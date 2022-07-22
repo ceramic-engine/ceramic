@@ -9,11 +9,6 @@ using StringTools;
 
 class Audio implements spec.Audio {
 
-/// Internal
-
-    var loopingStreams:Map<AudioHandle,Bool> = new Map();
-    var loopHandles:Map<AudioHandle,AudioHandle> = new Map();
-
 /// Lifecycle
 
     public function new() {}
@@ -211,70 +206,9 @@ class Audio implements spec.Audio {
 
         var handle:AudioHandle = null;
         if (loop) {
-
-            #if (cpp && ceramic_use_openal)
-            if (isStream) {
-
-                // At the moment, looping a stream doesn't seem reliable if just relying on openal implementation.
-                // When looping a stream, let's manage ourselve the loop by
-                // checking the position and playing again from start.
-
-                var duration = audioResource.getDuration();
-                handle = Clay.app.audio.play(audioResource, volume, false);
-                var firstHandle = handle;
-                loopingStreams.set(handle, true);
-                var pos:Float = 0;
-
-                var onUpdate = null;
-                onUpdate = function(delta) {
-
-                    if (!Clay.app.audio.active) return;
-
-                    if (loopingStreams.exists(handle)) {
-
-                        var playing = loopingStreams.get(handle);
-                        if (playing) {
-
-                            var instance = Clay.app.audio.instanceOf(handle);
-                            if (instance != null) {
-                                pos = Clay.app.audio.positionOf(handle);
-                                if (pos < duration) volume = Clay.app.audio.volumeOf(handle);
-
-                                if (pos >= duration - 1.0/60) {
-                                    // End of loop, start from 0 again
-                                    loopingStreams.remove(handle);
-                                    Clay.app.audio.stop(handle);
-                                    handle = Clay.app.audio.play(audioResource, volume, false);
-                                    loopingStreams.set(handle, true);
-                                    loopHandles.set(firstHandle, handle);
-                                }
-                            }
-                            else {
-                                // Sound instance was destroyed when looping (it can happen), restore it
-                                // Not perfect: the stream is resumed from the beginning regardless
-                                // of where it was stopped.
-                                loopingStreams.remove(handle);
-                                handle = Clay.app.audio.play(audioResource, volume, false);
-                                loopingStreams.set(handle, true);
-                                loopHandles.set(firstHandle, handle);
-                            }
-                        }
-
-                    } else {
-                        ceramic.App.app.offUpdate(onUpdate);
-                    }
-
-                };
-                ceramic.App.app.onUpdate(null, onUpdate);
-
-            } else {
-            #end
-                handle = Clay.app.audio.loop(audioResource, volume, false);
-            #if (cpp && ceramic_use_openal)
-            }
-            #end
-
-        } else {
+            handle = Clay.app.audio.loop(audioResource, volume, false);
+        }
+        else {
             handle = Clay.app.audio.play(audioResource, volume, false);
         }
 
@@ -293,15 +227,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return;
-        }
-
-        if (loopingStreams.exists(handle)) {
-            loopingStreams.set(handle, false);
-        }
-
         Clay.app.audio.pause(handle);
 
     }
@@ -311,15 +236,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return;
-        }
-
-        if (loopingStreams.exists(handle)) {
-            loopingStreams.set(handle, true);
-        }
-
         Clay.app.audio.unPause(handle);
 
     }
@@ -328,14 +244,6 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
-        if (loopHandles.exists(handle)) {
-            var prevHandle = handle;
-            handle = loopHandles.get(handle);
-            loopHandles.remove(prevHandle);
-        }
-
-        loopingStreams.remove(handle);
 
         if (handle == null || (handle:Int) == -1) return;
         Clay.app.audio.stop(handle);
@@ -347,11 +255,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return 0;
-        }
-
         return Clay.app.audio.volumeOf(handle);
 
     }
@@ -360,10 +263,6 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-        }
 
         Clay.app.audio.volume(handle, volume);
 
@@ -374,10 +273,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-        }
-
         return Clay.app.audio.panOf(handle);
 
     }
@@ -386,10 +281,6 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-        }
 
         // Forbid changing pan of streaming sounds
         var instance = Clay.app.audio.instanceOf(handle);
@@ -404,11 +295,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return 1;
         if (handle == null || (handle:Int) == -1) return 1;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return 1;
-        }
-
         return Clay.app.audio.pitchOf(handle);
 
     }
@@ -417,11 +303,6 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return;
-        }
 
         // Forbid changing pitch of streaming sounds
         var instance = Clay.app.audio.instanceOf(handle);
@@ -436,11 +317,6 @@ class Audio implements spec.Audio {
         if (!Clay.app.audio.active) return 0;
         if (handle == null || (handle:Int) == -1) return 0;
 
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return 0;
-        }
-
         return Clay.app.audio.positionOf(handle);
 
     }
@@ -449,11 +325,6 @@ class Audio implements spec.Audio {
 
         if (!Clay.app.audio.active) return;
         if (handle == null || (handle:Int) == -1) return;
-
-        if (loopHandles.exists(handle)) {
-            handle = loopHandles.get(handle);
-            if (handle == null || (handle:Int) == -1) return;
-        }
 
         // Forbid changing position of streaming sounds
         var instance = Clay.app.audio.instanceOf(handle);
