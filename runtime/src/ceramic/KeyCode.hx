@@ -1,5 +1,13 @@
 package ceramic;
 
+#if (cpp && windows)
+@:headerCode('
+// Needed otherwise windows build fails :(
+// But why?
+#undef DELETE
+#undef OUT
+')
+#end
 enum abstract KeyCode(Int) from Int to Int {
 
     var UNKNOWN:KeyCode             = 0;
