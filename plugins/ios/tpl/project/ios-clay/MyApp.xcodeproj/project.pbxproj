@@ -257,9 +257,9 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7E7BE92D2029EA0300CBF16B /* Build configuration list for PBXNativeTarget "SwiftClasses" */;
 			buildPhases = (
+				7E7BE91F2029EA0300CBF16B /* Headers */,
 				7E7BE91D2029EA0300CBF16B /* Sources */,
 				7E7BE91E2029EA0300CBF16B /* Frameworks */,
-				7E7BE91F2029EA0300CBF16B /* Headers */,
 				7E7BE9202029EA0300CBF16B /* Resources */,
 				7E7BE9312029F1E600CBF16B /* Copy Objective-C Header */,
 			);
