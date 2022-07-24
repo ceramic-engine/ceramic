@@ -48,10 +48,12 @@ class Quad extends Visual {
                 texture = tile.texture;
             }
 
-            frameX = tile.frameX;
-            frameY = tile.frameY;
-            frameWidth = tile.frameWidth;
-            frameHeight = tile.frameHeight;
+            frameX = tile.frameX + tile.edgeInset;
+            frameY = tile.frameY + tile.edgeInset;
+            frameWidth = tile.frameWidth - tile.edgeInset * 2;
+            frameHeight = tile.frameHeight - tile.edgeInset * 2;
+            width = tile.frameWidth;
+            height = tile.frameHeight;
 
             rotateFrame = tile.rotateFrame;
         }

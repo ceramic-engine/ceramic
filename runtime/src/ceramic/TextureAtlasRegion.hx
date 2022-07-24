@@ -44,7 +44,7 @@ class TextureAtlasRegion extends TextureTile {
         var pageInfo = atlas.pages[page];
         super(
             pageInfo != null ? pageInfo.texture : null,
-            0, 0, 0, 0, false
+            0, 0, 0, 0, false, 0
         );
 
         atlas.regions.push(this);
