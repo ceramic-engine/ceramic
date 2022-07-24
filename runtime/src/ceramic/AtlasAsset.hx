@@ -1,5 +1,6 @@
 package ceramic;
 
+import ceramic.Path;
 import ceramic.Shortcuts.*;
 
 class AtlasAsset extends Asset {
@@ -74,7 +75,12 @@ class AtlasAsset extends Asset {
 
                         var page = newAtlas.pages[i];
 
-                        var pathInfo = Assets.decodePath(page.name);
+                        var imagePath = page.name;
+                        var directory = Path.directory(path);
+                        if (directory != null && directory.length > 0) {
+                            imagePath = Path.join([directory, imagePath]);
+                        }
+                        var pathInfo = Assets.decodePath(imagePath);
                         var asset = new ImageAsset(pathInfo.name);
 
                         // Because it is handled at atlas level
