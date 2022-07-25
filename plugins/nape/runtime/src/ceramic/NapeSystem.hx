@@ -45,6 +45,11 @@ class NapeSystem extends System {
      */
     public var space(default, null):nape.space.Space = null;
 
+    /**
+     * If set to `true`, spaces won't be updated
+     */
+    public var paused:Bool = false;
+
     public function new() {
 
         super();
@@ -87,6 +92,9 @@ class NapeSystem extends System {
     }
 
     inline function updateSpaces(delta:Float):Void {
+
+        if (paused)
+            return;
 
         emitUpdateSpaces(delta);
 
