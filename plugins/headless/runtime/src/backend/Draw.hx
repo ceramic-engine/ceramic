@@ -215,6 +215,18 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    inline public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
+
+        // Unused in headless
+
+    }
+
+    inline public function disableScissor():Void {
+
+        // Unused in headless
+
+    }
+
     inline public function beginDrawingInStencilBuffer():Void {
 
         // Unused in headless
@@ -276,7 +288,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         _numColors++;
         _colorIndex += _vertexSize;
-    
+
     }
 
     inline public function beginFloatAttributes():Void {
@@ -343,7 +355,7 @@ class Draw #if !completion implements spec.Draw #end {
         if (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(_currentShader)) {
             _numColors = 0;
             _colorIndex = 4;
-    
+
             _numUVs = 0;
             _uvIndex = 8;
 
@@ -352,7 +364,7 @@ class Draw #if !completion implements spec.Draw #end {
         else {
             _numColors = 0;
             _colorIndex = 3;
-    
+
             _numUVs = 0;
             _uvIndex = 7;
 

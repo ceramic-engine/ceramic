@@ -23,6 +23,7 @@ class Renderer extends Entity {
     var lastRenderTarget:ceramic.RenderTexture = null;
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
     var lastClip:ceramic.Visual = null;
+    var lastClipIsRegular:Bool = false;
     var activeTextureSlot:Int = 0;
 
     var backendTextures:backend.Textures;
@@ -225,47 +226,64 @@ class Renderer extends Entity {
                             stateDirty = true;
 
                             if (lastClip != null) {
-                                lastRenderTarget = lastClip.computedRenderTarget;
-                                useRenderTarget(draw, lastRenderTarget);
+                                if (lastClipIsRegular) {
+                                    draw.disableScissor();
+                                }
+                                else {
+                                    lastRenderTarget = lastClip.computedRenderTarget;
+                                    useRenderTarget(draw, lastRenderTarget);
 
-                                // Finish clipping
-                                draw.drawWithoutStencilTest();
+                                    // Finish clipping
+                                    draw.drawWithoutStencilTest();
+                                }
                             }
 
                             lastClip = clip;
 
                             if (lastClip != null) {
-                                // Update stencil buffer
 
+                                // Update render target
                                 lastRenderTarget = lastClip.computedRenderTarget;
                                 useRenderTarget(draw, lastRenderTarget);
 
-                                draw.beginDrawingInStencilBuffer();
-
-                                if (lastClip.asQuad != null) {
-                                    quad = lastClip.asQuad;
-                                    stencilClip = true;
-                                    drawQuad(draw, quad);
-                                    stencilClip = false;
-                                    quad = visual.asQuad;
+                                // If we clip with a regular rectangle quad, we can use scissor(),
+                                // but in every other cases we need to use stencil buffer
+                                if (lastClip.asQuad != null && lastClip.asQuad.isRegular()) {
+                                    // Use scissor
+                                    lastClipIsRegular = true;
+                                    scissorWithQuad(draw, lastClip.asQuad);
                                 }
-                                else if (lastClip.asMesh != null) {
-                                    mesh = lastClip.asMesh;
-                                    stencilClip = true;
-                                    #if !ceramic_no_mesh
-                                    drawMesh(draw, mesh);
-                                    #end
-                                    stencilClip = false;
-                                    mesh = visual.asMesh;
+                                else {
+                                    // Update stencil buffer
+                                    lastClipIsRegular = false;
+
+                                    draw.beginDrawingInStencilBuffer();
+
+                                    if (lastClip.asQuad != null) {
+                                        quad = lastClip.asQuad;
+                                        stencilClip = true;
+                                        drawQuad(draw, quad);
+                                        stencilClip = false;
+                                        quad = visual.asQuad;
+                                    }
+                                    else if (lastClip.asMesh != null) {
+                                        mesh = lastClip.asMesh;
+                                        stencilClip = true;
+                                        #if !ceramic_no_mesh
+                                        drawMesh(draw, mesh);
+                                        #end
+                                        stencilClip = false;
+                                        mesh = visual.asMesh;
+                                    }
+
+                                    // Next things to be drawn will be clipped
+                                    flush(draw);
+                                    unbindUsedTextures(draw);
+                                    stateDirty = true;
+
+                                    draw.endDrawingInStencilBuffer();
+                                    draw.drawWithStencilTest();
                                 }
-
-                                // Next things to be drawn will be clipped
-                                flush(draw);
-                                unbindUsedTextures(draw);
-                                stateDirty = true;
-
-                                draw.endDrawingInStencilBuffer();
-                                draw.drawWithStencilTest();
                             }
                         }
 
@@ -347,6 +365,9 @@ class Renderer extends Entity {
             if (quad.computedRenderTarget != lastRenderTarget) {
                 lastRenderTarget = quad.computedRenderTarget;
                 useRenderTarget(draw, lastRenderTarget);
+                if (lastClip != null && lastClipIsRegular) {
+                    scissorWithQuad(draw, lastClip.asQuad);
+                }
             }
 
             // Update shader
@@ -872,6 +893,9 @@ class Renderer extends Entity {
             if (mesh.computedRenderTarget != lastRenderTarget) {
                 lastRenderTarget = mesh.computedRenderTarget;
                 useRenderTarget(draw, lastRenderTarget);
+                if (lastClip != null && lastClipIsRegular) {
+                    scissorWithQuad(draw, lastClip.asQuad);
+                }
             }
 
             // Update shader
@@ -1405,6 +1429,17 @@ class Renderer extends Entity {
             case AUTO:
                 throw 'Cannot apply AUTO blending. Needs to be computed to an actual blending function.';
         }
+
+    }
+
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function scissorWithQuad(draw:backend.Draw, quad:ceramic.Quad):Void {
+
+        draw.enableScissor(
+            quad.matTX,
+            quad.matTY,
+            quad.matA * quad.width,
+            quad.matD * quad.height
+        );
 
     }
 

@@ -388,6 +388,25 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    #if !ceramic_debug_draw_backend inline #end public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
+
+        GL.enable(GL.SCISSOR_TEST);
+
+        var left = _modelViewTransform.transformX(x, y);
+        var top = _modelViewTransform.transformY(x, y);
+        var right = _modelViewTransform.transformX(x + width, y + height);
+        var bottom = _modelViewTransform.transformY(x + width, y + height);
+
+        GL.scissor(Math.round(left), Math.round(top), Math.round(right - left), Math.round(bottom - top));
+
+    }
+
+    #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
+
+        GL.disable(GL.SCISSOR_TEST);
+
+    }
+
     #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
         // This part is not provided by clay because too specific for now

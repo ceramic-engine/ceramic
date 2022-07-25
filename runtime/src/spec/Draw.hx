@@ -54,6 +54,10 @@ interface Draw {
 
     function drawWithoutStencilTest():Void;
 
+    function enableScissor(x:Float, y:Float, width:Float, height:Float):Void;
+
+    function disableScissor():Void;
+
     function getNumPos():Int;
 
     function putPos(x:Float, y:Float, z:Float):Void;

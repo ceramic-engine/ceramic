@@ -651,6 +651,30 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    #if !ceramic_debug_draw_backend inline #end public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
+
+        var left = _modelViewTransform.transformX(x, y);
+        var top = _modelViewTransform.transformY(x, y);
+        var right = _modelViewTransform.transformX(x + width, y + height);
+        var bottom = _modelViewTransform.transformY(x + width, y + height);
+
+        var singleX:Single = left;
+        var singleY:Single = top;
+        var singleW:Single = right - left;
+        var singleH:Single = bottom - top;
+
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        untyped __cs__('cmd.EnableScissorRect(new UnityEngine.Rect({0}, {1}, {2}, {3}))', singleX, singleY, singleW, singleH);
+
+    }
+
+    #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
+
+        untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        untyped __cs__('cmd.DisableScissorRect()');
+
+    }
+
     public function beginDrawingInStencilBuffer():Void {
 
         if (hasAnythingToFlush())

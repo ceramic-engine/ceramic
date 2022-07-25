@@ -182,6 +182,21 @@ class Quad extends Visual {
 
     }
 
+    /**
+     * Returns `true` if this quad is a regular rectangle
+     */
+    public function isRegular():Bool {
+
+        if (matrixDirty)
+            computeMatrix();
+
+        var w = width;
+        var h = height;
+
+        return (matC * h == 0 && matB * w == 0 && matC * h == 0 && matB * w == 0);
+
+    }
+
 /// Overrides
 
     override function computeMatrix() {
