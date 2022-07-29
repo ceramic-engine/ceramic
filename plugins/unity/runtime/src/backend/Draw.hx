@@ -117,6 +117,12 @@ class Draw #if !completion implements spec.Draw #end {
     static var _materialStencilTest:Bool = false;
     static var _materialStencilWrite:Int = 0;
 
+    static var _viewportDensity:Float = 1.0;
+
+    static var _viewportWidth:Float = 0.0;
+
+    static var _viewportHeight:Float = 0.0;
+
     static var _stencilShader:backend.Shader = null;
 
     //static var _currentMaterial:Dynamic = null;
@@ -380,6 +386,10 @@ class Draw #if !completion implements spec.Draw #end {
                 );
                 _renderTargetTransform.translate(-translateX, -translateY);
 
+                _viewportDensity = renderTarget.density;
+                _viewportWidth = renderTarget.width * _viewportDensity;
+                _viewportHeight = renderTarget.height * _viewportDensity;
+
                 updateViewMatrix(
                     density,
                     renderTarget.width,
@@ -418,6 +428,10 @@ class Draw #if !completion implements spec.Draw #end {
                     ceramic.App.app.backend.screen.getHeight(),
                     @:privateAccess ceramic.App.app.screen.matrix
                 );
+
+                _viewportDensity = ceramic.App.app.backend.screen.getDensity();
+                _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
+                _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
 
                 updateCurrentMatrix();
             }
@@ -653,13 +667,27 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
 
-        var left = _modelViewTransform.transformX(x, y);
-        var top = _modelViewTransform.transformY(x, y);
-        var right = _modelViewTransform.transformX(x + width, y + height);
-        var bottom = _modelViewTransform.transformY(x + width, y + height);
+        var density = _viewportDensity;
+        var left = 0.0;
+        var top = 0.0;
+        var right = 0.0;
+        var bottom = 0.0;
+
+        if (_currentRenderTarget != null) {
+            left = x * density;
+            top = y * density;
+            right = (x + width) * density;
+            bottom = (y + height) * density;
+        }
+        else {
+            left = _modelViewTransform.transformX(x, y) * density;
+            top = _modelViewTransform.transformY(x, y) * density;
+            right = _modelViewTransform.transformX(x + width, y + height) * density;
+            bottom = _modelViewTransform.transformY(x + width, y + height) * density;
+        }
 
         var singleX:Single = left;
-        var singleY:Single = top;
+        var singleY:Single = _viewportHeight - bottom;
         var singleW:Single = right - left;
         var singleH:Single = bottom - top;
 

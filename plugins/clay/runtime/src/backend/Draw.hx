@@ -123,6 +123,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _renderTargetTransform = new ceramic.Transform();
 
+    static var _viewportDensity:Float = 1.0;
+
+    static var _viewportWidth:Float = 0.0;
+
+    static var _viewportHeight:Float = 0.0;
+
     static var _blackTransparentColor = new ceramic.AlphaColor(ceramic.Color.BLACK, 0);
 
     static var _whiteTransparentColor = new ceramic.AlphaColor(ceramic.Color.WHITE, 0);
@@ -282,6 +288,9 @@ class Draw #if !completion implements spec.Draw #end {
                     -1
                 );
 
+                _viewportDensity = renderTarget.density;
+                _viewportWidth = renderTarget.width * _viewportDensity;
+                _viewportHeight = renderTarget.height * _viewportDensity;
                 Graphics.setViewport(
                     0, 0,
                     Std.int(renderTarget.width * renderTarget.density),
@@ -311,10 +320,13 @@ class Draw #if !completion implements spec.Draw #end {
                     ceramic.App.app.backend.screen.getHeight(),
                     @:privateAccess ceramic.App.app.screen.matrix
                 );
+                _viewportDensity = ceramic.App.app.backend.screen.getDensity();
+                _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
+                _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
                 Graphics.setViewport(
                     0, 0,
-                    Std.int(ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity()),
-                    Std.int(ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity())
+                    Std.int(_viewportWidth),
+                    Std.int(_viewportHeight)
                 );
             }
         }
@@ -388,16 +400,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    #if !ceramic_debug_draw_backend inline #end public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
+    public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
 
         GL.enable(GL.SCISSOR_TEST);
 
-        var left = _modelViewTransform.transformX(x, y);
-        var top = _modelViewTransform.transformY(x, y);
-        var right = _modelViewTransform.transformX(x + width, y + height);
-        var bottom = _modelViewTransform.transformY(x + width, y + height);
+        var density = _viewportDensity;
+        var left = _modelViewTransform.transformX(x, y) * density;
+        var top = _modelViewTransform.transformY(x, y) * density;
+        var right = _modelViewTransform.transformX(x + width, y + height) * density;
+        var bottom = _modelViewTransform.transformY(x + width, y + height) * density;
 
-        GL.scissor(Math.round(left), Math.round(top), Math.round(right - left), Math.round(bottom - top));
+        if (_currentRenderTarget != null) {
+            GL.scissor(Math.round(left), Math.round(_viewportHeight - top), Math.round(right - left), Math.round(top - bottom));
+        }
+        else {
+            GL.scissor(Math.round(left), Math.round(_viewportHeight - bottom), Math.round(right - left), Math.round(bottom - top));
+        }
 
     }
 
