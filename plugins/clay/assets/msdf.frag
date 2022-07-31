@@ -20,10 +20,10 @@ float median(float r, float g, float b) {
 
 void main() {
     vec2 msdfUnit;
-    vec3 sample;
+    vec3 textureSample;
     msdfUnit = pxRange/texSize;
-    sample = texture2D(tex0, tcoord).rgb;
-    float sigDist = median(sample.r, sample.g, sample.b) - 0.5;
+    textureSample = texture2D(tex0, tcoord).rgb;
+    float sigDist = median(textureSample.r, textureSample.g, textureSample.b) - 0.5;
     sigDist *= dot(msdfUnit, 0.5/fwidth(tcoord));
     float opacity = clamp(sigDist + 0.5, 0.0, 1.0);
     vec4 bgColor = vec4(0.0, 0.0, 0.0, 0.0);

@@ -66,6 +66,7 @@ class Main {
         #end
 
         #if web
+        config.render.webgl.version = 2;
         var userAgent = js.Browser.navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             try {

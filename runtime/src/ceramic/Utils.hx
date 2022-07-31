@@ -672,4 +672,21 @@ class Utils {
 
     }
 
+    public static function replaceIdentifier(str:String, word:String, replacement:String):String {
+
+        str = str.replace('\n', ' \n ');
+        str = str.replace('\r', ' \r ');
+        str = ' ' + str + ' ';
+
+        var delimiter = '(\\s|[^a-zA-Z0-9_])';
+        str = new EReg(delimiter + EReg.escape(word) + delimiter, 'g').replace(str, "$1" + replacement.replace("$", "$$") + "$2");
+
+        str = str.substring(1, str.length - 1);
+        str = str.replace(' \r ', '\r');
+        str = str.replace(' \n ', '\n');
+
+        return str;
+
+    }
+
 }

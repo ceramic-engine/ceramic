@@ -1,8 +1,8 @@
 package backend;
 
+import ceramic.Path;
 import ceramic.ReadOnlyArray;
 import clay.opengl.GL;
-import ceramic.Path;
 
 using StringTools;
 
@@ -23,19 +23,6 @@ class Shaders implements spec.Shaders {
                 break;
             }
         }
-        #end
-
-        #if !(web || ios || tvos || android)
-        var fragLines = [];
-        for (line in fragSource.split('\n')) {
-            if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
-                // Skip line on desktop GL
-            }
-            else {
-                fragLines.push(line);
-            }
-        }
-        fragSource = fragLines.join('\n');
         #end
 
         var textures = ['tex0'];
@@ -61,6 +48,80 @@ class Shaders implements spec.Shaders {
         fragSource = processPremultiplyTextureShader(fragSource);
         #end
 
+        var shouldRemoveExtensions = false;
+        var shouldConvertToGLES3 = false;
+        #if !(web || ios || tvos || android)
+        shouldRemoveExtensions = true;
+        #end
+        #if web
+        if (clay.Clay.app.runtime.webglVersion >= 2) {
+            shouldRemoveExtensions = true;
+            shouldConvertToGLES3 = true;
+        }
+        #end
+
+        if (shouldRemoveExtensions) {
+            fragSource = removeExtensions(fragSource);
+            vertSource = removeExtensions(vertSource);
+        }
+
+        if (shouldConvertToGLES3) {
+            fragSource = convertToGLES3(fragSource, true);
+            vertSource = convertToGLES3(vertSource, false);
+        }
+
+        /*
+        #if !(ios || tvos || android)
+        var isGles3 = false;
+        #if web
+        if (clay.Clay.app.runtime.webglVersion >= 2) {
+        isGles3 = true;
+        fragSource = '#version 300 es\n' + fragSource;
+        #end
+        var fragLines = [];
+        for (line in fragSource.split('\n')) {
+            if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
+                // Skip line on desktop GL or GLES >= 3
+            }
+            else if (isGles3 && line.trim().startsWith('attribute ')) {
+                fragLines.push('in' + line.trim().substr('attribute'.length));
+            }
+            else if (isGles3 && line.trim().startsWith('varying ')) {
+                fragLines.push('out' + line.trim().substr('varying'.length));
+            }
+            else {
+                fragLines.push(line);
+            }
+        }
+        fragSource = fragLines.join('\n');
+        if (isGles3) {
+            vertSource = '#version 300 es\n' + vertSource;
+            var vertLines = [];
+            for (line in vertSource.split('\n')) {
+                if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
+                    // Skip line on desktop GL or GLES >= 3
+                }
+                else if (line.trim().startsWith('attribute ')) {
+                    vertLines.push('in' + line.trim().substr('attribute'.length));
+                }
+                else if (line.trim().startsWith('varying ')) {
+                    vertLines.push('out' + line.trim().substr('varying'.length));
+                }
+                else {
+                    vertLines.push(line);
+                }
+            }
+            vertSource = vertLines.join('\n');
+        }
+        #if web
+        }
+        #end
+        #end
+        */
+
+        trace(fragSource);
+        trace(vertSource);
+
         var shader = new ShaderImpl();
 
         shader.attributes = isMultiTextureTemplate ? SHADER_ATTRIBUTES_MULTITEXTURE.original : SHADER_ATTRIBUTES.original;
@@ -73,6 +134,55 @@ class Shaders implements spec.Shaders {
         shader.init();
 
         return shader;
+
+    }
+
+    static function removeExtensions(source:String):String {
+
+        var lines = [];
+        for (line in source.split('\n')) {
+            if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
+                // Skip line referencing an extension we want to remove
+            }
+            else {
+                lines.push(line);
+            }
+        }
+        source = lines.join('\n');
+        return source;
+
+    }
+
+    static function convertToGLES3(source:String, isFrag:Bool):String {
+
+        var sourceLines = source.split('\n');
+        if (sourceLines[0].trim().startsWith('#version 100')) {
+            sourceLines.shift();
+            source = sourceLines.join('\n');
+        }
+
+        if (!source.startsWith('#version ')) {
+            source = '#version 300 es\n' + source;
+
+            if (isFrag) {
+                source = source.replace('void main(', 'out vec4 fragColor;\nvoid main(');
+            }
+
+            source = ceramic.Utils.replaceIdentifier(source, 'attribute', 'in');
+
+            if (isFrag) {
+                source = ceramic.Utils.replaceIdentifier(source, 'varying', 'in');
+            }
+            else {
+                source = ceramic.Utils.replaceIdentifier(source, 'varying', 'out');
+            }
+
+            source = ceramic.Utils.replaceIdentifier(source, 'texture2D', 'texture');
+
+            source = ceramic.Utils.replaceIdentifier(source, 'gl_FragColor', 'fragColor');
+        }
+
+        return source;
 
     }
 
@@ -183,7 +293,7 @@ class Shaders implements spec.Shaders {
         }
 
         return newLines.join('\n');
-        
+
     }
 
     #if ceramic_shader_premultiply_texture
@@ -214,7 +324,7 @@ class Shaders implements spec.Shaders {
         }
 
         return newLines.join('\n');
-        
+
     }
 
     #end
@@ -234,55 +344,55 @@ class Shaders implements spec.Shaders {
 /// Public API
 
     inline public function setInt(shader:Shader, name:String, value:Int):Void {
-        
+
         (shader:ShaderImpl).uniforms.setInt(name, value);
 
     }
 
     inline public function setFloat(shader:Shader, name:String, value:Float):Void {
-        
+
         (shader:ShaderImpl).uniforms.setFloat(name, value);
 
     }
 
     inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
-        
+
         (shader:ShaderImpl).uniforms.setColor(name, r, g, b, a);
 
     }
 
     inline public function setVec2(shader:Shader, name:String, x:Float, y:Float):Void {
-        
+
         (shader:ShaderImpl).uniforms.setVector2(name, x, y);
 
     }
 
     inline public function setVec3(shader:Shader, name:String, x:Float, y:Float, z:Float):Void {
-        
+
         (shader:ShaderImpl).uniforms.setVector3(name, x, y, z);
 
     }
 
     inline public function setVec4(shader:Shader, name:String, x:Float, y:Float, z:Float, w:Float):Void {
-        
+
         (shader:ShaderImpl).uniforms.setVector4(name, x, y, z, w);
 
     }
 
     inline public function setFloatArray(shader:Shader, name:String, array:Array<Float>):Void {
-        
+
         (shader:ShaderImpl).uniforms.setFloatArray(name, Float32Array.fromArray(array));
 
     }
 
     inline public function setTexture(shader:Shader, name:String, slot:Int, texture:backend.Texture):Void {
-        
+
         (shader:ShaderImpl).uniforms.setTexture(name, slot, texture);
 
     }
 
     inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
-        
+
         (shader:ShaderImpl).uniforms.setMatrix4(name, ceramic.Float32Array.fromArray([
             transform.a, transform.b, 0, 0,
             transform.c, transform.d, 0, 0,
@@ -337,7 +447,7 @@ void main() {
 
                 GL.shaderSource(shader, frag);
                 GL.compileShader(shader);
-                
+
                 #if ceramic_debug_shader_if_statements
                 trace('LOGS:');
                 var logs = GL.getShaderInfoLog(shader);
@@ -388,7 +498,7 @@ void main() {
     public function canBatchWithMultipleTextures(shader:Shader):Bool {
 
         return (shader:ShaderImpl).isBatchingMultiTexture;
-        
+
     }
 
 }
