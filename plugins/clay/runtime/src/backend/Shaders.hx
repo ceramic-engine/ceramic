@@ -50,8 +50,11 @@ class Shaders implements spec.Shaders {
 
         var shouldRemoveExtensions = false;
         var shouldConvertToGLES3 = false;
-        #if !(web || ios || tvos || android)
+        #if !(web || tvos)
         shouldRemoveExtensions = true;
+        #if (ios || android)
+        shouldConvertToGLES3 = true;
+        #end
         #end
         #if web
         if (clay.Clay.app.runtime.webglVersion >= 2) {
@@ -69,58 +72,6 @@ class Shaders implements spec.Shaders {
             fragSource = convertToGLES3(fragSource, true);
             vertSource = convertToGLES3(vertSource, false);
         }
-
-        /*
-        #if !(ios || tvos || android)
-        var isGles3 = false;
-        #if web
-        if (clay.Clay.app.runtime.webglVersion >= 2) {
-        isGles3 = true;
-        fragSource = '#version 300 es\n' + fragSource;
-        #end
-        var fragLines = [];
-        for (line in fragSource.split('\n')) {
-            if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
-                // Skip line on desktop GL or GLES >= 3
-            }
-            else if (isGles3 && line.trim().startsWith('attribute ')) {
-                fragLines.push('in' + line.trim().substr('attribute'.length));
-            }
-            else if (isGles3 && line.trim().startsWith('varying ')) {
-                fragLines.push('out' + line.trim().substr('varying'.length));
-            }
-            else {
-                fragLines.push(line);
-            }
-        }
-        fragSource = fragLines.join('\n');
-        if (isGles3) {
-            vertSource = '#version 300 es\n' + vertSource;
-            var vertLines = [];
-            for (line in vertSource.split('\n')) {
-                if (line.trim().startsWith('#extension GL_OES_') || line.startsWith('#extension OES_')) {
-                    // Skip line on desktop GL or GLES >= 3
-                }
-                else if (line.trim().startsWith('attribute ')) {
-                    vertLines.push('in' + line.trim().substr('attribute'.length));
-                }
-                else if (line.trim().startsWith('varying ')) {
-                    vertLines.push('out' + line.trim().substr('varying'.length));
-                }
-                else {
-                    vertLines.push(line);
-                }
-            }
-            vertSource = vertLines.join('\n');
-        }
-        #if web
-        }
-        #end
-        #end
-        */
-
-        trace(fragSource);
-        trace(vertSource);
 
         var shader = new ShaderImpl();
 
