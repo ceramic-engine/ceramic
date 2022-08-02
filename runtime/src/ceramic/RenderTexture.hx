@@ -20,6 +20,10 @@ class RenderTexture extends Texture {
 
     public var renderDirty:Bool = false;
 
+    public var stencil(default, null):Bool = true;
+
+    public var antialiasing(default, null):Int = 0;
+
     #if ceramic_rendertexture_priority_use_haxe_map
     @:noCompletion public var dependingTextures:Map<Int,Int> = null;
     #else
@@ -54,13 +58,17 @@ class RenderTexture extends Texture {
 
 /// Lifecycle
 
-    public function new(width:Float, height:Float, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    public function new(width:Float, height:Float, density:Float = -1, stencil:Bool = true, antialiasing:Int = 0 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         if (density == -1) density = screen.texturesDensity;
 
+        this.stencil = stencil;
+        this.antialiasing = antialiasing;
+
         var backendItem = app.backend.textures.createRenderTarget(
             Math.round(width * density),
-            Math.round(height * density)
+            Math.round(height * density),
+            stencil, antialiasing
         );
 
         super(backendItem, density #if ceramic_debug_entity_allocs , pos #end);

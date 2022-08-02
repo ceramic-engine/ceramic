@@ -180,7 +180,7 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function createRenderTarget(width:Int, height:Int):Texture {
+    inline public function createRenderTarget(width:Int, height:Int, stencil:Bool, antialiasing:Int):Texture {
 
         var id = 'render:' + (nextRenderIndex++);
 
@@ -188,7 +188,8 @@ class Textures implements spec.Textures {
         renderTexture.id = id;
         renderTexture.width = width;
         renderTexture.height = height;
-        renderTexture.stencil = true;
+        renderTexture.stencil = stencil;
+        renderTexture.antialiasing = antialiasing;
         renderTexture.init();
 
         loadedTexturesRetainCount.set(id, 1);

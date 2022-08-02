@@ -76,6 +76,28 @@ class Filter extends Layer implements Observable {
     }
 
     /**
+     * Texture antialiasing
+     */
+    public var antialiasing(default,set):Int = 0;
+    function set_antialiasing(antialiasing:Int):Int {
+        if (this.antialiasing == antialiasing) return antialiasing;
+        this.antialiasing = antialiasing;
+        contentDirty = true;
+        return antialiasing;
+    }
+
+    /**
+     * Texture stencil
+     */
+    public var stencil(default,set):Bool = true;
+    function set_stencil(stencil:Bool):Bool {
+        if (this.stencil == stencil) return stencil;
+        this.stencil = stencil;
+        contentDirty = true;
+        return stencil;
+    }
+
+    /**
      * Auto render?
      */
     public var autoRender(default,set):Bool = true;
@@ -163,17 +185,17 @@ class Filter extends Layer implements Observable {
     function handleTexturesDensityChange(density:Float, prevDensity:Float):Void {
 
         if (density != prevDensity && this.density == -1) {
-            filterSize(Math.ceil(width), Math.ceil(height), density);
+            updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, stencil, antialiasing);
             contentDirty = false;
         }
 
     }
 
-    function filterSize(filterWidth:Int, filterHeight:Int, density:Float):Void {
+    function updateRenderTextureAndContent(filterWidth:Int, filterHeight:Int, density:Float, stencil:Bool, antialiasing:Int):Void {
 
         if (enabled) {
             if (renderTexture == null ||
-                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density))) ||
+                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density) || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
                 ) {
@@ -199,7 +221,7 @@ class Filter extends Layer implements Observable {
                         tile = textureTile;
                     }
                     else {
-                        renderTexture = new RenderTexture(filterWidth, filterHeight, density);
+                        renderTexture = new RenderTexture(filterWidth, filterHeight, density, stencil, antialiasing);
                         renderTexture.id = textureId;
                         renderTexture.filter = textureFilter;
                         renderTexture.autoRender = autoRender;
@@ -458,7 +480,7 @@ class Filter extends Layer implements Observable {
     }
 
     override function computeContent() {
-        filterSize(Math.ceil(width), Math.ceil(height), density);
+        updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, stencil, antialiasing);
         contentDirty = false;
     }
 

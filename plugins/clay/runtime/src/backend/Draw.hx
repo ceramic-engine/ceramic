@@ -104,6 +104,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _activeShader:ShaderImpl;
 
     static var _currentRenderTarget:ceramic.RenderTexture = null;
+    static var _didUpdateCurrentRenderTarget:Bool = false;
 
     static var _projectionMatrix = ceramic.Float32Array.fromArray([
         1.0, 0.0, 0.0, 0.0,
@@ -217,6 +218,10 @@ class Draw #if !completion implements spec.Draw #end {
             _whiteTransparentColor.alpha
         );
 
+        if (_currentRenderTarget != null) {
+            _didUpdateCurrentRenderTarget = true;
+        }
+
     }
 
     #if !ceramic_debug_draw_backend inline #end public function clearAndApplyBackground():Void {
@@ -229,6 +234,10 @@ class Draw #if !completion implements spec.Draw #end {
             background.blueFloat,
             1
         );
+
+        if (_currentRenderTarget != null) {
+            _didUpdateCurrentRenderTarget = true;
+        }
 
     }
 
@@ -263,10 +272,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    #if !ceramic_debug_draw_backend inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
+    #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         if (_currentRenderTarget != renderTarget || force) {
+
+            #if web
+            if (_currentRenderTarget != null && _currentRenderTarget != renderTarget && _didUpdateCurrentRenderTarget) {
+                var clayRenderTexture:clay.graphics.RenderTexture = cast _currentRenderTarget.backendItem;
+                if (clayRenderTexture.antialiasing > 1) {
+                    Graphics.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
+                }
+            }
+            #end
+
             _currentRenderTarget = renderTarget;
+            _didUpdateCurrentRenderTarget = true;
+
             if (renderTarget != null) {
                 var renderTexture:clay.graphics.RenderTexture = cast renderTarget.backendItem;
 
@@ -304,6 +325,8 @@ class Draw #if !completion implements spec.Draw #end {
                         _blackTransparentColor.blueFloat,
                         _blackTransparentColor.alphaFloat
                     );
+
+                    _didUpdateCurrentRenderTarget = true;
                 }
 
             } else {
@@ -871,6 +894,10 @@ class Draw #if !completion implements spec.Draw #end {
         GL.deleteBuffer(ib);
 
         // End submit
+
+        if (_currentRenderTarget != null) {
+            _didUpdateCurrentRenderTarget = true;
+        }
 
         pos = null;
         uvs = null;
