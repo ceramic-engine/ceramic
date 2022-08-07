@@ -36,7 +36,7 @@ interface Textures {
 
     function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void;
 
-    function createRenderTarget(width:Int, height:Int, stencil:Bool, antialiasing:Int):Texture;
+    function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture;
 
     /**
      * If this returns a value above 1, that means this backend supports multi-texture batching.

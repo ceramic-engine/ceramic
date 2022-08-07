@@ -76,14 +76,14 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * Texture antialiasing
+     * Texture depth
      */
-    public var antialiasing(default,set):Int = 0;
-    function set_antialiasing(antialiasing:Int):Int {
-        if (this.antialiasing == antialiasing) return antialiasing;
-        this.antialiasing = antialiasing;
+    public var depthBuffer(default,set):Bool = true;
+    function set_depthBuffer(depthBuffer:Bool):Bool {
+        if (this.depthBuffer == depthBuffer) return depthBuffer;
+        this.depthBuffer = depthBuffer;
         contentDirty = true;
-        return antialiasing;
+        return depthBuffer;
     }
 
     /**
@@ -95,6 +95,17 @@ class Filter extends Layer implements Observable {
         this.stencil = stencil;
         contentDirty = true;
         return stencil;
+    }
+
+    /**
+     * Texture antialiasing
+     */
+    public var antialiasing(default,set):Int = 0;
+    function set_antialiasing(antialiasing:Int):Int {
+        if (this.antialiasing == antialiasing) return antialiasing;
+        this.antialiasing = antialiasing;
+        contentDirty = true;
+        return antialiasing;
     }
 
     /**
@@ -185,17 +196,17 @@ class Filter extends Layer implements Observable {
     function handleTexturesDensityChange(density:Float, prevDensity:Float):Void {
 
         if (density != prevDensity && this.density == -1) {
-            updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, stencil, antialiasing);
+            updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, depthBuffer, stencil, antialiasing);
             contentDirty = false;
         }
 
     }
 
-    function updateRenderTextureAndContent(filterWidth:Int, filterHeight:Int, density:Float, stencil:Bool, antialiasing:Int):Void {
+    function updateRenderTextureAndContent(filterWidth:Int, filterHeight:Int, density:Float, depthBuffer:Bool, stencil:Bool, antialiasing:Int):Void {
 
         if (enabled) {
             if (renderTexture == null ||
-                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density) || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
+                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density) || renderTexture.depth != depthBuffer || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
                 ) {
@@ -221,7 +232,8 @@ class Filter extends Layer implements Observable {
                         tile = textureTile;
                     }
                     else {
-                        renderTexture = new RenderTexture(filterWidth, filterHeight, density, stencil, antialiasing);
+                        trace('new render texture depth=$depthBuffer');
+                        renderTexture = new RenderTexture(filterWidth, filterHeight, density, depthBuffer, stencil, antialiasing);
                         renderTexture.id = textureId;
                         renderTexture.filter = textureFilter;
                         renderTexture.autoRender = autoRender;
@@ -480,7 +492,7 @@ class Filter extends Layer implements Observable {
     }
 
     override function computeContent() {
-        updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, stencil, antialiasing);
+        updateRenderTextureAndContent(Math.ceil(width), Math.ceil(height), density, depthBuffer, stencil, antialiasing);
         contentDirty = false;
     }
 

@@ -276,14 +276,12 @@ class Draw #if !completion implements spec.Draw #end {
 
         if (_currentRenderTarget != renderTarget || force) {
 
-            #if web
             if (_currentRenderTarget != null && _currentRenderTarget != renderTarget && _didUpdateCurrentRenderTarget) {
                 var clayRenderTexture:clay.graphics.RenderTexture = cast _currentRenderTarget.backendItem;
                 if (clayRenderTexture.antialiasing > 1) {
                     Graphics.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
                 }
             }
-            #end
 
             _currentRenderTarget = renderTarget;
             _didUpdateCurrentRenderTarget = true;
