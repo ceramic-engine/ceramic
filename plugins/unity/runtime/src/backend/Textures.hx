@@ -156,9 +156,20 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function createRenderTarget(width:Int, height:Int):Texture {
+    inline public function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture {
+
+        if (antialiasing < 1)
+            antialiasing = 1;
 
         untyped __cs__('var renderTexture = new UnityEngine.RenderTexture({0}, {1}, 24, UnityEngine.RenderTextureFormat.Default)', width, height);
+        untyped __cs__('renderTexture.antiAliasing = {0}', antialiasing);
+
+        if (stencil) {
+            untyped __cs__('renderTexture.depthStencilFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.D24_UNorm_S8_UInt');
+        }
+        else if (depth)
+            untyped __cs__('renderTexture.depth = 16');
+
         untyped __cs__('renderTexture.Create()');
 
         var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'));

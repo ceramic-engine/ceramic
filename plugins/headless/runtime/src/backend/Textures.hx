@@ -35,9 +35,9 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function createRenderTarget(width:Int, height:Int):Texture {
+    inline public function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture {
 
-        return new TextureImpl(width, height);
+        return new TextureImpl(width, height, depth, stencil, antialiasing);
 
     }
 

@@ -184,13 +184,22 @@ class Textures implements spec.Textures {
 
         var id = 'render:' + (nextRenderIndex++);
 
+        #if web
+        var webglVersion = clay.Clay.app.runtime.webglVersion;
+        #end
+
         var renderTexture = new clay.graphics.RenderTexture();
         renderTexture.id = id;
         renderTexture.width = width;
         renderTexture.height = height;
         renderTexture.depth = depth;
         renderTexture.stencil = stencil;
+        #if web
+        // On web, render texture antialiasing is only supported on WebGL 2.0+
+        renderTexture.antialiasing = webglVersion >= 2 ? antialiasing : 0;
+        #else
         renderTexture.antialiasing = antialiasing;
+        #end
         renderTexture.init();
 
         loadedTexturesRetainCount.set(id, 1);
