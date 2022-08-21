@@ -61,6 +61,9 @@ class Quad extends Visual {
         return tile;
     }
 
+    /**
+     * The texture to use for this Quad object
+     */
     @editable
     public var texture(get,set):Texture;
     inline function get_texture():Texture {
