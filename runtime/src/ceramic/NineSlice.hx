@@ -118,6 +118,73 @@ class NineSlice extends Visual {
 
     }
 
+    public var rotateFrame(get,set):Bool;
+    inline function get_rotateFrame():Bool {
+        return quadCenter.rotateFrame;
+    }
+    inline function set_rotateFrame(rotateFrame:Bool):Bool {
+
+        if (quadCenter.rotateFrame != rotateFrame) {
+            _set_rotateFrame(rotateFrame);
+        }
+
+        return rotateFrame;
+    }
+    function _set_rotateFrame(rotateFrame:Bool):Void {
+
+        quadTop.rotateFrame = rotateFrame;
+        quadTopRight.rotateFrame = rotateFrame;
+        quadRight.rotateFrame = rotateFrame;
+        quadBottomRight.rotateFrame = rotateFrame;
+        quadBottom.rotateFrame = rotateFrame;
+        quadBottomLeft.rotateFrame = rotateFrame;
+        quadLeft.rotateFrame = rotateFrame;
+        quadTopLeft.rotateFrame = rotateFrame;
+        quadCenter.rotateFrame = rotateFrame;
+
+        contentDirty = true;
+
+    }
+
+    public var tile(default,set):TextureTile = null;
+    inline function set_tile(tile:TextureTile):TextureTile {
+
+        if (this.tile != tile) {
+            this.tile = tile;
+            _set_tile(tile);
+        }
+
+        return tile;
+    }
+    function _set_tile(tile:TextureTile):Void {
+
+        var texture:Texture = null;
+
+        if (tile != null) {
+            texture = tile.texture;
+        }
+
+        if (quadCenter.texture != texture) {
+            _set_texture(texture);
+        }
+
+        if (tile != null) {
+            if (quadCenter.rotateFrame != tile.rotateFrame) {
+                _set_rotateFrame(tile.rotateFrame);
+            }
+
+            size(tile.frameWidth, tile.frameHeight);
+        }
+        else {
+            if (quadCenter.rotateFrame != false) {
+                _set_rotateFrame(false);
+            }
+        }
+
+        contentDirty = true;
+
+    }
+
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         super.set_width(width);
@@ -264,88 +331,126 @@ class NineSlice extends Visual {
             var left = sliceLeft;
 
             var texture = this.texture;
-            var texWidth:Float = texture != null ? texture.width : 0.0;
-            var texHeight:Float = texture != null ? texture.height : 0.0;
+            var tile = this.tile;
+            var rotateFrame = this.rotateFrame;
+            var texX:Float = 0.0;
+            var texY:Float = 0.0;
+            var texWidth:Float = 0.0;
+            var texHeight:Float = 0.0;
 
-            quadTop.pos(left, 0);
+            if (tile != null) {
+                texWidth = tile.frameWidth;
+                texHeight = tile.frameHeight;
+                texX = tile.frameX;
+                texY = tile.frameY;
+            }
+            else if (texture != null) {
+                texWidth = texture.width;
+                texHeight = texture.height;
+            }
+
             quadTop.frame(
-                left,
-                0,
+                texX + left,
+                texY,
                 texWidth - left - right,
                 top
             );
+            quadTopRight.frame(
+                texX + texWidth - right,
+                texY,
+                right,
+                top
+            );
+            quadRight.frame(
+                texX + texWidth - right,
+                texY + top,
+                right,
+                texHeight - top - bottom
+            );
+            quadBottomRight.frame(
+                texX + texWidth - right,
+                texY + texHeight - bottom,
+                right,
+                bottom
+            );
+            quadBottom.frame(
+                texX + left,
+                texY + texHeight - bottom,
+                texWidth - left - right,
+                bottom
+            );
+            quadBottomLeft.frame(
+                texX,
+                texY + texHeight - bottom,
+                left,
+                bottom
+            );
+            quadLeft.frame(
+                texX,
+                texY + top,
+                left,
+                texHeight - top - bottom
+            );
+            quadTopLeft.frame(
+                texX,
+                texY,
+                left,
+                top
+            );
+            quadCenter.frame(
+                texX + left,
+                texY + top,
+                texWidth - left - right,
+                texHeight - top - bottom
+            );
+
+            if (rotateFrame) {
+                // When rotating the original frame, we need
+                // to adapt coordinates of each slices
+                inline function _rotateQuadFrame(quad:Quad) {
+                    quad.frame(
+                        texX + quad.frameY - texY,
+                        texY + texWidth - quad.frameX + texX - quad.frameWidth,
+                        quad.frameWidth,
+                        quad.frameHeight
+                    );
+                }
+                _rotateQuadFrame(quadTop);
+                _rotateQuadFrame(quadTopRight);
+                _rotateQuadFrame(quadRight);
+                _rotateQuadFrame(quadBottomRight);
+                _rotateQuadFrame(quadBottom);
+                _rotateQuadFrame(quadBottomLeft);
+                _rotateQuadFrame(quadLeft);
+                _rotateQuadFrame(quadTopLeft);
+                _rotateQuadFrame(quadCenter);
+            }
+
+            quadTop.pos(left, 0);
             quadTop.size(w - left - right, top);
 
             quadTopRight.pos(w - right, 0);
-            quadTopRight.frame(
-                texWidth - right,
-                0,
-                right,
-                top
-            );
             quadTopRight.size(right, top);
 
             quadRight.pos(w - right, top);
-            quadRight.frame(
-                texWidth - right,
-                top,
-                right,
-                texHeight - top - bottom
-            );
             quadRight.size(right, h - top - bottom);
 
             quadBottomRight.pos(w - right, h - bottom);
-            quadBottomRight.frame(
-                texWidth - right,
-                texHeight - bottom,
-                right,
-                bottom
-            );
             quadBottomRight.size(right, bottom);
 
             quadBottom.pos(left, h - bottom);
-            quadBottom.frame(
-                left,
-                texHeight - bottom,
-                texWidth - left - right,
-                bottom
-            );
             quadBottom.size(w - left - right, bottom);
 
             quadBottomLeft.pos(0, h - bottom);
-            quadBottomLeft.frame(
-                0,
-                texHeight - bottom,
-                left,
-                bottom
-            );
             quadBottomLeft.size(left, bottom);
 
             quadLeft.pos(0, top);
-            quadLeft.frame(
-                0,
-                top,
-                left,
-                texHeight - top - bottom
-            );
             quadLeft.size(left, h - top - bottom);
 
             quadTopLeft.pos(0, 0);
-            quadTopLeft.frame(
-                0,
-                0,
-                left,
-                top
-            );
             quadTopLeft.size(left, top);
 
             quadCenter.pos(left, top);
-            quadCenter.frame(
-                left,
-                top,
-                texWidth - left - right,
-                texHeight - top - bottom
-            );
             quadCenter.size(w - left - right, h - top - bottom);
         }
 
