@@ -201,6 +201,7 @@ class TextureAtlasParser {
                     if (el.exists('rotate')) {
                         result.add('rotate:');
                         result.add(el.get('rotate'));
+                        result.add('\n');
                     }
 
             }
