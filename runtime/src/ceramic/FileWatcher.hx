@@ -68,7 +68,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
     public function watch(path:String, onUpdate:String->Void):Void->Void {
 
         if (!canWatch()) {
-            trace('[warning] Cannot watch file at path $path with StandardWatcher on this target');
+            trace('[warning] Cannot watch file at path $path with FileWatcher on this target. Have you added electron to the plugins in your ceramic.yml?');
             return function() {};
         }
 
