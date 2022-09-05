@@ -405,8 +405,6 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     function separateBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool, overlapOnly:Bool = false):Bool {
 
-        // TODO handle layer offset & position
-
         _total = 0;
 
         if (tileBody == null) {
@@ -426,7 +424,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 var layerData = layer.layerData;
                 if (layerData == null)
                     continue;
-                ///*
+
                 var tilemapData:TilemapData = tilemap.tilemapData;
                 var tileWidth = tilemapData.tileWidth;
                 var tileHeight = tilemapData.tileHeight;
@@ -514,61 +512,9 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                     }
                     column++;
                 }
-                //*/
-
-
-                /*
-                var tileQuads = layer.surroundingTileQuads(body.left, body.top, body.right, body.bottom);
-
-                for (index in 0...tileQuads.length) {
-                    var tileQuad = tileQuads.unsafeGet(index);
-
-                    // Only collide with tiles gid > 0
-                    if (tileQuad.tilemapTile.gid > 0) {
-
-                        // Init tile physics if needed
-                        if (tileQuad.arcade == null) {
-                            tileQuad.initArcadePhysics();
-                            tileQuad.immovable = true;
-                        }
-
-                        var tileBody = tileQuad.arcade.body;
-                        if (separate(body, tileBody, processCallback, overlapOnly)) {
-
-                            if (collideCallback != null) {
-                                collideCallback(body, tileBody);
-                            }
-
-                            _total++;
-                        }
-
-                        // var tileBody = tileQuad.arcade.body;
-                        // quadTree.insert(tileBody);
-                        // numInserted++;
-                    }
-                }
-                //*/
 
             }
-
-            //var items = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
-            //trace('RETRIEVED ITEMS: ${items.length} (inserted=$numInserted)');
-
-            // for (i in 0...items.length)
-            // {
-            //     var item = items.unsafeGet(i);
-
-            //     if (separate(body, item, processCallback, overlapOnly)) {
-
-            //         if (collideCallback != null) {
-            //             collideCallback(body, item);
-            //         }
-
-            //         _total++;
-            //     }
-            // }
         }
-        //trace('--- end separate --');
 
         return (_total > 0);
 
