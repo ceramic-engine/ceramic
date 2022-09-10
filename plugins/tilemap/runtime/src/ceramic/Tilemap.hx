@@ -17,11 +17,24 @@ class Tilemap extends Quad {
 
 /// Properties
 
+    public var roundTilesTranslation(default,set):Int = 1;
+    function set_roundTilesTranslation(roundTilesTranslation:Int):Int {
+        if (this.roundTilesTranslation == roundTilesTranslation) return roundTilesTranslation;
+        this.roundTilesTranslation = roundTilesTranslation;
+        contentDirty = true;
+        for (i in 0...layers.length) {
+            var layer = layers.unsafeGet(i);
+            layer.contentDirty = true;
+        }
+        return roundTilesTranslation;
+    }
+
     public var tilemapData(default,set):TilemapData = null;
     function set_tilemapData(tilemapData:TilemapData):TilemapData {
         if (this.tilemapData == tilemapData) return tilemapData;
         this.tilemapData = tilemapData;
         contentDirty = true;
+        collidableLayersDirty = true;
         for (i in 0...layers.length) {
             var layer = layers.unsafeGet(i);
             layer.contentDirty = true;
@@ -245,7 +258,7 @@ class Tilemap extends Quad {
 
     @:allow(ceramic.ArcadeWorld)
     function computeCollidableLayers():Void {
-        
+
         if (contentDirty)
             computeContent();
 

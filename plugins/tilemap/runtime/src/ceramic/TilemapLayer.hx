@@ -232,6 +232,7 @@ class TilemapLayer extends Visual {
     function computeTileQuads(tilemap:Tilemap, tilemapData:TilemapData) {
 
         var usedQuads = 0;
+        var roundTilesTranslation = tilemap.roundTilesTranslation;
 
         var width = _width;
         var height = _height;
@@ -377,6 +378,7 @@ class TilemapLayer extends Visual {
                             tileQuadMapping.set(t, usedQuads);
 
                             quad.tilemapTile = tile;
+                            quad.roundTranslation = roundTilesTranslation;
                             quad.color = color;
                             quad.index = t;
                             quad.column = column;
