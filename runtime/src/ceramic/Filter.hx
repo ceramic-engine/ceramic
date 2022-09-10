@@ -232,7 +232,6 @@ class Filter extends Layer implements Observable {
                         tile = textureTile;
                     }
                     else {
-                        trace('new render texture depth=$depthBuffer');
                         renderTexture = new RenderTexture(filterWidth, filterHeight, density, depthBuffer, stencil, antialiasing);
                         renderTexture.id = textureId;
                         renderTexture.filter = textureFilter;
