@@ -9,6 +9,51 @@ class TilemapLayer extends Visual {
     #if plugin_arcade
 
     /**
+     * Shorthand to set `checkCollisionUp`, `checkCollisionRight`, `checkCollisionDown`, `checkCollisionLeft`
+     */
+    public extern inline overload function checkCollision(upDown:Bool, rightLeft:Bool) {
+        _checkCollision(upDown, rightLeft, upDown, rightLeft);
+    }
+
+    /**
+     * Shorthand to set `checkCollisionUp`, `checkCollisionRight`, `checkCollisionDown`, `checkCollisionLeft`
+     */
+    public extern inline overload function checkCollision(up:Bool, right:Bool, down:Bool, left:Bool) {
+        _checkCollision(up, right, down, left);
+    }
+
+    private function _checkCollision(up:Bool, right:Bool, down:Bool, left:Bool) {
+        checkCollisionUp = up;
+        checkCollisionRight = right;
+        checkCollisionDown = down;
+        checkCollisionLeft = left;
+    }
+
+    /**
+     * If this layer is collidable, this determines if it will collide `up`.
+     * (when a body is going `downward` torward the tile)
+     */
+    public var checkCollisionUp:Bool = true;
+
+    /**
+     * If this layer is collidable, this determines if it will collide `down`.
+     * (when a body is going `upward` toward a tile)
+     */
+    public var checkCollisionDown:Bool = true;
+
+    /**
+     * If this layer is collidable, this determines if it will collide `left`.
+     * (when a body is going `rightward` toward the tile)
+     */
+    public var checkCollisionLeft:Bool = true;
+
+    /**
+     * If this layer is collidable, this determines if it will collide `right`.
+     * (when a body is going `leftward` toward the tile)
+     */
+    public var checkCollisionRight:Bool = true;
+
+    /**
      * Internal flag used when walking through layers
      */
     @:allow(ceramic.Tilemap)

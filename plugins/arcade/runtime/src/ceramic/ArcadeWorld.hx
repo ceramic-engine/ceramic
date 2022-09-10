@@ -630,6 +630,12 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             if (maxRow >= layerData.height)
                 maxRow = layerData.height - 1;
 
+            tileBody.checkCollisionUp = layer.checkCollisionUp;
+            tileBody.checkCollisionRight = layer.checkCollisionRight;
+            tileBody.checkCollisionDown = layer.checkCollisionDown;
+            tileBody.checkCollisionLeft = layer.checkCollisionLeft;
+            tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
+
             var column = minColumn;
             while (column <= maxColumn) {
                 var row = minRow;
