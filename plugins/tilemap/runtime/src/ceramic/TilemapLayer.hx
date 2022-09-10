@@ -312,12 +312,17 @@ class TilemapLayer extends Visual {
                     maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / tilemapData.tileHeight);
                 }
 
-
+                var numTiles = tiles.length;
                 var c = minColumn;
                 while (c <= maxColumn) {
                     var r = minRow;
                     while (r <= maxRow) {
                         var t = r * layerWidth + c;
+
+                        if (t < 0 || t > numTiles) {
+                            r++;
+                            continue;
+                        }
 
                         var tile = tiles.unsafeGet(t);
 
@@ -359,7 +364,7 @@ class TilemapLayer extends Visual {
 
                             var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
                             if (quad == null) {
-                                quad = new TilemapQuad();
+                                quad = TilemapQuad.get();
                                 quad.anchor(0.5, 0.5);
                                 quad.inheritAlpha = true;
                                 tileQuads.push(quad);
@@ -435,9 +440,8 @@ class TilemapLayer extends Visual {
 
         // Remove unused quads
         while (usedQuads < tileQuads.length) {
-            // TODO find a way to recycle this quads on the whole tilemap
             var quad = tileQuads.pop();
-            quad.destroy();
+            quad.recycle();
         }
 
         emitTileQuadsChange();
