@@ -1,6 +1,5 @@
 package ceramic;
 
-import haxe.ds.ReadOnlyArray;
 import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;

@@ -34,15 +34,19 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             case Body: return Body;
             #if plugin_tilemap
             case Tilemap: return Tilemap;
+            case TilemapLayer: return TilemapLayer;
             #end
             case arcade.Group: return arcade.Group;
             default:
-                #if plugin_tilemap
-                if (Std.isOfType(element, Tilemap))
-                    return Tilemap;
-                #end
-                if (Std.isOfType(element, Visual))
+                if (Std.isOfType(element, Visual)) {
+                    #if plugin_tilemap
+                    if (Std.isOfType(element, Tilemap))
+                        return Tilemap;
+                    if (Std.isOfType(element, TilemapLayer))
+                        return TilemapLayer;
+                    #end
                     return Visual;
+                }
                 if (Std.isOfType(element, Group))
                     return Group;
                 if (Std.isOfType(element, Body))
@@ -85,6 +89,9 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         case Tilemap:
                             var visual1:Visual = cast element1;
                             return overlapBodyVsTilemap(visual1.body, cast element2, overlapCallback, processCallback);
+                        case TilemapLayer:
+                            var visual1:Visual = cast element1;
+                            return overlapBodyVsTilemapLayer(visual1.body, cast element2, overlapCallback, processCallback);
                         #end
                     }
                 case Group:
@@ -102,6 +109,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return overlapCeramicGroupVsTilemap(cast element1, cast element2, overlapCallback, processCallback);
+                        case TilemapLayer:
+                            return overlapCeramicGroupVsTilemapLayer(cast element1, cast element2, overlapCallback, processCallback);
                         #end
                     }
                 case arcade.Group:
@@ -119,6 +128,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return overlapArcadeGroupVsTilemap(cast element1, cast element2, overlapCallback, processCallback);
+                        case TilemapLayer:
+                            return overlapArcadeGroupVsTilemapLayer(cast element1, cast element2, overlapCallback, processCallback);
                         #end
                     }
                 case Body:
@@ -136,6 +147,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return overlapBodyVsTilemap(cast element1, cast element2, overlapCallback, processCallback);
+                        case TilemapLayer:
+                            return overlapBodyVsTilemapLayer(cast element1, cast element2, overlapCallback, processCallback);
                         #end
                     }
                 #if plugin_tilemap
@@ -151,6 +164,19 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             return overlapArcadeGroupVsTilemap(cast element2, cast element1, overlapCallback, processCallback);
                         case Body:
                             return overlapBodyVsTilemap(cast element2, cast element1, overlapCallback, processCallback);
+                    }
+                case TilemapLayer:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return overlapBodyVsTilemapLayer(visual2.body, cast element1, overlapCallback, processCallback);
+                        case Group:
+                            return overlapCeramicGroupVsTilemapLayer(cast element2, cast element1, overlapCallback, processCallback);
+                        case arcade.Group:
+                            return overlapArcadeGroupVsTilemapLayer(cast element2, cast element1, overlapCallback, processCallback);
+                        case Body:
+                            return overlapBodyVsTilemapLayer(cast element2, cast element1, overlapCallback, processCallback);
                     }
                 #end
             }
@@ -274,8 +300,23 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         _total = 0;
 
         var objects = group.items;
+        var filteredObjects = null;
+
+        var quadTree:arcade.QuadTree = null;
+        if (!skipQuadTree && objects.length > maxObjectsWithoutQuadTree) {
+            quadTree = getQuadTree();
+            for (i in 0...objects.length) {
+                var object = objects.unsafeGet(i);
+                var aBody = object.body;
+                if (aBody != null) {
+                    quadTree.insert(aBody);
+                }
+            }
+            filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+        }
+
         for (i in 0...objects.length) {
-            var body2 = objects[i].body;
+            var body2 = filteredObjects != null ? filteredObjects.unsafeGet(i) : objects[i].body;
 
             if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
             {
@@ -287,6 +328,9 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 _total++;
             }
         }
+
+        if (quadTree != null)
+            releaseQuadTree(quadTree);
 
         return (_total > 0);
 
@@ -335,6 +379,9 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         case Tilemap:
                             var visual1:Visual = cast element1;
                             return collideBodyVsTilemap(visual1.body, cast element2, collideCallback, processCallback);
+                        case TilemapLayer:
+                            var visual1:Visual = cast element1;
+                            return collideBodyVsTilemapLayer(visual1.body, cast element2, collideCallback, processCallback);
                         #end
                     }
                 case Group:
@@ -352,6 +399,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return collideCeramicGroupVsTilemap(cast element1, cast element2, collideCallback, processCallback);
+                        case TilemapLayer:
+                            return collideCeramicGroupVsTilemapLayer(cast element1, cast element2, collideCallback, processCallback);
                         #end
                     }
                 case arcade.Group:
@@ -369,6 +418,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return collideArcadeGroupVsTilemap(cast element1, cast element2, collideCallback, processCallback);
+                        case TilemapLayer:
+                            return collideArcadeGroupVsTilemapLayer(cast element1, cast element2, collideCallback, processCallback);
                         #end
                     }
                 case Body:
@@ -386,6 +437,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         #if plugin_tilemap
                         case Tilemap:
                             return collideBodyVsTilemap(cast element1, cast element2, collideCallback, processCallback);
+                        case TilemapLayer:
+                            return collideBodyVsTilemapLayer(cast element1, cast element2, collideCallback, processCallback);
                         #end
                     }
                 #if plugin_tilemap
@@ -401,6 +454,19 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             return collideArcadeGroupVsTilemap(cast element2, cast element1, collideCallback, processCallback);
                         case Body:
                             return collideBodyVsTilemap(cast element2, cast element1, collideCallback, processCallback);
+                    }
+                case TilemapLayer:
+                    switch getCollidableType(element2) {
+                        default:
+                        case Visual:
+                            var visual2:Visual = cast element2;
+                            return collideBodyVsTilemapLayer(visual2.body, cast element1, collideCallback, processCallback);
+                        case Group:
+                            return collideCeramicGroupVsTilemapLayer(cast element2, cast element1, collideCallback, processCallback);
+                        case arcade.Group:
+                            return collideArcadeGroupVsTilemapLayer(cast element2, cast element1, collideCallback, processCallback);
+                        case Body:
+                            return collideBodyVsTilemapLayer(cast element2, cast element1, collideCallback, processCallback);
                     }
                 #end
             }
@@ -524,8 +590,23 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         _total = 0;
 
         var objects = group.items;
+        var filteredObjects = null;
+
+        var quadTree:arcade.QuadTree = null;
+        if (!skipQuadTree && objects.length > maxObjectsWithoutQuadTree) {
+            quadTree = getQuadTree();
+            for (i in 0...objects.length) {
+                var object = objects.unsafeGet(i);
+                var aBody = object.body;
+                if (aBody != null) {
+                    quadTree.insert(aBody);
+                }
+            }
+            filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+        }
+
         for (i in 0...objects.length) {
-            var body2 = objects[i].body;
+            var body2 = filteredObjects != null ? filteredObjects.unsafeGet(i) : objects[i].body;
 
             if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
             {
@@ -538,17 +619,14 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             }
         }
 
+        if (quadTree != null)
+            releaseQuadTree(quadTree);
+
         return (_total > 0);
 
     }
 
 #if plugin_tilemap
-
-    // /**
-    //  * A cache of tilemap tile bodies.
-    //  * Key is `tileWidth * 10000 + tileHeight` and value is an array of bodies by tile index
-    //  */
-    // var tileBodies:IntMap<Array<Body>> = new IntMap();
 
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
@@ -562,6 +640,18 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    public function collideBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        return inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
+
+    }
+
+    public function overlapBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        return inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
+
+    }
+
     /**
      * A body instance used internally to perform tilemap collisions
      */
@@ -570,11 +660,6 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
     function separateBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool, overlapOnly:Bool = false):Bool {
 
         _total = 0;
-
-        if (tileBody == null) {
-            tileBody = new Body(0, 0, 1, 1);
-            tileBody.immovable = true;
-        }
 
         if (tilemap.collidableLayersDirty) {
             tilemap.computeCollidableLayers();
@@ -599,6 +684,11 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
     function separateBodyVsTilemapLayer(body:Body, layer:TilemapLayer, collideCallback:Body->Body->Void, processCallback:Body->Body->Bool, overlapOnly:Bool) {
 
         _total = 0;
+
+        if (tileBody == null) {
+            tileBody = new Body(0, 0, 1, 1);
+            tileBody.immovable = true;
+        }
 
         var layerData = layer.layerData;
         if (layerData != null) {
@@ -707,7 +797,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             }
         }
 
-        return _total;
+        return (_total > 0);
 
     }
 
@@ -733,6 +823,28 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    public function collideCeramicGroupVsTilemapLayer(group:Group<Visual>, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group);
+        }
+
+        _total = 0;
+
+        var objects = group.items;
+        for (i in 0...objects.length) {
+            var body = objects[i].body;
+            if (body != null) {
+                var total = _total;
+                separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
+                _total += total;
+            }
+        }
+
+        return (_total > 0);
+
+    }
+
     public function collideArcadeGroupVsTilemap(group:arcade.Group, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -746,6 +858,26 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             var body = objects[i];
             var total = _total;
             separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
+            _total += total;
+        }
+
+        return (_total > 0);
+
+    }
+
+    public function collideArcadeGroupVsTilemapLayer(group:arcade.Group, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group);
+        }
+
+        _total = 0;
+
+        var objects = group.objects;
+        for (i in 0...objects.length) {
+            var body = objects[i];
+            var total = _total;
+            separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
             _total += total;
         }
 
@@ -775,6 +907,28 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    public function overlapCeramicGroupVsTilemapLayer(group:Group<Visual>, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group);
+        }
+
+        _total = 0;
+
+        var objects = group.items;
+        for (i in 0...objects.length) {
+            var body = objects[i].body;
+            if (body != null) {
+                var total = _total;
+                separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
+                _total += total;
+            }
+        }
+
+        return (_total > 0);
+
+    }
+
     public function overlapArcadeGroupVsTilemap(group:arcade.Group, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -788,6 +942,26 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             var body = objects[i];
             var total = _total;
             separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
+            _total += total;
+        }
+
+        return (_total > 0);
+
+    }
+
+    public function overlapArcadeGroupVsTilemapLayer(group:arcade.Group, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group);
+        }
+
+        _total = 0;
+
+        var objects = group.objects;
+        for (i in 0...objects.length) {
+            var body = objects[i];
+            var total = _total;
+            separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
             _total += total;
         }
 
