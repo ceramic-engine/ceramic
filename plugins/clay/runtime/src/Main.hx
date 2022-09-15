@@ -180,6 +180,11 @@ class Main {
         config.render.stencil = 2;
         config.render.depth = 16;
 
+        #if ios
+        // By default, audio is muted by device mute switch
+        sdl.SDL.setHint("SDL_AUDIO_CATEGORY", "ambient");
+        #end
+
         configureOrientation();
 
         #if cpp
