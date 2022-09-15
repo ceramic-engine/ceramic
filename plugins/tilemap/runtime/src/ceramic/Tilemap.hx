@@ -34,7 +34,9 @@ class Tilemap extends Quad {
         if (this.tilemapData == tilemapData) return tilemapData;
         this.tilemapData = tilemapData;
         contentDirty = true;
+        #if plugin_arcade
         collidableLayersDirty = true;
+        #end
         for (i in 0...layers.length) {
             var layer = layers.unsafeGet(i);
             layer.contentDirty = true;
