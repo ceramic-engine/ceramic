@@ -732,7 +732,13 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 while (row <= maxRow) {
                     var index = row * layerData.width + column;
                     var tile = layerData.tiles.unsafeGet(index);
-                    if (tile.gid > 0) {
+                    var gid = tile.gid;
+                    if (gid > 0) {
+
+                        // Check if there is a slop assigned to this tile
+                        var tileset = tilemapData.tilesetForGid(gid);
+                        var slope = tileset.slope(gid);
+
                         // We reuse the same body for every tile collision
                         tileBody.reset(
                             offsetX + column * tileWidth,
