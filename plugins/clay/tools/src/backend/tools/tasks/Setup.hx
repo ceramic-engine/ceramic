@@ -240,6 +240,7 @@ ${haxeflagsHxml.join('\n')}
         // Save hxml file
         File.saveContent(hxmlPath, hxmlFileContent);
         Files.setToSameLastModified(projectPath, hxmlPath);
+
         print('Updated clay hxml at: $hxmlPath');
 
         var availableTargets = context.backend.getBuildTargets();
@@ -247,13 +248,15 @@ ${haxeflagsHxml.join('\n')}
         if (targetName == 'default') targetName = 'web';
 
         // Run initial project setup if needed
-        runInitialProjectSetupIfNeeded(cwd, args);
+        runInitialProjectSetupIfNeeded(cwd, args, targetPath);
 
     }
 
-    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>):Void {
+    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>, targetPath:String):Void {
 
-        if (FileSystem.exists(Path.join([cwd, 'completion.hxml']))) {
+        var projectHxmlPath = Path.join([targetPath, 'project.hxml']);
+
+        if (FileSystem.exists(projectHxmlPath)) {
             return; // Project seems ready
         }
 
@@ -268,7 +271,7 @@ ${haxeflagsHxml.join('\n')}
 
         // Default to web target
         runCeramic(cwd, ['clay', 'libs', 'web']);
-        runCeramic(cwd, ['clay', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml'].concat(extraArgs));
+        runCeramic(cwd, ['clay', 'build', 'web', '--assets'].concat(extraArgs));
 
     }
 
