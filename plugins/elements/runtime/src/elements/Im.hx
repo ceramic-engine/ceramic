@@ -54,8 +54,11 @@ import ceramic.SpineData;
 import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
+import haxe.macro.Printer;
 import sys.FileSystem;
 import sys.io.File;
+
+using haxe.macro.Tools;
 #end
 
 
@@ -889,7 +892,7 @@ class Im {
 
     }
 
-    public inline extern static overload function select(?title:String, value:StringPointer, list:Array<String>, labelPosition:LabelPosition = RIGHT, labelWidth:Float = DEFAULT_LABEL_WIDTH, ?nullValueText:String):Bool {
+    public inline extern static overload function select(?title:String, value:StringPointer, list:Array<String>, ?nullValueText:String):Bool {
 
         var index:Int = list.indexOf(Im.readString(value));
         var changed = false;
@@ -904,8 +907,17 @@ class Im {
 
     public inline extern static overload function select(?title:String, value:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
 
-        return _select(title, value, list, nullValueText);
+        var changed = false;
+        if (_select(title, value, list, nullValueText)) {
+            changed = true;
+            _markChanged();
+        }
+        return changed;
 
+    }
+
+    public inline extern static overload function select(?title:String, value:EnumValuePointer, enumType:Dynamic, ?list:Array<String>, ?nullValueText:String):Bool {
+        return _selectEnum(title, value, enumType, list, nullValueText);
     }
 
     static function _select(?title:String, index:IntPointer, list:Array<String>, ?nullValueText:String):Bool {
@@ -941,6 +953,38 @@ class Im {
         }
 
         return false;
+
+    }
+
+    static function _selectEnum(?title:String, value:EnumValuePointer, enumType:Dynamic, list:Array<String>, nullValueText:String):Bool {
+
+        var enumValue:Dynamic = Im.readEnumValue(value);
+        var strValue:String = null;
+        if (list == null) {
+            if (Std.isOfType(enumType, EnumAbstractInfo)) {
+                var abstractInfo:EnumAbstractInfo = cast enumType;
+                list = abstractInfo.getEnumFields();
+                strValue = abstractInfo.getEnumFieldFromValue(enumValue);
+            }
+            else {
+                var enumTypeAsEnum:Enum<Dynamic> = enumType;
+                list = enumTypeAsEnum.getConstructors();
+                strValue = enumValue != null ? ''+enumValue : null;
+            }
+        }
+        var changed = false;
+        changed = select(title, Im.string(strValue), list, nullValueText);
+        if (changed) {
+            if (Std.isOfType(enumType, EnumAbstractInfo)) {
+                var abstractInfo:EnumAbstractInfo = cast enumType;
+                Im.writeEnumValue(value, abstractInfo.createEnumValue(strValue));
+            }
+            else {
+                var index = strValue != null ? list.indexOf(strValue) : -1;
+                Im.writeEnumValue(value, index != -1 ? Type.createEnum(enumType, list[index], []) : null);
+            }
+        }
+        return changed;
 
     }
 
@@ -2887,6 +2931,20 @@ class Im {
 
     }
 
+    inline public static function readEnumValue(enumValuePointer:EnumValuePointer):Dynamic {
+
+        var func:Dynamic = enumValuePointer;
+        return func(null, false);
+
+    }
+
+    inline public static function writeEnumValue(enumValuePointer:EnumValuePointer, value:Dynamic):Void {
+
+        var func:Dynamic = enumValuePointer;
+        func(value, value == null);
+
+    }
+
     inline public static function readBool(boolPointer:BoolPointer):Bool {
 
         return boolPointer();
@@ -3058,6 +3116,71 @@ class Im {
                     return _val != null || erase ? $value = _val : $value;
                 };
         }
+
+    }
+
+    macro public static function enumValue<T>(value:Expr):ExprOf<EnumValuePointer> {
+
+        if (Context.defined('cs')) {
+            // C# target and its quirks...
+            switch value.expr {
+                case _:
+                    var enumType = Context.typeExpr(value).t.follow();
+                    switch enumType {
+                        case TEnum(t, params):
+                            return macro function(?_val:Dynamic, ?erase:Dynamic):Dynamic {
+                                return _val != null || erase ? $value = _val : $value;
+                            };
+                        case TAbstract(t, params):
+                            return macro function(?_val:Dynamic, ?erase:Dynamic):Dynamic {
+                                return _val != null || erase ? $value = _val : $value;
+                            };
+                        case _:
+                            return macro null;
+                    }
+                    return macro null;
+            }
+        }
+        else {
+            switch value.expr {
+                case _:
+                    var enumType = Context.typeExpr(value).t.follow();
+                    switch enumType {
+                        case TEnum(t, params):
+                            return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
+                                return _val != null || erase ? $value = _val : $value;
+                            };
+                        case TAbstract(t, params):
+                            return macro function(?_val:Dynamic, ?erase:Bool):Dynamic {
+                                return _val != null || erase ? $value = _val : $value;
+                            };
+                        case _:
+                            return macro null;
+                    }
+                    return macro null;
+            }
+        }
+
+    }
+
+    macro public static function enumAbstract(value:Expr):Expr {
+
+        var type = Context.getType(value.toString()).follow();
+        switch type {
+            case TAbstract(_.get() => ab, _) if (ab.meta.has(":enum")):
+                var fieldExprs = [];
+                var valueExprs = [];
+                for (field in ab.impl.get().statics.get()) {
+                    if (field.meta.has(":enum") && field.meta.has(":impl")) {
+                        var fieldName = field.name;
+                        fieldExprs.push(macro $v{fieldName});
+                        valueExprs.push(macro $value.$fieldName);
+                    }
+                }
+                return macro new elements.EnumAbstractInfo($a{fieldExprs}, $a{valueExprs});
+            default:
+        }
+        return macro null;
 
     }
 
