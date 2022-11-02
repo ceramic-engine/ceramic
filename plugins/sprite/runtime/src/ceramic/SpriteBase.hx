@@ -92,6 +92,14 @@ class SpriteBase<T> extends Visual {
 
     }
 
+    #if cs
+    function _updateIfNotPausedAndAutoUpdating(delta:Float) {
+        if (!paused && autoUpdate) {
+            update(delta);
+        }
+    }
+    #end
+
     public function update(delta:Float):Void {
 
         // Process current animation (if needed)
