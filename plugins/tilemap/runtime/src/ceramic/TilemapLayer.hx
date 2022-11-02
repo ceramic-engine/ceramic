@@ -319,7 +319,7 @@ class TilemapLayer extends Visual {
                     while (r <= maxRow) {
                         var t = r * layerWidth + c;
 
-                        if (t < 0 || t > numTiles) {
+                        if (t < 0 || t >= numTiles) {
                             r++;
                             continue;
                         }
