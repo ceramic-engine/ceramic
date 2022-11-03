@@ -2,6 +2,8 @@ package ceramic;
 
 import ceramic.Assert.assert;
 
+using ceramic.Extensions;
+
 #if (!documentation && (cpp || cs))
 
 import haxe.ds.Vector;
@@ -71,7 +73,7 @@ class IntIntMap {
 
         data = new Vector(capacity * 2);
         threshold = Std.int(capacity * fillFactor);
-        
+
         if (iterable) {
             iterableKeys = [];
             iterableKeysUsed = new IntBoolMap();
@@ -88,10 +90,10 @@ class IntIntMap {
         for (i in 0...data.length) {
             data.set(i, NO_VALUE);
         }
-        
+
         if (iterableKeys != null) {
             iterableKeys = [];
-            iterableKeysUsed = new IntBoolMap();
+            iterableKeysUsed = new IntBoolMap(); // TODO use clear()
         }
 
     }
@@ -381,7 +383,7 @@ class IntIntMap {
     }
 
     public function copy():IntIntMap {
-        
+
         var map = new IntIntMap();
 
         map.data = data.copy();
@@ -397,6 +399,18 @@ class IntIntMap {
 
         return map;
 
+    }
+
+    public inline function iterator():IntIntMapIterator {
+        return new IntIntMapIterator(this);
+    }
+
+    public inline function keys():IntIntMapKeyIterator {
+        return new IntIntMapKeyIterator(this);
+    }
+
+    public inline function keyValueIterator():IntIntMapKeyValueIterator {
+        return new IntIntMapKeyValueIterator(this);
     }
 
 /// Tools
@@ -436,42 +450,59 @@ class IntIntMap {
            var h = x * INT_PHI;
            return h ^ (h >> 16);
 
-       }
+    }
 
 }
 
 #else
 
-abstract IntIntMap(Map<Int,Int>) {
+class IntIntMap {
 
-    inline public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
-        this = new Map<Int,Int>();
-    }
+    /**
+     * Backing map
+     */
+    var intMap:Map<Int,Int>;
 
-    inline public function clear() {
-        this.clear();
-    }
+    /**
+     * When this map is marked as iterable, this array will contain every key.
+     */
+    public var iterableKeys(default,null):Array<Int> = null;
+    var iterableKeysUsed:IntBoolMap = null;
 
-    public var size(get,never):Int;
-    inline function get_size():Int {
-        return Lambda.count(this);
-    }
+    public var size(default,null):Int = 0;
 
-    public var iterableKeys(get,never):Array<Int>;
-    inline function get_iterableKeys():Array<Int> {
-        var keys:Array<Int> = [];
-        for (k in this.keys()) {
-            keys.push(k);
+    public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
+        intMap = new Map<Int,Int>();
+
+        if (iterable) {
+            iterableKeys = [];
+            iterableKeysUsed = new IntBoolMap();
         }
-        return keys;
+    }
+
+    public function clear() {
+        intMap.clear();
+        size = 0;
+        if (iterableKeys != null) {
+            iterableKeys = [];
+            iterableKeysUsed = new IntBoolMap(); // TODO use clear()
+        }
     }
 
     inline public function exists(key:Int):Bool {
         return existsInline(key);
     }
 
-    inline public function set(key:Int, value:Int):Int {
-        this.set(Std.int(key), value);
+    public function set(key:Int, value:Int):Int {
+        if (iterableKeys != null && !iterableKeysUsed.get(key)) {
+            iterableKeysUsed.set(key, true);
+            iterableKeys.push(key);
+        }
+        var k = Std.int(key);
+        if (!intMap.exists(k)) {
+            size++;
+        }
+        intMap.set(k, Std.int(value));
         return value;
     }
 
@@ -479,23 +510,143 @@ abstract IntIntMap(Map<Int,Int>) {
         return getInline(key);
     }
 
-    inline public function remove(key:Int):Int {
-        return this.remove(Std.int(key)) ? 1 : 0;
+    public function remove(key:Int):Int {
+        var k = Std.int(key);
+        var prev:Int = 0;
+        if (iterableKeys != null && iterableKeysUsed.get(key)) {
+            iterableKeysUsed.set(key, false);
+            iterableKeys.splice(iterableKeys.indexOf(key), 1);
+        }
+        if (intMap.exists(k)) {
+            prev = intMap.get(k);
+            size--;
+        }
+        intMap.remove(k);
+        return prev;
     }
 
     inline public function getInline(key:Int):Int {
-        var value = this.get(Std.int(key));
+        var value = intMap.get(Std.int(key));
         return value != null ? value : 0;
     }
 
     inline public function existsInline(key:Int):Bool {
-        return this.exists(Std.int(key));
+        return intMap.exists(Std.int(key));
     }
 
     inline public function copy():IntIntMap {
-        return cast this.copy();
+
+        var map = new IntIntMap();
+
+        map.intMap = intMap.copy();
+        map.size = size;
+        map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
+        map.iterableKeysUsed = iterableKeysUsed != null ? iterableKeysUsed.copy() : null;
+
+        return map;
+
+    }
+
+    inline public function iterator():IntIntMapIterator {
+        return new IntIntMapIterator(this);
+    }
+
+    inline public function keys():IntIntMapKeyIterator {
+        return new IntIntMapKeyIterator(this);
+    }
+
+    inline public function keyValueIterator():IntIntMapKeyValueIterator {
+        return new IntIntMapKeyValueIterator(this);
     }
 
 }
 
 #end
+
+@:allow(ceramic.IntIntMap)
+class IntIntMapIterator {
+
+    var intIntMap:IntIntMap;
+    var i:Int;
+    var len:Int;
+
+    inline private function new(intIntMap:IntIntMap) {
+
+        this.intIntMap = intIntMap;
+        i = 0;
+        var iterableKeys = this.intIntMap.iterableKeys;
+        len = iterableKeys != null ? iterableKeys.length : -1;
+
+    }
+
+    inline public function hasNext():Bool {
+        return i < len;
+    }
+
+    inline public function next():Int {
+
+        var n = i++;
+        var k = intIntMap.iterableKeys.unsafeGet(n);
+        return intIntMap.get(k);
+
+    }
+
+}
+
+@:allow(ceramic.IntIntMap)
+class IntIntMapKeyIterator {
+
+    var iterableKeys:Array<Int>;
+    var i:Int;
+    var len:Int;
+
+    inline private function new(intIntMap:IntIntMap) {
+
+        i = 0;
+        iterableKeys = intIntMap.iterableKeys;
+        len = iterableKeys != null ? iterableKeys.length : -1;
+
+    }
+
+    inline public function hasNext():Bool {
+        return i < len;
+    }
+
+    inline public function next():Int {
+
+        var n = i++;
+        return iterableKeys.unsafeGet(n);
+
+    }
+
+}
+
+@:allow(ceramic.IntIntMap)
+class IntIntMapKeyValueIterator {
+
+    var intIntMap:IntIntMap;
+    var i:Int;
+    var len:Int;
+
+    inline private function new(intIntMap:IntIntMap) {
+
+        this.intIntMap = intIntMap;
+        i = 0;
+        var iterableKeys = this.intIntMap.iterableKeys;
+        len = iterableKeys != null ? iterableKeys.length : -1;
+
+    }
+
+    inline public function hasNext():Bool {
+        return i < len;
+    }
+
+    inline public function next():{ key:Int, value:Int } {
+
+        var n = i++;
+        var k = intIntMap.iterableKeys.unsafeGet(n);
+        return { key: k, value: intIntMap.get(k) };
+
+    }
+
+}
