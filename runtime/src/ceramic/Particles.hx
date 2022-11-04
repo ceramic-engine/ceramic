@@ -309,302 +309,692 @@ class Particles<T:ParticleEmitter> extends Visual {
     inline function get_emitterVelocityEndMaxY():Float return emitter.velocityEndMaxY;
     inline function set_emitterVelocityEndMaxY(velocityEndMaxY:Float):Float return emitter.velocityEndMaxY = velocityEndMaxY;
 
-    #if nope
     /**
      * Set the speed range of particles launched from this emitter. Only used with `CIRCLE`.
      */
-    public var speedStartMin:Float = 0;
+    @editable({ label: 'Speed Start Min', group: 'emitterSpeedStart' })
+    public var emitterSpeedStartMin(get,set):Float;
+    inline function get_emitterSpeedStartMin():Float return emitter.speedStartMin;
+    inline function set_emitterSpeedStartMin(speedStartMin:Float):Float return emitter.speedStartMin = speedStartMin;
     /**
      * Set the speed range of particles launched from this emitter. Only used with `CIRCLE`.
      */
-    public var speedStartMax:Float = 100;
+    @editable({ label: 'Speed Start Max', group: 'emitterSpeedStart' })
+    public var emitterSpeedStartMax(get,set):Float;
+    inline function get_emitterSpeedStartMax():Float return emitter.speedStartMax;
+    inline function set_emitterSpeedStartMax(speedStartMax:Float):Float return emitter.speedStartMax = speedStartMax;
+
     /**
      * Set the speed range of particles launched from this emitter. Only used with `CIRCLE`.
      */
-    public var speedEndMin:Float = 0;
+    @editable({ label: 'Speed End Min', group: 'emitterSpeedEnd' })
+    public var emitterSpeedEndMin(get,set):Float;
+    inline function get_emitterSpeedEndMin():Float return emitter.speedEndMin;
+    inline function set_emitterSpeedEndMin(speedEndMin:Float):Float return emitter.speedEndMin = speedEndMin;
     /**
      * Set the speed range of particles launched from this emitter. Only used with `CIRCLE`.
      */
-    public var speedEndMax:Float = 100;
-    
+    @editable({ label: 'Speed End Max', group: 'emitterSpeedEnd' })
+    public var emitterSpeedEndMax(get,set):Float;
+    inline function get_emitterSpeedEndMax():Float return emitter.speedEndMax;
+    inline function set_emitterSpeedEndMax(speedEndMax:Float):Float return emitter.speedEndMax = speedEndMax;
+
     /**
      * Use in conjunction with angularAcceleration for fluid spin speed control.
      */
-    public var maxAngularVelocity:Float = 10000;
-
+    @editable({ label: 'Max Angular Vel.', group: 'emitterAngularVelocityAcceleration' })
+    public var emitterMaxAngularVelocity(get,set):Float;
+    inline function get_emitterMaxAngularVelocity():Float return emitter.maxAngularVelocity;
+    inline function set_emitterMaxAngularVelocity(maxAngularVelocity:Float):Float return emitter.maxAngularVelocity = maxAngularVelocity;
     /**
      * Enable or disable the angular acceleration range of particles launched from this emitter.
      */
-    public var angularAccelerationActive:Bool = true;
+    @editable({ label: 'Angular Accel. Active', group: 'emitterAngularVelocityAcceleration' })
+    public var emitterAngularAccelerationActive(get,set):Bool;
+    inline function get_emitterAngularAccelerationActive():Bool return emitter.angularAccelerationActive;
+    inline function set_emitterAngularAccelerationActive(angularAccelerationActive:Bool):Bool return emitter.angularAccelerationActive = angularAccelerationActive;
+
     /**
      * Set the angular acceleration range of particles launched from this emitter.
      */
-    public var angularAccelerationStartMin:Float = 0;
+    @editable({ label: 'Angular Accel. Start Min', group: 'emitterAngularAccelerationStart' })
+    public var emitterAngularAccelerationStartMin(get,set):Float;
+    inline function get_emitterAngularAccelerationStartMin():Float return emitter.angularAccelerationStartMin;
+    inline function set_emitterAngularAccelerationStartMin(angularAccelerationStartMin:Float):Float return emitter.angularAccelerationStartMin = angularAccelerationStartMin;
     /**
      * Set the angular acceleration range of particles launched from this emitter.
      */
-    public var angularAccelerationStartMax:Float = 0;
+    @editable({ label: 'Angular Accel. Start Max', group: 'emitterAngularAccelerationStart' })
+    public var emitterAngularAccelerationStartMax(get,set):Float;
+    inline function get_emitterAngularAccelerationStartMax():Float return emitter.angularAccelerationStartMax;
+    inline function set_emitterAngularAccelerationStartMax(angularAccelerationStartMax:Float):Float return emitter.angularAccelerationStartMax = angularAccelerationStartMax;
 
     /**
      * Enable or disable the angular drag range of particles launched from this emitter.
      */
-    public var angularDragActive:Bool = true;
+    @editable({ label: 'Angular Drag Active' })
+    public var emitterAngularDragActive(get,set):Bool;
+    inline function get_emitterAngularDragActive():Bool return emitter.angularDragActive;
+    inline function set_emitterAngularDragActive(angularDragActive:Bool):Bool return emitter.angularDragActive = angularDragActive;
+
     /**
      * Set the angular drag range of particles launched from this emitter.
      */
-    public var angularDragStartMin:Float = 0;
+    @editable({ label: 'Angular Drag Start Min', group: 'emitterAngularDragStart' })
+    public var emitterAngularDragStartMin(get,set):Float;
+    inline function get_emitterAngularDragStartMin():Float return emitter.angularDragStartMin;
+    inline function set_emitterAngularDragStartMin(angularDragStartMin:Float):Float return emitter.angularDragStartMin = angularDragStartMin;
     /**
      * Set the angular drag range of particles launched from this emitter.
      */
-    public var angularDragStartMax:Float = 0;
+    @editable({ label: 'Angular Drag Start Max', group: 'emitterAngularDragStart' })
+    public var emitterAngularDragStartMax(get,set):Float;
+    inline function get_emitterAngularDragStartMax():Float return emitter.angularDragStartMax;
+    inline function set_emitterAngularDragStartMax(angularDragStartMax:Float):Float return emitter.angularDragStartMax = angularDragStartMax;
 
     /**
      * Enable or disable the angular velocity range of particles launched from this emitter.
      */
-    public var angularVelocityActive:Bool = true;
+    @editable({ label: 'Angular Vel. Active' })
+    public var emitterAngularVelocityActive(get,set):Bool;
+    inline function get_emitterAngularVelocityActive():Bool return emitter.angularVelocityActive;
+    inline function set_emitterAngularVelocityActive(angularVelocityActive:Bool):Bool return emitter.angularVelocityActive = angularVelocityActive;
+
     /**
      * The angular velocity range of particles launched from this emitter.
      */
-    public var angularVelocityStartMin:Float = 0;
+    @editable({ label: 'Angular Vel. Start Min', group: 'emitterAngularVelocityStart' })
+    public var emitterAngularVelocityStartMin(get,set):Float;
+    inline function get_emitterAngularVelocityStartMin():Float return emitter.angularVelocityStartMin;
+    inline function set_emitterAngularVelocityStartMin(angularVelocityStartMin:Float):Float return emitter.angularVelocityStartMin = angularVelocityStartMin;
     /**
      * The angular velocity range of particles launched from this emitter.
      */
-    public var angularVelocityStartMax:Float = 0;
+    @editable({ label: 'Angular Vel. Start Max', group: 'emitterAngularVelocityStart' })
+    public var emitterAngularVelocityStartMax(get,set):Float;
+    inline function get_emitterAngularVelocityStartMax():Float return emitter.angularVelocityStartMax;
+    inline function set_emitterAngularVelocityStartMax(angularVelocityStartMax:Float):Float return emitter.angularVelocityStartMax = angularVelocityStartMax;
+
     /**
      * The angular velocity range of particles launched from this emitter.
      */
-    public var angularVelocityEndMin:Float = 0;
+    @editable({ label: 'Angular Vel. End Min', group: 'emitterAngularVelocityEnd' })
+    public var emitterAngularVelocityEndMin(get,set):Float;
+    inline function get_emitterAngularVelocityEndMin():Float return emitter.angularVelocityEndMin;
+    inline function set_emitterAngularVelocityEndMin(angularVelocityEndMin:Float):Float return emitter.angularVelocityEndMin = angularVelocityEndMin;
     /**
      * The angular velocity range of particles launched from this emitter.
      */
-    public var angularVelocityEndMax:Float = 0;
+    @editable({ label: 'Angular Vel. End Max', group: 'emitterAngularVelocityEnd' })
+    public var emitterAngularVelocityEndMax(get,set):Float;
+    inline function get_emitterAngularVelocityEndMax():Float return emitter.angularVelocityEndMax;
+    inline function set_emitterAngularVelocityEndMax(angularVelocityEndMax:Float):Float return emitter.angularVelocityEndMax = angularVelocityEndMax;
 
     /**
      * Enable or disable the angle range of particles launched from this emitter.
      * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
      */
-    public var angleActive:Bool = true;
+    @editable({ label: 'Angle Active' })
+    public var emitterAngleActive(get,set):Bool;
+    inline function get_emitterAngleActive():Bool return emitter.angleActive;
+    inline function set_emitterAngleActive(angleActive:Bool):Bool return emitter.angleActive = angleActive;
+
     /**
      * The angle range of particles launched from this emitter.
      * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
      */
-    public var angleStartMin:Float = 0;
+    @editable({ label: 'Angle Start Min', group: 'emitterAngleStart' })
+    public var emitterAngleStartMin(get,set):Float;
+    inline function get_emitterAngleStartMin():Float return emitter.angleStartMin;
+    inline function set_emitterAngleStartMin(angleStartMin:Float):Float return emitter.angleStartMin = angleStartMin;
     /**
      * The angle range of particles launched from this emitter.
      * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
      */
-    public var angleStartMax:Float = 0;
+    @editable({ label: 'Angle Start Max', group: 'emitterAngleStart' })
+    public var emitterAngleStartMax(get,set):Float;
+    inline function get_emitterAngleStartMax():Float return emitter.angleStartMax;
+    inline function set_emitterAngleStartMax(angleStartMax:Float):Float return emitter.angleStartMax = angleStartMax;
+
     /**
      * The angle range of particles launched from this emitter.
      * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
      */
-    public var angleEndMin:Float = 0;
+    @editable({ label: 'Angle End Min', group: 'emitterAngleEnd' })
+    public var emitterAngleEndMin(get,set):Float;
+    inline function get_emitterAngleEndMin():Float return emitter.angleEndMin;
+    inline function set_emitterAngleEndMin(angleEndMin:Float):Float return emitter.angleEndMin = angleEndMin;
     /**
      * The angle range of particles launched from this emitter.
      * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
      */
-    public var angleEndMax:Float = 0;
+    @editable({ label: 'Angle End Max', group: 'emitterAngleEnd' })
+    public var emitterAngleEndMax(get,set):Float;
+    inline function get_emitterAngleEndMax():Float return emitter.angleEndMax;
+    inline function set_emitterAngleEndMax(angleEndMax:Float):Float return emitter.angleEndMax = angleEndMax;
 
     /**
      * Set this if you want to specify the beginning and ending value of angle,
      * instead of using `angularVelocity` (or `angularAcceleration`).
      */
-    public var ignoreAngularVelocity:Bool = false;
+    @editable({ label: 'Ignore Angular Vel.' })
+    public var emitterIgnoreAngularVelocity(get,set):Bool;
+    inline function get_emitterIgnoreAngularVelocity():Bool return emitter.ignoreAngularVelocity;
+    inline function set_emitterIgnoreAngularVelocity(ignoreAngularVelocity:Bool):Bool return emitter.ignoreAngularVelocity = ignoreAngularVelocity;
 
     /**
      * Enable or disable the angle range at which particles will be launched from this emitter.
      * Ignored unless `launchMode` is set to `CIRCLE`.
      */
-    public var launchAngleActive:Bool = true;
+    @editable({ label: 'Launch Angle Active' })
+    public var emitterLaunchAngleActive(get,set):Bool;
+    inline function get_emitterLaunchAngleActive():Bool return emitter.launchAngleActive;
+    inline function set_emitterLaunchAngleActive(launchAngleActive:Bool):Bool return emitter.launchAngleActive = launchAngleActive;
+
     /**
      * The angle range at which particles will be launched from this emitter.
      * Ignored unless `launchMode` is set to `CIRCLE`.
      */
-    public var launchAngleMin:Float = -180;
+    @editable({ label: 'Launch Angle Min', group: 'emitterLaunchAngle' })
+    public var emitterLaunchAngleMin(get,set):Float;
+    inline function get_emitterLaunchAngleMin():Float return emitter.launchAngleMin;
+    inline function set_emitterLaunchAngleMin(launchAngleMin:Float):Float return emitter.launchAngleMin = launchAngleMin;
     /**
      * The angle range at which particles will be launched from this emitter.
      * Ignored unless `launchMode` is set to `CIRCLE`.
      */
-    public var launchAngleMax:Float = 180;
+    @editable({ label: 'Launch Angle Max', group: 'emitterLaunchAngle' })
+    public var emitterLaunchAngleMax(get,set):Float;
+    inline function get_emitterLaunchAngleMax():Float return emitter.launchAngleMax;
+    inline function set_emitterLaunchAngleMax(launchAngleMax:Float):Float return emitter.launchAngleMax = launchAngleMax;
 
     /**
      * Enable or disable the life, or duration, range of particles launched from this emitter.
      */
-    public var lifespanActive:Bool = true;
+    @editable({ label: 'Lifespan Active' })
+    public var emitterLifespanActive(get,set):Bool;
+    inline function get_emitterLifespanActive():Bool return emitter.lifespanActive;
+    inline function set_emitterLifespanActive(lifespanActive:Bool):Bool return emitter.lifespanActive = lifespanActive;
+
     /**
      * The life, or duration, range of particles launched from this emitter.
      */
-    public var lifespanMin:Float = 3;
+    @editable({ label: 'Lifespan Min', group: 'emitterLifespan' })
+    public var emitterLifespanMin(get,set):Float;
+    inline function get_emitterLifespanMin():Float return emitter.lifespanMin;
+    inline function set_emitterLifespanMin(lifespanMin:Float):Float return emitter.lifespanMin = lifespanMin;
     /**
      * The life, or duration, range of particles launched from this emitter.
      */
-    public var lifespanMax:Float = 3;
+    @editable({ label: 'Lifespan Max', group: 'emitterLifespan' })
+    public var emitterLifespanMax(get,set):Float;
+    inline function get_emitterLifespanMax():Float return emitter.lifespanMax;
+    inline function set_emitterLifespanMax(lifespanMax:Float):Float return emitter.lifespanMax = lifespanMax;
 
     /**
      * Enable or disable `scale` range of particles launched from this emitter.
      */
-    public var scaleActive:Bool = true;
+    @editable({ label: 'Scale Active' })
+    public var emitterScaleActive(get,set):Bool;
+    inline function get_emitterScaleActive():Bool return emitter.scaleActive;
+    inline function set_emitterScaleActive(scaleActive:Bool):Bool return emitter.scaleActive = scaleActive;
+
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleStartMinX:Float = 1;
+    @editable({ label: 'Scale Start Min X', group: 'emitterScaleStartMin' })
+    public var emitterScaleStartMinX(get,set):Float;
+    inline function get_emitterScaleStartMinX():Float return emitter.scaleStartMinX;
+    inline function set_emitterScaleStartMinX(scaleStartMinX:Float):Float return emitter.scaleStartMinX = scaleStartMinX;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleStartMinY:Float = 1;
+    @editable({ label: 'Scale Start Min Y', group: 'emitterScaleStartMin' })
+    public var emitterScaleStartMinY(get,set):Float;
+    inline function get_emitterScaleStartMinY():Float return emitter.scaleStartMinY;
+    inline function set_emitterScaleStartMinY(scaleStartMinY:Float):Float return emitter.scaleStartMinY = scaleStartMinY;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleStartMaxX:Float = 1;
+    @editable({ label: 'Scale Start Max X', group: 'emitterScaleStartMax' })
+    public var emitterScaleStartMaxX(get,set):Float;
+    inline function get_emitterScaleStartMaxX():Float return emitter.scaleStartMaxX;
+    inline function set_emitterScaleStartMaxX(scaleStartMaxX:Float):Float return emitter.scaleStartMaxX = scaleStartMaxX;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleStartMaxY:Float = 1;
+    @editable({ label: 'Scale Start Max Y', group: 'emitterScaleStartMax' })
+    public var emitterScaleStartMaxY(get,set):Float;
+    inline function get_emitterScaleStartMaxY():Float return emitter.scaleStartMaxY;
+    inline function set_emitterScaleStartMaxY(scaleStartMaxY:Float):Float return emitter.scaleStartMaxY = scaleStartMaxY;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleEndMinX:Float = 1;
+    @editable({ label: 'Scale End Min X', group: 'emitterScaleEndMin' })
+    public var emitterScaleEndMinX(get,set):Float;
+    inline function get_emitterScaleEndMinX():Float return emitter.scaleEndMinX;
+    inline function set_emitterScaleEndMinX(scaleEndMinX:Float):Float return emitter.scaleEndMinX = scaleEndMinX;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleEndMinY:Float = 1;
+    @editable({ label: 'Scale End Min Y', group: 'emitterScaleEndMin' })
+    public var emitterScaleEndMinY(get,set):Float;
+    inline function get_emitterScaleEndMinY():Float return emitter.scaleEndMinY;
+    inline function set_emitterScaleEndMinY(scaleEndMinY:Float):Float return emitter.scaleEndMinY = scaleEndMinY;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleEndMaxX:Float = 1;
+    @editable({ label: 'Scale End Max X', group: 'emitterScaleEndMax' })
+    public var emitterScaleEndMaxX(get,set):Float;
+    inline function get_emitterScaleEndMaxX():Float return emitter.scaleEndMaxX;
+    inline function set_emitterScaleEndMaxX(scaleEndMaxX:Float):Float return emitter.scaleEndMaxX = scaleEndMaxX;
     /**
      * Sets `scale` range of particles launched from this emitter.
      */
-    public var scaleEndMaxY:Float = 1;
+    @editable({ label: 'Scale End Max Y', group: 'emitterScaleEndMax' })
+    public var emitterScaleEndMaxY(get,set):Float;
+    inline function get_emitterScaleEndMaxY():Float return emitter.scaleEndMaxY;
+    inline function set_emitterScaleEndMaxY(scaleEndMaxY:Float):Float return emitter.scaleEndMaxY = scaleEndMaxY;
 
     /**
      * Enable or disable `alpha` range of particles launched from this emitter.
      */
-    public var alphaActive:Bool = true;
+    @editable({ label: 'Alpha Active' })
+    public var emitterAlphaActive(get,set):Bool;
+    inline function get_emitterAlphaActive():Bool return emitter.alphaActive;
+    inline function set_emitterAlphaActive(alphaActive:Bool):Bool return emitter.alphaActive = alphaActive;
+
     /**
      * Sets `alpha` range of particles launched from this emitter.
      */
-    public var alphaStartMin:Float = 1;
+    @editable({ label: 'Alpha Start Min', group: 'emitterAlphaStart' })
+    public var emitterAlphaStartMin(get,set):Float;
+    inline function get_emitterAlphaStartMin():Float return emitter.alphaStartMin;
+    inline function set_emitterAlphaStartMin(alphaStartMin:Float):Float return emitter.alphaStartMin = alphaStartMin;
     /**
      * Sets `alpha` range of particles launched from this emitter.
      */
-    public var alphaStartMax:Float = 1;
+    @editable({ label: 'Alpha Start Max', group: 'emitterAlphaStart' })
+    public var emitterAlphaStartMax(get,set):Float;
+    inline function get_emitterAlphaStartMax():Float return emitter.alphaStartMax;
+    inline function set_emitterAlphaStartMax(alphaStartMax:Float):Float return emitter.alphaStartMax = alphaStartMax;
+
     /**
      * Sets `alpha` range of particles launched from this emitter.
      */
-    public var alphaEndMin:Float = 1;
+    @editable({ label: 'Alpha End Min', group: 'emitterAlphaEnd' })
+    public var emitterAlphaEndMin(get,set):Float;
+    inline function get_emitterAlphaEndMin():Float return emitter.alphaEndMin;
+    inline function set_emitterAlphaEndMin(alphaEndMin:Float):Float return emitter.alphaEndMin = alphaEndMin;
     /**
      * Sets `alpha` range of particles launched from this emitter.
      */
-    public var alphaEndMax:Float = 1;
+    @editable({ label: 'Alpha End Max', group: 'emitterAlphaEnd' })
+    public var emitterAlphaEndMax(get,set):Float;
+    inline function get_emitterAlphaEndMax():Float return emitter.alphaEndMax;
+    inline function set_emitterAlphaEndMax(alphaEndMax:Float):Float return emitter.alphaEndMax = alphaEndMax;
 
     /**
      * Enable or disable `color` range of particles launched from this emitter.
      */
-    public var colorActive:Bool = true;
+    @editable({ label: 'Color Active' })
+    public var emitterColorActive(get,set):Bool;
+    inline function get_emitterColorActive():Bool return emitter.colorActive;
+    inline function set_emitterColorActive(colorActive:Bool):Bool return emitter.colorActive = colorActive;
+
     /**
      * Sets `color` range of particles launched from this emitter.
      */
-    public var colorStartMin:Color = Color.WHITE;
+    @editable({ label: 'Color Start Min', group: 'emitterColorStart' })
+    public var emitterColorStartMin(get,set):Color;
+    inline function get_emitterColorStartMin():Color return emitter.colorStartMin;
+    inline function set_emitterColorStartMin(colorStartMin:Color):Color return emitter.colorStartMin = colorStartMin;
     /**
      * Sets `color` range of particles launched from this emitter.
      */
-    public var colorStartMax:Color = Color.WHITE;
+    @editable({ label: 'Color Start Max', group: 'emitterColorStart' })
+    public var emitterColorStartMax(get,set):Color;
+    inline function get_emitterColorStartMax():Color return emitter.colorStartMax;
+    inline function set_emitterColorStartMax(colorStartMax:Color):Color return emitter.colorStartMax = colorStartMax;
+
     /**
      * Sets `color` range of particles launched from this emitter.
      */
-    public var colorEndMin:Color = Color.WHITE;
+    @editable({ label: 'Color End Min', group: 'emitterColorEnd' })
+    public var emitterColorEndMin(get,set):Color;
+    inline function get_emitterColorEndMin():Color return emitter.colorEndMin;
+    inline function set_emitterColorEndMin(colorEndMin:Color):Color return emitter.colorEndMin = colorEndMin;
     /**
      * Sets `color` range of particles launched from this emitter.
      */
-    public var colorEndMax:Color = Color.WHITE;
+    @editable({ label: 'Color End Max', group: 'emitterColorEnd' })
+    public var emitterColorEndMax(get,set):Color;
+    inline function get_emitterColorEndMax():Color return emitter.colorEndMax;
+    inline function set_emitterColorEndMax(colorEndMax:Color):Color return emitter.colorEndMax = colorEndMax;
 
     /**
      * Enable or disable X and Y drag component of particles launched from this emitter.
      */
-    public var dragActive:Bool = true;
+    @editable({ label: 'Drag Active' })
+    public var emitterDragActive(get,set):Bool;
+    inline function get_emitterDragActive():Bool return emitter.dragActive;
+    inline function set_emitterDragActive(dragActive:Bool):Bool return emitter.dragActive = dragActive;
+
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragStartMinX:Float = 0;
+    @editable({ label: 'Drag Start Min X', group: 'emitterDragStartMin' })
+    public var emitterDragStartMinX(get,set):Float;
+    inline function get_emitterDragStartMinX():Float return emitter.dragStartMinX;
+    inline function set_emitterDragStartMinX(dragStartMinX:Float):Float return emitter.dragStartMinX = dragStartMinX;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragStartMinY:Float = 0;
+    @editable({ label: 'Drag Start Min Y', group: 'emitterDragStartMin' })
+    public var emitterDragStartMinY(get,set):Float;
+    inline function get_emitterDragStartMinY():Float return emitter.dragStartMinY;
+    inline function set_emitterDragStartMinY(dragStartMinY:Float):Float return emitter.dragStartMinY = dragStartMinY;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragStartMaxX:Float = 0;
+    @editable({ label: 'Drag Start Max X', group: 'emitterDragStartMax' })
+    public var emitterDragStartMaxX(get,set):Float;
+    inline function get_emitterDragStartMaxX():Float return emitter.dragStartMaxX;
+    inline function set_emitterDragStartMaxX(dragStartMaxX:Float):Float return emitter.dragStartMaxX = dragStartMaxX;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragStartMaxY:Float = 0;
+    @editable({ label: 'Drag Start Max Y', group: 'emitterDragStartMax' })
+    public var emitterDragStartMaxY(get,set):Float;
+    inline function get_emitterDragStartMaxY():Float return emitter.dragStartMaxY;
+    inline function set_emitterDragStartMaxY(dragStartMaxY:Float):Float return emitter.dragStartMaxY = dragStartMaxY;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragEndMinX:Float = 0;
+    @editable({ label: 'Drag End Min X', group: 'emitterDragEndMin' })
+    public var emitterDragEndMinX(get,set):Float;
+    inline function get_emitterDragEndMinX():Float return emitter.dragEndMinX;
+    inline function set_emitterDragEndMinX(dragEndMinX:Float):Float return emitter.dragEndMinX = dragEndMinX;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragEndMinY:Float = 0;
+    @editable({ label: 'Drag End Min Y', group: 'emitterDragEndMin' })
+    public var emitterDragEndMinY(get,set):Float;
+    inline function get_emitterDragEndMinY():Float return emitter.dragEndMinY;
+    inline function set_emitterDragEndMinY(dragEndMinY:Float):Float return emitter.dragEndMinY = dragEndMinY;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragEndMaxX:Float = 0;
+    @editable({ label: 'Drag End Max X', group: 'emitterDragEndMax' })
+    public var emitterDragEndMaxX(get,set):Float;
+    inline function get_emitterDragEndMaxX():Float return emitter.dragEndMaxX;
+    inline function set_emitterDragEndMaxX(dragEndMaxX:Float):Float return emitter.dragEndMaxX = dragEndMaxX;
     /**
      * Sets X and Y drag component of particles launched from this emitter.
      */
-    public var dragEndMaxY:Float = 0;
+    @editable({ label: 'Drag End Max Y', group: 'emitterDragEndMax' })
+    public var emitterDragEndMaxY(get,set):Float;
+    inline function get_emitterDragEndMaxY():Float return emitter.dragEndMaxY;
+    inline function set_emitterDragEndMaxY(dragEndMaxY:Float):Float return emitter.dragEndMaxY = dragEndMaxY;
 
     /**
      * Enable or disable the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationActive:Bool = true;
+    @editable({ label: 'Accel. Active' })
+    public var emitterAccelerationActive(get,set):Bool;
+    inline function get_emitterAccelerationActive():Bool return emitter.accelerationActive;
+    inline function set_emitterAccelerationActive(accelerationActive:Bool):Bool return emitter.accelerationActive = accelerationActive;
+
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationStartMinX:Float = 0;
+    @editable({ label: 'Accel. Start Min X', group: 'emitterAccelerationStartMin' })
+    public var emitterAccelerationStartMinX(get,set):Float;
+    inline function get_emitterAccelerationStartMinX():Float return emitter.accelerationStartMinX;
+    inline function set_emitterAccelerationStartMinX(accelerationStartMinX:Float):Float return emitter.accelerationStartMinX = accelerationStartMinX;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationStartMinY:Float = 0;
+    @editable({ label: 'Accel. Start Min Y', group: 'emitterAccelerationStartMin' })
+    public var emitterAccelerationStartMinY(get,set):Float;
+    inline function get_emitterAccelerationStartMinY():Float return emitter.accelerationStartMinY;
+    inline function set_emitterAccelerationStartMinY(accelerationStartMinY:Float):Float return emitter.accelerationStartMinY = accelerationStartMinY;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationStartMaxX:Float = 0;
+    @editable({ label: 'Accel. Start Max X', group: 'emitterAccelerationStartMax' })
+    public var emitterAccelerationStartMaxX(get,set):Float;
+    inline function get_emitterAccelerationStartMaxX():Float return emitter.accelerationStartMaxX;
+    inline function set_emitterAccelerationStartMaxX(accelerationStartMaxX:Float):Float return emitter.accelerationStartMaxX = accelerationStartMaxX;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationStartMaxY:Float = 0;
+    @editable({ label: 'Accel. Start Max Y', group: 'emitterAccelerationStartMax' })
+    public var emitterAccelerationStartMaxY(get,set):Float;
+    inline function get_emitterAccelerationStartMaxY():Float return emitter.accelerationStartMaxY;
+    inline function set_emitterAccelerationStartMaxY(accelerationStartMaxY:Float):Float return emitter.accelerationStartMaxY = accelerationStartMaxY;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationEndMinX:Float = 0;
+    @editable({ label: 'Accel. End Min X', group: 'emitterAccelerationEndMin' })
+    public var emitterAccelerationEndMinX(get,set):Float;
+    inline function get_emitterAccelerationEndMinX():Float return emitter.accelerationEndMinX;
+    inline function set_emitterAccelerationEndMinX(accelerationEndMinX:Float):Float return emitter.accelerationEndMinX = accelerationEndMinX;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationEndMinY:Float = 0;
+    @editable({ label: 'Accel. End Min Y', group: 'emitterAccelerationEndMin' })
+    public var emitterAccelerationEndMinY(get,set):Float;
+    inline function get_emitterAccelerationEndMinY():Float return emitter.accelerationEndMinY;
+    inline function set_emitterAccelerationEndMinY(accelerationEndMinY:Float):Float return emitter.accelerationEndMinY = accelerationEndMinY;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationEndMaxX:Float = 0;
+    @editable({ label: 'Accel. End Max X', group: 'emitterAccelerationEndMax' })
+    public var emitterAccelerationEndMaxX(get,set):Float;
+    inline function get_emitterAccelerationEndMaxX():Float return emitter.accelerationEndMaxX;
+    inline function set_emitterAccelerationEndMaxX(accelerationEndMaxX:Float):Float return emitter.accelerationEndMaxX = accelerationEndMaxX;
     /**
      * Sets the `acceleration` range of particles launched from this emitter.
      * Set acceleration y-values to give particles gravity.
      */
-    public var accelerationEndMaxY:Float = 0;
-    #end
+    @editable({ label: 'Accel. End Max Y', group: 'emitterAccelerationEndMax' })
+    public var emitterAccelerationEndMaxY(get,set):Float;
+    inline function get_emitterAccelerationEndMaxY():Float return emitter.accelerationEndMaxY;
+    inline function set_emitterAccelerationEndMaxY(accelerationEndMaxY:Float):Float return emitter.accelerationEndMaxY = accelerationEndMaxY;
+
+/// Configuration shorthands
+
+    /**
+     * The width and height of the emission area.
+     * If not defined (`-1`), will use visual's width and height bound to this `ParticleEmitter` object, if any
+     */
+    inline public function emitterSize(width:Float, height:Float):Void {
+        emitter.size(width, height);
+    }
+
+    /**
+     * The x and y position of the emission, relative to particles parent (if any)
+     */
+    inline public function emitterPos(x:Float, y:Float):Void {
+        emitter.pos(x, y);
+    }
+
+    /**
+     * If you are using `acceleration`, you can use `maxVelocity` with it
+     * to cap the speed automatically (very useful!).
+     */
+    inline public function emitterMaxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
+        emitter.maxVelocity(maxVelocityX, maxVelocityY);
+    }
+
+    /**
+     * Sets the velocity starting range of particles launched from this emitter. Only used with `SQUARE`.
+     */
+    inline public function emitterVelocityStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        emitter.velocityStart(startMinX, startMinY, startMaxX, startMaxY);
+    }
+
+    /**
+     * Sets the velocity ending range of particles launched from this emitter. Only used with `SQUARE`.
+     */
+    inline public function emitterVelocityEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        emitter.velocityEnd(endMinX, endMinY, endMaxX, endMaxY);
+    }
+
+    /**
+     * Set the speed starting range of particles launched from this emitter. Only used with `CIRCLE`.
+     */
+    inline public function emitterSpeedStart(startMin:Float, ?startMax:Float):Void {
+        emitter.speedStart(startMin, startMax);
+    }
+
+    /**
+     * Set the speed ending range of particles launched from this emitter. Only used with `CIRCLE`.
+     */
+    inline public function emitterSpeedEnd(endMin:Float, ?endMax:Float):Void {
+        emitter.speedEnd(endMin, endMax);
+    }
+
+    /**
+     * Set the angular acceleration range of particles launched from this emitter.
+     */
+    inline public function emitterAngularAcceleration(startMin:Float, startMax:Float):Void {
+        emitter.angularAcceleration(startMin, startMax);
+    }
+
+    /**
+     * Set the angular drag range of particles launched from this emitter.
+     */
+    inline public function emitterAngularDrag(startMin:Float, startMax:Float):Void {
+        emitter.angularDrag(startMin, startMax);
+    }
+
+    /**
+     * The angular velocity starting range of particles launched from this emitter.
+     */
+    inline public function emitterAngularVelocityStart(startMin:Float, ?startMax:Float):Void {
+        emitter.angularVelocityStart(startMin, startMax);
+    }
+
+    /**
+     * The angular velocity ending range of particles launched from this emitter.
+     */
+    inline public function emitterAngularVelocityEnd(endMin:Float, ?endMax:Float):Void {
+        emitter.angularVelocityEnd(endMin, endMax);
+    }
+
+    /**
+     * The angle starting range of particles launched from this emitter.
+     * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
+     */
+    inline public function emitterAngleStart(startMin:Float, ?startMax:Float):Void {
+        emitter.angleStart(startMin, startMax);
+    }
+
+    /**
+     * The angle ending range of particles launched from this emitter.
+     * `angleEndMin` and `angleEndMax` are ignored unless `ignoreAngularVelocity` is set to `true`.
+     */
+    inline public function emitterAngleEnd(endMin:Float, ?endMax:Float):Void {
+        emitter.angleEnd(endMin, endMax);
+    }
+
+    /**
+     * The angle range at which particles will be launched from this emitter.
+     * Ignored unless `launchMode` is set to `CIRCLE`.
+     */
+    inline public function emitterLaunchAngle(min:Float, max:Float):Void {
+        emitter.launchAngle(min, max);
+    }
+
+    /**
+     * The life, or duration, range of particles launched from this emitter.
+     */
+    inline public function emitterLifespan(min:Float, max:Float):Void {
+        emitter.lifespan(min, max);
+    }
+
+    /**
+     * Sets `scale` starting range of particles launched from this emitter.
+     */
+    inline public function emitterScaleStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        emitter.scaleStart(startMinX, startMinY, startMaxX, startMaxY);
+    }
+
+    /**
+     * Sets `scale` ending range of particles launched from this emitter.
+     */
+    inline public function emitterScaleEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        emitter.scaleEnd(endMinX, endMinY, endMaxX, endMaxY);
+    }
+
+    /**
+     * Sets `acceleration` starting range of particles launched from this emitter.
+     */
+    inline public function emitterAccelerationStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        emitter.accelerationStart(startMinX, startMinY, startMaxX, startMaxY);
+    }
+
+    /**
+     * Sets `acceleration` ending range of particles launched from this emitter.
+     */
+    inline public function emitterAccelerationEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        emitter.accelerationEnd(endMinX, endMinY, endMaxX, endMaxY);
+    }
+
+    /**
+     * Sets `drag` starting range of particles launched from this emitter.
+     */
+    inline public function emitterDragStart(startMinX:Float, startMinY:Float, ?startMaxX:Float, ?startMaxY:Float):Void {
+        emitter.dragStart(startMinX, startMinY, startMaxX, startMaxY);
+    }
+
+    /**
+     * Sets `drag` ending range of particles launched from this emitter.
+     */
+    inline public function emitterdragEnd(endMinX:Float, endMinY:Float, ?endMaxX:Float, ?endMaxY:Float):Void {
+        emitter.dragEnd(endMinX, endMinY, endMaxX, endMaxY);
+    }
+
+    /**
+     * Sets `color` starting range of particles launched from this emitter.
+     */
+    inline public function emitterColorStart(startMin:Color, ?startMax:Color):Void {
+        emitter.colorStart(startMin, startMax);
+    }
+
+    /**
+     * Sets `color` ending range of particles launched from this emitter.
+     */
+    inline public function emitterColorEnd(endMin:Color, ?endMax:Color):Void {
+        emitter.colorEnd(endMin, endMax);
+    }
+
+    /**
+     * Sets `alpha` starting range of particles launched from this emitter.
+     */
+    inline public function emitterAlphaStart(startMin:Float, ?startMax:Float):Void {
+        emitter.alphaStart(startMin, startMax);
+    }
+
+    /**
+     * Sets `alpha` ending range of particles launched from this emitter.
+     */
+    inline public function emitterAlphaEnd(endMin:Float, ?endMax:Float):Void {
+        emitter.alphaEnd(endMin, endMax);
+    }
 
     #if editor
-    
+
 /// Editor
 
     public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
@@ -614,7 +1004,7 @@ class Particles<T:ParticleEmitter> extends Visual {
         entityData.props.set('autoEmit', true);
 
     }
-    
+
     #end
 
 }
