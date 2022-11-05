@@ -433,7 +433,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
      * Return a String representation of the color in the format
      *
      * @param prefix Whether to include "0x" prefix at start of string
-     * @return    A string of length 10 in the format 0xAARRGGBB
+     * @return    A string of length 8 in the format 0xRRGGBB
      */
     public inline function toHexString(prefix:Bool = true):String
     {
@@ -461,9 +461,9 @@ abstract Color(Int) from Int from UInt to Int to UInt
         // Hex format
         var result:String = toHexString() + "\n";
         // RGB format
-        result += "Red: " + red + " green: " + green + " blue: " + blue + "\n";
+        result += "red: " + red + " green: " + green + " blue: " + blue + "\n";
         // HSB/HSL info
-        result += "Hue: " + roundDecimal(hue, 2) + " saturation: " + roundDecimal(saturation, 2) +
+        result += "hue: " + roundDecimal(hue, 2) + " saturation: " + roundDecimal(saturation, 2) +
             " brightness: " + roundDecimal(brightness, 2) + " lightness: " + roundDecimal(lightness, 2);
 
         return result;
