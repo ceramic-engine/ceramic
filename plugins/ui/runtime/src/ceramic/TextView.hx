@@ -118,6 +118,14 @@ class TextView extends View {
         return maxLineDiff;
     }
 
+    public var noFitWidth(default,set):Bool = false;
+    function set_noFitWidth(noFitWidth:Bool):Bool {
+        if (this.noFitWidth == noFitWidth) return noFitWidth;
+        this.noFitWidth = noFitWidth;
+        layoutDirty = true;
+        return noFitWidth;
+    }
+
     public function new() {
 
         super();
@@ -156,7 +164,7 @@ class TextView extends View {
 
         if (shouldComputeHeight || shouldComputeWidth) {
             // Compute size from text
-            if (computedWidth > 0) {
+            if (!noFitWidth && computedWidth > 0) {
                 if (hasExplicitWidth) {
                     text.fitWidth = computedWidth - paddingLeft - paddingRight;
                 }
@@ -179,7 +187,7 @@ class TextView extends View {
         }
         else {
             // Still update fitWidth value in other cases
-            if (hasExplicitWidth && computedWidth > 0) {
+            if (!noFitWidth && hasExplicitWidth && computedWidth > 0) {
                 text.fitWidth = computedWidth - paddingLeft - paddingRight;
             }
             else {
