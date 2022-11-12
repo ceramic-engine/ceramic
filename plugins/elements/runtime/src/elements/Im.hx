@@ -2999,7 +2999,7 @@ class Im {
 
     }
 
-    macro public static function int(?value:ExprOf<Int>):Expr {
+    macro public static function int(?value:ExprOf<Int>):ExprOf<elements.IntPointer> {
 
         return switch value.expr {
             case EConst(CIdent('null')):
