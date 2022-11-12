@@ -115,6 +115,7 @@ class CellView extends LayersLayout implements Observable {
         titleTextView.align = LEFT;
         titleTextView.pointSize = 12;
         titleTextView.preRenderedSize = 20;
+        titleTextView.noFitWidth = true;
         titleTextView.viewSize(fill(), auto());
         titleTextView.onLayout(this, layoutTitle);
         columnLayout.add(titleTextView);
@@ -123,6 +124,7 @@ class CellView extends LayersLayout implements Observable {
         subTitleTextView.align = LEFT;
         subTitleTextView.pointSize = 11;
         subTitleTextView.preRenderedSize = 20;
+        subTitleTextView.noFitWidth = true;
         subTitleTextView.paddingLeft = 1;
         subTitleTextView.viewSize(fill(), auto());
         subTitleTextView.text.component('italicText', new ItalicText());
