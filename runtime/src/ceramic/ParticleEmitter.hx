@@ -35,7 +35,7 @@ class ParticleEmitter extends Entity implements Component implements Observable 
         this.width = width;
         this.height = height;
     }
-  
+
     /**
      * The x and y position of the emission, relative to particles parent (if any)
      */
@@ -466,7 +466,7 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * Set the speed range of particles launched from this emitter. Only used with `CIRCLE`.
      */
     public var speedEndMax:Float = 100;
-    
+
     /**
      * Use in conjunction with angularAcceleration for fluid spin speed control.
      */
@@ -800,7 +800,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     /**
      * Creates a new `ParticleEmitter` object.
-     * @param visual The visual that should contain particles (optional)
      */
     public function new()
     {
@@ -809,8 +808,27 @@ class ParticleEmitter extends Entity implements Component implements Observable 
         app.onUpdate(this, update);
     }
 
+    override function destroy() {
+
+        // When particle visuals are not associated to another visual,
+        // destroy them if emitter is destroyed
+        if (visual == null && _activeParticles != null && _activeParticles.length > 0) {
+            var len = _activeParticles.length;
+            for (i in 0...len) {
+                var particle = _activeParticles.unsafeGet(i);
+                if (particle.visual != null && particle.visual.parent == null) {
+                    particle.visual.destroy();
+                    particle.visual = null;
+                }
+            }
+        }
+
+        super.destroy();
+
+    }
+
     function bindAsComponent() {
-        
+
     }
 
     /**
