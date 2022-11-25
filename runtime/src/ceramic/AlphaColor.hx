@@ -7,6 +7,13 @@ using StringTools;
  * Can be decomposed to Color/Int (RGB) + Float (A) and
  * constructed from Color/Int (RGB) + Float (A).
  */
+#if (cpp && windows)
+@:headerCode('
+// Needed otherwise windows build fails :(
+// But why?
+#undef TRANSPARENT
+')
+#end
 abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
     public static inline var NONE:AlphaColor =        -1;
