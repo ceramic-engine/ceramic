@@ -252,29 +252,51 @@ class TilemapAsset extends Asset {
 
             if (texture == null) {
 
-                // Texture not already loaded, load it!
+                var asset = owner.imageAsset(pathInfo.name);
+                if (asset != null) {
 
-                var asset = new ImageAsset(pathInfo.name);
-                asset.handleTexturesDensityChange = true;
-                asset.onDestroy(this, function(_) {
-                    // Should we do some cleanup here?
-                });
-                assets.addAsset(asset);
-                assets.onceComplete(this, function(isSuccess) {
-                    if (isSuccess) {
-                        var texture = assets.texture(asset.name);
-
-                        // NEAREST is usually preferred for tilemaps so use that by default,
-                        // although it is still possible to set it to LINEAR manually after
-                        texture.filter = NEAREST;
-
-                        // Share this texture with owner `Assets` instance
-                        // so that it can be reused later
-                        owner.addAsset(asset);
-
-                        done(texture);
+                    switch asset.status {
+                        case NONE | LOADING:
+                            asset.onceComplete(this, function(isSuccess) {
+                                if (isSuccess) {
+                                    var texture = owner.texture(asset.name);
+                                    done(texture);
+                                }
+                                else {
+                                    done(null);
+                                }
+                            });
+                        case READY | BROKEN:
+                            done(null);
                     }
-                });
+
+                }
+                else {
+
+                    // Texture not already loaded, load it!
+
+                    var asset = new ImageAsset(pathInfo.name);
+                    asset.handleTexturesDensityChange = true;
+                    asset.onDestroy(this, function(_) {
+                        // Should we do some cleanup here?
+                    });
+                    assets.addAsset(asset);
+                    assets.onceComplete(this, function(isSuccess) {
+                        if (isSuccess) {
+                            var texture = assets.texture(asset.name);
+
+                            // NEAREST is usually preferred for tilemaps so use that by default,
+                            // although it is still possible to set it to LINEAR manually after
+                            texture.filter = NEAREST;
+
+                            // Share this texture with owner `Assets` instance
+                            // so that it can be reused later
+                            owner.addAsset(asset);
+
+                            done(texture);
+                        }
+                    });
+                }
             }
             else {
 
