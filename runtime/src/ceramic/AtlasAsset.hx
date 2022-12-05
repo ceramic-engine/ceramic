@@ -13,6 +13,15 @@ class AtlasAsset extends Asset {
 
     @observe public var atlas:TextureAtlas = null;
 
+    @observe public var text:String = null;
+
+/// Internal
+
+    /**
+     * A custom atlas parsing method. Will be used over the default parsing if not null
+     */
+    var parseAtlas:(text:String)->TextureAtlas = null;
+
 /// Lifecycle
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -60,12 +69,12 @@ class AtlasAsset extends Asset {
         assets.addAsset(asset);
         assets.onceComplete(this, function(success) {
 
-            var text = asset.text;
+            text = asset.text;
 
             if (text != null) {
 
                 try {
-                    var newAtlas = TextureAtlasParser.parse(text);
+                    var newAtlas = parseAtlas != null ? parseAtlas(text) : TextureAtlasParser.parse(text);
                     newAtlas.id = 'atlas:' + path;
 
                     // Load textures
@@ -148,7 +157,7 @@ class AtlasAsset extends Asset {
                                 // Set asset to null because we don't want it
                                 // to be destroyed when destroying the atlas.
                                 prevAtlas.asset = null;
-                                // Destroy texture
+                                // Destroy previous atlas
                                 prevAtlas.destroy();
                             }
 
