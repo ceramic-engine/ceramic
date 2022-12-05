@@ -100,13 +100,12 @@ class SpriteSheet extends Model {
      */
     @serialize public var source:String = null;
 
+    /**
+     * The asset related to this sprite sheet (if any)
+     */
+    public var asset:SpriteAsset = null;
+
 /// Helpers
-
-    public function extractAsepriteData(asepriteData:Dynamic):Void {
-
-        log.warning('Not implemented (todo)');
-
-    }
 
     public function addAnimation(animation:SpriteSheetAnimation):Void {
 
