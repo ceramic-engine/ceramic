@@ -75,6 +75,8 @@ class Asset extends Entity implements Observable {
 
     var hotReload(default,set):Bool = false;
 
+    var customExtensions(default,null):Array<String> = null;
+
 /// Lifecycle
 
     public function new(kind:String, name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -123,16 +125,21 @@ class Asset extends Entity implements Observable {
         // Compute extensions list and dir flag
         //
         if (extensions == null) {
-            extensions = switch (kind) {
-                case 'image': app.backend.info.imageExtensions();
-                case 'text': app.backend.info.textExtensions();
-                case 'sound': app.backend.info.soundExtensions();
-                case 'shader': app.backend.info.shaderExtensions();
-                case 'font': ['fnt'];
-                case 'atlas': ['atlas'];
-                case 'database': ['csv'];
-                case 'fragments': ['fragments'];
-                default: null;
+            if (customExtensions != null) {
+                extensions = [].concat(customExtensions);
+            }
+            else {
+                extensions = switch (kind) {
+                    case 'image': app.backend.info.imageExtensions();
+                    case 'text': app.backend.info.textExtensions();
+                    case 'sound': app.backend.info.soundExtensions();
+                    case 'shader': app.backend.info.shaderExtensions();
+                    case 'font': ['fnt'];
+                    case 'atlas': ['atlas'];
+                    case 'database': ['csv'];
+                    case 'fragments': ['fragments'];
+                    default: null;
+                }
             }
         }
         if (extensions == null || dir == null) {
