@@ -8,9 +8,13 @@ class SpriteSheetFrame extends Model {
 
     @serialize public var region:TextureAtlasRegion;
 
-    public function new(atlas:TextureAtlas, name:String, page:Int = 0) {
+    public function new(atlas:TextureAtlas, name:String, page:Int = 0, ?region:TextureAtlasRegion) {
         super();
-        region = new TextureAtlasRegion(name, atlas, page);
+
+        if (region != null)
+            this.region = region;
+        else
+            this.region = new TextureAtlasRegion(name, atlas, page);
     }
 
 }

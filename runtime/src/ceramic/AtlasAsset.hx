@@ -65,8 +65,8 @@ class AtlasAsset extends Asset {
 
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
-        asset.path = path;
         assets.addAsset(asset);
+        asset.path = path;
         assets.onceComplete(this, function(success) {
 
             text = asset.text;
@@ -107,7 +107,10 @@ class AtlasAsset extends Asset {
                             // Update textures
                             for (i in 0...assetList.length) {
                                 var asset = assetList[i];
-                                newAtlas.pages[i].texture = asset.texture;
+                                var texture = asset.texture;
+                                if (texture != null)
+                                    texture.filter = newAtlas.pages[i].filter;
+                                newAtlas.pages[i].texture = texture;
                             }
 
                             // Compute atlas frames with loaded textures

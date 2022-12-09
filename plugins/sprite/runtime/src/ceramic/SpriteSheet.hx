@@ -105,6 +105,20 @@ class SpriteSheet extends Model {
      */
     public var asset:SpriteAsset = null;
 
+/// Lifecycle
+
+    override function destroy() {
+
+        if (atlas != null && implicitAtlas) {
+            var _atlas = atlas;
+            atlas = null;
+            _atlas.destroy();
+        }
+
+        super.destroy();
+
+    }
+
 /// Helpers
 
     public function addAnimation(animation:SpriteSheetAnimation):Void {

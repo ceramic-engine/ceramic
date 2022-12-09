@@ -150,8 +150,8 @@ class AsepriteParser {
                 frame.filename, atlas, 0
             );
 
-            region.x = Std.int(frame.frame.x);
-            region.y = Std.int(frame.frame.y);
+            region.x = Math.round(frame.frame.x + (frame.frame.w - frame.spriteSourceSize.w) * 0.5);
+            region.y = Math.round(frame.frame.y + (frame.frame.h - frame.spriteSourceSize.h) * 0.5);
             region.originalWidth = Std.int(frame.sourceSize.w);
             region.originalHeight = Std.int(frame.sourceSize.h);
             region.width = Std.int(frame.spriteSourceSize.w);
@@ -178,6 +178,10 @@ class AsepriteParser {
 
         var sheet = new SpriteSheet();
 
+        sheet.atlas = atlas;
+
+        var animations:Array<SpriteSheetAnimation> = [];
+
         for (frameTag in data.meta.frameTags) {
 
             var animation = new SpriteSheetAnimation();
@@ -190,7 +194,9 @@ class AsepriteParser {
 
             inline function addFrame(index:Int) {
 
-                var frame = new SpriteSheetFrame(atlas, atlas.regions[index].name, 0);
+                var region = atlas.regions[index];
+                var frame = new SpriteSheetFrame(atlas, region.name, 0, region);
+                frame.duration = data.frames[index].duration * 0.001;
                 frames.push(frame);
 
             }
@@ -225,8 +231,10 @@ class AsepriteParser {
             }
 
             animation.frames = frames;
-
+            animations.push(animation);
         }
+
+        sheet.animations = animations;
 
         return sheet;
 

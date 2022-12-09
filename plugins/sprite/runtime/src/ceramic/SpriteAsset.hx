@@ -11,6 +11,11 @@ class SpriteAsset extends Asset {
 
     @observe public var text:String = null;
 
+    public var atlas(get,never):TextureAtlas;
+    function get_atlas():TextureAtlas {
+        return atlasAsset != null ? atlasAsset.atlas : null;
+    }
+
 /// Internal
 
     var atlasAsset:AtlasAsset = null;
@@ -56,7 +61,11 @@ class SpriteAsset extends Asset {
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
-        var atlasAsset = new AtlasAsset(name);
+        if (atlasAsset != null) {
+
+        }
+
+        atlasAsset = new AtlasAsset(name);
         atlasAsset.path = path;
 
         // We provide a custom atlas parsing method to the atlas asset
@@ -90,6 +99,13 @@ class SpriteAsset extends Asset {
                         // Set asset to null because we don't want it
                         // to be destroyed when destroying the sheet.
                         prevSheet.asset = null;
+
+                        // Destroy atlas as well
+                        var prevAtlas = prevSheet.atlas;
+                        if (prevAtlas != null) {
+                            prevAtlas.destroy();
+                        }
+
                         // Destroy previous sheet
                         prevSheet.destroy();
                     }
