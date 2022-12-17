@@ -313,6 +313,18 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap): Void {
+            
+        // Not implemented yet
+
+    }
+
+    inline public function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap): Void {
+        
+        // Not implemented yet
+
+    }
+
     inline public function supportsHotReloadPath():Bool {
 
         return false;
