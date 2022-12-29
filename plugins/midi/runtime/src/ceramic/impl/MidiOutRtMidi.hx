@@ -6,7 +6,7 @@ class MidiOutRtMidi extends MidiOutBase {
 
     var rtMidiOut:RtMidiOut;
 
-    var midiMessage:haxe.io.Bytes = haxe.io.Bytes.alloc(2);
+    var midiMessage:haxe.io.Bytes = haxe.io.Bytes.alloc(3);
 
     static var hasError = false;
 
