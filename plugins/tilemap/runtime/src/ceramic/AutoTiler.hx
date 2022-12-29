@@ -6,22 +6,20 @@ class AutoTiler extends Entity implements Component {
 
     @entity var layerData:TilemapLayerData;
 
-    public var kinds(default, null):ReadOnlyArray<AutoTileKind>;
+    public var autoTiles(default, null):ReadOnlyArray<AutoTile>;
 
-    public var gids(default, null):ReadOnlyArray<Int>;
+    var gidMap:IntMap<AutoTile>;
 
-    var gidMap:IntIntMap;
-
-    public function new(kinds:Array<AutoTileKind>, gids:Array<Int>) {
+    public function new(autoTiles:Array<AutoTile>) {
 
         super();
 
-        this.kinds = kinds;
-        this.gids = gids;
+        this.autoTiles = [].concat(autoTiles);
 
-        this.gidMap = new IntIntMap();
-        for (i in 0...gids.length) {
-            this.gidMap.set(gids.unsafeGet(i), kinds.unsafeGet(i));
+        this.gidMap = new IntMap<AutoTile>();
+        for (i in 0...autoTiles.length) {
+            var autoTile = autoTiles.unsafeGet(i);
+            this.gidMap.set(autoTile.gid, autoTile);
         }
 
     }
@@ -48,8 +46,8 @@ class AutoTiler extends Entity implements Component {
         computedTiles.setArrayLength(tiles.length);
 
         var edgeCorner32Map = AutoTiler.edgeCorner32Map;
+        var expandedBottomCorner26Map = AutoTiler.expandedBottomCorner26Map;
 
-        var boundsSameTile = true;
         var row = 0;
         var col = 0;
         var width = layerData.width;
@@ -64,12 +62,13 @@ class AutoTiler extends Entity implements Component {
             var tile = tiles.unsafeGet(i);
             var extraTile = hasExtraTiles ? tiles.unsafeGet(extraI) : 0;
             var gid = tile.gid;
-            var rawKind = gidMap.get(gid);
-            if (rawKind != 0) {
+            var autoTile = gidMap.get(gid);
+            if (autoTile != null) {
                 // Matching autotile rule
-                var kind:AutoTileKind = rawKind;
+                var kind = autoTile.kind;
+                var boundsSameTile = autoTile.bounds;
                 switch kind {
-                    case EDGE_CORNER_32 | EXPANDED_48:
+                    case EDGE_16 | EDGE_CORNER_32 | EXPANDED_47 | EXPANDED_BOTTOM_CORNER_26:
 
                         // Create mask from surrounding tiles
                         // bits: 0 = any other tile / 1 = same tile
@@ -78,7 +77,6 @@ class AutoTiler extends Entity implements Component {
                         var otherTile:TilemapTile = 0;
                         var otherExtraTile:TilemapTile = 0;
                         var n:Int = 0;
-                        var hasCorners:Bool = false;
 
                         if (col > 0) {
                             // Left
@@ -130,54 +128,56 @@ class AutoTiler extends Entity implements Component {
                         }
 
                         // Corners
-                        if (edgeMask.bool(0)) {
-                            if (edgeMask.bool(1)) {
-                                if (col > 0 && row > 0) {
-                                    // Top-left corner
-                                    n = i - width - 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(0, false);
+                        if (kind != EDGE_16) {
+                            if (edgeMask.bool(0)) {
+                                if (edgeMask.bool(1)) {
+                                    if (col > 0 && row > 0) {
+                                        // Top-left corner
+                                        n = i - width - 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(0, false);
+                                        }
+                                    }
+                                }
+                                if (edgeMask.bool(3)) {
+                                    if (col > 0 && row < height - 1) {
+                                        // Bottom-left corner
+                                        n = i + width - 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(3, false);
+                                        }
                                     }
                                 }
                             }
-                            if (edgeMask.bool(3)) {
-                                if (col > 0 && row < height - 1) {
-                                    // Bottom-left corner
-                                    n = i + width - 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(3, false);
+                            if (edgeMask.bool(2)) {
+                                if (edgeMask.bool(1)) {
+                                    if (col < width - 1 && row > 0) {
+                                        // Top-right corner
+                                        n = i - width + 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(1, false);
+                                        }
                                     }
                                 }
-                            }
-                        }
-                        if (edgeMask.bool(2)) {
-                            if (edgeMask.bool(1)) {
-                                if (col < width - 1 && row > 0) {
-                                    // Top-right corner
-                                    n = i - width + 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(1, false);
-                                    }
-                                }
-                            }
-                            if (edgeMask.bool(3)) {
-                                if (col < width - 1 && row < height - 1) {
-                                    // Bottom-right corner
-                                    n = i + width + 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(2, false);
+                                if (edgeMask.bool(3)) {
+                                    if (col < width - 1 && row < height - 1) {
+                                        // Bottom-right corner
+                                        n = i + width + 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(2, false);
+                                        }
                                     }
                                 }
                             }
@@ -205,7 +205,7 @@ class AutoTiler extends Entity implements Component {
 
                             // Some corner specifics
                             if (cornerMask == 15) {
-                                if (edgeMask != 15) {
+                                if (edgeMask != 15 || kind == EDGE_16) {
                                     cornerMask = 0;
                                 }
                             }
@@ -223,12 +223,16 @@ class AutoTiler extends Entity implements Component {
 
                             // Retrieve index from mapping
                             var finalIndex:Int = fullMask;
-                            finalIndex = edgeCorner32Map[finalIndex];
 
                             if (finalIndex == -1) {
                                 tile.gid = 0;
                             }
                             else {
+                                finalIndex = edgeCorner32Map[finalIndex];
+                                if (kind == EXPANDED_BOTTOM_CORNER_26) {
+                                    finalIndex = expandedBottomCorner26Map[finalIndex];
+                                }
+
                                 tile.gid = gid + finalIndex;
                             }
 
@@ -297,6 +301,52 @@ class AutoTiler extends Entity implements Component {
             edgeCorner32Map = map;
         }
         return edgeCorner32Map;
+    }
+
+    public static var expandedBottomCorner26Map(get,null):ReadOnlyArray<Int> = null;
+    static function get_expandedBottomCorner26Map():ReadOnlyArray<Int> {
+        if (expandedBottomCorner26Map == null) {
+            var map:Array<Int> = [];
+
+            for (i in 0...16) {
+                map[i] = i;
+            }
+
+            map[16] = 15;
+            map[17] = 15;
+            map[18] = 16;
+            map[19] = 15;
+            map[20] = 17;
+            map[21] = 17;
+            map[22] = 18;
+            map[23] = 17;
+            map[24] = 19;
+            map[25] = 18;
+            map[26] = 20;
+            map[27] = 17;
+            map[28] = 21;
+            map[29] = 22;
+            map[30] = 21;
+            map[31] = 21;
+            map[32] = 23;
+            map[33] = 24;
+            map[34] = 22;
+            map[35] = 21;
+            map[36] = 7;
+            map[37] = 25;
+            map[38] = 6;
+            map[39] = 7;
+            map[40] = 14;
+            map[41] = 25;
+            map[42] = 3;
+            map[43] = 7;
+            map[44] = 11;
+            map[45] = 25;
+            map[46] = 25;
+
+            expandedBottomCorner26Map = map;
+        }
+        return expandedBottomCorner26Map;
     }
 
     public static var edgeCorner32InvertedMap(get,null):ReadOnlyArray<Int> = null;
