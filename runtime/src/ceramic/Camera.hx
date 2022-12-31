@@ -96,16 +96,6 @@ class Camera extends Entity {
     public var zoom:Float = 1.0;
 
     /**
-     * Translation X
-     */
-    public var translateX:Float = 0.0;
-
-    /**
-     * Translation Y
-     */
-    public var translateY:Float = 0.0;
-
-    /**
      * Horizontal dead zone (percentage between 0 and 1 relative to viewport width)
      */
     public var deadZoneX:Float = 0.04;
@@ -161,6 +151,20 @@ class Camera extends Entity {
      * A threshold value to stop the camera if its movement is lower than this value
      */
     public var movementThreshold:Float = 0.00001;
+
+    /**
+     * Translation X that should be applied to the
+     * content so that the camera is pointing to the correct area.
+     * This value is computed by the camera when it is updated.
+     */
+    public var contentTranslateX:Float = 0.0;
+
+    /**
+     * Translation Y that should be applied to the
+     * content so that the camera is pointing to the correct area
+     * This value is computed by the camera when it is updated.
+     */
+    public var contentTranslateY:Float = 0.0;
 
     var hasPrevTransform:Bool = false;
 
@@ -280,8 +284,8 @@ class Camera extends Entity {
             }
         }
 
-        translateX = (contentX - x) + viewportWidth * 0.5;
-        translateY = (contentY - y) + viewportHeight * 0.5;
+        contentTranslateX = (contentX - x) + viewportWidth * 0.5;
+        contentTranslateY = (contentY - y) + viewportHeight * 0.5;
 
     }
 

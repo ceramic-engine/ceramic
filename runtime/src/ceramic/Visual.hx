@@ -967,8 +967,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
     /**
-     * Use the given visual's bounds as clipping area for **every children**.
-     * The clipping only affect childrens and not the visual it is assigned to.
+     * Use the given visual's bounds as clipping area for itself and **every children**.
      * Clipping areas cannot be combined. That means if `clip` is not null and current
      * visual instance is already clipped by a parent visual, its children's won't be clipped
      * by it anymore as they are instead clipped by this `clip` property instead.
@@ -1658,9 +1657,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     public var computedTouchable(default, null):Bool = true;
 
     /**
-     * If any parent of this visual has a `clip` visual assigned, `computedClip` will be `true`.
+     * If any parent of this visual has a `clip` visual assigned, this will be the computed/resolved visual.
      */
-    public var computedClip(default, null):Bool = false;
+    public var computedClip(default, null):Visual = null;
 
 /// Properties (Children)
 
@@ -2375,14 +2374,25 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             parent.computeClip();
         }
 
-        computedClip = false;
+        #if ceramic_clip_children_only
+        computedClip = null;
         if (parent != null) {
-            if (parent.computedClip || parent.clip != null) {
+            if (parent.computedClip != null || parent.clip != null) {
                 if (computedRenderTarget == parent.computedRenderTarget) {
-                    computedClip = true;
+                    computedClip = parent.computedClip != null ? parent.computedClip : parent.clip;
                 }
             }
         }
+        #else
+        computedClip = clip;
+        if (computedClip == null && parent != null) {
+            if (parent.computedClip != null) {
+                if (computedRenderTarget == parent.computedRenderTarget) {
+                    computedClip = parent.computedClip;
+                }
+            }
+        }
+        #end
 
         clipDirty = false;
 
@@ -3007,8 +3017,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         transform.identity();
         transform.scale(ceramic.App.app.screen.nativeDensity, ceramic.App.app.screen.nativeDensity);
         transform.concat(ceramic.App.app.screen.reverseMatrix);
-        transform.tx = Math.round(transform.tx);
-        transform.ty = Math.round(transform.ty);
+        transform.tx = transform.tx;
+        transform.ty = transform.ty;
         transform.changedDirty = true;
 
         size(ceramic.App.app.screen.nativeWidth, ceramic.App.app.screen.nativeHeight);

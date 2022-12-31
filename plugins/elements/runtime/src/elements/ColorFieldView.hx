@@ -3,12 +3,14 @@ package elements;
 import ceramic.Color;
 import ceramic.EditText;
 import ceramic.GeometryUtils;
+import ceramic.KeyBindings;
 import ceramic.KeyCode;
 import ceramic.LayersLayout;
 import ceramic.Point;
 import ceramic.Quad;
 import ceramic.RowLayout;
 import ceramic.ScanCode;
+import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
 import ceramic.View;
@@ -57,6 +59,8 @@ class ColorFieldView extends FieldView {
 /// Internal properties
 
     @observe var pickerVisible:Bool = false;
+
+    @component var keyBindings:KeyBindings;
 
     var container:RowLayout;
 
@@ -178,6 +182,8 @@ class ColorFieldView extends FieldView {
                 pickerVisible = !pickerVisible;
             }
         });
+
+        bindKeyBindings();
 
     }
 
@@ -356,6 +362,22 @@ class ColorFieldView extends FieldView {
                 bubbleTopBorderRight.size(1 + pickerView.width - bubbleTriangle.width * 0.5 + pickerView.x, 1);
             }
         }
+
+    }
+
+/// Key bindings
+
+    function bindKeyBindings() {
+
+        keyBindings = new KeyBindings();
+
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
+            if (focused) {
+                var selectText:SelectText = cast textView.text.component('selectText');
+                selectText.selectionStart = 0;
+                selectText.selectionEnd = textView.text.content.length;
+            }
+        });
 
     }
 

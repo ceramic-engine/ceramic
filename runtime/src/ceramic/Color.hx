@@ -36,8 +36,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var PINK:Color =        0xFFC0CB;
     public static inline var MAGENTA:Color =     0xFF00FF;
     public static inline var CYAN:Color =        0x00FFFF;
-    
-    // Extra colors
+
     public static inline var CORNFLOWERBLUE:Color =  0x6495ED;
     public static inline var MEDIUMVIOLETRED:Color = 0xC71585;
     public static inline var DEEPPINK:Color =        0xFF1493;
@@ -83,15 +82,96 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public static inline var SLATEGREY:Color =       0x708090;
     public static inline var SNOW:Color =            0xFFFAFA;
 
-    public static var colorLookup(default, null):Map<String, Int> = new Map<String, Int>();
+    public static var colorLookup(default, null):Map<String, Int> = [
+        "NONE" =>       -1,
 
+        "WHITE" =>      0xFFFFFF,
+        "GRAY" =>       0x808080,
+        "BLACK" =>      0x000000,
+
+        "GREEN" =>      0x008000,
+        "LIME" =>       0x00FF00,
+        "YELLOW" =>     0xFFFF00,
+        "ORANGE" =>     0xFFA500,
+        "RED" =>        0xFF0000,
+        "PURPLE" =>     0x800080,
+        "BLUE" =>       0x0000FF,
+        "BROWN" =>      0x8B4513,
+        "PINK" =>       0xFFC0CB,
+        "MAGENTA" =>    0xFF00FF,
+        "CYAN" =>       0x00FFFF,
+
+        "CORNFLOWERBLUE" => 0x6495ED,
+        "MEDIUMVIOLETRED" =>0xC71585,
+        "DEEPPINK" =>       0xFF1493,
+        "PALEVIOLETRED" =>  0xDB7093,
+        "HOTPINK" =>        0xFF69B4,
+        "LIGHTPINK" =>      0xFFB6C1,
+        "DARKRED" =>        0x8B0000,
+        "FIREBRICK" =>      0xB22222,
+        "CRIMSON" =>        0xDC143C,
+        "INDIANRED" =>      0xCD5C5C,
+        "LIGHTCORAL" =>     0xF08080,
+        "SALMON" =>         0xFA8072,
+        "DARKSALMON" =>     0xE9967A,
+        "LIGHTSALMON" =>    0xFFA07A,
+        "ORANGERED" =>      0xFF4500,
+        "TOMATO" =>         0xFF6347,
+        "DARKORANGE" =>     0xFF8C00,
+        "CORAL" =>          0xFF7F50,
+        "DARKKHAKI" =>      0xBDB76B,
+        "GOLD" =>           0xFFD700,
+        "KHAKI" =>          0xF0E68C,
+        "PEACHPUFF" =>      0xFFDAB9,
+        "PALEGOLDENROD" =>  0xEEE8AA,
+        "MOCCASIN" =>       0xFFE4B5,
+        "PAPAYAWHIP" =>     0xFFEFD5,
+        "LEMONCHIFFON" =>   0xFFFACD,
+        "LIGHTYELLOW" =>    0xFFFFE0,
+        "SIENNA" =>         0xA0522D,
+        "CHOCOLATE" =>      0xD2691E,
+        "PERU" =>           0xCD853F,
+        "TAN" =>            0xD2B48C,
+        "DARKOLIVEGREEN" => 0x556B2F,
+        "OLIVE" =>          0x808000,
+        "TEAL" =>           0x008080,
+        "TURQUOISE" =>      0x40E0D0,
+        "NAVY" =>           0x000080,
+        "INDIGO" =>         0x4B0082,
+        "ORCHID" =>         0xDA70D6,
+        "LAVENDER" =>       0xE6E6FA,
+        "AZURE" =>          0xF0FFFF,
+        "IVORY" =>          0xFFFFF0,
+        "DIMGREY" =>        0x696969,
+        "SLATEGREY" =>      0x708090,
+        "SNOW" =>           0xFFFAFA
+    ];
+
+    /**
+     * Red color component as `Int` between `0` and `255`
+     */
     public var red(get, set):Int;
-    public var blue(get, set):Int;
+    /**
+     * Green color component as `Int` between `0` and `255`
+     */
     public var green(get, set):Int;
+    /**
+     * Blue color component as `Int` between `0` and `255`
+     */
+    public var blue(get, set):Int;
 
+    /**
+     * Red color component as `Float` between `0.0` and `1.0`
+     */
     public var redFloat(get, set):Float;
-    public var blueFloat(get, set):Float;
+    /**
+     * Green color component as `Float` between `0.0` and `1.0`
+     */
     public var greenFloat(get, set):Float;
+    /**
+     * Blue color component as `Float` between `0.0` and `1.0`
+     */
+    public var blueFloat(get, set):Float;
 
     public var cyan(get, set):Float;
     public var magenta(get, set):Float;
@@ -116,6 +196,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
     public var lightness(get, set):Float;
 
     /**
+     * Get the color as AlphaColor
+     */
+    @:to public inline function toAlphaColor():AlphaColor {
+        return new AlphaColor(this);
+    }
+
+    /**
      * Generate a random color (away from white or black)
      * @return The color as a Color
      */
@@ -128,7 +215,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
     }
 
     /**
-     * Create a color from the least significant four bytes of an Int
+     * Create a color from the least significant three bytes of an Int
      *
      * @param    value And Int with bytes in the format 0xRRGGBB
      * @return    The color as a Color
@@ -233,15 +320,22 @@ abstract Color(Int) from Int from UInt to Int to UInt
         }
         else if (str.startsWith('#'))
         {
-            var hexColor:String = "0x" + str.substring(1, 7);
-            result = new Color(Std.parseInt(hexColor));
+            if (str.length >= 9) {
+                var hexColor:String = "0x" + str.substring(1, 9);
+                var alphaColor:AlphaColor = Std.parseInt(hexColor);
+                result = alphaColor.rgb;
+            }
+            else {
+                var hexColor:String = "0x" + str.substring(1, 7);
+                result = new Color(Std.parseInt(hexColor));
+            }
         }
         else
         {
             str = str.toUpperCase();
             for (key in colorLookup.keys())
             {
-                if (key.toUpperCase() == str)
+                if (key == str)
                 {
                     result = new Color(colorLookup.get(key));
                     break;
@@ -339,7 +433,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
      * Return a String representation of the color in the format
      *
      * @param prefix Whether to include "0x" prefix at start of string
-     * @return    A string of length 10 in the format 0xAARRGGBB
+     * @return    A string of length 8 in the format 0xRRGGBB
      */
     public inline function toHexString(prefix:Bool = true):String
     {
@@ -367,9 +461,9 @@ abstract Color(Int) from Int from UInt to Int to UInt
         // Hex format
         var result:String = toHexString() + "\n";
         // RGB format
-        result += "Red: " + red + " green: " + green + " blue: " + blue + "\n";
+        result += "red: " + red + " green: " + green + " blue: " + blue + "\n";
         // HSB/HSL info
-        result += "Hue: " + roundDecimal(hue, 2) + " saturation: " + roundDecimal(saturation, 2) +
+        result += "hue: " + roundDecimal(hue, 2) + " saturation: " + roundDecimal(saturation, 2) +
             " brightness: " + roundDecimal(brightness, 2) + " lightness: " + roundDecimal(lightness, 2);
 
         return result;

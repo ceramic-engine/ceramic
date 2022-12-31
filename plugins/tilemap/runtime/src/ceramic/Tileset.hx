@@ -1,6 +1,9 @@
 package ceramic;
 
+import ceramic.Assert.assert;
 import tracker.Model;
+
+using ceramic.Extensions;
 
 class Tileset extends Model {
 
@@ -92,6 +95,12 @@ class Tileset extends Model {
     @serialize public var gridCellHeight:Int = 0;
 
     /**
+     * A mapping to access a given slope by it's tile index
+     * without having to walk through the whole slope array
+     */
+    var slopesMapping:IntIntMap = null;
+
+    /**
      * Internal: `true` if TilesetImage instance was created
      * implicitly from assigning a texture object.
      */
@@ -129,6 +138,131 @@ class Tileset extends Model {
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
     }
+
+/// Slopes
+
+    /**
+     * Slopes in this tileset or null if there is no slope.
+     */
+    @serialize public var slopes(default, set):ReadOnlyArray<TileSlope> = null;
+    function set_slopes(slopes:ReadOnlyArray<TileSlope>):ReadOnlyArray<TileSlope> {
+        if (this.slopes != slopes) {
+            this.slopes = slopes;
+            slopesMapping = null; // Slope mapping needs to be rebuilt at next query
+        }
+        return slopes;
+    }
+
+    /**
+     * Add a slope to this tileset.
+     */
+    public extern inline overload function slope(slope:TileSlope):Void {
+        _setSlope(slope.index, slope);
+    }
+
+    /**
+     * Assign a slope to a given tile index.
+     */
+    public extern inline overload function slope(index:Int, slope:TileSlope):Void {
+        if (slope != null)
+            _setSlope(index, slope);
+        else
+            _removeSlope(index);
+    }
+
+    /**
+     * Get a slope from a tile index or assign a slope to a given tile index.
+     */
+    public extern inline overload function slope(index:Int):TileSlope {
+        return _getSlope(index);
+    }
+
+    function _setSlope(index:Int, slope:TileSlope) {
+
+        assert(index >= 0, 'Invalid slope index: $index');
+
+        if (slope.index != index) {
+            slope = {
+                index: index,
+                y0: slope.y0,
+                y1: slope.y1,
+                rotation: slope.rotation
+            };
+        }
+
+        var arrayIndex = -1;
+
+        if (slopesMapping == null) {
+            _buildSlopesMapping();
+        }
+
+        arrayIndex = slopesMapping.get(index) - 1;
+
+        if (arrayIndex == -1) {
+            arrayIndex = slopes.length;
+
+            var nPlus1 = arrayIndex + 1;
+            slopesMapping.set(index, nPlus1);
+        }
+
+        slopes.original[arrayIndex] = slope;
+        dirty = true;
+
+    }
+
+    function _buildSlopesMapping() {
+
+        var slopes = this.slopes;
+
+        if (slopes != null) {
+            slopesMapping = new IntIntMap();
+            for (i in 0...slopes.length) {
+                var slope = slopes.unsafeGet(i);
+                if (slope != null) {
+                    var iPlus1 = i + 1;
+                    slopesMapping.set(slope.index, iPlus1);
+                }
+            }
+        }
+        else {
+            if (slopesMapping != null)
+                slopesMapping = null;
+        }
+
+    }
+
+    function _removeSlope(index:Int) {
+
+        if (slopesMapping != null) {
+            var arrayIndex = slopesMapping.get(index) - 1;
+            if (arrayIndex != -1) {
+                slopesMapping.remove(index);
+                slopes.original.splice(arrayIndex, 1);
+                dirty = true;
+            }
+        }
+
+    }
+
+    function _getSlope(tileIndex:Int):TileSlope {
+
+        if (slopes == null)
+            return null;
+
+        if (slopesMapping == null)
+            _buildSlopesMapping();
+
+        var arrayIndex = slopesMapping.get(tileIndex) - 1;
+
+        if (arrayIndex != -1) {
+            return slopes.unsafeGet(arrayIndex);
+        }
+
+        return null;
+
+    }
+
+/// Lifecycle
 
     override function destroy() {
 

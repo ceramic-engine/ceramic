@@ -295,6 +295,16 @@ class NineSlice extends Visual {
         quadCenter = new Quad();
         add(quadCenter);
 
+        quadTop.inheritAlpha = true;
+        quadTopRight.inheritAlpha = true;
+        quadRight.inheritAlpha = true;
+        quadBottomRight.inheritAlpha = true;
+        quadBottom.inheritAlpha = true;
+        quadBottomLeft.inheritAlpha = true;
+        quadLeft.inheritAlpha = true;
+        quadTopLeft.inheritAlpha = true;
+        quadCenter.inheritAlpha = true;
+
     }
 
     override function computeContent() {

@@ -1,10 +1,10 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import haxe.io.Path;
 import haxe.Json;
-import sys.io.File;
+import haxe.io.Path;
 import sys.FileSystem;
+import sys.io.File;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -89,9 +89,6 @@ class Vscode extends tools.Task {
         //
         var vscodeSettings = {
             "window.title": "${activeEditorShort} — " + project.app.name,
-            "haxe.configurations": [
-                ["completion.hxml"]
-            ],
             "search.exclude": {
                 "**/.git": true,
                 "**/node_modules": true,
@@ -103,18 +100,25 @@ class Vscode extends tools.Task {
         };
 
         // If settings already exist, just change haxe.configurations
-        var settingsExist = false;
+        var settingsModified = false;
         if (FileSystem.exists(Path.join([vscodeDir, 'settings.json']))) {
             try {
                 var existingVscodeSettings = Json.parse(File.getContent(Path.join([vscodeDir, 'settings.json'])));
-                Reflect.setField(existingVscodeSettings, "haxe.configurations", Reflect.field(vscodeSettings, "haxe.configurations"));
-                vscodeSettings = existingVscodeSettings;
-                settingsExist = true;
+                if (Reflect.hasField(existingVscodeSettings, "haxe.configurations")) {
+                    Reflect.deleteField(existingVscodeSettings, "haxe.configurations");
+                    settingsModified = true;
+                    vscodeSettings = existingVscodeSettings;
+                }
+                if (Reflect.hasField(existingVscodeSettings, "haxe.displayConfigurations")) {
+                    Reflect.deleteField(existingVscodeSettings, "haxe.displayConfigurations");
+                    settingsModified = true;
+                    vscodeSettings = existingVscodeSettings;
+                }
             }
             catch (e:Dynamic) {}
         }
-        
-        if (!settingsOnly || settingsExist) {
+
+        if (!settingsOnly || settingsModified) {
             File.saveContent(Path.join([vscodeDir, 'settings.json']), Json.stringify(vscodeSettings, null, '    '));
         }
 
@@ -134,7 +138,7 @@ class Vscode extends tools.Task {
                 }
             ]
         };
-        
+
         if (!settingsOnly) {
             File.saveContent(Path.join([vscodeDir, 'launch.json']), Json.stringify(vscodeLaunch, null, '    '));
         }

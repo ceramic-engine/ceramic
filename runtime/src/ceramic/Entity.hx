@@ -314,7 +314,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      * Destroy this entity. This method is automatically protected from duplicate calls. That means
      * calling multiple times an entity's `destroy()` method will run the destroy code only one time.
      * As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
-     * method on a subclass (a macro is inserting a code to marke the object
+     * method on a subclass (a macro is inserting a code to mark the object
      * as destroyed at the beginning of every `destroy()` override function.
      */
     public function destroy():Void {

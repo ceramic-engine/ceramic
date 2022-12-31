@@ -204,19 +204,9 @@ class Renderer extends Entity {
 
                         var clip:ceramic.Visual;
                         #if !ceramic_no_clip
-                        if (visual.computedClip) {
-                            // Get new clip and compare with last
-                            var clippingVisual = visual;
-                            while (clippingVisual != null && clippingVisual.clip == null) {
-                                clippingVisual = clippingVisual.parent;
-                            }
-                            clip = clippingVisual != null ? clippingVisual.clip : null;
-
-                        } else {
-                        #end
-                            clip = null;
-                        #if !ceramic_no_clip
-                        }
+                        clip = visual.computedClip;
+                        #else
+                        clip = null;
                         #end
 
                         if (clip != lastClip) {

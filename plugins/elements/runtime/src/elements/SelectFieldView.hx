@@ -115,7 +115,7 @@ class SelectFieldView extends FieldView {
 
         textView = new TextView();
         textView.minHeight = 15;
-        textView.viewSize(fill(), auto());
+        textView.viewSize(auto(), auto());
         textView.align = LEFT;
         textView.verticalAlign = CENTER;
         textView.pointSize = 12;
@@ -242,7 +242,13 @@ class SelectFieldView extends FieldView {
 
     function layoutContainer() {
 
-        //
+        if (textView != null) {
+            textView.text.clipText(
+                0, 0,
+                container.width - textView.text.x - textView.x - container.paddingRight - 20 /* tip width */,
+                999999999
+            );
+        }
 
     }
 
@@ -300,9 +306,6 @@ class SelectFieldView extends FieldView {
 
         if (value != null) {
             var displayedValue = value.trim().replace("\n", ' ');
-            if (displayedValue.length > 20) {
-                displayedValue = displayedValue.substr(0, 20) + '...'; // TODO at textview level
-            }
             textView.content = displayedValue;
         }
         else {

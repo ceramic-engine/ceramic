@@ -30,9 +30,13 @@ class Main {
     @:keep public static function main():Void {
 
         // Force to sync app fps with screen fps
+        var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
         untyped __cs__('UnityEngine.QualitySettings.vSyncCount = 1');
 
         var settings = ceramic.App.init();
+        if (isEditor) {
+            settings.targetFps = 60;
+        }
         project = @:privateAccess new Project(settings);
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..'])); // Fix this TODO
 

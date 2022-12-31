@@ -20,9 +20,9 @@ class TilemapEditor extends Entity implements Component {
 
     var hoveredTileIndexes:IntBoolMap = null;
 
-    // var offsetX:Float = 0;
+    var lastPaintedX:Float = -1;
 
-    // var offsetY:Float = 0;
+    var lastPaintedY:Float = -1;
 
     public function new(layerName:String = 'main', fillValue:TilemapTile = 1, emptyValue:TilemapTile = 0) {
 
@@ -51,6 +51,8 @@ class TilemapEditor extends Entity implements Component {
                 var layer = tilemap.layer(layerName);
                 if (layerData != null && layer != null) {
                     layer.screenToVisual(info.x, info.y, _point);
+                    lastPaintedX = _point.x;
+                    lastPaintedY = _point.y;
                     var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
                     if (index >= 0 && index < layerData.tiles.length) {
@@ -104,23 +106,38 @@ class TilemapEditor extends Entity implements Component {
                 var layer = tilemap.layer(layerName);
                 if (layerData != null && layer != null) {
                     layer.screenToVisual(info.x, info.y, _point);
-                    var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
-                    if (index >= 0 && index < layerData.tiles.length) {
-                        if (!hoveredTileIndexes.exists(index)) {
-                            hoveredTileIndexes.set(index, true);
-                            
-                            // Update tile
-                            var tiles = [].concat(layerData.tiles.original);
-                            tiles[index] = leftButtonTileValue;
-                            layerData.tiles = tiles;
+                    var paintedX = _point.x;
+                    var paintedY = _point.y;
 
-                            var layer = tilemap.layer(layerName);
-                            if (layer != null) {
-                                layer.contentDirty = true;
+                    var numSteps = Std.int(Math.max(1, Math.max(Math.abs(paintedX - lastPaintedX), Math.abs(paintedY - lastPaintedY))));
+
+                    for (i in 0...numSteps) {
+
+                        var x = lastPaintedX + (paintedX - lastPaintedX) * i / numSteps;
+                        var y = lastPaintedY + (paintedY - lastPaintedY) * i / numSteps;
+
+                        var index = tileIndexAtPosition(tilemapData, layerData, x, y);
+
+                        if (index >= 0 && index < layerData.tiles.length) {
+                            if (!hoveredTileIndexes.exists(index)) {
+                                hoveredTileIndexes.set(index, true);
+
+                                // Update tile
+                                var tiles = [].concat(layerData.tiles.original);
+                                tiles[index] = leftButtonTileValue;
+                                layerData.tiles = tiles;
+
+                                var layer = tilemap.layer(layerName);
+                                if (layer != null) {
+                                    layer.contentDirty = true;
+                                }
                             }
                         }
                     }
+
+                    lastPaintedX = paintedX;
+                    lastPaintedY = paintedY;
                 }
             }
         }

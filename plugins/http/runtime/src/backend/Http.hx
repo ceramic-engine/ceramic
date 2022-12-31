@@ -246,6 +246,11 @@ class Http implements spec.Http {
 
         if (httpHeaders != null) {
             for (key in httpHeaders.keys()) {
+
+                // Skip unsafe header
+                if (key.toLowerCase() == 'content-length')
+                    continue;
+
                 xhr.setRequestHeader(key, httpHeaders.get(key));
             }
         }

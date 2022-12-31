@@ -75,6 +75,8 @@ class Asset extends Entity implements Observable {
 
     var hotReload(default,set):Bool = false;
 
+    var customExtensions(default,null):Array<String> = null;
+
 /// Lifecycle
 
     public function new(kind:String, name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -143,6 +145,9 @@ class Asset extends Entity implements Observable {
             }
         }
         if (extensions == null) extensions = [];
+        if (customExtensions != null) {
+            extensions = extensions.concat(customExtensions);
+        }
         if (dir == null) dir = false;
 
         // Compute path

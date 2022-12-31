@@ -105,7 +105,7 @@ jobs:
         id: release_url
         run: |
           $UPLOAD_URL = $(cat upload_url.txt)
-          echo "::set-output name=UPLOAD_URL::$UPLOAD_URL"
+          echo "UPLOAD_URL=$UPLOAD_URL" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -204,7 +204,7 @@ jobs:
         working-directory: .
         id: release_url
         run: |
-          echo '::set-output name=UPLOAD_URL::'$(cat upload_url.txt)
+          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -302,7 +302,7 @@ jobs:
         working-directory: .
         id: release_url
         run: |
-          echo '::set-output name=UPLOAD_URL::'$(cat upload_url.txt)
+          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1

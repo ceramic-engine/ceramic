@@ -13,6 +13,15 @@ class AtlasAsset extends Asset {
 
     @observe public var atlas:TextureAtlas = null;
 
+    @observe public var text:String = null;
+
+/// Internal
+
+    /**
+     * A custom atlas parsing method. Will be used over the default parsing if not null
+     */
+    var parseAtlas:(text:String)->TextureAtlas = null;
+
 /// Lifecycle
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -56,16 +65,16 @@ class AtlasAsset extends Asset {
 
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
-        asset.path = path;
         assets.addAsset(asset);
+        asset.path = path;
         assets.onceComplete(this, function(success) {
 
-            var text = asset.text;
+            text = asset.text;
 
             if (text != null) {
 
                 try {
-                    var newAtlas = TextureAtlasParser.parse(text);
+                    var newAtlas = parseAtlas != null ? parseAtlas(text) : TextureAtlasParser.parse(text);
                     newAtlas.id = 'atlas:' + path;
 
                     // Load textures
@@ -98,7 +107,10 @@ class AtlasAsset extends Asset {
                             // Update textures
                             for (i in 0...assetList.length) {
                                 var asset = assetList[i];
-                                newAtlas.pages[i].texture = asset.texture;
+                                var texture = asset.texture;
+                                if (texture != null)
+                                    texture.filter = newAtlas.pages[i].filter;
+                                newAtlas.pages[i].texture = texture;
                             }
 
                             // Compute atlas frames with loaded textures
@@ -148,7 +160,7 @@ class AtlasAsset extends Asset {
                                 // Set asset to null because we don't want it
                                 // to be destroyed when destroying the atlas.
                                 prevAtlas.asset = null;
-                                // Destroy texture
+                                // Destroy previous atlas
                                 prevAtlas.destroy();
                             }
 

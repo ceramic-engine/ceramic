@@ -100,13 +100,26 @@ class SpriteSheet extends Model {
      */
     @serialize public var source:String = null;
 
-/// Helpers
+    /**
+     * The asset related to this sprite sheet (if any)
+     */
+    public var asset:SpriteAsset = null;
 
-    public function extractAsepriteData(asepriteData:Dynamic):Void {
+/// Lifecycle
 
-        log.warning('Not implemented (todo)');
+    override function destroy() {
+
+        if (atlas != null && implicitAtlas) {
+            var _atlas = atlas;
+            atlas = null;
+            _atlas.destroy();
+        }
+
+        super.destroy();
 
     }
+
+/// Helpers
 
     public function addAnimation(animation:SpriteSheetAnimation):Void {
 
