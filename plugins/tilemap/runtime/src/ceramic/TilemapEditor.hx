@@ -14,9 +14,9 @@ class TilemapEditor extends Entity implements Component {
 
     public var emptyValue:TilemapTile;
 
-    var isLeftButtonDown:Bool = false;
+    var buttonDownId:Int = -1;
 
-    var leftButtonTileValue:TilemapTile = 0;
+    var buttonDownValue:Int = -1;
 
     var hoveredTileIndexes:IntBoolMap = null;
 
@@ -43,8 +43,11 @@ class TilemapEditor extends Entity implements Component {
 
     function handlePointerDown(info:TouchInfo) {
 
-        if (info.buttonId == 0) {
-            // Left click
+        if (info.buttonId == 0 || info.buttonId == 2) {
+
+            // Left click: fill
+            // Right click: erase
+
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
@@ -59,18 +62,18 @@ class TilemapEditor extends Entity implements Component {
 
                         hoveredTileIndexes = new IntBoolMap();
                         hoveredTileIndexes.set(index, true);
-                        isLeftButtonDown = true;
+                        buttonDownId = info.buttonId;
                         screen.onPointerMove(this, handlePointerMove);
 
                         // Update tile
                         var tiles = [].concat(layerData.tiles.original);
-                        if (tiles[index] != fillValue) {
+                        if (buttonDownId == 0) {
                             tiles[index] = fillValue;
-                            leftButtonTileValue = fillValue;
+                            buttonDownValue = fillValue;
                         }
                         else {
                             tiles[index] = emptyValue;
-                            leftButtonTileValue = emptyValue;
+                            buttonDownValue = emptyValue;
                         }
                         layerData.tiles = tiles;
 
@@ -82,16 +85,14 @@ class TilemapEditor extends Entity implements Component {
                 }
             }
         }
-        else if (info.buttonId == 2) {
-            // Right click
-        }
 
     }
 
     function handlePointerUp(info:TouchInfo) {
 
-        if (info.buttonId == 0) {
-            isLeftButtonDown = false;
+        if (info.buttonId == buttonDownId) {
+            buttonDownId = -1;
+            buttonDownValue = -1;
             hoveredTileIndexes = null;
         }
 
@@ -99,7 +100,7 @@ class TilemapEditor extends Entity implements Component {
 
     function handlePointerMove(info:TouchInfo) {
 
-        if (isLeftButtonDown && hoveredTileIndexes != null) {
+        if (buttonDownId != -1 && hoveredTileIndexes != null) {
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
@@ -125,7 +126,7 @@ class TilemapEditor extends Entity implements Component {
 
                                 // Update tile
                                 var tiles = [].concat(layerData.tiles.original);
-                                tiles[index] = leftButtonTileValue;
+                                tiles[index] = buttonDownValue;
                                 layerData.tiles = tiles;
 
                                 var layer = tilemap.layer(layerName);
