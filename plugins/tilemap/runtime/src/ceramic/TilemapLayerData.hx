@@ -78,14 +78,14 @@ class TilemapLayerData extends Model {
 
     /**
      * Computed tiles, after applying auto-tiling (if any).
-     * Will be `null` if no auto-tiling is used.    
+     * Will be `null` if no auto-tiling is used.
      */
     @observe public var computedTiles:ReadOnlyArray<TilemapTile> = null;
 
     /**
      * A shorthand to set `width` and `height`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function size(width:Int, height:Int):Void {
         this.width = width;
@@ -94,8 +94,8 @@ class TilemapLayerData extends Model {
 
     /**
      * A shorthand to set `x` and `y`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function pos(x:Int, y:Int):Void {
         this.x = x;
@@ -104,8 +104,8 @@ class TilemapLayerData extends Model {
 
     /**
      * A shorthand to set `offsetX` and `offsetY`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function offset(offsetX:Int, offsetY:Int):Void {
         this.offsetX = offsetX;

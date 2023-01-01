@@ -21,6 +21,7 @@ class AutoTiler extends Entity implements Component {
         this.gidMap = new IntMap<AutoTile>();
         for (i in 0...autoTiles.length) {
             var autoTile = autoTiles.unsafeGet(i);
+            autoTile.computeValues();
             this.gidMap.set(autoTile.gid, autoTile);
         }
 
@@ -51,8 +52,9 @@ class AutoTiler extends Entity implements Component {
         }
         computedTiles.setArrayLength(tiles.length);
 
-        var edgeCorner32Map = AutoTiler.edgeCorner32Map;
-        var expandedBottomCorner26Map = AutoTiler.expandedBottomCorner26Map;
+        var edgeCorner32Map:ReadOnlyArray<Int> = null;
+        var expandedBottomCorner26Map:ReadOnlyArray<Int> = null;
+        var tilesetterBlob47Map:ReadOnlyArray<Int> = null;
 
         var listensComputeTileEvent = this.listensComputeTile();
 
@@ -76,7 +78,7 @@ class AutoTiler extends Entity implements Component {
                 var kind = autoTile.kind;
                 var boundsSameTile = autoTile.bounds;
                 switch kind {
-                    case EDGE_16 | EDGE_CORNER_32 | EXPANDED_47 | EXPANDED_BOTTOM_CORNER_26:
+                    case EDGE_16 | EDGE_CORNER_32 | EXPANDED_47 | EXPANDED_BOTTOM_CORNER_26 | TILESETTER_BLOB_47:
 
                         // Create mask from surrounding tiles
                         // bits: 0 = any other tile / 1 = same tile
@@ -240,12 +242,46 @@ class AutoTiler extends Entity implements Component {
                                 tile.gid = 0;
                             }
                             else {
+                                if (edgeCorner32Map == null)
+                                    edgeCorner32Map = AutoTiler.edgeCorner32Map;
                                 finalIndex = edgeCorner32Map[finalIndex];
-                                if (kind == EXPANDED_BOTTOM_CORNER_26) {
-                                    finalIndex = expandedBottomCorner26Map[finalIndex];
-                                }
 
-                                tile.gid = gid + finalIndex;
+                                switch kind {
+
+                                    case EDGE_16:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EDGE_CORNER_32:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EXPANDED_47:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EXPANDED_BOTTOM_CORNER_26:
+                                        if (expandedBottomCorner26Map == null)
+                                            expandedBottomCorner26Map = AutoTiler.expandedBottomCorner26Map;
+                                        finalIndex = expandedBottomCorner26Map[finalIndex];
+
+                                        tile.gid = gid + finalIndex;
+
+                                    case TILESETTER_BLOB_47:
+                                        if (tilesetterBlob47Map == null)
+                                            tilesetterBlob47Map = AutoTiler.tilesetterBlob47Map;
+
+                                        var tileset = autoTile.tileset;
+                                        if (tileset != null) {
+                                            var x = autoTile.column;
+                                            var y = autoTile.row;
+                                            x += tilesetterBlob47Map[finalIndex * 2];
+                                            y += tilesetterBlob47Map[finalIndex * 2 + 1];
+                                            finalIndex = tileset.gidAtPosition(x, y);
+
+                                            tile.gid = finalIndex;
+                                        }
+                                        else {
+                                            throw "The 'tileset' option is required when using TILESETTER_BLOB_47 auto tile kind!";
+                                        }
+                                }
                             }
 
                             // Add extra tile on top if it already existed
@@ -363,6 +399,204 @@ class AutoTiler extends Entity implements Component {
             expandedBottomCorner26Map = map;
         }
         return expandedBottomCorner26Map;
+    }
+
+    public static var tilesetterBlob47Map(get,null):ReadOnlyArray<Int> = null;
+    static function get_tilesetterBlob47Map():ReadOnlyArray<Int> {
+        if (tilesetterBlob47Map == null) {
+            var map:Array<Int> = [];
+
+            var i = 0;
+            map[i*2] = 2;
+            map[i*2+1] = 2;
+
+            i = 1;
+            map[i*2] = 1;
+            map[i*2+1] = 2;
+
+            i = 2;
+            map[i*2] = 2;
+            map[i*2+1] = 1;
+
+            i = 3;
+            map[i*2] = 1;
+            map[i*2+1] = 1;
+
+            i = 4;
+            map[i*2] = -1;
+            map[i*2+1] = 2;
+
+            i = 5;
+            map[i*2] = 0;
+            map[i*2+1] = 2;
+
+            i = 6;
+            map[i*2] = -1;
+            map[i*2+1] = 1;
+
+            i = 7;
+            map[i*2] = 0;
+            map[i*2+1] = 1;
+
+            i = 8;
+            map[i*2] = 2;
+            map[i*2+1] = -1;
+
+            i = 9;
+            map[i*2] = 1;
+            map[i*2+1] = -1;
+
+            i = 10;
+            map[i*2] = 2;
+            map[i*2+1] = 0;
+
+            i = 11;
+            map[i*2] = 1;
+            map[i*2+1] = 0;
+
+            i = 12;
+            map[i*2] = -1;
+            map[i*2+1] = -1;
+
+            i = 13;
+            map[i*2] = 0;
+            map[i*2+1] = -1;
+
+            i = 14;
+            map[i*2] = -1;
+            map[i*2+1] = 0;
+
+            i = 15;
+            map[i*2] = 7;
+            map[i*2+1] = 3;
+
+            i = 16;
+            map[i*2] = 9;
+            map[i*2+1] = 2;
+
+            i = 17;
+            map[i*2] = 8;
+            map[i*2+1] = 2;
+
+            i = 18;
+            map[i*2] = 7;
+            map[i*2+1] = -1;
+
+            i = 19;
+            map[i*2] = 7;
+            map[i*2+1] = 0;
+
+            i = 20;
+            map[i*2] = 8;
+            map[i*2+1] = 1;
+
+            i = 21;
+            map[i*2] = 8;
+            map[i*2+1] = -1;
+
+            i = 22;
+            map[i*2] = 6;
+            map[i*2+1] = 3;
+
+            i = 23;
+            map[i*2] = 5;
+            map[i*2+1] = 3;
+
+            i = 24;
+            map[i*2] = 6;
+            map[i*2+1] = -1;
+
+            i = 25;
+            map[i*2] = 6;
+            map[i*2+1] = 0;
+
+            i = 26;
+            map[i*2] = 5;
+            map[i*2+1] = -1;
+
+            i = 27;
+            map[i*2] = 5;
+            map[i*2+1] = 0;
+
+            i = 28;
+            map[i*2] = 9;
+            map[i*2+1] = 1;
+
+            i = 29;
+            map[i*2] = 3;
+            map[i*2+1] = 3;
+
+            i = 30;
+            map[i*2] = 4;
+            map[i*2+1] = 3;
+
+            i = 31;
+            map[i*2] = 8;
+            map[i*2+1] = 0;
+
+            i = 32;
+            map[i*2] = 3;
+            map[i*2+1] = -1;
+
+            i = 33;
+            map[i*2] = 4;
+            map[i*2+1] = -1;
+
+            i = 34;
+            map[i*2] = 3;
+            map[i*2+1] = 0;
+
+            i = 35;
+            map[i*2] = 4;
+            map[i*2+1] = 0;
+
+            i = 36;
+            map[i*2] = 7;
+            map[i*2+1] = 2;
+
+            i = 37;
+            map[i*2] = 7;
+            map[i*2+1] = 1;
+
+            i = 38;
+            map[i*2] = 3;
+            map[i*2+1] = 2;
+
+            i = 39;
+            map[i*2] = 4;
+            map[i*2+1] = 2;
+
+            i = 40;
+            map[i*2] = 3;
+            map[i*2+1] = 1;
+
+            i = 41;
+            map[i*2] = 4;
+            map[i*2+1] = 1;
+
+            i = 42;
+            map[i*2] = 6;
+            map[i*2+1] = 2;
+
+            i = 43;
+            map[i*2] = 5;
+            map[i*2+1] = 2;
+
+            i = 44;
+            map[i*2] = 6;
+            map[i*2+1] = 1;
+
+            i = 45;
+            map[i*2] = 5;
+            map[i*2+1] = 1;
+
+            i = 46;
+            map[i*2] = 0;
+            map[i*2+1] = 0;
+
+            tilesetterBlob47Map = map;
+        }
+        return tilesetterBlob47Map;
     }
 
     public static var edgeCorner32InvertedMap(get,null):ReadOnlyArray<Int> = null;

@@ -22,4 +22,34 @@ class AutoTile {
      */
     public var bounds:Bool = true;
 
+    /**
+     * The tileset holding this autotile. Required when using `TILESETTER_BLOB_47` kind.
+     */
+    public var tileset:Tileset = null;
+
+    /**
+     * Column in the tileset matching the main gid of this autotile.
+     * Available when a `tileset` option is provided.
+     */
+    public var column(default, null):Int = -1;
+
+    /**
+     * Row in the tileset matching the main gid of this autotile.
+     * Available when a `tileset` option is provided.
+     */
+    public var row(default, null):Int = -1;
+
+    /**
+     * Will compute additional values like `row` and `column`
+     * from the existing data. Automatically called by `AutoTiler`.
+     */
+    public function computeValues() {
+
+        if (tileset != null) {
+            column = tileset.columnForGid(gid);
+            row = tileset.rowForGid(gid);
+        }
+
+    }
+
 }

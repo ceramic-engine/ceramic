@@ -35,4 +35,10 @@ enum abstract AutoTileKind(Int) from Int to Int {
      */
     var EXPANDED_BOTTOM_CORNER_26 = 4;
 
+    /**
+     * Blob set. This renders the same auto tiling as `EXPANDED_47` but
+     * the source tiles layout is following tilesetter's: https://www.tilesetter.org/docs/generating_tilesets#blob-sets
+     */
+    var TILESETTER_BLOB_47 = 5;
+
 }
