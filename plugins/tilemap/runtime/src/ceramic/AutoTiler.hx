@@ -6,11 +6,13 @@ class AutoTiler extends Entity implements Component {
 
     @entity var layerData:TilemapLayerData;
 
+    @event function computeTile(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int);
+
     public var autoTiles(default, null):ReadOnlyArray<AutoTile>;
 
     var gidMap:IntMap<AutoTile>;
 
-    public function new(autoTiles:Array<AutoTile>) {
+    public function new(autoTiles:Array<AutoTile>, ?handleComputeTile:(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int)->Void) {
 
         super();
 
@@ -20,6 +22,10 @@ class AutoTiler extends Entity implements Component {
         for (i in 0...autoTiles.length) {
             var autoTile = autoTiles.unsafeGet(i);
             this.gidMap.set(autoTile.gid, autoTile);
+        }
+
+        if (handleComputeTile != null) {
+            onComputeTile(this, handleComputeTile);
         }
 
     }
@@ -47,6 +53,8 @@ class AutoTiler extends Entity implements Component {
 
         var edgeCorner32Map = AutoTiler.edgeCorner32Map;
         var expandedBottomCorner26Map = AutoTiler.expandedBottomCorner26Map;
+
+        var listensComputeTileEvent = this.listensComputeTile();
 
         var row = 0;
         var col = 0;
@@ -193,12 +201,16 @@ class AutoTiler extends Entity implements Component {
                                 var cornerTile = tile;
                                 cornerTile.gid = gid + 16 + cornerMask;
                                 computedTiles[i + numTiles] = cornerTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles);
                             }
 
                             // Add extra tile on top if it already existed
                             // but offset it with gid
                             if (extraTile != 0) {
                                 computedTiles[i + numTiles * 2] = extraTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles * 2);
                             }
                         }
                         else {
@@ -240,6 +252,8 @@ class AutoTiler extends Entity implements Component {
                             // but offset it with gid
                             if (extraTile != 0) {
                                 computedTiles[i + numTiles] = extraTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles);
                             }
                         }
                 }
@@ -247,6 +261,8 @@ class AutoTiler extends Entity implements Component {
 
             // Assign computed tile
             computedTiles.unsafeSet(i, tile);
+            if (listensComputeTileEvent && autoTile != null)
+                emitComputeTile(this, autoTile, computedTiles, i);
 
             // Update row and columns
             col++;
