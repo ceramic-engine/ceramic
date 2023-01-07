@@ -8,11 +8,13 @@ class AutoTiler extends Entity implements Component {
 
     @event function computeTile(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int);
 
+    @event function computeTiles(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>);
+
     public var autoTiles(default, null):ReadOnlyArray<AutoTile>;
 
     var gidMap:IntMap<AutoTile>;
 
-    public function new(autoTiles:Array<AutoTile>, ?handleComputeTile:(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int)->Void) {
+    public function new(autoTiles:Array<AutoTile>, ?handleComputeTile:(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int)->Void, ?handleComputeTiles:(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>)->Void) {
 
         super();
 
@@ -27,6 +29,10 @@ class AutoTiler extends Entity implements Component {
 
         if (handleComputeTile != null) {
             onComputeTile(this, handleComputeTile);
+        }
+
+        if (handleComputeTiles != null) {
+            onComputeTiles(this, handleComputeTiles);
         }
 
     }
@@ -310,6 +316,9 @@ class AutoTiler extends Entity implements Component {
             // Increment extra i
             extraI++;
         }
+
+        // Emit event before updating computed tiles
+        emitComputeTiles(this, computedTiles);
 
         // Update computed tiles
         layerData.computedTiles = computedTiles;

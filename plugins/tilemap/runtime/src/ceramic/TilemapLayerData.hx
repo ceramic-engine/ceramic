@@ -114,9 +114,15 @@ class TilemapLayerData extends Model {
 
 /// Helpers
 
+    inline public function indexFromColumnAndRow(column:Int, row:Int):Int {
+
+        return row * width + column;
+
+    }
+
     inline public function tileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
-        var index = row * width + column;
+        var index = indexFromColumnAndRow(column, row);
         return tiles.unsafeGet(index);
 
     }
@@ -129,7 +135,7 @@ class TilemapLayerData extends Model {
 
     inline public function rowAtIndex(index:Int):Int {
 
-        return Math.floor(index / height);
+        return Math.floor(index / width);
 
     }
 

@@ -48,6 +48,23 @@ class Tileset extends Model {
     @serialize public var columns:Int = 0;
 
     /**
+     * The number of tile rows in this tileset
+     */
+    @compute public function rows():Int {
+
+        var result:Int = 0;
+
+        var image = this.image;
+        if (image != null) {
+            var imageHeight = image.height;
+            result = Math.floor((imageHeight - margin * 2 + spacing) / (tileHeight + spacing));
+        }
+
+        return result;
+
+    }
+
+    /**
      * Horizontal offset. Used to specify an offset to be applied when drawing a tile.
      */
     @serialize public var tileOffsetX:Int = 0;
@@ -144,46 +161,19 @@ class Tileset extends Model {
      */
     public function gidAtPosition(column:Float, row:Float):Int {
 
-        var image = this.image;
-        var tileWidth = this.tileWidth;
-        var result:Int = -1;
-        if (image != null && tileWidth > 0) {
-            var imageWidth = image.width;
-            if (imageWidth > 0) {
-                result = Math.floor(firstGid + row * Math.floor(imageWidth / tileWidth) + column);
-            }
-        }
-        return result;
+        return Math.floor(firstGid + row * columns + column);
 
     }
 
     inline public function columnForGid(gid:Int):Int {
 
-        var image = this.image;
-        var tileWidth = this.tileWidth;
-        var result:Int = -1;
-        if (image != null && tileWidth > 0) {
-            var imageWidth = image.width;
-            if (imageWidth > 0) {
-                result = (gid - firstGid) % Math.floor(imageWidth / tileWidth);
-            }
-        }
-        return result;
+        return (gid - firstGid) % columns;
 
     }
 
     inline public function rowForGid(gid:Int):Int {
 
-        var image = this.image;
-        var tileHeight = this.tileHeight;
-        var result:Int = -1;
-        if (image != null && tileHeight > 0) {
-            var imageHeight = image.height;
-            if (imageHeight > 0) {
-                result = Math.floor((gid - firstGid) / Math.floor(imageHeight / tileHeight));
-            }
-        }
-        return result;
+        return Math.floor((gid - firstGid) / columns);
 
     }
 
