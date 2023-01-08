@@ -4,6 +4,10 @@ import ceramic.Shortcuts.*;
 
 class TilemapEditor extends Entity implements Component {
 
+    @event function fill(index:Int);
+
+    @event function erase(index:Int);
+
     static var _point = new Point(0, 0);
 
     @entity var tilemap:Tilemap;
@@ -12,7 +16,9 @@ class TilemapEditor extends Entity implements Component {
 
     public var fillValue:TilemapTile;
 
-    public var emptyValue:TilemapTile;
+    public var eraseValue:TilemapTile;
+
+    public var enabled:Bool = true;
 
     var buttonDownId:Int = -1;
 
@@ -24,13 +30,13 @@ class TilemapEditor extends Entity implements Component {
 
     var lastPaintedY:Float = -1;
 
-    public function new(layerName:String = 'main', fillValue:TilemapTile = 1, emptyValue:TilemapTile = 0) {
+    public function new(layerName:String = 'main', fillValue:TilemapTile = 1, eraseValue:TilemapTile = 0) {
 
         super();
 
         this.layerName = layerName;
         this.fillValue = fillValue;
-        this.emptyValue = emptyValue;
+        this.eraseValue = eraseValue;
 
     }
 
@@ -42,6 +48,9 @@ class TilemapEditor extends Entity implements Component {
     }
 
     function handlePointerDown(info:TouchInfo) {
+
+        if (!enabled)
+            return;
 
         if (info.buttonId == 0 || info.buttonId == 2) {
 
@@ -72,10 +81,16 @@ class TilemapEditor extends Entity implements Component {
                             buttonDownValue = fillValue;
                         }
                         else {
-                            tiles[index] = emptyValue;
-                            buttonDownValue = emptyValue;
+                            tiles[index] = eraseValue;
+                            buttonDownValue = eraseValue;
                         }
                         layerData.tiles = tiles;
+                        if (buttonDownId == 0) {
+                            emitFill(index);
+                        }
+                        else {
+                            emitErase(index);
+                        }
 
                         var layer = tilemap.layer(layerName);
                         if (layer != null) {
@@ -128,6 +143,13 @@ class TilemapEditor extends Entity implements Component {
                                 var tiles = [].concat(layerData.tiles.original);
                                 tiles[index] = buttonDownValue;
                                 layerData.tiles = tiles;
+
+                                if (buttonDownValue == fillValue) {
+                                    emitFill(index);
+                                }
+                                else {
+                                    emitErase(index);
+                                }
 
                                 var layer = tilemap.layer(layerName);
                                 if (layer != null) {
