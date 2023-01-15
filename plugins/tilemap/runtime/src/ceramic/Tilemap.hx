@@ -321,6 +321,61 @@ class Tilemap extends Quad {
 
     }
 
+    /**
+     * Returns `true` if the tilemap should collide at the given `x` and `y` position with an object going to the given `direction`.
+     */
+    public function shouldCollideAtPosition(x:Float, y:Float, direction:arcade.Direction = NONE):Bool {
+
+        var result:Bool = false;
+
+        if (collidableLayersDirty)
+            computeCollidableLayers();
+
+        var tilemapData = this.tilemapData;
+        if (tilemapData != null) {
+
+            var tileWidth = tilemapData.tileWidth;
+            var tileHeight = tilemapData.tileHeight;
+
+            var computedCollidableLayers = this.computedCollidableLayers;
+            if (computedCollidableLayers != null) {
+                for (i in 0...computedCollidableLayers.length) {
+                    var layer = computedCollidableLayers.unsafeGet(i);
+                    var layerData = layer.layerData;
+                    if (layerData != null) {
+
+                        var checkLayer:Bool = switch direction {
+                            case NONE: layer.checkCollisionUp || layer.checkCollisionRight || layer.checkCollisionDown || layer.checkCollisionLeft;
+                            case LEFT: layer.checkCollisionRight;
+                            case RIGHT: layer.checkCollisionLeft;
+                            case UP: layer.checkCollisionDown;
+                            case DOWN: layer.checkCollisionUp;
+                        }
+
+                        if (checkLayer) {
+                            var offsetX = layerData.offsetX + layerData.x * tileWidth;
+                            var offsetY = layerData.offsetY + layerData.y * tileHeight;
+
+                            var column = Math.floor((x - offsetX) / tileWidth);
+                            var row = Math.floor((y - offsetY) / tileHeight);
+
+                            if (column >= 0 && column < layerData.width && row >= 0 && row < layerData.height) {
+                                var tile = layerData.tileByColumnAndRow(column, row);
+                                if (tile != 0) {
+                                    result = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+
+    }
+
 #end
 
 }
