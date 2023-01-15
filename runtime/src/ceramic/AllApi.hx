@@ -200,6 +200,9 @@ import ceramic.Sound;
 import ceramic.SoundAsset;
 import ceramic.SoundPlayer;
 #if (sys && ceramic_sqlite) import ceramic.SqliteKeyValue; #end
+import ceramic.Scene;
+import ceramic.SceneStatus;
+import ceramic.SceneSystem;
 import ceramic.State;
 import ceramic.StateMachine;
 import ceramic.StateMachineBase;
@@ -214,6 +217,10 @@ import ceramic.TextAlign;
 import ceramic.TextAsset;
 import ceramic.TextInput;
 import ceramic.TextInputDelegate;
+import ceramic.TextureAtlas;
+import ceramic.TextureAtlasPage;
+import ceramic.TextureAtlasParser;
+import ceramic.TextureAtlasRegion;
 import ceramic.Texture;
 import ceramic.TextureFilter;
 import ceramic.TextureTile;
@@ -276,6 +283,7 @@ import ceramic.VisualNapePhysics;
 #end
 
 #if plugin_tilemap
+import ceramic.AutoTile;
 import ceramic.AutoTileKind;
 import ceramic.AutoTiler;
 import ceramic.ConvertTilemapData;
@@ -290,7 +298,6 @@ import ceramic.TilemapParser;
 import ceramic.TilemapPlugin;
 import ceramic.TilemapQuad;
 import ceramic.TilemapRenderOrder;
-import ceramic.Tilemaps;
 import ceramic.TilemapStaggerAxis;
 import ceramic.TilemapStaggerIndex;
 import ceramic.TilemapTile;
@@ -300,11 +307,15 @@ import ceramic.TilesetImage;
 #end
 
 #if plugin_sprite
+import ceramic.AsepriteParser;
+import ceramic.ConvertSpriteSheet;
 import ceramic.Sprite;
+import ceramic.SpriteBase;
+import ceramic.SpriteAsset;
 import ceramic.SpriteSheet;
 import ceramic.SpriteSheetAnimation;
 import ceramic.SpriteSheetFrame;
-import ceramic.SpriteSheetImage;
+import ceramic.SpriteSheetParser;
 import ceramic.SpriteSystem;
 #end
 
