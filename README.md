@@ -7,17 +7,6 @@ Ceramic is a cross-platform 2D framework written in Haxe that can export nativel
 
 ![demo-video](https://user-images.githubusercontent.com/164094/134378094-401c519d-bdd0-4d89-b9a2-c7f9d5893c02.gif)
 
-## ℹ️ More updates about ceramic soon
-
-Ceramic is _almost_ ready to be used by more developers.
-
-At the moment, it lacks a lot of documentation, but you can already read a few articles:
-- Start with the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://ceramic-engine.com/guides/discover-ceramic/)
-- Then, follow the [Guides](https://ceramic-engine.com/guides/). Start with the Getting Started section, to install Ceramic and create your first project, and continue learning the the additional guides.
-- Check the [Ceramic API docs](https://ceramic-engine.com/api-docs/) (still rough, will be improved iteratively).
-- Take a look at the [Samples repository](https://github.com/ceramic-engine/ceramic-samples/) to see small example projects that demonstrate ceramic features (new samples will be added on a regular basis). Test them on [Ceramic website examples page](https://ceramic-engine.com/examples/).
-- Join the **#ceramic** channel on the [Haxe Discord](https://discordapp.com/invite/0uEuWH3spjck73Lo) server.
-
 ## Why ceramic?
 
 Ceramic is made with a few goals in mind:
@@ -38,7 +27,12 @@ Ceramic comes with command line tools, also written in Haxe language, then run w
 
 ## Getting started
 
-**Take a look at the [Wiki](https://github.com/ceramic-engine/ceramic/wiki).**
+Documentation on https://ceramic-engine.com is actively being improved. Here's how you can start:
+- Read the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://ceramic-engine.com/guides/discover-ceramic/)
+- Then, follow the [Guides](https://ceramic-engine.com/guides/). Start with the Getting Started section, to install Ceramic and create your first project, and continue learning the the additional guides.
+- Check the [Ceramic API docs](https://ceramic-engine.com/api-docs/) (still rough, will be improved iteratively).
+- Take a look at the [Samples repository](https://github.com/ceramic-engine/ceramic-samples/) to see small example projects that demonstrate ceramic features (new samples will be added on a regular basis). Test them on [Ceramic website examples page](https://ceramic-engine.com/examples/).
+- Join the **#ceramic** channel on the [Haxe Discord](https://discordapp.com/invite/0uEuWH3spjck73Lo) server.
 
 ## Available backends
 
