@@ -23,7 +23,7 @@ class TilemapMacros {
 
         AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);
 
-        var nameFields = AssetsMacro.computeNames(fields, pos, 'tilemap', ['tmx']);
+        var nameFields = AssetsMacro.computeNames(fields, pos, 'tilemap', ['tmx' #if plugin_ldtk , 'ldtk' #end]);
 
         for (field in nameFields) {
             fields.push(field);

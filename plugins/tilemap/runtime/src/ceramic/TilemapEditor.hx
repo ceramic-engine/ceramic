@@ -169,16 +169,16 @@ class TilemapEditor extends Entity implements Component {
 
     static function tileIndexAtPosition(tilemapData:TilemapData, layerData:TilemapLayerData, x:Float, y:Float):Int {
 
-        var tileWidth = tilemapData.tileWidth;
-        var tileHeight = tilemapData.tileHeight;
+        var tileWidth = layerData.tileWidth;
+        var tileHeight = layerData.tileHeight;
         x -= layerData.offsetX + layerData.x * tileWidth;
         y -= layerData.offsetY + layerData.y * tileHeight;
         var index = -1;
-        if (x >= 0 && x < layerData.width * tileWidth) {
-            if (y >= 0 && y < layerData.height * tileHeight) {
+        if (x >= 0 && x < layerData.columns * tileWidth) {
+            if (y >= 0 && y < layerData.rows * tileHeight) {
                 var column:Int = Math.floor(x / tileWidth);
                 var row:Int = Math.floor(y / tileHeight);
-                index = row * layerData.width + column;
+                index = row * layerData.columns + column;
             }
         }
         return index;

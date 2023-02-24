@@ -18,6 +18,7 @@ app:
     plugins:
         - clay
         - tilemap
+        - ldtk
         - spine
         - nape
         - arcade

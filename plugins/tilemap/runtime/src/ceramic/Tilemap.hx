@@ -156,8 +156,8 @@ class Tilemap extends Quad {
 
         // Update size
         size(
-            tilemapData.width * tilemapData.tileWidth,
-            tilemapData.height * tilemapData.tileHeight
+            tilemapData.width,
+            tilemapData.height
         );
 
         computeLayers();
@@ -334,15 +334,15 @@ class Tilemap extends Quad {
         var tilemapData = this.tilemapData;
         if (tilemapData != null) {
 
-            var tileWidth = tilemapData.tileWidth;
-            var tileHeight = tilemapData.tileHeight;
-
             var computedCollidableLayers = this.computedCollidableLayers;
             if (computedCollidableLayers != null) {
                 for (i in 0...computedCollidableLayers.length) {
                     var layer = computedCollidableLayers.unsafeGet(i);
                     var layerData = layer.layerData;
                     if (layerData != null) {
+
+                        var tileWidth = layerData.tileWidth;
+                        var tileHeight = layerData.tileHeight;
 
                         var checkLayer:Bool = switch direction {
                             case NONE: layer.checkCollisionUp || layer.checkCollisionRight || layer.checkCollisionDown || layer.checkCollisionLeft;
@@ -359,7 +359,7 @@ class Tilemap extends Quad {
                             var column = Math.floor((x - offsetX) / tileWidth);
                             var row = Math.floor((y - offsetY) / tileHeight);
 
-                            if (column >= 0 && column < layerData.width && row >= 0 && row < layerData.height) {
+                            if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
                                 var tile = layerData.tileByColumnAndRow(column, row);
                                 if (tile != 0) {
                                     result = true;

@@ -3,21 +3,22 @@ package ceramic;
 import ceramic.Shortcuts.*;
 import format.tmx.Data.TmxBaseLayer;
 import format.tmx.Data.TmxImage;
+import format.tmx.Data.TmxImage;
 import format.tmx.Data.TmxLayer;
 import format.tmx.Data.TmxMap;
-import format.tmx.Data.TmxTileset;
-import format.tmx.Reader as TmxReader;
 #if (haxe_ver >= 4)
 import haxe.xml.Access as Fast;
 #else
 import haxe.xml.Fast;
 #end
 
-
 class TilemapParser {
 
-    @:allow(ceramic.TilemapAsset)
     var tmxParser:TilemapTmxParser = null;
+
+    #if plugin_ldtk
+    var ldtkParser:TilemapLdtkParser = null;
+    #end
 
     public function new() {}
 
@@ -88,12 +89,12 @@ class TilemapParser {
 
     }
 
-    public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:TmxImage->(Texture->Void)->Void):TilemapData {
+    public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):TilemapData {
 
         var tilemapData = new TilemapData();
 
-        tilemapData.width = tmxMap.width;
-        tilemapData.height = tmxMap.height;
+        tilemapData.width = tmxMap.width * tmxMap.tileWidth;
+        tilemapData.height = tmxMap.height * tmxMap.tileHeight;
 
         switch (tmxMap.orientation) {
             case Orthogonal:
@@ -108,9 +109,6 @@ class TilemapParser {
                 tilemapData.orientation = ORTHOGONAL;
                 log.warning('TMX map orientation is Unknown($value), using ORTHOGONAL in TilemapData');
         }
-
-        tilemapData.tileWidth = tmxMap.tileWidth;
-        tilemapData.tileHeight = tmxMap.tileHeight;
 
         tilemapData.backgroundColor = tmxMap.backgroundColor;
 
@@ -182,11 +180,6 @@ class TilemapParser {
 
                 tileset.columns = tmxTileset.columns;
 
-                if (tmxTileset.tileOffset != null) {
-                    tileset.tileOffsetX = tmxTileset.tileOffset.x;
-                    tileset.tileOffsetY = tmxTileset.tileOffset.y;
-                }
-
                 if (tmxTileset.image != null) {
                     var tmxImage = tmxTileset.image;
                     var image = new TilesetImage();
@@ -204,14 +197,17 @@ class TilemapParser {
 
                     if (tmxImage.source != null) {
                         image.source = tmxImage.source;
-                    }
 
-                    if (loadTexture != null) {
-                        (function(image:TilesetImage, tmxImage:TmxImage) {
-                            loadTexture(tmxImage, function(texture:Texture) {
-                                image.texture = texture;
-                            });
-                        })(image, tmxImage);
+                        if (loadTexture != null) {
+                            (function(image:TilesetImage, source:String) {
+                                loadTexture(source, function(texture:Texture) {
+                                    image.texture = texture;
+                                });
+                            })(image, tmxImage.source);
+                        }
+                    }
+                    else if (tmxImage.data != null) {
+                        log.warning('Loading TMX embedded images is not supported.');
                     }
 
                     tileset.image = image;
@@ -246,8 +242,8 @@ class TilemapParser {
                     layer.name = tmxLayer.name;
                     if (tmxLayer.x != null) layer.x = Std.int(tmxLayer.x);
                     if (tmxLayer.y != null) layer.y = Std.int(tmxLayer.y);
-                    if (tmxLayer.width != null) layer.width = tmxLayer.width;
-                    if (tmxLayer.height != null) layer.height = tmxLayer.height;
+                    if (tmxLayer.width != null) layer.columns = tmxLayer.width;
+                    if (tmxLayer.height != null) layer.rows = tmxLayer.height;
                     if (tmxLayer.opacity != null) layer.opacity = tmxLayer.opacity;
                     if (tmxLayer.visible != null) layer.visible = tmxLayer.visible;
                     if (tmxLayer.offsetX != null) layer.offsetX = tmxLayer.offsetX;
@@ -257,6 +253,13 @@ class TilemapParser {
                 switch (tmxLayer) {
                     case LTileLayer(_layer):
                         var layer = new TilemapLayerData();
+
+                        // Tiled doesn't support layers with different tile size,
+                        // so we simply use the same tile size of the map itself
+                        // for each layer!
+                        layer.tileWidth = tmxMap.tileWidth;
+                        layer.tileHeight = tmxMap.tileHeight;
+
                         copyTmxLayerData(_layer, layer);
                         if (_layer.data != null && _layer.data.tiles != null) {
                             // Ceramic tilemap tile encoding follows TMX tile encoding,
@@ -282,70 +285,45 @@ class TilemapParser {
 
     }
 
-}
+#if plugin_ldtk
 
-@:allow(ceramic.TilemapParser)
-private class TilemapTmxParser {
+    /**
+     * Parse LDtk file
+     * @param rawLdtkData Raw LDtk data as string
+     * @return The LDtk parsed data
+     */
+    public function parseLdtk(rawLdtkData:String):LdtkData {
 
-    private var tsxCache:Map<String, TmxTileset> = null;
+        // Parse LDtk data
+        if (ldtkParser == null) {
+            ldtkParser = new TilemapLdtkParser();
+        }
+        var ldtkData = ldtkParser.parseLdtk(rawLdtkData);
 
-    private var r:TmxReader = null;
+        if (ldtkData == null) {
+            log.warning('Failed to parse LDtk data: result is null!');
+            return null;
+        }
 
-    private var resolveTsxRawData:(name:String,cwd:String)->String = null;
-
-    private var cwd:String;
-
-    public function new() {
+        return ldtkData;
 
     }
 
-    public function parseTmx(rawTmxData:String, cwd:String, ?resolveTsxRawData:(name:String,cwd:String)->String):TmxMap {
+    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):Void {
 
-        if (rawTmxData.length == 0) {
-            throw "Tilemap: rawTmxData is 0 length";
+        if (ldtkData.externalLevels) {
+            log.info('This LDtk project uses external levels');
+            return;
         }
 
-        this.resolveTsxRawData = resolveTsxRawData != null ? resolveTsxRawData : (function(_,_) { return null; });
-
-        if (tsxCache == null) {
-            tsxCache = new Map();
+        if (ldtkParser == null) {
+            ldtkParser = new TilemapLdtkParser();
         }
 
-        try
-        {
-            r = new TmxReader();
-            r.resolveTSX = getTsx;
-            this.cwd = cwd;
-            var result = r.read(Xml.parse(rawTmxData));
-            this.cwd = null;
-            return result;
-        }
-        catch (e:Dynamic)
-        {
-            log.error(e);
-        }
-
-        return null;
+        ldtkParser.loadLdtkTilemaps(ldtkData, loadTexture);
 
     }
 
-    function clearCache():Void {
-
-        tsxCache = null;
-
-    }
-
-    function getTsx(name:String):TmxTileset {
-
-        var cacheKey = cwd + ':' + name;
-        var cached:TmxTileset = tsxCache.get(cacheKey);
-        if (cached != null) return cached;
-
-        cached = r.readTSX(Xml.parse(resolveTsxRawData(name, cwd)));
-        tsxCache.set(cacheKey, cached);
-
-        return cached;
-
-    }
+#end
 
 }

@@ -7,6 +7,7 @@ import ceramic.ImageAsset;
 import ceramic.Mesh;
 import ceramic.Path;
 import ceramic.Quad;
+import ceramic.ReadOnlyMap;
 import ceramic.Shortcuts.*;
 import ceramic.TextAsset;
 import format.tmx.Data.TmxImage;
@@ -19,8 +20,25 @@ class TilemapAsset extends Asset {
 
 /// Properties
 
+    /**
+     * If the tilemap originates from a Tiled/TMX file, this will
+     * contain the TMX data that you can use for custom logic etc...
+     */
     @observe public var tmxMap:TmxMap = null;
 
+    #if plugin_ldtk
+
+    /**
+     * If the tilemap data originates from an LDtk file, this will
+     * contain the LDtk data that you can use for custom logic and access generated tilemaps
+     */
+    @observe public var ldtkData:LdtkData = null;
+
+    #end
+
+    /**
+     * The tilemap data that can be used with a Ceramic `Tilemap` visual.
+     */
     @observe public var tilemapData:TilemapData = null;
 
 /// Internal
@@ -29,7 +47,11 @@ class TilemapAsset extends Asset {
 
     var tsxRawData:Map<String,String> = null;
 
-    // TODO cache external tileset so that we don't need to reload that for every tilemap
+    #if plugin_ldtk
+
+    var ldtkAsset:TextAsset = null;
+
+    #end
 
 /// Lifecycle
 
@@ -60,9 +82,18 @@ class TilemapAsset extends Asset {
 
         var isTiledMap = path.toLowerCase().endsWith('.tmx');
 
+        #if plugin_ldtk
+        var isLdtk = path.toLowerCase().endsWith('.ldtk');
+        #end
+
         if (isTiledMap) {
             loadTmxTiledMap();
         }
+        #if plugin_ldtk
+        else if (isLdtk) {
+            loadLdtk();
+        }
+        #end
         else {
             status = BROKEN;
             ceramic.App.app.logger.error('Unknown format for tilemap data at path: $path');
@@ -97,7 +128,7 @@ class TilemapAsset extends Asset {
 
                         var tilemapParser = owner.getTilemapParser();
                         tmxMap = tilemapParser.parseTmx(rawTmxData, Path.directory(path), resolveTsxRawData);
-                        tilemapData = tilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromTmxImage);
+                        tilemapData = tilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromSource);
 
                         if (tilemapData != null) {
 
@@ -242,10 +273,10 @@ class TilemapAsset extends Asset {
 
     }
 
-    function loadTextureFromTmxImage(tmxImage:TmxImage, done:Texture->Void):Void {
+    function loadTextureFromSource(source:String, done:Texture->Void):Void {
 
-        if (tmxImage.source != null) {
-            var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), tmxImage.source]));
+        if (source != null) {
+            var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), source]));
 
             // Check if asset is already available
             var texture = owner.texture(pathInfo.name);
@@ -304,14 +335,95 @@ class TilemapAsset extends Asset {
                 done(texture);
             }
         }
-        else if (tmxImage.data != null) {
-            log.warning('Loading TMX embedded images is not supported.');
-        }
         else {
-            log.warning('Cannot load texture for TMX image: $tmxImage');
+            log.warning('Cannot load texture for source: $source');
         }
 
     }
+
+#if plugin_ldtk
+
+/// LDtk
+
+    function loadLdtk() {
+
+        // Load ldtk asset
+        //
+        ldtkAsset = new TextAsset(path);
+        var prevAsset = assets.addAsset(ldtkAsset);
+        ldtkAsset.computePath(['ldtk'], false, runtimeAssets);
+
+        // Remove previous json asset if different
+        if (prevAsset != null) prevAsset.destroy();
+
+        assets.onceComplete(this, function(success) {
+
+            var rawLdtkData = ldtkAsset.text;
+
+            if (rawLdtkData != null && rawLdtkData.length > 0) {
+
+                var tilemapParser = owner.getTilemapParser();
+                ldtkData = tilemapParser.parseLdtk(rawLdtkData);
+
+                if (ldtkData == null) {
+                    status = BROKEN;
+                    ceramic.App.app.logger.error('Failed to load because of invalid LDtk data');
+                    emitComplete(false);
+                    return;
+                }
+
+                try {
+
+                    tilemapParser.loadLdtkTilemaps(ldtkData, loadTextureFromSource);
+
+                    // Link the ldtk data to this asset so that
+                    // destroying one will destroy the other
+                    ldtkData.asset = this;
+
+                    // Run load of assets again to load textures
+                    assets.onceComplete(this, function(isSuccess) {
+
+                        if (isSuccess) {
+
+                            // Success
+                            status = READY;
+                            emitComplete(true);
+                            if (handleTexturesDensityChange) {
+                                checkTexturesDensity();
+                            }
+                        }
+                        else {
+                            status = BROKEN;
+                            ceramic.App.app.logger.error('Failed to load tilemap textures at path: $path');
+                            emitComplete(false);
+                        }
+
+                    });
+
+                    assets.load(false);
+
+                }
+                catch (e:Dynamic) {
+                    status = BROKEN;
+                    ceramic.App.app.logger.error('Error when loading LDtk tilemaps: ' + e);
+                    ceramic.App.app.logger.error('Failed to load tilemap data at path: $path');
+                    emitComplete(false);
+                }
+
+            }
+            else {
+                status = BROKEN;
+                ceramic.App.app.logger.error('Failed to load raw tilemap data at path: $path');
+                emitComplete(false);
+            }
+
+        });
+
+        assets.load();
+
+    }
+
+#end
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -360,6 +472,15 @@ class TilemapAsset extends Asset {
             tilemapData.destroy();
             tilemapData = null;
         }
+
+        #if plugin_ldtk
+
+        if (ldtkData != null) {
+            ldtkData.destroy();
+            ldtkData = null;
+        }
+
+        #end
 
         if (tmxMap != null) {
             tmxMap = null;

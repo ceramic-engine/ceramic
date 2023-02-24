@@ -66,9 +66,9 @@ class AutoTiler extends Entity implements Component {
 
         var row = 0;
         var col = 0;
-        var width = layerData.width;
-        var height = layerData.height;
-        var numTiles = width * height;
+        var columns = layerData.columns;
+        var rows = layerData.rows;
+        var numTiles = columns * rows;
         var hasExtraTiles = false;
         var extraI = numTiles;
         if (tiles.length >= numTiles * 2) {
@@ -108,7 +108,7 @@ class AutoTiler extends Entity implements Component {
                         }
                         if (row > 0) {
                             // Top
-                            n = i - width;
+                            n = i - columns;
                             otherTile = tiles.unsafeGet(n);
                             n += numTiles;
                             otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -118,7 +118,7 @@ class AutoTiler extends Entity implements Component {
                         else if (boundsSameTile) {
                             edgeMask.setBool(1, true);
                         }
-                        if (col < width - 1) {
+                        if (col < columns - 1) {
                             // Right
                             n = i  +1;
                             otherTile = tiles.unsafeGet(n);
@@ -130,9 +130,9 @@ class AutoTiler extends Entity implements Component {
                         else if (boundsSameTile) {
                             edgeMask.setBool(2, true);
                         }
-                        if (row < height - 1) {
+                        if (row < rows - 1) {
                             // Bottom
-                            n = i + width;
+                            n = i + columns;
                             otherTile = tiles.unsafeGet(n);
                             n += numTiles;
                             otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -149,7 +149,7 @@ class AutoTiler extends Entity implements Component {
                                 if (edgeMask.bool(1)) {
                                     if (col > 0 && row > 0) {
                                         // Top-left corner
-                                        n = i - width - 1;
+                                        n = i - columns - 1;
                                         otherTile = tiles.unsafeGet(n);
                                         n += numTiles;
                                         otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -159,9 +159,9 @@ class AutoTiler extends Entity implements Component {
                                     }
                                 }
                                 if (edgeMask.bool(3)) {
-                                    if (col > 0 && row < height - 1) {
+                                    if (col > 0 && row < rows - 1) {
                                         // Bottom-left corner
-                                        n = i + width - 1;
+                                        n = i + columns - 1;
                                         otherTile = tiles.unsafeGet(n);
                                         n += numTiles;
                                         otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -173,9 +173,9 @@ class AutoTiler extends Entity implements Component {
                             }
                             if (edgeMask.bool(2)) {
                                 if (edgeMask.bool(1)) {
-                                    if (col < width - 1 && row > 0) {
+                                    if (col < columns - 1 && row > 0) {
                                         // Top-right corner
-                                        n = i - width + 1;
+                                        n = i - columns + 1;
                                         otherTile = tiles.unsafeGet(n);
                                         n += numTiles;
                                         otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -185,9 +185,9 @@ class AutoTiler extends Entity implements Component {
                                     }
                                 }
                                 if (edgeMask.bool(3)) {
-                                    if (col < width - 1 && row < height - 1) {
+                                    if (col < columns - 1 && row < rows - 1) {
                                         // Bottom-right corner
-                                        n = i + width + 1;
+                                        n = i + columns + 1;
                                         otherTile = tiles.unsafeGet(n);
                                         n += numTiles;
                                         otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -308,7 +308,7 @@ class AutoTiler extends Entity implements Component {
 
             // Update row and columns
             col++;
-            if (col == width) {
+            if (col == columns) {
                 col = 0;
                 row++;
             }

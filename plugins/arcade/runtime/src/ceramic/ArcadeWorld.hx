@@ -701,8 +701,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
             var tilemapData:TilemapData = tilemap.tilemapData;
             var layers = tilemap.computedCollidableLayers;
-            var tileWidth = tilemapData.tileWidth;
-            var tileHeight = tilemapData.tileHeight;
+            var tileWidth = layerData.tileWidth;
+            var tileHeight = layerData.tileHeight;
             var offsetX = layerData.offsetX + layerData.x * tileWidth;
             var offsetY = layerData.offsetY + layerData.y * tileHeight;
 
@@ -713,12 +713,12 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
             if (minColumn < 0)
                 minColumn = 0;
-            if (maxColumn >= layerData.width)
-                maxColumn = layerData.width - 1;
+            if (maxColumn >= layerData.columns)
+                maxColumn = layerData.columns - 1;
             if (minRow < 0)
                 minRow = 0;
-            if (maxRow >= layerData.height)
-                maxRow = layerData.height - 1;
+            if (maxRow >= layerData.rows)
+                maxRow = layerData.rows - 1;
 
             tileBody.checkCollisionUp = layer.checkCollisionUp;
             tileBody.checkCollisionRight = layer.checkCollisionRight;
@@ -730,7 +730,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             while (column <= maxColumn) {
                 var row = minRow;
                 while (row <= maxRow) {
-                    var index = row * layerData.width + column;
+                    var index = row * layerData.columns + column;
                     var tile = layerData.tiles.unsafeGet(index);
                     var gid = tile.gid;
                     if (gid > 0) {
@@ -750,8 +750,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
                         // When being blocked by a wall, prioritize X over Y separation
                         if (body.velocityY < 0 && !body.blockedDown) {
-                            var hasTileBelow = false;
-                            var indexBelow = index + layerData.width;
+                            var indexBelow = index + layerData.columns;
                             var tileBelow = 0;
                             if (layers != null) {
                                 for (n in 0...layers.length) {

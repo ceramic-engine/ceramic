@@ -5,7 +5,17 @@ import tracker.Model;
 
 using ceramic.Extensions;
 
+#if plugin_ldtk
+import ceramic.LdtkData;
+#end
+
 class Tileset extends Model {
+
+    #if plugin_ldtk
+
+    @observe public var ldtkTileset:LdtkTilesetDefinition = null;
+
+    #end
 
     /**
      * First global id. Maps to the first tile in this tileset.
@@ -63,16 +73,6 @@ class Tileset extends Model {
         return result;
 
     }
-
-    /**
-     * Horizontal offset. Used to specify an offset to be applied when drawing a tile.
-     */
-    @serialize public var tileOffsetX:Int = 0;
-
-    /**
-     * Vertical offset. Used to specify an offset to be applied when drawing a tile.
-     */
-    @serialize public var tileOffsetY:Int = 0;
 
     /**
      * The image used to display tiles in this tileset

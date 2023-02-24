@@ -11,6 +11,10 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+#if plugin_ldtk
+import ceramic.LdtkData;
+#end
+
 @:access(ceramic.App)
 class TilemapPlugin {
 
@@ -23,7 +27,7 @@ class TilemapPlugin {
             log.info('Init tilemap plugin');
 
             // Extend assets with `tilemap` kind
-            Assets.addAssetKind('tilemap', addTilemap, ['tmx'], false, ['ceramic.TilemapData']);
+            Assets.addAssetKind('tilemap', addTilemap, ['tmx' #if plugin_ldtk , 'ldtk' #end], false, ['ceramic.TilemapData']);
 
             // Extend converters
             var convertTilemapData = new ConvertTilemapData();
@@ -57,7 +61,6 @@ class TilemapPlugin {
 
         var asset = tilemapAsset(assets, name);
         if (asset == null) return null;
-
         return asset.tilemapData;
 
     }
@@ -74,6 +77,18 @@ class TilemapPlugin {
         return asset;
 
     }
+
+    #if plugin_ldtk
+
+    public static function ldtk(assets:Assets, name:Either<String,AssetId<String>>):LdtkData {
+
+        var asset = tilemapAsset(assets, name);
+        if (asset == null) return null;
+        return asset.ldtkData;
+
+    }
+
+    #end
 
     /**
      * Return the tilemap parser instance associated with this `Assets` object.
