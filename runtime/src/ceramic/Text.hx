@@ -216,7 +216,7 @@ class Text extends Visual {
 
     function scaleWidth(targetWidth:Float):Void {
         // Only adjust scaleX to match requested width
-        if (_height == targetWidth) return;
+        if (_width == targetWidth) return;
         scaleX = targetWidth / _width;
         matrixDirty = true;
     }
