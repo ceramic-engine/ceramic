@@ -110,6 +110,7 @@ class Http {
             done({
                 status: backendResponse.status,
                 content: backendResponse.content,
+                binaryContent: backendResponse.binaryContent,
                 error: backendResponse.error,
                 headers: resHeaders
             });

@@ -4,6 +4,7 @@ import ceramic.IntMap;
 import ceramic.Path;
 import ceramic.Runner;
 import ceramic.Shortcuts.*;
+import haxe.io.Bytes;
 
 using StringTools;
 #if android
@@ -196,10 +197,16 @@ class Http implements spec.Http {
                     headers.set(key, Reflect.field(rawResponse.headers, key));
                 }
             }
+
+            var binaryContent:Bytes = null;
+            if (rawResponse.binaryContent != null) {
+                binaryContent = Bytes.ofData(rawResponse.binaryContent);
+            }
+
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
-                binaryContent: null,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: rawResponse.error
             });

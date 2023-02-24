@@ -57,6 +57,7 @@
             NSInteger statusCode;
             id statusMessage;
             id content;
+            id binaryContent;
             id headers;
             
             if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
@@ -64,12 +65,45 @@
                 // Treat the response as an NSHTTPURLResponse instance
                 NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
                 
+                // Retrieve content type
+                __block NSString *contentType = nil;
+                [[httpResponse allHeaderFields] enumerateKeysAndObjectsUsingBlock:^(id  _Nonnull key, id  _Nonnull obj, BOOL * _Nonnull stop) {
+                    if ([key isKindOfClass:[NSString class]]) {
+                        NSString *keyStr = key;
+                        if ([[keyStr lowercaseString] isEqualToString:@"content-type"] && [obj isKindOfClass:[NSString class]]) {
+                            contentType = obj;
+                            contentType = [obj stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+                            *stop = YES;
+                        }
+                    }
+                }];
+                
                 // Status
                 statusCode = httpResponse.statusCode;
                 statusMessage = [NSHTTPURLResponse localizedStringForStatusCode:statusCode];
                 
                 // Content
-                content = data ? [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] : [NSNull null];
+                if (data) {
+                    if ([[contentType lowercaseString] hasPrefix:@"text/"]) {
+                        // Text content
+                        if ([[contentType lowercaseString] containsString:@"charset=iso-8859-1"]) {
+                            // Convert from ISO-8859-1 to UTF-8 if needed
+                            content = [[NSString alloc] initWithCString:[[[NSString alloc] initWithData:data encoding:NSISOLatin1StringEncoding] UTF8String] encoding:NSUTF8StringEncoding];
+                        }
+                        else {
+                            content = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+                        }
+                        binaryContent = [NSNull null];
+                    }
+                    else {
+                        // Binary content
+                        content = [NSNull null];
+                        binaryContent = data;
+                    }
+                }
+                if (!content)
+                    content = [NSNull null];
+                
                 
                 // Headers
                 headers = [httpResponse allHeaderFields];
@@ -79,6 +113,7 @@
                 statusCode = [error code] > 0 ? -[error code] : [error code];
                 statusMessage = [error localizedDescription];
                 content = [NSNull null];
+                binaryContent = [NSNull null];
                 headers = [NSNull null];
                 
             }
@@ -87,6 +122,7 @@
                 statusCode = 0;
                 statusMessage = @"Unknown response";
                 content = [NSNull null];
+                binaryContent = [NSNull null];
                 headers = [NSNull null];
             }
             
@@ -94,7 +130,8 @@
             done(@{
                    @"status": @(statusCode),
                    @"content": content,
-                   @"error": statusCode >= 400 && statusMessage ? statusMessage : [NSNull null],
+                   @"binaryContent": binaryContent,
+                   @"error": (statusCode >= 400 || statusCode == 0) && statusMessage ? statusMessage : [NSNull null],
                    @"headers": headers ? headers : [NSNull null]
             });
             

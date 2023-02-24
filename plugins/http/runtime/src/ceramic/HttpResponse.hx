@@ -1,11 +1,15 @@
 package ceramic;
 
+import haxe.io.Bytes;
+
 @:structInit
 class HttpResponse {
 
     public var status:Int;
 
     public var content:String;
+
+    public var binaryContent:Bytes;
 
     public var error:String = null;
 
@@ -15,6 +19,7 @@ class HttpResponse {
         return '' + {
             status: status,
             content: content,
+            binaryContent: binaryContent,
             headers: headers,
             error: error
         };
