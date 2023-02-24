@@ -35,8 +35,8 @@ class Textures implements spec.Textures {
                 ceramic.App.app.onceImmediate(fn);
         };
 
-        // Create empty texture
-        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+        var isUrl:Bool = path.startsWith('http://') || path.startsWith('https://');
+        path = Path.isAbsolute(path) || isUrl ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
@@ -64,9 +64,11 @@ class Textures implements spec.Textures {
 
         // Remove ?something in path
         var cleanedPath = path;
-        var questionMarkIndex = cleanedPath.indexOf('?');
-        if (questionMarkIndex != -1) {
-            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        if (!isUrl) {
+            var questionMarkIndex = cleanedPath.indexOf('?');
+            if (questionMarkIndex != -1) {
+                cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+            }
         }
 
         // Create callbacks list with first entry
@@ -78,7 +80,7 @@ class Textures implements spec.Textures {
             done(texture);
         }]);
 
-        var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        var fullPath = isUrl ? cleanedPath : Clay.app.assets.fullPath(cleanedPath);
         var premultiplyAlpha:Bool = #if web true #else false #end;
         if (options != null && options.premultiplyAlpha != null) {
             premultiplyAlpha = options.premultiplyAlpha;

@@ -32,7 +32,8 @@ class Audio implements spec.Audio {
 
         var isStream:Bool = (options != null && options.stream == true);
 
-        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+        var isUrl:Bool = path.startsWith('http://') || path.startsWith('https://');
+        path = Path.isAbsolute(path) || isUrl ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
@@ -60,9 +61,11 @@ class Audio implements spec.Audio {
 
         // Remove ?something in path
         var cleanedPath = path;
-        var questionMarkIndex = cleanedPath.indexOf('?');
-        if (questionMarkIndex != -1) {
-            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        if (!isUrl) {
+            var questionMarkIndex = cleanedPath.indexOf('?');
+            if (questionMarkIndex != -1) {
+                cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+            }
         }
 
         // Create callbacks list with first entry
@@ -74,7 +77,7 @@ class Audio implements spec.Audio {
             done(resource);
         }]);
 
-        var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        var fullPath = isUrl ? cleanedPath : Clay.app.assets.fullPath(cleanedPath);
 
         function doFail() {
 

@@ -31,7 +31,8 @@ class Texts implements spec.Texts {
                 ceramic.App.app.onceImmediate(fn);
         };
 
-        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+        var isUrl:Bool = path.startsWith('http://') || path.startsWith('https://');
+        path = Path.isAbsolute(path) || isUrl ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
@@ -51,12 +52,14 @@ class Texts implements spec.Texts {
 
         // Remove ?something in path
         var cleanedPath = path;
-        var questionMarkIndex = cleanedPath.indexOf('?');
-        if (questionMarkIndex != -1) {
-            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        if (!isUrl) {
+            var questionMarkIndex = cleanedPath.indexOf('?');
+            if (questionMarkIndex != -1) {
+                cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+            }
         }
 
-        var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        var fullPath = isUrl ? cleanedPath : Clay.app.assets.fullPath(cleanedPath);
 
         Clay.app.io.loadData(fullPath, true, !synchronous, function(res:Uint8Array) {
 
