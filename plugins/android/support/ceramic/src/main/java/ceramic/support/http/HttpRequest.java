@@ -10,6 +10,7 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -20,6 +21,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import bind.Support;
@@ -30,7 +32,7 @@ import bind.Support;
 public class HttpRequest extends AsyncTask<String, Void, Void> {
 
     public interface Listener {
-        void onComplete(int statusCode, String statusMessage, String content, String downloadPath, Map<String,String> headers);
+        void onComplete(int statusCode, String statusMessage, String content, byte[] binaryContent, String downloadPath, Map<String,String> headers);
     }
 
     private final Map<String,Object> mParams;
@@ -39,6 +41,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
     private int mStatusCode;
     private String mStatusMessage;
     private String mContent;
+    private byte[] mBinaryContent;
     private String mTargetDownloadPath;
     private String mFinalDownloadPath;
     private Map<String,String> mHeaders;
@@ -141,18 +144,46 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 mStatusMessage = connection.getResponseMessage();
                 mHeaders = new HashMap<>();
 
-                if (downloadFile == null) {
-                    // Regular http request, store response in mContent String
-                    BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-                    String line;
-                    StringBuilder responseOutput = new StringBuilder();
-                    while ((line = br.readLine()) != null) {
-                        responseOutput.append(line);
-                        responseOutput.append('\n');
+                String contentType = null;
+                for (String name : connection.getHeaderFields().keySet()) {
+                    if (name != null) {
+                        mHeaders.put(name, connection.getHeaderField(name));
+                        if (contentType == null && name.toLowerCase().equals("content-type")) {
+                            contentType = connection.getHeaderField(name).trim();
+                        }
                     }
-                    br.close();
+                }
 
-                    mContent = responseOutput.toString();
+                if (downloadFile == null) {
+                    if (contentType.toLowerCase().startsWith("text/")) {
+                        // Text content
+                        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
+                        String line;
+                        StringBuilder responseOutput = new StringBuilder();
+                        while ((line = br.readLine()) != null) {
+                            responseOutput.append(line);
+                            responseOutput.append('\n');
+                        }
+                        br.close();
+
+                        mContent = responseOutput.toString();
+                        mBinaryContent = null;
+                    }
+                    else {
+                        // Binary content
+                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+                        int nRead;
+                        byte[] data = new byte[16384];
+                        InputStream is = connection.getInputStream();
+                        while ((nRead = is.read(data, 0, data.length)) != -1) {
+                            buffer.write(data, 0, nRead);
+                        }
+                        is.close();
+
+                        mContent = null;
+                        mBinaryContent = buffer.toByteArray();
+                    }
                 }
                 else if (mStatusCode >= 200 && mStatusCode < 300) {
                     // A download path was provided, store result in tmp file, works with binary data as well
@@ -178,10 +209,6 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                     mFinalDownloadPath = downloadFile.getAbsolutePath();
                 }
 
-                for (String name : connection.getHeaderFields().keySet()) {
-                    if (name != null) mHeaders.put(name, connection.getHeaderField(name));
-                }
-
             } catch (Throwable e) {
                 Log.e("CERAMIC", "Http error: " + e.getMessage());
                 e.printStackTrace();
@@ -189,6 +216,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 mStatusCode = 0;
                 mStatusMessage = e.getClass().getSimpleName() + " " + e.getMessage();
                 mContent = null;
+                mBinaryContent = null;
                 mHeaders = new HashMap<>();
 
             } finally {
@@ -201,6 +229,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
             mStatusCode = 0;
             mStatusMessage = e.getClass().getSimpleName() + " " + e.getMessage();
             mContent = null;
+            mBinaryContent = null;
             mHeaders = new HashMap<>();
         }
 
@@ -209,7 +238,7 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
             @Override
             public void run() {
                 if (mListener != null) {
-                    mListener.onComplete(mStatusCode, mStatusMessage, mContent, mFinalDownloadPath, mHeaders);
+                    mListener.onComplete(mStatusCode, mStatusMessage, mContent, mBinaryContent, mFinalDownloadPath, mHeaders);
                     mListener = null;
                 }
             }

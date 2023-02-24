@@ -4,6 +4,7 @@ import ceramic.IntMap;
 import ceramic.Path;
 import ceramic.Runner;
 import ceramic.Shortcuts.*;
+import haxe.crypto.Base64;
 import haxe.io.Bytes;
 
 using StringTools;
@@ -161,10 +162,17 @@ class Http implements spec.Http {
                     headers.set(key, Reflect.field(rawResponse.headers, key));
                 }
             }
+
+            var binaryContent:Bytes = null;
+            if (rawResponse.binaryContent != null) {
+                var binaryContentRaw:String = rawResponse.binaryContent;
+                binaryContent = Base64.decode(binaryContentRaw);
+            }
+
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
-                binaryContent: null,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: rawResponse.error
             });
