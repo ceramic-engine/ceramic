@@ -244,6 +244,8 @@ class Http implements spec.Http {
 
         var xhr = new XMLHttpRequest();
 
+        untyped xhr.responseType = 'arraybuffer';
+
         if (options.timeout != null && options.timeout > 0) {
             xhr.timeout = options.timeout * 1000;
 
@@ -300,6 +302,7 @@ class Http implements spec.Http {
 
             var rawHeaders = xhr.getAllResponseHeaders();
             var headers = new Map<String,String>();
+            var contentType = null;
             if (rawHeaders != null) {
                 for (rawHeader in rawHeaders.split("\n")) {
                     if (rawHeader.trim() == '') continue;
@@ -308,17 +311,36 @@ class Http implements spec.Http {
                         var key = rawHeader.substring(0, colonIndex).trim();
                         var value = rawHeader.substring(colonIndex + 1).trim();
                         headers.set(key, value);
+
+                        if (contentType == null && key.toLowerCase() == 'content-type') {
+                            contentType = value;
+                        }
                     }
                     else {
                         log.warning('Failed to parse header: $rawHeader');
                     }
                 }
             }
+            if (contentType == null)
+                contentType = 'application/octet-stream';
+
+            var binaryContent:Bytes = null;
+            if (xhr.response != null) {
+                var responseBuffer:js.lib.ArrayBuffer = xhr.response;
+                binaryContent = ceramic.UInt8Array.fromBuffer(responseBuffer, 0, responseBuffer.byteLength).toBytes();
+            }
+
+            var textContent:String = null;
+            if (contentType.toLowerCase().startsWith('text/')) {
+                // Treat text as utf-8. Could be improved
+                textContent = binaryContent.toString();
+                binaryContent = null;
+            }
 
             var response:HttpResponse = {
                 status: xhr.status,
-                content: xhr.responseText,
-                binaryContent: null,
+                content: textContent,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: null
             };

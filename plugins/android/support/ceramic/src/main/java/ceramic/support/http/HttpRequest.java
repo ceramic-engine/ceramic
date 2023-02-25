@@ -153,6 +153,8 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                         }
                     }
                 }
+                if (contentType == null)
+                    contentType = "application/octet-stream";
 
                 if (downloadFile == null) {
                     if (contentType.toLowerCase().startsWith("text/")) {

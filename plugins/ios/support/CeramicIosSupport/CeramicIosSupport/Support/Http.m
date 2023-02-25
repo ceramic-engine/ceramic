@@ -77,7 +77,9 @@
                         }
                     }
                 }];
-                
+                if (!contentType)
+                    contentType = @"application/octet-stream";
+
                 // Status
                 statusCode = httpResponse.statusCode;
                 statusMessage = [NSHTTPURLResponse localizedStringForStatusCode:statusCode];
