@@ -27,7 +27,6 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-
 #if (cs && unity)
 @:classCode('
 System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
@@ -175,7 +174,7 @@ class Http implements spec.Http {
                         for (i in 0...buffer.length) {
                             bufferData[i] = js.Syntax.code("{0}[{1}]", buffer, i);
                         }
-                        binaryContent = @:privateAccess new haxe.io.Bytes( cast new js.lib.Uint8Array(bufferData) );
+                        binaryContent = haxe.io.Bytes.ofData(bufferData.buffer);
                     }
                 }
             });
@@ -470,27 +469,28 @@ class Http implements spec.Http {
 
         var url = options.url;
 
-        // Unity web request API forces us to decode uri components and give them as a dictionary...
-        var formFields:Dynamic = null;
-        if (options.method == POST) {
-            if (content != null) {
-                var postUriParams = ceramic.Utils.decodeUriParams(content);
-                formFields = untyped __cs__('new System.Collections.Generic.Dictionary<string,string>()');
-                for (key => val in postUriParams) {
-                    untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0}).Add({1}, {2})', formFields, key, val);
-                }
-            }
-        }
-
         var webRequest:UnityWebRequest = null;
         try {
-            webRequest = switch options.method {
-                case null: UnityWebRequest.Get(url);
-                case GET: UnityWebRequest.Get(url);
-                case POST: UnityWebRequest.Post(url, untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0})', formFields));
-                case PUT: UnityWebRequest.Put(url, content);
-                case DELETE: UnityWebRequest.Delete(url);
+            if (content == null || options.method == GET || options.method == DELETE) {
+                webRequest = switch options.method {
+                    case GET: UnityWebRequest.Get(url);
+                    case DELETE: UnityWebRequest.Delete(url);
+                    case _: UnityWebRequest.Get(url);
+                }
             }
+            else {
+                webRequest = new UnityWebRequest();
+                webRequest.url = url;
+                webRequest.method = switch options.method {
+                    case POST: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPOST');
+                    case PUT: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPUT');
+                    case _: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPOST');
+                };
+                webRequest.downloadHandler = untyped __cs__('new UnityEngine.Networking.DownloadHandlerBuffer()');
+                webRequest.uploadHandler = untyped __cs__('new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes({0}))', content);
+            }
+            webRequest.disposeUploadHandlerOnDispose = true;
+            webRequest.disposeDownloadHandlerOnDispose = true;
 
             if (options.headers != null) {
                 for (key in options.headers.keys()) {
@@ -505,13 +505,6 @@ class Http implements spec.Http {
                 var resStatus = Std.int(webRequest.responseCode);
                 var resHeaders = new Map<String, String>();
 
-                var rawHeaders = webRequest.GetResponseHeaders();
-                untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
-                var headerName:String = untyped __cs__('rawHeaderEntry.Key');
-                var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
-                resHeaders.set(headerName, headerValue);
-                untyped __cs__('}');
-
                 if (webRequest.isNetworkError || webRequest.isHttpError) {
                     done({
                         status: resStatus,
@@ -522,16 +515,46 @@ class Http implements spec.Http {
                     });
                 }
                 else {
+
+                    var rawHeaders = webRequest.GetResponseHeaders();
+                    untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
+                    var headerName:String = untyped __cs__('rawHeaderEntry.Key');
+                    var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
+                    resHeaders.set(headerName, headerValue);
+                    untyped __cs__('}');
+
+                    var resContentType:String = null;
+                    for (key in resHeaders.keys()) {
+                        if (resContentType == null && key.toLowerCase() == 'content-type') {
+                            resContentType = resHeaders.get(key);
+                        }
+                    }
+
+                    if (resContentType == null)
+                        resContentType = 'application/octet-stream';
+
+                    var resTextContent:String = null;
+                    var resBinaryContent:Bytes = null;
+                    if (resContentType.startsWith('text/')) {
+                        resTextContent = downloadHandler.text;
+                    }
+                    else {
+                        resBinaryContent = haxe.io.Bytes.ofData(cast downloadHandler.data);
+                    }
+
                     done({
                         status: resStatus,
-                        content: resStatus < 200 || resStatus >= 300 ? null : downloadHandler.text,
-                        binaryContent: null, // TODO?
+                        content: resTextContent,
+                        binaryContent: resBinaryContent,
                         headers: resHeaders,
                         error: webRequest.error
                     });
                 }
 
-                webRequest.Dispose();
+                if (webRequest != null)
+                    webRequest.Dispose();
+                if (downloadHandler != null)
+                    downloadHandler.Dispose();
 
             });
 
