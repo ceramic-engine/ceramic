@@ -17,7 +17,7 @@ import js.html.XMLHttpRequest;
 #elseif (cs && unity)
 import unityengine.networking.DownloadHandler;
 import unityengine.networking.UnityWebRequest;
-#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
+#elseif ceramic_http_tink
 import tink.http.Fetch;
 import tink.http.Header;
 #end
@@ -67,6 +67,12 @@ class Http implements spec.Http {
             });
         };
 
+        _request(options, done);
+
+    }
+
+    function _request(options:HttpRequestOptions, done:HttpResponse->Void, numRedirects:Int = 0):Void {
+
 #if (nodejs || hxnodejs || node)
 
         var isSSL = options.url.startsWith('https');
@@ -90,42 +96,107 @@ class Http implements spec.Http {
             }
         }
 
-        var resContent = '';
+        var resContent = [];
         var resError = null;
         var resHeaders = new Map<String,String>();
         var resStatus = 404;
+        var textContent:String = null;
+        var binaryContent:Bytes = null;
+        var didRedirect:Bool = false;
 
         var req:Dynamic = http.request(requestOptions, function(res:Dynamic) {
 
             resStatus = res.statusCode;
 
-            res.setEncoding('utf8');
+            if (numRedirects < 8 && (resStatus >= 300 && resStatus <= 399) && res.headers.location != null) {
+
+                didRedirect = true;
+
+                var newUrl:String = options.url;
+                var newLocation:String = res.headers.location;
+                if (!newLocation.toLowerCase().startsWith('http://') && !newLocation.toLowerCase().startsWith('https://')) {
+                    var slashIndex = newUrl.indexOf('/', 8);
+                    if (slashIndex != -1) {
+                        newUrl = newUrl.substring(0, slashIndex);
+                    }
+                    if (newLocation.charAt(0) != '/')
+                        newUrl += '/';
+                    newUrl += newLocation;
+                }
+                else {
+                    newUrl = newLocation;
+                }
+
+                var redirectedOptions:HttpRequestOptions = {
+                    url: newUrl
+                };
+                redirectedOptions.timeout = options.timeout;
+                if (resStatus == 307) {
+                    redirectedOptions.method = options.method;
+                    redirectedOptions.content = options.content;
+                    redirectedOptions.headers = options.headers;
+                }
+                else {
+                    redirectedOptions.method = GET;
+                    redirectedOptions.content = null;
+                }
+                _request(redirectedOptions, done, numRedirects + 1);
+                return;
+            }
 
             res.on('data', function(chunk) {
-                resContent += chunk;
+                if (!didRedirect) {
+                    resContent.push(chunk);
+                }
             });
 
             res.on('end', function() {
+                if (!didRedirect) {
+                    var buffer:Dynamic = js.Syntax.code('Buffer.concat({0})', resContent);
 
-                for (key in Reflect.fields(res.headers)) {
-                    resHeaders.set(key, Reflect.field(res.headers, key));
+                    var resContentType:String = null;
+                    for (key in Reflect.fields(res.headers)) {
+                        resHeaders.set(key, Reflect.field(res.headers, key));
+
+                        if (resContentType == null && key.toLowerCase() == 'content-type') {
+                            resContentType = Reflect.field(res.headers, key);
+                        }
+                    }
+
+                    if (resContentType == null)
+                        resContentType = 'application/octet-stream';
+
+                    if (resContentType.toLowerCase().startsWith('text/')) {
+                        textContent = buffer.toString('utf8');
+                    }
+                    else {
+                        // Copy data and get rid of nodejs buffer
+                        var bufferData = new js.lib.Uint8Array(buffer.length);
+                        for (i in 0...buffer.length) {
+                            bufferData[i] = js.Syntax.code("{0}[{1}]", buffer, i);
+                        }
+                        binaryContent = @:privateAccess new haxe.io.Bytes( cast new js.lib.Uint8Array(bufferData) );
+                    }
                 }
-
             });
         });
 
         req.on('error', function(e) {
-            resError = e.message;
+            if (!didRedirect) {
+                resError = e.message;
+            }
         });
 
         req.on('close', function() {
-            done({
-                status: resStatus,
-                content: resStatus < 200 || resStatus >= 300 ? null : resContent,
-                binaryContent: null,
-                headers: resHeaders,
-                error: resError
-            });
+            if (!didRedirect) {
+                done({
+                    status: resStatus,
+                    content: resStatus < 200 || resStatus >= 300 ? null : textContent,
+                    binaryContent: resStatus < 200 || resStatus >= 300 ? null : binaryContent,
+                    headers: resHeaders,
+                    error: resError
+                });
+            }
         });
 
         // Write request body (if any)
@@ -485,7 +556,7 @@ class Http implements spec.Http {
             });
         }
 
-#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
+#elseif ceramic_http_tink
 
         var contentType = "application/x-www-form-urlencoded";
         var httpHeaders = [];
@@ -528,15 +599,32 @@ class Http implements spec.Http {
                         case Success(res):
                             var bytes = res.body.toBytes();
 
+                            var resContentType:String = null;
                             var headers = new Map<String,String>();
                             for (headerField in res.header) {
-                                headers.set(headerField.name, headerField.value);
+                                headers.set(''+headerField.name, ''+headerField.value);
+
+                                if (resContentType == null && (''+headerField.name).toLowerCase() == 'content-type') {
+                                    resContentType = ''+headerField.value;
+                                }
+                            }
+
+                            if (resContentType == null)
+                                resContentType = 'application/octet-stream';
+
+                            var resTextContent:String = null;
+                            var resBinaryContent:Bytes = null;
+                            if (resContentType.startsWith('text/')) {
+                                resTextContent = (bytes != null ? bytes.toString() : null);
+                            }
+                            else {
+                                resBinaryContent = bytes;
                             }
 
                             var response:HttpResponse = {
                                 status: res.header.statusCode.toInt(),
-                                content: bytes != null ? bytes.toString() : null,
-                                binaryContent: null,
+                                content: resTextContent,
+                                binaryContent: resBinaryContent,
                                 headers: headers,
                                 error: null
                             };
@@ -627,7 +715,7 @@ class Http implements spec.Http {
 
                 var response:HttpResponse = {
                     status: res.status,
-                    content: res.content,
+                    content: res.contentIsBinary ? null : res.content,
                     binaryContent: res.contentIsBinary ? res.contentRaw : null,
                     headers: headers,
                     error: null // TODO
