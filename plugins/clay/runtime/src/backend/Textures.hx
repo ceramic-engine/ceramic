@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.Files;
+import ceramic.ImageType;
 import ceramic.Path;
 import ceramic.Utils;
 import clay.Clay;
@@ -113,7 +114,7 @@ class Textures implements spec.Textures {
 
             // Transform image into texture
             var texture:clay.graphics.Texture = null;
-            //try {
+            try {
                 texture = clay.graphics.Texture.fromImage(image, premultiplyAlpha);
                 if (texture == null) {
                     doFail();
@@ -121,12 +122,12 @@ class Textures implements spec.Textures {
                 }
                 texture.id = path;
                 texture.init();
-            // }
-            // catch (e:Dynamic) {
-            //     ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
-            //     doFail();
-            //     return;
-            // }
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
+                doFail();
+                return;
+            }
 
             // Load seems successful, keep texture
             loadedTextures.set(path, texture);
@@ -155,6 +156,73 @@ class Textures implements spec.Textures {
 
     }
 
+    public function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, _done:Texture->Void):Void {
+
+        var id = 'bytes:' + (nextBytesIndex++);
+
+        var synchronous = options != null && options.loadMethod == SYNC;
+        var immediate = options != null ? options.immediate : null;
+        var done = function(texture:Texture) {
+            final fn = function() {
+                _done(texture);
+                _done = null;
+            };
+            if (immediate != null)
+                immediate.push(fn);
+            else
+                ceramic.App.app.onceImmediate(fn);
+        };
+
+        var premultiplyAlpha:Bool = #if web true #else false #end;
+        if (options != null && options.premultiplyAlpha != null) {
+            premultiplyAlpha = options.premultiplyAlpha;
+        }
+
+        inline function doFail() {
+            done(null);
+        }
+
+        // Load image
+        Clay.app.assets.imageFromBytes(clay.buffers.Uint8Array.fromBytes(bytes) #if web , type #else , !synchronous #end , function(image:clay.Image) {
+
+            if (image == null) {
+                doFail();
+                return;
+            }
+
+            // Transform image into texture
+            var texture:clay.graphics.Texture = null;
+            try {
+                texture = clay.graphics.Texture.fromImage(image, premultiplyAlpha);
+                if (texture == null) {
+                    doFail();
+                    return;
+                }
+                texture.id = id;
+                texture.init();
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
+                doFail();
+                return;
+            }
+
+            // Load seems successful, keep texture
+            loadedTexturesRetainCount.set(id, 1);
+            done(texture);
+
+        });
+
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        if (immediate != null) {
+            immediate.push(Immediate.flush);
+        }
+        else {
+            ceramic.App.app.onceImmediate(Immediate.flush);
+        }
+
+    }
+
     inline public function supportsHotReloadPath():Bool {
 
         return true;
@@ -164,6 +232,8 @@ class Textures implements spec.Textures {
     var nextRenderIndex:Int = 0;
 
     var nextPixelsIndex:Int = 0;
+
+    var nextBytesIndex:Int = 0;
 
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 

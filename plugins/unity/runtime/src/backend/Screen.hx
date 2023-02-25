@@ -2,6 +2,7 @@ package backend;
 
 import ceramic.IntIntMap;
 import haxe.io.Bytes;
+import unityengine.ImageConversion;
 import unityengine.ScreenCapture;
 import unityengine.Texture2D;
 import unityengine.inputsystem.Mouse;
@@ -10,10 +11,6 @@ import unityengine.inputsystem.Touchscreen;
 import unityengine.inputsystem.controls.TouchControl;
 
 using ceramic.Extensions;
-
-#if unity_image_conversion
-import unityengine.ImageConversion;
-#end
 
 @:keep
 @:allow(Main)
@@ -386,7 +383,6 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             done();
         }
         else {
-            #if unity_image_conversion
             var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
             if (unityTexture != null) {
                 var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
@@ -396,10 +392,6 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                 ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
                 done(null);
             }
-            #else
-            ceramic.Shortcuts.log.warning('Getting PNG bytes in memory from screen is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
-            done(null);
-            #end
         }
 
     }

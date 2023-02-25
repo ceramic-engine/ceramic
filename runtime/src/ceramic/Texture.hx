@@ -1,5 +1,6 @@
 package ceramic;
 
+import backend.LoadTextureOptions;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
@@ -106,6 +107,22 @@ class Texture extends Entity {
 
         var backendItem = app.backend.textures.createTexture(Math.round(width * density), Math.round(height * density), pixels);
         return new Texture(backendItem, density);
+
+    }
+
+    public static function fromPngBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
+
+        app.backend.textures.loadFromBytes(bytes, PNG, options, backendItem -> {
+            done(new Texture(backendItem, density));
+        });
+
+    }
+
+    public static function fromJpegBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
+
+        app.backend.textures.loadFromBytes(bytes, JPEG, options, backendItem -> {
+            done(new Texture(backendItem, density));
+        });
 
     }
 

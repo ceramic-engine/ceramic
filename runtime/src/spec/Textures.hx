@@ -2,11 +2,14 @@ package spec;
 
 import backend.LoadTextureOptions;
 import backend.Texture;
+import ceramic.ImageType;
 import haxe.io.Bytes;
 
 interface Textures {
 
     function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void;
+
+    function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, done:Texture->Void):Void;
 
 /// Textures
 
