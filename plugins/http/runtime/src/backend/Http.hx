@@ -326,12 +326,15 @@ class Http implements spec.Http {
 
             var binaryContent:Bytes = null;
             if (xhr.response != null) {
-                var responseBuffer:js.lib.ArrayBuffer = xhr.response;
-                binaryContent = ceramic.UInt8Array.fromBuffer(responseBuffer, 0, responseBuffer.byteLength).toBytes();
+                try {
+                    var responseBuffer:js.lib.ArrayBuffer = xhr.response;
+                    binaryContent = ceramic.UInt8Array.fromBuffer(responseBuffer, 0, responseBuffer.byteLength).toBytes();
+                }
+                catch (e:Dynamic) {}
             }
 
             var textContent:String = null;
-            if (contentType.toLowerCase().startsWith('text/')) {
+            if (binaryContent != null && contentType.toLowerCase().startsWith('text/')) {
                 // Treat text as utf-8. Could be improved
                 textContent = binaryContent.toString();
                 binaryContent = null;
