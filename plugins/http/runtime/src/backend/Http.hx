@@ -825,7 +825,7 @@ class Http implements spec.Http {
         });
         return;
 
-        #elseif cpp
+        #elseif (cpp || cs)
 
         // Ensure we can write the file at the desired location
         if (FileSystem.exists(tmpTargetPath)) {
@@ -878,13 +878,16 @@ class Http implements spec.Http {
         }
 
         #if (mac || linux)
+
         // Use built-in curl on mac & linux, that's the easiest!
         Runner.runInBackground(function() {
             Sys.command('curl', ['-sS', '-L', url, '--output', tmpTargetPath]);
             Runner.runInMain(finishDownload);
         });
         return;
+
         #elseif windows
+
         // Use curl through powershell on windows
         Runner.runInBackground(function() {
             var escapedArgs = [];
@@ -896,6 +899,32 @@ class Http implements spec.Http {
             Runner.runInMain(finishDownload);
         });
         return;
+
+        #elseif (cs && unity)
+
+        var requestId = nextRequestId;
+        nextRequestId = (nextRequestId + 1) % 999999999;
+
+        var webRequest = new UnityWebRequest();
+        webRequest.url = url;
+        webRequest.method = untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbGET');
+        webRequest.downloadHandler = untyped __cs__('new UnityEngine.Networking.DownloadHandlerFile({0})', tmpTargetPath);
+        webRequest.disposeDownloadHandlerOnDispose = true;
+
+        requestCallbacks.set(requestId, function(downloadHandler) {
+
+            if (webRequest != null)
+                webRequest.Dispose();
+            if (downloadHandler != null)
+                downloadHandler.Dispose();
+
+            finishDownload();
+
+        });
+
+        var monoBehaviour = Main.monoBehaviour;
+        untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+
         #end
 
         #end
