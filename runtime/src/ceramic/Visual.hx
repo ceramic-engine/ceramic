@@ -1729,10 +1729,27 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param scaleX The scale to set to the visual on **x** axis
      * @param scaleY (optional) The scale to set to the visual on **y** axis. If not provided, will use scaleX value.
      */
-    inline public function scale(scaleX:Float, scaleY:Float = -1):Void {
+    inline public extern overload function scale(scaleX:Float):Void {
+
+        _scale(scaleX, scaleX);
+
+    }
+
+    /**
+     * Shorthand to set `scaleX` and `scaleY` in a single call.
+     * @param scaleX The scale to set to the visual on **x** axis
+     * @param scaleY (optional) The scale to set to the visual on **y** axis. If not provided, will use scaleX value.
+     */
+    inline public extern overload function scale(scaleX:Float, scaleY:Float):Void {
+
+        _scale(scaleX, scaleY);
+
+    }
+
+    inline function _scale(scaleX:Float, scaleY:Float):Void {
 
         this.scaleX = scaleX;
-        this.scaleY = scaleY != -1 ? scaleY : scaleX;
+        this.scaleY = scaleY;
 
     }
 
