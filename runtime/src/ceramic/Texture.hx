@@ -110,17 +110,17 @@ class Texture extends Entity {
 
     }
 
-    public static function fromPngBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
+    /**
+     * Create a new texture from the given bytes.
+     * The bytes must be PNG or JPEG data
+     * @param bytes The PNG or JPEG data as bytes
+     * @param density (optional) Density of the texture
+     * @param options (optional) Additional options when loading texture (could depend on backend)
+     * @param done A callback receiving the loaded texture, or `null` if it failed
+     */
+    public static function fromBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
 
-        app.backend.textures.loadFromBytes(bytes, PNG, options, backendItem -> {
-            done(new Texture(backendItem, density));
-        });
-
-    }
-
-    public static function fromJpegBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
-
-        app.backend.textures.loadFromBytes(bytes, JPEG, options, backendItem -> {
+        app.backend.textures.loadFromBytes(bytes, Utils.imageTypeFromBytes(bytes), options, backendItem -> {
             done(new Texture(backendItem, density));
         });
 
