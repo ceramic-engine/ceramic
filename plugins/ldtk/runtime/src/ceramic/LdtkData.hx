@@ -135,6 +135,24 @@ class LdtkData extends Entity {
                             level.ceramicTilemap = null;
                             ceramicTilemap.destroy();
                         }
+
+                        var layers = level.layerInstances;
+                        if (layers != null) {
+                            for (k in 0...layers.length) {
+                                var layer = layers[k];
+                                var entities = layer.entityInstances;
+                                if (entities != null) {
+                                    for (l in 0...entities.length) {
+                                        var entity = entities[l];
+                                        if (entity.ceramicEntity != null) {
+                                            var ceramicEntity = entity.ceramicEntity;
+                                            entity.ceramicEntity = null;
+                                            ceramicEntity.destroy();
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -256,7 +274,7 @@ class LdtkData extends Entity {
 
     @:allow(ceramic.LdtkFieldInstance)
     @:allow(ceramic.LdtkLayerInstance)
-    private function _resolveEntityInstance(json:DynamicAccess<Dynamic>, ?ldtkWorld:LdtkWorld):LdtkEntityInstance {
+    private function _resolveEntityInstance(json:DynamicAccess<Dynamic>, ?ldtkWorld:LdtkWorld, ?ldtkLayerInstance:LdtkLayerInstance):LdtkEntityInstance {
 
         var iid:String = null;
 
@@ -290,12 +308,16 @@ class LdtkData extends Entity {
 
                 var entityInstance = new LdtkEntityInstance(this, json);
                 registerEntity(entityInstance, json);
+                if (ldtkLayerInstance != null)
+                    entityInstance.layerInstance = ldtkLayerInstance;
                 return entityInstance;
             }
             else if (_rootJson != null && json.get('entityIid') != null) {
                 iid = json.get('entityIid');
                 for (i in 0..._entityInstances.length) {
                     if (_entityInstances[i].iid == iid) {
+                        if (ldtkLayerInstance != null)
+                            _entityInstances[i].layerInstance = ldtkLayerInstance;
                         return _entityInstances[i];
                     }
                 }
@@ -324,6 +346,8 @@ class LdtkData extends Entity {
                             if (entityInstanceJson.get('iid') == iid) {
                                 var entityInstance = new LdtkEntityInstance(this, entityInstanceJson);
                                 registerEntity(entityInstance, entityInstanceJson);
+                                if (ldtkLayerInstance != null)
+                                    entityInstance.layerInstance = ldtkLayerInstance;
                                 return entityInstance;
                             }
                         }
@@ -668,14 +692,21 @@ class LdtkEntityDefinition {
     public var tileRenderMode:LdtkTileRenderMode;
 
     /**
-     * Tileset ID used for optional tile display
+     * The corresponding Tileset definition, if any, for optional tile display
      */
-    public var tilesetId:Int;
+    public var tileset:LdtkTilesetDefinition = null;
 
     /**
      * Unique Int identifier
      */
     public var uid:Int;
+
+    /**
+     * A custom function that should return a new Ceramic entity from the given LDtk entity instance,
+     * that will be used on every LDtk entity instance having this LDtk entity definition.
+     * If this function isn't defined (default), no Ceramic entity will be created
+     */
+    public var toCeramicEntity:(entityInstance:LdtkEntityInstance)->Entity = null;
 
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
@@ -691,7 +722,8 @@ class LdtkEntityDefinition {
             pivotY = json.get('pivotY');
             tileRect = new LdtkTilesetRectangle(json.get('tileRect'));
             tileRenderMode = LdtkTileRenderMode.fromString(json.get('tileRenderMode'));
-            tilesetId = json.get('tilesetId') != null ? json.get('tilesetId') : -1;
+            if (defs != null && defs.ldtkData != null)
+                tileset = defs.ldtkData.findTilesetDef(Std.int(json.get('tilesetId')));
             uid = Std.int(json.get('uid'));
         }
 
@@ -710,7 +742,7 @@ class LdtkEntityDefinition {
                 pivotY: ''+pivotY,
                 tileRect: ''+tileRect,
                 tileRenderMode: ''+tileRenderMode,
-                tilesetId: ''+tilesetId,
+                tileset: ''+tileset,
                 uid: ''+uid
             });
             LdtkDataHelpers.endObjectToString();
@@ -728,9 +760,9 @@ class LdtkEntityDefinition {
 class LdtkTilesetRectangle {
 
     /**
-     * UID of the tileset
+     * The related tileset
      */
-    public var tilesetUid:Int;
+    public var tileset:LdtkTilesetDefinition = null;
 
     /**
      * X pixels coordinate of the top-left corner in the Tileset image
@@ -752,10 +784,12 @@ class LdtkTilesetRectangle {
      */
     public var h:Int;
 
-    public function new(?json:DynamicAccess<Dynamic>) {
+    public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
-            tilesetUid = Std.int(json.get('tilesetUid'));
+            if (ldtkData != null) {
+                tileset = ldtkData.findTilesetDef(Std.int(json.get('tilesetUid')));
+            }
             x = json.get('x');
             y = json.get('y');
             w = json.get('w');
@@ -768,7 +802,7 @@ class LdtkTilesetRectangle {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
             var res = 'LdtkTilesetRectangle' + LdtkDataHelpers.objectToString({
-                tilesetUid: ''+tilesetUid,
+                tileset: ''+tileset,
                 x: ''+x,
                 y: ''+y,
                 w: ''+w,
@@ -1928,7 +1962,7 @@ class LdtkLevel {
 
             var layerInstancesJson:Array<Dynamic> = json.get('layerInstances');
             layerInstances = layerInstancesJson != null ? [for (i in 0...layerInstancesJson.length) {
-                new LdtkLayerInstance(ldtkData, world, layerInstancesJson[i]);
+                new LdtkLayerInstance(this, ldtkData, world, layerInstancesJson[i]);
             }] : null;
 
             pxWid = Std.int(json.get('pxWid'));
@@ -2175,7 +2209,7 @@ class LdtkFieldInstance {
                 }
             }
 
-            tile = json.get('tile') != null ? new LdtkTilesetRectangle(json.get('tile')) : null;
+            tile = json.get('tile') != null ? new LdtkTilesetRectangle(ldtkData, json.get('tile')) : null;
 
             var rawValue:Any = json.get('__value');
             if (rawValue != null) {
@@ -2194,7 +2228,7 @@ class LdtkFieldInstance {
                     case 'Point':
                         value = new Point(Std.int(Reflect.field(rawValue, 'cx')), Std.int(Reflect.field(rawValue, 'cy')));
                     case 'TilesetRect':
-                        value = new LdtkTilesetRectangle(rawValue);
+                        value = new LdtkTilesetRectangle(ldtkData, rawValue);
                     case 'EntityRef':
                         value = ldtkData != null ? ldtkData._resolveEntityInstance(rawValue, ldtkWorld) : null;
                     default:
@@ -2233,6 +2267,11 @@ class LdtkLayerInstance {
      * The Ceramic layer generated from this level
      */
     public var ceramicLayer:TilemapLayerData = null;
+
+    /**
+     * The LDtk level this layer instance belongs to
+     */
+    public var level:LdtkLevel = null;
 
     /**
      * The related layer definition
@@ -2366,9 +2405,13 @@ class LdtkLayerInstance {
      */
     public var seed:Int;
 
-    public function new(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>) {
+    public function new(?level:LdtkLevel, ?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
+
+            if (level != null)
+                this.level = null;
+
             var uid:Int = Std.int(json.get('layerDefUid'));
             var tilesetDefUid:Int = json.get('__tilesetDefUid') != null ? Std.int(json.get('__tilesetDefUid')) : -1;
 
@@ -2476,6 +2519,11 @@ class LdtkEntityInstance {
     public var def:LdtkEntityDefinition = null;
 
     /**
+     * The layer instance this entity instance belongs to
+     */
+    public var layerInstance:LdtkLayerInstance = null;
+
+    /**
      * Grid-based X coordinate
      */
     public var gridX:Int;
@@ -2515,6 +2563,11 @@ class LdtkEntityInstance {
      */
     public var iid:String;
 
+    /**
+     * The Ceramic entity matching this LDtk entity instance (if any)
+     */
+    public var ceramicEntity:Entity = null;
+
     public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
@@ -2544,6 +2597,23 @@ class LdtkEntityInstance {
             height = Std.int(json.get('height'));
             iid = json.get('iid');
         }
+
+    }
+
+    public function createCeramicEntity():Entity {
+
+        // Destroy previous entity, if any
+        if (ceramicEntity != null) {
+            ceramicEntity.destroy();
+            ceramicEntity = null;
+        }
+
+        // Create new entity, if we can
+        if (def.toCeramicEntity != null) {
+            ceramicEntity = def.toCeramicEntity(this);
+        }
+
+        return ceramicEntity;
 
     }
 

@@ -93,6 +93,26 @@ class TilemapLayerData extends Model {
     @observe public var computedTiles:ReadOnlyArray<TilemapTile> = null;
 
     /**
+     * Is `true` if this layer has tiles. Some layers don't have tile and
+     * don't need to be rendered with tilemap layer quads, but are still
+     * available as containers to add custom objects (like LDtk entities).
+     * @return Bool
+     */
+    @compute public function hasTiles():Bool {
+
+        return (
+            (tiles != null && tiles.length > 0) ||
+            (computedTiles != null && computedTiles.length > 0)
+        );
+
+    }
+
+    /**
+     * Is `true` (default) if this layer should have its tiles rendered (if any).
+     */
+    @serialize public var shouldRenderTiles:Bool = true;
+
+    /**
      * The width of a tile in this layer
      */
     @serialize public var tileWidth:Int = -1;

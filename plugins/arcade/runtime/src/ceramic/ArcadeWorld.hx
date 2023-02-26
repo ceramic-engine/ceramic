@@ -691,7 +691,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         }
 
         var layerData = layer.layerData;
-        if (layerData != null) {
+        if (layerData != null && layerData.hasTiles) {
 
             var tilemap:Tilemap = layer.tilemap;
 

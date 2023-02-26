@@ -114,61 +114,55 @@ class TilemapLdtkParser {
                     var k = level.layerInstances.length - 1;
                     while (k >= 0) {
                         var layerInstance = level.layerInstances[k];
-                        var createTilemapLayer:Bool = switch layerInstance.def.type {
-                            case IntGrid: layerInstance.tileset != null;
-                            case Entities: false;
-                            case Tiles: layerInstance.tileset != null;
-                            case AutoLayer: layerInstance.tileset != null;
+
+                        var tilemapLayerData = new TilemapLayerData();
+
+                        tilemapLayerData.name = layerInstance.def.identifier;
+                        tilemapLayerData.tileWidth = layerInstance.def.gridSize;
+                        tilemapLayerData.tileHeight = layerInstance.def.gridSize;
+                        tilemapLayerData.opacity = layerInstance.opacity;
+                        tilemapLayerData.extraOpacity = layerInstance.opacity;
+                        tilemapLayerData.offsetX = layerInstance.pxTotalOffsetX;
+                        tilemapLayerData.offsetY = layerInstance.pxTotalOffsetY;
+                        tilemapLayerData.visible = layerInstance.visible;
+                        tilemapLayerData.columns = layerInstance.cWid;
+                        tilemapLayerData.rows = layerInstance.cHei;
+
+                        tilemapLayerData.shouldRenderTiles = (layerInstance.tileset != null);
+
+                        if (layerInstance.tileset != null && layerInstance.tileset.ceramicTileset != null && usedTilesets.indexOf(layerInstance.tileset.ceramicTileset) == -1) {
+                            usedTilesets.push(layerInstance.tileset.ceramicTileset);
                         }
 
-                        if (createTilemapLayer) {
-
-                            var tilemapLayerData = new TilemapLayerData();
-
-                            tilemapLayerData.name = layerInstance.def.identifier;
-                            tilemapLayerData.tileWidth = layerInstance.def.gridSize;
-                            tilemapLayerData.tileHeight = layerInstance.def.gridSize;
-                            tilemapLayerData.opacity = layerInstance.opacity;
-                            tilemapLayerData.extraOpacity = layerInstance.opacity;
-                            tilemapLayerData.offsetX = layerInstance.pxOffsetX;
-                            tilemapLayerData.offsetY = layerInstance.pxOffsetY;
-                            tilemapLayerData.visible = layerInstance.visible;
-                            tilemapLayerData.columns = layerInstance.cWid;
-                            tilemapLayerData.rows = layerInstance.cHei;
-
-                            if (layerInstance.tileset != null && layerInstance.tileset.ceramicTileset != null && usedTilesets.indexOf(layerInstance.tileset.ceramicTileset) == -1) {
-                                usedTilesets.push(layerInstance.tileset.ceramicTileset);
-                            }
-
-                            switch layerInstance.def.type {
-                                case Tiles:
-                                    tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
-                                case IntGrid | AutoLayer:
-                                    if (layerInstance.def.autoSourceLayerDefUid != -1) {
-                                        var autoSourceLayer = null;
-                                        for (l in 0...level.layerInstances.length) {
-                                            var aLayer = level.layerInstances[l];
-                                            if (aLayer.def.uid == layerInstance.def.autoSourceLayerDefUid) {
-                                                autoSourceLayer = aLayer;
-                                                break;
-                                            }
+                        switch layerInstance.def.type {
+                            case Tiles:
+                                tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
+                            case IntGrid | AutoLayer:
+                                if (layerInstance.def.autoSourceLayerDefUid != -1) {
+                                    var autoSourceLayer = null;
+                                    for (l in 0...level.layerInstances.length) {
+                                        var aLayer = level.layerInstances[l];
+                                        if (aLayer.def.uid == layerInstance.def.autoSourceLayerDefUid) {
+                                            autoSourceLayer = aLayer;
+                                            break;
                                         }
-                                        if (autoSourceLayer == null) {
-                                            log.warning('Failed to resolve auto source layer for: ' + layerInstance.def.identifier);
-                                        }
-                                        tilemapLayerData.tiles = [].concat(autoSourceLayer.intGrid);
                                     }
-                                    else {
-                                        tilemapLayerData.tiles = [].concat(layerInstance.intGrid);
+                                    if (autoSourceLayer == null) {
+                                        log.warning('Failed to resolve auto source layer for: ' + layerInstance.def.identifier);
                                     }
-                                    tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
-                                case _:
-                            }
-
-                            tilemapLayers.push(tilemapLayerData);
-                            layerInstance.ceramicLayer = tilemapLayerData;
-                            tilemapLayerData.ldtkLayer = layerInstance;
+                                    tilemapLayerData.tiles = [].concat(autoSourceLayer.intGrid);
+                                }
+                                else {
+                                    tilemapLayerData.tiles = [].concat(layerInstance.intGrid);
+                                }
+                                tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
+                            case Entities:
+                                // Do not assign tiles
                         }
+
+                        tilemapLayers.push(tilemapLayerData);
+                        layerInstance.ceramicLayer = tilemapLayerData;
+                        tilemapLayerData.ldtkLayer = layerInstance;
 
                         k--;
                     }

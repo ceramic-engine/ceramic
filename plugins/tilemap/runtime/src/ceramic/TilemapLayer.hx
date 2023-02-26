@@ -237,212 +237,215 @@ class TilemapLayer extends Visual {
         var roundTilesTranslation = tilemap.roundTilesTranslation;
         var layerData = this.layerData;
 
-        var width = _width;
-        var height = _height;
-        var layerColumns = layerData.columns;
-        var layerRows = layerData.rows;
+        if (layerData.shouldRenderTiles && layerData.hasTiles) {
 
-        var hasClipping = false;
-        var clipTilesX = tilemap.clipTilesX;
-        var clipTilesY = tilemap.clipTilesY;
-        var clipTilesWidth = tilemap.clipTilesWidth;
-        var clipTilesHeight = tilemap.clipTilesHeight;
-        if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
-            hasClipping = true;
-        }
+            var width = _width;
+            var height = _height;
+            var layerColumns = layerData.columns;
+            var layerRows = layerData.rows;
 
-        // Computing depth from render order
-        var startDepthX = 0;
-        var startDepthY = 0;
-        var depthXStep = 1;
-        var depthYStep = layerColumns;
-        switch (tilemapData.renderOrder) {
-            case RIGHT_DOWN:
-            case RIGHT_UP:
-                startDepthY = layerColumns * (layerRows - 1);
-                depthYStep = -layerColumns;
-            case LEFT_DOWN:
-                startDepthX = layerColumns - 1;
-                depthXStep = -1;
-            case LEFT_UP:
-                startDepthX = layerColumns - 1;
-                depthXStep = -1;
-                startDepthY = layerColumns * (layerRows - 1);
-                depthYStep = -layerColumns;
-        }
-
-        var offsetX = layerData.offsetX + layerData.x * layerData.tileWidth;
-        var offsetY = layerData.offsetY + layerData.y * layerData.tileHeight;
-
-        var filterX:Float = 0.0;
-        var filterY:Float = 0.0;
-        if (tilesFilter != null) {
-            var filterWidth = width;
-            var filterHeight = height;
-            if (hasClipping) {
-                filterX = Math.floor(clipTilesX / layerData.tileWidth) * layerData.tileWidth - offsetX;
-                filterY = Math.floor(clipTilesY / layerData.tileHeight) * layerData.tileHeight - offsetY;
-                tilesFilter.pos(
-                    filterX,
-                    filterY
-                );
-                filterWidth = Math.ceil(clipTilesWidth / layerData.tileWidth) * layerData.tileWidth + layerData.tileWidth;
-                filterHeight = Math.ceil(clipTilesHeight / layerData.tileHeight) * layerData.tileHeight + layerData.tileHeight;
+            var hasClipping = false;
+            var clipTilesX = tilemap.clipTilesX;
+            var clipTilesY = tilemap.clipTilesY;
+            var clipTilesWidth = tilemap.clipTilesWidth;
+            var clipTilesHeight = tilemap.clipTilesHeight;
+            if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
+                hasClipping = true;
             }
-            else {
-                tilesFilter.pos(0, 0);
+
+            // Computing depth from render order
+            var startDepthX = 0;
+            var startDepthY = 0;
+            var depthXStep = 1;
+            var depthYStep = layerColumns;
+            switch (tilemapData.renderOrder) {
+                case RIGHT_DOWN:
+                case RIGHT_UP:
+                    startDepthY = layerColumns * (layerRows - 1);
+                    depthYStep = -layerColumns;
+                case LEFT_DOWN:
+                    startDepthX = layerColumns - 1;
+                    depthXStep = -1;
+                case LEFT_UP:
+                    startDepthX = layerColumns - 1;
+                    depthXStep = -1;
+                    startDepthY = layerColumns * (layerRows - 1);
+                    depthYStep = -layerColumns;
             }
-            if (autoSizeTilesFilter && filterWidth > 0 && filterHeight > 0) {
-                tilesFilter.size(filterWidth, filterHeight);
-            }
-        }
 
-        if (layerData.visible) {
-            var tiles = layerData.computedTiles;
-            if (tiles == null)
-                tiles = layerData.tiles;
-            if (tiles != null) {
+            var offsetX = layerData.offsetX + layerData.x * layerData.tileWidth;
+            var offsetY = layerData.offsetY + layerData.y * layerData.tileHeight;
 
-                var minColumn = 0;
-                var maxColumn = layerColumns - 1;
-                var minRow = 0;
-                var maxRow = layerRows - 1;
-                var tilesPerLayer = layerColumns * layerRows;
-
+            var filterX:Float = 0.0;
+            var filterY:Float = 0.0;
+            if (tilesFilter != null) {
+                var filterWidth = width;
+                var filterHeight = height;
                 if (hasClipping) {
-                    minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
-                    maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
-                    minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
-                    maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                    filterX = Math.floor(clipTilesX / layerData.tileWidth) * layerData.tileWidth - offsetX;
+                    filterY = Math.floor(clipTilesY / layerData.tileHeight) * layerData.tileHeight - offsetY;
+                    tilesFilter.pos(
+                        filterX,
+                        filterY
+                    );
+                    filterWidth = Math.ceil(clipTilesWidth / layerData.tileWidth) * layerData.tileWidth + layerData.tileWidth;
+                    filterHeight = Math.ceil(clipTilesHeight / layerData.tileHeight) * layerData.tileHeight + layerData.tileHeight;
                 }
+                else {
+                    tilesFilter.pos(0, 0);
+                }
+                if (autoSizeTilesFilter && filterWidth > 0 && filterHeight > 0) {
+                    tilesFilter.size(filterWidth, filterHeight);
+                }
+            }
 
-                var numTiles = tiles.length;
-                var c = minColumn;
-                while (c <= maxColumn) {
-                    var r = minRow;
-                    while (r <= maxRow) {
-                        var t = r * layerColumns + c;
+            if (layerData.visible) {
+                var tiles = layerData.computedTiles;
+                if (tiles == null)
+                    tiles = layerData.tiles;
+                if (tiles != null) {
 
-                        if (t < 0 || t >= numTiles) {
-                            r++;
-                            continue;
-                        }
+                    var minColumn = 0;
+                    var maxColumn = layerColumns - 1;
+                    var minRow = 0;
+                    var maxRow = layerRows - 1;
+                    var tilesPerLayer = layerColumns * layerRows;
 
-                        while (t < numTiles) {
+                    if (hasClipping) {
+                        minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
+                        maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
+                        minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
+                        maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                    }
 
-                            var tile = tiles.unsafeGet(t);
+                    var numTiles = tiles.length;
+                    var c = minColumn;
+                    while (c <= maxColumn) {
+                        var r = minRow;
+                        while (r <= maxRow) {
+                            var t = r * layerColumns + c;
 
-                            if (tile == 0) {
-                                t += tilesPerLayer;
+                            if (t < 0 || t >= numTiles) {
+                                r++;
                                 continue;
                             }
 
-                            var gid = tile.gid;
+                            while (t < numTiles) {
 
-                            var tileset = tilemapData.tilesetForGid(gid);
+                                var tile = tiles.unsafeGet(t);
 
-                            if (tileset != null && tileset.image != null && tileset.columns > 0) {
-                                var index = gid - tileset.firstGid;
-
-                                var column = (t % layerColumns);
-                                var row = Math.floor(t / layerColumns);
-                                var depthExtra = 0.0;
-                                var color = Color.multiply(layerData.color, tilesColor);
-                                var alpha = layerData.opacity;
-                                var blending = layerData.blending;
-                                if (row >= layerRows) {
-                                    row -= layerRows;
-                                    depthExtra += 0.1;
-                                    blending = layerData.extraBlending;
-                                    alpha = layerData.extraOpacity;
-                                }
-                                while (row >= layerRows) {
-                                    row -= layerRows;
-                                    depthExtra += 0.1;
+                                if (tile == 0) {
+                                    t += tilesPerLayer;
+                                    continue;
                                 }
 
-                                var tileLeft = column * tileset.tileWidth;
-                                var tileTop = row * tileset.tileWidth;
-                                var tileWidth = tileset.tileWidth;
-                                var tileHeight = tileset.tileHeight;
-                                var tileRight = tileLeft + tileWidth;
-                                var tileBottom = tileTop + tileHeight;
+                                var gid = tile.gid;
 
-                                var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
-                                if (quad == null) {
-                                    quad = TilemapQuad.get();
-                                    quad.anchor(0.5, 0.5);
-                                    quad.inheritAlpha = true;
-                                    tileQuads.push(quad);
-                                    if (tilesFilter != null) {
-                                        tilesFilter.content.add(quad);
+                                var tileset = tilemapData.tilesetForGid(gid);
+
+                                if (tileset != null && tileset.image != null && tileset.columns > 0) {
+                                    var index = gid - tileset.firstGid;
+
+                                    var column = (t % layerColumns);
+                                    var row = Math.floor(t / layerColumns);
+                                    var depthExtra = 0.0;
+                                    var color = Color.multiply(layerData.color, tilesColor);
+                                    var alpha = layerData.opacity;
+                                    var blending = layerData.blending;
+                                    if (row >= layerRows) {
+                                        row -= layerRows;
+                                        depthExtra += 0.1;
+                                        blending = layerData.extraBlending;
+                                        alpha = layerData.extraOpacity;
+                                    }
+                                    while (row >= layerRows) {
+                                        row -= layerRows;
+                                        depthExtra += 0.1;
+                                    }
+
+                                    var tileLeft = column * tileset.tileWidth;
+                                    var tileTop = row * tileset.tileWidth;
+                                    var tileWidth = tileset.tileWidth;
+                                    var tileHeight = tileset.tileHeight;
+                                    var tileRight = tileLeft + tileWidth;
+                                    var tileBottom = tileTop + tileHeight;
+
+                                    var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
+                                    if (quad == null) {
+                                        quad = TilemapQuad.get();
+                                        quad.anchor(0.5, 0.5);
+                                        quad.inheritAlpha = true;
+                                        tileQuads.push(quad);
+                                        if (tilesFilter != null) {
+                                            tilesFilter.content.add(quad);
+                                        }
+                                        else {
+                                            add(quad);
+                                        }
+                                    }
+                                    usedQuads++;
+
+                                    if (quad.index != -1 && quad.index != t && tileQuadMapping.get(quad.index) == usedQuads) {
+                                        tileQuadMapping.set(quad.index, 0);
+                                    }
+                                    tileQuadMapping.set(t, usedQuads);
+
+                                    quad.tilemapTile = tile;
+                                    quad.roundTranslation = roundTilesTranslation;
+                                    quad.color = color;
+                                    quad.index = t;
+                                    quad.column = column;
+                                    quad.row = row;
+                                    quad.alpha = alpha;
+                                    quad.blending = blending;
+                                    quad.visible = true;
+                                    quad.texture = tileset.image.texture;
+                                    quad.frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
+                                    quad.frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2) + tileset.spacing;
+                                    quad.frameWidth = tileset.tileWidth;
+                                    quad.frameHeight = tileset.tileHeight;
+                                    quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
+                                    quad.x = tileWidth * 0.5 + tileLeft - filterX;
+                                    quad.y = tileHeight * 0.5 + tileTop - filterY;
+
+                                    if (tile.diagonalFlip) {
+
+                                        if (tile.verticalFlip)
+                                            quad.scaleX = -1.0 * tileScale;
+                                        else
+                                            quad.scaleX = tileScale;
+
+                                        if (tile.horizontalFlip)
+                                            quad.scaleY = tileScale;
+                                        else
+                                            quad.scaleY = -1.0 * tileScale;
+
+                                        quad.rotation = 90;
                                     }
                                     else {
-                                        add(quad);
+
+                                        if (tile.horizontalFlip)
+                                            quad.scaleX = -1.0 * tileScale;
+                                        else
+                                            quad.scaleX = tileScale;
+
+                                        if (tile.verticalFlip)
+                                            quad.scaleY = -1.0 * tileScale;
+                                        else
+                                            quad.scaleY = tileScale;
+
+                                        quad.rotation = 0;
                                     }
-                                }
-                                usedQuads++;
 
-                                if (quad.index != -1 && quad.index != t && tileQuadMapping.get(quad.index) == usedQuads) {
-                                    tileQuadMapping.set(quad.index, 0);
-                                }
-                                tileQuadMapping.set(t, usedQuads);
-
-                                quad.tilemapTile = tile;
-                                quad.roundTranslation = roundTilesTranslation;
-                                quad.color = color;
-                                quad.index = t;
-                                quad.column = column;
-                                quad.row = row;
-                                quad.alpha = alpha;
-                                quad.blending = blending;
-                                quad.visible = true;
-                                quad.texture = tileset.image.texture;
-                                quad.frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
-                                quad.frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2) + tileset.spacing;
-                                quad.frameWidth = tileset.tileWidth;
-                                quad.frameHeight = tileset.tileHeight;
-                                quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
-                                quad.x = tileWidth * 0.5 + tileLeft - filterX;
-                                quad.y = tileHeight * 0.5 + tileTop - filterY;
-
-                                if (tile.diagonalFlip) {
-
-                                    if (tile.verticalFlip)
-                                        quad.scaleX = -1.0 * tileScale;
-                                    else
-                                        quad.scaleX = tileScale;
-
-                                    if (tile.horizontalFlip)
-                                        quad.scaleY = tileScale;
-                                    else
-                                        quad.scaleY = -1.0 * tileScale;
-
-                                    quad.rotation = 90;
-                                }
-                                else {
-
-                                    if (tile.horizontalFlip)
-                                        quad.scaleX = -1.0 * tileScale;
-                                    else
-                                        quad.scaleX = tileScale;
-
-                                    if (tile.verticalFlip)
-                                        quad.scaleY = -1.0 * tileScale;
-                                    else
-                                        quad.scaleY = tileScale;
-
-                                    quad.rotation = 0;
                                 }
 
+                                t += tilesPerLayer;
                             }
 
-                            t += tilesPerLayer;
+                            r++;
                         }
-
-                        r++;
+                        c++;
                     }
-                    c++;
                 }
             }
         }
