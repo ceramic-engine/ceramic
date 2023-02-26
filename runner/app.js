@@ -234,7 +234,14 @@ exports.consoleLog = function(str) {
 };
 
 exports.setFullscreen = function(fullscreen) {
-    mainWindow.setFullScreen(fullscreen);
+    if (fullscreen) {
+        mainWindow.setFullScreenable(true);
+        mainWindow.setFullScreen(true);
+    }
+    else {
+        mainWindow.setFullScreen(false);
+        mainWindow.setFullScreenable(mainWindow.resizable);
+    }
 };
 
 exports.listenFullscreen = function(enterFullscreen, leaveFullscreen) {
