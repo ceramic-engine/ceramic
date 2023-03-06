@@ -150,6 +150,8 @@ class Tilemap extends Quad {
         if (tilemapData == null) {
             width = 0;
             height = 0;
+            transparent = true;
+            color = Color.WHITE;
             contentDirty = false;
             return;
         }
@@ -159,6 +161,16 @@ class Tilemap extends Quad {
             tilemapData.width,
             tilemapData.height
         );
+
+        if (tilemapData.backgroundColor != AlphaColor.NONE && tilemapData.backgroundColor.alpha > 0) {
+            transparent = false;
+            alpha = tilemapData.backgroundColor.alphaFloat;
+            color = tilemapData.backgroundColor.rgb;
+        }
+        else {
+            transparent = true;
+            color = Color.WHITE;
+        }
 
         computeLayers();
 
