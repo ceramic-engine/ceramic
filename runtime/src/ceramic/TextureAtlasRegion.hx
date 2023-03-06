@@ -53,15 +53,6 @@ class TextureAtlasRegion extends TextureTile {
 
 /// Helpers
 
-    inline public function frame(frameX:Int, frameY:Int, frameWidth:Int, frameHeight:Int):Void {
-
-        this.frameX = frameX;
-        this.frameY = frameY;
-        this.frameWidth = frameWidth;
-        this.frameHeight = frameHeight;
-
-    }
-
     public function computeFrame():Void {
 
         var pageInfo = atlas.pages[page];
