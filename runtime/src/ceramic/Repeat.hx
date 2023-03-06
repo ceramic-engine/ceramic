@@ -350,12 +350,9 @@ class Repeat extends Visual {
                         usedTexH
                     );
                     if (rotateFrame) {
-                        quad.frame(
-                            texX + quad.frameY - texY,
-                            texY + texWidth - quad.frameX + texX - quad.frameWidth,
-                            quad.frameWidth,
-                            quad.frameHeight
-                        );
+                        var _frameX = quad.frameX;
+                        quad.frameX = texX + quad.frameY - texY;
+                        quad.frameY = texY + texWidth - _frameX + texX - quad.frameWidth;
                     }
                     quad.pos(x, y);
                     quad.size(
