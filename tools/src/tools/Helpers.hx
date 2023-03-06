@@ -408,6 +408,9 @@ class Helpers {
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp'])))
             haxelib(['dev', 'hxcpp', Path.join([ceramicHaxelibRepoPath, 'hxcpp', '4,2,1']), '--always', '--quiet'], {cwd: cwd});
 
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcs'])))
+            haxelib(['dev', 'hxcs', Path.join([ceramicHaxelibRepoPath, 'hxcs', '4,2,0']), '--always', '--quiet'], {cwd: cwd});
+
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws'])))
             haxelib(['dev', 'hxnodejs-ws', Path.join([context.ceramicGitDepsPath, 'hscript']), '--always', '--quiet'], {cwd: cwd});
 
