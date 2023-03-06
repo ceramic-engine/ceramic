@@ -135,24 +135,6 @@ class LdtkData extends Entity {
                             level.ceramicTilemap = null;
                             ceramicTilemap.destroy();
                         }
-
-                        var layers = level.layerInstances;
-                        if (layers != null) {
-                            for (k in 0...layers.length) {
-                                var layer = layers[k];
-                                var entities = layer.entityInstances;
-                                if (entities != null) {
-                                    for (l in 0...entities.length) {
-                                        var entity = entities[l];
-                                        if (entity.ceramicEntity != null) {
-                                            var ceramicEntity = entity.ceramicEntity;
-                                            entity.ceramicEntity = null;
-                                            ceramicEntity.destroy();
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -578,9 +560,17 @@ class LdtkDefinitions {
 
     public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
-        this.ldtkData = ldtkData;
+        if (ldtkData != null) {
+            this.ldtkData = ldtkData;
+            ldtkData.defs = this;
+        }
 
         if (json != null) {
+            var tilesetsJson:Array<Dynamic> = json.get('tilesets');
+            tilesets = tilesetsJson != null ? [for (i in 0...tilesetsJson.length) {
+                new LdtkTilesetDefinition(this, tilesetsJson[i]);
+            }] : [];
+
             var entitiesJson:Array<Dynamic> = json.get('entities');
             entities = entitiesJson != null ? [for (i in 0...entitiesJson.length) {
                 new LdtkEntityDefinition(this, entitiesJson[i]);
@@ -604,11 +594,6 @@ class LdtkDefinitions {
             var levelFieldsJson:Array<Dynamic> = json.get('levelFields');
             levelFields = levelFieldsJson != null ? [for (i in 0...levelFieldsJson.length) {
                 new LdtkFieldDefinition(this, levelFieldsJson[i]);
-            }] : [];
-
-            var tilesetsJson:Array<Dynamic> = json.get('tilesets');
-            tilesets = tilesetsJson != null ? [for (i in 0...tilesetsJson.length) {
-                new LdtkTilesetDefinition(this, tilesetsJson[i]);
             }] : [];
         }
 
@@ -682,6 +667,11 @@ class LdtkEntityDefinition {
     public var pivotY:Float;
 
     /**
+     * Render mode
+     */
+    public var renderMode:LdtkRenderMode;
+
+    /**
      * An object representing a rectangle from an existing Tileset (can be `null`)
      */
     public var tileRect:LdtkTilesetRectangle;
@@ -701,13 +691,6 @@ class LdtkEntityDefinition {
      */
     public var uid:Int;
 
-    /**
-     * A custom function that should return a new Ceramic entity from the given LDtk entity instance,
-     * that will be used on every LDtk entity instance having this LDtk entity definition.
-     * If this function isn't defined (default), no Ceramic entity will be created
-     */
-    public var toCeramicEntity:(entityInstance:LdtkEntityInstance)->Entity = null;
-
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -720,12 +703,42 @@ class LdtkEntityDefinition {
             nineSliceBorders = LdtkDataHelpers.toIntArray(json.get('nineSliceBorders'));
             pivotX = json.get('pivotX');
             pivotY = json.get('pivotY');
-            tileRect = new LdtkTilesetRectangle(json.get('tileRect'));
+            renderMode = LdtkRenderMode.fromString(json.get('renderMode'));
+            tileRect = new LdtkTilesetRectangle(
+                defs != null ? defs.ldtkData : null,
+                json.get('tileRect')
+            );
             tileRenderMode = LdtkTileRenderMode.fromString(json.get('tileRenderMode'));
             if (defs != null && defs.ldtkData != null)
                 tileset = defs.ldtkData.findTilesetDef(Std.int(json.get('tilesetId')));
             uid = Std.int(json.get('uid'));
         }
+
+    }
+
+    /**
+     * Returns `true` if entities instances having this entity definition
+     * can be rendered with the given `renderMode`. Will also check that
+     * the definition is not using internal icons as well, as they should not be rendered anyway.
+     * @param renderMode The render mode we want to test
+     * @return Bool
+     */
+    public function isRenderable(renderMode:LdtkRenderMode):Bool {
+
+        var result = false;
+        if (this.renderMode == renderMode) {
+            if (tileset != null) {
+                var ceramicTileset = tileset.ceramicTileset;
+                if (ceramicTileset != null) {
+                    var texture = ceramicTileset.texture;
+                    if (texture != null) {
+                        result = true;
+                    }
+                }
+            }
+        }
+
+        return result;
 
     }
 
@@ -784,6 +797,21 @@ class LdtkTilesetRectangle {
      */
     public var h:Int;
 
+    /**
+     * Get a Ceramic texture tile from this tileset rectangle.
+     */
+    public var ceramicTile(get, null):TextureTile;
+    function get_ceramicTile():TextureTile {
+        if (this.ceramicTile == null && tileset != null && tileset.ceramicTileset != null) {
+            this.ceramicTile = {
+                texture: tileset.ceramicTileset.texture,
+                frameX: x, frameY: y,
+                frameWidth: w, frameHeight: h
+            };
+        }
+        return this.ceramicTile;
+    }
+
     public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
@@ -814,6 +842,43 @@ class LdtkTilesetRectangle {
         else {
             return LdtkDataHelpers.HIDDEN_VALUE;
         }
+    }
+
+}
+
+enum abstract LdtkRenderMode(Int) from Int to Int {
+
+    var Rectangle = 1;
+
+    var Ellipse = 2;
+
+    var Tile = 3;
+
+    var Cross = 4;
+
+    public static function fromString(str:String):LdtkRenderMode {
+
+        return switch str {
+            case 'Rectangle': Rectangle;
+            case 'Ellipse': Ellipse;
+            case 'Tile': Tile;
+            case 'Cross': Cross;
+            case _: 0;
+        }
+
+    }
+
+    public function toString() {
+
+        var value:LdtkRenderMode = this;
+        return 'LdtkTileRenderMode.' + switch value {
+            case Rectangle: 'Rectangle';
+            case Ellipse: 'Ellipse';
+            case Tile: 'Tile';
+            case Cross: 'Cross';
+            case _: '_';
+        }
+
     }
 
 }
@@ -1170,6 +1235,28 @@ class LdtkLayerDefinition {
 
     }
 
+    public function findRule(uid:Int):LdtkAutoLayerRuleDefinition {
+
+        var ruleGroups = this.autoRuleGroups;
+        if (ruleGroups != null) {
+            for (i in 0...ruleGroups.length) {
+                var ruleGroup = ruleGroups[i];
+                if (ruleGroup != null && ruleGroup.rules != null) {
+                    var rules = ruleGroup.rules;
+                    for (j in 0...rules.length) {
+                        var rule = rules[j];
+                        if (rule.uid == uid) {
+                            return rule;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -1348,6 +1435,12 @@ class LdtkTilesetDefinition {
      */
     public var uid:Int;
 
+    /**
+     * Array of colors (with alpha) for this tileset tiles.
+     * Can be useful to know if a tile is opaque or not.
+     */
+    public var averageColors:Array<AlphaColor> = null;
+
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -1378,7 +1471,37 @@ class LdtkTilesetDefinition {
             tagsSourceEnumUid = json.get('tagsSourceEnumUid') != null ? Std.int(json.get('tagsSourceEnumUid')) : -1;
             tileGridSize = Std.int(json.get('tileGridSize'));
             uid = Std.int(json.get('uid'));
+
+            if (json.get('cachedPixelData') != null) {
+                var cachedPixelDataJson:DynamicAccess<Dynamic> = json.get('cachedPixelData');
+                if (cachedPixelDataJson.get('averageColors') != null) {
+                    var averageColorsStr:String = cachedPixelDataJson.get('averageColors');
+                    var c:Int = 0;
+                    var len:Int = averageColorsStr.length;
+                    averageColors = [];
+                    while (c < len) {
+
+                        var a = LdtkDataHelpers.colorValueFromCharCode(averageColorsStr.charCodeAt(c));
+                        c++;
+                        var r = LdtkDataHelpers.colorValueFromCharCode(averageColorsStr.charCodeAt(c));
+                        c++;
+                        var g = LdtkDataHelpers.colorValueFromCharCode(averageColorsStr.charCodeAt(c));
+                        c++;
+                        var b = LdtkDataHelpers.colorValueFromCharCode(averageColorsStr.charCodeAt(c));
+                        c++;
+
+                        var color = AlphaColor.fromRGBA(r, g, b, a);
+                        averageColors.push(color);
+                    }
+                }
+            }
         }
+
+    }
+
+    inline public function averageColor(tileId:Int):AlphaColor {
+
+        return averageColors != null && averageColors.length > tileId ? averageColors[tileId] : AlphaColor.NONE;
 
     }
 
@@ -1975,6 +2098,88 @@ class LdtkLevel {
 
     }
 
+    /**
+     * Walk through every entity instance in the level.
+     * Optionally filter by `identifier`. The `callback` will be
+     * called for each matching entity instance.
+     */
+    public function mapEntities(tilemap:Tilemap, ?identifier:String, callback:(entity:LdtkEntityInstance)->Void) {
+
+        for (layer in this.layerInstances) {
+            var depth:Float = 0;
+            if (layer.autoLayerTiles != null) {
+                depth = Math.max(depth, layer.autoLayerTiles.length / 6);
+            }
+            if (layer.gridTiles != null) {
+                depth = Math.max(depth, layer.gridTiles.length / 6);
+            }
+            if (layer.entityInstances != null) {
+                for (entity in layer.entityInstances) {
+                    if (identifier == null || entity.def.identifier == identifier) {
+                        callback(entity);
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Create visuals for every entity instance in the level.
+     * Optionally filter by `identifier`. If provided, the `createVisual` callback
+     * will be called for every entity, and this callback can either return a `Visual`
+     * instance or `null`.
+     *
+     * If a visual is created, it will be added at the correct position
+     * in the `tilemap` object, inside the correct `layer`.
+     *
+     * If `createVisual` is not provided, this method will create instances of `LdtkVisual`,
+     * which are built-in visuals that will display entities that are renderable.
+     */
+    public function createVisualsForEntities(tilemap:Tilemap, ?identifier:String, ?createVisual:(entity:LdtkEntityInstance)->Visual) {
+
+        for (layer in this.layerInstances) {
+            var depth:Float = 0;
+            if (layer.ceramicLayer != null) {
+                var ceramicLayer = tilemap.layer(layer.ceramicLayer.name);
+                if (ceramicLayer != null) {
+                    if (layer.autoLayerTiles != null) {
+                        depth = Math.max(depth, layer.autoLayerTiles.length / 6);
+                    }
+                    if (layer.gridTiles != null) {
+                        depth = Math.max(depth, layer.gridTiles.length / 6);
+                    }
+                    if (layer.entityInstances != null) {
+                        for (entity in layer.entityInstances) {
+                            if (identifier == null || entity.def.identifier == identifier) {
+                                var visual:Visual = null;
+                                if (createVisual == null) {
+                                    if (entity.def.isRenderable(Tile)) {
+                                        visual = new LdtkVisual(entity);
+                                    }
+                                }
+                                else {
+                                    visual = createVisual(entity);
+                                }
+                                if (visual != null) {
+                                    visual.depth = depth++;
+                                    ceramicLayer.add(visual);
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    log.warning('Cannot create visuals for layer ${layer.ceramicLayer.name} because there is no matching layer visual');
+                }
+            }
+            else {
+                log.warning('Cannot create visuals because there is no ceramic layer for LDtk layer ${layer.def.identifier}');
+            }
+        }
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -2434,7 +2639,7 @@ class LdtkLayerInstance {
             pxTotalOffsetX = Std.int(json.get('__pxTotalOffsetX'));
             pxTotalOffsetY = Std.int(json.get('__pxTotalOffsetY'));
 
-            var rawAutoLayerTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int}> = json.get('autoLayerTiles');
+            var rawAutoLayerTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int,d:Array<Int>}> = json.get('autoLayerTiles');
             if (rawAutoLayerTiles != null) {
                 autoLayerTiles = [];
                 for (i in 0...rawAutoLayerTiles.length) {
@@ -2456,12 +2661,12 @@ class LdtkLayerInstance {
                 gridTiles = [];
                 for (i in 0...rawGridTiles.length) {
                     var tile = rawGridTiles[i];
-                    autoLayerTiles.push(Std.int(tile.t));
-                    autoLayerTiles.push(Std.int(tile.f));
-                    autoLayerTiles.push(Std.int(tile.px[0]));
-                    autoLayerTiles.push(Std.int(tile.px[1]));
-                    autoLayerTiles.push(Std.int(tile.src[0]));
-                    autoLayerTiles.push(Std.int(tile.src[1]));
+                    gridTiles.push(Std.int(tile.t));
+                    gridTiles.push(Std.int(tile.f));
+                    gridTiles.push(Std.int(tile.px[0]));
+                    gridTiles.push(Std.int(tile.px[1]));
+                    gridTiles.push(Std.int(tile.src[0]));
+                    gridTiles.push(Std.int(tile.src[1]));
                 }
             }
             else {
@@ -2563,11 +2768,6 @@ class LdtkEntityInstance {
      */
     public var iid:String;
 
-    /**
-     * The Ceramic entity matching this LDtk entity instance (if any)
-     */
-    public var ceramicEntity:Entity = null;
-
     public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
@@ -2600,27 +2800,11 @@ class LdtkEntityInstance {
 
     }
 
-    public function createCeramicEntity():Entity {
-
-        // Destroy previous entity, if any
-        if (ceramicEntity != null) {
-            ceramicEntity.destroy();
-            ceramicEntity = null;
-        }
-
-        // Create new entity, if we can
-        if (def.toCeramicEntity != null) {
-            ceramicEntity = def.toCeramicEntity(this);
-        }
-
-        return ceramicEntity;
-
-    }
-
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
             var res = 'LdtkEntityInstance' + LdtkDataHelpers.objectToString({
+                identifier: def != null && def.identifier != null ? def.identifier : '',
                 def: ''+def,
                 gridX: ''+gridX,
                 gridY: ''+gridY,
@@ -2781,6 +2965,28 @@ class LdtkDataHelpers {
         }
         result.add(')');
         return result.toString();
+    }
+
+    #if !ceramic_soft_inline inline #end public static function colorValueFromCharCode(code:Int):Int {
+        return switch code {
+            case '0'.code: 0x00;
+            case '1'.code: 0x11;
+            case '2'.code: 0x22;
+            case '3'.code: 0x33;
+            case '4'.code: 0x44;
+            case '5'.code: 0x55;
+            case '6'.code: 0x66;
+            case '7'.code: 0x77;
+            case '8'.code: 0x88;
+            case '9'.code: 0x99;
+            case 'a'.code | 'A'.code: 0xAA;
+            case 'b'.code | 'B'.code: 0xBB;
+            case 'c'.code | 'C'.code: 0xCC;
+            case 'd'.code | 'D'.code: 0xDD;
+            case 'e'.code | 'E'.code: 0xEE;
+            case 'f'.code | 'F'.code: 0xFF;
+            case _: 0x00;
+        }
     }
 
 }
