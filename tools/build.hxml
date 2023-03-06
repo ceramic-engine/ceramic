@@ -1,8 +1,8 @@
 -cp src
 -main tools.Index
--lib hxnodejs:12.1.0
--lib hxnodejs-ws:5.2.3
--lib hscript:2.3.0
+-lib hxnodejs
+-lib hxnodejs-ws
+-lib hscript
 -lib jsasync:1.2.3
 -js index.js
 -debug

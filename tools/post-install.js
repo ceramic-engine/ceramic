@@ -21,7 +21,11 @@ function postInstall() {
         fs.mkdirSync(haxelibRepoPath);
     }
     spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'hxcpp', '4.2.1', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
@@ -39,9 +43,9 @@ function postInstall() {
             androidClangToolchain = androidClangToolchain.split('="-static-libstdc++" />').join('="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
         if (indexOfPlatform16 != -1)
             androidClangToolchain = androidClangToolchain.split('<set name="PLATFORM_NUMBER" value="16" />').join('<set name="PLATFORM_NUMBER" value="21" />');
+        fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
     }
 
-    fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
 
     // Patch hxcpp toolchain on iOS
     // See: https://github.com/HaxeFoundation/hxcpp/issues/764

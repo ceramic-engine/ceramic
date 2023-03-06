@@ -349,6 +349,29 @@ class Helpers {
     public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
+
+        if (options == null) {
+            options = {};
+        }
+        else {
+            options = {
+                cwd: options.cwd,
+                mute: options.mute,
+                detached: options.detached
+            };
+        }
+
+        if (args != null) {
+            if (args[0] == 'install') {
+                options.mute = true;
+                print('Install haxe library: ' + args[1]);
+            }
+            else if (args[0] == 'dev') {
+                options.mute = true;
+                print('Link haxe library: ' + args[1]);
+            }
+        }
+
         return command(Path.join([context.ceramicToolsPath, haxelib]), args, options);
 
     }
@@ -376,76 +399,35 @@ class Helpers {
 
     public static function checkProjectHaxelibSetup(cwd:String, args:Array<String>) {
 
+        var ceramicHaxelibRepoPath = Path.join([context.ceramicRootPath, '.haxelib']);
         var haxelibRepoPath = Path.join([cwd, '.haxelib']);
 
         if (!FileSystem.exists(haxelibRepoPath))
             FileSystem.createDirectory(haxelibRepoPath);
 
-        var hxcppPath = Path.join([haxelibRepoPath, 'hxcpp', '4,2,1']);
-        if (!FileSystem.exists(hxcppPath)) {
-            haxelib(['install', 'hxcpp', '4.2.1', '--always', '--quiet'], {cwd: cwd});
-        }
-        // Patch hxcpp if needed
-        var androidClangToolchainPath = Path.join([hxcppPath, 'toolchain/android-toolchain-clang.xml']);
-        var androidClangToolchain = File.getContent(androidClangToolchainPath);
-        var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
-        var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
-        var indexOfPlatform16 = androidClangToolchain.indexOf('<set name="PLATFORM_NUMBER" value="16" />');
-        if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfPlatform16 != -1) {
-            print("Patch hxcpp android-clang toolchain");
-            if (indexOfOptimFlag == -1)
-                androidClangToolchain = androidClangToolchain.replace('<flag value="-fpic"/>', '<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
-            if (indexOfStaticLibcpp != -1)
-                androidClangToolchain = androidClangToolchain.replace('="-static-libstdc++" />', '="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
-            if (indexOfPlatform16 != -1)
-                androidClangToolchain = androidClangToolchain.replace('<set name="PLATFORM_NUMBER" value="16" />', '<set name="PLATFORM_NUMBER" value="21" />');
-            File.saveContent(androidClangToolchainPath, androidClangToolchain);
-        }
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxcpp'])))
+            haxelib(['dev', 'hxcpp', Path.join([ceramicHaxelibRepoPath, 'hxcpp', '4,2,1']), '--always', '--quiet'], {cwd: cwd});
 
-        var iphoneToolchainPath = Path.join([hxcppPath, 'toolchain/iphoneos-toolchain.xml']);
-        var iphoneToolchain = File.getContent(iphoneToolchainPath);
-        var indexOfO2 = iphoneToolchain.indexOf('<flag value="-O2" unless="debug"/>');
-        if (indexOfO2 != -1) {
-            print("Patch hxcpp iphoneos toolchain");
-            iphoneToolchain = iphoneToolchain.replace('<flag value="-O2" unless="debug"/>', '<flag value="-O2" unless="debug || HXCPP_OPTIM_O1"/><flag value="-O1" if="HXCPP_OPTIM_O1" unless="debug"/>');
-            File.saveContent(iphoneToolchainPath, iphoneToolchain);
-        }
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws'])))
+            haxelib(['dev', 'hxnodejs-ws', Path.join([context.ceramicGitDepsPath, 'hscript']), '--always', '--quiet'], {cwd: cwd});
 
-        var macToolchainPath = Path.join([hxcppPath, 'toolchain/mac-toolchain.xml']);
-        var macToolchain = File.getContent(macToolchainPath);
-        var indexOfMacosXVersion = macToolchain.indexOf('<flag value="-mmacosx-version-min=10.10"/>');
-        var indexOfDeploymentTarget = macToolchain.indexOf('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/>');
-        if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
-            print("Patch hxcpp mac toolchain");
-            if (indexOfMacosXVersion == -1) {
-                macToolchain = macToolchain.replace('<flag value="-m64" if="HXCPP_M64"/>', '<flag value="-m64" if="HXCPP_M64"/><flag value="-mmacosx-version-min=10.10"/>');
-            }
-            if (indexOfDeploymentTarget == -1) {
-                macToolchain = macToolchain.replace('<setenv name="MACOSX_DEPLOYMENT_TARGET"', '<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');
-                macToolchain = macToolchain.replace(' unless="MACOSX_DEPLOYMENT_TARGET"/>', ' unless="MACOSX_DEPLOYMENT_TARGET"/>-->');
-                macToolchain = macToolchain.replace(' unless="MACOSX_DEPLOYMENT_TARGET" />', ' unless="MACOSX_DEPLOYMENT_TARGET" />-->');
-                macToolchain = macToolchain.replace('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"', '<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/><!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"');
-            }
-            File.saveContent(macToolchainPath, macToolchain);
-        }
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript'])))
+            haxelib(['dev', 'hscript', Path.join([context.ceramicGitDepsPath, 'hscript']), '--always', '--quiet'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '12,1,0'])))
-            haxelib(['install', 'hxnodejs', '12.1.0', '--always', '--quiet'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind'])))
+            haxelib(['dev', 'bind', Path.join([context.ceramicGitDepsPath, 'bind']), '--always', '--quiet'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs-ws', '5,2,3'])))
-            haxelib(['install', 'hxnodejs-ws', '5.2.3', '--always', '--quiet'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs'])))
+            haxelib(['dev', 'hxnodejs', Path.join([context.ceramicGitDepsPath, 'hxnodejs']), '--always', '--quiet'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hscript', '2,4,0'])))
-            haxelib(['install', 'hscript', '2.4.0', '--always', '--quiet'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format'])))
+            haxelib(['dev', 'format', Path.join([context.ceramicGitDepsPath, 'format']), '--always', '--quiet'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bind', '0,4,13'])))
-            haxelib(['install', 'bind', '0.4.13', '--always', '--quiet'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'ase'])))
+            haxelib(['dev', 'ase', Path.join([context.ceramicGitDepsPath, 'ase']), '--always', '--quiet'], {cwd: cwd});
 
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'format', '3,4,2'])))
-            haxelib(['install', 'format', '3.4.2', '--always', '--quiet'], {cwd: cwd});
-
-        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'hxnodejs', '10,0,0'])))
-            haxelib(['install', 'hxnodejs', '10.0.0', '--always', '--quiet'], {cwd: cwd});
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'bin-packing'])))
+            haxelib(['dev', 'bin-packing', Path.join([context.ceramicGitDepsPath, 'bin-packing']), '--always', '--quiet'], {cwd: cwd});
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'akifox-asynchttp'])))
             haxelib(['dev', 'akifox-asynchttp', Path.join([context.ceramicGitDepsPath, 'akifox-asynchttp']), '--always', '--quiet'], {cwd: cwd});
@@ -488,6 +470,15 @@ class Helpers {
 
         if (!FileSystem.exists(Path.join([haxelibRepoPath, 'gif'])))
             haxelib(['dev', 'gif', Path.join([context.ceramicGitDepsPath, 'gif']), '--always', '--quiet'], {cwd: cwd});
+
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'linc_dialogs'])))
+            haxelib(['dev', 'linc_dialogs', Path.join([context.ceramicGitDepsPath, 'linc_dialogs']), '--always', '--quiet'], {cwd: cwd});
+
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'linc_rtmidi'])))
+            haxelib(['dev', 'linc_rtmidi', Path.join([context.ceramicGitDepsPath, 'linc_rtmidi']), '--always', '--quiet'], {cwd: cwd});
+
+        if (!FileSystem.exists(Path.join([haxelibRepoPath, 'fuzzaldrin'])))
+            haxelib(['dev', 'fuzzaldrin', Path.join([context.ceramicGitDepsPath, 'fuzzaldrin']), '--always', '--quiet'], {cwd: cwd});
 
     }
 

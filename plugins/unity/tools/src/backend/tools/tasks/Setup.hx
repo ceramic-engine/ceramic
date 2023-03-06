@@ -228,7 +228,8 @@ class Setup extends tools.Task {
             return; // Seems installed already
         }
 
-        haxelib(['install', 'hxcs', '--quiet'], { cwd: cwd });
+        var ceramicHaxelibRepoPath = Path.join([context.ceramicRootPath, '.haxelib']);
+        haxelib(['dev', 'hxcs', Path.join([ceramicHaxelibRepoPath, 'hxcs', '4,2,0']), '--always', '--quiet'], {cwd: cwd});
 
     }
 

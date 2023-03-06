@@ -5,4 +5,4 @@ plugin:
         if plugin_dialogs:
             if mac || linux || windows || ios || android:
                 +libs:
-                    - linc_dialogs: path:{plugin:cwd}/../../git/linc_dialogs
+                    - linc_dialogs
