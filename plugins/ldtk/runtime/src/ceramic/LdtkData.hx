@@ -260,25 +260,6 @@ class LdtkData extends Entity {
 
         var iid:String = null;
 
-        inline function registerEntity(entityInstance:LdtkEntityInstance, json:DynamicAccess<Dynamic>) {
-            if (json.get('exportToToc') == true) {
-                var identifier:String = json.get('__identifier');
-                var foundTocEntry = null;
-                for (j in 0...toc.length) {
-                    var tocEntry = toc[j];
-                    if (tocEntry.identifier == identifier) {
-                        foundTocEntry = tocEntry;
-                        break;
-                    }
-                }
-                if (foundTocEntry == null) {
-                    foundTocEntry = new LdtkTocEntry(identifier);
-                }
-                foundTocEntry.instances.push(entityInstance);
-            }
-            _entityInstances.push(entityInstance);
-        }
-
         if (_entityInstances != null) {
             if (json.get('iid') != null) {
                 iid = json.get('iid');
@@ -288,8 +269,7 @@ class LdtkData extends Entity {
                     }
                 }
 
-                var entityInstance = new LdtkEntityInstance(this, json);
-                registerEntity(entityInstance, json);
+                var entityInstance = new LdtkEntityInstance(this, ldtkWorld, json, _registerEntity);
                 if (ldtkLayerInstance != null)
                     entityInstance.layerInstance = ldtkLayerInstance;
                 return entityInstance;
@@ -326,8 +306,7 @@ class LdtkData extends Entity {
                         for (k in 0...entityInstancesJson.length) {
                             var entityInstanceJson:DynamicAccess<Dynamic> = entityInstancesJson[k];
                             if (entityInstanceJson.get('iid') == iid) {
-                                var entityInstance = new LdtkEntityInstance(this, entityInstanceJson);
-                                registerEntity(entityInstance, entityInstanceJson);
+                                var entityInstance = new LdtkEntityInstance(this, ldtkWorld, entityInstanceJson, _registerEntity);
                                 if (ldtkLayerInstance != null)
                                     entityInstance.layerInstance = ldtkLayerInstance;
                                 return entityInstance;
@@ -339,6 +318,28 @@ class LdtkData extends Entity {
         }
 
         return null;
+
+    }
+
+    private function _registerEntity(entityInstance:LdtkEntityInstance, json:DynamicAccess<Dynamic>) {
+
+        if (json.get('exportToToc') == true) {
+            var identifier:String = json.get('__identifier');
+            var foundTocEntry = null;
+            for (j in 0...toc.length) {
+                var tocEntry = toc[j];
+                if (tocEntry.identifier == identifier) {
+                    foundTocEntry = tocEntry;
+                    break;
+                }
+            }
+            if (foundTocEntry == null) {
+                foundTocEntry = new LdtkTocEntry(identifier);
+            }
+            foundTocEntry.instances.push(entityInstance);
+        }
+
+        _entityInstances.push(entityInstance);
 
     }
 
@@ -982,7 +983,7 @@ class LdtkEnumDefinition {
 
             var valuesJson:Array<Dynamic> = json.get('values');
             values = valuesJson != null ? [for (i in 0...valuesJson.length) {
-                new LdtkEnumValueDefinition(valuesJson[i]);
+                new LdtkEnumValueDefinition(defs, valuesJson[i]);
             }] : [];
         }
 
@@ -2768,9 +2769,18 @@ class LdtkEntityInstance {
      */
     public var iid:String;
 
-    public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
+    public function new(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>, ?register:(entity:LdtkEntityInstance, json:DynamicAccess<Dynamic>)->Void) {
+
+        if (register != null) {
+            register(this, json);
+        }
 
         if (json != null) {
+
+            width = Std.int(json.get('width'));
+            height = Std.int(json.get('height'));
+            iid = json.get('iid');
+
             var uid:Int = Std.int(json.get('defUid'));
 
             if (ldtkData != null) {
@@ -2790,12 +2800,8 @@ class LdtkEntityInstance {
 
             var fieldInstancesJson:Array<Dynamic> = json.get('fieldInstances');
             fieldInstances = fieldInstancesJson != null ? [for (i in 0...fieldInstancesJson.length) {
-                new LdtkFieldInstance(fieldInstancesJson[i]);
+                new LdtkFieldInstance(ldtkData, ldtkWorld, fieldInstancesJson[i]);
             }] : [];
-
-            width = Std.int(json.get('width'));
-            height = Std.int(json.get('height'));
-            iid = json.get('iid');
         }
 
     }
