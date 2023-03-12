@@ -114,6 +114,19 @@ class Pixels {
     }
 
     /**
+     * Create a pixels buffer from bytes with RGBA representation
+     */
+    public static function fromBytes(bytes:Bytes):UInt8Array {
+
+        #if (cpp || js)
+        return UInt8Array.fromBytes(bytes);
+        #else
+        return bytes.getData();
+        #end
+
+    }
+
+    /**
      * Get a pixel as `AlphaColor` at `x`,`y` coordinates on the given buffer
      * @param buffer The pixel buffer to read from
      * @param bufferWidth Image width
