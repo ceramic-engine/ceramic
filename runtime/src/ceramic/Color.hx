@@ -610,7 +610,7 @@ abstract Color(Int) from Int from UInt to Int to UInt
         return this;
     }
 
-    public function new(value:Int = 0)
+    public inline function new(value:Int = 0)
     {
         this = value;
     }
