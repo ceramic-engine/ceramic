@@ -64,6 +64,21 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
+        var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
+        if (isEditor) {
+            try {
+                _draw(visuals);
+            }
+            catch (e:Dynamic) {}
+        }
+        else {
+            _draw(visuals);
+        }
+
+    }
+
+    function _draw(visuals:Array<ceramic.Visual>):Void {
+
         #if unity_urp
         widthOnDraw = ceramic.App.app.backend.screen.getWidth();
         heightOnDraw = ceramic.App.app.backend.screen.getHeight();
