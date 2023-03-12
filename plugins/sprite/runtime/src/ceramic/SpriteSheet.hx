@@ -115,6 +115,12 @@ class SpriteSheet extends Model {
             _atlas.destroy();
         }
 
+        if (asset != null) {
+            var _asset = asset;
+            asset = null;
+            _asset.destroy();
+        }
+
         super.destroy();
 
     }

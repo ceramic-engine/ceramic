@@ -17,7 +17,7 @@ class SpriteSheetParser {
             // JSON
             var json:Dynamic = Json.parse(text);
             if (AsepriteParser.isAsepriteJson(json)) {
-                return AsepriteParser.parseAtlas(json);
+                return AsepriteParser.parseAtlasFromJson(json);
             }
         }
 
@@ -32,7 +32,7 @@ class SpriteSheetParser {
             // JSON
             var json:Dynamic = Json.parse(text);
             if (AsepriteParser.isAsepriteJson(json)) {
-                return AsepriteParser.parseSheet(json, atlas);
+                return AsepriteParser.parseSheetFromJson(json, atlas);
             }
         }
 

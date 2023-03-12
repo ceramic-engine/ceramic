@@ -23,7 +23,7 @@ class SpriteMacros {
 
         AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);
 
-        var nameFields = AssetsMacro.computeNames(fields, pos, 'sprite', ['sprite']);
+        var nameFields = AssetsMacro.computeNames(fields, pos, 'sprite', ['sprite', 'ase', 'aseprite']);
 
         for (field in nameFields) {
             fields.push(field);

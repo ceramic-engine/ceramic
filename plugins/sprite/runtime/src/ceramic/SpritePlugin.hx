@@ -23,7 +23,7 @@ class SpritePlugin {
             log.info('Init sprite plugin');
 
             // Extend assets with `sprite` kind
-            Assets.addAssetKind('sprite', addSprite, ['sprite'], false, ['ceramic.SpriteSheet']);
+            Assets.addAssetKind('sprite', addSprite, ['sprite', 'ase', 'aseprite'], false, ['ceramic.SpriteSheet']);
 
             // Extend converters
             var convertSpriteSheet = new ConvertSpriteSheet();

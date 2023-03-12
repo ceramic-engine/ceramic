@@ -3,6 +3,8 @@ plugin:
 
     runtime:
         if plugin_sprite:
+            +libs:
+                - ase
             +generated:
                 - {plugin:cwd}/tpl/generated
             +paths:

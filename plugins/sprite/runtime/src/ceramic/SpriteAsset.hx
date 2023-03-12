@@ -1,7 +1,10 @@
 package ceramic;
 
+import ase.Ase;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
+
+using StringTools;
 
 class SpriteAsset extends Asset {
 
@@ -19,6 +22,10 @@ class SpriteAsset extends Asset {
 /// Internal
 
     var atlasAsset:AtlasAsset = null;
+
+    var aseAsset:BinaryAsset = null;
+
+    var asepriteData:AsepriteData = null;
 
 /// Lifecycle
 
@@ -61,9 +68,16 @@ class SpriteAsset extends Asset {
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
-        if (atlasAsset != null) {
-
+        if (path != null && (path.toLowerCase().endsWith('.aseprite') || path.toLowerCase().endsWith('.ase'))) {
+            loadAse();
         }
+        else {
+            loadSpriteSheet();
+        }
+
+    }
+
+    function loadSpriteSheet() {
 
         atlasAsset = new AtlasAsset(name);
         atlasAsset.path = path;
@@ -91,7 +105,7 @@ class SpriteAsset extends Asset {
                     // destroying one will destroy the other
                     newSheet.asset = this;
 
-                    // Do the actual atlas replacement
+                    // Do the actual replacement
                     this.sheet = newSheet;
 
                     if (prevSheet != null) {
@@ -113,7 +127,8 @@ class SpriteAsset extends Asset {
                     status = READY;
                     emitComplete(true);
 
-                } catch (e:Dynamic) {
+                }
+                catch (e:Dynamic) {
                     status = BROKEN;
                     log.error('Failed to decode sprite data at path: $path');
                     emitComplete(false);
@@ -122,6 +137,96 @@ class SpriteAsset extends Asset {
             else {
                 status = BROKEN;
                 log.error('Failed to load sprite data at path: $path');
+                emitComplete(false);
+            }
+        });
+
+        assets.load();
+
+    }
+
+    function loadAse() {
+
+        aseAsset = new BinaryAsset(name);
+        aseAsset.path = path;
+
+        assets.addAsset(aseAsset);
+        assets.onceComplete(this, function(success) {
+
+            if (aseAsset.bytes != null) {
+
+                try {
+                    var atlasPacker:TextureAtlasPacker = null;
+                    if (owner != null) {
+                        atlasPacker = owner.atlasPacker;
+                    }
+                    if (atlasPacker == null) {
+                        atlasPacker = new TextureAtlasPacker();
+                        atlasPacker.spacing = 0;
+                        atlasPacker.filter = NEAREST;
+                        if (owner != null) {
+                            owner.atlasPacker = atlasPacker;
+                        }
+                    }
+
+                    var ase:Ase = Ase.fromBytes(aseAsset.bytes);
+                    var newAsepriteData = AsepriteParser.parseAse(ase, path, atlasPacker);
+                    newAsepriteData.id = 'sprite:' + path;
+
+                    var prevAsepriteData = this.asepriteData;
+
+                    // Link the aseprite data to this asset so that
+                    // destroying one will destroy the other
+                    newAsepriteData.asset = this;
+
+                    // Do the actual replacement
+                    this.asepriteData = newAsepriteData;
+
+                    if (prevAsepriteData != null) {
+
+                        // Set asset to null because we don't want it
+                        // to be destroyed when destroying the aseprite data.
+                        prevAsepriteData.asset = null;
+
+                        // Destroy atlas as well
+                        var prevAtlas = prevAsepriteData.atlas;
+                        if (prevAtlas != null) {
+                            prevAtlas.destroy();
+                        }
+
+                        // Destroy previous aseprite data
+                        // (will remove regions from atlas packer as well)
+                        prevAsepriteData.destroy();
+                    }
+
+                    if (atlasPacker.hasPendingRegions()) {
+                        if (owner != null) {
+                            owner.addPendingAtlasPacker(atlasPacker);
+                            status = READY;
+                            emitComplete(true);
+                        }
+                        else {
+                            atlasPacker.pack(atlas -> {
+                                status = READY;
+                                emitComplete(true);
+                            });
+                        }
+                    }
+                    else {
+                        status = READY;
+                        emitComplete(true);
+                    }
+                }
+                catch (e:Dynamic) {
+                    status = BROKEN;
+                    log.error('Failed to decode ase data at path: $path');
+                    emitComplete(false);
+                }
+
+            }
+            else {
+                status = BROKEN;
+                log.error('Failed to load ase data at path: $path');
                 emitComplete(false);
             }
         });
