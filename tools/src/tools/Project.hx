@@ -46,7 +46,8 @@ class Project {
         'tracker',
         'earcut',
         'poly2tri',
-        'hsluv'
+        'hsluv',
+        'bin-packing'
     ];
 
 /// Properties
