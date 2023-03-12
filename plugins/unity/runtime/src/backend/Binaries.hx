@@ -1,10 +1,9 @@
 package backend;
 
-import haxe.io.Bytes;
 import ceramic.Path;
+import haxe.io.Bytes;
 import sys.FileSystem;
 import sys.io.File;
-
 import unityengine.TextAsset;
 
 using StringTools;
@@ -45,7 +44,7 @@ class Binaries implements spec.Binaries {
             // Add loading callbacks array
             loadingBinaryCallbacks.set(path, []);
         }
-        
+
         var binaryFile:TextAsset = untyped __cs__('UnityEngine.Resources.Load<UnityEngine.TextAsset>({0})', path);
 
         if (binaryFile == null) {
@@ -83,7 +82,7 @@ class Binaries implements spec.Binaries {
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return false;
 
     }
