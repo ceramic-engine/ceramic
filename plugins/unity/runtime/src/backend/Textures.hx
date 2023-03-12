@@ -3,6 +3,7 @@ package backend;
 import ceramic.Files;
 import ceramic.ImageType;
 import ceramic.Path;
+import ceramic.Pixels;
 import cs.system.Byte;
 import haxe.io.Bytes;
 import unityengine.ImageConversion;
@@ -168,8 +169,10 @@ class Textures implements spec.Textures {
 
         var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', width, height);
 
+        Pixels.flipY(pixels, width);
         unityTexture.SetPixelData(pixels, 0, 0);
         unityTexture.Apply(false, false);
+        Pixels.flipY(pixels, width);
 
         var texture = new TextureImpl('pixels:' + (nextPixelsIndex++), unityTexture, null);
 
@@ -306,6 +309,8 @@ class Textures implements spec.Textures {
             }
         }
 
+        Pixels.flipY(result, width);
+
         if (didCreateTemporaryTexture) {
             untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
         }
@@ -317,9 +322,12 @@ class Textures implements spec.Textures {
     public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
         var unityTexture = (texture:TextureImpl).unityTexture;
+        var width = (texture:TextureImpl).width;
 
+        Pixels.flipY(pixels, width);
         unityTexture.SetPixelData(pixels, 0, 0);
         unityTexture.Apply(false, false);
+        Pixels.flipY(pixels, width);
 
     }
 
