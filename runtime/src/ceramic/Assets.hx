@@ -58,7 +58,15 @@ class Assets extends Entity {
      */
     public var parent:Assets = null;
 
+    /**
+     * A shared texture atlas packer that can be used to merge smaller textures together.
+     * Also required when loading some kind of assets, like `.ase`/`.aseprite` files.
+     */
+    public var atlasPacker:TextureAtlasPacker = null;
+
 /// Internal
+
+    private var pendingAtlasPackers:Array<TextureAtlasPacker> = null;
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
 
@@ -106,6 +114,20 @@ class Assets extends Entity {
         }
         addedAssets = null;
         assetsByKindAndName = null;
+
+        if (atlasPacker != null) {
+            var _atlasPacker = atlasPacker;
+            atlasPacker = null;
+            _atlasPacker.destroy();
+        }
+
+        if (pendingAtlasPackers != null) {
+            var _pendingAtlasPackers = pendingAtlasPackers;
+            pendingAtlasPackers = null;
+            for (i in 0..._pendingAtlasPackers.length) {
+                _pendingAtlasPackers[i].destroy();
+            }
+        }
 
     }
 
@@ -544,7 +566,7 @@ class Assets extends Entity {
                     emitProgress(total - pending, total, allSuccess);
 
                     if (pending == 0) {
-                        emitComplete(allSuccess);
+                        _prepareComplete(allSuccess);
                     }
 
                 });
@@ -604,9 +626,37 @@ class Assets extends Entity {
             if (warnIfNothingToLoad) {
                 App.app.logger.warning('There was no asset to load.', pos);
             }
-            emitComplete(true);
+            _prepareComplete(true);
 
         }
+
+    }
+
+    private function _prepareComplete(allSuccess:Bool):Void {
+
+        if (pendingAtlasPackers != null && pendingAtlasPackers.length > 0) {
+            _packNextAtlasPacker(() -> _prepareComplete(allSuccess));
+        }
+        else {
+            emitComplete(true);
+        }
+
+    }
+
+    private function _packNextAtlasPacker(done:()->Void):Void {
+
+        var atlasPacker = pendingAtlasPackers.shift();
+        atlasPacker.pack(atlas -> done());
+
+    }
+
+    function addPendingAtlasPacker(atlasPacker:TextureAtlasPacker):Void {
+
+        if (pendingAtlasPackers == null)
+            pendingAtlasPackers = [];
+
+        if (!pendingAtlasPackers.contains(atlasPacker))
+            pendingAtlasPackers.push(atlasPacker);
 
     }
 
