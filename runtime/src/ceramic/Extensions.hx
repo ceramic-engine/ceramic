@@ -1,5 +1,7 @@
 package ceramic;
 
+import haxe.io.Bytes;
+
 /**
  * A bunch of static extensions to make life easier.
  */
@@ -214,5 +216,15 @@ class Extensions<T> {
         return Reflect.getProperty(instance, field);
 
     }
+
+/// Buffer extensions
+
+#if cs
+
+    public static extern inline overload function toBytes(buffer:UInt8Array):Bytes {
+        return Bytes.ofData(buffer);
+    }
+
+#end
 
 }
