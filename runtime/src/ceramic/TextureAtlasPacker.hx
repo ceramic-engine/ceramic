@@ -7,6 +7,8 @@ using StringTools;
 
 class TextureAtlasPacker extends Entity {
 
+    @event function finishPack();
+
     static final MIN_TEXTURE_SIZE:Int = 32;
 
     static final MAX_TEXTURE_SIZE:Int = 2048;
@@ -60,13 +62,13 @@ class TextureAtlasPacker extends Entity {
 
     }
 
-    public function removeRegionsWithMatcher(matcher:(region:TextureAtlasPackerRegion)->Bool):Void {
+    public function removeRegionsWithMatcher(removeAtlasRegions:Bool = true, matcher:(regionName:String)->Bool):Void {
 
         if (pendingRegions != null) {
             var pendingToRemove:Array<TextureAtlasPackerRegion> = null;
             for (i in 0...pendingRegions.length) {
                 var region = pendingRegions[i];
-                if (matcher(region)) {
+                if (matcher(region.name)) {
                     if (pendingToRemove == null)
                         pendingToRemove = [];
                     pendingToRemove.push(region);
@@ -81,45 +83,66 @@ class TextureAtlasPacker extends Entity {
         }
 
         if (pages != null) {
+            var pagesToRemove:Array<TextureAtlasPackerPage> = null;
             for (p in 0...pages.length) {
                 var pendingToRemove:Array<TextureAtlasPackerRegion> = null;
                 var page = pages[p];
                 for (i in 0...page.regions.length) {
                     var region = page.regions[i];
-                    if (matcher(region)) {
+                    if (matcher(region.name)) {
                         if (pendingToRemove == null)
                             pendingToRemove = [];
                         pendingToRemove.push(region);
                     }
                 }
                 if (pendingToRemove != null) {
+                    if (pagesToRemove == null)
+                        pagesToRemove = [];
+                    pagesToRemove.push(page);
                     for (i in 0...pendingToRemove.length) {
                         var region = pendingToRemove[i];
                         page.regions.remove(region);
                         page.shouldResetTexture = true;
-
-                        if (atlas != null) {
-                            var atlasRegion = atlas.region(region.name);
-                            if (atlasRegion != null) {
-                                atlas.regions.remove(atlasRegion);
-                            }
-                        }
                     }
                     if (pendingRegions != null)
                         pendingRegions = [];
                     for (i in 0...page.regions.length) {
                         var region = page.regions[i];
+                        region.rect = null;
+                        region.rendered = false;
                         pendingRegions.unshift(region);
                     }
+                }
+            }
+            if (pagesToRemove != null) {
+                for (p in 0...pagesToRemove.length) {
+                    pages.remove(pagesToRemove[p]);
+                }
+            }
+        }
+
+        if (removeAtlasRegions && atlas != null) {
+            var toRemoveInAtlas:Array<TextureAtlasRegion> = null;
+            for (i in 0...atlas.regions.length) {
+                var atlasRegion = atlas.regions[i];
+                if (matcher(atlasRegion.name)) {
+                    if (toRemoveInAtlas == null)
+                        toRemoveInAtlas = [];
+                    toRemoveInAtlas.push(atlasRegion);
+                }
+            }
+            if (toRemoveInAtlas != null) {
+                for (i in 0...toRemoveInAtlas.length) {
+                    atlas.regions.remove(toRemoveInAtlas[i]);
                 }
             }
         }
 
     }
 
-    public function removeRegionsWithPrefix(prefix:String):Void {
+    public function removeRegionsWithPrefix(removeAtlasRegions:Bool = true, prefix:String):Void {
 
-        removeRegionsWithMatcher(region -> region.name.startsWith(prefix));
+        removeRegionsWithMatcher(removeAtlasRegions, regionName -> regionName.startsWith(prefix));
 
     }
 
@@ -312,6 +335,8 @@ class TextureAtlasPacker extends Entity {
                         regions: [],
                         shouldResetTexture: true
                     });
+
+                    pendingRegions.unshift(region);
                 }
             }
             else {
@@ -367,12 +392,12 @@ class TextureAtlasPacker extends Entity {
                     atlasPage = atlas.pages[p];
                 }
                 if (atlasPage == null) {
-                    atlasPage = {
-                        name: page.name,
-                        width: page.width,
-                        height: page.height,
-                        filter: filter
-                    };
+                    atlasPage = new TextureAtlasPage(
+                        page.name,
+                        page.width,
+                        page.height,
+                        filter
+                    );
                     atlas.pages.push(atlasPage);
                 }
 
@@ -380,6 +405,8 @@ class TextureAtlasPacker extends Entity {
                 var pagePixels:UInt8Array = null;
                 if (page.shouldResetTexture || atlasPage.texture == null) {
                     pagePixels = Pixels.create(page.width, page.height, AlphaColor.TRANSPARENT);
+                    atlasPage.width = page.width;
+                    atlasPage.height = page.height;
                 }
                 else {
                     pagePixels = atlasPage.texture.fetchPixels();
@@ -434,7 +461,6 @@ class TextureAtlasPacker extends Entity {
                         var atlasRegion = atlas.region(region.name);
                         if (atlasRegion == null) {
                             atlasRegion = new TextureAtlasRegion(region.name, atlas, p);
-                            atlas.regions.push(atlasRegion);
                         }
                         atlasRegion.texture = atlasPage.texture;
                         atlasRegion.originalWidth = region.originalWidth;
@@ -445,8 +471,8 @@ class TextureAtlasPacker extends Entity {
                         atlasRegion.offsetY = region.offsetY;
                         atlasRegion.x = Math.round(region.rect.x + page.spacing);
                         atlasRegion.y = Math.round(region.rect.y + page.spacing);
-                        atlasRegion.width = region.originalWidth;
-                        atlasRegion.height = region.originalHeight;
+                        atlasRegion.width = region.packedWidth;
+                        atlasRegion.height = region.packedHeight;
                         atlasRegion.computeFrame();
                     }
                 }
@@ -466,7 +492,6 @@ class TextureAtlasPacker extends Entity {
                         var atlasRegion = atlas.region(region.name);
                         if (atlasRegion == null) {
                             atlasRegion = new TextureAtlasRegion(region.name, atlas, p);
-                            atlas.regions.push(atlasRegion);
                         }
                         atlasRegion.texture = sourceAtlasRegion.texture;
                         atlasRegion.originalWidth = region.originalWidth;
@@ -477,14 +502,15 @@ class TextureAtlasPacker extends Entity {
                         atlasRegion.offsetY = region.offsetY;
                         atlasRegion.x = Math.round(sourceRegion.rect.x + page.spacing);
                         atlasRegion.y = Math.round(sourceRegion.rect.y + page.spacing);
-                        atlasRegion.width = region.originalWidth;
-                        atlasRegion.height = region.originalHeight;
+                        atlasRegion.width = region.packedWidth;
+                        atlasRegion.height = region.packedHeight;
                         atlasRegion.computeFrame();
                     }
                 }
             }
         }
 
+        emitFinishPack();
         done(atlas);
 
     }
