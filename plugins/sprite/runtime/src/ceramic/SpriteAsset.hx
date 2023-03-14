@@ -27,6 +27,8 @@ class SpriteAsset extends Asset {
 
     var asepriteData:AsepriteData = null;
 
+    var postPack:()->Void = null;
+
 /// Lifecycle
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -150,6 +152,10 @@ class SpriteAsset extends Asset {
         aseAsset = new BinaryAsset(name);
         aseAsset.path = path;
 
+        var assetReloadedCount = Assets.getReloadCount(Assets.realAssetPath(path, runtimeAssets));
+
+        @:privateAccess aseAsset.customExtensions = ['ase', 'aseprite'];
+
         assets.addAsset(aseAsset);
         assets.onceComplete(this, function(success) {
 
@@ -169,11 +175,43 @@ class SpriteAsset extends Asset {
                         }
                     }
 
+                    var prevAsepriteData = this.asepriteData;
+
+                    if (prevAsepriteData != null) {
+                        if (prevAsepriteData.atlasPacker != null) {
+                            prevAsepriteData.atlasPacker.removeRegionsWithPrefix(false, prevAsepriteData.prefix + '#');
+                        }
+                    }
+
                     var ase:Ase = Ase.fromBytes(aseAsset.bytes);
-                    var newAsepriteData = AsepriteParser.parseAse(ase, path, atlasPacker);
+                    var newAsepriteData = AsepriteParser.parseAse(ase, path + (assetReloadedCount > 0 ? '?hot='+assetReloadedCount : ''), atlasPacker);
                     newAsepriteData.id = 'sprite:' + path;
 
-                    var prevAsepriteData = this.asepriteData;
+                    if (postPack != null) {
+                        atlasPacker.offFinishPack(postPack);
+                    }
+                    postPack = function() {
+                        if (!newAsepriteData.destroyed && this.asepriteData == newAsepriteData) {
+                            // We need to pack texture atlas before computing
+                            // the final sprite sheet because we need valid regions
+                            this.sheet = AsepriteParser.parseSheetFromAsepriteData(this.asepriteData);
+                            @:privateAccess this.asepriteData.destroySheet();
+                            @:privateAccess this.asepriteData.sheet = this.sheet;
+                        }
+
+                        if (prevAsepriteData != null) {
+
+                            // Set asset to null because we don't want it
+                            // to be destroyed when destroying the aseprite data.
+                            prevAsepriteData.asset = null;
+
+                            // Destroy previous aseprite data
+                            // (will remove regions from atlas packer as well)
+                            prevAsepriteData.destroy();
+                            prevAsepriteData = null;
+                        }
+                    };
+                    atlasPacker.onFinishPack(this, postPack);
 
                     // Link the aseprite data to this asset so that
                     // destroying one will destroy the other
@@ -182,25 +220,8 @@ class SpriteAsset extends Asset {
                     // Do the actual replacement
                     this.asepriteData = newAsepriteData;
 
-                    if (prevAsepriteData != null) {
-
-                        // Set asset to null because we don't want it
-                        // to be destroyed when destroying the aseprite data.
-                        prevAsepriteData.asset = null;
-
-                        // Destroy atlas as well
-                        var prevAtlas = prevAsepriteData.atlas;
-                        if (prevAtlas != null) {
-                            prevAtlas.destroy();
-                        }
-
-                        // Destroy previous aseprite data
-                        // (will remove regions from atlas packer as well)
-                        prevAsepriteData.destroy();
-                    }
-
                     if (atlasPacker.hasPendingRegions()) {
-                        if (owner != null) {
+                        if (assetReloadedCount == 0 && owner != null) {
                             owner.addPendingAtlasPacker(atlasPacker);
                             status = READY;
                             emitComplete(true);
@@ -213,6 +234,7 @@ class SpriteAsset extends Asset {
                         }
                     }
                     else {
+                        postPack();
                         status = READY;
                         emitComplete(true);
                     }

@@ -13,11 +13,6 @@ class AsepriteData extends Entity {
     public var ase(default, null):Ase;
 
     /**
-     * The sprite sheet created from the aseprite file
-     */
-    public var sheet(default, null):SpriteSheet;
-
-    /**
      * The palette used (on RGB frames, this might not be relevant though)
      */
     public var palette(default, null):AsepritePalette;
@@ -66,14 +61,47 @@ class AsepriteData extends Entity {
     }
 
     /**
+     * The sprite sheet created from the aseprite file
+     */
+    public var sheet(default, set):SpriteSheet = null;
+    function set_sheet(sheet:SpriteSheet):SpriteSheet {
+        if (this.sheet != sheet) {
+            if (this.sheet != null) {
+                var _sheet = this.sheet;
+                sheet = null;
+                if (atlasPacker != null && _sheet.atlas == atlasPacker.atlas) {
+                    _sheet.atlas = null;
+                }
+                _sheet.destroy();
+            }
+        }
+        return sheet;
+    }
+
+    /**
      * The asset related to this sprite aseprite data (if any)
      */
     public var asset:SpriteAsset = null;
 
+    function destroySheet() {
+
+        if (sheet != null) {
+            var _sheet = sheet;
+            sheet = null;
+            if (atlasPacker != null && _sheet.atlas == atlasPacker.atlas) {
+                _sheet.atlas = null;
+            }
+            _sheet.destroy();
+        }
+
+    }
+
     override function destroy() {
 
+        destroySheet();
+
         if (atlasPacker != null && prefix != null) {
-            atlasPacker.removeRegionsWithPrefix(prefix);
+            atlasPacker.removeRegionsWithPrefix(prefix + '#');
         }
 
         if (asset != null) {

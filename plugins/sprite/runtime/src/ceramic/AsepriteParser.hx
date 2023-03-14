@@ -42,12 +42,12 @@ class AsepriteParser {
 
     public static function parseAtlasFromJson(data:AsepriteJson):TextureAtlas {
 
-        var page:TextureAtlasPage = {
-            name: data.meta.image,
-            width: data.meta.size.w,
-            height: data.meta.size.h,
-            filter: NEAREST
-        };
+        var page:TextureAtlasPage = new TextureAtlasPage(
+            data.meta.image,
+            data.meta.size.w,
+            data.meta.size.h,
+            NEAREST
+        );
 
         var atlas = new TextureAtlas();
         atlas.pages.push(page);
@@ -214,7 +214,7 @@ class AsepriteParser {
 
         // Add tags to the frames
         for (tag in tags) {
-            for (i in tag.start...tag.end+1) {
+            for (i in tag.fromFrame...tag.toFrame+1) {
                 frames[i].tags.push(tag.name);
             }
         }
@@ -271,7 +271,6 @@ class AsepriteParser {
 
         var asepriteData:AsepriteData = {
             ase: ase,
-            sheet: sheet,
             palette: palette,
             tags: tags,
             slices: slices,
@@ -283,6 +282,75 @@ class AsepriteParser {
         };
 
         return asepriteData;
+
+    }
+
+    public static function parseSheetFromAsepriteData(asepriteData:AsepriteData):SpriteSheet {
+
+        var sheet = new SpriteSheet();
+
+        var atlas = asepriteData.atlas;
+        sheet.atlas = atlas;
+
+        var animations:Array<SpriteSheetAnimation> = [];
+
+        for (tag in asepriteData.tags) {
+
+            var animation = new SpriteSheetAnimation();
+            animation.name = tag.name;
+
+            var frames:Array<SpriteSheetFrame> = [];
+
+            #if !debug inline #end function addFrame(index:Int) {
+
+                var asepriteFrame = asepriteData.frames[index];
+                while (asepriteFrame.duplicateOfIndex >= 0 && asepriteFrame.duplicateSameOffset)
+                    asepriteFrame = asepriteData.frames[asepriteFrame.duplicateOfIndex];
+                var region = atlas.region(asepriteData.prefix + '#' + asepriteFrame.index);
+                var frame = new SpriteSheetFrame(atlas, region.name, region.page, region);
+                frame.duration = asepriteData.frames[index].duration;
+                frames.push(frame);
+
+            }
+
+            switch tag.direction {
+
+                case 0: // FORWARD
+                    var i = tag.fromFrame;
+                    while (i <= tag.toFrame) {
+                        addFrame(i);
+                        i++;
+                    }
+
+                case 1: // REVERSE
+                    var i = tag.toFrame;
+                    while (i >= tag.fromFrame) {
+                        addFrame(i);
+                        i--;
+                    }
+
+                case 2: // PINGPONG
+                    var i = tag.fromFrame;
+                    while (i <= tag.toFrame) {
+                        addFrame(i);
+                        i++;
+                    }
+                    i = tag.toFrame - 1;
+                    while (i > tag.fromFrame) {
+                        addFrame(i);
+                        i--;
+                    }
+
+                case _:
+            }
+
+            animation.frames = frames;
+            animations.push(animation);
+        }
+
+        sheet.animations = animations;
+
+        return sheet;
 
     }
 

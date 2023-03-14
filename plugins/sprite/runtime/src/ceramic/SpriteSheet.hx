@@ -76,13 +76,13 @@ class SpriteSheet extends Model {
             if (unobservedAtlas == null || unobservedAtlas.pages[0].texture != texture) {
                 unobservedAtlas = new TextureAtlas();
                 implicitAtlas = true;
-                unobservedAtlas.pages[0] = {
-                    name: 'page0',
-                    width: texture.width,
-                    height: texture.height,
-                    filter: texture.filter,
-                    texture: texture
-                };
+                unobservedAtlas.pages[0] = new TextureAtlasPage(
+                    'page0',
+                    texture.width,
+                    texture.height,
+                    texture.filter,
+                    texture
+                );
             }
         }
         else {

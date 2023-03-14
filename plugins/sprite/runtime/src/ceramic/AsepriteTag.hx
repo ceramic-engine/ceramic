@@ -6,15 +6,15 @@ package ceramic;
 @:structInit
 class AsepriteTag {
     public var name(default, null):String;
-    public var start(default, null):Int;
-    public var end(default, null):Int;
+    public var fromFrame(default, null):Int;
+    public var toFrame(default, null):Int;
     public var direction(default, null):Int;
 
     public static function fromChunk(chunk:ase.chunks.TagsChunk.Tag):AsepriteTag {
         return {
             name: chunk.tagName,
-            start: chunk.fromFrame,
-            end: chunk.toFrame,
+            fromFrame: chunk.fromFrame,
+            toFrame: chunk.toFrame,
             direction: chunk.animDirection
         };
     }

@@ -4,6 +4,8 @@ import ceramic.Shortcuts.*;
 
 class SpriteBase<T> extends Visual {
 
+    public var autoComputeSize:Bool = true;
+
     public var region(get, set):TextureAtlasRegion;
     inline function get_region():TextureAtlasRegion {
         return quad.tile != null ? cast quad.tile : null;
@@ -26,6 +28,11 @@ class SpriteBase<T> extends Visual {
 
         time = 0;
         currentAnimationDirty = true;
+
+        if (autoComputeSize && animationName != null && sheet != null) {
+            computeSizeFromAnimation();
+        }
+
         return animation;
     }
 
@@ -35,7 +42,37 @@ class SpriteBase<T> extends Visual {
         this.sheet = sheet;
         time = 0;
         currentAnimationDirty = true;
+
+        if (autoComputeSize && animationName != null && sheet != null) {
+            computeSizeFromAnimation();
+        }
+
         return sheet;
+    }
+
+    public function computeSizeFromAnimation() {
+
+        if (animationName != null && sheet != null) {
+            var sheetAnimations = sheet.animations;
+            var foundAnimation = null;
+            if (sheetAnimations != null) {
+                for (i in 0...sheetAnimations.length) {
+                    var sheetAnimation = sheetAnimations.unsafeGet(i);
+                    if (sheetAnimation.name == animationName) {
+                        foundAnimation = sheetAnimation;
+                        break;
+                    }
+                }
+            }
+            if (foundAnimation != null && foundAnimation.frames != null && foundAnimation.frames.length > 0) {
+                var region = foundAnimation.frames[0].region;
+                if (region != null) {
+                    width = region.originalWidth * region.frameWidth / region.width;
+                    height = region.originalHeight * region.frameHeight / region.height;
+                }
+            }
+        }
+
     }
 
     override function set_width(width:Float):Float {
@@ -196,8 +233,10 @@ class SpriteBase<T> extends Visual {
             // compute size and content right away
             if (region != null && currentAnimation == null) {
 
-                width = region.originalWidth * region.frameWidth / region.width;
-                height = region.originalHeight * region.frameHeight / region.height;
+                if (autoComputeSize) {
+                    width = region.originalWidth * region.frameWidth / region.width;
+                    height = region.originalHeight * region.frameHeight / region.height;
+                }
 
                 computeContent();
             }
