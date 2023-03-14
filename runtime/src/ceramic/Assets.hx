@@ -52,6 +52,8 @@ class Assets extends Entity {
 
     public var delayBetweenXAssets:Int = -1;
 
+    public var reloadOnTextureDensityChange = true;
+
     /**
      * If provided, when requesting an asset, it will also check if the parent `Assets`
      * instance has it and return it if that's the case.

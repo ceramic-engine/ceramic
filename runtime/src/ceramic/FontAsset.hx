@@ -206,6 +206,9 @@ class FontAsset extends Asset {
 
     function checkTexturesDensity():Void {
 
+        if (owner == null || !owner.reloadOnTextureDensityChange)
+            return;
+
         var prevPath = path;
         computePath();
 

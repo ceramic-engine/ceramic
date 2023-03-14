@@ -308,6 +308,9 @@ class SpineAsset extends Asset {
 
     function checkTexturesDensity():Void {
 
+        if (owner == null || !owner.reloadOnTextureDensityChange)
+            return;
+
         if (atlasAsset == null) return;
 
         var prevPath = atlasAsset.path;
