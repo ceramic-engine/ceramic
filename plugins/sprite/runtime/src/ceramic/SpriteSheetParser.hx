@@ -16,8 +16,8 @@ class SpriteSheetParser {
         if (text.startsWith('{')) {
             // JSON
             var json:Dynamic = Json.parse(text);
-            if (AsepriteParser.isAsepriteJson(json)) {
-                return AsepriteParser.parseAtlasFromJson(json);
+            if (AsepriteJsonParser.isAsepriteJson(json)) {
+                return AsepriteJsonParser.parseAtlasFromJson(json);
             }
         }
 
@@ -31,8 +31,8 @@ class SpriteSheetParser {
         if (text.startsWith('{')) {
             // JSON
             var json:Dynamic = Json.parse(text);
-            if (AsepriteParser.isAsepriteJson(json)) {
-                return AsepriteParser.parseSheetFromJson(json, atlas);
+            if (AsepriteJsonParser.isAsepriteJson(json)) {
+                return AsepriteJsonParser.parseSheetFromJson(json, atlas);
             }
         }
 

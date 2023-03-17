@@ -5,7 +5,6 @@ import ase.chunks.CelChunk;
 import ase.chunks.LayerChunk;
 import ase.chunks.SliceChunk;
 import ase.chunks.TagsChunk;
-import ceramic.AsepriteJson;
 import ceramic.Shortcuts.*;
 import haxe.crypto.Hmac;
 import haxe.io.Bytes;
@@ -15,142 +14,12 @@ import haxe.io.BytesInput;
 using ceramic.Extensions;
 
 /**
- * Utility class to parse sprite sheet json data exported by aseprite
+ * Utility class to parse `.ase`/`.aseprite` files
  */
 class AsepriteParser {
 
-    static var didLogHashWarning:Bool = false;
+    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1):AsepriteData {
 
-    public static function isAsepriteJson(json:Dynamic):Bool {
-
-        if (json != null && json.frames != null) {
-            // Aseprite JSON
-            if (Std.isOfType(json.frames, Array)) {
-                return true;
-            }
-            else {
-                if (!didLogHashWarning) {
-                    didLogHashWarning = true;
-                    log.warning('Aseprite JSON format with frames as hash is not supported. Please export using array.');
-                }
-            }
-        }
-
-        return false;
-
-    }
-
-    public static function parseAtlasFromJson(data:AsepriteJson):TextureAtlas {
-
-        var page:TextureAtlasPage = new TextureAtlasPage(
-            data.meta.image,
-            data.meta.size.w,
-            data.meta.size.h,
-            NEAREST
-        );
-
-        var atlas = new TextureAtlas();
-        atlas.pages.push(page);
-
-        for (frame in data.frames) {
-
-            var region = new TextureAtlasRegion(
-                frame.filename, atlas, 0
-            );
-
-            region.x = Math.round(frame.frame.x + (frame.frame.w - frame.spriteSourceSize.w) * 0.5);
-            region.y = Math.round(frame.frame.y + (frame.frame.h - frame.spriteSourceSize.h) * 0.5);
-            region.originalWidth = Std.int(frame.sourceSize.w);
-            region.originalHeight = Std.int(frame.sourceSize.h);
-            region.width = Std.int(frame.spriteSourceSize.w);
-            region.height = Std.int(frame.spriteSourceSize.h);
-            region.offsetX = Std.int(frame.spriteSourceSize.x);
-            region.offsetY = Std.int(frame.spriteSourceSize.y);
-
-            region.rotateFrame = frame.rotated;
-            if (region.rotateFrame) {
-                region.packedWidth = region.height;
-                region.packedHeight = region.width;
-            } else {
-                region.packedWidth = region.width;
-                region.packedHeight = region.height;
-            }
-
-        }
-
-        return atlas;
-
-    }
-
-    public static function parseSheetFromJson(data:AsepriteJson, atlas:TextureAtlas):SpriteSheet {
-
-        var sheet = new SpriteSheet();
-
-        sheet.atlas = atlas;
-
-        var animations:Array<SpriteSheetAnimation> = [];
-
-        for (frameTag in data.meta.frameTags) {
-
-            var animation = new SpriteSheetAnimation();
-            animation.name = frameTag.name;
-
-            var from:Int = Std.int(frameTag.from);
-            var to:Int = Std.int(frameTag.to);
-
-            var frames:Array<SpriteSheetFrame> = [];
-
-            inline function addFrame(index:Int) {
-
-                var region = atlas.regions[index];
-                var frame = new SpriteSheetFrame(atlas, region.name, 0, region);
-                frame.duration = data.frames[index].duration * 0.001;
-                frames.push(frame);
-
-            }
-
-            switch frameTag.direction {
-
-                case FORWARD:
-                    var i = from;
-                    while (i <= to) {
-                        addFrame(i);
-                        i++;
-                    }
-
-                case REVERSE:
-                    var i = to;
-                    while (i >= from) {
-                        addFrame(i);
-                        i--;
-                    }
-
-                case PINGPONG:
-                    var i = from;
-                    while (i <= to) {
-                        addFrame(i);
-                        i++;
-                    }
-                    i = to - 1;
-                    while (i > from) {
-                        addFrame(i);
-                        i--;
-                    }
-            }
-
-            animation.frames = frames;
-            animations.push(animation);
-        }
-
-        sheet.animations = animations;
-
-        return sheet;
-
-    }
-
-    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker):AsepriteData {
-
-        var sheet = new SpriteSheet();
         var palette:AsepritePalette = null;
         var tags:Map<String,AsepriteTag> = new Map();
         var slices:Map<String,SliceChunk> = new Map();
@@ -202,6 +71,9 @@ class AsepriteParser {
 
         // Extract frame data
         for (f in 0...ase.frames.length) {
+            if (singleFrame >= 0 && f > singleFrame)
+                break;
+
             var aseFrame = ase.frames[f];
             var frame:AsepriteFrame = {
                 aseFrame: aseFrame,
@@ -222,16 +94,12 @@ class AsepriteParser {
         // Prepare frame layers data structure
         var allFrameLayers:Array<Array<AsepriteFrameLayer>> = [];
 
-        // Create atlas packer if needed
-        if (atlasPacker == null) {
-            atlasPacker = new TextureAtlasPacker();
-            atlasPacker.spacing = 0;
-            atlasPacker.filter = NEAREST;
-        }
-
         // Extract each frame's pixels,
         // and create an atlas
         for (f in 0...frames.length) {
+            if (singleFrame >= 0 && f > singleFrame)
+                break;
+
             var frame = frames[f];
             parseAseFramePixels(ase, palette, layers, frame, allFrameLayers);
 
@@ -255,17 +123,21 @@ class AsepriteParser {
             if (frame.duplicateOfIndex < 0) {
                 // Pixels that are not duplicates, store them
                 frame.hashIndex = nextHashIndex++;
-                atlasPacker.add(
-                    prefix+'#'+f, frame.pixels, ase.width, ase.height,
-                    frame.packedWidth, frame.packedHeight, frame.offsetX, frame.offsetY
-                );
+                if (atlasPacker != null) {
+                    atlasPacker.add(
+                        prefix+'#'+f, frame.pixels, ase.width, ase.height,
+                        frame.packedWidth, frame.packedHeight, frame.offsetX, frame.offsetY
+                    );
+                }
             }
             else if (!frame.duplicateSameOffset) {
                 // Pixels duplicate, but different offsets, add a region without pixels
-                atlasPacker.add(
-                    prefix+'#'+f, prefix+'#'+frame.duplicateOfIndex, ase.width, ase.height,
-                    frame.offsetX, frame.offsetY
-                );
+                if (atlasPacker != null) {
+                    atlasPacker.add(
+                        prefix+'#'+f, prefix+'#'+frame.duplicateOfIndex, ase.width, ase.height,
+                        frame.offsetX, frame.offsetY
+                    );
+                }
             }
         }
 
@@ -284,6 +156,52 @@ class AsepriteParser {
         return asepriteData;
 
     }
+
+    public static function parseTextureFromAsepriteData(asepriteData:AsepriteData, frame:Int, density:Float = 1):Texture {
+
+        var asepriteFrame = asepriteData.frames[frame];
+        if (asepriteFrame != null) {
+            var actualFrame = asepriteFrame;
+            while (actualFrame.duplicateOfIndex >= 0)
+                actualFrame = asepriteData.frames[actualFrame.duplicateOfIndex];
+
+            if (actualFrame.pixels != null) {
+                if (actualFrame.packedWidth == asepriteData.ase.width &&
+                    actualFrame.packedHeight == asepriteData.ase.height &&
+                    asepriteFrame.offsetX == 0 && asepriteFrame.offsetY == 0) {
+
+                    return Texture.fromPixels(
+                        asepriteData.ase.width,
+                        asepriteData.ase.height,
+                        actualFrame.pixels, density
+                    );
+                }
+                else {
+                    var pixels = Pixels.create(
+                        asepriteData.ase.width,
+                        asepriteData.ase.height,
+                        AlphaColor.TRANSPARENT
+                    );
+                    Pixels.copy(
+                        actualFrame.pixels, actualFrame.packedWidth,
+                        pixels, asepriteData.ase.width,
+                        0, 0, actualFrame.packedWidth, actualFrame.packedHeight,
+                        asepriteFrame.offsetX, asepriteFrame.offsetY
+                    );
+                    return Texture.fromPixels(
+                        asepriteData.ase.width,
+                        asepriteData.ase.height,
+                        pixels, density
+                    );
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    #if plugin_sprite
 
     public static function parseSheetFromAsepriteData(asepriteData:AsepriteData):SpriteSheet {
 
@@ -353,6 +271,8 @@ class AsepriteParser {
         return sheet;
 
     }
+
+    #end
 
     static function parseAseFramePixels(ase:Ase, palette:AsepritePalette, layers:Array<LayerChunk>, frame:AsepriteFrame, allFrameLayers:Array<Array<AsepriteFrameLayer>>):Void {
 

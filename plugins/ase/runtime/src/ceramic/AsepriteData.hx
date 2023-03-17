@@ -48,9 +48,9 @@ class AsepriteData extends Entity {
     public var frames(default, null):Array<AsepriteFrame>;
 
     /**
-     * The texture atlas packer used to store frame regions as texture
+     * The texture atlas packer used to store frame regions as texture (if any)
      */
-    public var atlasPacker(default, null):TextureAtlasPacker;
+    public var atlasPacker(default, null):TextureAtlasPacker = null;
 
     /**
      * The texture atlas (if any)
@@ -59,6 +59,13 @@ class AsepriteData extends Entity {
     inline function get_atlas():TextureAtlas {
         return atlasPacker != null ? atlasPacker.atlas : null;
     }
+
+    /**
+     * The image asset related to this aseprite data (if any)
+     */
+    public var imageAsset:ImageAsset = null;
+
+    #if plugin_sprite
 
     /**
      * The sprite sheet created from the aseprite file
@@ -79,9 +86,9 @@ class AsepriteData extends Entity {
     }
 
     /**
-     * The asset related to this sprite aseprite data (if any)
+     * The sprite asset related to this sprite aseprite data (if any)
      */
-    public var asset:SpriteAsset = null;
+    public var spriteAsset:SpriteAsset = null;
 
     function destroySheet() {
 
@@ -96,18 +103,30 @@ class AsepriteData extends Entity {
 
     }
 
+    #end
+
     override function destroy() {
 
+        #if plugin_sprite
         destroySheet();
+        #end
 
         if (atlasPacker != null && prefix != null) {
             atlasPacker.removeRegionsWithPrefix(prefix + '#');
         }
 
-        if (asset != null) {
-            var _asset = asset;
-            asset = null;
-            _asset.destroy();
+        #if plugin_sprite
+        if (spriteAsset != null) {
+            var _spriteAsset = spriteAsset;
+            spriteAsset = null;
+            _spriteAsset.destroy();
+        }
+        #end
+
+        if (imageAsset != null) {
+            var _imageAsset = imageAsset;
+            imageAsset = null;
+            _imageAsset.destroy();
         }
 
         super.destroy();

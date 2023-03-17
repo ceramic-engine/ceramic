@@ -23,11 +23,13 @@ class SpriteAsset extends Asset {
 
     var atlasAsset:AtlasAsset = null;
 
-    var aseAsset:BinaryAsset = null;
+    #if plugin_ase
 
     var asepriteData:AsepriteData = null;
 
-    var postPack:()->Void = null;
+    var asepritePostPack:()->Void = null;
+
+    #end
 
 /// Lifecycle
 
@@ -70,12 +72,16 @@ class SpriteAsset extends Asset {
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
+        #if plugin_ase
         if (path != null && (path.toLowerCase().endsWith('.aseprite') || path.toLowerCase().endsWith('.ase'))) {
             loadAse();
         }
         else {
+        #end
             loadSpriteSheet();
+        #if plugin_ase
         }
+        #end
 
     }
 
@@ -147,19 +153,22 @@ class SpriteAsset extends Asset {
 
     }
 
+    #if plugin_ase
+
     function loadAse() {
 
-        aseAsset = new BinaryAsset(name);
-        aseAsset.path = path;
-
         var assetReloadedCount = Assets.getReloadCount(Assets.realAssetPath(path, runtimeAssets));
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.binaries.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
 
-        @:privateAccess aseAsset.customExtensions = ['ase', 'aseprite'];
+        app.backend.binaries.load(realPath, options, function(bytes) {
 
-        assets.addAsset(aseAsset);
-        assets.onceComplete(this, function(success) {
-
-            if (aseAsset.bytes != null) {
+            if (bytes != null) {
 
                 try {
                     var atlasPacker:TextureAtlasPacker = null;
@@ -183,14 +192,14 @@ class SpriteAsset extends Asset {
                         }
                     }
 
-                    var ase:Ase = Ase.fromBytes(aseAsset.bytes);
+                    var ase:Ase = Ase.fromBytes(bytes);
                     var newAsepriteData = AsepriteParser.parseAse(ase, path + (assetReloadedCount > 0 ? '?hot='+assetReloadedCount : ''), atlasPacker);
                     newAsepriteData.id = 'sprite:' + path;
 
-                    if (postPack != null) {
-                        atlasPacker.offFinishPack(postPack);
+                    if (asepritePostPack != null) {
+                        atlasPacker.offFinishPack(asepritePostPack);
                     }
-                    postPack = function() {
+                    asepritePostPack = function() {
                         if (!newAsepriteData.destroyed && this.asepriteData == newAsepriteData) {
                             // We need to pack texture atlas before computing
                             // the final sprite sheet because we need valid regions
@@ -203,7 +212,7 @@ class SpriteAsset extends Asset {
 
                             // Set asset to null because we don't want it
                             // to be destroyed when destroying the aseprite data.
-                            prevAsepriteData.asset = null;
+                            prevAsepriteData.spriteAsset = null;
 
                             // Destroy previous aseprite data
                             // (will remove regions from atlas packer as well)
@@ -211,11 +220,11 @@ class SpriteAsset extends Asset {
                             prevAsepriteData = null;
                         }
                     };
-                    atlasPacker.onFinishPack(this, postPack);
+                    atlasPacker.onFinishPack(this, asepritePostPack);
 
                     // Link the aseprite data to this asset so that
                     // destroying one will destroy the other
-                    newAsepriteData.asset = this;
+                    newAsepriteData.spriteAsset = this;
 
                     // Do the actual replacement
                     this.asepriteData = newAsepriteData;
@@ -234,7 +243,7 @@ class SpriteAsset extends Asset {
                         }
                     }
                     else {
-                        postPack();
+                        asepritePostPack();
                         status = READY;
                         emitComplete(true);
                     }
@@ -253,9 +262,9 @@ class SpriteAsset extends Asset {
             }
         });
 
-        assets.load();
-
     }
+
+    #end
 
     function parseAtlas(text:String):TextureAtlas {
 
@@ -292,6 +301,15 @@ class SpriteAsset extends Asset {
             sheet.destroy();
             sheet = null;
         }
+
+        #if plugin_ase
+
+        if (asepriteData != null) {
+            asepriteData.destroy();
+            asepriteData = null;
+        }
+
+        #end
 
     }
 
