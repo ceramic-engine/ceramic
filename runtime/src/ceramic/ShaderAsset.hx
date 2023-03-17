@@ -8,7 +8,7 @@ using ceramic.Extensions;
 
 class ShaderAsset extends Asset {
 
-    public var shader:Shader = null;
+    @observe public var shader:Shader = null;
 
     override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
@@ -86,8 +86,26 @@ class ShaderAsset extends Asset {
             return;
         }
 
-        app.backend.texts.load(Assets.realAssetPath(options.vertId, runtimeAssets), loadOptions, function(vertSource) {
-            app.backend.texts.load(Assets.realAssetPath(options.fragId, runtimeAssets), loadOptions, function(fragSource) {
+        // Add reload count if any
+        var vertPath = options.vertId;
+        if (options.vertId != 'textured.vert') {
+            vertPath = Assets.realAssetPath(options.vertId, runtimeAssets);
+            var assetReloadedCount = Assets.getReloadCount(vertPath);
+            if (app.backend.shaders.supportsHotReloadPath() && assetReloadedCount > 0) {
+                vertPath += '?hot=' + assetReloadedCount;
+            }
+        }
+        else {
+            vertPath = Assets.realAssetPath(options.vertId, null);
+        }
+        var fragPath = Assets.realAssetPath(options.fragId, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(fragPath);
+        if (app.backend.shaders.supportsHotReloadPath() && assetReloadedCount > 0) {
+            fragPath += '?hot=' + assetReloadedCount;
+        }
+
+        app.backend.texts.load(vertPath, loadOptions, function(vertSource) {
+            app.backend.texts.load(fragPath, loadOptions, function(fragSource) {
 
                 if (vertSource == null) {
                     status = BROKEN;
@@ -103,7 +121,14 @@ class ShaderAsset extends Asset {
                     return;
                 }
 
-                var backendItem = app.backend.shaders.fromSource(vertSource, fragSource, customAttributes);
+                var backendItem = null;
+                try {
+                    backendItem = app.backend.shaders.fromSource(vertSource, fragSource, customAttributes);
+                }
+                catch (e:Dynamic) {
+                    log.error('Error when creating shader from source: ' + e);
+                }
+
                 if (backendItem == null) {
                     status = BROKEN;
                     log.error('Failed to create shader from data at path: $path');
@@ -111,12 +136,21 @@ class ShaderAsset extends Asset {
                     return;
                 }
 
-                this.shader = new Shader(backendItem, customAttributes);
-                this.shader.asset = this;
-                this.shader.id = 'shader:' + path;
+                var shader = new Shader(backendItem, customAttributes);
+                shader.asset = this;
+                shader.id = 'shader:' + path;
+
+                var prevShader = this.shader;
+
+                this.shader = shader;
                 status = READY;
                 emitComplete(true);
 
+                if (prevShader != null) {
+                    prevShader.asset = null;
+                    prevShader.destroy();
+                    prevShader = null;
+                }
             });
         });
 #else
@@ -137,6 +171,50 @@ class ShaderAsset extends Asset {
 
         });
 #end
+
+    }
+
+    override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
+
+        if (!app.backend.shaders.supportsHotReloadPath())
+            return;
+
+        #if ceramic_shader_vert_frag
+        if (options != null) {
+            if (options.fragId != null) {
+                var path = options.fragId;
+                var previousTime:Float = -1;
+                if (previousFiles.exists(path)) {
+                    previousTime = previousFiles.get(path);
+                }
+                var newTime:Float = -1;
+                if (newFiles.exists(path)) {
+                    newTime = newFiles.get(path);
+                }
+
+                if (newTime > previousTime) {
+                    log.info('Reload shader (fragment shader has changed)');
+                    load();
+                }
+            }
+            else if (options.vertId != null) {
+                var path = options.vertId;
+                var previousTime:Float = -1;
+                if (previousFiles.exists(path)) {
+                    previousTime = previousFiles.get(path);
+                }
+                var newTime:Float = -1;
+                if (newFiles.exists(path)) {
+                    newTime = newFiles.get(path);
+                }
+
+                if (newTime > previousTime) {
+                    log.info('Reload shader (vertex shader has changed)');
+                    load();
+                }
+            }
+        }
+        #end
 
     }
 

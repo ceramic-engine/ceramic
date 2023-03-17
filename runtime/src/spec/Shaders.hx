@@ -39,4 +39,10 @@ interface Shaders {
 
     function canBatchWithMultipleTextures(shader:Shader):Bool;
 
+    /**
+     * Returns `true` if paths with `?hot=...` are supported on this backend
+     * @return Bool
+     */
+    function supportsHotReloadPath():Bool;
+
 }
