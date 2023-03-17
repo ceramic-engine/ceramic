@@ -2,6 +2,12 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using StringTools;
+
+#if plugin_ase
+import ase.Ase;
+#end
+
 class ImageAsset extends Asset {
 
 /// Events
@@ -60,22 +66,12 @@ class ImageAsset extends Asset {
             }
         }
 
-        // Add reload count if any
-        var backendPath = path;
-        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
-        var assetReloadedCount = Assets.getReloadCount(realPath);
-        if (app.backend.textures.supportsHotReloadPath() && assetReloadedCount > 0) {
-            realPath += '?hot=' + assetReloadedCount;
-            backendPath += '?hot=' + assetReloadedCount;
-        }
+        loadTexture(path, loadOptions, function(newTexture, backendPath) {
 
-        log.info('Load image $backendPath (density=$density)');
-        app.backend.textures.load(realPath, loadOptions, function(image) {
+            if (newTexture != null) {
 
-            if (image != null) {
 
                 var prevTexture = this.texture;
-                var newTexture = new Texture(image, density);
                 newTexture.id = 'texture:' + backendPath;
                 this.texture = newTexture;
 
@@ -146,12 +142,81 @@ class ImageAsset extends Asset {
                 }
             }
             else {
+                log.warning('Failed to decode texture');
                 status = BROKEN;
-                log.error('Failed to load texture at path: $path');
                 emitComplete(false);
             }
 
         });
+
+    }
+
+    function loadTexture(path:String, loadOptions:AssetOptions, callback:(texture:Texture, backendPath:String)->Void) {
+
+        // Add reload count if any
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.textures.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+
+        log.info('Load image $backendPath (density=$density)');
+
+        #if plugin_ase
+        if (path != null && (path.toLowerCase().endsWith('.ase') || path.toLowerCase().endsWith('.aseprite'))) {
+
+            app.backend.binaries.load(realPath, loadOptions, function(bytes) {
+
+                if (bytes != null) {
+                    try {
+
+                        // Decode ase data, but once we have our texture, destroy it
+                        var ase:Ase = Ase.fromBytes(bytes);
+                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, 0);
+                        var texture = AsepriteParser.parseTextureFromAsepriteData(asepriteData, 0, density);
+                        asepriteData.destroy();
+
+                        callback(texture, backendPath);
+                    }
+                    catch (e:Dynamic) {
+                        status = BROKEN;
+                        log.error('Failed to decode ase image at path: $path');
+                        emitComplete(false);
+                    }
+                }
+                else {
+                    status = BROKEN;
+                    log.error('Failed to load ase image at path: $path');
+                    emitComplete(false);
+                }
+
+            });
+
+        }
+        else {
+        #end
+
+            app.backend.textures.load(realPath, loadOptions, function(image) {
+
+                if (image != null) {
+
+                    var newTexture = new Texture(image, density);
+                    callback(newTexture, backendPath);
+
+                }
+                else {
+                    status = BROKEN;
+                    log.error('Failed to load texture at path: $path');
+                    emitComplete(false);
+                }
+
+            });
+
+        #if plugin_ase
+        }
+        #end
 
     }
 

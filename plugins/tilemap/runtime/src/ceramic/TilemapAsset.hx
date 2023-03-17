@@ -43,13 +43,11 @@ class TilemapAsset extends Asset {
 
 /// Internal
 
-    var tmxAsset:TextAsset = null;
-
     var tsxRawData:Map<String,String> = null;
 
     #if plugin_ldtk
 
-    var ldtkAsset:TextAsset = null;
+    var ldtkExternalSources:Array<String> = null;
 
     #end
 
@@ -108,7 +106,7 @@ class TilemapAsset extends Asset {
 
         // Load tmx asset
         //
-        tmxAsset = new TextAsset(path);
+        var tmxAsset = new TextAsset(path);
         var prevAsset = assets.addAsset(tmxAsset);
         tmxAsset.computePath(['tmx'], false, runtimeAssets);
 
@@ -118,6 +116,7 @@ class TilemapAsset extends Asset {
         assets.onceComplete(this, function(success) {
 
             var rawTmxData = tmxAsset.text;
+            tmxAsset.destroy();
 
             if (rawTmxData != null && rawTmxData.length > 0) {
 
@@ -349,7 +348,7 @@ class TilemapAsset extends Asset {
 
         // Load ldtk asset
         //
-        ldtkAsset = new TextAsset(path);
+        var ldtkAsset = new TextAsset(path);
         var prevAsset = assets.addAsset(ldtkAsset);
         ldtkAsset.computePath(['ldtk'], false, runtimeAssets);
 
@@ -359,11 +358,12 @@ class TilemapAsset extends Asset {
         assets.onceComplete(this, function(success) {
 
             var rawLdtkData = ldtkAsset.text;
+            ldtkAsset.destroy();
 
             if (rawLdtkData != null && rawLdtkData.length > 0) {
 
                 var tilemapParser = owner.getTilemapParser();
-                ldtkData = tilemapParser.parseLdtk(rawLdtkData);
+                ldtkData = tilemapParser.parseLdtk(rawLdtkData, loadExternalLdtkLevelData);
 
                 if (ldtkData == null) {
                     status = BROKEN;
@@ -423,6 +423,50 @@ class TilemapAsset extends Asset {
 
     }
 
+    function loadExternalLdtkLevelData(source:String, callback:(rawLevelData:String)->Void):Void {
+
+        log.info('Load external LDtk level $source');
+
+        // Load ldtk external level asset
+        //
+        var ldtkAsset = new TextAsset(source);
+        var prevAsset = assets.addAsset(ldtkAsset);
+        ldtkAsset.computePath(['ldtkl'], false, runtimeAssets);
+
+        if (ldtkExternalSources == null)
+            ldtkExternalSources = [];
+        if (!ldtkExternalSources.contains(ldtkAsset.path)) {
+            ldtkExternalSources.push(ldtkAsset.path);
+        }
+
+        // Remove previous json asset if different
+        if (prevAsset != null) prevAsset.destroy();
+
+        assets.onceComplete(this, function(success) {
+
+            var rawLdtkData = ldtkAsset.text;
+            ldtkAsset.destroy();
+
+            if (rawLdtkData != null && rawLdtkData.length > 0) {
+                try {
+                    callback(rawLdtkData);
+                }
+                catch (e:Dynamic) {
+                    ceramic.App.app.logger.error('Error when loading external LDtk level: ' + e);
+                    callback(null);
+                }
+            }
+            else {
+                ceramic.App.app.logger.error('Failed to load raw external LDtk level at path: $source');
+                callback(null);
+            }
+
+        });
+
+        assets.load();
+
+    }
+
 #end
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
@@ -459,8 +503,37 @@ class TilemapAsset extends Asset {
 
         if (newTime > previousTime) {
             log.info('Reload tilemap (file has changed)');
+            #if plugin_ldtk
+            ldtkExternalSources = null;
+            #end
             load();
         }
+        #if plugin_ldtk
+        else {
+
+            if (ldtkExternalSources != null) {
+                for (i in 0...ldtkExternalSources.length) {
+                    var source = ldtkExternalSources[i];
+
+                    var previousTime:Float = -1;
+                    if (previousFiles.exists(source)) {
+                        previousTime = previousFiles.get(source);
+                    }
+                    var newTime:Float = -1;
+                    if (newFiles.exists(source)) {
+                        newTime = newFiles.get(source);
+                    }
+
+                    if (newTime > previousTime) {
+                        log.info('Reload tilemap (external file has changed)');
+                        ldtkExternalSources = null;
+                        load();
+                        return;
+                    }
+                }
+            }
+        }
+        #end
 
     }
 

@@ -1,7 +1,9 @@
 package ceramic;
 
+import ceramic.LdtkData.LdtkLevel;
 import ceramic.LdtkData.LdtkTilesetDefinition;
 import ceramic.Shortcuts.*;
+import haxe.DynamicAccess;
 import haxe.Json;
 
 using ceramic.Extensions;
@@ -13,12 +15,16 @@ class TilemapLdtkParser {
 
     }
 
-    public function parseLdtk(rawLdtkData:String):LdtkData {
+    public function parseLdtk(rawLdtkData:String, loadExternalLdtkLevelData:(source:String, callback:(rawLevelData:String)->Void)->Void):LdtkData {
 
         var ldtkData:LdtkData = null;
 
         try {
-            return new LdtkData(Json.parse(rawLdtkData));
+            return new LdtkData(Json.parse(rawLdtkData), function(source:String, callback:(rawLevelData:DynamicAccess<Dynamic>)->Void) {
+                loadExternalLdtkLevelData(source, (rawLevelData) -> {
+                    callback(Json.parse(rawLevelData));
+                });
+            }, loadLdtkLevelTilemap);
         }
         catch (e:Dynamic) {
             log.error('Failed to parse raw LDtk data: ' + e);
@@ -33,7 +39,6 @@ class TilemapLdtkParser {
 
         if (ldtkData.externalLevels) {
             log.info('This LDtk project uses external levels');
-            return;
         }
 
         // Parse tilesets
@@ -90,93 +95,14 @@ class TilemapLdtkParser {
             log.warning('LDtk data has no tileset');
         }
 
-        if (ldtkData.worlds != null && ldtkData.worlds.length > 0) {
+        if (!ldtkData.externalLevels && ldtkData.worlds != null && ldtkData.worlds.length > 0) {
             for (i in 0...ldtkData.worlds.length) {
                 var world = ldtkData.worlds[i];
 
                 for (j in 0...world.levels.length) {
                     var level = world.levels[j];
 
-                    var tilemapData = new TilemapData();
-                    var usedTilesets:Array<Tileset> = [];
-
-                    tilemapData.backgroundColor = level.bgColor.toAlphaColor();
-                    tilemapData.renderOrder = RIGHT_DOWN;
-                    tilemapData.name = level.identifier;
-                    tilemapData.width = level.pxWid;
-                    tilemapData.height = level.pxHei;
-
-                    // TODO bgPos + bgRelPath?
-
-                    var tilemapLayers = [];
-                    var tilemapWidth:Int = 0;
-                    var tilemapHeight:Int = 0;
-                    var k = level.layerInstances.length - 1;
-                    while (k >= 0) {
-                        var layerInstance = level.layerInstances[k];
-
-                        var tilemapLayerData = new TilemapLayerData();
-
-                        tilemapLayerData.name = layerInstance.def.identifier;
-                        tilemapLayerData.tileWidth = layerInstance.def.gridSize;
-                        tilemapLayerData.tileHeight = layerInstance.def.gridSize;
-                        tilemapLayerData.opacity = layerInstance.opacity;
-                        tilemapLayerData.extraOpacity = layerInstance.opacity;
-                        tilemapLayerData.offsetX = layerInstance.pxTotalOffsetX;
-                        tilemapLayerData.offsetY = layerInstance.pxTotalOffsetY;
-                        tilemapLayerData.visible = layerInstance.visible;
-                        tilemapLayerData.columns = layerInstance.cWid;
-                        tilemapLayerData.rows = layerInstance.cHei;
-
-                        tilemapLayerData.shouldRenderTiles = (layerInstance.tileset != null);
-
-                        if (layerInstance.tileset != null && layerInstance.tileset.ceramicTileset != null && usedTilesets.indexOf(layerInstance.tileset.ceramicTileset) == -1) {
-                            usedTilesets.push(layerInstance.tileset.ceramicTileset);
-                        }
-
-                        switch layerInstance.def.type {
-                            case Tiles:
-                                tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
-                            case IntGrid | AutoLayer:
-                                if (layerInstance.def.autoSourceLayerDefUid != -1) {
-                                    var autoSourceLayer = null;
-                                    for (l in 0...level.layerInstances.length) {
-                                        var aLayer = level.layerInstances[l];
-                                        if (aLayer.def.uid == layerInstance.def.autoSourceLayerDefUid) {
-                                            autoSourceLayer = aLayer;
-                                            break;
-                                        }
-                                    }
-                                    if (autoSourceLayer == null) {
-                                        log.warning('Failed to resolve auto source layer for: ' + layerInstance.def.identifier);
-                                    }
-                                    tilemapLayerData.tiles = [].concat(autoSourceLayer.intGrid);
-                                }
-                                else {
-                                    tilemapLayerData.tiles = [].concat(layerInstance.intGrid);
-                                }
-                                tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
-                            case Entities:
-                                // Do not assign tiles
-                        }
-
-                        tilemapLayers.push(tilemapLayerData);
-                        layerInstance.ceramicLayer = tilemapLayerData;
-                        tilemapLayerData.ldtkLayer = layerInstance;
-
-                        k--;
-                    }
-
-                    // Tilesets must be ordered by first gid
-                    usedTilesets.sort((a, b) -> {
-                        return a.firstGid - b.firstGid;
-                    });
-
-                    tilemapData.tilesets = usedTilesets;
-                    tilemapData.layers = tilemapLayers;
-
-                    level.ceramicTilemap = tilemapData;
-                    tilemapData.ldtkLevel = level;
+                    loadLdtkLevelTilemap(level);
                 }
 
             }
@@ -187,7 +113,93 @@ class TilemapLdtkParser {
 
     }
 
+    public function loadLdtkLevelTilemap(level:LdtkLevel):Void {
+
+        var tilemapData = new TilemapData();
+        var usedTilesets:Array<Tileset> = [];
+
+        tilemapData.backgroundColor = level.bgColor.toAlphaColor();
+        tilemapData.renderOrder = RIGHT_DOWN;
+        tilemapData.name = level.identifier;
+        tilemapData.width = level.pxWid;
+        tilemapData.height = level.pxHei;
+
+        // TODO bgPos + bgRelPath?
+
+        var tilemapLayers = [];
+        var k = level.layerInstances.length - 1;
+        while (k >= 0) {
+            var layerInstance = level.layerInstances[k];
+
+            var tilemapLayerData = new TilemapLayerData();
+
+            tilemapLayerData.name = layerInstance.def.identifier;
+            tilemapLayerData.tileWidth = layerInstance.def.gridSize;
+            tilemapLayerData.tileHeight = layerInstance.def.gridSize;
+            tilemapLayerData.opacity = layerInstance.opacity;
+            tilemapLayerData.extraOpacity = layerInstance.opacity;
+            tilemapLayerData.offsetX = layerInstance.pxTotalOffsetX;
+            tilemapLayerData.offsetY = layerInstance.pxTotalOffsetY;
+            tilemapLayerData.visible = layerInstance.visible;
+            tilemapLayerData.columns = layerInstance.cWid;
+            tilemapLayerData.rows = layerInstance.cHei;
+
+            tilemapLayerData.shouldRenderTiles = (layerInstance.tileset != null);
+
+            if (layerInstance.tileset != null && layerInstance.tileset.ceramicTileset != null && usedTilesets.indexOf(layerInstance.tileset.ceramicTileset) == -1) {
+                usedTilesets.push(layerInstance.tileset.ceramicTileset);
+            }
+
+            switch layerInstance.def.type {
+                case Tiles:
+                    tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
+                case IntGrid | AutoLayer:
+                    if (layerInstance.def.autoSourceLayerDefUid != -1) {
+                        var autoSourceLayer = null;
+                        for (l in 0...level.layerInstances.length) {
+                            var aLayer = level.layerInstances[l];
+                            if (aLayer.def.uid == layerInstance.def.autoSourceLayerDefUid) {
+                                autoSourceLayer = aLayer;
+                                break;
+                            }
+                        }
+                        if (autoSourceLayer == null) {
+                            log.warning('Failed to resolve auto source layer for: ' + layerInstance.def.identifier);
+                        }
+                        tilemapLayerData.tiles = [].concat(autoSourceLayer.intGrid);
+                    }
+                    else {
+                        tilemapLayerData.tiles = [].concat(layerInstance.intGrid);
+                    }
+                    tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize);
+                case Entities:
+                    // Do not assign tiles
+            }
+
+            tilemapLayers.push(tilemapLayerData);
+            layerInstance.ceramicLayer = tilemapLayerData;
+            tilemapLayerData.ldtkLayer = layerInstance;
+
+            k--;
+        }
+
+        // Tilesets must be ordered by first gid
+        usedTilesets.sort((a, b) -> {
+            return a.firstGid - b.firstGid;
+        });
+
+        tilemapData.tilesets = usedTilesets;
+        tilemapData.layers = tilemapLayers;
+
+        level.ceramicTilemap = tilemapData;
+        tilemapData.ldtkLevel = level;
+
+    }
+
     function convertLdtkTiles(ldtkTiles:Array<Int>, tileset:LdtkTilesetDefinition, cols:Int, rows:Int, gridSize:Int):Array<TilemapTile> {
+
+        if (ldtkTiles == null || ldtkTiles.length == 0)
+            return null;
 
         var result:Array<TilemapTile> = [];
         var firstGid:Int = tileset != null && tileset.ceramicTileset != null ? tileset.ceramicTileset.firstGid : 0;

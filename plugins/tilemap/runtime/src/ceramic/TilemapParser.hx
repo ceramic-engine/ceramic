@@ -292,13 +292,13 @@ class TilemapParser {
      * @param rawLdtkData Raw LDtk data as string
      * @return The LDtk parsed data
      */
-    public function parseLdtk(rawLdtkData:String):LdtkData {
+    public function parseLdtk(rawLdtkData:String, loadExternalLdtkLevelData:(source:String, callback:(rawLevelData:String)->Void)->Void):LdtkData {
 
         // Parse LDtk data
         if (ldtkParser == null) {
             ldtkParser = new TilemapLdtkParser();
         }
-        var ldtkData = ldtkParser.parseLdtk(rawLdtkData);
+        var ldtkData = ldtkParser.parseLdtk(rawLdtkData, loadExternalLdtkLevelData);
 
         if (ldtkData == null) {
             log.warning('Failed to parse LDtk data: result is null!');
@@ -310,11 +310,6 @@ class TilemapParser {
     }
 
     public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):Void {
-
-        if (ldtkData.externalLevels) {
-            log.info('This LDtk project uses external levels');
-            return;
-        }
 
         if (ldtkParser == null) {
             ldtkParser = new TilemapLdtkParser();

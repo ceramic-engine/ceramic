@@ -186,6 +186,9 @@ class Assets extends Entity {
 
         var info = app.backend.info;
         var imageExtensions = info.imageExtensions();
+        #if plugin_ase
+        imageExtensions = imageExtensions.concat(['ase', 'aseprite']);
+        #end
         var textExtensions = info.textExtensions();
         var soundExtensions = info.soundExtensions();
         var shaderExtensions = info.shaderExtensions();

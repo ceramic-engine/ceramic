@@ -60,15 +60,32 @@ class LdtkData extends Entity {
     public var asset:TilemapAsset;
 
     /**
+     * Used to load external level data
+     */
+    @:allow(ceramic.LdtkLevel)
+    private var loadExternalLevelData:(relPath:String, callback:(levelData:DynamicAccess<Dynamic>)->Void)->Void;
+
+    /**
+     * When loading external levels, we also need
+     * a funtion to load the Ceramic tilemap from it.
+     * This is it.
+     */
+    @:allow(ceramic.LdtkLevel)
+    private var loadLevelCeramicTilemap:(level:LdtkLevel)->Void;
+
+    /**
      * Internal reference to the json currently being parsed
      */
     private static var _rootJson:DynamicAccess<Dynamic> = null;
 
     private static var _entityInstances:Array<LdtkEntityInstance> = null;
 
-    public function new(?json:DynamicAccess<Dynamic>) {
+    public function new(?json:DynamicAccess<Dynamic>, ?loadExternalLevelData:(relPath:String, callback:(levelData:DynamicAccess<Dynamic>)->Void)->Void, ?loadLevelCeramicTilemap:(level:LdtkLevel)->Void) {
 
         super();
+
+        this.loadExternalLevelData = loadExternalLevelData;
+        this.loadLevelCeramicTilemap = loadLevelCeramicTilemap;
 
         if (json != null) {
 
@@ -318,6 +335,111 @@ class LdtkData extends Entity {
         }
 
         return null;
+
+    }
+
+    @:allow(ceramic.LdtkLevel)
+    private function _cleanUnusedEntityInstances():Void {
+
+        if (_entityInstances != null && _entityInstances.length > 0) {
+
+            var used:Array<LdtkEntityInstance> = null;
+            if (worlds != null) {
+                for (w in 0...worlds.length) {
+                    var world = worlds[w];
+                    if (world.levels != null) {
+                        var levels = world.levels;
+                        for (l in 0...levels.length) {
+                            var level = levels[l];
+                            if (level.fieldInstances != null) {
+                                used = _markEntityInstancesUsedInFieldInstances(used, level.fieldInstances);
+                            }
+                            if (level.layerInstances != null) {
+                                used = _markEntityInstancesUsedInLayerInstances(used, level.layerInstances);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var toRemove:Array<Int> = null;
+            if (used != null) {
+                for (e in 0..._entityInstances.length) {
+                    var entityInstance = _entityInstances[e];
+                    if (!used.contains(entityInstance)) {
+                        if (toRemove == null)
+                            toRemove = [];
+                        toRemove.push(e);
+                    }
+                }
+                if (toRemove != null) {
+                    var i = toRemove.length - 1;
+                    while (i >= 0) {
+                        _entityInstances.splice(toRemove[i], 1);
+                        i--;
+                    }
+                }
+            }
+        }
+
+    }
+
+    private function _markEntityInstancesUsedInFieldInstances(used:Array<LdtkEntityInstance>, fieldInstances:Array<LdtkFieldInstance>):Array<LdtkEntityInstance> {
+
+        if (fieldInstances != null) {
+            for (f in 0...fieldInstances.length) {
+                var fieldInstance = fieldInstances[f];
+                if (fieldInstance.def.type == 'EntityRef') {
+                    used = _markEntityInstanceUsed(used, fieldInstance.value);
+                }
+                else if (fieldInstance.def.type == 'Array<EntityRef>') {
+                    var array:Array<LdtkEntityInstance> = fieldInstance.value;
+                    for (e in 0...array.length) {
+                        used = _markEntityInstanceUsed(used, array[e]);
+                    }
+                }
+            }
+        }
+
+        return used;
+
+    }
+
+    private function _markEntityInstancesUsedInLayerInstances(used:Array<LdtkEntityInstance>, layerInstances:Array<LdtkLayerInstance>):Array<LdtkEntityInstance> {
+
+        if (layerInstances != null) {
+            for (l in 0...layerInstances.length) {
+                var layerInstance = layerInstances[l];
+                if (layerInstance.entityInstances != null) {
+                    var entityInstances = layerInstance.entityInstances;
+                    for (e in 0...entityInstances.length) {
+                        used = _markEntityInstanceUsed(used, entityInstances[e]);
+                    }
+                }
+            }
+        }
+
+        return used;
+
+    }
+
+    private function _markEntityInstanceUsed(used:Array<LdtkEntityInstance>, entityInstance:LdtkEntityInstance):Array<LdtkEntityInstance> {
+
+        if (entityInstance == null)
+            return used;
+
+        if (used == null)
+            used = [];
+
+        if (!used.contains(entityInstance)) {
+            used.push(entityInstance);
+
+            if (entityInstance.fieldInstances != null) {
+                used = _markEntityInstancesUsedInFieldInstances(used, entityInstance.fieldInstances);
+            }
+        }
+
+        return used;
 
     }
 
@@ -2066,6 +2188,7 @@ class LdtkLevel {
         this.world = world;
 
         if (json != null) {
+
             bgColor = Color.fromString(json.get('__bgColor'));
             bgPos = json.get('__bgPos') != null ? new LdtkBackgroundPosition(json.get('__bgPos')) : null;
             bgRelPath = json.get('bgRelPath');
@@ -2084,17 +2207,73 @@ class LdtkLevel {
 
             identifier = json.get('identifier');
 
-            var layerInstancesJson:Array<Dynamic> = json.get('layerInstances');
-            layerInstances = layerInstancesJson != null ? [for (i in 0...layerInstancesJson.length) {
-                new LdtkLayerInstance(this, ldtkData, world, layerInstancesJson[i]);
-            }] : null;
-
             pxWid = Std.int(json.get('pxWid'));
             pxHei = Std.int(json.get('pxHei'));
             uid = Std.int(json.get('uid'));
             worldDepth = Std.int(json.get('worldDepth'));
             worldX = Std.int(json.get('worldX'));
             worldY = Std.int(json.get('worldY'));
+
+            var layerInstancesJson:Array<Dynamic> = json.get('layerInstances');
+            layerInstances = layerInstancesJson != null ? [for (i in 0...layerInstancesJson.length) {
+                new LdtkLayerInstance(this, ldtkData, world, layerInstancesJson[i]);
+            }] : null;
+
+        }
+
+    }
+
+    public function ensureLoaded(done:()->Void):Void {
+
+        if (externalRelPath != null && layerInstances == null) {
+            if (world != null && world.ldtkData != null && world.ldtkData.loadExternalLevelData != null) {
+                world.ldtkData.loadExternalLevelData(externalRelPath, json -> {
+
+                    if (json != null) {
+
+                        var layerInstancesJson:Array<Dynamic> = json.get('layerInstances');
+                        layerInstances = layerInstancesJson != null ? [for (i in 0...layerInstancesJson.length) {
+                            new LdtkLayerInstance(this, world.ldtkData, world, layerInstancesJson[i]);
+                        }] : null;
+
+                        if (world.ldtkData.loadLevelCeramicTilemap != null) {
+                            world.ldtkData.loadLevelCeramicTilemap(this);
+                        }
+                    }
+                    else{
+                        log.error('Failed to read external level JSON data');
+                    }
+
+                    done();
+
+                });
+            }
+            else {
+                log.error('Cannot load external level data because there is no way to load it.');
+                done();
+            }
+        }
+        else {
+            done();
+        }
+
+    }
+
+    public function unload():Void {
+
+        if (externalRelPath != null && layerInstances != null) {
+
+            layerInstances = null;
+
+            if (ceramicTilemap != null) {
+                var _ceramicTilemap = ceramicTilemap;
+                ceramicTilemap = null;
+                _ceramicTilemap.destroy();
+            }
+
+            if (world != null && world.ldtkData != null) {
+                world.ldtkData._cleanUnusedEntityInstances();
+            }
         }
 
     }
