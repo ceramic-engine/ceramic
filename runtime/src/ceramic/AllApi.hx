@@ -307,7 +307,8 @@ import ceramic.TilesetImage;
 #end
 
 #if plugin_sprite
-import ceramic.AsepriteParser;
+import ceramic.AsepriteJson;
+import ceramic.AsepriteJsonParser;
 import ceramic.ConvertSpriteSheet;
 import ceramic.Sprite;
 import ceramic.SpriteBase;
@@ -317,6 +318,22 @@ import ceramic.SpriteSheetAnimation;
 import ceramic.SpriteSheetFrame;
 import ceramic.SpriteSheetParser;
 import ceramic.SpriteSystem;
+#end
+
+#if plugin_ase
+import ceramic.AsepriteBlendFuncs;
+import ceramic.AsepriteData;
+import ceramic.AsepriteFrame;
+import ceramic.AsepriteFrameLayer;
+import ceramic.AsepritePalette;
+import ceramic.AsepriteParser;
+import ceramic.AsepriteTag;
+#end
+
+#if plugin_ldtk
+import ceramic.LdtkData;
+import ceramic.LdtkVisual;
+import ceramic.TilemapLdtkParser;
 #end
 
 #if plugin_spine
