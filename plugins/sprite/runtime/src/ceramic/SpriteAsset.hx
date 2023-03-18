@@ -1,10 +1,12 @@
 package ceramic;
 
-import ase.Ase;
-import ceramic.Path;
 import ceramic.Shortcuts.*;
 
 using StringTools;
+
+#if plugin_ase
+import ase.Ase;
+#end
 
 class SpriteAsset extends Asset {
 

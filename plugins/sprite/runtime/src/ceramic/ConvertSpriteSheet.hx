@@ -3,7 +3,6 @@ package ceramic;
 import ceramic.Assets;
 import ceramic.ConvertField;
 
-import ceramic.SpritePlugin;
 using ceramic.SpritePlugin;
 
 class ConvertSpriteSheet implements ConvertField<String,SpriteSheet> {
