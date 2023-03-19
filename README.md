@@ -1,60 +1,78 @@
 # Ceramic
 
-| ![Ceramic Logo](/tools/resources/AppIcon-128.png) | Cross-platform 2D framework written in Haxe. |
-| - | - |
+<img alt="Ceramic Logo" align="left" src="/tools/tpl/project/empty/assets/ceramic.png" height="130" />
 
-Ceramic is a cross-platform 2D framework written in Haxe that can export natively to desktop (windows, mac, linux), mobile (ios, android), web (js + webgl) and to unity projects.
+**Ceramic** is a cross-platform 2D framework written in Haxe that can export natively to:
 
-![demo-video](https://user-images.githubusercontent.com/164094/134378094-401c519d-bdd0-4d89-b9a2-c7f9d5893c02.gif)
+- **Desktop** (windows, mac, linux)
+- **Mobile** (ios, android), web (js + webgl)
+- **Unity** projects
 
-## Why ceramic?
+## Examples and Documentation
 
-Ceramic is made with a few goals in mind:
-
-* Provide a runtime with high level cross-platform [Haxe](http://haxe.org) API to make apps, 2d games, animations and creative coding projects.
-* Bundle a set of command line tools that handle building for different targets. Currently supported: iOS, Android, HTML5 (WebGL), PC (Win/OSX/Linux), Headless (Node.js).
-* Make it extensible with a plugin system. A plugin can extend both the runtime and the command line tools.
-* Ensure adding new backends is as easy as possible by keeping the API clean and platform independant. New backends/targets can be added via separate plugins without changing the framework itself.
-* Provide opinionated features out of the box (event system, observables, physics, data model...), but always try to make these optional.
-
-## How does it work?
-
-Ceramic is built using [Haxe](http://haxe.org), a high level strictly typed programming language that can compile to multiple platforms.
-
-It consists on a high level cross-platform API for Haxe, the **runtime**, and makes it work on different platforms with **backends**.
-
-Ceramic comes with command line tools, also written in Haxe language, then run with Node.js.
-
-## Getting started
-
-Documentation on https://ceramic-engine.com is actively being improved. Here's how you can start:
-- Read the introduction: [Discover ceramic, a cross-platform and open-source 2D framework](https://ceramic-engine.com/guides/discover-ceramic/)
-- Then, follow the [Guides](https://ceramic-engine.com/guides/). Start with the Getting Started section, to install Ceramic and create your first project, and continue learning the the additional guides.
-- Check the [Ceramic API docs](https://ceramic-engine.com/api-docs/) (still rough, will be improved iteratively).
-- Take a look at the [Samples repository](https://github.com/ceramic-engine/ceramic-samples/) to see small example projects that demonstrate ceramic features (new samples will be added on a regular basis). Test them on [Ceramic website examples page](https://ceramic-engine.com/examples/).
-- Join the **#ceramic** channel on the [Haxe Discord](https://discordapp.com/invite/0uEuWH3spjck73Lo) server.
-
-## Available backends
-
-- Current default backend is `clay`. It allows to natively target Mac, Windows, Linux, iOS, Android and HTML5 (WebGL).
-
-- A `headless` backend allows to run ceramic as a server/cli app (via Node.js for now, even if that could work with other language targets too).
-
-- A `unity` backend allows to run a ceramic app _inside_ Unity Editor and take advantage of all the platforms Unity provides.
+https://ceramic-engine.com
 
 ## Credits
 
-Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)** but is also possible thanks to the following works:
+Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as well as multiple libraries used internally, but is also possible thanks to the following works:
 
-* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by Sven Bergström** which was used as a transitional backend before `clay` backend was ready. `Luxe` is also a great source of inspiration that influenced how ceramic works in various aspects. Some snippets of `ceramic` directly come from `luxe`.
+* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by Sven Bergström** which was used as a transitional backend before `clay` backend was ready. Some snippets of Ceramic still directly come from `luxe`.
 
-* **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was ported into `ceramic.Color` class.
+* **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was ported into  to `ceramic.Color` and `ceramic.AlphaColor` classes.
 
 * **[OpenFL](https://github.com/openfl/openfl/blob/0b84012052fc8f6ab2e211c93769c99ad331beb9/openfl/geom/Matrix.hx) by Joshua Granick** and **[PixiJS](https://github.com/pixijs/pixi.js/blob/85aaea595f77bf0511886c499fc2733d4f5ba524/src/core/math/Matrix.js) by Mathew Groves** to implement `ceramic.Transform` class.
 
 * **[Haxe](https://haxe.org/) by Nicolas Cannasse**, maintained by the **Haxe Foundation**, which is a fantastic cross-platform toolkit and programming language making it much easier to create a portable engine.
 
 * **[Node.js](https://nodejs.org/) and its huge amount of community supported modules**, helping a lot to create feature-complete and cross-platform command line tools.
+
+* **[Janicek Core Haxe](https://github.com/rjanicek/janicek-core-haxe) by Richard Janicek**, for some borrowed code for `ceramic.Utils.hashCode()`.
+
+* **[Slugify](https://github.com/simov/slugify) by Simov**, and **[Slug haxelib port](https://lib.haxe.org/p/slug)** to provide `ceramic.Slug`.
+
+* **[HaxeFlixel's FlxEmitter class](https://github.com/HaxeFlixel/flixel/blob/02e2d18158761d0d508a06126daef2487aa7373c/flixel/effects/particles/FlxEmitter.hx)** used as a starting point to implement `ceramic.Particles` and `ceramic.ParticleEmitter`.
+
+* **[Optimised HashMaps](https://github.com/mikvor/hashmapTest) by Mikhail Vorontsov** to implement `ceramic.IntIntMap` and related on static targets.
+
+* **[Some crash logging snippets](https://github.com/larsiusprime/crashdumper/blob/24e28e8fd664de922bd480502efe596665d905b8/crashdumper/CrashDumper.hx) by Lars Doucet** to handle errors with `ceramic.Errors`.
+
+* **[Cardinal Spline JS](https://github.com/gdenisov/cardinal-spline-js) by Gleb Denisov**, used to create `ceramic.CardinalSpline`.
+
+* **[Nuclear Blaze's GameBase Camera](https://github.com/deepnight/ld48-NuclearBlaze/blob/master/src/game/gm/Camera.hx) by Sébastien Bénard**, used as a model to create `ceramic.Camera`.
+
+* **[Bezier Easing](https://github.com/gre/bezier-easing) by Gaëtan Renaudeau**, used to create `ceramic.BezierEasing`.
+
+* **[Some GLSL shader code](https://github.com/kiwipxl/GLSL-shaders) by Richman Steward**.
+
+* **[Some browser mess handling](https://github.com/goldfire/howler.js/blob/143ae442386c7b42d91a007d0b1f1695528abe64/src/howler.core.js#L245-L293) from Holwer.js** to help implement Ceramic audio backend for web.
+
+* **[Heaps Aseprite](https://github.com/AustinEast/heaps-aseprite) by Austin East**, from which several snippets were ported for make Ceramic `ase` format parsing and rendering.
+
+* **[Aseprite Blend Functions](https://github.com/aseprite/aseprite/blob/23557a190b4f5ab46c9b3ddb19146a7dcfb9dd82/src/doc/blend_funcs.cpp) by Igara Studio S.A. and David Capello**, which were ported to Haxe in order to implement ase frame blending at runtime in Ceramic.
+
+* **[Extrude Polyline](https://github.com/mattdesl/extrude-polyline) by Matt DesLauriers**, via Haxe port used in Ceramic to draw lines.
+
+* **[Earcut](https://github.com/mapbox/earcut) from Mapbox**, via Haxe port to triangulate shapes.
+
+* **[Haxe Format Tiled](https://github.com/Yanrishatum/haxe-format-tiled) by Pavel Alexandrov** to parse Tiled Map Editor's TMX format.
+
+* **[Akifox Async HTTP](https://github.com/yupswing/akifox-asynchttp) by Simone Cingano**, used to implement HTTP backend on native targets.
+
+* **[Nape Physics](https://joecreates.github.io/napephys) by Luca Deltodesco and contributors**.
+
+* **[HSLuv](https://github.com/hsluv/hsluv)** to provide additional color manipulation helpers to `ceramic.Color` and `ceramic.AlphaColor`.
+
+* **[Dear ImGui](https://github.com/ocornut/imgui) by Omar Cornut**, via **[Haxe bindings](https://github.com/jeremyfa/imgui-hx) initially created by Aidan Lee**.
+
+* **[Gif Capture](https://github.com/snowkit/gif) ported by Tilman Schmidt and Sven Bergström** from [Moments](https://github.com/Chman/Moments).
+
+* **[Linc RTMidi](https://github.com/KeyMaster-/linc_rtmidi) by Tilman Schmidt**.
+
+* **[Rectangle Bin Packing](https://github.com/Tw1ddle/Rectangle-Bin-Packing) by Sam Twidale**, used for `ceramic.TextureAtlasPacker`.
+
+* **[Ase format parser](https://github.com/miriti/ase) by Michael Miriti** to read `.ase`/`.aseprite` files.
+
+* **[Fuzzaldrin](https://github.com/atom/fuzzaldrin) from Atom** to provide some auto-completion features at runtime debug UI.
 
 ## License
 
