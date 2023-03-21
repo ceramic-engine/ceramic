@@ -153,11 +153,6 @@ class RenderTexture extends Texture {
         visual.renderTarget = this;
         visual.visible = true;
 
-        #if ceramic_texture_stamp_request_update
-        // Request full update in current frame
-        app.requestFullUpdateAndDrawInFrame();
-        #end
-
         // Running post-update code allows to ensure this is executed after visuals
         // have been prepared for update, but before this is applied
         app.oncePreUpdate(this, function(_) {

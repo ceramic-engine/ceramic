@@ -59,6 +59,8 @@ class Backend implements tracker.Events implements spec.Backend {
 
     @event function update(delta:Float);
 
+    @event function render();
+
 /// Internal update logic
 
     inline function willEmitUpdate(delta:Float) {

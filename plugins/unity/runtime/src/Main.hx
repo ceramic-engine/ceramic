@@ -95,6 +95,7 @@ class Main {
 
             // Update
             ceramic.App.app.backend.emitUpdate(delta);
+            ceramic.App.app.backend.emitRender();
 
         #if !ceramic_no_unity_catch_exit
         }

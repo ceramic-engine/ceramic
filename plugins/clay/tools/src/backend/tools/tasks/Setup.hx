@@ -224,7 +224,7 @@ class Setup extends tools.Task {
         }
 
         var hxmlFileContent = ('
--main ${target.name == 'cppia' ? 'CPPIAMain' : 'Main'}
+-main ${target.name == 'cppia' ? 'CPPIAMain' : 'backend.Main'}
 $targetFlags
 -D ${target.name}
 -D no-console

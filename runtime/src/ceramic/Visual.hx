@@ -90,6 +90,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     @event function blur();
 
+    inline function willListenPointerOver()
+        @:privateAccess ceramic.App.app.screen.visualsListenPointerOver = true;
+
 #if plugin_arcade
 
 /// Arcade physics
@@ -3045,17 +3048,17 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Will set this visual size to screen size
      */
-    public function bindToScreenSize():Void {
+    public function bindToScreenSize(factor:Float = 1.0):Void {
 
         // Bind to screen size
-        ceramic.App.app.screen.onResize(this, _bindToScreenSizeCallback);
-        _bindToScreenSizeCallback();
+        ceramic.App.app.screen.onResize(this, () -> _bindToScreenSizeCallback(factor));
+        _bindToScreenSizeCallback(factor);
 
     }
 
-    private function _bindToScreenSizeCallback():Void {
+    private function _bindToScreenSizeCallback(factor:Float):Void {
 
-        size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
+        size(ceramic.App.app.screen.width * factor, ceramic.App.app.screen.height * factor);
 
     }
 

@@ -18,7 +18,7 @@ class IO implements spec.IO {
 
     public function new() {}
 
-    @:allow(Main)
+    @:allow(backend.Main)
     function initKeyValueIfNeeded() {
 
         #if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string && !ceramic_no_sqlite_key_value_init)

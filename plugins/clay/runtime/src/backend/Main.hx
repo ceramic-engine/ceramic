@@ -1,4 +1,4 @@
-package;
+package backend;
 
 import backend.ClayEvents;
 import backend.ElectronRunner;

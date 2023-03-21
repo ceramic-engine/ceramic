@@ -271,7 +271,7 @@ class Filter extends Layer implements Observable {
 
 /// Public API
 
-    public function render(requestFullUpdate:Bool = false, ?done:Void->Void):Void {
+    public function render(?done:Void->Void):Void {
 
         if (!explicitRender) {
             log.warning('Explicit render is disabled on this filter. Ignoring render() call.');
@@ -295,7 +295,7 @@ class Filter extends Layer implements Observable {
                     explicitRenderPendingResultCallbacks = [];
                 }
                 explicitRenderPendingResultCallbacks.push(() -> {
-                    render(requestFullUpdate, done);
+                    render(done);
                     done = null;
                 });
             }
@@ -329,10 +329,6 @@ class Filter extends Layer implements Observable {
         }
 
         content.active = true;
-
-        if (requestFullUpdate) {
-            app.requestFullUpdateAndDrawInFrame();
-        }
 
         app.onceUpdate(null, function(_) {
             if (destroyed) {

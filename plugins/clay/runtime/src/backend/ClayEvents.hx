@@ -129,6 +129,12 @@ class ClayEvents extends clay.Events {
 
     }
 
+    override function render() {
+
+        backend.emitRender();
+
+    }
+
     #if (linc_sdl && cpp)
 
     override function sdlEvent(event:sdl.Event) {
