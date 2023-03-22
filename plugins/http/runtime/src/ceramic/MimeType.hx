@@ -11,7 +11,12 @@ class MimeType {
             type = type.substring(0, semicolonIndex);
         }
 
-        return switch type.trim().toLowerCase() {
+        type = type.trim().toLowerCase();
+
+        if (type.startsWith('text/'))
+            return false;
+
+        return switch type {
             case 'text/html': false;
             case 'text/css': false;
             case 'text/xml': false;
