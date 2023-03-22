@@ -165,7 +165,7 @@ class Http implements spec.Http {
                     if (resContentType == null)
                         resContentType = 'application/octet-stream';
 
-                    if (resContentType.toLowerCase().startsWith('text/')) {
+                    if (ceramic.MimeType.isText(resContentType)) {
                         textContent = buffer.toString('utf8');
                     }
                     else {
@@ -404,7 +404,7 @@ class Http implements spec.Http {
             }
 
             var textContent:String = null;
-            if (binaryContent != null && contentType.toLowerCase().startsWith('text/')) {
+            if (binaryContent != null && ceramic.MimeType.isText(contentType)) {
                 // Treat text as utf-8. Could be improved
                 textContent = binaryContent.toString();
                 binaryContent = null;
@@ -535,7 +535,7 @@ class Http implements spec.Http {
 
                     var resTextContent:String = null;
                     var resBinaryContent:Bytes = null;
-                    if (resContentType.startsWith('text/')) {
+                    if (ceramic.MimeType.isText(resContentType)) {
                         resTextContent = downloadHandler.text;
                     }
                     else {
@@ -637,7 +637,7 @@ class Http implements spec.Http {
 
                             var resTextContent:String = null;
                             var resBinaryContent:Bytes = null;
-                            if (resContentType.startsWith('text/')) {
+                            if (ceramic.MimeType.isText(resContentType)) {
                                 resTextContent = (bytes != null ? bytes.toString() : null);
                             }
                             else {
