@@ -580,7 +580,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      */
     @:noCompletion var _components:Map<String,Component> = null;
 
-    public function component(?name:String, ?component:Component):Component {
+    public function component<C:Component>(?name:String, ?component:C):C {
 
         if (name == null && component == null) {
             throw 'Invalid component() call: either `name` or `component` should be provided at least.';
@@ -631,7 +631,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
         } else {
             if (_components == null) return null;
-            return _components.get(name);
+            return cast _components.get(name);
         }
 
     }
