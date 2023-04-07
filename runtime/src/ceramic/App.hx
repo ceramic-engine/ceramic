@@ -1241,7 +1241,6 @@ class App extends Entity {
         // End draw
         #if ceramic_pending_finish_draw
         _pendingFinishDraw = true;
-        break;
         #else
         emitFinishDraw();
         #end
