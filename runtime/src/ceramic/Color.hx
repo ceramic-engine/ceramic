@@ -828,6 +828,71 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
     static var _hsluvResult:Array<Float> = [0, 0, 0];
 
+    static var _hsluvCacheMap:IntIntMap = new IntIntMap();
+
+    static var _hsluvCacheValues:Array<Float> = [];
+
+    /**
+     * The HSLuv hue of the color in degrees (from 0 to 359)
+     */
+    public var hueHSLuv(get, set):Float;
+    /**
+     * The HSLuv saturation of the color (from 0 to 1)
+     */
+    public var saturationHSLuv(get, set):Float;
+    /**
+     * The HSLuv lightness of the color (from 0 to 1)
+     */
+    public var lightnessHSLuv(get, set):Float;
+
+    private function get_hueHSLuv():Float
+    {
+        return _getOrCreateCachedHSLuvComponent(0);
+    }
+
+    inline private function set_hueHSLuv(hueHSLuv:Float):Float
+    {
+        setHSLuv(hueHSLuv, get_saturationHSLuv(), get_lightnessHSLuv());
+        return hueHSLuv;
+    }
+
+    private function get_saturationHSLuv():Float
+    {
+        return _getOrCreateCachedHSLuvComponent(1);
+    }
+
+    inline private function set_saturationHSLuv(saturationHSLuv:Float):Float
+    {
+        setHSLuv(get_hueHSLuv(), saturationHSLuv, get_lightnessHSLuv());
+        return saturationHSLuv;
+    }
+
+    private function get_lightnessHSLuv():Float
+    {
+        return _getOrCreateCachedHSLuvComponent(2);
+    }
+
+    inline private function set_lightnessHSLuv(lightnessHSLuv:Float):Float
+    {
+        setHSLuv(get_hueHSLuv(), get_saturationHSLuv(), lightnessHSLuv);
+        return lightnessHSLuv;
+    }
+
+    private inline function _getOrCreateCachedHSLuvComponent(index:Int):Float
+    {
+        var key:Int = this;
+        var entry:Int = _hsluvCacheMap.get(key);
+        if (entry == 0) {
+            entry = Std.int(_hsluvCacheValues.length / 3) + 1;
+            _hsluvCacheMap.set(key, entry);
+            getHSLuv(_hsluvResult);
+            _hsluvCacheValues.push(_hsluvResult[0]);
+            _hsluvCacheValues.push(_hsluvResult[1]);
+            _hsluvCacheValues.push(_hsluvResult[2]);
+        }
+        return _hsluvCacheValues[(entry-1)*3+index];
+    }
+
     /**
      * Generate a color from HSLuv components.
      *
