@@ -612,7 +612,11 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
             }
             _components.set(name, component);
             @:privateAccess component.setEntity(this);
-            var componentAsEntity:Entity = cast component;
+
+            // 2-step to Entity cast to avoid warning
+            var componentAsAny:Any = component;
+            var componentAsEntity:Entity = componentAsAny;
+
             componentAsEntity.onceDestroy(this, function(_) {
                 // Remove entity reference from component
                 if (@:privateAccess component.getEntity() == this) {
