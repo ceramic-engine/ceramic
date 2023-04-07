@@ -1,8 +1,10 @@
 package elements;
 
+import ceramic.Pool;
 #if !macro
 import ceramic.Assert.assert;
 import ceramic.AssetId;
+import ceramic.Assets;
 import ceramic.Click;
 import ceramic.Color;
 import ceramic.ColumnLayout;
@@ -128,6 +130,18 @@ class Im {
 
     static var _flex:Int = 1;
 
+    static var _assets:Assets = null;
+
+    static var _theme:Theme = null;
+
+    static var _themeTint:Color = Color.NONE;
+
+    static var _themeAltTint:Color = Color.NONE;
+
+    static var _themeTextColor:Color = Color.NONE;
+
+    static var _themeBackgroundColor:Color = Color.NONE;
+
     static var _pointerBaseHandles:Map<String,Int> = new Map();
 
     static var _pointerHandles:Map<String,Int> = new Map();
@@ -158,13 +172,25 @@ class Im {
 
     static var _changeChecks:Array<Bool> = [];
 
+    static var _themePool:Array<Theme> = null;
+
     @:allow(elements.ImSystem)
     static var _numUsedWindows:Int = 0;
+
+    static var _imTheme:Theme;
 
     public static function initIfNeeded():Void {
 
         if (context.view == null) {
             ImSystem.shared.createView();
+        }
+
+        if (_imTheme == null) {
+            _imTheme = new Theme();
+        }
+
+        if (_theme == null) {
+            _theme = _imTheme;
         }
 
     }
@@ -183,8 +209,24 @@ class Im {
 
     @:noCompletion public static function beginFrame():Void {
 
+        initIfNeeded();
+
+        _imTheme.backgroundInFormLayout = true;
+
         _usedWindowKeys.clear();
         _numUsedWindows = 0;
+        _assets = null;
+        _theme = _imTheme;
+        _themeTint = Color.NONE;
+        _themeAltTint = Color.NONE;
+        _themeBackgroundColor = Color.NONE;
+        _themeTextColor = Color.NONE;
+
+        if (_themePool != null) {
+            for (i in 0..._themePool.length) {
+                _themePool.unsafeGet(i)._used = false;
+            }
+        }
 
         while (_beginFrameCallbacks.length > 0) {
             var cb = _beginFrameCallbacks.pop();
@@ -203,7 +245,7 @@ class Im {
                 count--;
                 if (count < -DESTROY_ASSET_AFTER_X_FRAMES) {
                     _assetUses.remove(assetId);
-                    var assets = context.assets;
+                    var assets = _assets != null ? _assets : context.assets;
                     var asset = assets.asset(assetId);
                     if (asset != null) {
                         asset.destroy();
@@ -613,6 +655,11 @@ class Im {
         windowData.targetAnchorX = -999999999;
         windowData.targetAnchorY = -999999999;
 
+        // Set theme (can be changed with Im.theme())
+        windowData.theme = _theme;
+        if (window != null)
+            window.theme = _theme;
+
         // Make the window current
         _currentWindowData = windowData;
 
@@ -620,17 +667,35 @@ class Im {
 
     }
 
-    public static function beginTabs(selected:StringPointer):Bool {
+    // #if (display || completion)
+
+    // public extern inline static overload function beginTabs():Bool {
+
+    //     return _beginTabs(null);
+
+    // }
+
+    public extern inline static overload function beginTabs(selected:StringPointer):Bool {
+
+        return _beginTabs(selected);
+
+    }
+
+    // #end
+
+    private static function _beginTabs(selected:StringPointer):Bool {
 
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.disabled = _fieldsDisabled;
         item.kind = TABS;
         item.string0 = Im.readString(selected);
         item.string1 = item.string0;
         item.stringArray0 = [];
         item.stringArray1 = [];
+        item.anyArray0 = [];
         item.any0 = selected;
 
         windowData.addItem(item);
@@ -658,6 +723,9 @@ class Im {
     public static function endTabs():Void {
 
         assert(_currentTabBarItem.length > 0, 'beginTabs() must be called before endTabs()');
+
+        var tabItem = _currentTabBarItem[_currentTabBarItem.length - 1];
+        assert(tabItem.stringArray0.length > 0, 'there should be at least one tab() call between beginTabs() and endTabs()');
 
         _currentTabBarItem.pop();
 
@@ -687,6 +755,7 @@ class Im {
 
         tabItem.stringArray0.push(id);
         tabItem.stringArray1.push(title);
+        tabItem.anyArray0.push(_theme);
 
         if (tabItem.stringArray0.length == 1) {
             // First tab, set it default if there is no tab selected yet
@@ -773,6 +842,156 @@ class Im {
 
     }
 
+    public static extern inline overload function textColor():Void {
+        _themeTextColor = Color.NONE;
+        _updateTheme();
+    }
+
+    public static extern inline overload function textColor(color:Color):Void {
+        _themeTextColor = color;
+        _updateTheme();
+    }
+
+    public static extern inline overload function background():Void {
+        _themeBackgroundColor = Color.NONE;
+        _updateTheme();
+    }
+
+    public static extern inline overload function background(color:Color):Void {
+        _themeBackgroundColor = color;
+        _updateTheme();
+    }
+
+    public static extern inline overload function tint():Void {
+        _themeTint = Color.NONE;
+        _themeAltTint = Color.NONE;
+        _updateTheme();
+    }
+
+    public static extern inline overload function tint(tint:Color):Void {
+        _themeTint = tint;
+        _themeAltTint = tint;
+        _updateTheme();
+    }
+
+    public static extern inline overload function tint(tint:Color, altTint:Color):Void {
+        _themeTint = tint;
+        _themeAltTint = altTint;
+        _updateTheme();
+    }
+
+    private static function _updateTheme():Void {
+
+        initIfNeeded();
+
+        if (_themePool == null)
+            _themePool = [];
+
+        var resolvedTheme:Theme = null;
+
+        for (i in 0..._themePool.length) {
+            var theme = _themePool[i];
+            if (theme._tint == _themeTint && theme._altTint == _themeAltTint && theme._backgroundColor == _themeBackgroundColor && theme._textColor == _themeTextColor) {
+                theme._used = true;
+                resolvedTheme = theme;
+                break;
+            }
+        }
+
+        if (resolvedTheme == null) {
+            for (i in 0..._themePool.length) {
+                var theme = _themePool[i];
+                if (!theme._used) {
+                    theme._used = true;
+                    if (theme._tint != _themeTint || theme._altTint != _themeAltTint || theme._backgroundColor != _themeBackgroundColor || theme._textColor != _themeTextColor) {
+
+                        _imTheme.clone(theme);
+
+                        if (_themeTint != Color.NONE) {
+                            theme.applyTint(_themeTint);
+                        }
+                        theme._tint = _themeTint;
+
+                        if (_themeAltTint != Color.NONE) {
+                            theme.applyAltTint(_themeAltTint);
+                        }
+                        theme._altTint = _themeAltTint;
+
+                        if (_themeBackgroundColor != Color.NONE) {
+                            theme.applyBackgroundColor(_themeBackgroundColor);
+                        }
+                        theme._backgroundColor = _themeBackgroundColor;
+
+                        if (_themeTextColor != Color.NONE) {
+                            theme.applyTextColor(_themeTextColor);
+                        }
+                        theme._textColor = _themeTextColor;
+
+                    }
+                    resolvedTheme = theme;
+                    break;
+                }
+            }
+        }
+
+        if (resolvedTheme == null) {
+            var theme = new Theme();
+            theme._used = true;
+
+            _imTheme.clone(theme);
+
+            if (_themeTint != Color.NONE) {
+                theme.applyTint(_themeTint);
+            }
+            theme._tint = _themeTint;
+
+            if (_themeAltTint != Color.NONE) {
+                theme.applyAltTint(_themeAltTint);
+            }
+            theme._altTint = _themeAltTint;
+
+            if (_themeBackgroundColor != Color.NONE) {
+                theme.applyBackgroundColor(_themeBackgroundColor);
+            }
+            theme._backgroundColor = _themeBackgroundColor;
+
+            if (_themeTextColor != Color.NONE) {
+                theme.applyTextColor(_themeTextColor);
+            }
+            theme._textColor = _themeTextColor;
+
+            resolvedTheme = theme;
+        }
+
+        theme(resolvedTheme);
+
+    }
+
+    public static function assets(?assets:Assets):Void {
+
+        _assets = assets;
+
+    }
+
+    public static var defaultTheme(get,never):Theme;
+    static function get_defaultTheme():Theme {
+        initIfNeeded();
+        return _imTheme;
+    }
+
+    public static function theme(theme:Theme):Void {
+
+        initIfNeeded();
+
+        if (theme == null) {
+            theme = _imTheme;
+        }
+
+        _theme = theme;
+        _theme.backgroundInFormLayout = true;
+
+    }
+
     public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0):Void {
 
         var windowData = _currentWindowData;
@@ -783,6 +1002,16 @@ class Im {
         windowData.targetAnchorY = anchorY;
 
         windowData.movable = false;
+
+    }
+
+    public static function focus():Void {
+
+        var windowData = _currentWindowData;
+
+        if (windowData != null && windowData.window != null) {
+            screen.focusedVisual = windowData.window;
+        }
 
     }
 
@@ -837,17 +1066,26 @@ class Im {
 
     }
 
-    public static function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+    public static extern inline overload function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+        return _list(height, true, items, selected, sortable, lockable, trashable, duplicable);
+    }
+
+    public static extern inline overload function list(bigItems:Bool, height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+        return _list(height, !bigItems, items, selected, sortable, lockable, trashable, duplicable);
+    }
+
+    private static function _list(height:Float, smallItems:Bool, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
 
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = LIST;
         item.int0 = Im.readInt(selected);
         item.int1 = item.int0;
-        item.int2 = Flags.fromValues(sortable, lockable, trashable, duplicable).toInt();
+        item.int2 = Flags.fromValues(sortable, lockable, trashable, duplicable, smallItems).toInt();
         item.float0 = height;
         item.labelPosition = _labelPosition;
         item.labelWidth = _labelWidth;
@@ -925,6 +1163,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = SELECT;
@@ -999,6 +1238,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = CHECK;
@@ -1037,6 +1277,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_COLOR;
@@ -1071,6 +1312,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_TEXT;
@@ -1117,6 +1359,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_DIR;
@@ -1154,6 +1397,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_FILE;
@@ -1190,7 +1434,7 @@ class Im {
     #end
 
     public static function editInt(
-        #if completion
+        #if (display || completion)
         ?title:String, value:IntPointer, ?placeholder:String, ?minValue:Int, ?maxValue:Int
         #else
         ?title:String, value:IntPointer, ?placeholder:String, minValue:Int = INT_MIN_VALUE, maxValue:Int = INT_MAX_VALUE
@@ -1200,6 +1444,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_INT;
@@ -1233,7 +1478,7 @@ class Im {
     }
 
     public static function editFloat(
-        #if completion
+        #if (display || completion)
         ?title:String, value:FloatPointer, ?placeholder:String, ?minValue:Float, ?maxValue:Float, ?round:Int
         #else
         ?title:String, value:FloatPointer, ?placeholder:String, minValue:Float = FLOAT_MIN_VALUE, maxValue:Float = FLOAT_MAX_VALUE, round:Int = 1000
@@ -1243,6 +1488,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = EDIT_FLOAT;
@@ -1283,6 +1529,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = SLIDE_INT;
@@ -1321,6 +1568,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = SLIDE_FLOAT;
@@ -1358,6 +1606,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
@@ -1414,7 +1663,7 @@ class Im {
         }
         _assetUses.set(assetId, count + 1);
 
-        var assets = context.assets;
+        var assets = _assets != null ? _assets : context.assets;
         var texture = assets.texture(assetId);
         if (texture == null) {
             var imageAsset = assets.asset(assetId);
@@ -1438,6 +1687,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
@@ -1497,6 +1747,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
@@ -1549,6 +1800,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = VISUAL;
@@ -1627,11 +1879,20 @@ class Im {
 
     #end
 
+    public static function margin():Void {
+
+        initIfNeeded();
+
+        space(-_theme.formItemSpacing / 2);
+
+    }
+
     public static function space(height:Float = DEFAULT_SPACE_HEIGHT):Void {
 
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.kind = SPACE;
         item.float0 = height;
@@ -1646,6 +1907,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.kind = SEPARATOR;
         item.float0 = height;
@@ -1672,6 +1934,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = BUTTON;
@@ -1701,6 +1964,7 @@ class Im {
         var windowData = _currentWindowData;
 
         var item = WindowItem.get();
+        item.theme = _theme;
         item.flex = _flex;
         item.disabled = _fieldsDisabled;
         item.kind = TEXT;
@@ -1749,6 +2013,16 @@ class Im {
                     }
                 }
             }
+
+            if (window != null && windowData.targetX != -999999999) {
+                // We update window after we are sure its content layout is done
+                ViewSystem.shared.onceEndLateUpdate(window, function(delta) {
+                    windowData.x = windowData.targetX - windowData.targetAnchorX * window.width;
+                    windowData.y = windowData.targetY - windowData.targetAnchorY * window.height;
+                    window.x = windowData.x;
+                    window.y = windowData.y;
+                });
+            }
         }
         else {
             window.closable = windowData.closable;
@@ -1779,6 +2053,16 @@ class Im {
                             }
                         }
                     }
+                }
+
+                if (window != null && windowData.targetX != -999999999) {
+                    // We update window after we are sure its content layout is done
+                    ViewSystem.shared.onceEndLateUpdate(window, function(delta) {
+                        windowData.x = windowData.targetX - windowData.targetAnchorX * window.width;
+                        windowData.y = windowData.targetY - windowData.targetAnchorY * window.height;
+                        window.x = windowData.x;
+                        window.y = windowData.y;
+                    });
                 }
             }
             else {
@@ -1847,6 +2131,7 @@ class Im {
 
                 if (form != null) {
                     form.tabFocus.focusRoot = window;
+                    form.theme = windowData.theme;
                 }
 
                 var windowItems = windowData.items;
@@ -3039,6 +3324,21 @@ class Im {
 
     }
 
+    // #if !(completion || display)
+    // macro public static function beginTabs(?value:Expr):Expr {
+
+    //     return switch value.expr {
+    //         case EConst(CIdent('null')):
+    //             macro @:privateAccess elements.Im._beginTabs(Im.string());
+    //         case _:
+    //             macro @:privateAccess elements.Im._beginTabs($value);
+    //     }
+
+    //     return macro null;
+
+    // }
+    // #end
+
     macro public static function string(?value:ExprOf<String>):Expr {
 
         if (Context.defined('cs')) {
@@ -3113,7 +3413,7 @@ class Im {
                 }
             case _:
                 macro function(?_val:Array<Dynamic>, ?erase:Bool):Array<Dynamic> {
-                    return _val != null || erase ? $value = _val : $value;
+                    return _val != null || erase ? $value = cast _val : $value;
                 };
         }
 

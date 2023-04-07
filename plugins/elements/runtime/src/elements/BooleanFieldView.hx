@@ -9,6 +9,8 @@ import tracker.Observable;
 
 class BooleanFieldView extends FieldView {
 
+    @observe public var theme:Theme = null;
+
     var switchContainer:View;
 
     var switchSquare:View;
@@ -142,7 +144,9 @@ class BooleanFieldView extends FieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (inputStyle == OVERLAY || inputStyle == MINIMAL) {
             switchContainer.transparent = true;

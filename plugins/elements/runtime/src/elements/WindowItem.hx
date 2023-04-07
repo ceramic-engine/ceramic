@@ -42,6 +42,8 @@ class WindowItem {
 
     public var previous:WindowItem = null;
 
+    public var theme:Theme = null;
+
     public var int0:Int = 0;
 
     public var int1:Int = 0;
@@ -97,6 +99,8 @@ class WindowItem {
     public var stringArray0:Array<String> = null;
 
     public var stringArray1:Array<String> = null;
+
+    public var anyArray0:Array<Any> = null;
 
     public var row:Int = -1;
 
@@ -264,6 +268,7 @@ class WindowItem {
         int2 = 0;
         labelPosition = 0;
         disabled = false;
+        theme = null;
         flex = 1;
         float0 = 0;
         float1 = 0;
@@ -286,6 +291,7 @@ class WindowItem {
         any5 = null;
         stringArray0 = null;
         stringArray1 = null;
+        anyArray0 = null;
         if (visual != null && visual.parent == null) {
             visual.active = false;
         }
@@ -320,6 +326,7 @@ class WindowItem {
             separator = new Separator();
         }
 
+        separator.theme = theme;
         separator.viewHeight = float0;
         separator.viewWidth = ViewSize.fill();
 
@@ -420,6 +427,7 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
             labeled.labelWidth = labelWidth;
+            labeled.theme = theme;
             switch labeled.labelPosition {
                 case LEFT: field.align = LEFT;
                 case RIGHT: field.align = RIGHT;
@@ -435,6 +443,7 @@ class WindowItem {
         field.data = this;
         field.list = stringArray0;
         field.nullValueText = string1;
+        field.theme = theme;
         if (justCreated) {
             field.setValue = _selectSetIntValue;
         }
@@ -471,6 +480,7 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
             labeled.labelWidth = labelWidth;
+            labeled.theme = theme;
         }
         else {
             field = (view != null ? cast view : null);
@@ -480,6 +490,7 @@ class WindowItem {
             }
         }
         field.data = this;
+        field.theme = theme;
         var intValue = field.value ? 1 : 0;
         if (intValue != int0) {
             field.value = int0 != 0 ? true : false;
@@ -529,6 +540,7 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
             labeled.labelWidth = labelWidth;
+            labeled.theme = theme;
         }
         else {
             field = (view != null ? cast view : null);
@@ -540,6 +552,7 @@ class WindowItem {
 
         var previous = field.windowItem();
         field.data = this;
+        field.theme = theme;
 
         if (justCreated) {
             field.setValue = _editColorSetValue;
@@ -593,6 +606,7 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
             labeled.labelWidth = labelWidth;
+            labeled.theme = theme;
         }
         else {
             field = (view != null ? cast view : null);
@@ -604,6 +618,7 @@ class WindowItem {
 
         var previous = field.windowItem();
         field.data = this;
+        field.theme = theme;
 
         if (kind == EDIT_TEXT) {
             if (justCreated) {
@@ -832,6 +847,7 @@ class WindowItem {
             labeled.label = string2;
             labeled.labelPosition = labelPosition;
             labeled.labelWidth = labelWidth;
+            labeled.theme = theme;
         }
         else {
             field = (view != null ? cast view : null);
@@ -843,6 +859,7 @@ class WindowItem {
 
         var previous = field.windowItem();
         field.data = this;
+        field.theme = theme;
 
         if (kind == SLIDE_FLOAT) {
 
@@ -940,6 +957,7 @@ class WindowItem {
         };
         text.disabled = disabled;
         text.viewWidth = ViewSize.fill();
+        text.theme = theme;
         return text;
 
     }
@@ -969,6 +987,7 @@ class WindowItem {
         }
         button.disabled = disabled;
         button.viewWidth = ViewSize.fill();
+        button.theme = theme;
         return button;
 
     }
@@ -992,9 +1011,11 @@ class WindowItem {
         list.lockable = flags.bool(1);
         list.trashable = flags.bool(2);
         list.duplicable = flags.bool(3);
+        list.smallItems = flags.bool(4);
         list.items = any0;
         list.data = this;
         list.selectedIndex = int0;
+        list.theme = theme;
         if (justCreated) {
             list.onSelectedIndexChange(null, (selectedIndex, _) -> {
                 var windowItem:WindowItem = list.hasData ? list.data : null;
@@ -1156,8 +1177,12 @@ class WindowItem {
         if (!Equal.equal(tabs.tabs, stringArray1)) {
             tabs.tabs = stringArray1;
         }
+        if (!Equal.equal(tabs.tabThemes, anyArray0)) {
+            tabs.tabThemes = cast anyArray0;
+        }
         tabs.selectedIndex = stringArray0.indexOf(string0);
         tabs.marginX = context.theme.formPadding;
+        tabs.marginY = context.theme.formPadding * 0.5;
 
         if (justCreated) {
 
@@ -1175,6 +1200,7 @@ class WindowItem {
         }
 
         tabs.viewWidth = ViewSize.fill();
+        tabs.theme = theme;
 
         return tabs;
 

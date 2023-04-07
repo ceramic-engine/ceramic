@@ -17,6 +17,8 @@ import tracker.Observable;
 
 class SelectListView extends View implements CollectionViewDataSource implements Observable {
 
+    @observe public var theme:Theme = null;
+
     @event function valueClick(value:String);
 
     public static final ITEM_HEIGHT = 26;
@@ -168,6 +170,14 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
         });
 
+        cell.autorun(function() {
+
+            var theme = this.theme;
+            unobserve();
+            cell.theme = theme;
+
+        });
+
         var click = new Click();
         cell.component('click', click);
         click.onClick(cell, function() {
@@ -190,7 +200,9 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         color = Color.interpolate(theme.darkBackgroundColor, Color.BLACK, 0.1);
 

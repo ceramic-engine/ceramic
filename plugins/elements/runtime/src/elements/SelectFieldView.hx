@@ -20,6 +20,8 @@ using StringTools;
 
 class SelectFieldView extends FieldView {
 
+    @observe public var theme:Theme = null;
+
     static var _point = new Point();
 
     static final MAX_LIST_HEIGHT = 200;
@@ -320,7 +322,9 @@ class SelectFieldView extends FieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         container.color = theme.darkBackgroundColor;
 
@@ -473,6 +477,11 @@ class SelectFieldView extends FieldView {
 
             if (listView == null) {
                 listView = new SelectListView();
+                listView.autorun(() -> {
+                    var theme = this.theme;
+                    unobserve();
+                    listView.theme = theme;
+                });
                 listView.depth = 10;
                 listView.value = this.value;
                 listView.list = this.list;

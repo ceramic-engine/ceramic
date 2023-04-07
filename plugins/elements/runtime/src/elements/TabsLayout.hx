@@ -18,6 +18,8 @@ using ceramic.Extensions;
 
 class TabsLayout extends RowLayout implements Observable {
 
+    @observe public var theme:Theme = null;
+
     public var marginX(default, set):Float = 0;
     function set_marginX(marginX:Float):Float {
         if (this.marginX != marginX) {
@@ -27,9 +29,20 @@ class TabsLayout extends RowLayout implements Observable {
         return marginX;
     }
 
+    public var marginY(default, set):Float = 0;
+    function set_marginY(marginY:Float):Float {
+        if (this.marginY != marginY) {
+            this.marginY = marginY;
+            layoutDirty = true;
+        }
+        return marginY;
+    }
+
     @observe public var selectedIndex:Int = -1;
 
     @observe public var tabs:ReadOnlyArray<String> = [];
+
+    @observe public var tabThemes:ReadOnlyArray<Theme> = [];
 
     @observe var tabViews:Array<TextView> = [];
 
@@ -41,6 +54,14 @@ class TabsLayout extends RowLayout implements Observable {
 
     var afterBorder:Quad;
 
+    var beforeSelectedBackground:Quad = null;
+
+    var afterSelectedBackground:Quad = null;
+
+    var topBackground:Quad = null;
+
+    var bottomBackground:Quad = null;
+
     public function new() {
 
         super();
@@ -48,6 +69,7 @@ class TabsLayout extends RowLayout implements Observable {
         viewHeight = 27;
         transparent = true;
         itemSpacing = -1;
+        childrenDepth = CUSTOM;
 
         beforeBorder = new Quad();
         beforeBorder.transparent = false;
@@ -115,6 +137,13 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    @:keep
+    function renderWindowBackground():Bool {
+
+        return true;
+
+    }
+
     function initTabView(index:Int, tabView:TextView) {
 
         tabView.onPointerOver(this, _ -> {
@@ -143,6 +172,34 @@ class TabsLayout extends RowLayout implements Observable {
     override function layout() {
 
         super.layout();
+
+        if (selectedIndex >= 0 && tabViews != null && tabViews.length > 0) {
+            var selectedTabView = tabViews.unsafeGet(selectedIndex);
+            selectedTabView.depth = tabViews.length;
+            var i = selectedIndex - 1;
+            var d = selectedTabView.depth - 1;
+            while (i >= 0) {
+                tabViews.unsafeGet(i).depth = d;
+                i--;
+                d--;
+            }
+            i = selectedIndex + 1;
+            var d = selectedTabView.depth - 1;
+            while (i < tabViews.length) {
+                tabViews.unsafeGet(i).depth = d;
+                i++;
+                d--;
+            }
+        }
+        else if (tabViews != null && tabViews.length > 0) {
+            var i = tabViews.length - 1;
+            var d = 1;
+            while (i >= 0) {
+                tabViews.unsafeGet(i).depth = d;
+                i--;
+                d++;
+            }
+        }
 
         if (selectedIndex >= 0 && tabViews.length > selectedIndex) {
             var selectedTabView = tabViews.unsafeGet(selectedIndex);
@@ -173,48 +230,148 @@ class TabsLayout extends RowLayout implements Observable {
             afterBorder.size(marginX + width - afterX, 1);
         }
 
+        if (selectedIndex >= 0 && tabViews != null && tabViews.length > 0) {
+            var selectedTabView = tabViews.unsafeGet(selectedIndex);
+            if (beforeSelectedBackground != null) {
+                beforeSelectedBackground.pos(-marginX, 0);
+                beforeSelectedBackground.size(marginX + selectedTabView.x, height);
+            }
+            if (afterSelectedBackground != null) {
+                afterSelectedBackground.pos(selectedTabView.x + selectedTabView.width, 0);
+                afterSelectedBackground.size(marginX + width - selectedTabView.x - selectedTabView.width, height);
+            }
+        }
+        else {
+            if (beforeSelectedBackground != null) {
+                beforeSelectedBackground.pos(-marginX, 0);
+                beforeSelectedBackground.size(marginX * 2 + width, height);
+            }
+            if (afterSelectedBackground != null) {
+                afterSelectedBackground.pos(0, 0);
+                afterSelectedBackground.size(0, 0);
+            }
+        }
+
+        if (topBackground != null) {
+            topBackground.pos(-marginX, -marginY);
+            topBackground.size(marginX * 2 + width, marginY);
+        }
+        if (bottomBackground != null) {
+            bottomBackground.pos(-marginX, height);
+            bottomBackground.size(marginX * 2 + width, marginY);
+        }
+
     }
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
+        var selectedTheme = theme;
 
         var selectedIndex = this.selectedIndex;
         var hoverIndex = this.hoverIndex;
 
+        var backgroundInFormLayout = theme.backgroundInFormLayout;
+
         if (tabViews != null) {
             for (i in 0...tabViews.length) {
                 var tabView = tabViews.unsafeGet(i);
+                var tabTheme = tabThemes[i];
+                if (tabTheme == null)
+                    tabTheme = theme;
 
                 tabView.borderLeftSize = 1;
                 tabView.borderRightSize = 1;
                 tabView.borderTopSize = 1;
                 tabView.borderBottomSize = 0;
                 tabView.borderPosition = INSIDE;
-                tabView.borderColor = theme.tabsBorderColor;
+                tabView.borderColor = tabTheme.tabsBorderColor;
 
                 if (i == selectedIndex) {
-                    tabView.textColor = theme.lightTextColor;
-                    tabView.transparent = true;
-                    tabView.alpha = 1;
+                    tabView.textColor = tabTheme.lightTextColor;
+                    if (theme.backgroundInFormLayout) {
+                        tabView.transparent = false;
+                        tabView.alpha = tabTheme.windowBackgroundAlpha;
+                        tabView.color = tabTheme.windowBackgroundColor;
+                    }
+                    else {
+                        tabView.transparent = true;
+                        tabView.alpha = 1;
+                    }
+                    selectedTheme = tabTheme;
                 }
                 else if (i == hoverIndex) {
-                    tabView.textColor = theme.mediumTextColor;
+                    tabView.textColor = tabTheme.mediumTextColor;
                     tabView.transparent = false;
-                    tabView.alpha = theme.tabsHoverBackgroundAlpha;
-                    tabView.color = theme.tabsHoverBackgroundColor;
+                    tabView.alpha = tabTheme.tabsHoverBackgroundAlpha;
+                    tabView.color = tabTheme.tabsHoverBackgroundColor;
                 }
                 else {
-                    tabView.textColor = theme.darkTextColor;
+                    tabView.textColor = tabTheme.darkTextColor;
                     tabView.transparent = false;
-                    tabView.alpha = theme.tabsBackgroundAlpha;
-                    tabView.color = theme.tabsBackgroundColor;
+                    tabView.alpha = tabTheme.tabsBackgroundAlpha;
+                    tabView.color = tabTheme.tabsBackgroundColor;
                 }
             }
         }
 
-        beforeBorder.color = theme.tabsBorderColor;
-        afterBorder.color = theme.tabsBorderColor;
+        beforeBorder.color = selectedTheme.tabsBorderColor;
+        afterBorder.color = selectedTheme.tabsBorderColor;
+
+        if (backgroundInFormLayout) {
+            unobserve();
+            if (beforeSelectedBackground == null) {
+                beforeSelectedBackground = new Quad();
+                beforeSelectedBackground.depth = 0.5;
+                add(beforeSelectedBackground);
+            }
+            if (afterSelectedBackground == null) {
+                afterSelectedBackground = new Quad();
+                afterSelectedBackground.depth = 0.5;
+                add(afterSelectedBackground);
+            }
+            if (topBackground == null) {
+                topBackground = new Quad();
+                topBackground.depth = 0.5;
+                add(topBackground);
+            }
+            if (bottomBackground == null) {
+                bottomBackground = new Quad();
+                bottomBackground.depth = 0.5;
+                add(bottomBackground);
+            }
+            reobserve();
+            beforeSelectedBackground.alpha = theme.windowBackgroundAlpha;
+            beforeSelectedBackground.color = theme.windowBackgroundColor;
+            afterSelectedBackground.alpha = theme.windowBackgroundAlpha;
+            afterSelectedBackground.color = theme.windowBackgroundColor;
+            topBackground.alpha = theme.windowBackgroundAlpha;
+            topBackground.color = theme.windowBackgroundColor;
+            bottomBackground.alpha = selectedTheme.windowBackgroundAlpha;
+            bottomBackground.color = selectedTheme.windowBackgroundColor;
+        }
+        else {
+            unobserve();
+            if (beforeSelectedBackground != null) {
+                beforeSelectedBackground.destroy();
+                beforeSelectedBackground = null;
+            }
+            if (afterSelectedBackground != null) {
+                afterSelectedBackground.destroy();
+                afterSelectedBackground = null;
+            }
+            if (topBackground != null) {
+                topBackground.destroy();
+                topBackground = null;
+            }
+            if (bottomBackground != null) {
+                bottomBackground.destroy();
+                bottomBackground = null;
+            }
+            reobserve();
+        }
 
     }
 

@@ -37,6 +37,8 @@ class ListView extends View implements Observable {
         return dataSource;
     }
 
+    @observe public var theme:Theme = null;
+
     @observe public var items:Array<Dynamic>;
 
     @observe public var selectedIndex:Int = -1;
@@ -49,6 +51,8 @@ class ListView extends View implements Observable {
 
     @observe public var sortable:Bool = false;
 
+    @observe public var smallItems:Bool = false;
+
     public var autoCheckLocked:Bool = true;
 
     public function new(items:Array<Dynamic>) {
@@ -60,6 +64,11 @@ class ListView extends View implements Observable {
         collectionView = new CellCollectionView();
         collectionView.itemsBehavior = RECYCLE;
         collectionView.viewSize(fill(), percent(25));
+        collectionView.autorun(() -> {
+            var theme = this.theme;
+            unobserve();
+            collectionView.theme = theme;
+        });
         add(collectionView);
 
         dataSource = new ListViewDataSource(this);
@@ -73,10 +82,15 @@ class ListView extends View implements Observable {
     function updateFromItems() {
 
         var items = this.items;
+        var smallItems = this.smallItems;
 
         unobserve();
 
         collectionView.reloadData();
+        collectionView.onceLayout(this, () -> {
+            collectionView.scroller.scrollToBounds();
+        });
+        collectionView.layoutDirty = true;
 
         reobserve();
 
@@ -160,7 +174,7 @@ class ListViewDataSource implements CollectionViewDataSource {
     public function collectionViewItemFrameAtIndex(collectionView:CollectionView, itemIndex:Int, frame:CollectionViewItemFrame):Void {
 
         frame.width = collectionView.width - 12;
-        frame.height = 39; // TODO adapt depending on kind of list item
+        frame.height = listView.smallItems ? 30 : 39; // TODO adapt depending on kind of list item
 
     }
 
@@ -209,12 +223,21 @@ class ListViewDataSource implements CollectionViewDataSource {
             }
             else {
                 cell.title = Reflect.getProperty(item, 'title');
-                cell.subTitle = Reflect.getProperty(item, 'subTitle');
+                cell.subTitle = listView.smallItems ? null : Reflect.getProperty(item, 'subTitle');
                 cell.locked = (Reflect.getProperty(item, 'locked') == true);
             }
             cell.selected = (cell.itemIndex == listView.selectedIndex);
 
         });
+
+        cell.autorun(function() {
+
+            var theme = listView.theme;
+            unobserve();
+            cell.theme = theme;
+
+        });
+
 
         var click = new Click();
         cell.component('click', click);

@@ -3,8 +3,11 @@ package elements;
 import ceramic.Quad;
 import ceramic.View;
 import elements.Context.context;
+import tracker.Observable;
 
-class Separator extends View {
+class Separator extends View implements Observable {
+
+    @observe public var theme:Theme = null;
 
     public var thickness(default, set):Float = 1;
     function set_thickness(thickness:Float):Float {
@@ -39,7 +42,9 @@ class Separator extends View {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         quad.color = theme.mediumBorderColor;
 

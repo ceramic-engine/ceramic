@@ -8,6 +8,8 @@ import tracker.Observable;
 
 class Scrollbar extends Visual implements Observable {
 
+    @observe public var theme:Theme = null;
+
     @observe var hover:Bool = false;
 
     @observe var pressed:Bool = false;
@@ -75,7 +77,9 @@ class Scrollbar extends Visual implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (pressed) {
             quad.color = Color.interpolate(theme.lightBackgroundColor, theme.darkTextColor, 0.5);

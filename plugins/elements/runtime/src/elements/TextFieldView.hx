@@ -24,6 +24,8 @@ using StringTools;
 
 class TextFieldView extends BaseTextFieldView {
 
+    @observe public var theme:Theme = null;
+
 /// Overrides
 
     override function didLostFocus() {
@@ -103,7 +105,9 @@ class TextFieldView extends BaseTextFieldView {
 
         switch kind {
             case TEXT | NUMERIC:
-                var theme = context.theme;
+                var theme = this.theme;
+                if (theme == null)
+                    theme = context.theme;
                 editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
                 editText.container = this;
                 textView.text.component('editText', editText);
@@ -218,7 +222,9 @@ class TextFieldView extends BaseTextFieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;
