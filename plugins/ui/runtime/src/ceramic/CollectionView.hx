@@ -231,7 +231,7 @@ class CollectionView extends ScrollView {
                     else if (childrenDepth == DECREMENT) {
                         view.depth = frames.length - itemIndex;
                     }
-                    else {
+                    else if (childrenDepth == SAME) {
                         view.depth = 1;
                     }
                     var prevWidth = view.width;
