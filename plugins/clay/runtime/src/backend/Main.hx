@@ -128,7 +128,14 @@ class Main {
         }
         #end
 
-        project = @:privateAccess new Project(ceramic.App.init());
+        var settings = ceramic.App.init();
+
+        #if mac
+        // Because vsync doesn't seem to work
+        settings.targetFps = 60;
+        #end
+
+        project = @:privateAccess new Project(settings);
         app = @:privateAccess ceramic.App.app;
 
         #if (web && plugin_bridge)
