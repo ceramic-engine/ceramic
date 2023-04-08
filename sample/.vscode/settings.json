@@ -1,13 +1,11 @@
 {
-    "haxe.displayConfigurations": [
-        [
-            "completion.hxml"
-        ]
-    ],
+    "window.title": "${activeEditorShort} — sample",
     "search.exclude": {
         "**/.git": true,
         "**/node_modules": true,
         "**/tmp": true,
         "**/out": true
-    }
+    },
+    "haxe.executable": "../tools/haxe",
+    "haxelib.executable": "../tools/haxelib"
 }

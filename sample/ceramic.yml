@@ -1,31 +1,68 @@
 app:
-    package: mycompany.Sample
-    name: Sample
-    displayName: Sample
+    package: mycompany.sample
+    name: sample
+    displayName: sample
     author: My Company
     version: '1.0'
 
-    defines:
-        - ceramic_no_skip
-        - plugin_arcade
-        # - ceramic_debug_draw
-        # - ceramic_debug_draw_backend
-        # - ceramic_debug_unsafe
-        # - ceramic_no_multitexture
-        # - clay_debug
-        # - clay_debug_unsafe
-
     plugins:
-        - clay
-        - tilemap
-        - ldtk
-        - spine
-        - nape
+
+        # Uncomment plugins you want to enable
+
+        # Arcade physics
         - arcade
-        - elements
-        - ui
-        - electron
-        - midi
-        - bridge
-        - sprite
+
+        # Nape physics
+        - nape
+
+        # Support of .ase/.aseprite files
         - ase
+
+        # Sprite support (requires ase plugin to create sprites from .ase/.aseprite files)
+        - ldtk
+
+        # Tilemap support (.tmx/.tsx loading included, requires ldtk plugin to create tilemaps from .ldtk files)
+        - tilemap
+
+        # LDtk support (requires tilemap and ase plugins)
+        - ldtk
+
+        # HTTP client
+        - http
+
+        # UI-related classes
+        - ui
+
+        # Immediate GUI utility (requires ui plugin)
+        - elements
+
+        # Gif capture utility
+        - gif
+
+        # Native dialogs
+        - dialogs
+
+        # Extended support of Electron
+        - electron
+
+        # Spine animation support
+        - spine
+
+        # Dear ImGui support (clay backend only)
+        - imgui
+
+        # Midi support (experimental, clay backend only)
+        - midi
+
+        # Add entity runtime scripting support: entity.scriptContent = ...
+        - script
+
+    libs:
+        #- somelib
+        #- somelib: someversion
+        #- somelib: git:https://github.com/somelibauthor/somelib.git
+
+    defines:
+        #- some_define
+        #- some_define: 'some value'
+

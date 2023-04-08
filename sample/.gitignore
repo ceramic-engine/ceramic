@@ -1,8 +1,4 @@
+.DS_Store
+.haxelib
 /out
-/.haxelib
-/project/web
-/project/mac
-/project/windows
-/project/android
-/project/ios
-/project/unity
+/completion.hxml
