@@ -1,12 +1,11 @@
 package backend.tools;
 
-import tools.Helpers.*;
-import tools.Images;
-import tools.Files;
 import haxe.io.Path;
-
 import sys.FileSystem;
 import sys.io.File;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Images;
 
 using StringTools;
 
@@ -180,7 +179,7 @@ class BackendTools implements tools.spec.BackendTools {
         var requiredLibs = backend.tools.tasks.Setup.requiredLibs;
 
         for (lib in requiredLibs) {
-            haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+            ensureHaxelibDevToCeramicGit(lib, cwd);
         }
 
         // Check that required libs are available
@@ -207,7 +206,7 @@ class BackendTools implements tools.spec.BackendTools {
         var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         var assetsChanged = false;
-        
+
         var assetsPrefix = '';
         if (context.defines.get('ceramic_assets_prefix') != null) {
             assetsPrefix = context.defines.get('ceramic_assets_prefix');
@@ -317,7 +316,7 @@ class BackendTools implements tools.spec.BackendTools {
 
             case 'linux':
                 // Icon needs to be generated manually for now
-            
+
             case 'windows':
                 outIconsPath = Path.join([cwd, 'project/windows']);
                 toTransform.push({
@@ -325,7 +324,7 @@ class BackendTools implements tools.spec.BackendTools {
                     width: 256,
                     height: 256
                 });
-            
+
             case 'web':
                 outIconsPath = Path.join([cwd, 'project/web']);
                 toTransform.push({
@@ -339,7 +338,7 @@ class BackendTools implements tools.spec.BackendTools {
                     height: 128,
                     flat: true
                 });
-            
+
             case 'ios':
                 // Might move this to ios plugin later
                 outIconsPath = Path.join([cwd, 'project/ios/project/Images.xcassets/AppIcon.appiconset']);
@@ -469,7 +468,7 @@ class BackendTools implements tools.spec.BackendTools {
                     height: 1024,
                     flat: true
                 });
-            
+
             case 'android':
                 // Might move this to android plugin later
                 outIconsPath = Path.join([cwd, 'project/android/app/src/main/res']);

@@ -24,7 +24,7 @@ function postInstall() {
     spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcpp', '4.2.1', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcpp', '4.3.2', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
 
@@ -68,7 +68,7 @@ function postInstall() {
     if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
         console.log("Patch hxcpp mac toolchain");
         if (indexOfMacosXVersion == -1) {
-            macToolchain = macToolchain.split('<flag value="-m64" if="HXCPP_M64"/>').join('<flag value="-m64" if="HXCPP_M64"/><flag value="-mmacosx-version-min=10.10"/>');
+            macToolchain = macToolchain.split('<flag value="Cocoa"/>').join('<flag value="Cocoa"/><flag value="-mmacosx-version-min=10.10"/>');
         }
         if (indexOfDeploymentTarget == -1) {
             macToolchain = macToolchain.split('<setenv name="MACOSX_DEPLOYMENT_TARGET"').join('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');

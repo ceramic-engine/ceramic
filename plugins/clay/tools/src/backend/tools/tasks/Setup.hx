@@ -47,7 +47,7 @@ class Setup extends tools.Task {
     override function run(cwd:String, args:Array<String>):Void {
 
         var updateFramework = args.indexOf('--update-framework') != -1;
-        checkFrameworkSetup(updateFramework);
+        checkFrameworkSetup(updateFramework, cwd);
 
         var project = new tools.Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
@@ -275,7 +275,7 @@ ${haxeflagsHxml.join('\n')}
 
     }
 
-    function checkFrameworkSetup(forceSetup:Bool = false):Void {
+    function checkFrameworkSetup(forceSetup:Bool = false, cwd:String):Void {
 
         // Almost the same thing as backend.runUpdate()
 
@@ -300,7 +300,7 @@ ${haxeflagsHxml.join('\n')}
         }
 
         for (lib in requiredLibs) {
-            haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+            ensureHaxelibDevToCeramicGit(lib, cwd);
             libs.set(lib, true);
         }
 
