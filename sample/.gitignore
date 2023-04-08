@@ -2,3 +2,4 @@
 .haxelib
 /out
 /completion.hxml
+/project/

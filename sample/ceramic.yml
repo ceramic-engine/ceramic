@@ -65,4 +65,5 @@ app:
     defines:
         #- some_define
         #- some_define: 'some value'
+        - ceramic_no_skip
 
