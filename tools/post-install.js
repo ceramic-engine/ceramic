@@ -79,6 +79,22 @@ function postInstall() {
         fs.writeFileSync(macToolchainPath, macToolchain);
     }
 
+    // Patch some HXCPP C++ files with a ::cpp::Int64 fix (until the fix gets released)
+    console.log("Patch ::cpp::Int64 in C++ files");
+    var hxcppInt64PathList = [
+        path.join(hxcppPath, 'include/Array.h'),
+        path.join(hxcppPath, 'include/Dynamic.h'),
+        path.join(hxcppPath, 'include/hx/Class.h'),
+        path.join(hxcppPath, 'src/Array.cpp')
+    ];
+    for (hxcppInt64Path of hxcppInt64PathList) {
+        var cppData = '' + fs.readFileSync(hxcppInt64Path);
+        var newCppData = cppData.split('<::cpp::Int64>').join('< ::cpp::Int64>');
+        if (cppData != newCppData) {
+            fs.writeFileSync(hxcppInt64Path, newCppData);
+        }
+    }
+
     // Patch haxe std with ceramic's overrides
     /*var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');
     var overrideHaxeStdDir = path.join(__dirname, '../haxe/std');
