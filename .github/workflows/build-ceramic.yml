@@ -218,7 +218,7 @@ jobs:
 
   build-ceramic-linux:
     needs: setup-release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -316,7 +316,7 @@ jobs:
 
   generate-api-docs:
     needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Dispatch event
         uses: ceramic-engine/repository-dispatch@v1
