@@ -1,8 +1,8 @@
 package tools.tasks.ios;
 
-import tools.Helpers.*;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -40,15 +40,16 @@ class Compile extends tools.Task {
             if (!context.colors) {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
+            if (simulator) {
+                hxcppArgs.push('-Dsimulator');
+            }
             switch (arch) {
                 case 'armv7':
                     hxcppArgs.push('-DHXCPP_ARMV7');
                 case 'arm64':
                     hxcppArgs.push('-DHXCPP_ARM64');
                 case 'x86' | 'i386':
-                    hxcppArgs.push('-Dsimulator');
                 case 'x86_64':
-                    hxcppArgs.push('-Dsimulator');
                     hxcppArgs.push('-DHXCPP_M64');
                 default:
                     warning('Unsupported ios arch: $arch');
@@ -64,17 +65,29 @@ class Compile extends tools.Task {
 
         // Combine binaries
         //
-        var allBinaries = debug ? [
-            'libMain-debug.iphoneos-v7.a',
-            'libMain-debug.iphoneos-64.a',
-            'libMain-debug.iphonesim.a',
-            'libMain-debug.iphonesim-64.a'
-        ] : [
-            'libMain.iphoneos-v7.a',
-            'libMain.iphoneos-64.a',
-            'libMain.iphonesim.a',
-            'libMain.iphonesim-64.a'
-        ];
+        var allBinaries = [];
+        if (debug) {
+            if (simulator) {
+                allBinaries.push('libMain-debug.iphonesim.a');
+                allBinaries.push('libMain-debug.iphonesim-64.a');
+                allBinaries.push('libMain-debug.iphonesim-arm64.a');
+            }
+            else {
+                allBinaries.push('libMain-debug.iphoneos-v7.a');
+                allBinaries.push('libMain-debug.iphoneos-64.a');
+            }
+        }
+        else {
+            if (simulator) {
+                allBinaries.push('libMain.iphonesim.a');
+                allBinaries.push('libMain.iphonesim-64.a');
+                allBinaries.push('libMain.iphonesim-arm64.a');
+            }
+            else {
+                allBinaries.push('libMain.iphoneos-v7.a');
+                allBinaries.push('libMain.iphoneos-64.a');
+            }
+        }
 
         // Combine
         var lipoArgs = [
