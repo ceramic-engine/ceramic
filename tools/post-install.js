@@ -80,7 +80,7 @@ function postInstall() {
     }
 
     // Patch some HXCPP C++ files with a ::cpp::Int64 fix (until the fix gets released)
-    console.log("Patch ::cpp::Int64 in C++ files");
+    console.log("Patch <::cpp::Int64> in C++ files");
     var hxcppInt64PathList = [
         path.join(hxcppPath, 'include/Array.h'),
         path.join(hxcppPath, 'include/Dynamic.h'),
