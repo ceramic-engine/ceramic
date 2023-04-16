@@ -21,6 +21,7 @@ class Compile extends tools.Task {
             context.defines.set('ios', '');
         }
 
+        var simulator = extractArgFlag(args, 'simulator');
         var archs = extractArgValue(args, 'archs');
         if (archs == null || archs.trim() == '') {
             fail('Missing argument --archs (usage: --archs armv7,arm64)');
