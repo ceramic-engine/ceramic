@@ -89,11 +89,26 @@ class Settings implements Observable {
     /**
      * Override app update delta time.
      * This can be used to ignore completely the actual elapsed time between frames
-     * and replaced it with an explicit delta time of your choice.
+     * and replace it with an explicit delta time of your choice.
      * This will affect timers, tween, systems update etc...
      * Use with caution.
      */
     @observe public var overrideDelta:Float = -1;
+
+    /**
+     * If set to `true` (default). Default mouse wheel events
+     * will be prevented. This is relevant when running the ceramic
+     * app from an `iframe` inside a page that can scroll.
+     */
+    @observe public var preventDefaultMouseWheel:Bool = #if ceramic_allow_default_mouse_wheel false #else true #end;
+
+    /**
+     * If set to `true` (default). Default touch events
+     * will be prevented. This is relevant when running the ceramic
+     * app from an `iframe` inside a page that can scroll,
+     * on a touchscreen device.
+     */
+    @observe public var preventDefaultTouches:Bool = #if ceramic_allow_default_mouse_wheel false #else true #end;
 
     /**
      * Setup screen orientation. Default is `NONE`,

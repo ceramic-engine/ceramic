@@ -163,6 +163,17 @@ class Scroller extends Visual {
 
     }
 
+    override function destroy() {
+
+        if (blockingDefaultScroll) {
+            blockingDefaultScroll = false;
+            app.numBlockingDefaultScroll--;
+        }
+
+        super.destroy();
+
+    }
+
     function set_scrollEnabled(scrollEnabled:Bool):Bool {
 
         if (this.scrollEnabled == scrollEnabled) return scrollEnabled;
@@ -369,6 +380,8 @@ class Scroller extends Visual {
 
     var pointerOnScrollerChild:Bool = false;
 
+    var blockingDefaultScroll:Bool = false;
+
 /// Toggle tracking
 
     function startTracking():Void {
@@ -398,6 +411,11 @@ class Scroller extends Visual {
         screen.offFocus(screenFocus);
 
         screen.offMouseWheel(mouseWheel);
+
+        if (blockingDefaultScroll) {
+            blockingDefaultScroll = false;
+            app.numBlockingDefaultScroll--;
+        }
 
     }
 
@@ -666,6 +684,17 @@ class Scroller extends Visual {
 /// Update loop
 
     function update(delta:Float):Void {
+
+        #if ceramic_auto_block_default_scroll
+        var prevBlockingDefaultScroll = blockingDefaultScroll;
+        blockingDefaultScroll = (pointerOnScroller || pointerOnScrollerChild) && hits(screen.pointerX, screen.pointerY);
+        if (blockingDefaultScroll != prevBlockingDefaultScroll) {
+            if (blockingDefaultScroll)
+                app.numBlockingDefaultScroll++;
+            else
+                app.numBlockingDefaultScroll--;
+        }
+        #end
 
         if (delta == 0) return;
 

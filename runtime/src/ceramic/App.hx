@@ -679,6 +679,8 @@ class App extends Entity {
     @:noCompletion public var initSettings:InitSettings;
 #end
 
+    @:noCompletion public var numBlockingDefaultScroll:Int = 0;
+
 /// Public initializer
 
     @:noCompletion
