@@ -979,6 +979,12 @@ class Im {
         return _imTheme;
     }
 
+    public static var currentTheme(get,never):Theme;
+    static function get_currentTheme():Theme {
+        initIfNeeded();
+        return _theme;
+    }
+
     public static function theme(theme:Theme):Void {
 
         initIfNeeded();
