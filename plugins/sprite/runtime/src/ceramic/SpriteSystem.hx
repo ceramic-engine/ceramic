@@ -2,7 +2,7 @@ package ceramic;
 
 using ceramic.Extensions;
 
-@:allow(ceramic.SpriteBase)
+@:allow(ceramic.Sprite)
 class SpriteSystem extends System {
 
     /**
@@ -15,9 +15,9 @@ class SpriteSystem extends System {
 
     var _updatingSprites:Array<Dynamic> = [];
     #else
-    var sprites:Array<SpriteBase<Any>> = [];
+    var sprites:Array<Sprite<Any>> = [];
 
-    var _updatingSprites:Array<SpriteBase<Any>> = [];
+    var _updatingSprites:Array<Sprite<Any>> = [];
     #end
 
     override function new() {
@@ -44,7 +44,7 @@ class SpriteSystem extends System {
         // Call
         for (i in 0...len) {
             #if cs
-            var sprite:SpriteBase<Dynamic> = _updatingSprites.unsafeGet(i);
+            var sprite:Sprite<Dynamic> = _updatingSprites.unsafeGet(i);
             @:privateAccess sprite._updateIfNotPausedAndAutoUpdating(delta);
             #else
             var sprite = _updatingSprites.unsafeGet(i);

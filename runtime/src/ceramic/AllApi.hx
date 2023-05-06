@@ -311,7 +311,6 @@ import ceramic.AsepriteJson;
 import ceramic.AsepriteJsonParser;
 import ceramic.ConvertSpriteSheet;
 import ceramic.Sprite;
-import ceramic.SpriteBase;
 import ceramic.SpriteAsset;
 import ceramic.SpriteSheet;
 import ceramic.SpriteSheetAnimation;
