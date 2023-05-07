@@ -814,6 +814,11 @@ class LdtkEntityDefinition {
      */
     public var uid:Int;
 
+    /**
+     * An array of strings that classifies this entity
+     */
+    public var tags:Array<String>;
+
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -835,6 +840,7 @@ class LdtkEntityDefinition {
             if (defs != null && defs.ldtkData != null)
                 tileset = defs.ldtkData.findTilesetDef(Std.int(json.get('tilesetId')));
             uid = Std.int(json.get('uid'));
+            tags = LdtkDataHelpers.toStringArray(json.get('tags'));
         }
 
     }
@@ -2283,7 +2289,20 @@ class LdtkLevel {
      * Optionally filter by `identifier`. The `callback` will be
      * called for each matching entity instance.
      */
-    public function mapEntities(tilemap:Tilemap, ?identifier:String, callback:(entity:LdtkEntityInstance)->Void) {
+    public extern inline overload function mapEntities(identifier:String, callback:(entity:LdtkEntityInstance)->Void) {
+        _mapEntities(identifier, callback);
+    }
+
+    /**
+     * Walk through every entity instance in the level.
+     * Optionally filter by `identifier`. The `callback` will be
+     * called for each matching entity instance.
+     */
+    public extern inline overload function mapEntities(callback:(entity:LdtkEntityInstance)->Void) {
+        _mapEntities(null, callback);
+    }
+
+    private function _mapEntities(identifier:String, callback:(entity:LdtkEntityInstance)->Void) {
 
         for (layer in this.layerInstances) {
             var depth:Float = 0;
