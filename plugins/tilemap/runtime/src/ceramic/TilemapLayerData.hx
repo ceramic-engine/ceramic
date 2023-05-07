@@ -177,6 +177,13 @@ class TilemapLayerData extends Model {
 
     }
 
+    inline public function computedTileByColumnAndRow(column:Int, row:Int):TilemapTile {
+
+        var index = indexFromColumnAndRow(column, row);
+        return computedTiles.unsafeGet(index);
+
+    }
+
     inline public function columnAtIndex(index:Int):Int {
 
         return index % columns;

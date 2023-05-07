@@ -706,6 +706,9 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             var offsetX = layerData.offsetX + layerData.x * tileWidth;
             var offsetY = layerData.offsetY + layerData.y * tileHeight;
 
+            var tiles = layer.checkCollisionWithComputedTiles ? layerData.computedTiles : layerData.tiles;
+            var checkCollisionValues = layer.checkCollisionValues;
+
             var minColumn = Math.floor((body.left - offsetX) / tileWidth);
             var maxColumn = Math.ceil((body.right - offsetX) / tileWidth);
             var minRow = Math.floor((body.top - offsetY) / tileHeight);
@@ -731,11 +734,11 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 var row = minRow;
                 while (row <= maxRow) {
                     var index = row * layerData.columns + column;
-                    var tile = layerData.tiles.unsafeGet(index);
+                    var tile = tiles.unsafeGet(index);
                     var gid = tile.gid;
-                    if (gid > 0) {
+                    if ((checkCollisionValues != null) ? checkCollisionValues.contains(gid) : gid > 0) {
 
-                        // Check if there is a slop assigned to this tile
+                        // Check if there is a slope assigned to this tile
                         var tileset = tilemapData.tilesetForGid(gid);
                         var slope = tileset.slope(gid);
 
@@ -752,20 +755,30 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         if (body.velocityY < 0 && !body.blockedDown) {
                             var indexBelow = index + layerData.columns;
                             var tileBelow = 0;
+                            var foundCollidingTileBelow = false;
                             if (layers != null) {
                                 for (n in 0...layers.length) {
                                     var layer = layers.unsafeGet(n);
                                     var layerData = layer.layerData;
                                     if (layerData != null) {
-                                        tileBelow = indexBelow < layerData.tiles.length ? layerData.tiles.unsafeGet(indexBelow).gid : 0;
-                                        if (tileBelow > 0) {
-                                            break;
+                                        tileBelow = indexBelow < tiles.length ? tiles.unsafeGet(indexBelow).gid : 0;
+                                        if (checkCollisionValues != null) {
+                                            if (checkCollisionValues.contains(tileBelow)) {
+                                                foundCollidingTileBelow = true;
+                                                break;
+                                            }
+                                        }
+                                        else {
+                                            if (tileBelow > 0) {
+                                                foundCollidingTileBelow = true;
+                                                break;
+                                            }
                                         }
                                     }
                                 }
                             }
 
-                            if (tileBelow > 0) {
+                            if (foundCollidingTileBelow) {
                                 tileBody.forceX = true;
                             }
                             else if (!body.isCircle && intersects(tileBody, body)) {

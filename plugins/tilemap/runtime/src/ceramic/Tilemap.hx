@@ -372,10 +372,19 @@ class Tilemap extends Quad {
                             var row = Math.floor((y - offsetY) / tileHeight);
 
                             if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
-                                var tile = layerData.tileByColumnAndRow(column, row);
-                                if (tile != 0) {
-                                    result = true;
-                                    break;
+                                var tile = layer.checkCollisionWithComputedTiles ? layerData.computedTileByColumnAndRow(column, row) : layerData.tileByColumnAndRow(column, row);
+                                var gid = tile.gid;
+                                if (layer.checkCollisionValues != null) {
+                                    if (layer.checkCollisionValues.contains(gid)) {
+                                        result = true;
+                                        break;
+                                    }
+                                }
+                                else {
+                                    if (gid > 0) {
+                                        result = true;
+                                        break;
+                                    }
                                 }
                             }
                         }

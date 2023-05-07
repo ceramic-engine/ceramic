@@ -54,6 +54,19 @@ class TilemapLayer extends Visual {
     public var checkCollisionRight:Bool = true;
 
     /**
+     * If this layer is collidable, this determines if it will collide
+     * using `tiles` or `computedTiles`
+     */
+    public var checkCollisionWithComputedTiles:Bool = false;
+
+    /**
+     * If this layer is collidable, it collides with any tiles
+     * that have a value != 0, unless `checkCollisionValues` is provided.
+     * In that case, it will collide when matching any value of the array.
+     */
+    public var checkCollisionValues:Array<Int> = null;
+
+    /**
      * Internal flag used when walking through layers
      */
     @:allow(ceramic.Tilemap)
