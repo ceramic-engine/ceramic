@@ -182,7 +182,7 @@ class ImageAsset extends Asset {
                     }
                     catch (e:Dynamic) {
                         status = BROKEN;
-                        log.error('Failed to decode ase image at path: $path');
+                        log.error('Failed to decode ase image at path: $path ($e)');
                         emitComplete(false);
                     }
                 }

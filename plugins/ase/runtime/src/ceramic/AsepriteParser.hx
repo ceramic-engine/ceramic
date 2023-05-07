@@ -87,6 +87,8 @@ class AsepriteParser {
         // Add tags to the frames
         for (tag in tags) {
             for (i in tag.fromFrame...tag.toFrame+1) {
+                if (singleFrame >= 0 && i > singleFrame)
+                    break;
                 frames[i].tags.push(tag.name);
             }
         }
