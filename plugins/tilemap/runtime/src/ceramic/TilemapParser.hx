@@ -309,13 +309,13 @@ class TilemapParser {
 
     }
 
-    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void):Void {
+    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void, skip:Array<String>):Void {
 
         if (ldtkParser == null) {
             ldtkParser = new TilemapLdtkParser();
         }
 
-        ldtkParser.loadLdtkTilemaps(ldtkData, loadTexture);
+        ldtkParser.loadLdtkTilemaps(ldtkData, loadTexture, skip);
 
     }
 

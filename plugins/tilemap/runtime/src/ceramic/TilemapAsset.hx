@@ -378,7 +378,12 @@ class TilemapAsset extends Asset {
 
                 try {
 
-                    tilemapParser.loadLdtkTilemaps(ldtkData, loadTextureFromSource);
+                    var skip:Array<String> = null;
+                    if (options != null && options.skip != null && options.skip is Array) {
+                        skip = options.skip;
+                    }
+
+                    tilemapParser.loadLdtkTilemaps(ldtkData, loadTextureFromSource, skip);
 
                     // Link the ldtk data to this asset so that
                     // destroying one will destroy the other

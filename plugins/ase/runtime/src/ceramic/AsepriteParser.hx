@@ -209,8 +209,6 @@ class AsepriteParser {
             throw 'Cannot create grid texture of size $texWidth x $texHeight because ase frame size (${asepriteData.ase.width + padding} x ${asepriteData.ase.height + padding}) won\'t fit';
         }
 
-        trace('start=$frameStart end=$frameEnd');
-
         var gridPixels = Pixels.create(texWidth, texHeight, AlphaColor.TRANSPARENT);
 
         var x = padding;
@@ -259,7 +257,6 @@ class AsepriteParser {
                 x = padding;
                 y += asepriteData.ase.height + spacing;
                 if (y + asepriteData.ase.height > texHeight) {
-                    trace('BREAK ${asepriteData.ase.width}x${asepriteData.ase.height} frame=$frame x=$x y=$y');
                     break;
                 }
             }
