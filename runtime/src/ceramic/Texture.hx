@@ -92,7 +92,7 @@ class Texture extends Entity {
     /**
      * Horizontal texture wrap mode
      */
-    public var wrapS(default,set):TextureWrap = CLAMP_TO_EDGE;
+    public var wrapS(default,set):TextureWrap = CLAMP;
     function set_wrapS(wrapS:TextureWrap):TextureWrap {
         if (this.wrapS == wrapS) return wrapS;
         this.wrapS = wrapS;
@@ -103,7 +103,7 @@ class Texture extends Entity {
     /**
      * Vertical texture wrapping mode
      */
-    public var wrapT(default,set):TextureWrap = CLAMP_TO_EDGE;
+    public var wrapT(default,set):TextureWrap = CLAMP;
     function set_wrapT(wrapT:TextureWrap):TextureWrap {
         if (this.wrapT == wrapT) return wrapT;
         this.wrapT = wrapT;
@@ -113,7 +113,7 @@ class Texture extends Entity {
 
     /**
      * Shorthand for setting both wrapS and wrapT at the same time.
-     * Possible values: `CLAMP_TO_EDGE`, `REPEAT`, `MIRRORED_REPEAT`
+     * Possible values: `CLAMP`, `REPEAT`, `MIRROR`
      * @param wrapS horizontal wrap mode
      * @param wrapT vertical wrap mode
      */

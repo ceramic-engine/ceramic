@@ -1,11 +1,11 @@
 package ceramic;
 
-enum TextureWrap {
+enum abstract TextureWrap(Int) {
 
-    CLAMP_TO_EDGE;
+    var CLAMP = 0;
 
-    REPEAT;
+    var REPEAT = 1;
 
-    MIRRORED_REPEAT;
+    var MIRROR = 2;
 
 }

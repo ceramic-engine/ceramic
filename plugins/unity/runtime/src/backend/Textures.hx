@@ -9,6 +9,7 @@ import haxe.io.Bytes;
 import unityengine.ImageConversion;
 import unityengine.ResourceRequest;
 import unityengine.Texture2D;
+import unityengine.TextureWrapMode;
 
 using StringTools;
 
@@ -348,15 +349,47 @@ class Textures implements spec.Textures {
 
     }
 
-    inline public function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap): Void {
-            
-        // Not implemented yet
+    inline public function setTextureWrapS(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+        switch (wrap) {
+            case CLAMP:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Clamp;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Clamp;
+            case REPEAT:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Repeat;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Repeat;
+            case MIRROR:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Mirror;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Mirror;
+        }
 
     }
 
-    inline public function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap): Void {
-        
-        // Not implemented yet
+    inline public function setTextureWrapT(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+        switch (wrap) {
+            case CLAMP:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Clamp;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Clamp;
+            case REPEAT:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Repeat;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Repeat;
+            case MIRROR:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Mirror;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Mirror;
+        }
 
     }
 
