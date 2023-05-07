@@ -93,7 +93,7 @@ app:
         #- ase
 
         # Sprite support (requires ase plugin to create sprites from .ase/.aseprite files)
-        #- ldtk
+        #- sprite
 
         # Tilemap support (.tmx/.tsx loading included, requires ldtk plugin to create tilemaps from .ldtk files)
         #- tilemap
