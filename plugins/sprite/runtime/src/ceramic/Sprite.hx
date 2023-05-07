@@ -36,6 +36,29 @@ class Sprite<T=String> extends Visual {
         return animation;
     }
 
+    public var frameOffsetX(default,set):Float = 0;
+    function set_frameOffsetX(frameOffsetX:Float):Float {
+        if (this.frameOffsetX != frameOffsetX) {
+            this.frameOffsetX = frameOffsetX;
+            contentDirty = true;
+        }
+        return frameOffsetX;
+    }
+
+    public var frameOffsetY(default,set):Float = 0;
+    function set_frameOffsetY(frameOffsetY:Float):Float {
+        if (this.frameOffsetY != frameOffsetY) {
+            this.frameOffsetY = frameOffsetY;
+            contentDirty = true;
+        }
+        return frameOffsetY;
+    }
+
+    public function frameOffset(anchorX:Float, anchorY:Float) {
+        this.frameOffsetX = anchorX;
+        this.frameOffsetY = anchorY;
+    }
+
     public var sheet(default,set):SpriteSheet = null;
     function set_sheet(sheet:SpriteSheet):SpriteSheet {
         if (this.sheet == sheet) return sheet;
@@ -252,8 +275,10 @@ class Sprite<T=String> extends Visual {
         if (region != null) {
             quad.active = true;
             quad.tile = region;
-            var quadX:Float = width * quad.anchorX;
-            var quadY:Float = height * quad.anchorY;
+            var frameW = region.originalWidth * region.frameWidth / region.width;
+            var frameH = region.originalHeight * region.frameHeight / region.height;
+            var quadX:Float = frameOffsetX;
+            var quadY:Float = frameOffsetY;
             quad.pos(
                 quadX + region.offsetX * region.frameWidth / region.width,
                 quadY + region.offsetY * region.frameHeight / region.height
