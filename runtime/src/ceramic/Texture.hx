@@ -89,6 +89,40 @@ class Texture extends Entity {
         return filter;
     }
 
+    /**
+     * Horizontal texture wrap mode
+     */
+    public var wrapS(default,set):TextureWrap = CLAMP_TO_EDGE;
+    function set_wrapS(wrapS:TextureWrap):TextureWrap {
+        if (this.wrapS == wrapS) return wrapS;
+        this.wrapS = wrapS;
+        app.backend.textures.setTextureWrapS(backendItem, wrapS);
+        return wrapS;
+    }
+
+    /**
+     * Vertical texture wrapping mode
+     */
+    public var wrapT(default,set):TextureWrap = CLAMP_TO_EDGE;
+    function set_wrapT(wrapT:TextureWrap):TextureWrap {
+        if (this.wrapT == wrapT) return wrapT;
+        this.wrapT = wrapT;
+        app.backend.textures.setTextureWrapT(backendItem, wrapT);
+        return wrapT;
+    }
+
+    /**
+     * Shorthand for setting both wrapS and wrapT at the same time.
+     * Possible values: `CLAMP_TO_EDGE`, `REPEAT`, `MIRRORED_REPEAT`
+     * @param wrapS horizontal wrap mode
+     * @param wrapT vertical wrap mode
+     */
+    public function setWrap(wrapS:TextureWrap, ?wrapT:TextureWrap):Void {
+        set_wrapS(wrapS);
+        if(wrapT != null)
+            set_wrapT(wrapT);
+    }
+
     public var backendItem:backend.Texture;
 
     public var asset:ImageAsset = null;

@@ -107,6 +107,18 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap): Void {
+            
+        //
+
+    }
+
+    inline public function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap): Void {
+        
+        //
+
+    }
+
     public function maxTexturesByBatch():Int {
 
         return 1;

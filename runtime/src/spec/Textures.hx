@@ -39,6 +39,10 @@ interface Textures {
 
     function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void;
 
+    function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap):Void;
+
+    function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap):Void;
+
     function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture;
 
     /**

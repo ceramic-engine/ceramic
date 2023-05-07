@@ -365,6 +365,32 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap): Void {
+            
+            switch (wrap) {
+                case CLAMP_TO_EDGE:
+                    (texture: clay.graphics.Texture).wrapS = CLAMP_TO_EDGE;
+                case REPEAT:
+                    (texture: clay.graphics.Texture).wrapS = REPEAT;
+                case MIRRORED_REPEAT:
+                    (texture: clay.graphics.Texture).wrapS = MIRRORED_REPEAT;
+            }
+    
+    }
+
+    inline public function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap): Void {
+            
+            switch (wrap) {
+                case CLAMP_TO_EDGE:
+                    (texture: clay.graphics.Texture).wrapT = CLAMP_TO_EDGE;
+                case REPEAT:
+                    (texture: clay.graphics.Texture).wrapT = REPEAT;
+                case MIRRORED_REPEAT:
+                    (texture: clay.graphics.Texture).wrapT = MIRRORED_REPEAT;
+            }
+    
+    }
+
     static var _maxTexturesByBatch:Int = -1;
 
     #if cpp
