@@ -203,6 +203,72 @@ class AsepriteParser {
 
     }
 
+    public static function parseGridTextureFromAsepriteData(asepriteData:AsepriteData, frameStart:Int, frameEnd:Int, texWidth:Int, texHeight:Int, spacing:Int = 0, padding:Int = 0, density:Float = 1):Texture {
+
+        if (asepriteData.ase.width + padding > texWidth || asepriteData.ase.height + padding > texHeight) {
+            throw 'Cannot create grid texture of size $texWidth x $texHeight because ase frame size (${asepriteData.ase.width + padding} x ${asepriteData.ase.height + padding}) won\'t fit';
+        }
+
+        trace('start=$frameStart end=$frameEnd');
+
+        var gridPixels = Pixels.create(texWidth, texHeight, AlphaColor.TRANSPARENT);
+
+        var x = padding;
+        var y = padding;
+
+        for (frame in frameStart...frameEnd+1) {
+            var asepriteFrame = asepriteData.frames[frame];
+            if (asepriteFrame != null) {
+                var actualFrame = asepriteFrame;
+                while (actualFrame.duplicateOfIndex >= 0)
+                    actualFrame = asepriteData.frames[actualFrame.duplicateOfIndex];
+
+                if (actualFrame.pixels != null) {
+                    if (actualFrame.packedWidth == asepriteData.ase.width &&
+                        actualFrame.packedHeight == asepriteData.ase.height &&
+                        asepriteFrame.offsetX == 0 && asepriteFrame.offsetY == 0) {
+
+                        Pixels.copy(
+                            actualFrame.pixels,
+                            actualFrame.packedWidth,
+                            gridPixels,
+                            texWidth,
+                            0, 0,
+                            actualFrame.packedWidth,
+                            actualFrame.packedHeight,
+                            x, y
+                        );
+                    }
+                    else {
+                        Pixels.copy(
+                            actualFrame.pixels,
+                            actualFrame.packedWidth,
+                            gridPixels,
+                            texWidth,
+                            0, 0,
+                            actualFrame.packedWidth,
+                            actualFrame.packedHeight,
+                            x + asepriteFrame.offsetX, y + asepriteFrame.offsetY
+                        );
+                    }
+                }
+            }
+
+            x += asepriteData.ase.width + spacing;
+            if (x + asepriteData.ase.width > texWidth) {
+                x = padding;
+                y += asepriteData.ase.height + spacing;
+                if (y + asepriteData.ase.height > texHeight) {
+                    trace('BREAK ${asepriteData.ase.width}x${asepriteData.ase.height} frame=$frame x=$x y=$y');
+                    break;
+                }
+            }
+        }
+
+        return Texture.fromPixels(texWidth, texHeight, gridPixels, density);
+
+    }
+
     #if plugin_sprite
 
     public static function parseSheetFromAsepriteData(asepriteData:AsepriteData):SpriteSheet {

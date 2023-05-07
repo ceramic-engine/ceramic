@@ -16,8 +16,6 @@ class ImageAsset extends Asset {
 
 /// Properties
 
-    //public var pixels:Pixels = null;
-
     @observe public var texture:Texture = null;
 
 /// Internal
@@ -26,6 +24,18 @@ class ImageAsset extends Asset {
     var defaultImageOptions:AssetOptions = null;
 
     var reloadBecauseOfDensityChange:Bool = false;
+
+    #if plugin_ase
+
+    var aseTexWidth:Int = -1;
+
+    var aseTexHeight:Int = -1;
+
+    var asePadding:Int = 0;
+
+    var aseSpacing:Int = 0;
+
+    #end
 
 /// Lifecycle
 
@@ -172,10 +182,23 @@ class ImageAsset extends Asset {
                 if (bytes != null) {
                     try {
 
-                        // Decode ase data, but once we have our texture, destroy it
+                        final loadGridTexture = (aseTexWidth > 0 && aseTexHeight > 0);
+
+                        // Decode ase data, but once we have our texture, destroy that ase data
                         var ase:Ase = Ase.fromBytes(bytes);
-                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, 0);
-                        var texture = AsepriteParser.parseTextureFromAsepriteData(asepriteData, 0, density);
+                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, loadGridTexture ? -1 : 0);
+
+                        var texture:Texture = if (loadGridTexture) {
+                            AsepriteParser.parseGridTextureFromAsepriteData(
+                                asepriteData, 0, asepriteData.frames.length + 1,
+                                aseTexWidth, aseTexHeight, aseSpacing, asePadding,
+                                density
+                            );
+                        }
+                        else {
+                            AsepriteParser.parseTextureFromAsepriteData(asepriteData, 0, density);
+                        }
+
                         asepriteData.destroy();
 
                         callback(texture, backendPath);

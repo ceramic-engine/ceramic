@@ -89,7 +89,7 @@ class TilemapParser {
 
     }
 
-    public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):TilemapData {
+    public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void):TilemapData {
 
         var tilemapData = new TilemapData();
 
@@ -200,7 +200,7 @@ class TilemapParser {
 
                         if (loadTexture != null) {
                             (function(image:TilesetImage, source:String) {
-                                loadTexture(source, function(texture:Texture) {
+                                loadTexture(source, null, function(texture:Texture) {
                                     image.texture = texture;
                                 });
                             })(image, tmxImage.source);
@@ -309,7 +309,7 @@ class TilemapParser {
 
     }
 
-    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):Void {
+    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void):Void {
 
         if (ldtkParser == null) {
             ldtkParser = new TilemapLdtkParser();

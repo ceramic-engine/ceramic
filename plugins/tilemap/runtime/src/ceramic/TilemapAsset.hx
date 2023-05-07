@@ -272,7 +272,7 @@ class TilemapAsset extends Asset {
 
     }
 
-    function loadTextureFromSource(source:String, done:Texture->Void):Void {
+    function loadTextureFromSource(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void):Void {
 
         if (source != null) {
             var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), source]));
@@ -283,6 +283,7 @@ class TilemapAsset extends Asset {
             if (texture == null) {
 
                 var asset = owner.imageAsset(pathInfo.name);
+
                 if (asset != null) {
 
                     switch asset.status {
@@ -306,6 +307,9 @@ class TilemapAsset extends Asset {
                     // Texture not already loaded, load it!
 
                     var asset = new ImageAsset(pathInfo.name);
+                    if (configureAsset != null) {
+                        configureAsset(asset);
+                    }
                     asset.handleTexturesDensityChange = true;
                     asset.onDestroy(this, function(_) {
                         // Should we do some cleanup here?

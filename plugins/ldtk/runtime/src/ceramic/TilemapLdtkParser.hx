@@ -35,7 +35,7 @@ class TilemapLdtkParser {
 
     }
 
-    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, (texture:Texture)->Void)->Void):Void {
+    public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void):Void {
 
         if (ldtkData.externalLevels) {
             log.info('This LDtk project uses external levels');
@@ -74,11 +74,18 @@ class TilemapLdtkParser {
                     image.source = ldtkTileset.relPath;
 
                     if (loadTexture != null) {
-                        (function(image:TilesetImage, source:String) {
-                            loadTexture(source, function(texture:Texture) {
+                        (function(image:TilesetImage, ldtkTileset:LdtkTilesetDefinition) {
+                            loadTexture(ldtkTileset.relPath, function(asset:ImageAsset) {
+                                #if plugin_ase
+                                @:privateAccess asset.aseTexWidth = ldtkTileset.pxWid;
+                                @:privateAccess asset.aseTexHeight = ldtkTileset.pxHei;
+                                @:privateAccess asset.asePadding = ldtkTileset.padding;
+                                @:privateAccess asset.aseSpacing = ldtkTileset.spacing;
+                                #end
+                            }, function(texture:Texture) {
                                 image.texture = texture;
                             });
-                        })(image, ldtkTileset.relPath);
+                        })(image, ldtkTileset);
                     }
 
                     tileset.image = image;
