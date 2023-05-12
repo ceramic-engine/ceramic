@@ -2284,6 +2284,19 @@ class LdtkLevel {
 
     }
 
+    public function layerInstance(identifier:String):LdtkLayerInstance {
+
+        for (i in 0...this.layerInstances.length) {
+            var layerInstance = this.layerInstances[i];
+            if (layerInstance.def.identifier == identifier) {
+                return layerInstance;
+            }
+        }
+
+        return null;
+
+    }
+
     /**
      * Walk through every entity instance in the level.
      * Optionally filter by `identifier`. The `callback` will be
