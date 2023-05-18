@@ -203,6 +203,16 @@ class TilemapData extends Model {
         this.height = height;
     }
 
+    public function tileset(name:String):Tileset {
+        for (i in 0...tilesets.length) {
+            var tileset = tilesets.unsafeGet(i);
+            if (tileset.name == name) {
+                return tileset;
+            }
+        }
+        return null;
+    }
+
 /// Print
 
     override function toString():String {
