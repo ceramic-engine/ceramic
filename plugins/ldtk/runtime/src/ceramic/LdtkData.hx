@@ -2342,7 +2342,7 @@ class LdtkLevel {
      * will be called for every entity, and this callback can either return a `Visual`
      * instance or `null`.
      *
-     * If a visual is created, it will be added at the correct position
+     * If a visual is created, it will be added at the correct depth
      * in the `tilemap` object, inside the correct `layer`.
      *
      * If `createVisual` is not provided, this method will create instances of `LdtkVisual`,
