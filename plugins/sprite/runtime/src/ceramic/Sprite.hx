@@ -13,6 +13,10 @@ class Sprite<T=String> extends Visual {
 
     public var animationName(default,null):String;
 
+    public var easing(default,null):Easing = null;
+
+    public var timeScale:Float = 1.0;
+
     public var animation(default,set):T = null;
     function set_animation(animation:T):T {
         if (this.animation == animation) return animation;
@@ -137,7 +141,36 @@ class Sprite<T=String> extends Visual {
 
     var currentAnimationDirty:Bool = false;
 
-    var currentAnimation:SpriteSheetAnimation = null;
+    public var currentAnimation(get, null):SpriteSheetAnimation = null;
+    function get_currentAnimation():SpriteSheetAnimation {
+        // Process current animation (if needed)
+        if (currentAnimationDirty) {
+            if (sheet != null && animationName != null) {
+                var sheetAnimations = sheet.animations;
+                var foundAnimation = null;
+                if (sheetAnimations != null) {
+                    for (i in 0...sheetAnimations.length) {
+                        var sheetAnimation = sheetAnimations.unsafeGet(i);
+                        if (sheetAnimation.name == animationName) {
+                            foundAnimation = sheetAnimation;
+                            break;
+                        }
+                    }
+                }
+                if (foundAnimation == null) {
+                    log.warning('Failed to find sprite animation: $animation');
+                }
+                this.currentAnimation = foundAnimation;
+                currentAnimationFrame = null;
+            }
+            else {
+                this.currentAnimation = null;
+                currentAnimationFrame = null;
+            }
+            currentAnimationDirty = false;
+        }
+        return this.currentAnimation;
+    }
 
     var currentAnimationFrame:SpriteSheetFrame = null;
 
@@ -162,32 +195,7 @@ class Sprite<T=String> extends Visual {
 
     public function update(delta:Float):Void {
 
-        // Process current animation (if needed)
-        if (currentAnimationDirty) {
-            if (sheet != null && animationName != null) {
-                var sheetAnimations = sheet.animations;
-                var foundAnimation = null;
-                if (sheetAnimations != null) {
-                    for (i in 0...sheetAnimations.length) {
-                        var sheetAnimation = sheetAnimations.unsafeGet(i);
-                        if (sheetAnimation.name == animationName) {
-                            foundAnimation = sheetAnimation;
-                            break;
-                        }
-                    }
-                }
-                if (foundAnimation == null) {
-                    log.warning('Failed to find sprite animation: $animation');
-                }
-                currentAnimation = foundAnimation;
-                currentAnimationFrame = null;
-            }
-            else {
-                currentAnimation = null;
-                currentAnimationFrame = null;
-            }
-            currentAnimationDirty = false;
-        }
+        var currentAnimation = this.currentAnimation;
 
         // Update frame
         var foundFrame = null;
@@ -199,11 +207,16 @@ class Sprite<T=String> extends Visual {
                 foundFrame = sheetFrames.unsafeGet(0);
             }
             else {
-                var totalTime = 0.0;
+                var duration:Float = currentAnimation.duration;
+                var usedTime:Float = loop ? (time % duration) : Math.min(time, duration);
+                if (easing != null) {
+                    usedTime = Tween.ease(easing, usedTime / duration) * duration;
+                }
+                var consumedTime:Float = 0.0;
                 for (i in 0...sheetFrames.length) {
                     var sheetFrame = sheetFrames.unsafeGet(i);
-                    totalTime += sheetFrame.duration;
-                    if (totalTime > time) {
+                    consumedTime += sheetFrame.duration;
+                    if (consumedTime > usedTime) {
                         // Current frame matches
                         foundFrame = sheetFrame;
                         break;
@@ -211,25 +224,10 @@ class Sprite<T=String> extends Visual {
                 }
                 // Nothing found?
                 if (foundFrame == null) {
-                    if (loop) {
-                        // Loop (if loop is enabled)
-                        time = time % totalTime;
-                        for (i in 0...sheetFrames.length) {
-                            var sheetFrame = sheetFrames.unsafeGet(i);
-                            totalTime += sheetFrame.duration;
-                            if (totalTime > time) {
-                                // Current frame matches
-                                foundFrame = sheetFrame;
-                                break;
-                            }
-                        }
-                    }
-                    else {
-                        // Or just stay in last frame
-                        if (sheetFrames.length > 0) {
-                            var n = sheetFrames.length - 1;
-                            foundFrame = sheetFrames.unsafeGet(n);
-                        }
+                    // Or just stay in last frame
+                    if (sheetFrames.length > 0) {
+                        var n = sheetFrames.length - 1;
+                        foundFrame = sheetFrames.unsafeGet(n);
                     }
                 }
             }
@@ -242,7 +240,7 @@ class Sprite<T=String> extends Visual {
         }
 
         // Increment time
-        time += delta;
+        time += delta / timeScale;
 
     }
 
