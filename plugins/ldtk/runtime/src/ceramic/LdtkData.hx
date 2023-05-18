@@ -2927,6 +2927,8 @@ class LdtkLayerInstance {
      * [4] Pixel X coordinate of the tile in the tileset.
      *
      * [5] Pixel Y coordinate of the tile in the tileset.
+     *
+     * [6] Pixel alpha [0-4096].
      */
     public var autoLayerTiles:Array<Int>;
 
@@ -2955,6 +2957,8 @@ class LdtkLayerInstance {
      * [4] Pixel X coordinate of the tile in the tileset.
      *
      * [5] Pixel Y coordinate of the tile in the tileset.
+     *
+     * [6] Pixel alpha [0-4096].
      */
     public var gridTiles:Array<Int>;
 
@@ -3033,7 +3037,7 @@ class LdtkLayerInstance {
             pxTotalOffsetX = Std.int(json.get('__pxTotalOffsetX'));
             pxTotalOffsetY = Std.int(json.get('__pxTotalOffsetY'));
 
-            var rawAutoLayerTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int,d:Array<Int>}> = json.get('autoLayerTiles');
+            var rawAutoLayerTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int,d:Array<Int>,a:Float}> = json.get('autoLayerTiles');
             if (rawAutoLayerTiles != null) {
                 autoLayerTiles = [];
                 for (i in 0...rawAutoLayerTiles.length) {
@@ -3044,13 +3048,14 @@ class LdtkLayerInstance {
                     autoLayerTiles.push(Std.int(tile.px[1]));
                     autoLayerTiles.push(Std.int(tile.src[0]));
                     autoLayerTiles.push(Std.int(tile.src[1]));
+                    autoLayerTiles.push(Math.round(tile.a * 4096));
                 }
             }
             else {
                 autoLayerTiles = null;
             }
 
-            var rawGridTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int}> = json.get('gridTiles');
+            var rawGridTiles:Array<{f:Int,px:Array<Int>,src:Array<Int>,t:Int,a:Float}> = json.get('gridTiles');
             if (rawGridTiles != null) {
                 gridTiles = [];
                 for (i in 0...rawGridTiles.length) {
@@ -3061,6 +3066,7 @@ class LdtkLayerInstance {
                     gridTiles.push(Std.int(tile.px[1]));
                     gridTiles.push(Std.int(tile.src[0]));
                     gridTiles.push(Std.int(tile.src[1]));
+                    gridTiles.push(Math.round(tile.a * 4096));
                 }
             }
             else {
