@@ -92,10 +92,20 @@ class TilemapLayerData extends Model {
     @serialize public var tiles:ReadOnlyArray<TilemapTile> = null;
 
     /**
+     * Per-tile alpha, or null if there is no custom alpha per tile
+     */
+    @serialize public var tilesAlpha:ReadOnlyArray<Float> = null;
+
+    /**
      * Computed tiles, after applying auto-tiling (if any).
      * Will be `null` if no auto-tiling is used.
      */
     @observe public var computedTiles:ReadOnlyArray<TilemapTile> = null;
+
+    /**
+     * Per-computed tile alpha, or null if there is no custom alpha per computed tile
+     */
+    @observe public var computedTilesAlpha:ReadOnlyArray<Float> = null;
 
     /**
      * Is `true` if this layer has tiles. Some layers don't have tile and

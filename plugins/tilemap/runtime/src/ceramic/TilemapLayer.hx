@@ -314,8 +314,11 @@ class TilemapLayer extends Visual {
 
             if (layerData.visible) {
                 var tiles = layerData.computedTiles;
-                if (tiles == null)
+                var tilesAlpha = layerData.computedTilesAlpha;
+                if (tiles == null) {
                     tiles = layerData.tiles;
+                    tilesAlpha = layerData.tilesAlpha;
+                }
                 if (tiles != null) {
 
                     var minColumn = 0;
@@ -375,13 +378,14 @@ class TilemapLayer extends Visual {
                                         row -= layerRows;
                                         depthExtra += 0.1;
                                     }
+                                    if (tilesAlpha != null) {
+                                        alpha *= tilesAlpha.unsafeGet(t);
+                                    }
 
                                     var tileLeft = column * tileset.tileWidth;
                                     var tileTop = row * tileset.tileWidth;
                                     var tileWidth = tileset.tileWidth;
                                     var tileHeight = tileset.tileHeight;
-                                    var tileRight = tileLeft + tileWidth;
-                                    var tileBottom = tileTop + tileHeight;
 
                                     var quad:TilemapQuad = usedQuads < tileQuads.length ? tileQuads[usedQuads] : null;
                                     if (quad == null) {
