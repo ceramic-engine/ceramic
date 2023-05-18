@@ -91,7 +91,7 @@ class Hxml extends tools.Task {
             }
 
             // Add completion flags
-            rawHxml += "\n" + '-D completion';
+            rawHxml += "\n" + '-D completion -D no_inline';
 
             // Add some completion cache optims
             //
