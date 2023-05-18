@@ -163,6 +163,21 @@ class LdtkData extends Entity {
 
     }
 
+    public function world(identifier:String):LdtkWorld {
+
+        if (this.worlds != null) {
+            for (i in 0...this.worlds.length) {
+                var world = this.worlds[i];
+                if (world.identifier == identifier) {
+                    return world;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public extern inline overload function findLayerDef(identifier:String):LdtkLayerDefinition {
         return _findLayerDefWithIdentifier(identifier);
     }
@@ -579,6 +594,21 @@ class LdtkWorld {
 
     }
 
+    public function level(identifier:String):LdtkLevel {
+
+        if (this.levels != null) {
+            for (i in 0...this.levels.length) {
+                var level = this.levels[i];
+                if (level.identifier == identifier) {
+                    return level;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -719,6 +749,96 @@ class LdtkDefinitions {
                 new LdtkFieldDefinition(this, levelFieldsJson[i]);
             }] : [];
         }
+
+    }
+
+    public function entity(identifier:String):LdtkEntityDefinition {
+
+        if (this.entities != null) {
+            for (i in 0...this.entities.length) {
+                var entity = this.entities[i];
+                if (entity.identifier == identifier) {
+                    return entity;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function layer(identifier:String):LdtkLayerDefinition {
+
+        if (this.layers != null) {
+            for (i in 0...this.layers.length) {
+                var layer = this.layers[i];
+                if (layer.identifier == identifier) {
+                    return layer;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function tileset(identifier:String):LdtkTilesetDefinition {
+
+        if (this.tilesets != null) {
+            for (i in 0...this.tilesets.length) {
+                var tileset = this.tilesets[i];
+                if (tileset.identifier == identifier) {
+                    return tileset;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function levelField(identifier:String):LdtkFieldDefinition {
+
+        if (this.levelFields != null) {
+            for (i in 0...this.levelFields.length) {
+                var levelField = this.levelFields[i];
+                if (levelField.identifier == identifier) {
+                    return levelField;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function enumDef(identifier:String):LdtkEnumDefinition {
+
+        if (this.enums != null) {
+            for (i in 0...this.enums.length) {
+                var enumDef = this.enums[i];
+                if (enumDef.identifier == identifier) {
+                    return enumDef;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function externalEnumDef(identifier:String):LdtkEnumDefinition {
+
+        if (this.externalEnums != null) {
+            for (i in 0...this.externalEnums.length) {
+                var enumDef = this.externalEnums[i];
+                if (enumDef.identifier == identifier) {
+                    return enumDef;
+                }
+            }
+        }
+
+        return null;
 
     }
 
@@ -1117,6 +1237,21 @@ class LdtkEnumDefinition {
 
     }
 
+    public function value(id:String):LdtkEnumValueDefinition {
+
+        if (this.values != null) {
+            for (i in 0...this.values.length) {
+                var value = this.values[i];
+                if (value.id == id) {
+                    return value;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -1361,6 +1496,21 @@ class LdtkLayerDefinition {
             tilePivotX = json.get('tilePivotX');
             tilePivotY = json.get('tilePivotY');
         }
+
+    }
+
+    public function autoRuleGroup(name:String):LdtkAutoRuleGroup {
+
+        if (this.autoRuleGroups != null) {
+            for (i in 0...this.autoRuleGroups.length) {
+                var autoRuleGroup = this.autoRuleGroups[i];
+                if (autoRuleGroup.name == name) {
+                    return autoRuleGroup;
+                }
+            }
+        }
+
+        return null;
 
     }
 
@@ -1625,6 +1775,21 @@ class LdtkTilesetDefinition {
                 }
             }
         }
+
+    }
+
+    public function tileIdByCustomData(data:String):Int {
+
+        if (this.customData != null) {
+            for (i in 0...this.customData.length) {
+                var aData = this.customData[i];
+                if (aData.data == data) {
+                    return aData.tileId;
+                }
+            }
+        }
+
+        return null;
 
     }
 
@@ -2286,10 +2451,27 @@ class LdtkLevel {
 
     public function layerInstance(identifier:String):LdtkLayerInstance {
 
-        for (i in 0...this.layerInstances.length) {
-            var layerInstance = this.layerInstances[i];
-            if (layerInstance.def.identifier == identifier) {
-                return layerInstance;
+        if (this.layerInstances != null) {
+            for (i in 0...this.layerInstances.length) {
+                var layerInstance = this.layerInstances[i];
+                if (layerInstance.def.identifier == identifier) {
+                    return layerInstance;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function fieldInstance(identifier:String):LdtkFieldInstance {
+
+        if (this.fieldInstances != null) {
+            for (i in 0...this.fieldInstances.length) {
+                var fieldInstance = this.fieldInstances[i];
+                if (fieldInstance.def.identifier == identifier) {
+                    return fieldInstance;
+                }
             }
         }
 
