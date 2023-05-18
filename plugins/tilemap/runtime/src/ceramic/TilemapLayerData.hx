@@ -62,6 +62,11 @@ class TilemapLayerData extends Model {
     @serialize public var offsetY:Int = 0;
 
     /**
+     * Explicit depth, or null of that should be computed by `Tilemap` instead
+     */
+    @serialize public var explicitDepth:Null<Float> = null;
+
+    /**
      * Tile default blending
      */
     @serialize public var blending:Blending = AUTO;

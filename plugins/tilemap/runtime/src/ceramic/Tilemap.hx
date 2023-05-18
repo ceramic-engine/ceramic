@@ -199,7 +199,12 @@ class Tilemap extends Quad {
             }
             usedLayers++;
 
-            layer.depth = l + 1;
+            if (layerData.explicitDepth != null) {
+                layer.depth = layerData.explicitDepth;
+            }
+            else {
+                layer.depth = l + 1;
+            }
             layer.layerData = layerData;
 
             if (isNew)
