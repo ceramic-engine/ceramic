@@ -433,7 +433,7 @@ class TilemapLayer extends Visual {
                                         else
                                             quad.scaleY = -1.0 * tileScale;
 
-                                        quad.rotation = 90;
+                                        quad.rotateFrame = true;
                                     }
                                     else {
 
@@ -447,7 +447,7 @@ class TilemapLayer extends Visual {
                                         else
                                             quad.scaleY = tileScale;
 
-                                        quad.rotation = 0;
+                                        quad.rotateFrame = false;
                                     }
 
                                 }
