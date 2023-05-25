@@ -185,7 +185,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function setRenderWireframe(value:Bool):Void {
+    inline public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
         // Unused in headless
 

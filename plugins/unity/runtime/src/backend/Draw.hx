@@ -163,6 +163,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _colorIndex:Int = 0;
 
     static var _floatAttributesIndex:Int = 0;
+    static var _meshTopology:MeshTopology = MeshTopology.Triangles;
 
     #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
@@ -611,7 +612,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    #if !ceramic_debug_draw_backend inline #end public function setRenderWireframe(value:Bool):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
+
+        _meshTopology = switch primitiveType {
+            case LINE: MeshTopology.Lines;
+            case _: MeshTopology.Triangles;
+        }
 
     }
 
@@ -794,7 +800,7 @@ class Draw #if !completion implements spec.Draw #end {
         // Configure sub mesh
         mesh.subMeshCount = 1;
         var submesh:SubMeshDescriptor = new SubMeshDescriptor(
-            0, _numIndices, MeshTopology.Triangles
+            0, _numIndices, _meshTopology
         );
         mesh.SetSubMesh(0, submesh, updateFlags);
 

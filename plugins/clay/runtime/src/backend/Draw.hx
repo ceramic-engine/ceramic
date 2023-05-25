@@ -151,6 +151,8 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _drawingInStencilBuffer:Bool = false;
 
+    static var _primitiveType:Int = GL.TRIANGLES;
+
     #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         _activeTextureSlot = 0;
@@ -260,9 +262,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    #if !ceramic_debug_draw_backend inline #end public function setRenderWireframe(value:Bool):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
-        // TODO?
+        _primitiveType = switch primitiveType {
+            case LINE: GL.LINES;
+            case _: GL.TRIANGLES;
+        }
 
     }
 
@@ -872,7 +877,7 @@ class Draw #if !completion implements spec.Draw #end {
         GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STREAM_DRAW);
 
         // Draw
-        GL.drawElements(GL.TRIANGLES, _numIndices, GL.UNSIGNED_SHORT, 0);
+        GL.drawElements(_primitiveType, _numIndices, GL.UNSIGNED_SHORT, 0);
 
         GL.deleteBuffer(pb);
         GL.deleteBuffer(cb);

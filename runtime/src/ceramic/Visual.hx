@@ -1005,9 +1005,18 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 #end
     }
 
-#if ceramic_debug_rendering_option
+#if ceramic_wireframe
 
-    public var debugRendering:DebugRendering = DebugRendering.DEFAULT;
+    public var wireframe(get,set):Bool;
+    inline function get_wireframe():Bool {
+        // Equivalent to internalFlag(7)
+        return flags & FLAG_RENDER_WIREFRAME == FLAG_RENDER_WIREFRAME;
+    }
+    inline function set_wireframe(wireframe:Bool):Bool {
+        // Equivalent to internalFlag(7, isHitVisual)
+        flags = wireframe ? flags | FLAG_RENDER_WIREFRAME : flags & ~FLAG_RENDER_WIREFRAME;
+        return wireframe;
+    }
 
 #end
 
@@ -1548,6 +1557,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     #if plugin_arcade
     private inline static final FLAG_ARCADE_BODY_ENABLE:Int = 64; // 1 << 6
+    #end
+
+    #if ceramic_wireframe
+    private inline static final FLAG_RENDER_WIREFRAME:Int = 128; // 1 << 7
     #end
 
     /**

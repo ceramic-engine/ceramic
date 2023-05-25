@@ -180,6 +180,12 @@ class Mesh extends Visual {
     @editable
     public var uvs:Array<Float> = [];
 
+    #if ceramic_wireframe
+    @:noCompletion
+    @:allow(ceramic.Renderer)
+    private var wireframeIndices:Array<Int> = null;
+    #end
+
 /// Texture destroyed
 
     function textureDestroyed(_) {

@@ -87,8 +87,6 @@ import ceramic.ConvertTexture;
 import ceramic.Csv;
 import ceramic.CustomAssetKind;
 import ceramic.DatabaseAsset;
-import ceramic.scriptable.ScriptableDebugRendering;
-#if (ceramic_cppia_host || documentation) import ceramic.DebugRendering; #end
 import ceramic.DecomposedTransform;
 import ceramic.DoubleClick;
 import ceramic.Easing;
@@ -473,7 +471,6 @@ class AllApi {
         interp.variables.set('CustomAssetKind', ceramic.CustomAssetKind);
         interp.variables.set('DatabaseAsset', ceramic.DatabaseAsset);
         //interp.variables.set('Databases', assets.Databases);
-        interp.variables.set('DebugRendering', ceramic.scriptable.ScriptableDebugRendering);
         interp.variables.set('DecomposedTransform', ceramic.DecomposedTransform);
         interp.variables.set('DoubleClick', ceramic.DoubleClick);
         interp.variables.set('Easing', ceramic.Easing);

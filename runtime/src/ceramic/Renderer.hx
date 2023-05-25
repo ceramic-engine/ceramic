@@ -61,8 +61,8 @@ class Renderer extends Entity {
     var flushedMeshes:Int = 0;
     #end
 
-    #if ceramic_debug_rendering_option
-    var lastDebugRendering = ceramic.DebugRendering.DEFAULT;
+    #if ceramic_wireframe
+    var lastWireframe = false;
     #end
 
     public function new() {
@@ -130,8 +130,8 @@ class Renderer extends Entity {
         lastShader = null;
         lastRenderTarget = null;
         lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
-    #if ceramic_debug_rendering_option
-        lastDebugRendering = ceramic.DebugRendering.DEFAULT;
+    #if ceramic_wireframe
+        lastWireframe = false;
     #end
         lastClip = null;
         usedTextures = 0;
@@ -344,12 +344,19 @@ class Renderer extends Entity {
 
             // Update texture
             lastTexture = quad.texture;
-            useFirstTextureInBatch(draw, lastTexture);
 
-    #if ceramic_debug_rendering_option
-            lastDebugRendering = quad.debugRendering;
-            draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+    #if ceramic_wireframe
+            lastWireframe = quad.wireframe;
+            if (lastWireframe) {
+                lastTexture = null;
+                draw.setPrimitiveType(LINE);
+            }
+            else {
+                draw.setPrimitiveType(TRIANGLE);
+            }
     #end
+
+            useFirstTextureInBatch(draw, lastTexture);
 
             // Update render target
             if (quad.computedRenderTarget != lastRenderTarget) {
@@ -407,8 +414,8 @@ class Renderer extends Entity {
                 stateDirty =
                     !isSameShader(quad.shader, lastShader) ||
                     newComputedBlending != lastComputedBlending ||
-    #if ceramic_debug_rendering_option
-                    quad.debugRendering != lastDebugRendering ||
+    #if ceramic_wireframe
+                    quad.wireframe != lastWireframe ||
     #end
                     quad.computedRenderTarget != lastRenderTarget;
     #if ceramic_debug_draw_flush_reason
@@ -712,12 +719,38 @@ class Renderer extends Entity {
 
             #end
 
+
+            #if ceramic_wireframe
+            if (lastWireframe) {
+                draw.putIndice(numPos);
+                draw.putIndice(numPos + 1);
+                draw.putIndice(numPos + 1);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos);
+                draw.putIndice(numPos);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos + 3);
+                draw.putIndice(numPos + 3);
+                draw.putIndice(numPos);
+            }
+            else {
+                draw.putIndice(numPos);
+                draw.putIndice(numPos + 1);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos);
+                draw.putIndice(numPos + 2);
+                draw.putIndice(numPos + 3);
+            }
+            #else
             draw.putIndice(numPos);
             draw.putIndice(numPos + 1);
             draw.putIndice(numPos + 2);
-            draw.putIndice(numPos + 0);
+            draw.putIndice(numPos);
             draw.putIndice(numPos + 2);
             draw.putIndice(numPos + 3);
+            #end
 
         }
 
@@ -872,12 +905,19 @@ class Renderer extends Entity {
 
             // Update texture
             lastTexture = mesh.texture;
-            useFirstTextureInBatch(draw, lastTexture);
 
-    #if ceramic_debug_rendering_option
-            lastDebugRendering = mesh.debugRendering;
-            draw.setRenderWireframe(lastDebugRendering == ceramic.DebugRendering.WIREFRAME);
+    #if ceramic_wireframe
+            lastWireframe = mesh.wireframe;
+            if (lastWireframe) {
+                lastTexture = null;
+                draw.setPrimitiveType(LINE);
+            }
+            else {
+                draw.setPrimitiveType(TRIANGLE);
+            }
     #end
+
+            useFirstTextureInBatch(draw, lastTexture);
 
             // Update render target
             if (mesh.computedRenderTarget != lastRenderTarget) {
@@ -935,8 +975,8 @@ class Renderer extends Entity {
                 stateDirty =
                     !isSameShader(mesh.shader, lastShader) ||
                     newComputedBlending != lastComputedBlending ||
-    #if ceramic_debug_rendering_option
-                    mesh.debugRendering != lastDebugRendering ||
+    #if ceramic_wireframe
+                    mesh.wireframe != lastWireframe ||
     #end
                     mesh.computedRenderTarget != lastRenderTarget;
     #if ceramic_debug_draw_flush_reason
@@ -1025,20 +1065,32 @@ class Renderer extends Entity {
         // Let backend know we will start sending mesh data
         draw.beginDrawMesh(mesh); // TODO pass mesh info
 
-    #if ceramic_debug_rendering_option
-        // TODO avoid allocating an array
-        if (lastDebugRendering == ceramic.DebugRendering.WIREFRAME) {
-            meshIndices = [];
+    #if ceramic_wireframe
+        if (lastWireframe) {
+            meshIndices = mesh.wireframeIndices;
+            if (meshIndices == null) {
+                meshIndices = [];
+                mesh.wireframeIndices = meshIndices;
+            }
             var i = 0;
+            var n = 0;
             while (i < mesh.indices.length) {
-                meshIndices.push(mesh.indices[i]);
-                meshIndices.push(mesh.indices[i+1]);
-                meshIndices.push(mesh.indices[i+1]);
-                meshIndices.push(mesh.indices[i+2]);
-                meshIndices.push(mesh.indices[i+2]);
-                meshIndices.push(mesh.indices[i]);
+                meshIndices[n] = mesh.indices[i];
+                n++;
+                meshIndices[n] = mesh.indices[i+1];
+                n++;
+                meshIndices[n] = mesh.indices[i+1];
+                n++;
+                meshIndices[n] = mesh.indices[i+2];
+                n++;
+                meshIndices[n] = mesh.indices[i+2];
+                n++;
+                meshIndices[n] = mesh.indices[i];
+                n++;
                 i += 3;
             }
+            if (meshIndices.length > n)
+                meshIndices.setArrayLength(n);
             meshSingleColor = true;
         }
     #end
