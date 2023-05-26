@@ -1091,7 +1091,6 @@ class Renderer extends Entity {
             }
             if (meshIndices.length > n)
                 meshIndices.setArrayLength(n);
-            meshSingleColor = true;
         }
     #end
 
@@ -1120,7 +1119,11 @@ class Renderer extends Entity {
             // Check that our mesh is still not too large
             if (visualNumVertices > draw.remainingVertices() || visualNumVertices > draw.remainingIndices()) {
                 endVertices = Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
+                #if ceramic_wireframe
+                endVertices = lastWireframe ? Std.int(endVertices / 6) * 6 : Std.int(endVertices / 3) * 3;
+                #else
                 endVertices = Std.int(endVertices / 3) * 3;
+                #end
             }
         }
 
@@ -1279,7 +1282,11 @@ class Renderer extends Entity {
 
                     startVertices = endVertices;
                     endVertices = startVertices + Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
+                    #if ceramic_wireframe
+                    endVertices = lastWireframe ? Std.int(endVertices / 6) * 6 : Std.int(endVertices / 3) * 3;
+                    #else
                     endVertices = Std.int(endVertices / 3) * 3;
+                    #end
                     if (endVertices > visualNumVertices) {
                         endVertices = visualNumVertices;
                     }
