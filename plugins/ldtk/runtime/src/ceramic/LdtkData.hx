@@ -1789,7 +1789,7 @@ class LdtkTilesetDefinition {
             }
         }
 
-        return null;
+        return -1;
 
     }
 
