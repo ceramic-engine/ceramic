@@ -227,8 +227,8 @@ class MeshExtensions {
      * @param rows The number of rows in the grid
      * @param width The total width of the grid
      * @param height The total height of the grid
-     * @param staggerX (optional, default 0) A stagger value to offset odd rows by this value
-     * @param staggerY (optional, default 0) A stagger value to offset odd columns by this value
+     * @param staggerX (optional, default 0) A stagger value to offset rows by this value
+     * @param staggerY (optional, default 0) A stagger value to offset columns by this value
      * @param attrLength (optional, default 0) The number of attribute values per vertex
      * @param attrValues (optional) The attributes buffer that will be added to vertex data
      */
