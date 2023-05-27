@@ -151,7 +151,7 @@ class MeshExtensions {
     }
 
     /**
-     * Generate vertices to draw arc, pie, ring or disc geometry
+     * Generate vertices and indices to draw arc, pie, ring or disc geometry
      * @param mesh The mesh to work with
      * @param radius Radius of the arc
      * @param angle Angle (from 0 to 360). 360 will make it draw a full circle/ring
@@ -162,7 +162,7 @@ class MeshExtensions {
     public static function createArc(mesh:Mesh, radius:Float, angle:Float, thickness:Float, sides:Int, borderPosition:BorderPosition):Void {
 
         var count:Int = Math.ceil(sides * angle / 360);
-        
+
         var vertices = mesh.vertices;
         var indices = mesh.indices;
 
@@ -218,6 +218,47 @@ class MeshExtensions {
 
         }
 
+    }
+
+    /**
+     * Create vertices to form a grid with the given options
+     * @param mesh The mesh to work with
+     * @param columns The number of columns in the grid
+     * @param rows The number of rows in the grid
+     * @param width The total width of the grid
+     * @param height The total height of the grid
+     * @param staggerX (optional, default 0) A stagger value to offset odd rows by this value
+     * @param staggerY (optional, default 0) A stagger value to offset odd columns by this value
+     * @param attrLength (optional, default 0) The number of attribute values per vertex
+     * @param attrValues (optional) The attributes buffer that will be added to vertex data
+     */
+    public static function createVerticesGrid(mesh:Mesh, columns:Int, rows:Int, width:Float, height:Float, staggerX:Float = 0, staggerY:Float = 0, attrLength:Int = 0, ?attrValues:Array<Float>):Void {
+        mesh.vertices = MeshUtils.createVerticesGrid(mesh.vertices, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
+    }
+
+    /**
+     * Create indices to form a grid with the given options
+     * @param mesh The mesh to work with
+     * @param columns The number of columns in the grid
+     * @param rows The number of rows in the grid
+     * @param mirrorX (optional, default false) Mirror triangles horizontally in odd columns
+     * @param mirrorY (optional, default false) Mirror triangles vertically in odd rows
+     * @param mirrorFlip (optional, default false) Invert the mirroring described by `mirrorX` and `mirrorY`
+     */
+    public static function createIndicesGrid(mesh:Mesh, columns:Int, rows:Int, mirrorX:Bool = false, mirrorY:Bool = false, mirrorFlip:Bool = false):Void {
+        mesh.indices = MeshUtils.createIndicesGrid(mesh.indices, columns, rows, mirrorX, mirrorY, mirrorFlip);
+    }
+
+    /**
+     * Create uvs to match a grid with the given options.
+     * The uvs will be distributed linearly across the mesh so that
+     * when displaying a texture it would be stretched to the grid.
+     * @param mesh The mesh to work with
+     * @param columns The number of columns in the grid
+     * @param rows The number of rows in the grid
+     */
+    public static function createUVsGrid(mesh:Mesh, columns:Int, rows:Int):Void {
+        mesh.uvs = MeshUtils.createUVsGrid(mesh.uvs, columns, rows);
     }
 
 }
