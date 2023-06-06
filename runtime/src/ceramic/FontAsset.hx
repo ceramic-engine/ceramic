@@ -19,9 +19,9 @@ class FontAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('font', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('font', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
         assets = new Assets();

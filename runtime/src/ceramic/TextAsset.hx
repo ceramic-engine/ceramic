@@ -6,9 +6,9 @@ class TextAsset extends Asset {
 
     @observe public var text:String = null;
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('text', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('text', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
 
     }
 

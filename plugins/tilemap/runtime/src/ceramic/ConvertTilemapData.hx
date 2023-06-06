@@ -2,8 +2,8 @@ package ceramic;
 
 import ceramic.Assets;
 import ceramic.ConvertField;
-
 import ceramic.TilemapPlugin;
+
 using ceramic.TilemapPlugin;
 
 class ConvertTilemapData implements ConvertField<String,TilemapData> {
@@ -13,7 +13,7 @@ class ConvertTilemapData implements ConvertField<String,TilemapData> {
     public function basicToField(instance:Entity, field:String, assets:Assets, basic:String, done:TilemapData->Void):Void {
 
         if (basic != null) {
-            assets.ensureTilemap(basic, null, function(asset:TilemapAsset) {
+            assets.ensureTilemap(basic, null, null, function(asset:TilemapAsset) {
                 done(asset != null ? asset.tilemapData : null);
             });
         }

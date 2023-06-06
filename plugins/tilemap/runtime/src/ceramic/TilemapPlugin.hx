@@ -27,7 +27,7 @@ class TilemapPlugin {
             log.info('Init tilemap plugin');
 
             // Extend assets with `tilemap` kind
-            Assets.addAssetKind('tilemap', addTilemap, ['tmx' #if plugin_ldtk , 'ldtk' #end], false, ['ceramic.TilemapData']);
+            Assets.addAssetKind('tilemap', _addTilemap, ['tmx' #if plugin_ldtk , 'ldtk' #end], false, ['ceramic.TilemapData']);
 
             // Extend converters
             var convertTilemapData = new ConvertTilemapData();
@@ -39,41 +39,46 @@ class TilemapPlugin {
 
 /// Asset extensions
 
-    public static function addTilemap(assets:Assets, name:String, ?options:AssetOptions):Void {
+    private static function _addTilemap(assets:Assets, name:String, variant:String, options:AssetOptions):Void {
+        addTilemap(assets, name, variant, options);
+    }
+
+    public static function addTilemap(assets:Assets, name:String, ?variant:String, ?options:AssetOptions):Void {
 
         if (name.startsWith('tilemap:')) name = name.substr(8);
 
-        assets.addAsset(new TilemapAsset(name, options));
+        assets.addAsset(new TilemapAsset(name, variant, options));
 
     }
 
-    public static function ensureTilemap(assets:Assets, name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TilemapAsset->Void):Void {
+    public static function ensureTilemap(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:TilemapAsset->Void):Void {
 
         if (!name.startsWith('tilemap:')) name = 'tilemap:' + name;
 
-        assets.ensure(cast name, options, function(asset) {
+        assets.ensure(cast name, variant, options, function(asset) {
             done(Std.isOfType(asset, TilemapAsset) ? cast asset : null);
         });
 
     }
 
-    public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>):TilemapData {
+    public static function tilemap(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):TilemapData {
 
-        var asset = tilemapAsset(assets, name);
+        var asset = tilemapAsset(assets, name, variant);
         if (asset == null) return null;
         return asset.tilemapData;
 
     }
 
     @:access(ceramic.Assets)
-    public static function tilemapAsset(assets:Assets, name:Either<String,AssetId<String>>):TilemapAsset {
+    public static function tilemapAsset(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):TilemapAsset {
 
         var nameStr:String = cast name;
         if (nameStr.startsWith('tilemap:')) nameStr = nameStr.substr(8);
+        if (variant != null) nameStr += ':' + variant;
 
-        if (!assets.assetsByKindAndName.exists('tilemap')) return assets.parent != null ? tilemapAsset(assets.parent, name) : null;
+        if (!assets.assetsByKindAndName.exists('tilemap')) return assets.parent != null ? tilemapAsset(assets.parent, name, variant) : null;
         var asset:TilemapAsset = cast assets.assetsByKindAndName.get('tilemap').get(nameStr);
-        if (asset == null) return assets.parent != null ? tilemapAsset(assets.parent, name) : null;
+        if (asset == null) return assets.parent != null ? tilemapAsset(assets.parent, name, variant) : null;
         return asset;
 
     }

@@ -12,7 +12,7 @@ class ConvertSpriteSheet implements ConvertField<String,SpriteSheet> {
     public function basicToField(instance:Entity, field:String, assets:Assets, basic:String, done:SpriteSheet->Void):Void {
 
         if (basic != null) {
-            assets.ensureSprite(basic, null, function(asset:SpriteAsset) {
+            assets.ensureSprite(basic, null, null, function(asset:SpriteAsset) {
                 done(asset != null ? asset.sheet : null);
             });
         }

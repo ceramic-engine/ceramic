@@ -26,6 +26,16 @@ class Asset extends Entity implements Observable {
     public var name(default,set):String;
 
     /**
+     * Asset variant
+     */
+    public var variant(default,set):String;
+
+    /**
+     * Asset full name (including variant, if provided)
+     */
+    public var fullName(default,null):String;
+
+    /**
      * Asset path
      */
     public var path(default,set):String;
@@ -79,13 +89,14 @@ class Asset extends Entity implements Observable {
 
 /// Lifecycle
 
-    public function new(kind:String, name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    public function new(kind:String, name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
         this.kind = kind;
         this.options = options != null ? options : {};
         this.name = name;
+        this.variant = variant;
 
         computePath();
 
@@ -267,7 +278,22 @@ class Asset extends Entity implements Observable {
         if (this.name == name) return name;
 
         this.name = name;
-        id = 'asset:$kind:$name';
+
+        fullName = variant != null ? '$name:$variant' : name;
+        id = 'asset:$kind:$fullName';
+
+        return name;
+
+    }
+
+    function set_variant(variant:String):String {
+
+        if (this.variant == variant) return variant;
+
+        this.variant = variant;
+
+        fullName = variant != null ? '$name:$variant' : name;
+        id = 'asset:$kind:$fullName';
 
         return name;
 

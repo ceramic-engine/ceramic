@@ -35,27 +35,31 @@ class SpritePlugin {
 
 /// Asset extensions
 
-    public static function addSprite(assets:Assets, name:String, ?options:AssetOptions):Void {
+    private static function _addSprite(assets:Assets, name:String, variant:String, options:AssetOptions):Void {
+        addSprite(assets, name, variant, options);
+    }
+
+    public static function addSprite(assets:Assets, name:String, ?variant:String, ?options:AssetOptions):Void {
 
         if (name.startsWith('sprite:')) name = name.substr(7);
 
-        assets.addAsset(new SpriteAsset(name, options));
+        assets.addAsset(new SpriteAsset(name, variant, options));
 
     }
 
-    public static function ensureSprite(assets:Assets, name:Either<String,AssetId<String>>, ?options:AssetOptions, done:SpriteAsset->Void):Void {
+    public static function ensureSprite(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:SpriteAsset->Void):Void {
 
         if (!name.startsWith('sprite:')) name = 'sprite:' + name;
 
-        assets.ensure(cast name, options, function(asset) {
+        assets.ensure(cast name, variant, options, function(asset) {
             done(Std.isOfType(asset, SpriteAsset) ? cast asset : null);
         });
 
     }
 
-    public static function sheet(assets:Assets, name:Either<String,AssetId<String>>):SpriteSheet {
+    public static function sheet(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):SpriteSheet {
 
-        var asset = spriteAsset(assets, name);
+        var asset = spriteAsset(assets, name, variant);
         if (asset == null) return null;
 
         return asset.sheet;
@@ -63,14 +67,15 @@ class SpritePlugin {
     }
 
     @:access(ceramic.Assets)
-    public static function spriteAsset(assets:Assets, name:Either<String,AssetId<String>>):SpriteAsset {
+    public static function spriteAsset(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):SpriteAsset {
 
         var nameStr:String = cast name;
         if (nameStr.startsWith('sprite:')) nameStr = nameStr.substr(7);
+        if (variant != null) nameStr += ':' + variant;
 
-        if (!assets.assetsByKindAndName.exists('sprite')) return assets.parent != null ? spriteAsset(assets.parent, name) : null;
+        if (!assets.assetsByKindAndName.exists('sprite')) return assets.parent != null ? spriteAsset(assets.parent, name, variant) : null;
         var asset:SpriteAsset = cast assets.assetsByKindAndName.get('sprite').get(nameStr);
-        if (asset == null) return assets.parent != null ? spriteAsset(assets.parent, name) : null;
+        if (asset == null) return assets.parent != null ? spriteAsset(assets.parent, name, variant) : null;
         return asset;
 
     }

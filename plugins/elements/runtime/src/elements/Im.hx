@@ -246,7 +246,7 @@ class Im {
                 if (count < -DESTROY_ASSET_AFTER_X_FRAMES) {
                     _assetUses.remove(assetId);
                     var assets = _assets != null ? _assets : context.assets;
-                    var asset = assets.asset(assetId);
+                    var asset = assets.asset(assetId, null, null);
                     if (asset != null) {
                         asset.destroy();
                     }
@@ -1672,7 +1672,7 @@ class Im {
         var assets = _assets != null ? _assets : context.assets;
         var texture = assets.texture(assetId);
         if (texture == null) {
-            var imageAsset = assets.asset(assetId);
+            var imageAsset = assets.asset(assetId, null, null);
             if (imageAsset == null) {
                 assets.addImage(assetId);
                 assets.load();

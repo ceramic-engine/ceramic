@@ -5,7 +5,7 @@ class CustomAssetKind {
 
     public var kind:String;
 
-    public var add:Assets->String->?AssetOptions->Void;
+    public var add:(assets:Assets, name:String, variant:String, options:AssetOptions)->Void;
 
     public var extensions:Array<String>;
 

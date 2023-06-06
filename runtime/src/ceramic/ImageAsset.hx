@@ -39,9 +39,9 @@ class ImageAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('image', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('image', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
     }
@@ -186,7 +186,9 @@ class ImageAsset extends Asset {
 
                         // Decode ase data, but once we have our texture, destroy that ase data
                         var ase:Ase = Ase.fromBytes(bytes);
-                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, loadGridTexture ? -1 : 0);
+                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, loadGridTexture ? -1 : 0, {
+                            layers: options?.layers
+                        });
 
                         var texture:Texture = if (loadGridTexture) {
                             AsepriteParser.parseGridTextureFromAsepriteData(

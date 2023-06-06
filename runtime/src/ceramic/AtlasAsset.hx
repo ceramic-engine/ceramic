@@ -24,9 +24,9 @@ class AtlasAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('atlas', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('atlas', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
         assets = new Assets();

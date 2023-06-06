@@ -39,9 +39,9 @@ class SpineAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions) {
 
-        super('spine', name, options);
+        super('spine', name, variant, options);
         handleTexturesDensityChange = true;
 
         if (this.options.scale != null) {

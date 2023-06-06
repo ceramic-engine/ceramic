@@ -35,9 +35,9 @@ class SpriteAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('sprite', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('sprite', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = false; // Handled at atlas level
 
         assets = new Assets();

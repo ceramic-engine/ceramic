@@ -7,7 +7,7 @@ class ConvertTexture implements ConvertField<String,Texture> {
     public function basicToField(instance:Entity, field:String, assets:Assets, basic:String, done:Texture->Void):Void {
 
         if (basic != null) {
-            assets.ensureImage(basic, null, function(asset:ImageAsset) {
+            assets.ensureImage(basic, null, null, function(asset:ImageAsset) {
                 done(asset != null ? asset.texture : null);
             });
         }

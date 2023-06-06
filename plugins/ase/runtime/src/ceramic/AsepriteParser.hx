@@ -18,7 +18,7 @@ using ceramic.Extensions;
  */
 class AsepriteParser {
 
-    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1):AsepriteData {
+    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1, ?options:{?layers:Array<String>}):AsepriteData {
 
         var palette:AsepritePalette = null;
         var tags:Map<String,AsepriteTag> = new Map();
@@ -26,6 +26,8 @@ class AsepriteParser {
         var layers:Array<LayerChunk> = [];
         var duration:Float = 0.0;
         var frames:Array<AsepriteFrame> = [];
+
+        var filterLayers:Array<String> = options?.layers;
 
         // Just a hash key to compute hash of every frame pixels.
         // This can be anything as long as we use the same for each frame.
@@ -103,7 +105,7 @@ class AsepriteParser {
                 break;
 
             var frame = frames[f];
-            parseAseFramePixels(ase, palette, layers, frame, allFrameLayers);
+            parseAseFramePixels(ase, palette, layers, frame, allFrameLayers, filterLayers);
 
             // Compute hash to detect duplicate pixels
             frame.hash = hmac.make(hashKey, frame.pixels.toBytes());
@@ -339,7 +341,7 @@ class AsepriteParser {
 
     #end
 
-    static function parseAseFramePixels(ase:Ase, palette:AsepritePalette, layers:Array<LayerChunk>, frame:AsepriteFrame, allFrameLayers:Array<Array<AsepriteFrameLayer>>):Void {
+    static function parseAseFramePixels(ase:Ase, palette:AsepritePalette, layers:Array<LayerChunk>, frame:AsepriteFrame, allFrameLayers:Array<Array<AsepriteFrameLayer>>, filterLayers:Array<String>):Void {
 
         var packedWidth:Int = ase.width;
         var packedHeight:Int = ase.height;
@@ -375,7 +377,10 @@ class AsepriteParser {
                     frameLayer.pixels = parseAseCelPixels(ase, palette, celChunk);
                 }
 
-                if (frameLayer != null && (frameLayer.layer.flags & LayerFlags.Visible) == LayerFlags.Visible) {
+                if (frameLayer != null && (
+                    (filterLayers == null && (frameLayer.layer.flags & LayerFlags.Visible) == LayerFlags.Visible)) ||
+                    (filterLayers != null && filterLayers.contains(frameLayer.layer.name)
+                )) {
                     var frameCelChunk = frameLayer.celChunk;
                     if (frameCelChunk.xPosition < left)
                         left = frameCelChunk.xPosition;
@@ -415,7 +420,10 @@ class AsepriteParser {
         var l:Int = 0;
         while (l < frameLayers.length) {
             var frameLayer = frameLayers[l];
-            if (frameLayer.pixels != null && (frameLayer.layer.flags & LayerFlags.Visible) == LayerFlags.Visible) {
+            if (frameLayer.pixels != null && (
+                (filterLayers == null && (frameLayer.layer.flags & LayerFlags.Visible) == LayerFlags.Visible)) ||
+                (filterLayers != null && filterLayers.contains(frameLayer.layer.name)
+            )) {
                 var frameCelChunk = frameLayer.celChunk;
                 if (frameCelChunk != null) {
                     var srcX:Int = 0;

@@ -16,7 +16,7 @@ class EntypoIconView extends TextView implements Observable {
         align = CENTER;
         verticalAlign = CENTER;
         pointSize = 16;
-        context.assets.ensureFont('font:entypo', null, function(fontAsset) {
+        context.assets.ensureFont('font:entypo', null, null, function(fontAsset) {
             font = fontAsset.font;
             preRenderedSize = 20;
             autorun(updateContent);

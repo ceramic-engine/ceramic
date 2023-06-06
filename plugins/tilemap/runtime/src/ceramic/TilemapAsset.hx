@@ -53,9 +53,9 @@ class TilemapAsset extends Asset {
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions) {
 
-        super('tilemap', name, options);
+        super('tilemap', name, variant, options);
         handleTexturesDensityChange = false;
 
         assets = new Assets();
