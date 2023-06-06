@@ -716,4 +716,8 @@ class Utils {
 
     }
 
+    public inline static function lerp(a:Float, b:Float, t:Float):Float {
+        return a + (b - a) * t;
+    }
+
 }
