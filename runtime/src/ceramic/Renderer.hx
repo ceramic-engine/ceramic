@@ -1054,6 +1054,7 @@ class Renderer extends Entity {
 
         // Color
         var meshColors = mesh.colors;
+        var meshFloatColors = mesh.floatColors;
         var meshSingleColor = stencilClip || mesh.colorMapping == MESH;
         var meshIndicesColor = !stencilClip && mesh.colorMapping == INDICES;
 
@@ -1165,21 +1166,30 @@ class Renderer extends Entity {
                         g = 0;
                         b = 0;
                     }
-                    else if (/*meshDrawsRenderTexture ||*/ lastComputedBlending == ceramic.Blending.ALPHA) {
-                        var meshAlphaColor = meshColors.unsafeGet(0);
-                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                        r = meshAlphaColor.redFloat;
-                        g = meshAlphaColor.greenFloat;
-                        b = meshAlphaColor.blueFloat;
-                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                    }
                     else {
-                        var meshAlphaColor = meshColors.unsafeGet(0);
-                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                        r = meshAlphaColor.redFloat * a;
-                        g = meshAlphaColor.greenFloat * a;
-                        b = meshAlphaColor.blueFloat * a;
-                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        if (meshFloatColors != null) {
+                            a = mesh.computedAlpha * meshFloatColors[3];
+                            r = meshFloatColors[0];
+                            g = meshFloatColors[1];
+                            b = meshFloatColors[2];
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
+                        else if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                            var meshAlphaColor = meshColors.unsafeGet(0);
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat;
+                            g = meshAlphaColor.greenFloat;
+                            b = meshAlphaColor.blueFloat;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
+                        else {
+                            var meshAlphaColor = meshColors.unsafeGet(0);
+                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                            r = meshAlphaColor.redFloat * a;
+                            g = meshAlphaColor.greenFloat * a;
+                            b = meshAlphaColor.blueFloat * a;
+                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                        }
                     }
                 }
 
@@ -1220,21 +1230,41 @@ class Renderer extends Entity {
                     // Color
                     //
                     if (!meshSingleColor) {
-                        var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+                        if (meshFloatColors != null) {
+                            var floatColorIndex = (meshIndicesColor ? i : j) * 4;
 
-                        if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat;
-                            g = meshAlphaColor.greenFloat;
-                            b = meshAlphaColor.blueFloat;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                                a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
+                                r = meshFloatColors[floatColorIndex];
+                                g = meshFloatColors[floatColorIndex+1];
+                                b = meshFloatColors[floatColorIndex+2];
+                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            }
+                            else {
+                                a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
+                                r = meshFloatColors[floatColorIndex] * a;
+                                g = meshFloatColors[floatColorIndex+1] * a;
+                                b = meshFloatColors[floatColorIndex+2] * a;
+                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            }
                         }
                         else {
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat * a;
-                            g = meshAlphaColor.greenFloat * a;
-                            b = meshAlphaColor.blueFloat * a;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+
+                            if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                                r = meshAlphaColor.redFloat;
+                                g = meshAlphaColor.greenFloat;
+                                b = meshAlphaColor.blueFloat;
+                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            }
+                            else {
+                                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                                r = meshAlphaColor.redFloat * a;
+                                g = meshAlphaColor.greenFloat * a;
+                                b = meshAlphaColor.blueFloat * a;
+                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                            }
                         }
                     }
                     draw.putColor(r, g, b, a);

@@ -94,13 +94,28 @@ class Mesh extends Visual {
     @editable
     public var color(get,set):Color;
     function get_color():Color {
-        if (colors == null || colors.length == 0) return Color.WHITE;
-        return colors[0].color;
+        return if (floatColors != null && floatColors.length >= 3) {
+            Color.fromRGBFloat(floatColors[0], floatColors[1], floatColors[2]);
+        }
+        else if (colors != null && colors.length > 0) {
+            colors[0].color;
+        }
+        else {
+            Color.WHITE;
+        }
+
     }
     function set_color(color:Color):Color {
-        if (colors == null) colors = [];
-        if (colors.length == 0) colors.push(new AlphaColor(color, 255));
-        else colors[0] = new AlphaColor(color, 255);
+        if (floatColors != null) {
+            floatColors[0] = color.redFloat;
+            floatColors[1] = color.greenFloat;
+            floatColors[2] = color.blueFloat;
+            floatColors[3] = 1.0;
+        }
+        else {
+            if (colors == null) colors = [];
+            colors[0] = new AlphaColor(color, 255);
+        }
         return color;
     }
 
@@ -120,8 +135,18 @@ class Mesh extends Visual {
 
     /**
      * An array of colors for each vertex.
+     * Each color is stored in a single `AlphaColor`(`Int`) value.
      */
     public var colors:Array<AlphaColor> = [];
+
+    /**
+     * An array of colors for each vertex stored are four float32 values for each color.
+     * Generally not needed unless you need extra precision for each color value.
+     * If provided (not `null`), it will be used instead of `colors`.
+     * When using `floatColors` instead of `colors`, no additional operation
+     * related to premultiplied alpha will be done on the CPU.
+     */
+    public var floatColors:Float32Array = null;
 
 /// Texture
 

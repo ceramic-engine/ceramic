@@ -32,37 +32,76 @@ class MeshUtils {
 
         var index:Int = 0;
         var attrIndex:Int = 0;
-        if (staggerX == 0 && staggerY == 0) {
-            for (y in 0...(rows + 1)) {
-                for (x in 0...(columns + 1)) {
+        if (attrLength > 0 && attrValues == null) {
+            if (staggerX == 0 && staggerY == 0) {
+                for (y in 0...(rows + 1)) {
+                    for (x in 0...(columns + 1)) {
 
-                    var xPos:Float = x * columnWidth;
-                    var yPos:Float = y * rowHeight;
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
 
-                    vertices[index++] = xPos;
-                    vertices[index++] = yPos;
+                        vertices[index++] = xPos;
+                        vertices[index++] = yPos;
 
-                    // Custom attributes
-                    for (i in 0...attrLength) {
-                        vertices[index++] = attrValues[attrIndex++];
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            vertices[index++] = 0;
+                        }
+                    }
+                }
+            }
+            else {
+                for (y in 0...(rows + 1)) {
+                    var modY = (y % 2);
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        vertices[index++] = xPos + staggerX * modY;
+                        vertices[index++] = yPos + staggerY * (x % 2);
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            vertices[index++] = 0;
+                        }
                     }
                 }
             }
         }
         else {
-            for (y in 0...(rows + 1)) {
-                var modY = (y % 2);
-                for (x in 0...(columns + 1)) {
+            if (staggerX == 0 && staggerY == 0) {
+                for (y in 0...(rows + 1)) {
+                    for (x in 0...(columns + 1)) {
 
-                    var xPos:Float = x * columnWidth;
-                    var yPos:Float = y * rowHeight;
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
 
-                    vertices[index++] = xPos + staggerX * modY;
-                    vertices[index++] = yPos + staggerY * (x % 2);
+                        vertices[index++] = xPos;
+                        vertices[index++] = yPos;
 
-                    // Custom attributes
-                    for (i in 0...attrLength) {
-                        vertices[index++] = attrValues[attrIndex++];
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            vertices[index++] = attrValues[attrIndex++];
+                        }
+                    }
+                }
+            }
+            else {
+                for (y in 0...(rows + 1)) {
+                    var modY = (y % 2);
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        vertices[index++] = xPos + staggerX * modY;
+                        vertices[index++] = yPos + staggerY * (x % 2);
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            vertices[index++] = attrValues[attrIndex++];
+                        }
                     }
                 }
             }
