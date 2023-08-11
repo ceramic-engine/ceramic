@@ -3,6 +3,7 @@ package ceramic;
 #if plugin_arcade
 import arcade.Body;
 import arcade.Collidable;
+import arcade.QuadTree;
 import arcade.SortDirection;
 import arcade.Tile;
 import ceramic.ArcadeSortGroup;
@@ -185,46 +186,10 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
-    function overlapCeramicGroupVsCeramicGroup(group1:Group<Visual>, group2:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+    override public function overlapGroupVsGroup(group1:arcade.Group, group2:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group1);
-        }
-        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group2);
-        }
-
-        _total = 0;
-
-        var objects1 = group1.items;
-        var objects2 = group2.items;
-        for (i in 0...objects1.length) {
-            var body1 = objects1[i].body;
-            if (body1 != null) {
-                for (j in 0...objects2.length) {
-                    var body2 = objects2[j].body;
-
-                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, true))
-                    {
-                        if (overlapCallback != null)
-                        {
-                            overlapCallback(body1, body2);
-                        }
-
-                        _total++;
-                    }
-                }
-            }
-        }
-
-        return (_total > 0);
-
-    }
-
-    function overlapCeramicGroupVsArcadeGroup(group1:Group<Visual>, group2:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
-
-        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group1);
+            sort(group1);
         }
         if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
             sort(group2);
@@ -232,45 +197,68 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects1 = group1.items;
-        var objects2 = group2.objects;
-        for (i in 0...objects1.length) {
-            var body1 = objects1[i].body;
+        final objects1 = group1.objects;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i));
+        }
+
+        final objects2 = group2.objects;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
             if (body1 != null) {
-                for (j in 0...objects2.length) {
-                    var body2 = objects2[j];
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
 
-                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, true))
-                    {
-                        if (overlapCallback != null)
+                    if (body1 != body2 && body2 != null) {
+                        if (separate(body1, body2, processCallback, true))
                         {
-                            overlapCallback(body1, body2);
-                        }
+                            if (overlapCallback != null)
+                            {
+                                overlapCallback(body1, body2);
+                            }
 
-                        _total++;
+                            _total++;
+                        }
                     }
                 }
             }
         }
 
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
         return (_total > 0);
 
     }
 
-    public function overlapCeramicGroupVsItself(group:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+    override public function overlapGroupVsItself(group:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group);
+            sort(group);
         }
 
         _total = 0;
 
-        var objects = group.items;
+        var objects = group.objects;
         for (i in 0...objects.length) {
-            var body1 = objects[i].body;
+            var body1 = objects[i];
             if (body1 != null) {
                 for (j in 0...objects.length) {
-                    var body2 = objects[j].body;
+                    var body2 = objects[j];
 
                     if (body1 != body2 && body2 != null) {
                         if (separate(body1, body2, processCallback, true))
@@ -291,6 +279,234 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    override public function overlapBodyVsGroup(body:Body, group:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group);
+        }
+
+        _total = 0;
+
+        var objects = group.objects;
+        var numObjects = objects.length;
+
+        if (!skipQuadTree && numObjects > maxObjectsWithoutQuadTree) {
+            final quadTree = getQuadTree();
+
+            for (i in 0...numObjects) {
+                var aBody = objects.unsafeGet(i);
+                if (aBody != null) {
+                    quadTree.insert(aBody);
+                }
+            }
+            final filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+            numObjects = filteredObjects.length;
+
+            for (i in 0...numObjects) {
+                final body2:Body = filteredObjects.unsafeGet(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
+                {
+                    if (overlapCallback != null)
+                    {
+                        overlapCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            releaseQuadTree(quadTree);
+        }
+        else if (numObjects > 0) {
+            final pool = ArrayPool.pool(numObjects);
+            final tmpObjects = pool.get();
+
+            for (i in 0...numObjects) {
+                tmpObjects.set(i, objects.unsafeGet(i));
+            }
+
+            for (i in 0...numObjects) {
+                final body2:Body = tmpObjects.get(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
+                {
+                    if (overlapCallback != null)
+                    {
+                        overlapCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            pool.release(tmpObjects);
+        }
+
+        return (_total > 0);
+
+    }
+
+    function overlapCeramicGroupVsCeramicGroup(group1:Group<Visual>, group2:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group1);
+        }
+        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group2);
+        }
+
+        _total = 0;
+
+        final objects1 = group1.items;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i).body);
+        }
+
+        final objects2 = group2.items;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
+            if (body1 != null) {
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
+
+                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, true))
+                    {
+                        if (overlapCallback != null)
+                        {
+                            overlapCallback(body1, body2);
+                        }
+
+                        _total++;
+                    }
+                }
+            }
+        }
+
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
+        return (_total > 0);
+
+    }
+
+    function overlapCeramicGroupVsArcadeGroup(group1:Group<Visual>, group2:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group1);
+        }
+        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group2);
+        }
+
+        _total = 0;
+
+        final objects1 = group1.items;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i).body);
+        }
+
+        final objects2 = group2.objects;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
+            if (body1 != null) {
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
+
+                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, true))
+                    {
+                        if (overlapCallback != null)
+                        {
+                            overlapCallback(body1, body2);
+                        }
+
+                        _total++;
+                    }
+                }
+            }
+        }
+
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
+        return (_total > 0);
+
+    }
+
+    public function overlapCeramicGroupVsItself(group:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group);
+        }
+
+        _total = 0;
+
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body1 = tmpObjects.get(i);
+
+            if (body1 != null) {
+                for (j in 0...objects.length) {
+                    final body2 = tmpObjects.get(j);
+
+                    if (body1 != body2 && body2 != null) {
+                        if (separate(body1, body2, processCallback, true))
+                        {
+                            if (overlapCallback != null)
+                            {
+                                overlapCallback(body1, body2);
+                            }
+
+                            _total++;
+                        }
+                    }
+                }
+            }
+        }
+
+        pool.release(tmpObjects);
+
+        return (_total > 0);
+
+    }
+
     public function overlapBodyVsCeramicGroup(body:Body, group:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -300,37 +516,61 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         _total = 0;
 
         var objects = group.items;
-        var filteredObjects = null;
+        var numObjects = objects.length;
 
-        var quadTree:arcade.QuadTree = null;
-        if (!skipQuadTree && objects.length > maxObjectsWithoutQuadTree) {
-            quadTree = getQuadTree();
-            for (i in 0...objects.length) {
+        if (!skipQuadTree && numObjects > maxObjectsWithoutQuadTree) {
+            final quadTree = getQuadTree();
+
+            for (i in 0...numObjects) {
                 var object = objects.unsafeGet(i);
                 var aBody = object.body;
                 if (aBody != null) {
                     quadTree.insert(aBody);
                 }
             }
-            filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
-        }
+            final filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+            numObjects = filteredObjects.length;
 
-        for (i in 0...objects.length) {
-            var body2 = filteredObjects != null ? filteredObjects.unsafeGet(i) : objects[i].body;
+            for (i in 0...numObjects) {
+                final body2:Body = filteredObjects.unsafeGet(i);
 
-            if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
-            {
-                if (overlapCallback != null)
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
                 {
-                    overlapCallback(body, body2);
+                    if (overlapCallback != null)
+                    {
+                        overlapCallback(body, body2);
+                    }
+
+                    _total++;
                 }
-
-                _total++;
             }
-        }
 
-        if (quadTree != null)
             releaseQuadTree(quadTree);
+        }
+        else if (numObjects > 0) {
+            final pool = ArrayPool.pool(numObjects);
+            final tmpObjects = pool.get();
+
+            for (i in 0...numObjects) {
+                tmpObjects.set(i, objects.unsafeGet(i).body);
+            }
+
+            for (i in 0...numObjects) {
+                final body2:Body = tmpObjects.get(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, true))
+                {
+                    if (overlapCallback != null)
+                    {
+                        overlapCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            pool.release(tmpObjects);
+        }
 
         return (_total > 0);
 
@@ -338,8 +578,6 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     // TODO use haxe 4.2 overloads to resolve collidable types
     // at compile time instead of runtime
-
-    // TODO collide with tilemap layers
 
     override function collide(
         element1:Collidable, ?element2:Collidable,
@@ -475,46 +713,10 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
-    function collideCeramicGroupVsCeramicGroup(group1:Group<Visual>, group2:Group<Visual>, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+    override public function collideGroupVsGroup(group1:arcade.Group, group2:arcade.Group, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group1);
-        }
-        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group2);
-        }
-
-        _total = 0;
-
-        var objects1 = group1.items;
-        var objects2 = group2.items;
-        for (i in 0...objects1.length) {
-            var body1 = objects1[i].body;
-            if (body1 != null) {
-                for (j in 0...objects2.length) {
-                    var body2 = objects2[j].body;
-
-                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, false))
-                    {
-                        if (collideCallback != null)
-                        {
-                            collideCallback(body1, body2);
-                        }
-
-                        _total++;
-                    }
-                }
-            }
-        }
-
-        return (_total > 0);
-
-    }
-
-    function collideCeramicGroupVsArcadeGroup(group1:Group<Visual>, group2:arcade.Group, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
-
-        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group1);
+            sort(group1);
         }
         if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
             sort(group2);
@@ -522,47 +724,70 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects1 = group1.items;
-        var objects2 = group2.objects;
-        for (i in 0...objects1.length) {
-            var body1 = objects1[i].body;
+        final objects1 = group1.objects;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i));
+        }
+
+        final objects2 = group2.objects;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
             if (body1 != null) {
-                for (j in 0...objects2.length) {
-                    var body2 = objects2[j];
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
 
-                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, false))
-                    {
-                        if (collideCallback != null)
+                    if (body1 != body2 && body2 != null) {
+                        if (separate(body1, body2, processCallback, false))
                         {
-                            collideCallback(body1, body2);
-                        }
+                            if (collideCallback != null)
+                            {
+                                collideCallback(body1, body2);
+                            }
 
-                        _total++;
+                            _total++;
+                        }
                     }
                 }
             }
         }
 
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
         return (_total > 0);
 
     }
 
-    public function collideCeramicGroupVsItself(group:Group<Visual>, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+    override public function collideGroupVsItself(group:arcade.Group, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
-            sortCeramicGroup(group);
+            sort(group);
         }
 
         _total = 0;
 
-        var objects = group.items;
+        var objects = group.objects;
         for (i in 0...objects.length) {
-            var body1 = objects[i].body;
+            var body1 = objects[i];
             if (body1 != null) {
                 for (j in 0...objects.length) {
-                    var body2 = objects[j].body;
+                    var body2 = objects[j];
 
-                    if (body1 != body2 && body1 != null && body2 != null) {
+                    if (body1 != body2 && body2 != null) {
                         if (separate(body1, body2, processCallback, false))
                         {
                             if (collideCallback != null)
@@ -581,6 +806,234 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    override public function collideBodyVsGroup(body:Body, group:arcade.Group, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group);
+        }
+
+        _total = 0;
+
+        var objects = group.objects;
+        var numObjects = objects.length;
+
+        if (!skipQuadTree && numObjects > maxObjectsWithoutQuadTree) {
+            final quadTree = getQuadTree();
+
+            for (i in 0...numObjects) {
+                var aBody = objects.unsafeGet(i);
+                if (aBody != null) {
+                    quadTree.insert(aBody);
+                }
+            }
+            final filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+            numObjects = filteredObjects.length;
+
+            for (i in 0...numObjects) {
+                final body2:Body = filteredObjects.unsafeGet(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
+                {
+                    if (collideCallback != null)
+                    {
+                        collideCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            releaseQuadTree(quadTree);
+        }
+        else if (numObjects > 0) {
+            final pool = ArrayPool.pool(numObjects);
+            final tmpObjects = pool.get();
+
+            for (i in 0...numObjects) {
+                tmpObjects.set(i, objects.unsafeGet(i));
+            }
+
+            for (i in 0...numObjects) {
+                final body2:Body = tmpObjects.get(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
+                {
+                    if (collideCallback != null)
+                    {
+                        collideCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            pool.release(tmpObjects);
+        }
+
+        return (_total > 0);
+
+    }
+
+    function collideCeramicGroupVsCeramicGroup(group1:Group<Visual>, group2:Group<Visual>, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group1);
+        }
+        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group2);
+        }
+
+        _total = 0;
+
+        final objects1 = group1.items;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i).body);
+        }
+
+        final objects2 = group2.items;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
+            if (body1 != null) {
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
+
+                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, false))
+                    {
+                        if (collideCallback != null)
+                        {
+                            collideCallback(body1, body2);
+                        }
+
+                        _total++;
+                    }
+                }
+            }
+        }
+
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
+        return (_total > 0);
+
+    }
+
+    function collideCeramicGroupVsArcadeGroup(group1:Group<Visual>, group2:arcade.Group, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group1);
+        }
+        if (group2.sortDirection != NONE && (group2.sortDirection != INHERIT || sortDirection != NONE)) {
+            sort(group2);
+        }
+
+        _total = 0;
+
+        final objects1 = group1.items;
+        final numObjects1 = objects1.length;
+
+        final pool1 = ArrayPool.pool(numObjects1);
+        final tmpObjects1 = pool1.get();
+
+        for (i in 0...numObjects1) {
+            tmpObjects1.set(i, objects1.unsafeGet(i).body);
+        }
+
+        final objects2 = group2.objects;
+        final numObjects2 = objects2.length;
+
+        final pool2 = ArrayPool.pool(numObjects2);
+        final tmpObjects2 = pool2.get();
+
+        for (i in 0...numObjects2) {
+            tmpObjects2.set(i, objects2.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects1) {
+            var body1 = tmpObjects1.get(i);
+            if (body1 != null) {
+                for (j in 0...numObjects2) {
+                    var body2 = tmpObjects2.get(j);
+
+                    if (body1 != body2 && body2 != null && separate(body1, body2, processCallback, false))
+                    {
+                        if (collideCallback != null)
+                        {
+                            collideCallback(body1, body2);
+                        }
+
+                        _total++;
+                    }
+                }
+            }
+        }
+
+        pool1.release(tmpObjects1);
+        pool2.release(tmpObjects2);
+
+        return (_total > 0);
+
+    }
+
+    public function collideCeramicGroupVsItself(group:Group<Visual>, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
+            sortCeramicGroup(group);
+        }
+
+        _total = 0;
+
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body1 = tmpObjects.get(i);
+
+            if (body1 != null) {
+                for (j in 0...objects.length) {
+                    final body2 = tmpObjects.get(j);
+
+                    if (body1 != body2 && body1 != null && body2 != null) {
+                        if (separate(body1, body2, processCallback, false))
+                        {
+                            if (collideCallback != null)
+                            {
+                                collideCallback(body1, body2);
+                            }
+
+                            _total++;
+                        }
+                    }
+                }
+            }
+        }
+
+        pool.release(tmpObjects);
+
+        return (_total > 0);
+
+    }
+
     public function collideBodyVsCeramicGroup(body:Body, group:Group<Visual>, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -590,37 +1043,61 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         _total = 0;
 
         var objects = group.items;
-        var filteredObjects = null;
+        var numObjects = objects.length;
 
-        var quadTree:arcade.QuadTree = null;
-        if (!skipQuadTree && objects.length > maxObjectsWithoutQuadTree) {
-            quadTree = getQuadTree();
-            for (i in 0...objects.length) {
+        if (!skipQuadTree && numObjects > maxObjectsWithoutQuadTree) {
+            final quadTree = getQuadTree();
+
+            for (i in 0...numObjects) {
                 var object = objects.unsafeGet(i);
                 var aBody = object.body;
                 if (aBody != null) {
                     quadTree.insert(aBody);
                 }
             }
-            filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
-        }
+            final filteredObjects = quadTree.retrieve(body.left, body.top, body.right, body.bottom);
+            numObjects = filteredObjects.length;
 
-        for (i in 0...objects.length) {
-            var body2 = filteredObjects != null ? filteredObjects.unsafeGet(i) : objects[i].body;
+            for (i in 0...numObjects) {
+                final body2:Body = filteredObjects.unsafeGet(i);
 
-            if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
-            {
-                if (collideCallback != null)
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
                 {
-                    collideCallback(body, body2);
+                    if (collideCallback != null)
+                    {
+                        collideCallback(body, body2);
+                    }
+
+                    _total++;
                 }
-
-                _total++;
             }
-        }
 
-        if (quadTree != null)
             releaseQuadTree(quadTree);
+        }
+        else if (numObjects > 0) {
+            final pool = ArrayPool.pool(numObjects);
+            final tmpObjects = pool.get();
+
+            for (i in 0...numObjects) {
+                tmpObjects.set(i, objects.unsafeGet(i).body);
+            }
+
+            for (i in 0...numObjects) {
+                final body2:Body = tmpObjects.get(i);
+
+                if (body != body2 && body2 != null && separate(body, body2, processCallback, false))
+                {
+                    if (collideCallback != null)
+                    {
+                        collideCallback(body, body2);
+                    }
+
+                    _total++;
+                }
+            }
+
+            pool.release(tmpObjects);
+        }
 
         return (_total > 0);
 
@@ -827,15 +1304,27 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.items;
-        for (i in 0...objects.length) {
-            var body = objects[i].body;
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             if (body != null) {
                 var total = _total;
                 separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
                 _total += total;
             }
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -849,15 +1338,27 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.items;
-        for (i in 0...objects.length) {
-            var body = objects[i].body;
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             if (body != null) {
                 var total = _total;
                 separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
                 _total += total;
             }
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -871,13 +1372,25 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.objects;
-        for (i in 0...objects.length) {
-            var body = objects[i];
+        final objects = group.objects;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             var total = _total;
             separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
             _total += total;
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -891,13 +1404,25 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.objects;
-        for (i in 0...objects.length) {
-            var body = objects[i];
+        final objects = group.objects;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             var total = _total;
             separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
             _total += total;
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -911,15 +1436,27 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.items;
-        for (i in 0...objects.length) {
-            var body = objects[i].body;
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             if (body != null) {
                 var total = _total;
                 separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
                 _total += total;
             }
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -933,15 +1470,27 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.items;
-        for (i in 0...objects.length) {
-            var body = objects[i].body;
+        final objects = group.items;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i).body);
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             if (body != null) {
                 var total = _total;
                 separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
                 _total += total;
             }
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -955,13 +1504,25 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.objects;
-        for (i in 0...objects.length) {
-            var body = objects[i];
+        final objects = group.objects;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             var total = _total;
             separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
             _total += total;
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
@@ -975,13 +1536,25 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         _total = 0;
 
-        var objects = group.objects;
-        for (i in 0...objects.length) {
-            var body = objects[i];
+        final objects = group.objects;
+        final numObjects = objects.length;
+
+        final pool = ArrayPool.pool(numObjects);
+        final tmpObjects = pool.get();
+
+        for (i in 0...numObjects) {
+            tmpObjects.set(i, objects.unsafeGet(i));
+        }
+
+        for (i in 0...numObjects) {
+            final body = tmpObjects.get(i);
+
             var total = _total;
             separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
             _total += total;
         }
+
+        pool.release(tmpObjects);
 
         return (_total > 0);
 
