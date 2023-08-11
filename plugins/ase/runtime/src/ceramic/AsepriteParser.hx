@@ -18,7 +18,7 @@ using ceramic.Extensions;
  */
 class AsepriteParser {
 
-    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1, ?options:{?layers:Array<String>}):AsepriteData {
+    public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1, premultiplyAlpha:Bool = true, ?options:{?layers:Array<String>}):AsepriteData {
 
         var palette:AsepritePalette = null;
         var tags:Map<String,AsepriteTag> = new Map();
@@ -142,6 +142,12 @@ class AsepriteParser {
                         frame.offsetX, frame.offsetY
                     );
                 }
+            }
+        }
+
+        if (premultiplyAlpha) {
+            for (i in 0...frames.length) {
+                PremultiplyAlpha.premultiplyAlpha(frames.unsafeGet(i).pixels);
             }
         }
 
