@@ -182,6 +182,11 @@ class ImageAsset extends Asset {
                 if (bytes != null) {
                     try {
 
+                        if (options != null && options.width != null && options.height != null) {
+                            aseTexWidth = options.width;
+                            aseTexHeight = options.height;
+                        }
+
                         final loadGridTexture = (aseTexWidth > 0 && aseTexHeight > 0);
 
                         // Decode ase data, but once we have our texture, destroy that ase data
