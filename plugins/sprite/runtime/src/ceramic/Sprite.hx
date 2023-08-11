@@ -179,6 +179,7 @@ class Sprite<T=String> extends Visual {
         super();
 
         quad = new Quad();
+        quad.inheritAlpha = true;
         add(quad);
 
         SpriteSystem.shared.sprites.push(cast this);
