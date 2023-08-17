@@ -45,7 +45,7 @@ void main() {
             tcoord.y * resolution.y
         );
 
-        float gap = 1.0;//(1.0 / resolution.x);
+        float gap = 1.0;
 
         // compute antialiased grid pattern
         float line = grid(gridThickness, gap, uv);
