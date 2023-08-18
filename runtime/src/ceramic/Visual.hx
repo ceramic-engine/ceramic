@@ -1885,7 +1885,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         super.destroy();
 
-        if (ceramic.App.app.screen.focusedVisual == this) {
+        if (@:privateAccess ceramic.App.app.screen.unobservedFocusedVisual == this) {
             ceramic.App.app.screen.focusedVisual = null;
         }
 
