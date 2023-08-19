@@ -460,7 +460,7 @@ class Files {
             return null;
         }
         else {
-            var data:UInt8Array = fs.readFileSync(path, 'binary');
+            var data:UInt8Array = fs.readFileSync(path);
             return data != null ? data.toBytes() : null;
         }
 
