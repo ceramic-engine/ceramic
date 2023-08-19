@@ -73,7 +73,7 @@ class Spine extends Visual {
 
     var clipper:SkeletonClipping = new SkeletonClipping();
 
-	var clipShape:Shape = null;
+    var clipShape:Shape = null;
 
     var slotClips:IntMap<Shape> = new IntMap(16, 0.5, true);
 
@@ -652,18 +652,18 @@ class Spine extends Visual {
             }
         }
 
-		keys = slotClips.iterableKeys;
-		for (i in 0...keys.length) {
-			var key = keys.unsafeGet(i);
-			var clip = slotClips.getInline(key);
-			if (clip != null) {
-				clip.points = null;
-				clip.destroy();
-				if (!destroyed) {
-					slotClips.set(key, null);
-				}
-			}
-		}
+        keys = slotClips.iterableKeys;
+        for (i in 0...keys.length) {
+            var key = keys.unsafeGet(i);
+            var clip = slotClips.getInline(key);
+            if (clip != null) {
+                clip.points = null;
+                clip.destroy();
+                if (!destroyed) {
+                    slotClips.set(key, null);
+                }
+            }
+        }
 
         if (destroyed) {
             slotMeshes = null;
@@ -1438,11 +1438,11 @@ class Spine extends Visual {
                                     if (mesh.colors == null) mesh.colors = [alphaColor];
                                     else mesh.colors[0] = alphaColor;
 									
-									if (clipper.isClipping()) {
-										mesh.clip = clipShape;
+                                    if (clipper.isClipping()) {
+                                        mesh.clip = clipShape;
                                     } else {
-										mesh.clip = null;
-									}
+                                        mesh.clip = null;
+                                    }
 
                                     mesh.blending = isAdditive ? Blending.ADD : Blending.AUTO;
                                     mesh.depth = slotInfo.depth;
@@ -1552,20 +1552,20 @@ class Spine extends Visual {
                     clipAttachment = cast slot.attachment;
                     clipper.clipStart(slot, clipAttachment);
 					
-					clipShape = slotClips.getInline(slot.data.index);
+                    clipShape = slotClips.getInline(slot.data.index);
 
-					if (clipShape == null) {
-						clipShape = new Shape();
-						clipShape.visible = false;
-						add(clipShape);
-						slotClips.set(slot.data.index, clipShape);
-					}
+                    if (clipShape == null) {
+                        clipShape = new Shape();
+                        clipShape.visible = false;
+                        add(clipShape);
+                        slotClips.set(slot.data.index, clipShape);
+                    }
 
-					@:privateAccess var points:Array<Float> = cast clipper.clippingPolygon;
-					clipShape.points = points.slice(0);
-					clipShape.scaleX = skeletonScale;
-					clipShape.scaleY = -skeletonScale;
-					clipShape.computeContent();
+                    @:privateAccess var points:Array<Float> = cast clipper.clippingPolygon;
+                    clipShape.points = points.slice(0);
+                    clipShape.scaleX = skeletonScale;
+                    clipShape.scaleY = -skeletonScale;
+                    clipShape.computeContent();
 
                     continue;
 				}
