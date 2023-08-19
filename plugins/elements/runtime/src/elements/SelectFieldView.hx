@@ -20,6 +20,8 @@ using StringTools;
 
 class SelectFieldView extends FieldView {
 
+    @observe public var theme:Theme = null;
+
     static var _point = new Point();
 
     static final MAX_LIST_HEIGHT = 200;
@@ -115,7 +117,7 @@ class SelectFieldView extends FieldView {
 
         textView = new TextView();
         textView.minHeight = 15;
-        textView.viewSize(fill(), auto());
+        textView.viewSize(auto(), auto());
         textView.align = LEFT;
         textView.verticalAlign = CENTER;
         textView.pointSize = 12;
@@ -242,7 +244,13 @@ class SelectFieldView extends FieldView {
 
     function layoutContainer() {
 
-        //
+        if (textView != null) {
+            textView.text.clipText(
+                0, 0,
+                container.width - textView.text.x - textView.x - container.paddingRight - 20 /* tip width */,
+                999999999
+            );
+        }
 
     }
 
@@ -300,9 +308,6 @@ class SelectFieldView extends FieldView {
 
         if (value != null) {
             var displayedValue = value.trim().replace("\n", ' ');
-            if (displayedValue.length > 20) {
-                displayedValue = displayedValue.substr(0, 20) + '...'; // TODO at textview level
-            }
             textView.content = displayedValue;
         }
         else {
@@ -317,7 +322,9 @@ class SelectFieldView extends FieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         container.color = theme.darkBackgroundColor;
 
@@ -470,6 +477,11 @@ class SelectFieldView extends FieldView {
 
             if (listView == null) {
                 listView = new SelectListView();
+                listView.autorun(() -> {
+                    var theme = this.theme;
+                    unobserve();
+                    listView.theme = theme;
+                });
                 listView.depth = 10;
                 listView.value = this.value;
                 listView.list = this.list;

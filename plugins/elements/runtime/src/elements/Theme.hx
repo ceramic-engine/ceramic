@@ -2,10 +2,15 @@ package elements;
 
 import ceramic.BitmapFont;
 import ceramic.Color;
+import ceramic.FontAsset;
 import ceramic.Shortcuts.*;
 import tracker.Model;
 
 class Theme extends Model {
+
+/// Behaviors
+
+    @serialize public var backgroundInFormLayout:Bool = false;
 
 /// Text colors
 
@@ -27,11 +32,13 @@ class Theme extends Model {
 
 /// Text fonts
 
-    public var mediumFont(get,never):BitmapFont;
-    function get_mediumFont():BitmapFont return app.assets.font(settings.defaultFont);
+    @serialize public var customMediumFont:BitmapFont = null;
 
-    public var boldFont(get,never):BitmapFont;
-    function get_boldFont():BitmapFont return app.assets.font(settings.defaultFont);
+    public var mediumFont(get,never):BitmapFont;
+    function get_mediumFont():BitmapFont {
+        var font = customMediumFont;
+        return font != null ? font : app.assets.font(settings.defaultFont);
+    }
 
 /// Borders colors
 
@@ -120,5 +127,177 @@ class Theme extends Model {
         super();
 
     }
+
+/// Helpers
+
+    public function clone(?toTheme:Theme):Theme {
+
+        if (toTheme == null)
+            toTheme = new Theme();
+
+        toTheme.backgroundInFormLayout = backgroundInFormLayout;
+        toTheme.fieldTextColor = fieldTextColor;
+        toTheme.fieldPlaceholderColor = fieldPlaceholderColor;
+        toTheme.lightTextColor = lightTextColor;
+        toTheme.mediumTextColor = mediumTextColor;
+        toTheme.darkTextColor = darkTextColor;
+        toTheme.darkerTextColor = darkerTextColor;
+        toTheme.iconColor = iconColor;
+        toTheme.customMediumFont = customMediumFont;
+        toTheme.lighterBorderColor = lighterBorderColor;
+        toTheme.lightBorderColor = lightBorderColor;
+        toTheme.mediumBorderColor = mediumBorderColor;
+        toTheme.darkBorderColor = darkBorderColor;
+        toTheme.lightBackgroundColor = lightBackgroundColor;
+        toTheme.mediumBackgroundColor = mediumBackgroundColor;
+        toTheme.darkBackgroundColor = darkBackgroundColor;
+        toTheme.darkerBackgroundColor = darkerBackgroundColor;
+        toTheme.selectionBorderColor = selectionBorderColor;
+        toTheme.highlightColor = highlightColor;
+        toTheme.highlightPendingColor = highlightPendingColor;
+        toTheme.formItemSpacing = formItemSpacing;
+        toTheme.formPadding = formPadding;
+        toTheme.focusedFieldSelectionColor = focusedFieldSelectionColor;
+        toTheme.focusedFieldBorderColor = focusedFieldBorderColor;
+        toTheme.overlayBackgroundColor = overlayBackgroundColor;
+        toTheme.overlayBackgroundAlpha = overlayBackgroundAlpha;
+        toTheme.overlayBorderColor = overlayBorderColor;
+        toTheme.overlayBorderAlpha = overlayBorderAlpha;
+        toTheme.buttonBackgroundColor = buttonBackgroundColor;
+        toTheme.buttonOverBackgroundColor = buttonOverBackgroundColor;
+        toTheme.buttonPressedBackgroundColor = buttonPressedBackgroundColor;
+        toTheme.buttonFocusedBorderColor = buttonFocusedBorderColor;
+        toTheme.tabsBackgroundColor = tabsBackgroundColor;
+        toTheme.tabsBackgroundAlpha = tabsBackgroundAlpha;
+        toTheme.tabsHoverBackgroundColor = tabsHoverBackgroundColor;
+        toTheme.tabsHoverBackgroundAlpha = tabsHoverBackgroundAlpha;
+        toTheme.tabsBorderColor = tabsBorderColor;
+        toTheme.windowBackgroundColor = windowBackgroundColor;
+        toTheme.windowBackgroundAlpha = windowBackgroundAlpha;
+        toTheme.windowBorderColor = windowBorderColor;
+        toTheme.windowBorderAlpha = windowBorderAlpha;
+
+        return toTheme;
+
+    }
+
+    /**
+     * Apply the given `tint` color using `baseTheme` as lightness references
+     */
+    public function applyTint(?baseTheme:Theme, tint:Color):Void {
+
+        if (baseTheme == null)
+            baseTheme = Context.context.theme;
+
+        var tintHue = tint.hueHSLuv;
+        var tintSaturation = tint.saturationHSLuv;
+        var tintLightness = tint.lightnessHSLuv;
+
+        inline function computeColor(color:Color):Color {
+            return Color.fromHSLuv(
+                tintHue,
+                tintSaturation,
+                Math.max(0.0, Math.min(1.0, (color.lightnessHSLuv * 2.0 + tintLightness - 0.5) * 0.5))
+            );
+        }
+
+        fieldTextColor = computeColor(baseTheme.fieldTextColor);
+        fieldPlaceholderColor = computeColor(baseTheme.fieldPlaceholderColor);
+        lightTextColor = computeColor(baseTheme.lightTextColor);
+        mediumTextColor = computeColor(baseTheme.mediumTextColor);
+        darkTextColor = computeColor(baseTheme.darkTextColor);
+        darkerTextColor = computeColor(baseTheme.darkerTextColor);
+
+        iconColor = computeColor(baseTheme.iconColor);
+
+        lighterBorderColor = computeColor(baseTheme.lighterBorderColor);
+        lightBorderColor = computeColor(baseTheme.lightBorderColor);
+        mediumBorderColor = computeColor(baseTheme.mediumBorderColor);
+        darkBorderColor = computeColor(baseTheme.darkBorderColor);
+
+        lightBackgroundColor = computeColor(baseTheme.lightBackgroundColor);
+        mediumBackgroundColor = computeColor(baseTheme.mediumBackgroundColor);
+        darkBackgroundColor = computeColor(baseTheme.darkBackgroundColor);
+        darkerBackgroundColor = computeColor(baseTheme.darkerBackgroundColor);
+
+        overlayBackgroundColor = computeColor(baseTheme.overlayBackgroundColor);
+        overlayBorderColor = computeColor(baseTheme.overlayBorderColor);
+
+        buttonBackgroundColor = computeColor(baseTheme.buttonBackgroundColor);
+        buttonOverBackgroundColor = computeColor(baseTheme.buttonOverBackgroundColor);
+        buttonPressedBackgroundColor = computeColor(baseTheme.buttonPressedBackgroundColor);
+
+        tabsBackgroundColor = computeColor(baseTheme.tabsBackgroundColor);
+        tabsHoverBackgroundColor = computeColor(baseTheme.tabsHoverBackgroundColor);
+        tabsBorderColor = computeColor(baseTheme.tabsBorderColor);
+
+        windowBackgroundColor = computeColor(baseTheme.windowBackgroundColor);
+        windowBorderColor = computeColor(baseTheme.windowBorderColor);
+
+    }
+
+    /**
+     * Apply the given alt `tint` color using `baseTheme` as lightness references
+     */
+    public function applyAltTint(?baseTheme:Theme, tint:Color):Void {
+
+        if (baseTheme == null)
+            baseTheme = Context.context.theme;
+
+        var tintHue = tint.hueHSLuv;
+        var tintSaturation = tint.saturationHSLuv;
+        var tintLightness = tint.lightnessHSLuv;
+
+        inline function computeColor(color:Color):Color {
+            return Color.fromHSLuv(
+                tintHue,
+                tintSaturation,
+                Math.max(0.0, Math.min(1.0, (color.lightnessHSLuv * 2.0 + tintLightness - 0.5) * 0.5))
+            );
+        }
+
+        selectionBorderColor = computeColor(baseTheme.selectionBorderColor);
+        highlightColor = computeColor(baseTheme.highlightColor);
+        highlightPendingColor = computeColor(baseTheme.highlightPendingColor);
+
+        focusedFieldSelectionColor = computeColor(baseTheme.focusedFieldSelectionColor);
+        focusedFieldBorderColor = computeColor(baseTheme.focusedFieldBorderColor);
+
+        buttonFocusedBorderColor = computeColor(baseTheme.buttonFocusedBorderColor);
+
+    }
+
+    public function applyBackgroundColor(color:Color):Void {
+
+        tabsBackgroundColor = color;
+        windowBackgroundColor = color;
+
+    }
+
+    public function applyTextColor(color:Color):Void {
+
+        lightTextColor = color;
+        mediumTextColor = color;
+        darkTextColor = color;
+        darkerTextColor = color;
+
+    }
+
+/// Internals for Im
+
+    @:allow(elements.Im)
+    private var _tint:Color = Color.NONE;
+
+    @:allow(elements.Im)
+    private var _altTint:Color = Color.NONE;
+
+    @:allow(elements.Im)
+    private var _backgroundColor:Color = Color.NONE;
+
+    @:allow(elements.Im)
+    private var _textColor:Color = Color.NONE;
+
+    @:allow(elements.Im)
+    private var _used:Bool = false;
 
 }

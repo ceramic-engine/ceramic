@@ -6,6 +6,7 @@ import ceramic.CollectionViewDataSource;
 import ceramic.CollectionViewItemFrame;
 import ceramic.CollectionViewItemPosition;
 import ceramic.Color;
+import ceramic.Equal;
 import ceramic.ReadOnlyArray;
 import ceramic.View;
 import elements.CellView;
@@ -15,6 +16,8 @@ import tracker.Autorun.unobserve;
 import tracker.Observable;
 
 class SelectListView extends View implements CollectionViewDataSource implements Observable {
+
+    @observe public var theme:Theme = null;
 
     @event function valueClick(value:String);
 
@@ -46,13 +49,18 @@ class SelectListView extends View implements CollectionViewDataSource implements
         collectionView.inputStyle = true;
         /*filter.content.*/add(collectionView);
 
+        var prevList:Array<String> = null;
         autorun(() -> {
-            var size = list.length;
-            if (nullValueText != null) {
-                size++;
+            var list = this.list;
+            if (list != prevList && (prevList == null || !Equal.arrayEqual(list.original, prevList))) {
+                prevList = list.original;
+                var size = list.length;
+                if (nullValueText != null) {
+                    size++;
+                }
+                unobserve();
+                collectionView.reloadData();
             }
-            unobserve();
-            collectionView.reloadData();
         });
 
         autorun(updateScrollFromValueIfNeeded);
@@ -162,6 +170,14 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
         });
 
+        cell.autorun(function() {
+
+            var theme = this.theme;
+            unobserve();
+            cell.theme = theme;
+
+        });
+
         var click = new Click();
         cell.component('click', click);
         click.onClick(cell, function() {
@@ -184,7 +200,9 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         color = Color.interpolate(theme.darkBackgroundColor, Color.BLACK, 0.1);
 

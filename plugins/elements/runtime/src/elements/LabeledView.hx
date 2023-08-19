@@ -13,6 +13,8 @@ using ceramic.Extensions;
 
 class LabeledView<T:View> extends RowLayout implements Observable {
 
+    @observe public var theme:Theme = null;
+
 /// Public properties
 
     @observe public var label:String = '';
@@ -173,7 +175,9 @@ class LabeledView<T:View> extends RowLayout implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (disabled) {
             labelText.textColor = theme.darkTextColor;

@@ -14,6 +14,8 @@ import tracker.Observable;
 
 class Button extends TextView implements Observable implements TabFocusable {
 
+    @observe public var theme:Theme = null;
+
 /// Components
 
     @component var click:Click;
@@ -115,7 +117,10 @@ class Button extends TextView implements Observable implements TabFocusable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
+
         var enabled = this.enabled;
         var focused = this.focused;
         var pressed = (this.pressed || this.enterPressed);

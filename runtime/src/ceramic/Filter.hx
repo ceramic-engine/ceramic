@@ -30,6 +30,50 @@ class Filter extends Layer implements Observable {
         return textureId;
     }
 
+    /**
+     * By default, the render texture managed by this filter is
+     * rendered via itself, assigned to the `texture` field.
+     * If you provide a `Mesh` instance, that mesh will be added as
+     * a child of the filter and the texture will be rendered via
+     * that mesh instead of itself. This opens the door to more advanced
+     * post-processing in shaders.
+     */
+    public var mesh(default,set):Mesh = null;
+    function set_mesh(mesh:Mesh):Mesh {
+        if (this.mesh != mesh) {
+            if (this.mesh != null) {
+                if (destroyMeshOnRemove) {
+                    var prevMesh = this.mesh;
+                    this.mesh = null;
+                    prevMesh.destroy();
+                }
+                else {
+                    remove(this.mesh);
+                }
+            }
+            this.mesh = mesh;
+            if (this.mesh != null) {
+                add(this.mesh);
+            }
+            meshDirty = true;
+            contentDirty = true;
+        }
+        return mesh;
+    }
+
+    var meshDirty:Bool = false;
+
+    /**
+     * If set to `true`, when assigning `null` or
+     * a new mesh intance to the `mesh` field will destroy
+     * any existing mesh previously assigned.
+     */
+    public var destroyMeshOnRemove:Bool = true;
+
+    /**
+     * The content in which you are expected to add visuals
+     * so that they are rendered through the filter
+     */
     public var content(default,null):Quad;
 
     /**
@@ -204,8 +248,10 @@ class Filter extends Layer implements Observable {
 
     function updateRenderTextureAndContent(filterWidth:Int, filterHeight:Int, density:Float, depthBuffer:Bool, stencil:Bool, antialiasing:Int):Void {
 
+        var texture = mesh != null ? mesh.texture : this.texture;
+
         if (enabled) {
-            if (renderTexture == null ||
+            if (meshDirty || renderTexture == null ||
                 ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density) || renderTexture.depth != depthBuffer || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
@@ -252,6 +298,15 @@ class Filter extends Layer implements Observable {
             }
         }
 
+        if (mesh != null) {
+            mesh.texture = texture;
+            this.texture = null;
+        }
+        else {
+            this.texture = texture;
+        }
+        meshDirty = false;
+
         content.size(filterWidth, filterHeight);
         content.renderTarget = renderTexture;
 
@@ -271,7 +326,7 @@ class Filter extends Layer implements Observable {
 
 /// Public API
 
-    public function render(requestFullUpdate:Bool = false, ?done:Void->Void):Void {
+    public function render(?done:Void->Void):Void {
 
         if (!explicitRender) {
             log.warning('Explicit render is disabled on this filter. Ignoring render() call.');
@@ -295,7 +350,7 @@ class Filter extends Layer implements Observable {
                     explicitRenderPendingResultCallbacks = [];
                 }
                 explicitRenderPendingResultCallbacks.push(() -> {
-                    render(requestFullUpdate, done);
+                    render(done);
                     done = null;
                 });
             }
@@ -329,10 +384,6 @@ class Filter extends Layer implements Observable {
         }
 
         content.active = true;
-
-        if (requestFullUpdate) {
-            app.requestFullUpdateAndDrawInFrame();
-        }
 
         app.onceUpdate(null, function(_) {
             if (destroyed) {
@@ -507,6 +558,12 @@ class Filter extends Layer implements Observable {
         }
         textureTilePacker = null;
         renderTexture = null;
+
+        if (mesh != null) {
+            var _mesh = mesh;
+            mesh = null;
+            _mesh.destroy();
+        }
 
         explicitRenderPendingResultCallbacks = null;
 

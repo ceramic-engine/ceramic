@@ -1,46 +1,36 @@
 [submodule "git/linc_openal"]
 	path = git/linc_openal
 	url = https://github.com/ceramic-engine/linc_openal.git
-	branch = master
 [submodule "git/linc_timestamp"]
 	path = git/linc_timestamp
 	url = https://github.com/ceramic-engine/linc_timestamp.git
-	branch = master
 [submodule "git/linc_stb"]
 	path = git/linc_stb
 	url = https://github.com/ceramic-engine/linc_stb.git
-	branch = master
 [submodule "git/linc_ogg"]
 	path = git/linc_ogg
 	url = https://github.com/ceramic-engine/linc_ogg.git
-	branch = master
 [submodule "git/linc_sdl"]
 	path = git/linc_sdl
 	url = https://github.com/ceramic-engine/linc_sdl.git
-	branch = master
 [submodule "git/linc_opengl"]
 	path = git/linc_opengl
 	url = https://github.com/ceramic-engine/linc_opengl.git
-	branch = master
 [submodule "git/spine-hx"]
 	path = git/spine-hx
 	url = https://github.com/jeremyfa/spine-hx.git
 [submodule "git/polyline"]
 	path = git/polyline
 	url = https://github.com/jeremyfa/polyline.git
-	branch = master
 [submodule "git/generate"]
 	path = git/generate
 	url = https://github.com/jeremyfa/generate.git
-	branch = master
 [submodule "git/earcut"]
 	path = git/earcut
 	url = https://github.com/ceramic-engine/earcut.git
-	branch = master
 [submodule "git/format-tiled"]
 	path = git/format-tiled
 	url = https://github.com/ceramic-engine/format-tiled.git
-	branch = master
 [submodule "git/arcade"]
 	path = git/arcade
 	url = https://github.com/jeremyfa/arcade.git
@@ -48,47 +38,36 @@
 [submodule "git/haxe-binary"]
 	path = git/haxe-binary
 	url = https://github.com/ceramic-engine/haxe-binary.git
-	branch = master
 [submodule "git/akifox-asynchttp"]
 	path = git/akifox-asynchttp
 	url = https://github.com/ceramic-engine/akifox-asynchttp.git
-	branch = master
 [submodule "git/nape"]
 	path = git/nape
 	url = https://github.com/ceramic-engine/nape.git
-	branch = master
 [submodule "git/differ"]
 	path = git/differ
 	url = https://github.com/ceramic-engine/differ.git
-	branch = master
 [submodule "git/hsluv"]
 	path = git/hsluv
 	url = https://github.com/ceramic-engine/hsluv.git
-	branch = master
 [submodule "git/tracker"]
 	path = git/tracker
 	url = https://github.com/jeremyfa/tracker.git
-	branch = master
 [submodule "git/linc_dialogs"]
 	path = git/linc_dialogs
 	url = https://github.com/ceramic-engine/linc_dialogs.git
-	branch = master
 [submodule "git/poly2tri"]
 	path = git/poly2tri
 	url = https://github.com/ceramic-engine/poly2tri.git
-	branch = master
 [submodule "git/clay"]
 	path = git/clay
 	url = https://github.com/ceramic-engine/clay.git
-	branch = main
 [submodule "git/imgui-hx"]
 	path = git/imgui-hx
 	url = https://github.com/jeremyfa/imgui-hx.git
-	branch = master
 [submodule "git/gif"]
 	path = git/gif
 	url = https://github.com/ceramic-engine/gif.git
-	branch = master
 [submodule "git/hxWebSockets"]
 	path = git/hxWebSockets
 	url = https://github.com/ceramic-engine/hxWebSockets.git
@@ -98,3 +77,27 @@
 [submodule "git/linc_soloud"]
 	path = git/linc_soloud
 	url = https://github.com/jeremyfa/linc_soloud.git
+[submodule "git/hxnodejs-ws"]
+	path = git/hxnodejs-ws
+	url = https://github.com/ceramic-engine/hxnodejs-ws.git
+[submodule "git/bin-packing"]
+	path = git/bin-packing
+	url = https://github.com/ceramic-engine/bin-packing.git
+[submodule "git/hscript"]
+	path = git/hscript
+	url = https://github.com/ceramic-engine/hscript.git
+[submodule "git/ase"]
+	path = git/ase
+	url = https://github.com/ceramic-engine/ase.git
+[submodule "git/bind"]
+	path = git/bind
+	url = https://github.com/jeremyfa/bind.git
+[submodule "git/hxnodejs"]
+	path = git/hxnodejs
+	url = https://github.com/ceramic-engine/hxnodejs.git
+[submodule "git/format"]
+	path = git/format
+	url = https://github.com/ceramic-engine/format.git
+[submodule "git/fuzzaldrin"]
+	path = git/fuzzaldrin
+	url = https://github.com/jeremyfa/fuzzaldrin.git

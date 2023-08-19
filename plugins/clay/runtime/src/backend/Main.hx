@@ -1,4 +1,4 @@
-package;
+package backend;
 
 import backend.ClayEvents;
 import backend.ElectronRunner;
@@ -128,7 +128,14 @@ class Main {
         }
         #end
 
-        project = @:privateAccess new Project(ceramic.App.init());
+        var settings = ceramic.App.init();
+
+        #if mac
+        // Because vsync doesn't seem to work
+        settings.targetFps = 60;
+        #end
+
+        project = @:privateAccess new Project(settings);
         app = @:privateAccess ceramic.App.app;
 
         #if (web && plugin_bridge)
@@ -149,6 +156,27 @@ class Main {
         #end
 
         #if web
+        // Blocking scroll depending on settings and scrollers
+        config.runtime.preventDefaultMouseWheel = settings.preventDefaultMouseWheel;
+        app.settings.onPreventDefaultMouseWheelChange(app, (preventDefaultMouseWheel, _) -> {
+            config.runtime.preventDefaultMouseWheel = preventDefaultMouseWheel || app.numBlockingDefaultScroll > 0;
+        });
+        config.runtime.preventDefaultTouches = settings.preventDefaultTouches;
+        app.settings.onPreventDefaultTouchesChange(app, (preventDefaultTouches, _) -> {
+            config.runtime.preventDefaultTouches = preventDefaultTouches || app.numBlockingDefaultScroll > 0;
+        });
+        #if ceramic_auto_block_default_scroll
+        var prevNumBlockingDefaultScroll = app.numBlockingDefaultScroll;
+        app.onPostUpdate(app, delta -> {
+            var numBlockingDefaultScroll = app.numBlockingDefaultScroll;
+            if (prevNumBlockingDefaultScroll != numBlockingDefaultScroll) {
+                prevNumBlockingDefaultScroll = numBlockingDefaultScroll;
+                config.runtime.preventDefaultTouches = app.settings.preventDefaultTouches || numBlockingDefaultScroll > 0;
+                config.runtime.preventDefaultMouseWheel = app.settings.preventDefaultMouseWheel || numBlockingDefaultScroll > 0;
+            }
+        });
+        #end
+
         if (ElectronRunner.electronRunner == null) {
             // If running on web without electron, disable fullscreen.
             // It needs to be explicitly requested by the user.

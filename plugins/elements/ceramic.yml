@@ -4,7 +4,7 @@ plugin:
     runtime:
         if plugin_elements:
             +libs:
-                - fuzzaldrin: 0.1.1
+                - fuzzaldrin
             +paths:
                 - {plugin:cwd}/runtime/src
             +assets:

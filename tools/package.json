@@ -1,6 +1,6 @@
 {
   "name": "ceramic-tools",
-  "version": "0.17.1",
+  "version": "1.3.0",
   "description": "Cross-platform 2D framework written in Haxe",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

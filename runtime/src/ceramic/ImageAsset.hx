@@ -2,6 +2,12 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+using StringTools;
+
+#if plugin_ase
+import ase.Ase;
+#end
+
 class ImageAsset extends Asset {
 
 /// Events
@@ -9,8 +15,6 @@ class ImageAsset extends Asset {
     @event function replaceTexture(newTexture:Texture, prevTexture:Texture);
 
 /// Properties
-
-    //public var pixels:Pixels = null;
 
     @observe public var texture:Texture = null;
 
@@ -21,11 +25,23 @@ class ImageAsset extends Asset {
 
     var reloadBecauseOfDensityChange:Bool = false;
 
+    #if plugin_ase
+
+    var aseTexWidth:Int = -1;
+
+    var aseTexHeight:Int = -1;
+
+    var asePadding:Int = 0;
+
+    var aseSpacing:Int = 0;
+
+    #end
+
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('image', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('image', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
         handleTexturesDensityChange = true;
 
     }
@@ -60,22 +76,12 @@ class ImageAsset extends Asset {
             }
         }
 
-        // Add reload count if any
-        var backendPath = path;
-        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
-        var assetReloadedCount = Assets.getReloadCount(realPath);
-        if (app.backend.textures.supportsHotReloadPath() && assetReloadedCount > 0) {
-            realPath += '?hot=' + assetReloadedCount;
-            backendPath += '?hot=' + assetReloadedCount;
-        }
+        loadTexture(path, loadOptions, function(newTexture, backendPath) {
 
-        log.info('Load image $backendPath (density=$density)');
-        app.backend.textures.load(realPath, loadOptions, function(image) {
+            if (newTexture != null) {
 
-            if (image != null) {
 
                 var prevTexture = this.texture;
-                var newTexture = new Texture(image, density);
                 newTexture.id = 'texture:' + backendPath;
                 this.texture = newTexture;
 
@@ -146,12 +152,101 @@ class ImageAsset extends Asset {
                 }
             }
             else {
+                log.warning('Failed to decode texture');
                 status = BROKEN;
-                log.error('Failed to load texture at path: $path');
                 emitComplete(false);
             }
 
         });
+
+    }
+
+    function loadTexture(path:String, loadOptions:AssetOptions, callback:(texture:Texture, backendPath:String)->Void) {
+
+        // Add reload count if any
+        var backendPath = path;
+        var realPath = Assets.realAssetPath(backendPath, runtimeAssets);
+        var assetReloadedCount = Assets.getReloadCount(realPath);
+        if (app.backend.textures.supportsHotReloadPath() && assetReloadedCount > 0) {
+            realPath += '?hot=' + assetReloadedCount;
+            backendPath += '?hot=' + assetReloadedCount;
+        }
+
+        log.info('Load image $backendPath (density=$density)');
+
+        #if plugin_ase
+        if (path != null && (path.toLowerCase().endsWith('.ase') || path.toLowerCase().endsWith('.aseprite'))) {
+
+            app.backend.binaries.load(realPath, loadOptions, function(bytes) {
+
+                if (bytes != null) {
+                    try {
+
+                        if (options != null && options.width != null && options.height != null) {
+                            aseTexWidth = options.width;
+                            aseTexHeight = options.height;
+                        }
+
+                        final loadGridTexture = (aseTexWidth > 0 && aseTexHeight > 0);
+
+                        // Decode ase data, but once we have our texture, destroy that ase data
+                        var ase:Ase = Ase.fromBytes(bytes);
+                        var asepriteData = AsepriteParser.parseAse(ase, backendPath, null, loadGridTexture ? -1 : 0, {
+                            layers: options?.layers
+                        });
+
+                        var texture:Texture = if (loadGridTexture) {
+                            AsepriteParser.parseGridTextureFromAsepriteData(
+                                asepriteData, 0, asepriteData.frames.length + 1,
+                                aseTexWidth, aseTexHeight, aseSpacing, asePadding,
+                                density
+                            );
+                        }
+                        else {
+                            AsepriteParser.parseTextureFromAsepriteData(asepriteData, 0, density);
+                        }
+
+                        asepriteData.destroy();
+
+                        callback(texture, backendPath);
+                    }
+                    catch (e:Dynamic) {
+                        status = BROKEN;
+                        log.error('Failed to decode ase image at path: $path ($e)');
+                        emitComplete(false);
+                    }
+                }
+                else {
+                    status = BROKEN;
+                    log.error('Failed to load ase image at path: $path');
+                    emitComplete(false);
+                }
+
+            });
+
+        }
+        else {
+        #end
+
+            app.backend.textures.load(realPath, loadOptions, function(image) {
+
+                if (image != null) {
+
+                    var newTexture = new Texture(image, density);
+                    callback(newTexture, backendPath);
+
+                }
+                else {
+                    status = BROKEN;
+                    log.error('Failed to load texture at path: $path');
+                    emitComplete(false);
+                }
+
+            });
+
+        #if plugin_ase
+        }
+        #end
 
     }
 
@@ -167,6 +262,9 @@ class ImageAsset extends Asset {
     }
 
     function checkTexturesDensity():Void {
+
+        if (owner == null || !owner.reloadOnTextureDensityChange)
+            return;
 
         var prevPath = path;
         computePath();

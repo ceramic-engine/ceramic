@@ -217,19 +217,6 @@ class Setup extends tools.Task {
         Files.setToSameLastModified(projectPath, hxmlPath);
         print('Updated unity hxml at: $hxmlPath');
 
-        // Run initial project setup if needed
-        installHxcsIfNeeded(cwd, args);
-
-    }
-
-    function installHxcsIfNeeded(cwd:String, args:Array<String>):Void {
-
-        if (FileSystem.exists(Path.join([cwd, '.haxelib', 'hxcs']))) {
-            return; // Seems installed already
-        }
-
-        haxelib(['install', 'hxcs', '--quiet'], { cwd: cwd });
-
     }
 
 }

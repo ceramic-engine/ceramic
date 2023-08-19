@@ -6,6 +6,8 @@ import tracker.Observable;
 
 class LabelView extends TextView implements Observable {
 
+    @observe public var theme:Theme = null;
+
     @observe public var disabled:Bool = false;
 
     public function new() {
@@ -25,7 +27,9 @@ class LabelView extends TextView implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (disabled) {
             textColor = theme.darkTextColor;

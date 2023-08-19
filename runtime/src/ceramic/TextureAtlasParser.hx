@@ -33,7 +33,7 @@ class TextureAtlasParser {
             }
             else {
                 if (page == null) {
-                    page = { name: line };
+                    page = new TextureAtlasPage(line);
 
                     var key = reader.nextLineKey();
                     while (key != null) {

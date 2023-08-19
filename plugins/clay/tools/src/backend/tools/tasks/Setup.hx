@@ -47,7 +47,7 @@ class Setup extends tools.Task {
     override function run(cwd:String, args:Array<String>):Void {
 
         var updateFramework = args.indexOf('--update-framework') != -1;
-        checkFrameworkSetup(updateFramework);
+        checkFrameworkSetup(updateFramework, cwd);
 
         var project = new tools.Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
@@ -181,6 +181,7 @@ class Setup extends tools.Task {
             targetFlags += '\n' + '-D clay_web';
             targetFlags += '\n' + '-D ceramic_soft_inline';
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
+            targetFlags += '\n' + '-D ceramic_auto_block_default_scroll';
             targetFlags += '\n' + '-D clay_webgl_unpack_premultiply_alpha';
         }
         else {
@@ -224,7 +225,7 @@ class Setup extends tools.Task {
         }
 
         var hxmlFileContent = ('
--main ${target.name == 'cppia' ? 'CPPIAMain' : 'Main'}
+-main ${target.name == 'cppia' ? 'CPPIAMain' : 'backend.Main'}
 $targetFlags
 -D ${target.name}
 -D no-console
@@ -240,6 +241,7 @@ ${haxeflagsHxml.join('\n')}
         // Save hxml file
         File.saveContent(hxmlPath, hxmlFileContent);
         Files.setToSameLastModified(projectPath, hxmlPath);
+
         print('Updated clay hxml at: $hxmlPath');
 
         var availableTargets = context.backend.getBuildTargets();
@@ -247,13 +249,15 @@ ${haxeflagsHxml.join('\n')}
         if (targetName == 'default') targetName = 'web';
 
         // Run initial project setup if needed
-        runInitialProjectSetupIfNeeded(cwd, args);
+        runInitialProjectSetupIfNeeded(cwd, args, targetPath);
 
     }
 
-    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>):Void {
+    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>, targetPath:String):Void {
 
-        if (FileSystem.exists(Path.join([cwd, 'completion.hxml']))) {
+        var projectHxmlPath = Path.join([targetPath, 'project.hxml']);
+
+        if (FileSystem.exists(projectHxmlPath)) {
             return; // Project seems ready
         }
 
@@ -268,11 +272,11 @@ ${haxeflagsHxml.join('\n')}
 
         // Default to web target
         runCeramic(cwd, ['clay', 'libs', 'web']);
-        runCeramic(cwd, ['clay', 'build', 'web', '--assets', '--hxml-output', 'completion.hxml'].concat(extraArgs));
+        runCeramic(cwd, ['clay', 'build', 'web', '--assets'].concat(extraArgs));
 
     }
 
-    function checkFrameworkSetup(forceSetup:Bool = false):Void {
+    function checkFrameworkSetup(forceSetup:Bool = false, cwd:String):Void {
 
         // Almost the same thing as backend.runUpdate()
 
@@ -297,7 +301,7 @@ ${haxeflagsHxml.join('\n')}
         }
 
         for (lib in requiredLibs) {
-            haxelib(['dev', lib, Path.join([context.ceramicGitDepsPath, lib])]);
+            ensureHaxelibDevToCeramicGit(lib, cwd);
             libs.set(lib, true);
         }
 

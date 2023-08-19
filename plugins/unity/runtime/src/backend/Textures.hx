@@ -1,16 +1,17 @@
 package backend;
 
 import ceramic.Files;
+import ceramic.ImageType;
 import ceramic.Path;
+import ceramic.Pixels;
+import cs.system.Byte;
 import haxe.io.Bytes;
+import unityengine.ImageConversion;
 import unityengine.ResourceRequest;
 import unityengine.Texture2D;
+import unityengine.TextureWrapMode;
 
 using StringTools;
-
-#if unity_image_conversion
-import unityengine.ImageConversion;
-#end
 
 class Textures implements spec.Textures {
 
@@ -143,14 +144,40 @@ class Textures implements spec.Textures {
 
     var nextPixelsIndex:Int = 0;
 
+    var nextBytesIndex:Int = 0;
+
+    public function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, _done:Texture->Void):Void {
+
+        var done = function(texture:Texture) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(texture);
+                _done = null;
+            });
+        };
+
+        var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D(2, 2, UnityEngine.TextureFormat.RGBA32, false)');
+        ImageConversion.LoadImage(unityTexture, bytes.getData(), false);
+
+        var texture = new TextureImpl('bytes:' + (nextBytesIndex++), unityTexture, null);
+
+        loadedTexturesRetainCount.set(texture.path, 1);
+
+        done(texture);
+
+    }
+
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', width, height);
 
+        Pixels.flipY(pixels, width);
         unityTexture.SetPixelData(pixels, 0, 0);
         unityTexture.Apply(false, false);
+        Pixels.flipY(pixels, width);
 
         var texture = new TextureImpl('pixels:' + (nextPixelsIndex++), unityTexture, null);
+
+        loadedTexturesRetainCount.set(texture.path, 1);
 
         return texture;
 
@@ -174,6 +201,8 @@ class Textures implements spec.Textures {
 
         var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'));
 
+        loadedTexturesRetainCount.set(texture.path, 1);
+
         return texture;
 
     }
@@ -187,7 +216,7 @@ class Textures implements spec.Textures {
         else {
             loadedTextures.remove(id);
             loadedTexturesRetainCount.remove(id);
-            if (id.startsWith('pixels:') || id.startsWith('screenshot:')) {
+            if (id.startsWith('pixels:') || id.startsWith('screenshot:') || id.startsWith('bytes:')) {
                 untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityTexture);
             }
             else if (id.startsWith('render:')) {
@@ -232,6 +261,8 @@ class Textures implements spec.Textures {
     }
 
     public function fetchTexturePixels(texture:Texture, ?result:ceramic.UInt8Array):ceramic.UInt8Array {
+
+        // TODO read pixel directly from CPU if unityTexture.isReadable is true
 
         var unityTexture = (texture:TextureImpl).unityTexture;
         var didCreateTemporaryTexture = false;
@@ -279,6 +310,8 @@ class Textures implements spec.Textures {
             }
         }
 
+        Pixels.flipY(result, width);
+
         if (didCreateTemporaryTexture) {
             untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
         }
@@ -290,9 +323,12 @@ class Textures implements spec.Textures {
     public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
         var unityTexture = (texture:TextureImpl).unityTexture;
+        var width = (texture:TextureImpl).width;
 
+        Pixels.flipY(pixels, width);
         unityTexture.SetPixelData(pixels, 0, 0);
         unityTexture.Apply(false, false);
+        Pixels.flipY(pixels, width);
 
     }
 
@@ -309,6 +345,50 @@ class Textures implements spec.Textures {
                     (texture:TextureImpl).unityTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
                 else if ((texture:TextureImpl).unityRenderTexture != null)
                     (texture:TextureImpl).unityRenderTexture.filterMode = untyped __cs__('UnityEngine.FilterMode.Point');
+        }
+
+    }
+
+    inline public function setTextureWrapS(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+        switch (wrap) {
+            case CLAMP:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Clamp;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Clamp;
+            case REPEAT:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Repeat;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Repeat;
+            case MIRROR:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeU = TextureWrapMode.Mirror;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeU = TextureWrapMode.Mirror;
+        }
+
+    }
+
+    inline public function setTextureWrapT(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+        switch (wrap) {
+            case CLAMP:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Clamp;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Clamp;
+            case REPEAT:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Repeat;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Repeat;
+            case MIRROR:
+                if ((texture:TextureImpl).unityTexture != null)
+                    (texture:TextureImpl).unityTexture.wrapModeV = TextureWrapMode.Mirror;
+                else if ((texture:TextureImpl).unityRenderTexture != null)
+                    (texture:TextureImpl).unityRenderTexture.wrapModeV = TextureWrapMode.Mirror;
         }
 
     }
@@ -337,7 +417,6 @@ class Textures implements spec.Textures {
 
     public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
-        #if unity_image_conversion
         var unityTexture:Texture2D = (texture:TextureImpl).unityTexture;
         var id = (texture:TextureImpl).path;
         var shouldDestroyTexture = false;
@@ -368,16 +447,11 @@ class Textures implements spec.Textures {
         if (shouldDestroyTexture) {
             destroyTexture(texture);
         }
-        #else
-        ceramic.Shortcuts.log.warning('Getting PNG bytes from a texture is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
-        done(null);
-        #end
 
     }
 
     public function pixelsToPng(width:Int, height:Int, pixels:ceramic.UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
 
-        #if unity_image_conversion
         var texture = createTexture(width, height, pixels);
         var unityTexture:Texture2D = texture != null ? (texture:TextureImpl).unityTexture : null;
         if (unityTexture != null) {
@@ -397,10 +471,6 @@ class Textures implements spec.Textures {
         if (texture != null) {
             destroyTexture(texture);
         }
-        #else
-        ceramic.Shortcuts.log.warning('Getting PNG bytes from pixels is only supported if Image Conversion Module is installed to Unity project and `unity_image_conversion` defined in ceramic.yml.');
-        done(null);
-        #end
 
     }
 

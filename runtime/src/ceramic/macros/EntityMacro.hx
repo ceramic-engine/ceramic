@@ -12,10 +12,6 @@ class EntityMacro {
 
     @:persistent static var fieldNamesByTypeName:Map<String,Array<String>> = null;
 
-    #if (haxe_ver < 4)
-    static var onReused:Bool = false;
-    #end
-
     static var processed:Map<String,Bool> = new Map();
 
     static var hasSuperDestroy:Bool = false;
@@ -24,16 +20,6 @@ class EntityMacro {
 
         #if ceramic_debug_macro
         trace(Context.getLocalClass() + ' -> BEGIN EntityMacro.build()');
-        #end
-
-        #if (haxe_ver < 4)
-        if (!onReused) {
-            onReused = true;
-            Context.onMacroContextReused(function() {
-                processed = new Map();
-                return true;
-            });
-        }
         #end
 
         var fields = Context.getBuildFields();
@@ -138,7 +124,11 @@ class EntityMacro {
         fieldNamesByTypeName.set(typeName, fieldNames);
 
         var componentFields = [];
+
+        #if (!completion && !display)
         var ownFields:Array<String> = null;
+        #end
+
         var hasDestroyOverride = false;
         var index = 0;
         var checkStateMachineFields = true; // Always true for now
@@ -152,7 +142,7 @@ class EntityMacro {
                 hasDestroyOverride = true;
             }
 
-            var hasMeta = hasOwnerOrComponentMeta(field);
+            var hasMeta = hasOwnerOrComponentOrContentMeta(field);
 
             // Keep field info?
             if (fieldInfoData != null && !field.name.startsWith('unobserved') && (field.access == null || field.access.indexOf(AStatic) == -1)) {
@@ -178,7 +168,13 @@ class EntityMacro {
                 }
             }
 
-            if (hasMeta == 2 || hasMeta == 3) { // has component meta
+            if (hasMeta.bool(0)) { // has component meta
+
+                #if (!display && !completion)
+                if (hasMeta.bool(2)) {
+                    throw new Error("Component fields cannot have a `@content` meta", field.pos);
+                }
+                #end
 
                 switch(field.kind) {
                     case FieldType.FVar(type, expr):
@@ -294,7 +290,7 @@ class EntityMacro {
                                             }
                                         }
                                     }
-                                    
+
                                     if (type == null) {
                                         type = TPath(t);
                                     }
@@ -372,13 +368,13 @@ class EntityMacro {
                                         case TInst(t, params):
                                             var parent = t;
                                             while (parent != null) {
-                                    
+
                                                 var clazz = parent.get();
-                                    
+
                                                 if (clazz.pack.length == 1 && clazz.pack[0] == 'ceramic') {
                                                     if (clazz.name.startsWith('StateMachine_')) {
                                                         inheritsFromStateMachine = true;
-                                    
+
                                                         var stateComplexType = StateMachineMacro.getStateTypeFromImplName(clazz.name);
                                                         if (stateComplexType != null) {
                                                             try {
@@ -405,7 +401,7 @@ class EntityMacro {
                                                     }
                                                     break;
                                                 }
-                                    
+
                                                 var parentHold = clazz.superClass;
                                                 parent = parentHold != null ? parentHold.t : null;
                                             }
@@ -451,7 +447,7 @@ class EntityMacro {
                             access: [APrivate],
                             doc: '',
                             meta: []
-                        }
+                        };
                         newFields.push(setField);
 
                     default:
@@ -459,15 +455,67 @@ class EntityMacro {
                 }
 
             }
-            else if (hasMeta == 1 || hasMeta == 3) { // has owner meta
-                if (ownFields == null) {
-                    ownFields = [];
-                }
-                ownFields.push(field.name);
-                newFields.push(field);
-            }
             else {
+                #if (!completion && !display)
+                if (hasMeta.bool(1)) { // has owner meta
+                    if (ownFields == null) {
+                        ownFields = [];
+                    }
+                    ownFields.push(field.name);
+                    newFields.push(field);
+                }
+                else if (hasMeta.bool(2)) { // has content meta
+                    switch(field.kind) {
+                        case FieldType.FVar(type, expr):
+                            if (field.access.indexOf(AStatic) != -1) {
+                                throw new Error("Content field cannot be static", field.pos);
+                            }
+
+                            var fieldName = field.name;
+
+                            // Create prop from var
+                            var propField = {
+                                pos: field.pos,
+                                name: fieldName,
+                                kind: FProp('default', 'set', type, expr),
+                                access: field.access,
+                                doc: field.doc,
+                                meta: []
+                            };
+                            newFields.push(propField);
+
+                            var setField = {
+                                pos: field.pos,
+                                name: 'set_' + fieldName,
+                                kind: FFun({
+                                    args: [
+                                        {name: fieldName, type: type}
+                                    ],
+                                    ret: type,
+                                    expr: macro {
+                                        if (this.$fieldName != $i{fieldName}) {
+                                            this.$fieldName = $i{fieldName};
+                                            contentDirty = true;
+                                        }
+                                        return $i{fieldName};
+                                    }
+                                }),
+                                access: [APrivate],
+                                doc: '',
+                                meta: []
+                            }
+                            newFields.push(setField);
+
+                        default:
+                            throw new Error("Invalid content field syntax", field.pos);
+                    }
+                }
+                else {
+                    newFields.push(field);
+                }
+                #else
                 newFields.push(field);
+                #end
             }
 
             index++;
@@ -488,6 +536,7 @@ class EntityMacro {
 
         }
 
+        #if (!completion && !display)
         // In some cases, destroy override is a requirement, add it if not there already
         if (ownFields != null && !hasDestroyOverride) {
             newFields.push({
@@ -504,6 +553,7 @@ class EntityMacro {
                 meta: []
             });
         }
+        #end
 
         var isProcessed = processed.exists(classPath);
         if (!isProcessed) {
@@ -544,6 +594,7 @@ class EntityMacro {
                                         _lifecycleState = -2;
                                     });
 
+                                    #if (!completion && !display)
                                     // Destroy owned entities as well
                                     if (ownFields != null) {
                                         for (name in ownFields) {
@@ -556,6 +607,7 @@ class EntityMacro {
                                             });
                                         }
                                     }
+                                    #end
 
                                 default:
                             }
@@ -566,6 +618,7 @@ class EntityMacro {
             }
         }
 
+        #if (!completion && !display)
         // Add field info
         if (fieldInfoData != null) {
             var fieldInfoEntries = [];
@@ -621,13 +674,14 @@ class EntityMacro {
                 }]
             });
         }
+        #end
 
         // Check state machine enum state collisions
         var enumNames:Map<String,Bool> = null;
         if (resolvedStateEnums != null) {
 
             enumNames = new Map();
-            
+
             var duplicateNames:Map<String,Bool> = new Map();
 
             for (type in resolvedStateEnums) {
@@ -671,7 +725,7 @@ class EntityMacro {
                     if (enumNames == null || !enumNames.exists(stateName)) {
                         Context.error("Unknown state value: " + stateName + "", field.pos);
                     }
-                    
+
                     // Check args
                     switch field.kind {
                         default:
@@ -773,34 +827,27 @@ class EntityMacro {
 
     }
 
-    static function hasOwnerOrComponentMeta(field:Field):Int {
+    static function hasOwnerOrComponentOrContentMeta(field:Field):Flags {
 
         if (field.meta == null || field.meta.length == 0) return 0;
 
-        var hasComponentMeta = false;
-        var hasOwnerMeta = false;
+        var flags:Flags = 0;
 
         for (meta in field.meta) {
             if (meta.name == 'component') {
-                hasComponentMeta = true;
+                flags.setBool(0, true);
             }
+            #if (!completion && !display)
             else if (meta.name == 'owner') {
-                hasOwnerMeta = true;
+                flags.setBool(1, true);
             }
+            else if (meta.name == 'content') {
+                flags.setBool(2, true);
+            }
+            #end
         }
 
-        if (hasComponentMeta && hasOwnerMeta) {
-            return 3;
-        }
-        else if (hasComponentMeta) {
-            return 2;
-        }
-        else if (hasOwnerMeta) {
-            return 1;
-        }
-        else {
-            return 0;
-        }
+        return flags;
 
     }
 

@@ -7,6 +7,7 @@ import ceramic.ImageAsset;
 import ceramic.Mesh;
 import ceramic.Path;
 import ceramic.Quad;
+import ceramic.ReadOnlyMap;
 import ceramic.Shortcuts.*;
 import ceramic.TextAsset;
 import format.tmx.Data.TmxImage;
@@ -19,23 +20,42 @@ class TilemapAsset extends Asset {
 
 /// Properties
 
+    /**
+     * If the tilemap originates from a Tiled/TMX file, this will
+     * contain the TMX data that you can use for custom logic etc...
+     */
     @observe public var tmxMap:TmxMap = null;
 
+    #if plugin_ldtk
+
+    /**
+     * If the tilemap data originates from an LDtk file, this will
+     * contain the LDtk data that you can use for custom logic and access generated tilemaps
+     */
+    @observe public var ldtkData:LdtkData = null;
+
+    #end
+
+    /**
+     * The tilemap data that can be used with a Ceramic `Tilemap` visual.
+     */
     @observe public var tilemapData:TilemapData = null;
 
 /// Internal
 
-    var tmxAsset:TextAsset = null;
-
     var tsxRawData:Map<String,String> = null;
 
-    // TODO cache external tileset so that we don't need to reload that for every tilemap
+    #if plugin_ldtk
+
+    var ldtkExternalSources:Array<String> = null;
+
+    #end
 
 /// Lifecycle
 
-    override public function new(name:String, ?options:AssetOptions) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions) {
 
-        super('tilemap', name, options);
+        super('tilemap', name, variant, options);
         handleTexturesDensityChange = false;
 
         assets = new Assets();
@@ -60,9 +80,18 @@ class TilemapAsset extends Asset {
 
         var isTiledMap = path.toLowerCase().endsWith('.tmx');
 
+        #if plugin_ldtk
+        var isLdtk = path.toLowerCase().endsWith('.ldtk');
+        #end
+
         if (isTiledMap) {
             loadTmxTiledMap();
         }
+        #if plugin_ldtk
+        else if (isLdtk) {
+            loadLdtk();
+        }
+        #end
         else {
             status = BROKEN;
             ceramic.App.app.logger.error('Unknown format for tilemap data at path: $path');
@@ -77,7 +106,7 @@ class TilemapAsset extends Asset {
 
         // Load tmx asset
         //
-        tmxAsset = new TextAsset(path);
+        var tmxAsset = new TextAsset(path);
         var prevAsset = assets.addAsset(tmxAsset);
         tmxAsset.computePath(['tmx'], false, runtimeAssets);
 
@@ -87,6 +116,7 @@ class TilemapAsset extends Asset {
         assets.onceComplete(this, function(success) {
 
             var rawTmxData = tmxAsset.text;
+            tmxAsset.destroy();
 
             if (rawTmxData != null && rawTmxData.length > 0) {
 
@@ -97,7 +127,7 @@ class TilemapAsset extends Asset {
 
                         var tilemapParser = owner.getTilemapParser();
                         tmxMap = tilemapParser.parseTmx(rawTmxData, Path.directory(path), resolveTsxRawData);
-                        tilemapData = tilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromTmxImage);
+                        tilemapData = tilemapParser.tmxMapToTilemapData(tmxMap, loadTextureFromSource);
 
                         if (tilemapData != null) {
 
@@ -242,39 +272,65 @@ class TilemapAsset extends Asset {
 
     }
 
-    function loadTextureFromTmxImage(tmxImage:TmxImage, done:Texture->Void):Void {
+    function loadTextureFromSource(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void):Void {
 
-        if (tmxImage.source != null) {
-            var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), tmxImage.source]));
+        if (source != null) {
+            var pathInfo = Assets.decodePath(Path.join([Path.directory(this.path), source]));
 
             // Check if asset is already available
             var texture = owner.texture(pathInfo.name);
 
             if (texture == null) {
 
-                // Texture not already loaded, load it!
+                var asset = owner.imageAsset(pathInfo.name);
 
-                var asset = new ImageAsset(pathInfo.name);
-                asset.handleTexturesDensityChange = true;
-                asset.onDestroy(this, function(_) {
-                    // Should we do some cleanup here?
-                });
-                assets.addAsset(asset);
-                assets.onceComplete(this, function(isSuccess) {
-                    if (isSuccess) {
-                        var texture = assets.texture(asset.name);
+                if (asset != null) {
 
-                        // NEAREST is usually preferred for tilemaps so use that by default,
-                        // although it is still possible to set it to LINEAR manually after
-                        texture.filter = NEAREST;
-
-                        // Share this texture with owner `Assets` instance
-                        // so that it can be reused later
-                        owner.addAsset(asset);
-
-                        done(texture);
+                    switch asset.status {
+                        case NONE | LOADING:
+                            asset.onceComplete(this, function(isSuccess) {
+                                if (isSuccess) {
+                                    var texture = owner.texture(asset.name);
+                                    done(texture);
+                                }
+                                else {
+                                    done(null);
+                                }
+                            });
+                        case READY | BROKEN:
+                            done(null);
                     }
-                });
+
+                }
+                else {
+
+                    // Texture not already loaded, load it!
+
+                    var asset = new ImageAsset(pathInfo.name);
+                    if (configureAsset != null) {
+                        configureAsset(asset);
+                    }
+                    asset.handleTexturesDensityChange = true;
+                    asset.onDestroy(this, function(_) {
+                        // Should we do some cleanup here?
+                    });
+                    assets.addAsset(asset);
+                    assets.onceComplete(this, function(isSuccess) {
+                        if (isSuccess) {
+                            var texture = assets.texture(asset.name);
+
+                            // NEAREST is usually preferred for tilemaps so use that by default,
+                            // although it is still possible to set it to LINEAR manually after
+                            texture.filter = NEAREST;
+
+                            // Share this texture with owner `Assets` instance
+                            // so that it can be reused later
+                            owner.addAsset(asset);
+
+                            done(texture);
+                        }
+                    });
+                }
             }
             else {
 
@@ -282,14 +338,145 @@ class TilemapAsset extends Asset {
                 done(texture);
             }
         }
-        else if (tmxImage.data != null) {
-            log.warning('Loading TMX embedded images is not supported.');
-        }
         else {
-            log.warning('Cannot load texture for TMX image: $tmxImage');
+            log.warning('Cannot load texture for source: $source');
         }
 
     }
+
+#if plugin_ldtk
+
+/// LDtk
+
+    function loadLdtk() {
+
+        // Load ldtk asset
+        //
+        var ldtkAsset = new TextAsset(path);
+        var prevAsset = assets.addAsset(ldtkAsset);
+        ldtkAsset.computePath(['ldtk'], false, runtimeAssets);
+
+        // Remove previous json asset if different
+        if (prevAsset != null) prevAsset.destroy();
+
+        assets.onceComplete(this, function(success) {
+
+            var rawLdtkData = ldtkAsset.text;
+            ldtkAsset.destroy();
+
+            if (rawLdtkData != null && rawLdtkData.length > 0) {
+
+                var tilemapParser = owner.getTilemapParser();
+                ldtkData = tilemapParser.parseLdtk(rawLdtkData, loadExternalLdtkLevelData);
+
+                if (ldtkData == null) {
+                    status = BROKEN;
+                    ceramic.App.app.logger.error('Failed to load because of invalid LDtk data');
+                    emitComplete(false);
+                    return;
+                }
+
+                try {
+
+                    var skip:Array<String> = null;
+                    if (options != null && options.skip != null && options.skip is Array) {
+                        skip = options.skip;
+                    }
+
+                    tilemapParser.loadLdtkTilemaps(ldtkData, loadTextureFromSource, skip);
+
+                    // Link the ldtk data to this asset so that
+                    // destroying one will destroy the other
+                    ldtkData.asset = this;
+
+                    // Run load of assets again to load textures
+                    assets.onceComplete(this, function(isSuccess) {
+
+                        if (isSuccess) {
+
+                            // Success
+                            status = READY;
+                            emitComplete(true);
+                            if (handleTexturesDensityChange) {
+                                checkTexturesDensity();
+                            }
+                        }
+                        else {
+                            status = BROKEN;
+                            ceramic.App.app.logger.error('Failed to load tilemap textures at path: $path');
+                            emitComplete(false);
+                        }
+
+                    });
+
+                    assets.load(false);
+
+                }
+                catch (e:Dynamic) {
+                    status = BROKEN;
+                    ceramic.App.app.logger.error('Error when loading LDtk tilemaps: ' + e);
+                    ceramic.App.app.logger.error('Failed to load tilemap data at path: $path');
+                    emitComplete(false);
+                }
+
+            }
+            else {
+                status = BROKEN;
+                ceramic.App.app.logger.error('Failed to load raw tilemap data at path: $path');
+                emitComplete(false);
+            }
+
+        });
+
+        assets.load();
+
+    }
+
+    function loadExternalLdtkLevelData(source:String, callback:(rawLevelData:String)->Void):Void {
+
+        log.info('Load external LDtk level $source');
+
+        // Load ldtk external level asset
+        //
+        var ldtkAsset = new TextAsset(source);
+        var prevAsset = assets.addAsset(ldtkAsset);
+        ldtkAsset.computePath(['ldtkl'], false, runtimeAssets);
+
+        if (ldtkExternalSources == null)
+            ldtkExternalSources = [];
+        if (!ldtkExternalSources.contains(ldtkAsset.path)) {
+            ldtkExternalSources.push(ldtkAsset.path);
+        }
+
+        // Remove previous json asset if different
+        if (prevAsset != null) prevAsset.destroy();
+
+        assets.onceComplete(this, function(success) {
+
+            var rawLdtkData = ldtkAsset.text;
+            ldtkAsset.destroy();
+
+            if (rawLdtkData != null && rawLdtkData.length > 0) {
+                try {
+                    callback(rawLdtkData);
+                }
+                catch (e:Dynamic) {
+                    ceramic.App.app.logger.error('Error when loading external LDtk level: ' + e);
+                    callback(null);
+                }
+            }
+            else {
+                ceramic.App.app.logger.error('Failed to load raw external LDtk level at path: $source');
+                callback(null);
+            }
+
+        });
+
+        assets.load();
+
+    }
+
+#end
 
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
@@ -325,8 +512,37 @@ class TilemapAsset extends Asset {
 
         if (newTime > previousTime) {
             log.info('Reload tilemap (file has changed)');
+            #if plugin_ldtk
+            ldtkExternalSources = null;
+            #end
             load();
         }
+        #if plugin_ldtk
+        else {
+
+            if (ldtkExternalSources != null) {
+                for (i in 0...ldtkExternalSources.length) {
+                    var source = ldtkExternalSources[i];
+
+                    var previousTime:Float = -1;
+                    if (previousFiles.exists(source)) {
+                        previousTime = previousFiles.get(source);
+                    }
+                    var newTime:Float = -1;
+                    if (newFiles.exists(source)) {
+                        newTime = newFiles.get(source);
+                    }
+
+                    if (newTime > previousTime) {
+                        log.info('Reload tilemap (external file has changed)');
+                        ldtkExternalSources = null;
+                        load();
+                        return;
+                    }
+                }
+            }
+        }
+        #end
 
     }
 
@@ -338,6 +554,15 @@ class TilemapAsset extends Asset {
             tilemapData.destroy();
             tilemapData = null;
         }
+
+        #if plugin_ldtk
+
+        if (ldtkData != null) {
+            ldtkData.destroy();
+            ldtkData = null;
+        }
+
+        #end
 
         if (tmxMap != null) {
             tmxMap = null;

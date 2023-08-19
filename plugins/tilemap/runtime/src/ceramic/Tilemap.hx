@@ -150,15 +150,27 @@ class Tilemap extends Quad {
         if (tilemapData == null) {
             width = 0;
             height = 0;
+            transparent = true;
+            color = Color.WHITE;
             contentDirty = false;
             return;
         }
 
         // Update size
         size(
-            tilemapData.width * tilemapData.tileWidth,
-            tilemapData.height * tilemapData.tileHeight
+            tilemapData.width,
+            tilemapData.height
         );
+
+        if (tilemapData.backgroundColor != AlphaColor.NONE && tilemapData.backgroundColor.alpha > 0) {
+            transparent = false;
+            alpha = tilemapData.backgroundColor.alphaFloat;
+            color = tilemapData.backgroundColor.rgb;
+        }
+        else {
+            transparent = true;
+            color = Color.WHITE;
+        }
 
         computeLayers();
 
@@ -187,7 +199,12 @@ class Tilemap extends Quad {
             }
             usedLayers++;
 
-            layer.depth = l + 1;
+            if (layerData.explicitDepth != null) {
+                layer.depth = layerData.explicitDepth;
+            }
+            else {
+                layer.depth = l + 1;
+            }
             layer.layerData = layerData;
 
             if (isNew)
@@ -318,6 +335,70 @@ class Tilemap extends Quad {
 
         computedCollidableLayers = result;
         collidableLayersDirty = false;
+
+    }
+
+    /**
+     * Returns `true` if the tilemap should collide at the given `x` and `y` position with an object going to the given `direction`.
+     */
+    public function shouldCollideAtPosition(x:Float, y:Float, direction:arcade.Direction = NONE):Bool {
+
+        var result:Bool = false;
+
+        if (collidableLayersDirty)
+            computeCollidableLayers();
+
+        var tilemapData = this.tilemapData;
+        if (tilemapData != null) {
+
+            var computedCollidableLayers = this.computedCollidableLayers;
+            if (computedCollidableLayers != null) {
+                for (i in 0...computedCollidableLayers.length) {
+                    var layer = computedCollidableLayers.unsafeGet(i);
+                    var layerData = layer.layerData;
+                    if (layerData != null) {
+
+                        var tileWidth = layerData.tileWidth;
+                        var tileHeight = layerData.tileHeight;
+
+                        var checkLayer:Bool = switch direction {
+                            case NONE: layer.checkCollisionUp || layer.checkCollisionRight || layer.checkCollisionDown || layer.checkCollisionLeft;
+                            case LEFT: layer.checkCollisionRight;
+                            case RIGHT: layer.checkCollisionLeft;
+                            case UP: layer.checkCollisionDown;
+                            case DOWN: layer.checkCollisionUp;
+                        }
+
+                        if (checkLayer) {
+                            var offsetX = layerData.offsetX + layerData.x * tileWidth;
+                            var offsetY = layerData.offsetY + layerData.y * tileHeight;
+
+                            var column = Math.floor((x - offsetX) / tileWidth);
+                            var row = Math.floor((y - offsetY) / tileHeight);
+
+                            if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
+                                var tile = layer.checkCollisionWithComputedTiles ? layerData.computedTileByColumnAndRow(column, row) : layerData.tileByColumnAndRow(column, row);
+                                var gid = tile.gid;
+                                if (layer.checkCollisionValues != null) {
+                                    if (layer.checkCollisionValues.contains(gid)) {
+                                        result = true;
+                                        break;
+                                    }
+                                }
+                                else {
+                                    if (gid > 0) {
+                                        result = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
 
     }
 

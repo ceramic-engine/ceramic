@@ -1,7 +1,2 @@
 plugin:
     name: Linux
-
-    runtime:
-        if linux:
-            +defines:
-                - ceramic_use_openal

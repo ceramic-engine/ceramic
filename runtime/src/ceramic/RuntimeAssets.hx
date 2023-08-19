@@ -88,7 +88,11 @@ class RuntimeAssets {
 
         if (extensions == null) extensions = [];
         extensions = extensions.concat(switch (kind) {
+            #if plugin_ase
+            case 'image': app.backend.info.imageExtensions().concat(['ase', 'aseprite']);
+            #else
             case 'image': app.backend.info.imageExtensions();
+            #end
             case 'text': app.backend.info.textExtensions();
             case 'sound': app.backend.info.soundExtensions();
             case 'shader': app.backend.info.shaderExtensions();

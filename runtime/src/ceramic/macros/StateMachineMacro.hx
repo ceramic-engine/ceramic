@@ -672,10 +672,16 @@ class StateMachineMacro {
             try {
                 var resolvedEntityType:haxe.macro.Type = Context.resolveType(entityComplexType, Context.currentPos());
                 if (resolvedEntityType != null) {
-                    switch resolvedEntityType {
-                        default:
-                        case TLazy(f):
-                            resolvedEntityType = f();
+                    var follow = true;
+                    while (follow) {
+                        switch resolvedEntityType {
+                            case TLazy(f):
+                                resolvedEntityType = f();
+                            case TType(t, _):
+                                resolvedEntityType = t.get().type;
+                            case _:
+                                follow = false;
+                        }
                     }
                     switch resolvedEntityType {
                         default:

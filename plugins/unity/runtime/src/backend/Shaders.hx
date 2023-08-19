@@ -142,4 +142,10 @@ class Shaders implements spec.Shaders {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+
+        return false;
+
+    }
+
 }

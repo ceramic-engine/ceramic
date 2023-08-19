@@ -4,6 +4,8 @@ import ceramic.IntMap;
 import ceramic.Path;
 import ceramic.Runner;
 import ceramic.Shortcuts.*;
+import haxe.crypto.Base64;
+import haxe.io.Bytes;
 
 using StringTools;
 #if android
@@ -15,7 +17,7 @@ import js.html.XMLHttpRequest;
 #elseif (cs && unity)
 import unityengine.networking.DownloadHandler;
 import unityengine.networking.UnityWebRequest;
-#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
+#elseif ceramic_http_tink
 import tink.http.Fetch;
 import tink.http.Header;
 #end
@@ -24,7 +26,6 @@ import tink.http.Header;
 import sys.FileSystem;
 import sys.io.File;
 #end
-
 
 #if (cs && unity)
 @:classCode('
@@ -65,6 +66,12 @@ class Http implements spec.Http {
             });
         };
 
+        _request(options, done);
+
+    }
+
+    function _request(options:HttpRequestOptions, done:HttpResponse->Void, numRedirects:Int = 0):Void {
+
 #if (nodejs || hxnodejs || node)
 
         var isSSL = options.url.startsWith('https');
@@ -88,42 +95,107 @@ class Http implements spec.Http {
             }
         }
 
-        var resContent = '';
+        var resContent = [];
         var resError = null;
         var resHeaders = new Map<String,String>();
         var resStatus = 404;
+        var textContent:String = null;
+        var binaryContent:Bytes = null;
+        var didRedirect:Bool = false;
 
         var req:Dynamic = http.request(requestOptions, function(res:Dynamic) {
 
             resStatus = res.statusCode;
 
-            res.setEncoding('utf8');
+            if (numRedirects < 8 && (resStatus >= 300 && resStatus <= 399) && res.headers.location != null) {
+
+                didRedirect = true;
+
+                var newUrl:String = options.url;
+                var newLocation:String = res.headers.location;
+                if (!newLocation.toLowerCase().startsWith('http://') && !newLocation.toLowerCase().startsWith('https://')) {
+                    var slashIndex = newUrl.indexOf('/', 8);
+                    if (slashIndex != -1) {
+                        newUrl = newUrl.substring(0, slashIndex);
+                    }
+                    if (newLocation.charAt(0) != '/')
+                        newUrl += '/';
+                    newUrl += newLocation;
+                }
+                else {
+                    newUrl = newLocation;
+                }
+
+                var redirectedOptions:HttpRequestOptions = {
+                    url: newUrl
+                };
+                redirectedOptions.timeout = options.timeout;
+                if (resStatus == 307) {
+                    redirectedOptions.method = options.method;
+                    redirectedOptions.content = options.content;
+                    redirectedOptions.headers = options.headers;
+                }
+                else {
+                    redirectedOptions.method = GET;
+                    redirectedOptions.content = null;
+                }
+                _request(redirectedOptions, done, numRedirects + 1);
+                return;
+            }
 
             res.on('data', function(chunk) {
-                resContent += chunk;
+                if (!didRedirect) {
+                    resContent.push(chunk);
+                }
             });
 
             res.on('end', function() {
+                if (!didRedirect) {
+                    var buffer:Dynamic = js.Syntax.code('Buffer.concat({0})', resContent);
 
-                for (key in Reflect.fields(res.headers)) {
-                    resHeaders.set(key, Reflect.field(res.headers, key));
+                    var resContentType:String = null;
+                    for (key in Reflect.fields(res.headers)) {
+                        resHeaders.set(key, Reflect.field(res.headers, key));
+
+                        if (resContentType == null && key.toLowerCase() == 'content-type') {
+                            resContentType = Reflect.field(res.headers, key);
+                        }
+                    }
+
+                    if (resContentType == null)
+                        resContentType = 'application/octet-stream';
+
+                    if (ceramic.MimeType.isText(resContentType)) {
+                        textContent = buffer.toString('utf8');
+                    }
+                    else {
+                        // Copy data and get rid of nodejs buffer
+                        var bufferData = new js.lib.Uint8Array(buffer.length);
+                        for (i in 0...buffer.length) {
+                            bufferData[i] = js.Syntax.code("{0}[{1}]", buffer, i);
+                        }
+                        binaryContent = haxe.io.Bytes.ofData(bufferData.buffer);
+                    }
                 }
-
             });
         });
 
         req.on('error', function(e) {
-            resError = e.message;
+            if (!didRedirect) {
+                resError = e.message;
+            }
         });
 
         req.on('close', function() {
-            done({
-                status: resStatus,
-                content: resStatus < 200 || resStatus >= 300 ? null : resContent,
-                binaryContent: null,
-                headers: resHeaders,
-                error: resError
-            });
+            if (!didRedirect) {
+                done({
+                    status: resStatus,
+                    content: resStatus < 200 || resStatus >= 300 ? null : textContent,
+                    binaryContent: resStatus < 200 || resStatus >= 300 ? null : binaryContent,
+                    headers: resHeaders,
+                    error: resError
+                });
+            }
         });
 
         // Write request body (if any)
@@ -160,10 +232,17 @@ class Http implements spec.Http {
                     headers.set(key, Reflect.field(rawResponse.headers, key));
                 }
             }
+
+            var binaryContent:Bytes = null;
+            if (rawResponse.binaryContent != null) {
+                var binaryContentRaw:String = rawResponse.binaryContent;
+                binaryContent = Base64.decode(binaryContentRaw);
+            }
+
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
-                binaryContent: null,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: rawResponse.error
             });
@@ -196,10 +275,16 @@ class Http implements spec.Http {
                     headers.set(key, Reflect.field(rawResponse.headers, key));
                 }
             }
+
+            var binaryContent:Bytes = null;
+            if (rawResponse.binaryContent != null) {
+                binaryContent = Bytes.ofData(rawResponse.binaryContent);
+            }
+
             done({
                 status: rawResponse.status,
                 content: useContent ? rawResponse.content : null,
-                binaryContent: null,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: rawResponse.error
             });
@@ -229,6 +314,8 @@ class Http implements spec.Http {
 
         var xhr = new XMLHttpRequest();
 
+        untyped xhr.responseType = 'arraybuffer';
+
         if (options.timeout != null && options.timeout > 0) {
             xhr.timeout = options.timeout * 1000;
 
@@ -246,6 +333,11 @@ class Http implements spec.Http {
 
         if (httpHeaders != null) {
             for (key in httpHeaders.keys()) {
+
+                // Skip unsafe header
+                if (key.toLowerCase() == 'content-length')
+                    continue;
+
                 xhr.setRequestHeader(key, httpHeaders.get(key));
             }
         }
@@ -280,6 +372,7 @@ class Http implements spec.Http {
 
             var rawHeaders = xhr.getAllResponseHeaders();
             var headers = new Map<String,String>();
+            var contentType = null;
             if (rawHeaders != null) {
                 for (rawHeader in rawHeaders.split("\n")) {
                     if (rawHeader.trim() == '') continue;
@@ -288,17 +381,39 @@ class Http implements spec.Http {
                         var key = rawHeader.substring(0, colonIndex).trim();
                         var value = rawHeader.substring(colonIndex + 1).trim();
                         headers.set(key, value);
+
+                        if (contentType == null && key.toLowerCase() == 'content-type') {
+                            contentType = value;
+                        }
                     }
                     else {
                         log.warning('Failed to parse header: $rawHeader');
                     }
                 }
             }
+            if (contentType == null)
+                contentType = 'application/octet-stream';
+
+            var binaryContent:Bytes = null;
+            if (xhr.response != null) {
+                try {
+                    var responseBuffer:js.lib.ArrayBuffer = xhr.response;
+                    binaryContent = ceramic.UInt8Array.fromBuffer(responseBuffer, 0, responseBuffer.byteLength).toBytes();
+                }
+                catch (e:Dynamic) {}
+            }
+
+            var textContent:String = null;
+            if (binaryContent != null && ceramic.MimeType.isText(contentType)) {
+                // Treat text as utf-8. Could be improved
+                textContent = binaryContent.toString();
+                binaryContent = null;
+            }
 
             var response:HttpResponse = {
                 status: xhr.status,
-                content: xhr.responseText,
-                binaryContent: null,
+                content: textContent,
+                binaryContent: binaryContent,
                 headers: headers,
                 error: null
             };
@@ -354,27 +469,28 @@ class Http implements spec.Http {
 
         var url = options.url;
 
-        // Unity web request API forces us to decode uri components and give them as a dictionary...
-        var formFields:Dynamic = null;
-        if (options.method == POST) {
-            if (content != null) {
-                var postUriParams = ceramic.Utils.decodeUriParams(content);
-                formFields = untyped __cs__('new System.Collections.Generic.Dictionary<string,string>()');
-                for (key => val in postUriParams) {
-                    untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0}).Add({1}, {2})', formFields, key, val);
-                }
-            }
-        }
-
         var webRequest:UnityWebRequest = null;
         try {
-            webRequest = switch options.method {
-                case null: UnityWebRequest.Get(url);
-                case GET: UnityWebRequest.Get(url);
-                case POST: UnityWebRequest.Post(url, untyped __cs__('((System.Collections.Generic.Dictionary<string,string>){0})', formFields));
-                case PUT: UnityWebRequest.Put(url, content);
-                case DELETE: UnityWebRequest.Delete(url);
+            if (content == null || options.method == GET || options.method == DELETE) {
+                webRequest = switch options.method {
+                    case GET: UnityWebRequest.Get(url);
+                    case DELETE: UnityWebRequest.Delete(url);
+                    case _: UnityWebRequest.Get(url);
+                }
             }
+            else {
+                webRequest = new UnityWebRequest();
+                webRequest.url = url;
+                webRequest.method = switch options.method {
+                    case POST: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPOST');
+                    case PUT: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPUT');
+                    case _: untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbPOST');
+                };
+                webRequest.downloadHandler = untyped __cs__('new UnityEngine.Networking.DownloadHandlerBuffer()');
+                webRequest.uploadHandler = untyped __cs__('new UnityEngine.Networking.UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes({0}))', content);
+            }
+            webRequest.disposeUploadHandlerOnDispose = true;
+            webRequest.disposeDownloadHandlerOnDispose = true;
 
             if (options.headers != null) {
                 for (key in options.headers.keys()) {
@@ -389,13 +505,6 @@ class Http implements spec.Http {
                 var resStatus = Std.int(webRequest.responseCode);
                 var resHeaders = new Map<String, String>();
 
-                var rawHeaders = webRequest.GetResponseHeaders();
-                untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
-                var headerName:String = untyped __cs__('rawHeaderEntry.Key');
-                var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
-                resHeaders.set(headerName, headerValue);
-                untyped __cs__('}');
-
                 if (webRequest.isNetworkError || webRequest.isHttpError) {
                     done({
                         status: resStatus,
@@ -406,16 +515,46 @@ class Http implements spec.Http {
                     });
                 }
                 else {
+
+                    var rawHeaders = webRequest.GetResponseHeaders();
+                    untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
+                    var headerName:String = untyped __cs__('rawHeaderEntry.Key');
+                    var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
+                    resHeaders.set(headerName, headerValue);
+                    untyped __cs__('}');
+
+                    var resContentType:String = null;
+                    for (key in resHeaders.keys()) {
+                        if (resContentType == null && key.toLowerCase() == 'content-type') {
+                            resContentType = resHeaders.get(key);
+                        }
+                    }
+
+                    if (resContentType == null)
+                        resContentType = 'application/octet-stream';
+
+                    var resTextContent:String = null;
+                    var resBinaryContent:Bytes = null;
+                    if (ceramic.MimeType.isText(resContentType)) {
+                        resTextContent = downloadHandler.text;
+                    }
+                    else {
+                        resBinaryContent = haxe.io.Bytes.ofData(cast downloadHandler.data);
+                    }
+
                     done({
                         status: resStatus,
-                        content: resStatus < 200 || resStatus >= 300 ? null : downloadHandler.text,
-                        binaryContent: null, // TODO?
+                        content: resTextContent,
+                        binaryContent: resBinaryContent,
                         headers: resHeaders,
                         error: webRequest.error
                     });
                 }
 
-                webRequest.Dispose();
+                if (webRequest != null)
+                    webRequest.Dispose();
+                if (downloadHandler != null)
+                    downloadHandler.Dispose();
 
             });
 
@@ -440,7 +579,7 @@ class Http implements spec.Http {
             });
         }
 
-#elseif (ceramic_http_tink || (mac && !ceramic_http_no_tink))
+#elseif ceramic_http_tink
 
         var contentType = "application/x-www-form-urlencoded";
         var httpHeaders = [];
@@ -483,15 +622,32 @@ class Http implements spec.Http {
                         case Success(res):
                             var bytes = res.body.toBytes();
 
+                            var resContentType:String = null;
                             var headers = new Map<String,String>();
                             for (headerField in res.header) {
-                                headers.set(headerField.name, headerField.value);
+                                headers.set(''+headerField.name, ''+headerField.value);
+
+                                if (resContentType == null && (''+headerField.name).toLowerCase() == 'content-type') {
+                                    resContentType = ''+headerField.value;
+                                }
+                            }
+
+                            if (resContentType == null)
+                                resContentType = 'application/octet-stream';
+
+                            var resTextContent:String = null;
+                            var resBinaryContent:Bytes = null;
+                            if (ceramic.MimeType.isText(resContentType)) {
+                                resTextContent = (bytes != null ? bytes.toString() : null);
+                            }
+                            else {
+                                resBinaryContent = bytes;
                             }
 
                             var response:HttpResponse = {
                                 status: res.header.statusCode.toInt(),
-                                content: bytes != null ? bytes.toString() : null,
-                                binaryContent: null,
+                                content: resTextContent,
+                                binaryContent: resBinaryContent,
                                 headers: headers,
                                 error: null
                             };
@@ -582,7 +738,7 @@ class Http implements spec.Http {
 
                 var response:HttpResponse = {
                     status: res.status,
-                    content: res.content,
+                    content: res.contentIsBinary ? null : res.content,
                     binaryContent: res.contentIsBinary ? res.contentRaw : null,
                     headers: headers,
                     error: null // TODO
@@ -669,7 +825,7 @@ class Http implements spec.Http {
         });
         return;
 
-        #elseif cpp
+        #elseif (cpp || cs)
 
         // Ensure we can write the file at the desired location
         if (FileSystem.exists(tmpTargetPath)) {
@@ -722,13 +878,16 @@ class Http implements spec.Http {
         }
 
         #if (mac || linux)
+
         // Use built-in curl on mac & linux, that's the easiest!
         Runner.runInBackground(function() {
             Sys.command('curl', ['-sS', '-L', url, '--output', tmpTargetPath]);
             Runner.runInMain(finishDownload);
         });
         return;
+
         #elseif windows
+
         // Use curl through powershell on windows
         Runner.runInBackground(function() {
             var escapedArgs = [];
@@ -740,6 +899,32 @@ class Http implements spec.Http {
             Runner.runInMain(finishDownload);
         });
         return;
+
+        #elseif (cs && unity)
+
+        var requestId = nextRequestId;
+        nextRequestId = (nextRequestId + 1) % 999999999;
+
+        var webRequest = new UnityWebRequest();
+        webRequest.url = url;
+        webRequest.method = untyped __cs__('UnityEngine.Networking.UnityWebRequest.kHttpVerbGET');
+        webRequest.downloadHandler = untyped __cs__('new UnityEngine.Networking.DownloadHandlerFile({0})', tmpTargetPath);
+        webRequest.disposeDownloadHandlerOnDispose = true;
+
+        requestCallbacks.set(requestId, function(downloadHandler) {
+
+            if (webRequest != null)
+                webRequest.Dispose();
+            if (downloadHandler != null)
+                downloadHandler.Dispose();
+
+            finishDownload();
+
+        });
+
+        var monoBehaviour = Main.monoBehaviour;
+        untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+
         #end
 
         #end

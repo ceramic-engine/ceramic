@@ -4,6 +4,7 @@ import ceramic.Assert.assert;
 import ceramic.PlatformSpecific;
 import ceramic.Shortcuts.*;
 import haxe.CallStack;
+import haxe.io.Bytes;
 import haxe.rtti.CType;
 
 using StringTools;
@@ -687,6 +688,36 @@ class Utils {
 
         return str;
 
+    }
+
+    public static function imageTypeFromBytes(bytes:Bytes):ImageType {
+
+        if (
+            bytes.get(0) == 0xFF &&
+            bytes.get(1) == 0xD8 &&
+            bytes.get(2) == 0xFF) {
+
+            return ImageType.JPEG;
+        }
+        else if (
+            bytes.get(0) == 0x89 &&
+            bytes.get(1) == 0x50 &&
+            bytes.get(2) == 0x4E &&
+            bytes.get(3) == 0x47 &&
+            bytes.get(4) == 0x0D &&
+            bytes.get(5) == 0x0A &&
+            bytes.get(6) == 0x1A &&
+            bytes.get(7) == 0x0A) {
+
+            return ImageType.PNG;
+        }
+
+        return null;
+
+    }
+
+    public inline static function lerp(a:Float, b:Float, t:Float):Float {
+        return a + (b - a) * t;
     }
 
 }

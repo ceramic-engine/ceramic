@@ -1,0 +1,9 @@
+plugin:
+    name: Ase
+
+    runtime:
+        if plugin_ase:
+            +libs:
+                - ase
+            +paths:
+                - {plugin:cwd}/runtime/src

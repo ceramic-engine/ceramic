@@ -36,7 +36,7 @@ interface Draw {
 
     function bindNoTexture():Void;
 
-    function setRenderWireframe(value:Bool):Void;
+    function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void;
 
     function beginDrawQuad(quad:ceramic.Quad):Void;
 

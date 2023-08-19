@@ -2,11 +2,14 @@ package spec;
 
 import backend.LoadTextureOptions;
 import backend.Texture;
+import ceramic.ImageType;
 import haxe.io.Bytes;
 
 interface Textures {
 
     function load(path:String, ?options:LoadTextureOptions, done:Texture->Void):Void;
+
+    function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, done:Texture->Void):Void;
 
 /// Textures
 
@@ -35,6 +38,10 @@ interface Textures {
     function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void;
 
     function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void;
+
+    function setTextureWrapS(texture: Texture, wrap: ceramic.TextureWrap):Void;
+
+    function setTextureWrapT(texture: Texture, wrap: ceramic.TextureWrap):Void;
 
     function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture;
 

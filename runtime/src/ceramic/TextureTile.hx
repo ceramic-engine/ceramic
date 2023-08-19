@@ -34,6 +34,15 @@ class TextureTile {
 
     }
 
+    inline public function frame(frameX:Float, frameY:Float, frameWidth:Float, frameHeight:Float):Void {
+
+        this.frameX = frameX;
+        this.frameY = frameY;
+        this.frameWidth = frameWidth;
+        this.frameHeight = frameHeight;
+
+    }
+
     function toString() {
 
         return '' + {

@@ -951,14 +951,14 @@ class View extends Layer {
     /**
      * Will set this view size to screen size, and update view size each time screen size changes.
      */
-    override public function bindToScreenSize():Void {
+    override public function bindToScreenSize(factor:Float = 1.0):Void {
 
         // Bind to screen size
         screen.onResize(this, function() {
-            size(screen.width, screen.height);
+            size(screen.width * factor, screen.height * factor);
             View.requestLayout();
         });
-        size(screen.width, screen.height);
+        size(screen.width * factor, screen.height * factor);
         View.requestLayout();
 
     }

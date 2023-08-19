@@ -71,17 +71,33 @@ class UnityEditor {
                 fail('Cannot resolve unity editor path: you need to install Unity first with Unity Hub (https://unity3d.com/get-unity/download)');
             }
 
+            var bestAutomaticVersion = null;
+            for (version in availableVersions) {
+                if (version.startsWith('2021')) {
+                    bestAutomaticVersion = version;
+                }
+            }
+            if (bestAutomaticVersion == null)
+                bestAutomaticVersion = availableVersions[availableVersions.length-1];
+
             if (printVersions) {
                 print('Available Unity versions: ' + availableVersions.join(', '));
-                if (unityVersion != null && availableVersions.indexOf(unityVersion) == -1) {
-                    warning('Requested version $unityVersion not installed. Using ${availableVersions[availableVersions.length-1]} instead!');
+                if (unityVersion != null) {
+                    if (availableVersions.indexOf(unityVersion) == -1) {
+                        warning('Requested version $unityVersion not installed. Using ${bestAutomaticVersion} instead!');
+                        unityVersion = null;
+                    }
+                    else {
+                        success('Using version ${unityVersion}');
+                    }
                 }
                 else {
-                    success('Using version ${availableVersions[availableVersions.length-1]}');
+                    success('Using version ${bestAutomaticVersion}');
                 }
             }
 
-            unityVersion = availableVersions[availableVersions.length-1];
+            if (unityVersion == null)
+                unityVersion = bestAutomaticVersion;
 
             if (isMac) {
                 return Path.join([unityEditorsPath, unityVersion, 'Unity.app']);

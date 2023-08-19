@@ -90,6 +90,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     @event function blur();
 
+    inline function willListenPointerOver()
+        @:privateAccess ceramic.App.app.screen.visualsListenPointerOver = true;
+
 #if plugin_arcade
 
 /// Arcade physics
@@ -967,8 +970,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     inline function get_isPointerOver():Bool { return _numPointerOver > 0; }
 
     /**
-     * Use the given visual's bounds as clipping area for **every children**.
-     * The clipping only affect childrens and not the visual it is assigned to.
+     * Use the given visual's bounds as clipping area for itself and **every children**.
      * Clipping areas cannot be combined. That means if `clip` is not null and current
      * visual instance is already clipped by a parent visual, its children's won't be clipped
      * by it anymore as they are instead clipped by this `clip` property instead.
@@ -1003,9 +1005,18 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 #end
     }
 
-#if ceramic_debug_rendering_option
+#if ceramic_wireframe
 
-    public var debugRendering:DebugRendering = DebugRendering.DEFAULT;
+    public var wireframe(get,set):Bool;
+    inline function get_wireframe():Bool {
+        // Equivalent to internalFlag(7)
+        return flags & FLAG_RENDER_WIREFRAME == FLAG_RENDER_WIREFRAME;
+    }
+    inline function set_wireframe(wireframe:Bool):Bool {
+        // Equivalent to internalFlag(7, isHitVisual)
+        flags = wireframe ? flags | FLAG_RENDER_WIREFRAME : flags & ~FLAG_RENDER_WIREFRAME;
+        return wireframe;
+    }
 
 #end
 
@@ -1548,6 +1559,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     private inline static final FLAG_ARCADE_BODY_ENABLE:Int = 64; // 1 << 6
     #end
 
+    #if ceramic_wireframe
+    private inline static final FLAG_RENDER_WIREFRAME:Int = 128; // 1 << 7
+    #end
+
     /**
      * Read and write arbitrary boolean flags on this visual.
      * Index should be between 0 (included) and 16 (excluded) or result is undefined.
@@ -1658,9 +1673,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     public var computedTouchable(default, null):Bool = true;
 
     /**
-     * If any parent of this visual has a `clip` visual assigned, `computedClip` will be `true`.
+     * If any parent of this visual has a `clip` visual assigned, this will be the computed/resolved visual.
      */
-    public var computedClip(default, null):Bool = false;
+    public var computedClip(default, null):Visual = null;
 
 /// Properties (Children)
 
@@ -1730,10 +1745,27 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param scaleX The scale to set to the visual on **x** axis
      * @param scaleY (optional) The scale to set to the visual on **y** axis. If not provided, will use scaleX value.
      */
-    inline public function scale(scaleX:Float, scaleY:Float = -1):Void {
+    inline public extern overload function scale(scaleX:Float):Void {
+
+        _scale(scaleX, scaleX);
+
+    }
+
+    /**
+     * Shorthand to set `scaleX` and `scaleY` in a single call.
+     * @param scaleX The scale to set to the visual on **x** axis
+     * @param scaleY (optional) The scale to set to the visual on **y** axis. If not provided, will use scaleX value.
+     */
+    inline public extern overload function scale(scaleX:Float, scaleY:Float):Void {
+
+        _scale(scaleX, scaleY);
+
+    }
+
+    inline function _scale(scaleX:Float, scaleY:Float):Void {
 
         this.scaleX = scaleX;
-        this.scaleY = scaleY != -1 ? scaleY : scaleX;
+        this.scaleY = scaleY;
 
     }
 
@@ -1853,7 +1885,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         super.destroy();
 
-        if (ceramic.App.app.screen.focusedVisual == this) {
+        if (@:privateAccess ceramic.App.app.screen.unobservedFocusedVisual == this) {
             ceramic.App.app.screen.focusedVisual = null;
         }
 
@@ -2375,14 +2407,25 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             parent.computeClip();
         }
 
-        computedClip = false;
+        #if ceramic_clip_children_only
+        computedClip = null;
         if (parent != null) {
-            if (parent.computedClip || parent.clip != null) {
+            if (parent.computedClip != null || parent.clip != null) {
                 if (computedRenderTarget == parent.computedRenderTarget) {
-                    computedClip = true;
+                    computedClip = parent.computedClip != null ? parent.computedClip : parent.clip;
                 }
             }
         }
+        #else
+        computedClip = clip;
+        if (computedClip == null && parent != null) {
+            if (parent.computedClip != null) {
+                if (computedRenderTarget == parent.computedRenderTarget) {
+                    computedClip = parent.computedClip;
+                }
+            }
+        }
+        #end
 
         clipDirty = false;
 
@@ -3007,8 +3050,8 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         transform.identity();
         transform.scale(ceramic.App.app.screen.nativeDensity, ceramic.App.app.screen.nativeDensity);
         transform.concat(ceramic.App.app.screen.reverseMatrix);
-        transform.tx = Math.round(transform.tx);
-        transform.ty = Math.round(transform.ty);
+        transform.tx = transform.tx;
+        transform.ty = transform.ty;
         transform.changedDirty = true;
 
         size(ceramic.App.app.screen.nativeWidth, ceramic.App.app.screen.nativeHeight);
@@ -3018,17 +3061,17 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Will set this visual size to screen size
      */
-    public function bindToScreenSize():Void {
+    public function bindToScreenSize(factor:Float = 1.0):Void {
 
         // Bind to screen size
-        ceramic.App.app.screen.onResize(this, _bindToScreenSizeCallback);
-        _bindToScreenSizeCallback();
+        ceramic.App.app.screen.onResize(this, () -> _bindToScreenSizeCallback(factor));
+        _bindToScreenSizeCallback(factor);
 
     }
 
-    private function _bindToScreenSizeCallback():Void {
+    private function _bindToScreenSizeCallback(factor:Float):Void {
 
-        size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
+        size(ceramic.App.app.screen.width * factor, ceramic.App.app.screen.height * factor);
 
     }
 

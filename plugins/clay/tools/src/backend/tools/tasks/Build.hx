@@ -54,6 +54,7 @@ class Build extends tools.Task {
         var outPath = Path.join([cwd, 'out']);
         var action = null;
         var debug = context.debug;
+        var simulator = extractArgFlag(args, 'simulator');
         var noSkip = extractArgFlag(args, 'no-skip') || context.defines.exists('ceramic_no_skip');
         var useNativeBridge = extractArgFlag(args, 'native-bridge') || context.defines.exists('ceramic_native_bridge');
         var archs = extractArgValue(args, 'archs');
@@ -217,7 +218,10 @@ class Build extends tools.Task {
         // Compile c++ for iOS on requested architectures
         if (target.name == 'ios') {
             if (archs != null && archs.trim() != '') {
-                runTask('ios compile', ['--archs', archs.trim()]);
+                var compileArgs = ['--archs', archs.trim()];
+                if (simulator)
+                    compileArgs.push('--simulator');
+                runTask('ios compile', compileArgs);
             }
         }
 

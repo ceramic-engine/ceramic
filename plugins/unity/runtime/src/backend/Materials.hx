@@ -1,11 +1,10 @@
 package backend;
 
-import unityengine.rendering.VertexAttributeDescriptor;
-import unityengine.rendering.VertexAttribute;
-import unityengine.rendering.VertexAttributeFormat;
-import cs.NativeArray;
-
 import ceramic.Shortcuts.*;
+import cs.NativeArray;
+import unityengine.rendering.VertexAttribute;
+import unityengine.rendering.VertexAttributeDescriptor;
+import unityengine.rendering.VertexAttributeFormat;
 
 using ceramic.Extensions;
 
@@ -55,7 +54,7 @@ class Materials {
         var shaderImpl:ShaderImpl = shader;
 
         untyped __cs__('UnityEngine.Material material = new UnityEngine.Material((UnityEngine.Shader){0})', shaderImpl.unityShader);
-        
+
         materialData.material = untyped __cs__('material');
         repository.push(materialData);
 
@@ -84,7 +83,7 @@ class Materials {
                 }
             }
         }
-        
+
         materialData.syncShaderParams();
 
         untyped __cs__('material.SetInt("_SrcBlendRgb", (int){0})', MaterialData.blendingToUnityBlending(materialData.srcRgb));
@@ -174,8 +173,6 @@ class Materials {
             }
         }
         materialData.vertexBufferAttributes = vertexBufferAttributes;
-
-        // TODO handle shader custom attributes
 
         return materialData;
 

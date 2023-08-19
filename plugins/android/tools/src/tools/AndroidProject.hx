@@ -66,7 +66,8 @@ class AndroidProject {
                 androidProjectPath
             );
 
-            var packageName = Reflect.field(project.app, 'package').replace('-', '');
+            var packageName:String = Reflect.field(project.app, 'package');
+            packageName = packageName.replace('-', '');
 
             // Replace in names
             print('Perform replaces in names');

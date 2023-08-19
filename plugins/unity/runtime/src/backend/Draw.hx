@@ -64,6 +64,21 @@ class Draw #if !completion implements spec.Draw #end {
 
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
+        var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
+        if (isEditor) {
+            try {
+                _draw(visuals);
+            }
+            catch (e:Dynamic) {}
+        }
+        else {
+            _draw(visuals);
+        }
+
+    }
+
+    function _draw(visuals:Array<ceramic.Visual>):Void {
+
         #if unity_urp
         widthOnDraw = ceramic.App.app.backend.screen.getWidth();
         heightOnDraw = ceramic.App.app.backend.screen.getHeight();
@@ -102,8 +117,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _meshVertices:backend.Float32Array = null;
     static var _meshIndices:backend.UInt16Array = null;
-    //static var _meshUVs:NativeArray<Vector2> = null;
-    //static var _meshColors:NativeArray<Color> = null;
 
     static var _materials:Materials = new Materials();
 
@@ -125,7 +138,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _stencilShader:backend.Shader = null;
 
-    //static var _currentMaterial:Dynamic = null;
     static var _currentMatrix:Dynamic = null;
 
     static var _currentRenderTarget:ceramic.RenderTexture = null;
@@ -151,6 +163,7 @@ class Draw #if !completion implements spec.Draw #end {
     static var _colorIndex:Int = 0;
 
     static var _floatAttributesIndex:Int = 0;
+    static var _meshTopology:MeshTopology = MeshTopology.Triangles;
 
     #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
@@ -188,7 +201,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
-        //_meshUVs[_numUVs] = new Vector2(uvX, 1.0 - uvY);
         _meshVertices[_uvIndex] = uvX;
         _meshVertices[_uvIndex+1] = (1.0 - uvY);
         _numUVs++;
@@ -198,7 +210,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
-        //_meshColors[_numColors] = new Color(r, g, b, a);
         _meshVertices[_colorIndex] = r;
         _meshVertices[_colorIndex+1] = g;
         _meshVertices[_colorIndex+2] = b;
@@ -258,19 +269,10 @@ class Draw #if !completion implements spec.Draw #end {
             _meshes[_currentMeshIndex] = mesh;
             _meshesVertices[_currentMeshIndex] = new backend.Float32Array(MAX_VERTS_SIZE);
             _meshesIndices[_currentMeshIndex] = new backend.UInt16Array(MAX_INDICES);
-
-            //mesh.vertices = new NativeArray<Vector3>(_maxVerts);
-            //mesh.triangles = new NativeArray<Int>(MAX_INDICES);
-            //mesh.uv = new NativeArray<Vector2>(_maxVerts);
-            //mesh.colors = new NativeArray<Color>(_maxVerts);
         }
 
-        //_meshVertices = mesh.vertices;
         _meshVertices = _meshesVertices.unsafeGet(_currentMeshIndex);
         _meshIndices = _meshesIndices.unsafeGet(_currentMeshIndex);
-        //_meshIndices = mesh.triangles;
-        //_meshUVs = mesh.uv;
-        //_meshColors = mesh.colors;
 
         _currentMesh = mesh;
 
@@ -314,16 +316,10 @@ class Draw #if !completion implements spec.Draw #end {
         untyped __cs__('cmd.Clear()');
         #end
 
-        //_currentMaterial = new Material(unityengine.Shader.Find("Sprites/Default"));
-        //_currentMaterial = untyped __cs__('new UnityEngine.Material(UnityEngine.Shader.Find("Sprites/Default"))');
-
         untyped __cs__('UnityEngine.Camera.main.orthographicSize = UnityEngine.Camera.main.pixelHeight * 0.5f');
 
         untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
         untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
-
-        // trace('cameraWidth=' + Std.string(untyped __cs__('cameraWidth')));
-        // trace('cameraHeight=' + Std.string(untyped __cs__('cameraHeight')));
 
         if (_projectionMatrix == null) {
             _projectionMatrix = untyped __cs__('UnityEngine.Matrix4x4.identity');
@@ -441,33 +437,8 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end function updateProjectionMatrix(width:Float, height:Float):Void {
 
-        // // Making orthographic projection
-        // //
-
-        // var left = 0.0;
-        // var top = 0.0;
-        // var right = width;
-        // var bottom = height;
-        // var near = 1000.0;
-        // var far = -1000.0;
-
-        // var w = right - left;
-        // var h = top - bottom;
-        // var p = far - near;
-
-        // var tx = (right + left)   / w;
-        // var ty = (top   + bottom) / h;
-        // var tz = (far   + near)   / p;
-
-        // untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
-
-        // untyped __cs__('
-        // m[0] = (float)(2.0 / {0});  m[4] = 0f;      m[8] = 0f;       m[12] = (float)-{1};
-        // m[1] = 0f;      m[5] = (float)(2.0 / {2});  m[9] = 0f;       m[13] = (float)-{3};
-        // m[2] = 0f;      m[6] = 0f;        m[10] = (float)(-2 / {4}); m[14] = (float)-{5};
-        // m[3] = 0f;      m[7] = 0f;        m[11] = 0f;      m[15] = 1f;
-        // ', w, tx, h, ty, p, tz);
-
+        // Making orthographic projection
+        //
         untyped __cs__('
         UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity;
         m[12] = (float){0} * -0.5f;
@@ -631,8 +602,6 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
-        // TODO
-
         _materialCurrentTextures[_activeTextureSlot] = backendItem;
 
     }
@@ -643,9 +612,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    #if !ceramic_debug_draw_backend inline #end public function setRenderWireframe(value:Bool):Void {
+    #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
-        // TODO
+        _meshTopology = switch primitiveType {
+            case LINE: MeshTopology.Lines;
+            case _: MeshTopology.Triangles;
+        }
 
     }
 
@@ -811,33 +783,27 @@ class Draw #if !completion implements spec.Draw #end {
             stencil
         );
 
-        //mesh.vertices = _meshVertices;
-        //mesh.triangles = _meshIndices;
-        //mesh.uv = _meshUVs;
-        //mesh.colors = _meshColors;
-
         var updateFlags:MeshUpdateFlags = untyped __cs__('UnityEngine.Rendering.MeshUpdateFlags.DontValidateIndices | UnityEngine.Rendering.MeshUpdateFlags.DontResetBoneBounds | UnityEngine.Rendering.MeshUpdateFlags.DontNotifyMeshUsers | UnityEngine.Rendering.MeshUpdateFlags.DontRecalculateBounds');
 
         // Vertex buffer layout (positions, colors, uvs & custom float attributes)
         mesh.SetVertexBufferParams(_numPos, materialData.vertexBufferAttributes);
 
         // Vertex buffer data
-        mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos * _vertexSize, 0, updateFlags); // TODO change flags to remove checks
+        mesh.SetVertexBufferData(_meshVertices, 0, 0, _numPos * _vertexSize, 0, updateFlags);
 
         // Index buffer layout
         mesh.SetIndexBufferParams(_numIndices, IndexFormat.UInt16);
 
         // Index buffer data
-        mesh.SetIndexBufferData(_meshIndices, 0, 0, _numIndices, updateFlags); // TODO change flags to remove checks
+        mesh.SetIndexBufferData(_meshIndices, 0, 0, _numIndices, updateFlags);
 
         // Configure sub mesh
         mesh.subMeshCount = 1;
         var submesh:SubMeshDescriptor = new SubMeshDescriptor(
-            0, _numIndices, MeshTopology.Triangles
+            0, _numIndices, _meshTopology
         );
         mesh.SetSubMesh(0, submesh, updateFlags);
 
-        //trace('DRAW MESH vertices=${_numPos} indices=${_numIndices} uvs=${_numUVs} colors=${_numColors}');
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
         untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, materialData.material);
 

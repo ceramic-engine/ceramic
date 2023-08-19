@@ -100,11 +100,17 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     function _handleAssetsComplete(successful:Bool):Void {
 
         if (successful) {
-            load(internalCreate);
+            app.onceImmediate(this, internalLoad);
         }
         else {
             log.error('Failed to load all scene assets!');
         }
+
+    }
+
+    function internalLoad() {
+
+        load(internalCreate);
 
     }
 

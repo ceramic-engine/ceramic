@@ -210,6 +210,8 @@ class Screen extends Entity implements Observable {
 
     private var maxTouchIndex:Int = -1;
 
+    private var visualsListenPointerOver:Bool = false;
+
 /// Events
 
     /**
@@ -731,82 +733,85 @@ class Screen extends Entity implements Observable {
 
     function matchFirstOverListener(x:Float, y:Float):Visual {
 
-        app.computeHierarchy();
+        if (visualsListenPointerOver) {
 
-        for (n in 0...2) {
+            app.computeHierarchy();
 
-            // We walk through visual up to 2 times to find the correct down listener
-            // This double iteration is required when we hit first a visual that can re-route
-            // its events to children that are rendered with a custom render target
+            for (n in 0...2) {
 
-            matchedHitVisual = null;
-            var testHitVisuals = (n == 0);
-            var visuals = app.visuals;
-            var i = visuals.length - 1;
-            while (i >= 0) {
+                // We walk through visual up to 2 times to find the correct down listener
+                // This double iteration is required when we hit first a visual that can re-route
+                // its events to children that are rendered with a custom render target
 
-                var visual = visuals.unsafeGet(i);
-                if (!visual.destroyed && visual.computedTouchable) {
-                    var visualListensPointerOver = visual.listensPointerOver();
-                    var visualHits = false;
-                    var visualIntercepts = false;
-                    if (visualListensPointerOver) {
-                        visualHits = visual.hits(x, y);
-                        if (visualHits) {
-                            visualIntercepts = visual.interceptPointerOver(visual, x, y);
-                            #if ceramic_debug_touch_over
-                            log.debug('visual intercepts pointer over: $visual (parent=${visual.parent})');
-                            #end
-                        }
-                    }
-                    if ((visualHits && !visualIntercepts) ||
-                        (testHitVisuals && isHitVisual(visual) && visual.hits(x, y))) {
+                matchedHitVisual = null;
+                var testHitVisuals = (n == 0);
+                var visuals = app.visuals;
+                var i = visuals.length - 1;
+                while (i >= 0) {
 
-                        var intercepts = false;
-
-                        // If a parent intercepts this pointer event, ignore the visual
+                    var visual = visuals.unsafeGet(i);
+                    if (!visual.destroyed && visual.computedTouchable) {
+                        var visualListensPointerOver = visual.listensPointerOver();
+                        var visualHits = false;
+                        var visualIntercepts = false;
                         if (visualListensPointerOver) {
-                            var parent = visual.parent;
-                            while (parent != null) {
-                                intercepts = parent.interceptPointerOver(visual, x, y);
-                                if (intercepts) {
-                                    #if ceramic_debug_touch_over
-                                    log.debug('visual parent intercepts pointer over: $parent (parent=${parent.parent})');
-                                    #end
-                                    break;
-                                }
-                                parent = parent.parent;
+                            visualHits = visual.hits(x, y);
+                            if (visualHits) {
+                                visualIntercepts = visual.interceptPointerOver(visual, x, y);
+                                #if ceramic_debug_touch_over
+                                log.debug('visual intercepts pointer over: $visual (parent=${visual.parent})');
+                                #end
                             }
                         }
+                        if ((visualHits && !visualIntercepts) ||
+                            (testHitVisuals && isHitVisual(visual) && visual.hits(x, y))) {
 
-                        if (!intercepts) {
-                            // If no parent did intercept, that's should be fine,
-                            // But also check that this is not a hitVisual
-                            if (!visualListensPointerOver && testHitVisuals && isHitVisual(visual)) {
-                                // We matched a hit visual, keep the reference and continue
-                                matchedHitVisual = visual;
+                            var intercepts = false;
+
+                            // If a parent intercepts this pointer event, ignore the visual
+                            if (visualListensPointerOver) {
+                                var parent = visual.parent;
+                                while (parent != null) {
+                                    intercepts = parent.interceptPointerOver(visual, x, y);
+                                    if (intercepts) {
+                                        #if ceramic_debug_touch_over
+                                        log.debug('visual parent intercepts pointer over: $parent (parent=${parent.parent})');
+                                        #end
+                                        break;
+                                    }
+                                    parent = parent.parent;
+                                }
                             }
-                            else {
-                                // Clean any hitVisual reference
-                                matchedHitVisual = null;
 
-                                #if ceramic_debug_touch_over
-                                log.debug('visual pointer over: $visual (parent=${visual.parent})');
-                                #end
+                            if (!intercepts) {
+                                // If no parent did intercept, that's should be fine,
+                                // But also check that this is not a hitVisual
+                                if (!visualListensPointerOver && testHitVisuals && isHitVisual(visual)) {
+                                    // We matched a hit visual, keep the reference and continue
+                                    matchedHitVisual = visual;
+                                }
+                                else {
+                                    // Clean any hitVisual reference
+                                    matchedHitVisual = null;
 
-                                // Return this matching visual
-                                return visual;
+                                    #if ceramic_debug_touch_over
+                                    log.debug('visual pointer over: $visual (parent=${visual.parent})');
+                                    #end
+
+                                    // Return this matching visual
+                                    return visual;
+                                }
                             }
                         }
                     }
+
+                    i--;
                 }
-
-                i--;
             }
-        }
 
-        // Clean any hitVisual reference
-        matchedHitVisual = null;
+            // Clean any hitVisual reference
+            matchedHitVisual = null;
+        }
 
         return null;
 

@@ -6,22 +6,33 @@ class AutoTiler extends Entity implements Component {
 
     @entity var layerData:TilemapLayerData;
 
-    public var kinds(default, null):ReadOnlyArray<AutoTileKind>;
+    @event function computeTile(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int);
 
-    public var gids(default, null):ReadOnlyArray<Int>;
+    @event function computeTiles(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>);
 
-    var gidMap:IntIntMap;
+    public var autoTiles(default, null):ReadOnlyArray<AutoTile>;
 
-    public function new(kinds:Array<AutoTileKind>, gids:Array<Int>) {
+    var gidMap:IntMap<AutoTile>;
+
+    public function new(autoTiles:Array<AutoTile>, ?handleComputeTile:(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int)->Void, ?handleComputeTiles:(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>)->Void) {
 
         super();
 
-        this.kinds = kinds;
-        this.gids = gids;
+        this.autoTiles = [].concat(autoTiles);
 
-        this.gidMap = new IntIntMap();
-        for (i in 0...gids.length) {
-            this.gidMap.set(gids.unsafeGet(i), kinds.unsafeGet(i));
+        this.gidMap = new IntMap<AutoTile>();
+        for (i in 0...autoTiles.length) {
+            var autoTile = autoTiles.unsafeGet(i);
+            autoTile.computeValues();
+            this.gidMap.set(autoTile.gid, autoTile);
+        }
+
+        if (handleComputeTile != null) {
+            onComputeTile(this, handleComputeTile);
+        }
+
+        if (handleComputeTiles != null) {
+            onComputeTiles(this, handleComputeTiles);
         }
 
     }
@@ -47,14 +58,17 @@ class AutoTiler extends Entity implements Component {
         }
         computedTiles.setArrayLength(tiles.length);
 
-        var edgeCorner32Map = AutoTiler.edgeCorner32Map;
+        var edgeCorner32Map:ReadOnlyArray<Int> = null;
+        var expandedBottomCorner26Map:ReadOnlyArray<Int> = null;
+        var tilesetterBlob47Map:ReadOnlyArray<Int> = null;
 
-        var boundsSameTile = true;
+        var listensComputeTileEvent = this.listensComputeTile();
+
         var row = 0;
         var col = 0;
-        var width = layerData.width;
-        var height = layerData.height;
-        var numTiles = width * height;
+        var columns = layerData.columns;
+        var rows = layerData.rows;
+        var numTiles = columns * rows;
         var hasExtraTiles = false;
         var extraI = numTiles;
         if (tiles.length >= numTiles * 2) {
@@ -64,12 +78,13 @@ class AutoTiler extends Entity implements Component {
             var tile = tiles.unsafeGet(i);
             var extraTile = hasExtraTiles ? tiles.unsafeGet(extraI) : 0;
             var gid = tile.gid;
-            var rawKind = gidMap.get(gid);
-            if (rawKind != 0) {
+            var autoTile = gidMap.get(gid);
+            if (autoTile != null) {
                 // Matching autotile rule
-                var kind:AutoTileKind = rawKind;
+                var kind = autoTile.kind;
+                var boundsSameTile = autoTile.bounds;
                 switch kind {
-                    case EDGE_CORNER_32 | EXPANDED_48:
+                    case EDGE_16 | EDGE_CORNER_32 | EXPANDED_47 | EXPANDED_BOTTOM_CORNER_26 | TILESETTER_BLOB_47:
 
                         // Create mask from surrounding tiles
                         // bits: 0 = any other tile / 1 = same tile
@@ -78,7 +93,6 @@ class AutoTiler extends Entity implements Component {
                         var otherTile:TilemapTile = 0;
                         var otherExtraTile:TilemapTile = 0;
                         var n:Int = 0;
-                        var hasCorners:Bool = false;
 
                         if (col > 0) {
                             // Left
@@ -94,7 +108,7 @@ class AutoTiler extends Entity implements Component {
                         }
                         if (row > 0) {
                             // Top
-                            n = i - width;
+                            n = i - columns;
                             otherTile = tiles.unsafeGet(n);
                             n += numTiles;
                             otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -104,7 +118,7 @@ class AutoTiler extends Entity implements Component {
                         else if (boundsSameTile) {
                             edgeMask.setBool(1, true);
                         }
-                        if (col < width - 1) {
+                        if (col < columns - 1) {
                             // Right
                             n = i  +1;
                             otherTile = tiles.unsafeGet(n);
@@ -116,9 +130,9 @@ class AutoTiler extends Entity implements Component {
                         else if (boundsSameTile) {
                             edgeMask.setBool(2, true);
                         }
-                        if (row < height - 1) {
+                        if (row < rows - 1) {
                             // Bottom
-                            n = i + width;
+                            n = i + columns;
                             otherTile = tiles.unsafeGet(n);
                             n += numTiles;
                             otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
@@ -130,54 +144,56 @@ class AutoTiler extends Entity implements Component {
                         }
 
                         // Corners
-                        if (edgeMask.bool(0)) {
-                            if (edgeMask.bool(1)) {
-                                if (col > 0 && row > 0) {
-                                    // Top-left corner
-                                    n = i - width - 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(0, false);
+                        if (kind != EDGE_16) {
+                            if (edgeMask.bool(0)) {
+                                if (edgeMask.bool(1)) {
+                                    if (col > 0 && row > 0) {
+                                        // Top-left corner
+                                        n = i - columns - 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(0, false);
+                                        }
+                                    }
+                                }
+                                if (edgeMask.bool(3)) {
+                                    if (col > 0 && row < rows - 1) {
+                                        // Bottom-left corner
+                                        n = i + columns - 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(3, false);
+                                        }
                                     }
                                 }
                             }
-                            if (edgeMask.bool(3)) {
-                                if (col > 0 && row < height - 1) {
-                                    // Bottom-left corner
-                                    n = i + width - 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(3, false);
+                            if (edgeMask.bool(2)) {
+                                if (edgeMask.bool(1)) {
+                                    if (col < columns - 1 && row > 0) {
+                                        // Top-right corner
+                                        n = i - columns + 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(1, false);
+                                        }
                                     }
                                 }
-                            }
-                        }
-                        if (edgeMask.bool(2)) {
-                            if (edgeMask.bool(1)) {
-                                if (col < width - 1 && row > 0) {
-                                    // Top-right corner
-                                    n = i - width + 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(1, false);
-                                    }
-                                }
-                            }
-                            if (edgeMask.bool(3)) {
-                                if (col < width - 1 && row < height - 1) {
-                                    // Bottom-right corner
-                                    n = i + width + 1;
-                                    otherTile = tiles.unsafeGet(n);
-                                    n += numTiles;
-                                    otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
-                                    if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
-                                        cornerMask.setBool(2, false);
+                                if (edgeMask.bool(3)) {
+                                    if (col < columns - 1 && row < rows - 1) {
+                                        // Bottom-right corner
+                                        n = i + columns + 1;
+                                        otherTile = tiles.unsafeGet(n);
+                                        n += numTiles;
+                                        otherExtraTile = hasExtraTiles ? tiles.unsafeGet(n) : 0;
+                                        if (otherTile.gid != gid || otherExtraTile.gid != extraTile.gid) {
+                                            cornerMask.setBool(2, false);
+                                        }
                                     }
                                 }
                             }
@@ -193,19 +209,23 @@ class AutoTiler extends Entity implements Component {
                                 var cornerTile = tile;
                                 cornerTile.gid = gid + 16 + cornerMask;
                                 computedTiles[i + numTiles] = cornerTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles);
                             }
 
                             // Add extra tile on top if it already existed
                             // but offset it with gid
                             if (extraTile != 0) {
                                 computedTiles[i + numTiles * 2] = extraTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles * 2);
                             }
                         }
                         else {
 
                             // Some corner specifics
                             if (cornerMask == 15) {
-                                if (edgeMask != 15) {
+                                if (edgeMask != 15 || kind == EDGE_16) {
                                     cornerMask = 0;
                                 }
                             }
@@ -223,19 +243,59 @@ class AutoTiler extends Entity implements Component {
 
                             // Retrieve index from mapping
                             var finalIndex:Int = fullMask;
-                            finalIndex = edgeCorner32Map[finalIndex];
 
                             if (finalIndex == -1) {
                                 tile.gid = 0;
                             }
                             else {
-                                tile.gid = gid + finalIndex;
+                                if (edgeCorner32Map == null)
+                                    edgeCorner32Map = AutoTiler.edgeCorner32Map;
+                                finalIndex = edgeCorner32Map[finalIndex];
+
+                                switch kind {
+
+                                    case EDGE_16:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EDGE_CORNER_32:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EXPANDED_47:
+                                        tile.gid = gid + finalIndex;
+
+                                    case EXPANDED_BOTTOM_CORNER_26:
+                                        if (expandedBottomCorner26Map == null)
+                                            expandedBottomCorner26Map = AutoTiler.expandedBottomCorner26Map;
+                                        finalIndex = expandedBottomCorner26Map[finalIndex];
+
+                                        tile.gid = gid + finalIndex;
+
+                                    case TILESETTER_BLOB_47:
+                                        if (tilesetterBlob47Map == null)
+                                            tilesetterBlob47Map = AutoTiler.tilesetterBlob47Map;
+
+                                        var tileset = autoTile.tileset;
+                                        if (tileset != null) {
+                                            var x = autoTile.column;
+                                            var y = autoTile.row;
+                                            x += tilesetterBlob47Map[finalIndex * 2];
+                                            y += tilesetterBlob47Map[finalIndex * 2 + 1];
+                                            finalIndex = tileset.gidAtPosition(x, y);
+
+                                            tile.gid = finalIndex;
+                                        }
+                                        else {
+                                            throw "The 'tileset' option is required when using TILESETTER_BLOB_47 auto tile kind!";
+                                        }
+                                }
                             }
 
                             // Add extra tile on top if it already existed
                             // but offset it with gid
                             if (extraTile != 0) {
                                 computedTiles[i + numTiles] = extraTile;
+                                if (listensComputeTileEvent)
+                                    emitComputeTile(this, autoTile, computedTiles, i + numTiles);
                             }
                         }
                 }
@@ -243,10 +303,12 @@ class AutoTiler extends Entity implements Component {
 
             // Assign computed tile
             computedTiles.unsafeSet(i, tile);
+            if (listensComputeTileEvent && autoTile != null)
+                emitComputeTile(this, autoTile, computedTiles, i);
 
             // Update row and columns
             col++;
-            if (col == width) {
+            if (col == columns) {
                 col = 0;
                 row++;
             }
@@ -254,6 +316,9 @@ class AutoTiler extends Entity implements Component {
             // Increment extra i
             extraI++;
         }
+
+        // Emit event before updating computed tiles
+        emitComputeTiles(this, computedTiles);
 
         // Update computed tiles
         layerData.computedTiles = computedTiles;
@@ -297,6 +362,250 @@ class AutoTiler extends Entity implements Component {
             edgeCorner32Map = map;
         }
         return edgeCorner32Map;
+    }
+
+    public static var expandedBottomCorner26Map(get,null):ReadOnlyArray<Int> = null;
+    static function get_expandedBottomCorner26Map():ReadOnlyArray<Int> {
+        if (expandedBottomCorner26Map == null) {
+            var map:Array<Int> = [];
+
+            for (i in 0...16) {
+                map[i] = i;
+            }
+
+            map[16] = 15;
+            map[17] = 15;
+            map[18] = 16;
+            map[19] = 15;
+            map[20] = 17;
+            map[21] = 17;
+            map[22] = 18;
+            map[23] = 17;
+            map[24] = 19;
+            map[25] = 18;
+            map[26] = 20;
+            map[27] = 17;
+            map[28] = 21;
+            map[29] = 22;
+            map[30] = 21;
+            map[31] = 21;
+            map[32] = 23;
+            map[33] = 24;
+            map[34] = 22;
+            map[35] = 21;
+            map[36] = 7;
+            map[37] = 25;
+            map[38] = 6;
+            map[39] = 7;
+            map[40] = 14;
+            map[41] = 25;
+            map[42] = 3;
+            map[43] = 7;
+            map[44] = 11;
+            map[45] = 25;
+            map[46] = 25;
+
+            expandedBottomCorner26Map = map;
+        }
+        return expandedBottomCorner26Map;
+    }
+
+    public static var tilesetterBlob47Map(get,null):ReadOnlyArray<Int> = null;
+    static function get_tilesetterBlob47Map():ReadOnlyArray<Int> {
+        if (tilesetterBlob47Map == null) {
+            var map:Array<Int> = [];
+
+            var i = 0;
+            map[i*2] = 2;
+            map[i*2+1] = 2;
+
+            i = 1;
+            map[i*2] = 1;
+            map[i*2+1] = 2;
+
+            i = 2;
+            map[i*2] = 2;
+            map[i*2+1] = 1;
+
+            i = 3;
+            map[i*2] = 1;
+            map[i*2+1] = 1;
+
+            i = 4;
+            map[i*2] = -1;
+            map[i*2+1] = 2;
+
+            i = 5;
+            map[i*2] = 0;
+            map[i*2+1] = 2;
+
+            i = 6;
+            map[i*2] = -1;
+            map[i*2+1] = 1;
+
+            i = 7;
+            map[i*2] = 0;
+            map[i*2+1] = 1;
+
+            i = 8;
+            map[i*2] = 2;
+            map[i*2+1] = -1;
+
+            i = 9;
+            map[i*2] = 1;
+            map[i*2+1] = -1;
+
+            i = 10;
+            map[i*2] = 2;
+            map[i*2+1] = 0;
+
+            i = 11;
+            map[i*2] = 1;
+            map[i*2+1] = 0;
+
+            i = 12;
+            map[i*2] = -1;
+            map[i*2+1] = -1;
+
+            i = 13;
+            map[i*2] = 0;
+            map[i*2+1] = -1;
+
+            i = 14;
+            map[i*2] = -1;
+            map[i*2+1] = 0;
+
+            i = 15;
+            map[i*2] = 7;
+            map[i*2+1] = 3;
+
+            i = 16;
+            map[i*2] = 9;
+            map[i*2+1] = 2;
+
+            i = 17;
+            map[i*2] = 8;
+            map[i*2+1] = 2;
+
+            i = 18;
+            map[i*2] = 7;
+            map[i*2+1] = -1;
+
+            i = 19;
+            map[i*2] = 7;
+            map[i*2+1] = 0;
+
+            i = 20;
+            map[i*2] = 8;
+            map[i*2+1] = 1;
+
+            i = 21;
+            map[i*2] = 8;
+            map[i*2+1] = -1;
+
+            i = 22;
+            map[i*2] = 6;
+            map[i*2+1] = 3;
+
+            i = 23;
+            map[i*2] = 5;
+            map[i*2+1] = 3;
+
+            i = 24;
+            map[i*2] = 6;
+            map[i*2+1] = -1;
+
+            i = 25;
+            map[i*2] = 6;
+            map[i*2+1] = 0;
+
+            i = 26;
+            map[i*2] = 5;
+            map[i*2+1] = -1;
+
+            i = 27;
+            map[i*2] = 5;
+            map[i*2+1] = 0;
+
+            i = 28;
+            map[i*2] = 9;
+            map[i*2+1] = 1;
+
+            i = 29;
+            map[i*2] = 3;
+            map[i*2+1] = 3;
+
+            i = 30;
+            map[i*2] = 4;
+            map[i*2+1] = 3;
+
+            i = 31;
+            map[i*2] = 8;
+            map[i*2+1] = 0;
+
+            i = 32;
+            map[i*2] = 3;
+            map[i*2+1] = -1;
+
+            i = 33;
+            map[i*2] = 4;
+            map[i*2+1] = -1;
+
+            i = 34;
+            map[i*2] = 3;
+            map[i*2+1] = 0;
+
+            i = 35;
+            map[i*2] = 4;
+            map[i*2+1] = 0;
+
+            i = 36;
+            map[i*2] = 7;
+            map[i*2+1] = 2;
+
+            i = 37;
+            map[i*2] = 7;
+            map[i*2+1] = 1;
+
+            i = 38;
+            map[i*2] = 3;
+            map[i*2+1] = 2;
+
+            i = 39;
+            map[i*2] = 4;
+            map[i*2+1] = 2;
+
+            i = 40;
+            map[i*2] = 3;
+            map[i*2+1] = 1;
+
+            i = 41;
+            map[i*2] = 4;
+            map[i*2+1] = 1;
+
+            i = 42;
+            map[i*2] = 6;
+            map[i*2+1] = 2;
+
+            i = 43;
+            map[i*2] = 5;
+            map[i*2+1] = 2;
+
+            i = 44;
+            map[i*2] = 6;
+            map[i*2+1] = 1;
+
+            i = 45;
+            map[i*2] = 5;
+            map[i*2+1] = 1;
+
+            i = 46;
+            map[i*2] = 0;
+            map[i*2+1] = 0;
+
+            tilesetterBlob47Map = map;
+        }
+        return tilesetterBlob47Map;
     }
 
     public static var edgeCorner32InvertedMap(get,null):ReadOnlyArray<Int> = null;

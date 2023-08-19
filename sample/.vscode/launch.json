@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Web",
+            "type": "chrome",
+            "request": "attach",
+            "port": 9223,
+            "webRoot": "${workspaceFolder}/project/web",
+            "sourceMaps": true,
+            "disableNetworkCache": true,
+            "smartStep": true
+        }
+    ]
+}

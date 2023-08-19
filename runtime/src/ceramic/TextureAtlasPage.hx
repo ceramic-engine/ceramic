@@ -1,15 +1,16 @@
 package ceramic;
 
-@:structInit
-class TextureAtlasPage {
+import tracker.Observable;
 
-    public var name:String;
+class TextureAtlasPage implements Observable {
 
-    public var width:Float = 0;
+    @observe public var name:String;
 
-    public var height:Float = 0;
+    @observe public var width:Float = 0;
 
-    public var filter(default, set):TextureFilter = LINEAR;
+    @observe public var height:Float = 0;
+
+    @observe public var filter(default, set):TextureFilter = LINEAR;
     function set_filter(filter:TextureFilter):TextureFilter {
         if (this.filter != filter) {
             this.filter = filter;
@@ -20,7 +21,7 @@ class TextureAtlasPage {
         return filter;
     }
 
-    public var texture(default, set):Texture = null;
+    @observe public var texture(default, set):Texture = null;
 
     function set_texture(texture:Texture):Texture {
         if (this.texture != texture) {
@@ -33,6 +34,16 @@ class TextureAtlasPage {
             }
         }
         return texture;
+    }
+
+    public function new(name:String, width:Float = 0, height:Float = 0, filter:TextureFilter = LINEAR, texture:Texture = null) {
+
+        this.name = name;
+        this.width = width;
+        this.height = height;
+        this.filter = filter;
+        this.texture = texture;
+
     }
 
 }

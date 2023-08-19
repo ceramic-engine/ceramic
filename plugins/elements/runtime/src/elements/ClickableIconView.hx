@@ -8,6 +8,8 @@ import elements.Context.context;
 
 class ClickableIconView extends EntypoIconView {
 
+    @observe public var theme:Theme = null;
+
     @observe var hover:Bool = false;
 
     @observe public var disabled:Bool = false;
@@ -61,7 +63,9 @@ class ClickableIconView extends EntypoIconView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         var textColor = hover || !hoverStyle ? theme.iconColor : Color.interpolate(theme.mediumBackgroundColor, theme.iconColor, 0.7);
 

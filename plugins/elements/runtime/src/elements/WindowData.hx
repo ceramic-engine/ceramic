@@ -31,6 +31,8 @@ class WindowData extends Model {
     public var numItems(get, never):Int;
     inline function get_numItems():Int return itemIndex;
 
+    public var theme:Theme = null;
+
     public var form:FormLayout = null;
 
     public var used:Bool = true;

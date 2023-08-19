@@ -31,6 +31,8 @@ class Window extends ColumnLayout implements Observable {
 
     static var _point = new Point(0, 0);
 
+    @observe public var theme:Theme = null;
+
     @observe public var contentView:View = null;
 
     @observe public var title:String = null;
@@ -137,7 +139,6 @@ class Window extends ColumnLayout implements Observable {
         headerView.add(closeView);
 
         bodyView = new ColumnLayout();
-        bodyView.transparent = false;
         bodyView.viewSize(percent(100), 0);
         add(bodyView);
 
@@ -308,12 +309,21 @@ class Window extends ColumnLayout implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         headerView.color = theme.mediumBackgroundColor;
 
-        bodyView.color = theme.windowBackgroundColor;
-        bodyView.alpha = theme.windowBackgroundAlpha;
+        if (theme.backgroundInFormLayout) {
+            bodyView.transparent = true;
+            bodyView.alpha = 1;
+        }
+        else {
+            bodyView.transparent = false;
+            bodyView.color = theme.windowBackgroundColor;
+            bodyView.alpha = theme.windowBackgroundAlpha;
+        }
 
         expandTriangle.color = theme.lightTextColor;
         titleView.textColor = theme.lightTextColor;

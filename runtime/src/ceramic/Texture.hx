@@ -1,5 +1,6 @@
 package ceramic;
 
+import backend.LoadTextureOptions;
 import ceramic.Assets;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
@@ -88,6 +89,40 @@ class Texture extends Entity {
         return filter;
     }
 
+    /**
+     * Horizontal texture wrap mode
+     */
+    public var wrapS(default,set):TextureWrap = CLAMP;
+    function set_wrapS(wrapS:TextureWrap):TextureWrap {
+        if (this.wrapS == wrapS) return wrapS;
+        this.wrapS = wrapS;
+        app.backend.textures.setTextureWrapS(backendItem, wrapS);
+        return wrapS;
+    }
+
+    /**
+     * Vertical texture wrapping mode
+     */
+    public var wrapT(default,set):TextureWrap = CLAMP;
+    function set_wrapT(wrapT:TextureWrap):TextureWrap {
+        if (this.wrapT == wrapT) return wrapT;
+        this.wrapT = wrapT;
+        app.backend.textures.setTextureWrapT(backendItem, wrapT);
+        return wrapT;
+    }
+
+    /**
+     * Shorthand for setting both wrapS and wrapT at the same time.
+     * Possible values: `CLAMP`, `REPEAT`, `MIRROR`
+     * @param wrapS horizontal wrap mode
+     * @param wrapT vertical wrap mode
+     */
+    public function setWrap(wrapS:TextureWrap, ?wrapT:TextureWrap):Void {
+        set_wrapS(wrapS);
+        if(wrapT != null)
+            set_wrapT(wrapT);
+    }
+
     public var backendItem:backend.Texture;
 
     public var asset:ImageAsset = null;
@@ -106,6 +141,22 @@ class Texture extends Entity {
 
         var backendItem = app.backend.textures.createTexture(Math.round(width * density), Math.round(height * density), pixels);
         return new Texture(backendItem, density);
+
+    }
+
+    /**
+     * Create a new texture from the given bytes.
+     * The bytes must be PNG or JPEG data
+     * @param bytes The PNG or JPEG data as bytes
+     * @param density (optional) Density of the texture
+     * @param options (optional) Additional options when loading texture (could depend on backend)
+     * @param done A callback receiving the loaded texture, or `null` if it failed
+     */
+    public static function fromBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
+
+        app.backend.textures.loadFromBytes(bytes, Utils.imageTypeFromBytes(bytes), options, backendItem -> {
+            done(new Texture(backendItem, density));
+        });
 
     }
 

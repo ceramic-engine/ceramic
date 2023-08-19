@@ -135,8 +135,8 @@ class MeshPool {
         mesh.depthRange = 1;
         #end
 
-#if ceramic_debug_rendering_option
-        mesh.debugRendering = DebugRendering.DEFAULT;
+#if ceramic_wireframe
+        mesh.wireframe = false;
 #end
 
         recycleIntArray(mesh.indices);
@@ -148,6 +148,10 @@ class MeshPool {
         mesh.vertices = null;
         mesh.colors = null;
         mesh.uvs = null;
+
+        #if ceramic_wireframe
+        mesh.wireframeIndices = null;
+        #end
 
         mesh.offPointerDown();
         mesh.offPointerUp();
@@ -161,7 +165,7 @@ class MeshPool {
     }
 
     public static function clear():Void {
-        
+
         if (availableMeshes.length > 0) {
             var prevAvailable = availableMeshes;
             availableMeshes = [];

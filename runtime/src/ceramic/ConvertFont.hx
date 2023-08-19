@@ -13,7 +13,7 @@ class ConvertFont implements ConvertField<String,BitmapFont> {
                 done(app.defaultFont);
             }
             else {
-                assets.ensureFont(basic, null, function(asset:FontAsset) {
+                assets.ensureFont(basic, null, null, function(asset:FontAsset) {
                     done(asset != null ? asset.font : null);
                 });
             }

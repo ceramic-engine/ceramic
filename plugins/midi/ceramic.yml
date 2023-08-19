@@ -7,4 +7,4 @@ plugin:
                 - {plugin:cwd}/runtime/src
             if mac || linux || windows:
                 +libs:
-                    - linc_rtmidi: path:{plugin:cwd}/../../git/linc_rtmidi
+                    - linc_rtmidi

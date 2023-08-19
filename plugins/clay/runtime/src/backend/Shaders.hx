@@ -452,4 +452,10 @@ void main() {
 
     }
 
+    inline public function supportsHotReloadPath():Bool {
+
+        return true;
+
+    }
+
 }

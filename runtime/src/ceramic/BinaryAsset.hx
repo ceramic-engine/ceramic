@@ -7,9 +7,9 @@ class BinaryAsset extends Asset {
 
     @observe public var bytes:Bytes = null;
 
-    override public function new(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
-        super('binary', name, options #if ceramic_debug_entity_allocs , pos #end);
+        super('binary', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
 
     }
 

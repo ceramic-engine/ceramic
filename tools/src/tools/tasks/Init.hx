@@ -80,10 +80,56 @@ app:
     version: \'1.0\'
 
     plugins:
+
+        # Uncomment plugins you want to enable
+
+        # Arcade physics
         #- arcade
+
+        # Nape physics
         #- nape
+
+        # Support of .ase/.aseprite files
+        #- ase
+
+        # Sprite support (requires ase plugin to create sprites from .ase/.aseprite files)
+        #- sprite
+
+        # Tilemap support (.tmx/.tsx loading included, requires ldtk plugin to create tilemaps from .ldtk files)
+        #- tilemap
+
+        # LDtk support (requires tilemap and ase plugins)
+        #- ldtk
+
+        # HTTP client
+        #- http
+
+        # UI-related classes
         #- ui
+
+        # Immediate GUI utility (requires ui plugin)
         #- elements
+
+        # Gif capture utility
+        #- gif
+
+        # Native dialogs
+        #- dialogs
+
+        # Extended support of Electron
+        #- electron
+
+        # Spine animation support
+        #- spine
+
+        # Dear ImGui support (clay backend only)
+        #- imgui
+
+        # Midi support (experimental, clay backend only)
+        #- midi
+
+        # Add entity runtime scripting support: entity.scriptContent = ...
+        #- script
 
     libs:
         #- somelib

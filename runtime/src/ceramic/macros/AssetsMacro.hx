@@ -51,7 +51,11 @@ class AssetsMacro {
 
         if (extensions == null) extensions = [];
         extensions = extensions.concat(switch (kind) {
+            #if plugin_ase
+            case 'image': backendInfo.imageExtensions().concat(['ase', 'aseprite']);
+            #else
             case 'image': backendInfo.imageExtensions();
+            #end
             case 'text': backendInfo.textExtensions();
             case 'sound': backendInfo.soundExtensions();
             case 'shader': backendInfo.shaderExtensions();

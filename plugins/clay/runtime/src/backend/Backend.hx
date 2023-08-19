@@ -1,6 +1,6 @@
 package backend;
 
-@:allow(Main)
+@:allow(backend.Main)
 @:allow(backend.Textures)
 @:allow(backend.ClayEvents)
 class Backend implements tracker.Events implements spec.Backend {
@@ -65,23 +65,11 @@ class Backend implements tracker.Events implements spec.Backend {
 
     @event function update(delta:Float);
 
+    @event function render();
+
 #if (linc_sdl && cpp)
     @event function sdlEvent(event:sdl.Event);
 #end
-
-/// Internal update logic
-
-    inline function willEmitUpdate(delta:Float) {
-
-        draw.begin();
-
-    }
-
-    inline function didEmitUpdate(delta:Float) {
-
-        draw.end();
-
-    }
 
 /// Internal flags
 

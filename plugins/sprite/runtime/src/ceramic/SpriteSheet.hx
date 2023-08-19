@@ -76,13 +76,13 @@ class SpriteSheet extends Model {
             if (unobservedAtlas == null || unobservedAtlas.pages[0].texture != texture) {
                 unobservedAtlas = new TextureAtlas();
                 implicitAtlas = true;
-                unobservedAtlas.pages[0] = {
-                    name: 'page0',
-                    width: texture.width,
-                    height: texture.height,
-                    filter: texture.filter,
-                    texture: texture
-                };
+                unobservedAtlas.pages[0] = new TextureAtlasPage(
+                    'page0',
+                    texture.width,
+                    texture.height,
+                    texture.filter,
+                    texture
+                );
             }
         }
         else {
@@ -100,13 +100,32 @@ class SpriteSheet extends Model {
      */
     @serialize public var source:String = null;
 
-/// Helpers
+    /**
+     * The asset related to this sprite sheet (if any)
+     */
+    public var asset:SpriteAsset = null;
 
-    public function extractAsepriteData(asepriteData:Dynamic):Void {
+/// Lifecycle
 
-        log.warning('Not implemented (todo)');
+    override function destroy() {
+
+        if (atlas != null && implicitAtlas) {
+            var _atlas = atlas;
+            atlas = null;
+            _atlas.destroy();
+        }
+
+        if (asset != null) {
+            var _asset = asset;
+            asset = null;
+            _asset.destroy();
+        }
+
+        super.destroy();
 
     }
+
+/// Helpers
 
     public function addAnimation(animation:SpriteSheetAnimation):Void {
 

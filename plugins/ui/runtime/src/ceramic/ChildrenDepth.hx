@@ -3,21 +3,26 @@ package ceramic;
 /**
  * Control how children depth is sorted.
  */
-enum ChildrenDepth {
+enum abstract ChildrenDepth(Int) from Int to Int {
 
     /**
      * Each child has a greater depth than the previous one.
      */
-    INCREMENT;
+    var INCREMENT = 1;
 
     /**
      * Each child has a lower depth than the previous one.
      */
-    DECREMENT;
+    var DECREMENT = -1;
 
     /**
      * Every children share the same depth.
      */
-    SAME;
+    var SAME = 0;
+
+    /**
+     * Depth if not set automatically.
+     */
+    var CUSTOM = 2;
 
 }

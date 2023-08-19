@@ -3,12 +3,14 @@ package elements;
 import ceramic.Color;
 import ceramic.EditText;
 import ceramic.GeometryUtils;
+import ceramic.KeyBindings;
 import ceramic.KeyCode;
 import ceramic.LayersLayout;
 import ceramic.Point;
 import ceramic.Quad;
 import ceramic.RowLayout;
 import ceramic.ScanCode;
+import ceramic.SelectText;
 import ceramic.Shortcuts.*;
 import ceramic.TextView;
 import ceramic.View;
@@ -20,6 +22,8 @@ import tracker.Observable;
 using StringTools;
 
 class ColorFieldView extends FieldView {
+
+    @observe public var theme:Theme = null;
 
     static var _point = new Point();
 
@@ -57,6 +61,8 @@ class ColorFieldView extends FieldView {
 /// Internal properties
 
     @observe var pickerVisible:Bool = false;
+
+    @component var keyBindings:KeyBindings;
 
     var container:RowLayout;
 
@@ -130,7 +136,9 @@ class ColorFieldView extends FieldView {
         textView.preRenderedSize = 20;
         container.add(textView);
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
         editText.container = textView;
@@ -178,6 +186,8 @@ class ColorFieldView extends FieldView {
                 pickerVisible = !pickerVisible;
             }
         });
+
+        bindKeyBindings();
 
     }
 
@@ -359,6 +369,22 @@ class ColorFieldView extends FieldView {
 
     }
 
+/// Key bindings
+
+    function bindKeyBindings() {
+
+        keyBindings = new KeyBindings();
+
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
+            if (focused) {
+                var selectText:SelectText = cast textView.text.component('selectText');
+                selectText.selectionStart = 0;
+                selectText.selectionEnd = textView.text.content.length;
+            }
+        });
+
+    }
+
 /// Internal
 
     override function destroy() {
@@ -419,7 +445,9 @@ class ColorFieldView extends FieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;
@@ -470,6 +498,11 @@ class ColorFieldView extends FieldView {
 
             if (pickerView == null) {
                 pickerView = new ColorPickerView(this);
+                pickerView.autorun(() -> {
+                    var theme = this.theme;
+                    unobserve();
+                    pickerView.theme = theme;
+                });
                 pickerView.depth = 10;
                 pickerView.onColorValueChange(pickerView, (color, _) -> {
                     updatingFromPicker++;
@@ -490,7 +523,11 @@ class ColorFieldView extends FieldView {
                 bubbleTriangle.anchor(0.5, 1);
                 bubbleTriangle.borderSize = 1.5;
                 bubbleTriangle.autorun(() -> {
-                    var theme = context.theme;
+
+                    var theme = this.theme;
+                    if (theme == null)
+                        theme = context.theme;
+
                     var overlayBorderColor = theme.overlayBorderColor;
                     var overlayBorderAlpha = theme.overlayBorderAlpha;
                     bubbleTriangle.innerColor = theme.overlayBackgroundColor;

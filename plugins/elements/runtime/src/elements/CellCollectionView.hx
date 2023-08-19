@@ -5,9 +5,12 @@ import ceramic.Filter;
 import ceramic.Shortcuts.*;
 import elements.Context.context;
 import elements.Scrollbar;
+import tracker.Autorun.unobserve;
 import tracker.Observable;
 
 class CellCollectionView extends CollectionView implements Observable {
+
+    @observe public var theme:Theme = null;
 
     @observe public var scrolling(default,null):Bool = false;
 
@@ -29,7 +32,13 @@ class CellCollectionView extends CollectionView implements Observable {
         contentView.borderPosition = OUTSIDE;
         borderPosition = INSIDE;
         scroller.allowPointerOutside = false;
-        scroller.scrollbar = new Scrollbar();
+        var scrollbar = new Scrollbar();
+        scroller.scrollbar = scrollbar;
+        scrollbar.autorun(() -> {
+            var theme = this.theme;
+            unobserve();
+            scrollbar.theme = theme;
+        });
         filter.textureFilter = NEAREST;
         filter.content.add(scroller);
 
@@ -69,7 +78,9 @@ class CellCollectionView extends CollectionView implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (inputStyle) {
             transparent = true;
@@ -83,7 +94,7 @@ class CellCollectionView extends CollectionView implements Observable {
             color = theme.darkBackgroundColor;
             borderSize = 0;
             contentView.borderTopSize = 1;
-            borderBottomSize = 1;
+            borderBottomSize = 0;
             borderTopSize = 0;
             borderBottomColor = theme.mediumBorderColor;
         }

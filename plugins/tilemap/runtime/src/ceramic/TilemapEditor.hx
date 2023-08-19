@@ -4,6 +4,10 @@ import ceramic.Shortcuts.*;
 
 class TilemapEditor extends Entity implements Component {
 
+    @event function fill(index:Int);
+
+    @event function erase(index:Int);
+
     static var _point = new Point(0, 0);
 
     @entity var tilemap:Tilemap;
@@ -12,25 +16,27 @@ class TilemapEditor extends Entity implements Component {
 
     public var fillValue:TilemapTile;
 
-    public var emptyValue:TilemapTile;
+    public var eraseValue:TilemapTile;
 
-    var isLeftButtonDown:Bool = false;
+    public var enabled:Bool = true;
 
-    var leftButtonTileValue:TilemapTile = 0;
+    var buttonDownId:Int = -1;
+
+    var buttonDownValue:Int = -1;
 
     var hoveredTileIndexes:IntBoolMap = null;
 
-    // var offsetX:Float = 0;
+    var lastPaintedX:Float = -1;
 
-    // var offsetY:Float = 0;
+    var lastPaintedY:Float = -1;
 
-    public function new(layerName:String = 'main', fillValue:TilemapTile = 1, emptyValue:TilemapTile = 0) {
+    public function new(layerName:String = 'main', fillValue:TilemapTile = 1, eraseValue:TilemapTile = 0) {
 
         super();
 
         this.layerName = layerName;
         this.fillValue = fillValue;
-        this.emptyValue = emptyValue;
+        this.eraseValue = eraseValue;
 
     }
 
@@ -43,34 +49,48 @@ class TilemapEditor extends Entity implements Component {
 
     function handlePointerDown(info:TouchInfo) {
 
-        if (info.buttonId == 0) {
-            // Left click
+        if (!enabled)
+            return;
+
+        if (info.buttonId == 0 || info.buttonId == 2) {
+
+            // Left click: fill
+            // Right click: erase
+
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
                 var layer = tilemap.layer(layerName);
                 if (layerData != null && layer != null) {
                     layer.screenToVisual(info.x, info.y, _point);
+                    lastPaintedX = _point.x;
+                    lastPaintedY = _point.y;
                     var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
                     if (index >= 0 && index < layerData.tiles.length) {
 
                         hoveredTileIndexes = new IntBoolMap();
                         hoveredTileIndexes.set(index, true);
-                        isLeftButtonDown = true;
+                        buttonDownId = info.buttonId;
                         screen.onPointerMove(this, handlePointerMove);
 
                         // Update tile
                         var tiles = [].concat(layerData.tiles.original);
-                        if (tiles[index] != fillValue) {
+                        if (buttonDownId == 0) {
                             tiles[index] = fillValue;
-                            leftButtonTileValue = fillValue;
+                            buttonDownValue = fillValue;
                         }
                         else {
-                            tiles[index] = emptyValue;
-                            leftButtonTileValue = emptyValue;
+                            tiles[index] = eraseValue;
+                            buttonDownValue = eraseValue;
                         }
                         layerData.tiles = tiles;
+                        if (buttonDownId == 0) {
+                            emitFill(index);
+                        }
+                        else {
+                            emitErase(index);
+                        }
 
                         var layer = tilemap.layer(layerName);
                         if (layer != null) {
@@ -80,16 +100,14 @@ class TilemapEditor extends Entity implements Component {
                 }
             }
         }
-        else if (info.buttonId == 2) {
-            // Right click
-        }
 
     }
 
     function handlePointerUp(info:TouchInfo) {
 
-        if (info.buttonId == 0) {
-            isLeftButtonDown = false;
+        if (info.buttonId == buttonDownId) {
+            buttonDownId = -1;
+            buttonDownValue = -1;
             hoveredTileIndexes = null;
         }
 
@@ -97,30 +115,52 @@ class TilemapEditor extends Entity implements Component {
 
     function handlePointerMove(info:TouchInfo) {
 
-        if (isLeftButtonDown && hoveredTileIndexes != null) {
+        if (buttonDownId != -1 && hoveredTileIndexes != null) {
             var tilemapData = tilemap.tilemapData;
             if (tilemapData != null) {
                 var layerData = tilemapData.layer(layerName);
                 var layer = tilemap.layer(layerName);
                 if (layerData != null && layer != null) {
                     layer.screenToVisual(info.x, info.y, _point);
-                    var index = tileIndexAtPosition(tilemapData, layerData, _point.x, _point.y);
 
-                    if (index >= 0 && index < layerData.tiles.length) {
-                        if (!hoveredTileIndexes.exists(index)) {
-                            hoveredTileIndexes.set(index, true);
-                            
-                            // Update tile
-                            var tiles = [].concat(layerData.tiles.original);
-                            tiles[index] = leftButtonTileValue;
-                            layerData.tiles = tiles;
+                    var paintedX = _point.x;
+                    var paintedY = _point.y;
 
-                            var layer = tilemap.layer(layerName);
-                            if (layer != null) {
-                                layer.contentDirty = true;
+                    var numSteps = Std.int(Math.max(1, Math.max(Math.abs(paintedX - lastPaintedX), Math.abs(paintedY - lastPaintedY))));
+
+                    for (i in 0...numSteps) {
+
+                        var x = lastPaintedX + (paintedX - lastPaintedX) * i / numSteps;
+                        var y = lastPaintedY + (paintedY - lastPaintedY) * i / numSteps;
+
+                        var index = tileIndexAtPosition(tilemapData, layerData, x, y);
+
+                        if (index >= 0 && index < layerData.tiles.length) {
+                            if (!hoveredTileIndexes.exists(index)) {
+                                hoveredTileIndexes.set(index, true);
+
+                                // Update tile
+                                var tiles = [].concat(layerData.tiles.original);
+                                tiles[index] = buttonDownValue;
+                                layerData.tiles = tiles;
+
+                                if (buttonDownValue == fillValue) {
+                                    emitFill(index);
+                                }
+                                else {
+                                    emitErase(index);
+                                }
+
+                                var layer = tilemap.layer(layerName);
+                                if (layer != null) {
+                                    layer.contentDirty = true;
+                                }
                             }
                         }
                     }
+
+                    lastPaintedX = paintedX;
+                    lastPaintedY = paintedY;
                 }
             }
         }
@@ -129,16 +169,16 @@ class TilemapEditor extends Entity implements Component {
 
     static function tileIndexAtPosition(tilemapData:TilemapData, layerData:TilemapLayerData, x:Float, y:Float):Int {
 
-        var tileWidth = tilemapData.tileWidth;
-        var tileHeight = tilemapData.tileHeight;
+        var tileWidth = layerData.tileWidth;
+        var tileHeight = layerData.tileHeight;
         x -= layerData.offsetX + layerData.x * tileWidth;
         y -= layerData.offsetY + layerData.y * tileHeight;
         var index = -1;
-        if (x >= 0 && x < layerData.width * tileWidth) {
-            if (y >= 0 && y < layerData.height * tileHeight) {
+        if (x >= 0 && x < layerData.columns * tileWidth) {
+            if (y >= 0 && y < layerData.rows * tileHeight) {
                 var column:Int = Math.floor(x / tileWidth);
                 var row:Int = Math.floor(y / tileHeight);
-                index = row * layerData.width + column;
+                index = row * layerData.columns + column;
             }
         }
         return index;

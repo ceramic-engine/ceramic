@@ -11,6 +11,7 @@ import ceramic.Entity;
 import ceramic.Shortcuts.*;
 import ceramic.SpineAsset;
 import ceramic.SpineData;
+import haxe.Constraints.NotVoid;
 import spine.Bone;
 
 using StringTools;
@@ -38,7 +39,7 @@ class SpinePlugin {
             */
 
             // Extend assets with `spine` kind
-            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['ceramic.SpineData']);
+            Assets.addAssetKind('spine',addSpine, ['spine'], true, ['ceramic.SpineData']);
 
             // Extend converters
             var convertSpineData = new ConvertSpineData();
@@ -59,29 +60,33 @@ class SpinePlugin {
 
 /// Asset extensions
 
-    public static function addSpine(assets:Assets, name:String, ?options:AssetOptions):Void {
+    private static function _addSpine(assets:Assets, name:String, variant:String, options:AssetOptions):Void {
+        addSpine(assets, name, variant, options);
+    }
+
+    public static function addSpine(assets:Assets, name:String, ?variant:String, ?options:AssetOptions):Void {
 
         if (name.startsWith('spine:')) name = name.substr(6);
 
-        assets.addAsset(new SpineAsset(name, options));
+        assets.addAsset(new SpineAsset(name, variant, options));
 
     }
 
-    public static function ensureSpine(assets:Assets, name:Either<String,Dynamic>, ?options:AssetOptions, done:SpineAsset->Void):Void {
+    public static function ensureSpine(assets:Assets, name:Either<String,Dynamic>, ?variant:String, ?options:AssetOptions, done:SpineAsset->Void):Void {
 
         var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (!realName.startsWith('spine:')) realName = 'spine:' + realName;
 
-        assets.ensure(cast realName, options, function(asset) {
+        assets.ensure(cast realName, variant, options, function(asset) {
             done(Std.isOfType(asset, SpineAsset) ? cast asset : null);
         });
 
     }
 
     @:access(ceramic.Assets)
-    public static function spine(assets:Assets, name:Either<String,Dynamic>):SpineData {
+    public static function spine(assets:Assets, name:Either<String,Dynamic>, ?variant:String):SpineData {
 
-        var asset = spineAsset(assets, name);
+        var asset = spineAsset(assets, name, variant);
         if (asset == null) return null;
 
         return asset.spineData;
@@ -89,14 +94,15 @@ class SpinePlugin {
     }
 
     @:access(ceramic.Assets)
-    public static function spineAsset(assets:Assets, name:Either<String,Dynamic>):SpineAsset {
+    public static function spineAsset(assets:Assets, name:Either<String,Dynamic>, ?variant:String):SpineAsset {
 
         var realName:String = Std.isOfType(name, String) ? cast name : cast Reflect.field(name, '_id');
         if (realName.startsWith('spine:')) realName = realName.substr(6);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assets.assetsByKindAndName.exists('spine')) return assets.parent != null ? spineAsset(assets.parent, name) : null;
+        if (!assets.assetsByKindAndName.exists('spine')) return assets.parent != null ? spineAsset(assets.parent, name, variant) : null;
         var asset:SpineAsset = cast assets.assetsByKindAndName.get('spine').get(realName);
-        if (asset == null) return assets.parent != null ? spineAsset(assets.parent, name) : null;
+        if (asset == null) return assets.parent != null ? spineAsset(assets.parent, name, variant) : null;
         return asset;
 
     }

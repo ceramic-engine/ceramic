@@ -54,4 +54,16 @@ class Shortcuts {
     public static var systems(get,never):Systems;
     #if !haxe_server inline #end static function get_systems():Systems { return App.app.systems; }
 
+    /**
+     * Ensures current `autorun` won't be affected by the code after this call.
+     * `reobserve()` should be called to restore previous state.
+     */
+    inline public static function unobserve():Void { tracker.Autorun.unobserve(); }
+
+    /**
+     * Resume observing values and resume affecting current `autorun` scope.
+     * This should be called after an `unobserve()` call.
+     */
+    inline public static function reobserve():Void { tracker.Autorun.reobserve(); }
+
 }

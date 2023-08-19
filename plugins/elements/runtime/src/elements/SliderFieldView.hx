@@ -14,6 +14,8 @@ using StringTools;
 
 class SliderFieldView extends BaseTextFieldView {
 
+    @observe public var theme:Theme = null;
+
     static var _point = new Point();
 
 /// Public properties
@@ -77,7 +79,9 @@ class SliderFieldView extends BaseTextFieldView {
         });
         add(textView);
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         editText = new EditText(theme.focusedFieldSelectionColor, theme.lightTextColor);
         editText.container = textView;
@@ -218,7 +222,9 @@ class SliderFieldView extends BaseTextFieldView {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (editText != null) {
             editText.selectionColor = theme.focusedFieldSelectionColor;

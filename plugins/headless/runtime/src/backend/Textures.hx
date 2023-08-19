@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.ImageType;
 import haxe.io.Bytes;
 
 class Textures implements spec.Textures {
@@ -7,6 +8,19 @@ class Textures implements spec.Textures {
     public function new() {}
 
     public function load(path:String, ?options:LoadTextureOptions, _done:Texture->Void):Void {
+
+        var done = function(texture:Texture) {
+            ceramic.App.app.onceImmediate(function() {
+                _done(texture);
+                _done = null;
+            });
+        };
+
+        done(new TextureImpl(0, 0));
+
+    }
+
+    public function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, _done:Texture->Void):Void {
 
         var done = function(texture:Texture) {
             ceramic.App.app.onceImmediate(function() {
@@ -88,6 +102,18 @@ class Textures implements spec.Textures {
     }
 
     inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
+
+        //
+
+    }
+
+    inline public function setTextureWrapS(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+        //
+
+    }
+
+    inline public function setTextureWrapT(texture:Texture, wrap:ceramic.TextureWrap): Void {
 
         //
 

@@ -395,6 +395,7 @@ class LinearLayout extends View {
         // Compute depth sorting fashion
         var d:Float;
         var dDiff:Float;
+        var customDepth:Bool = false;
         switch (childrenDepth) {
             case INCREMENT:
                 dDiff = 1;
@@ -405,6 +406,10 @@ class LinearLayout extends View {
             case SAME:
                 dDiff = 0;
                 d = 1;
+            case CUSTOM:
+                dDiff = 0;
+                d = 1;
+                customDepth = true;
         }
 
         if (direction == VERTICAL) {
@@ -473,8 +478,10 @@ class LinearLayout extends View {
                         y += view.height;
 
                         // Set depth
-                        view.depth = d;
-                        d += dDiff;
+                        if (!customDepth) {
+                            view.depth = d;
+                            d += dDiff;
+                        }
                     }
                 }
             }
@@ -570,8 +577,10 @@ class LinearLayout extends View {
                         x += view.width;
 
                         // Set depth
-                        view.depth = d;
-                        d += dDiff;
+                        if (!customDepth) {
+                            view.depth = d;
+                            d += dDiff;
+                        }
                     }
                 }
             }

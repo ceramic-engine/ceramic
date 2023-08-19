@@ -6,16 +6,15 @@ on:
 jobs:
 
   setup-release:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Setup release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
       - name: Save upload URL
@@ -23,7 +22,7 @@ jobs:
         run: |
           echo '${{ steps.create_release.outputs.upload_url }}' > upload_url.txt
       - name: Upload saved file
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: upload_url
           path: upload_url.txt
@@ -31,7 +30,7 @@ jobs:
 
   build-ceramic-windows:
     needs: setup-release
-    runs-on: windows-2019
+    runs-on: windows-2022
     steps:
       - uses: actions/checkout@v2
         with:
@@ -105,7 +104,7 @@ jobs:
         id: release_url
         run: |
           $UPLOAD_URL = $(cat upload_url.txt)
-          echo "::set-output name=UPLOAD_URL::$UPLOAD_URL"
+          echo "UPLOAD_URL=$UPLOAD_URL" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -120,7 +119,7 @@ jobs:
 
   build-ceramic-mac:
     needs: setup-release
-    runs-on: macos-10.15
+    runs-on: macos-12
     steps:
       - uses: actions/checkout@v2
         with:
@@ -204,7 +203,7 @@ jobs:
         working-directory: .
         id: release_url
         run: |
-          echo '::set-output name=UPLOAD_URL::'$(cat upload_url.txt)
+          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -218,7 +217,7 @@ jobs:
 
   build-ceramic-linux:
     needs: setup-release
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -302,7 +301,7 @@ jobs:
         working-directory: .
         id: release_url
         run: |
-          echo '::set-output name=UPLOAD_URL::'$(cat upload_url.txt)
+          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
       - name: Upload release asset
         id: upload-release-asset
         uses: actions/upload-release-asset@v1
@@ -316,7 +315,7 @@ jobs:
 
   generate-api-docs:
     needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
       - name: Dispatch event
         uses: ceramic-engine/repository-dispatch@v1

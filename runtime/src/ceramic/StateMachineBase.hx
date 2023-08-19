@@ -65,6 +65,8 @@ class StateMachineBase extends Entity implements Observable implements Component
 
     override function destroy():Void {
 
+        StateMachineSystem.shared.stateMachines.remove(this);
+
         if (stateInstances != null) {
             var _stateInstances = stateInstances;
             stateInstances = null;

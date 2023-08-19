@@ -478,22 +478,6 @@ class App extends Entity {
      */
     public var inUpdate(default,null):Bool = false;
 
-    var shouldUpdateAndDrawAgain(default,null):Bool = false;
-
-    /**
-     * This method can be called if you want to ensure a full update + draw will be performed in frame
-     * starting from now. Beware that this can be an expensive call as it may double the work
-     * on the current frame in some situations.
-     * This should not be used unless you really know what you are doing for some specific edge case.
-     */
-    inline public function requestFullUpdateAndDrawInFrame():Void {
-
-        if (inUpdate) {
-            shouldUpdateAndDrawAgain = true;
-        }
-
-    }
-
 /// Static pre-init code (used to add plugins)
 
     static var preInitCallbacks:Array<Void->Void>;
@@ -694,6 +678,8 @@ class App extends Entity {
 #if (cppia || ceramic_cppia_host)
     @:noCompletion public var initSettings:InitSettings;
 #end
+
+    @:noCompletion public var numBlockingDefaultScroll:Int = 0;
 
 /// Public initializer
 
@@ -1065,6 +1051,7 @@ class App extends Entity {
 
         backend.offUpdate(updatePreReady);
         backend.onUpdate(this, update);
+        backend.onRender(this, render);
 
         // Forward key events
         //
@@ -1161,119 +1148,107 @@ class App extends Entity {
         screen.updatePointerOverState(delta);
 
         inUpdate = true;
-        shouldUpdateAndDrawAgain = true;
-        var isFirstUpdateInFrame = true;
 
-        // Allow update section to be run multiple times before drawing
-        // if this has been explicitly requested with requestFullUpdateBeforeDraw()
-        while (shouldUpdateAndDrawAgain) {
-            shouldUpdateAndDrawAgain = false;
-            var _delta:Float = isFirstUpdateInFrame ? delta : 0;
+        // Reset screen deltas
+        screen.resetDeltas();
 
-            // Reset screen deltas
-            screen.resetDeltas();
+        // Reset input deltas
+        input.resetDeltas();
 
-            // Reset input deltas
-            input.resetDeltas();
-
-            // Run 'begin update' callbacks, like touch/mouse/key events etc...
-            if (beginUpdateCallbacks.length > 0) {
-                var callbacks = beginUpdateCallbacks;
-                beginUpdateCallbacks = [];
-                for (callback in callbacks) {
-                    callback();
-                }
+        // Run 'begin update' callbacks, like touch/mouse/key events etc...
+        if (beginUpdateCallbacks.length > 0) {
+            var callbacks = beginUpdateCallbacks;
+            beginUpdateCallbacks = [];
+            for (callback in callbacks) {
+                callback();
             }
-
-            // Trigger pre-update event
-            emitPreUpdate(_delta);
-
-            // Run systems early update
-            systems.earlyUpdate(delta);
-
-            // Flush assets immediate callbacks
-            Assets.flushAllInstancesImmediate();
-
-            // Flush immediate callbacks
-            flushImmediate();
-
-            if (_delta > 0) {
-
-                // Update tweens
-                Tween.tick(delta);
-
-                // Flush immediate callbacks
-                flushImmediate();
-            }
-
-            // Then update
-            emitUpdate(_delta);
-
-            // Flush after x udpates
-            tickOnceXUpdates();
-
-            // Flush immediate callbacks
-            flushImmediate();
-
-            // Run systems late update
-            systems.lateUpdate(delta);
-
-            // Emit post-update event
-            emitPostUpdate(_delta);
-
-            // Flush immediate callbacks
-            flushImmediate();
-
-            // Destroy disposed entities
-            while (disposedEntities.length > 0) {
-                var toDestroy = disposedEntities.shift();
-                toDestroy.destroy();
-            }
-
-            // Sync pending and destroyed visuals
-            syncPendingVisuals();
-
-            // Update visuals
-            updateVisuals(visuals);
-
-            // Update hierarchy from depth
-            computeHierarchy();
-
-            // Compute render textures priority
-            computeRenderTexturesPriority(renderTextures);
-
-            // Sync destroyed visuals again, if needed, before sorting
-            syncDestroyedVisuals();
-
-            // Sort visuals depending on their settings
-            sortVisuals(visuals);
-
-            // First update in frame finished
-            isFirstUpdateInFrame = false;
-
-            // Begin draw
-            emitBeginDraw();
-
-            // Draw (clears anything drawn before)
-            backend.draw.draw(visuals);
-
-            // End draw
-            #if ceramic_pending_finish_draw
-            _pendingFinishDraw = true;
-            break;
-            #else
-            emitFinishDraw();
-            #end
-
-            // Will update again if requested
-            // or continue with drawing
         }
 
-        // Swap display (if backends needs to)
-        backend.draw.swap();
+        // Trigger pre-update event
+        emitPreUpdate(delta);
+
+        // Run systems early update
+        systems.earlyUpdate(delta);
+
+        // Flush assets immediate callbacks
+        Assets.flushAllInstancesImmediate();
+
+        // Flush immediate callbacks
+        flushImmediate();
+
+        if (delta > 0) {
+
+            // Update tweens
+            Tween.tick(delta);
+
+            // Flush immediate callbacks
+            flushImmediate();
+        }
+
+        // Then update
+        emitUpdate(delta);
+
+        // Flush after x udpates
+        tickOnceXUpdates();
+
+        // Flush immediate callbacks
+        flushImmediate();
+
+        // Run systems late update
+        systems.lateUpdate(delta);
+
+        // Emit post-update event
+        emitPostUpdate(delta);
+
+        // Flush immediate callbacks
+        flushImmediate();
+
+        // Destroy disposed entities
+        while (disposedEntities.length > 0) {
+            var toDestroy = disposedEntities.shift();
+            toDestroy.destroy();
+        }
+
+        // Sync pending and destroyed visuals
+        syncPendingVisuals();
+
+        // Update visuals
+        updateVisuals(visuals);
+
+        // Update hierarchy from depth
+        computeHierarchy();
+
+        // Compute render textures priority
+        computeRenderTexturesPriority(renderTextures);
+
+        // Sync destroyed visuals again, if needed, before sorting
+        syncDestroyedVisuals();
+
+        // Sort visuals depending on their settings
+        sortVisuals(visuals);
 
         // Update finished
         inUpdate = false;
+
+    }
+
+    function render():Void {
+
+        // Begin draw
+        emitBeginDraw();
+
+        // Draw (clears anything drawn before)
+        backend.draw.draw(visuals);
+
+        // End draw
+        #if ceramic_pending_finish_draw
+        _pendingFinishDraw = true;
+        #else
+        emitFinishDraw();
+        #end
+
+        // Swap display (if backends needs to)
+        backend.draw.swap();
 
     }
 

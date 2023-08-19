@@ -314,7 +314,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      * Destroy this entity. This method is automatically protected from duplicate calls. That means
      * calling multiple times an entity's `destroy()` method will run the destroy code only one time.
      * As soon as `destroy()` is called, the entity is marked `destroyed=true`, even when calling `destroy()`
-     * method on a subclass (a macro is inserting a code to marke the object
+     * method on a subclass (a macro is inserting a code to mark the object
      * as destroyed at the beginning of every `destroy()` override function.
      */
     public function destroy():Void {
@@ -580,7 +580,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      */
     @:noCompletion var _components:Map<String,Component> = null;
 
-    public function component(?name:String, ?component:Component):Component {
+    public function component<C:Component>(?name:String, ?component:C):C {
 
         if (name == null && component == null) {
             throw 'Invalid component() call: either `name` or `component` should be provided at least.';
@@ -612,7 +612,11 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
             }
             _components.set(name, component);
             @:privateAccess component.setEntity(this);
-            var componentAsEntity:Entity = cast component;
+
+            // 2-step to Entity cast to avoid warning
+            var componentAsAny:Any = component;
+            var componentAsEntity:Entity = componentAsAny;
+
             componentAsEntity.onceDestroy(this, function(_) {
                 // Remove entity reference from component
                 if (@:privateAccess component.getEntity() == this) {
@@ -631,7 +635,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
         } else {
             if (_components == null) return null;
-            return _components.get(name);
+            return cast _components.get(name);
         }
 
     }

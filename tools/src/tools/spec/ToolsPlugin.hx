@@ -1,7 +1,7 @@
 package tools.spec;
 
-import tools.Vscode;
 import tools.Ide;
+import tools.Vscode;
 
 typedef ToolsPlugin = {
 
@@ -16,8 +16,6 @@ typedef ToolsPlugin = {
     function init(context:Context):Void;
 
     @:optional function extendProject(project:Project):Void;
-
-    @:optional function extendVscodeTasksChooser(items:Array<VscodeChooserItem>):Void;
 
     @:optional function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>):Void;
 

@@ -38,6 +38,8 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
 /// Public properties
 
+    @observe public var theme:Theme = null;
+
     @observe public var colorValue(default, null):Color = Color.WHITE;
 
 /// Internal
@@ -404,6 +406,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
         colorModeButton.viewWidth = FIELD_ROW_WIDTH * 2 + PADDING;
         colorModeButton.offset(offsetX, offsetY);
         colorModeButton.onClick(this, switchColorMode);
+        colorModeButton.autorun(() -> {
+            var theme = this.theme;
+            if (theme == null)
+                theme = context.theme;
+            unobserve();
+            colorModeButton.theme = theme;
+        });
         add(colorModeButton);
 
         offsetY += BUTTON_ADVANCE + PADDING;
@@ -420,6 +429,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
             else {
                 saveColor();
             }
+        });
+        paletteAddButton.autorun(() -> {
+            var theme = this.theme;
+            if (theme == null)
+                theme = context.theme;
+            unobserve();
+            paletteAddButton.theme = theme;
         });
         paletteAddButton.autorun(() -> {
             var colorExists = paletteColors.indexOf(colorValue) != -1;
@@ -774,6 +790,14 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
         fieldView.textValue = '0';
         fieldView.viewWidth = FIELD_ROW_WIDTH;
 
+        fieldView.autorun(() -> {
+            var theme = this.theme;
+            if (theme == null)
+                theme = context.theme;
+            unobserve();
+            fieldView.theme = theme;
+        });
+
         fieldView.setTextValue = function(field, textValue) {
             if (applyValue != null) {
                 app.oncePostFlushImmediate(applyValue);
@@ -800,7 +824,9 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         borderColor = theme.overlayBorderColor;
         borderAlpha = theme.overlayBorderAlpha;

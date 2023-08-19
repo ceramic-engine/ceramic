@@ -1,5 +1,7 @@
 package ceramic;
 
+import haxe.io.Bytes;
+
 /**
  * A bunch of static extensions to make life easier.
  */
@@ -50,14 +52,9 @@ class Extensions<T> {
                 array.splice(length, array.length - length);
             }
             else {
-                #if cs
                 var dArray:Array<Dynamic> = array;
                 while (dArray.length < length)
                     dArray.push(null);
-                #else
-                var dArray:Array<Dynamic> = array;
-                dArray[length - 1] = null;
-                #end
             }
 #end
         }
@@ -219,5 +216,15 @@ class Extensions<T> {
         return Reflect.getProperty(instance, field);
 
     }
+
+/// Buffer extensions
+
+#if cs
+
+    public static extern inline overload function toBytes(buffer:UInt8Array):Bytes {
+        return Bytes.ofData(buffer);
+    }
+
+#end
 
 }

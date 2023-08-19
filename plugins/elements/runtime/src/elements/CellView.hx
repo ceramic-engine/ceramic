@@ -27,6 +27,8 @@ class CellView extends LayersLayout implements Observable {
 
     static var _notVisibleTransform:Transform = null;
 
+    @observe public var theme:Theme = null;
+
 /// Public properties
 
     @observe public var selected:Bool = false;
@@ -115,6 +117,7 @@ class CellView extends LayersLayout implements Observable {
         titleTextView.align = LEFT;
         titleTextView.pointSize = 12;
         titleTextView.preRenderedSize = 20;
+        titleTextView.noFitWidth = true;
         titleTextView.viewSize(fill(), auto());
         titleTextView.onLayout(this, layoutTitle);
         columnLayout.add(titleTextView);
@@ -123,6 +126,7 @@ class CellView extends LayersLayout implements Observable {
         subTitleTextView.align = LEFT;
         subTitleTextView.pointSize = 11;
         subTitleTextView.preRenderedSize = 20;
+        subTitleTextView.noFitWidth = true;
         subTitleTextView.paddingLeft = 1;
         subTitleTextView.viewSize(fill(), auto());
         subTitleTextView.text.component('italicText', new ItalicText());
@@ -220,6 +224,13 @@ class CellView extends LayersLayout implements Observable {
                 iconView.viewSize(25, fill());
                 iconView.pointSize = 20;
                 iconView.paddingLeft = 2;
+                iconView.autorun(() -> {
+                    var theme = this.theme;
+                    if (theme == null)
+                        theme = context.theme;
+                    unobserve();
+                    iconView.textColor = theme.iconColor;
+                });
                 columnLayout.add(iconView);
 
                 iconsView.add(iconView);
@@ -241,6 +252,13 @@ class CellView extends LayersLayout implements Observable {
                 iconView.viewSize(w, fill());
                 iconView.pointSize = s;
                 iconView.onClick(this, handleDuplicate);
+                iconView.autorun(() -> {
+                    var theme = this.theme;
+                    if (theme == null)
+                        theme = context.theme;
+                    unobserve();
+                    iconView.theme = theme;
+                });
                 iconsView.add(iconView);
             }
 
@@ -253,6 +271,13 @@ class CellView extends LayersLayout implements Observable {
                 iconView.viewSize(w, fill());
                 iconView.pointSize = s;
                 iconView.onClick(this, handleLock);
+                iconView.autorun(() -> {
+                    var theme = this.theme;
+                    if (theme == null)
+                        theme = context.theme;
+                    unobserve();
+                    iconView.theme = theme;
+                });
                 iconsView.add(iconView);
             }
 
@@ -263,6 +288,13 @@ class CellView extends LayersLayout implements Observable {
                 iconView.pointSize = s;
                 iconView.tooltip('Delete');
                 iconView.onClick(this, handleTrash);
+                iconView.autorun(() -> {
+                    var theme = this.theme;
+                    if (theme == null)
+                        theme = context.theme;
+                    unobserve();
+                    iconView.theme = theme;
+                });
                 iconsView.add(iconView);
             }
         }
@@ -277,7 +309,9 @@ class CellView extends LayersLayout implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         if (inputStyle) {
             columnLayout.padding(6, 6);
@@ -416,6 +450,7 @@ class CellView extends LayersLayout implements Observable {
 
         var cloned = new CellView();
 
+        cloned.theme = theme;
         cloned.selected = selected;
         cloned.title = title;
         cloned.subTitle = subTitle;

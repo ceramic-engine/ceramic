@@ -1,0 +1,7 @@
+plugin:
+    name: LDtk
+
+    runtime:
+        if plugin_ldtk:
+            +paths:
+                - {plugin:cwd}/runtime/src

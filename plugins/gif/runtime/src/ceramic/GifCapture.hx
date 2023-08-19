@@ -95,7 +95,13 @@ class GifCapture extends Entity {
             app.onceFinishDraw(this, () -> {
                 settings.overrideDelta = 0;
 
+                if (!capturing)
+                    return;
+
                 screen.toPixels(function(pixels, width, height) {
+
+                    if (!capturing)
+                        return;
 
                     // TODO pixels blending etc...
                     var rgbPixels = Pixels.rgbaPixelsToRgbPixels(width, height, pixels);

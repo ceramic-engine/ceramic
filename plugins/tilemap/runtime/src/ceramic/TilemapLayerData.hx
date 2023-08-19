@@ -4,7 +4,17 @@ import tracker.Model;
 
 using ceramic.Extensions;
 
+#if plugin_ldtk
+import ceramic.LdtkData;
+#end
+
 class TilemapLayerData extends Model {
+
+    #if plugin_ldtk
+
+    @observe public var ldtkLayer:LdtkLayerInstance = null;
+
+    #end
 
     /**
      * The name of the layer
@@ -24,12 +34,12 @@ class TilemapLayerData extends Model {
     /**
      * The width of the layer in tiles
      */
-    @serialize public var width:Int = 0;
+    @serialize public var columns:Int = 0;
 
     /**
      * The height of the layer in tiles
      */
-    @serialize public var height:Int = 0;
+    @serialize public var rows:Int = 0;
 
     /**
      * The opacity of the layer
@@ -52,9 +62,9 @@ class TilemapLayerData extends Model {
     @serialize public var offsetY:Int = 0;
 
     /**
-     * Tiles
+     * Explicit depth, or null of that should be computed by `Tilemap` instead
      */
-    @serialize public var tiles:ReadOnlyArray<TilemapTile> = null;
+    @serialize public var explicitDepth:Null<Float> = null;
 
     /**
      * Tile default blending
@@ -77,25 +87,70 @@ class TilemapLayerData extends Model {
     @serialize public var extraOpacity:Float = 1;
 
     /**
+     * Tiles
+     */
+    @serialize public var tiles:ReadOnlyArray<TilemapTile> = null;
+
+    /**
+     * Per-tile alpha, or null if there is no custom alpha per tile
+     */
+    @serialize public var tilesAlpha:ReadOnlyArray<Float> = null;
+
+    /**
      * Computed tiles, after applying auto-tiling (if any).
-     * Will be `null` if no auto-tiling is used.    
+     * Will be `null` if no auto-tiling is used.
      */
     @observe public var computedTiles:ReadOnlyArray<TilemapTile> = null;
 
     /**
-     * A shorthand to set `width` and `height`
-     * @param width 
-     * @param height 
+     * Per-computed tile alpha, or null if there is no custom alpha per computed tile
      */
-    public function size(width:Int, height:Int):Void {
-        this.width = width;
-        this.height = height;
+    @observe public var computedTilesAlpha:ReadOnlyArray<Float> = null;
+
+    /**
+     * Is `true` if this layer has tiles. Some layers don't have tile and
+     * don't need to be rendered with tilemap layer quads, but are still
+     * available as containers to add custom objects (like LDtk entities).
+     * @return Bool
+     */
+    @compute public function hasTiles():Bool {
+
+        return (
+            (tiles != null && tiles.length > 0) ||
+            (computedTiles != null && computedTiles.length > 0)
+        );
+
+    }
+
+    /**
+     * Is `true` (default) if this layer should have its tiles rendered (if any).
+     */
+    @serialize public var shouldRenderTiles:Bool = true;
+
+    /**
+     * The width of a tile in this layer
+     */
+    @serialize public var tileWidth:Int = -1;
+
+    /**
+     * The height of a tile in this layer
+     */
+    @serialize public var tileHeight:Int = -1;
+
+    /**
+     * A shorthand to set `columns` and `rows`
+     * @param columns
+     * @param rows
+     */
+    public function grid(columns:Int, rows:Int):Void {
+        this.columns = columns;
+        this.rows = rows;
     }
 
     /**
      * A shorthand to set `x` and `y`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function pos(x:Int, y:Int):Void {
         this.x = x;
@@ -104,32 +159,55 @@ class TilemapLayerData extends Model {
 
     /**
      * A shorthand to set `offsetX` and `offsetY`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function offset(offsetX:Int, offsetY:Int):Void {
         this.offsetX = offsetX;
         this.offsetY = offsetY;
     }
 
+    /**
+     * A shorthand to set `tileWidth` and `tileHeight`
+     * @param tileWidth
+     * @param tileHeight
+     */
+    public function tileSize(tileWidth:Int, tileHeight:Int):Void {
+        this.tileWidth = tileWidth;
+        this.tileHeight = tileHeight;
+    }
+
 /// Helpers
+
+    inline public function indexFromColumnAndRow(column:Int, row:Int):Int {
+
+        return row * columns + column;
+
+    }
 
     inline public function tileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
-        var index = row * width + column;
+        var index = indexFromColumnAndRow(column, row);
         return tiles.unsafeGet(index);
+
+    }
+
+    inline public function computedTileByColumnAndRow(column:Int, row:Int):TilemapTile {
+
+        var index = indexFromColumnAndRow(column, row);
+        return computedTiles.unsafeGet(index);
 
     }
 
     inline public function columnAtIndex(index:Int):Int {
 
-        return index % width;
+        return index % columns;
 
     }
 
     inline public function rowAtIndex(index:Int):Int {
 
-        return Math.floor(index / height);
+        return Math.floor(index / columns);
 
     }
 

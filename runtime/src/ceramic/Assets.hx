@@ -52,13 +52,23 @@ class Assets extends Entity {
 
     public var delayBetweenXAssets:Int = -1;
 
+    public var reloadOnTextureDensityChange = true;
+
     /**
      * If provided, when requesting an asset, it will also check if the parent `Assets`
      * instance has it and return it if that's the case.
      */
     public var parent:Assets = null;
 
+    /**
+     * A shared texture atlas packer that can be used to merge smaller textures together.
+     * Also required when loading some kind of assets, like `.ase`/`.aseprite` files.
+     */
+    public var atlasPacker:TextureAtlasPacker = null;
+
 /// Internal
+
+    private var pendingAtlasPackers:Array<TextureAtlasPacker> = null;
 
     static var customAssetKinds:Map<String,CustomAssetKind> = new Map();
 
@@ -107,6 +117,20 @@ class Assets extends Entity {
         addedAssets = null;
         assetsByKindAndName = null;
 
+        if (atlasPacker != null) {
+            var _atlasPacker = atlasPacker;
+            atlasPacker = null;
+            _atlasPacker.destroy();
+        }
+
+        if (pendingAtlasPackers != null) {
+            var _pendingAtlasPackers = pendingAtlasPackers;
+            pendingAtlasPackers = null;
+            for (i in 0..._pendingAtlasPackers.length) {
+                _pendingAtlasPackers[i].destroy();
+            }
+        }
+
     }
 
     /**
@@ -122,7 +146,15 @@ class Assets extends Entity {
 
 /// Add assets to load
 
-    public function add(id:AssetId<Dynamic>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    // public extern inline overload function add(id:AssetId<Dynamic>, variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    //     _add(id, variant, options #if ceramic_debug_entity_allocs , pos #end);
+    // }
+
+    // public extern inline overload function add(id:AssetId<Dynamic>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    //     _add(id, null, options #if ceramic_debug_entity_allocs , pos #end);
+    // }
+
+    public function add(id:AssetId<Dynamic>, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         var value:String = Std.isOfType(id, String) ? cast id : cast Reflect.field(id, '_id');
         var colonIndex = value.indexOf(':');
@@ -135,18 +167,18 @@ class Assets extends Entity {
         var name = value.substr(colonIndex + 1);
 
         switch (kind) {
-            case 'image': addImage(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'text': addText(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'binary': addBinary(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'sound': addSound(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'database': addDatabase(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'fragments': addFragments(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'font': addFont(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'atlas': addAtlas(name, options #if ceramic_debug_entity_allocs , pos #end);
-            case 'shader': addShader(name, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'image': addImage(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'text': addText(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'binary': addBinary(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'sound': addSound(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'database': addDatabase(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'fragments': addFragments(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'font': addFont(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'atlas': addAtlas(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
+            case 'shader': addShader(name, variant, options #if ceramic_debug_entity_allocs , pos #end);
             default:
                 if (customAssetKinds.exists(kind)) {
-                    customAssetKinds.get(kind).add(this, name, options);
+                    customAssetKinds.get(kind).add(this, name, variant, options);
                 } else {
                     throw "Assets: invalid asset kind (" + kind + ") for id: " + id;
                 }
@@ -162,6 +194,9 @@ class Assets extends Entity {
 
         var info = app.backend.info;
         var imageExtensions = info.imageExtensions();
+        #if plugin_ase
+        imageExtensions = imageExtensions.concat(['ase', 'aseprite']);
+        #end
         var textExtensions = info.textExtensions();
         var soundExtensions = info.soundExtensions();
         var shaderExtensions = info.shaderExtensions();
@@ -274,7 +309,7 @@ class Assets extends Entity {
                     for (i in 0...extensions.length) {
                         if (extensions.unsafeGet(i) == assetExtension) {
                             var add = customKindsAdd.unsafeGet(j);
-                            add(this, name);
+                            add(this, null, name, null);
                             didAdd = true;
                             break;
                         }
@@ -297,66 +332,66 @@ class Assets extends Entity {
 
     }
 
-    public function addImage(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addImage(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('image:')) name = name.substr(6);
-        addAsset(new ImageAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new ImageAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addFont(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addFont(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('font:')) name = name.substr(5);
-        addAsset(new FontAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new FontAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addAtlas(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addAtlas(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('atlas:')) name = name.substr(6);
-        addAsset(new AtlasAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new AtlasAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addText(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addText(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('text:')) name = name.substr(5);
-        addAsset(new TextAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new TextAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addBinary(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addBinary(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('binary:')) name = name.substr(7);
-        addAsset(new BinaryAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new BinaryAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addSound(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addSound(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('sound:')) name = name.substr(6);
-        addAsset(new SoundAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new SoundAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addDatabase(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addDatabase(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('database:')) name = name.substr(9);
-        addAsset(new DatabaseAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new DatabaseAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addFragments(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addFragments(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('fragments:')) name = name.substr(10);
-        addAsset(new FragmentsAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new FragmentsAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
-    public function addShader(name:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    public function addShader(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         if (name.startsWith('shader:')) name = name.substr(7);
-        addAsset(new ShaderAsset(name, options #if ceramic_debug_entity_allocs , pos #end));
+        addAsset(new ShaderAsset(name, variant, options #if ceramic_debug_entity_allocs , pos #end));
 
     }
 
@@ -373,20 +408,20 @@ class Assets extends Entity {
             imageAsset.defaultImageOptions = defaultImageOptions;
         }
 
-        var previousAsset = byName.get(asset.name);
+        var previousAsset = byName.get(asset.fullName);
         if (previousAsset != null) {
             if (previousAsset != asset) {
                 App.app.logger.info('Replace $previousAsset with $asset');
                 removeAsset(previousAsset);
             } else {
-                App.app.logger.warning('Cannot add asset $asset because it is already added for name: ${asset.name}.');
+                App.app.logger.warning('Cannot add asset $asset because it is already added for name: ${asset.fullName}.');
                 return previousAsset;
             }
         }
 
         asset.onDestroy(this, assetDestroyed);
 
-        byName.set(asset.name, asset);
+        byName.set(asset.fullName, asset);
 
         // Asset was associated with another `Assets` owner.
         // Remove ownership so that we can safely associate it to new instance
@@ -420,39 +455,39 @@ class Assets extends Entity {
 
     }
 
-    public function imageAsset(name:Either<String,AssetId<String>>):ImageAsset {
-        return cast asset(name, 'image');
+    public function imageAsset(name:Either<String,AssetId<String>>, ?variant:String):ImageAsset {
+        return cast asset(name, 'image', variant);
     }
 
-    public function fontAsset(name:Either<String,AssetId<String>>):FontAsset {
-        return cast asset(name, 'font');
+    public function fontAsset(name:Either<String,AssetId<String>>, ?variant:String):FontAsset {
+        return cast asset(name, 'font', variant);
     }
 
-    public function atlasAsset(name:Either<String,AssetId<String>>):AtlasAsset {
-        return cast asset(name, 'atlas');
+    public function atlasAsset(name:Either<String,AssetId<String>>, ?variant:String):AtlasAsset {
+        return cast asset(name, 'atlas', variant);
     }
 
-    public function textAsset(name:Either<String,AssetId<String>>):TextAsset {
-        return cast asset(name, 'text');
+    public function textAsset(name:Either<String,AssetId<String>>, ?variant:String):TextAsset {
+        return cast asset(name, 'text', variant);
     }
 
-    public function soundAsset(name:Either<String,AssetId<String>>):SoundAsset {
-        return cast asset(name, 'sound');
+    public function soundAsset(name:Either<String,AssetId<String>>, ?variant:String):SoundAsset {
+        return cast asset(name, 'sound', variant);
     }
 
-    public function databaseAsset(name:Either<String,AssetId<String>>):DatabaseAsset {
-        return cast asset(name, 'database');
+    public function databaseAsset(name:Either<String,AssetId<String>>, ?variant:String):DatabaseAsset {
+        return cast asset(name, 'database', variant);
     }
 
-    public function fragmentsAsset(name:Either<String,AssetId<String>>):FragmentsAsset {
-        return cast asset(name, 'fragments');
+    public function fragmentsAsset(name:Either<String,AssetId<String>>, ?variant:String):FragmentsAsset {
+        return cast asset(name, 'fragments', variant);
     }
 
-    public function shaderAsset(name:Either<String,AssetId<String>>):ShaderAsset {
-        return cast asset(name, 'shader');
+    public function shaderAsset(name:Either<String,AssetId<String>>, ?variant:String):ShaderAsset {
+        return cast asset(name, 'shader', variant);
     }
 
-    public function asset(idOrName:Dynamic, ?kind:String):Asset {
+    public function asset(idOrName:Dynamic, ?kind:String, ?variant:String):Asset {
 
         var value:String = Std.isOfType(idOrName, String) ? cast idOrName : cast Reflect.field(idOrName, '_id');
         var colonIndex = value.indexOf(':');
@@ -464,9 +499,13 @@ class Assets extends Entity {
             kind = value.substring(0, colonIndex);
         }
 
-        if (kind == null) return parent != null ? parent.asset(idOrName, kind) : null;
+        if (variant != null) {
+            name += ':' + variant;
+        }
+
+        if (kind == null) return parent != null ? parent.asset(idOrName, kind, variant) : null;
         var byName = assetsByKindAndName.get(kind);
-        if (byName == null) return parent != null ? parent.asset(idOrName, kind) : null;
+        if (byName == null) return parent != null ? parent.asset(idOrName, kind, variant) : null;
         return byName.get(name);
 
     }
@@ -544,7 +583,7 @@ class Assets extends Entity {
                     emitProgress(total - pending, total, allSuccess);
 
                     if (pending == 0) {
-                        emitComplete(allSuccess);
+                        _prepareComplete(allSuccess);
                     }
 
                 });
@@ -604,9 +643,37 @@ class Assets extends Entity {
             if (warnIfNothingToLoad) {
                 App.app.logger.warning('There was no asset to load.', pos);
             }
-            emitComplete(true);
+            _prepareComplete(true);
 
         }
+
+    }
+
+    private function _prepareComplete(allSuccess:Bool):Void {
+
+        if (pendingAtlasPackers != null && pendingAtlasPackers.length > 0) {
+            _packNextAtlasPacker(() -> _prepareComplete(allSuccess));
+        }
+        else {
+            emitComplete(true);
+        }
+
+    }
+
+    private function _packNextAtlasPacker(done:()->Void):Void {
+
+        var atlasPacker = pendingAtlasPackers.shift();
+        atlasPacker.pack(atlas -> done());
+
+    }
+
+    function addPendingAtlasPacker(atlasPacker:TextureAtlasPacker):Void {
+
+        if (pendingAtlasPackers == null)
+            pendingAtlasPackers = [];
+
+        if (!pendingAtlasPackers.contains(atlasPacker))
+            pendingAtlasPackers.push(atlasPacker);
 
     }
 
@@ -670,16 +737,16 @@ class Assets extends Entity {
      * already loaded or should be added and loaded. In all cases, it will try
      * its best to deliver the requested asset or `null` if something went wrong.
      */
-    public function ensure(id:AssetId<Dynamic>, ?options:AssetOptions, done:Asset->Void):Void {
+    public function ensure(id:AssetId<Dynamic>, ?variant:String, ?options:AssetOptions, done:Asset->Void):Void {
 
         // Asset already added?
-        var existing = this.asset(id);
+        var existing = this.asset(id, null, variant);
         var asset:Asset = null;
 
         if (existing == null) {
             // No? Add it and get it back
-            add(id, options);
-            asset = this.asset(id);
+            add(id, variant, options);
+            asset = this.asset(id, null, variant);
         } else {
             // Yes, use it
             asset = existing;
@@ -719,71 +786,71 @@ class Assets extends Entity {
 
     }
 
-    public function ensureImage(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ImageAsset->Void):Void {
+    public function ensureImage(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:ImageAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'image:')) _name = 'image:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, ImageAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureFont(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:FontAsset->Void):Void {
+    public function ensureFont(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:FontAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'font:')) _name = 'font:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, FontAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureAtlas(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:AtlasAsset->Void):Void {
+    public function ensureAtlas(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:AtlasAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'atlas:')) _name = 'atlas:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, AtlasAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureText(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:TextAsset->Void):Void {
+    public function ensureText(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:TextAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'text:')) _name = 'text:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, TextAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureSound(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:SoundAsset->Void):Void {
+    public function ensureSound(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:SoundAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'sound:')) _name = 'sound:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, SoundAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureDatabase(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:DatabaseAsset->Void):Void {
+    public function ensureDatabase(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:DatabaseAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'database:')) _name = 'database:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, DatabaseAsset) ? cast asset : null);
         });
 
     }
 
-    public function ensureShader(name:Either<String,AssetId<String>>, ?options:AssetOptions, done:ShaderAsset->Void):Void {
+    public function ensureShader(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:ShaderAsset->Void):Void {
 
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'shader:')) _name = 'shader:' + _name;
-        ensure(_name, options, function(asset) {
+        ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, ShaderAsset) ? cast asset : null);
         });
 
@@ -791,118 +858,127 @@ class Assets extends Entity {
 
 /// Get
 
-    public function texture(name:Either<String,AssetId<String>>):Texture {
+    public function texture(name:Either<String,AssetId<String>>, ?variant:String):Texture {
 
         var realName:String = cast name;
         if (realName.startsWith('image:')) realName = realName.substr(6);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('image')) return parent != null ? parent.texture(name) : null;
+        if (!assetsByKindAndName.exists('image')) return parent != null ? parent.texture(name, variant) : null;
         var asset:ImageAsset = cast assetsByKindAndName.get('image').get(realName);
-        if (asset == null) return parent != null ? parent.texture(name) : null;
+        if (asset == null) return parent != null ? parent.texture(name, variant) : null;
 
         return asset.texture;
 
     }
 
-    public function font(name:Either<String,AssetId<String>>):BitmapFont {
+    public function font(name:Either<String,AssetId<String>>, ?variant:String):BitmapFont {
 
         var realName:String = cast name;
         if (realName.startsWith('font:')) realName = realName.substr(5);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('font')) return parent != null ? parent.font(name) : null;
+        if (!assetsByKindAndName.exists('font')) return parent != null ? parent.font(name, variant) : null;
         var asset:FontAsset = cast assetsByKindAndName.get('font').get(realName);
-        if (asset == null) return parent != null ? parent.font(name) : null;
+        if (asset == null) return parent != null ? parent.font(name, variant) : null;
 
         return asset.font;
 
     }
 
-    public function atlas(name:Either<String,AssetId<String>>):TextureAtlas {
+    public function atlas(name:Either<String,AssetId<String>>, ?variant:String):TextureAtlas {
 
         var realName:String = cast name;
         if (realName.startsWith('atlas:')) realName = realName.substr(6);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('atlas')) return parent != null ? parent.atlas(name) : null;
+        if (!assetsByKindAndName.exists('atlas')) return parent != null ? parent.atlas(name, variant) : null;
         var asset:AtlasAsset = cast assetsByKindAndName.get('atlas').get(realName);
-        if (asset == null) return parent != null ? parent.atlas(name) : null;
+        if (asset == null) return parent != null ? parent.atlas(name, variant) : null;
 
         return asset.atlas;
 
     }
 
-    public function sound(name:Either<String,AssetId<String>>):Sound {
+    public function sound(name:Either<String,AssetId<String>>, ?variant:String):Sound {
 
         var realName:String = cast name;
         if (realName.startsWith('sound:')) realName = realName.substr(6);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('sound')) return parent != null ? parent.sound(name) : null;
+        if (!assetsByKindAndName.exists('sound')) return parent != null ? parent.sound(name, variant) : null;
         var asset:SoundAsset = cast assetsByKindAndName.get('sound').get(realName);
-        if (asset == null) return parent != null ? parent.sound(name) : null;
+        if (asset == null) return parent != null ? parent.sound(name, variant) : null;
 
         return asset.sound;
 
     }
 
-    public function text(name:Either<String,AssetId<String>>):String {
+    public function text(name:Either<String,AssetId<String>>, ?variant:String):String {
 
         var realName:String = cast name;
         if (realName.startsWith('text:')) realName = realName.substr(5);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('text')) return parent != null ? parent.text(name) : null;
+        if (!assetsByKindAndName.exists('text')) return parent != null ? parent.text(name, variant) : null;
         var asset:TextAsset = cast assetsByKindAndName.get('text').get(realName);
-        if (asset == null) return parent != null ? parent.text(name) : null;
+        if (asset == null) return parent != null ? parent.text(name, variant) : null;
 
         return asset.text;
 
     }
 
-    public function bytes(name:Either<String,AssetId<String>>):Bytes {
+    public function bytes(name:Either<String,AssetId<String>>, ?variant:String):Bytes {
 
         var realName:String = cast name;
         if (realName.startsWith('binary:')) realName = realName.substr(7);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('binary')) return parent != null ? parent.bytes(name) : null;
+        if (!assetsByKindAndName.exists('binary')) return parent != null ? parent.bytes(name, variant) : null;
         var asset:BinaryAsset = cast assetsByKindAndName.get('binary').get(realName);
-        if (asset == null) return parent != null ? parent.bytes(name) : null;
+        if (asset == null) return parent != null ? parent.bytes(name, variant) : null;
 
         return asset.bytes;
 
     }
 
-    public function shader(name:Either<String,AssetId<String>>):Shader {
+    public function shader(name:Either<String,AssetId<String>>, ?variant:String):Shader {
 
         var realName:String = cast name;
         if (realName.startsWith('shader:')) realName = realName.substr(7);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('shader')) return parent != null ? parent.shader(name) : null;
+        if (!assetsByKindAndName.exists('shader')) return parent != null ? parent.shader(name, variant) : null;
         var asset:ShaderAsset = cast assetsByKindAndName.get('shader').get(realName);
-        if (asset == null) return parent != null ? parent.shader(name) : null;
+        if (asset == null) return parent != null ? parent.shader(name, variant) : null;
 
         return asset.shader;
 
     }
 
-    public function database(name:Either<String,AssetId<String>>):Array<DynamicAccess<String>> {
+    public function database(name:Either<String,AssetId<String>>, ?variant:String):Array<DynamicAccess<String>> {
 
         var realName:String = cast name;
         if (realName.startsWith('database:')) realName = realName.substr(9);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('database')) return parent != null ? parent.database(name) : null;
+        if (!assetsByKindAndName.exists('database')) return parent != null ? parent.database(name, variant) : null;
         var asset:DatabaseAsset = cast assetsByKindAndName.get('database').get(realName);
-        if (asset == null) return parent != null ? parent.database(name) : null;
+        if (asset == null) return parent != null ? parent.database(name, variant) : null;
 
         return asset.database;
 
     }
 
-    public function fragments(name:Either<String,AssetId<String>>):DynamicAccess<FragmentData> {
+    public function fragments(name:Either<String,AssetId<String>>, ?variant:String):DynamicAccess<FragmentData> {
 
         var realName:String = cast name;
         if (realName.startsWith('fragments:')) realName = realName.substr(10);
+        if (variant != null) realName += ':' + variant;
 
-        if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragments(name) : null;
+        if (!assetsByKindAndName.exists('fragments')) return parent != null ? parent.fragments(name, variant) : null;
         var asset:FragmentsAsset = cast assetsByKindAndName.get('fragments').get(realName);
-        if (asset == null) return parent != null ? parent.fragments(name) : null;
+        if (asset == null) return parent != null ? parent.fragments(name, variant) : null;
 
         return asset.fragments;
 
@@ -1046,7 +1122,7 @@ class Assets extends Entity {
 
     }
 
-    public static function addAssetKind(kind:String, add:Assets->String->?AssetOptions->Void, extensions:Array<String>, dir:Bool, types:Array<String>):Void {
+    public static function addAssetKind(kind:String, add:(assets:Assets, name:String, variant:String, options:AssetOptions)->Void, extensions:Array<String>, dir:Bool, types:Array<String>):Void {
 
         customAssetKinds.set(kind, {
             kind: kind,

@@ -15,8 +15,14 @@ class TextureAtlasRegion extends TextureTile {
 
     public var page:Int = 0;
 
+    /**
+     * Width in actual pixels after rotation (if any)
+     */
     public var packedWidth:Int = 0;
 
+    /**
+     * Height in actual pixels after rotation (if any)
+     */
     public var packedHeight:Int = 0;
 
     public var x:Int = 0;
@@ -31,8 +37,14 @@ class TextureAtlasRegion extends TextureTile {
 
     public var offsetY:Float = 0;
 
+    /**
+     * Original width, white margins included
+     */
     public var originalWidth:Int = 0;
 
+    /**
+     * Original height, white margins included
+     */
     public var originalHeight:Int = 0;
 
     public function new(name:String, atlas:TextureAtlas, page:Int) {
@@ -52,15 +64,6 @@ class TextureAtlasRegion extends TextureTile {
     }
 
 /// Helpers
-
-    inline public function frame(frameX:Int, frameY:Int, frameWidth:Int, frameHeight:Int):Void {
-
-        this.frameX = frameX;
-        this.frameY = frameY;
-        this.frameWidth = frameWidth;
-        this.frameHeight = frameHeight;
-
-    }
 
     public function computeFrame():Void {
 

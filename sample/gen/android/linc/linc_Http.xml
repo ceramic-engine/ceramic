@@ -1,0 +1,8 @@
+<xml>
+    <files id="haxe">
+        <compilerflag value="-I${LINC_HTTP_PATH}linc/" />
+        <file name="${LINC_HTTP_PATH}linc/linc_Http.cpp" />
+    </files>
+    <target id="haxe">
+    </target>
+</xml>

@@ -21,7 +21,11 @@ function postInstall() {
         fs.mkdirSync(haxelibRepoPath);
     }
     spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcpp', '4.2.1', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcpp', '4.3.2', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
@@ -39,9 +43,9 @@ function postInstall() {
             androidClangToolchain = androidClangToolchain.split('="-static-libstdc++" />').join('="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
         if (indexOfPlatform16 != -1)
             androidClangToolchain = androidClangToolchain.split('<set name="PLATFORM_NUMBER" value="16" />').join('<set name="PLATFORM_NUMBER" value="21" />');
+        fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
     }
 
-    fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
 
     // Patch hxcpp toolchain on iOS
     // See: https://github.com/HaxeFoundation/hxcpp/issues/764
@@ -64,7 +68,7 @@ function postInstall() {
     if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
         console.log("Patch hxcpp mac toolchain");
         if (indexOfMacosXVersion == -1) {
-            macToolchain = macToolchain.split('<flag value="-m64" if="HXCPP_M64"/>').join('<flag value="-m64" if="HXCPP_M64"/><flag value="-mmacosx-version-min=10.10"/>');
+            macToolchain = macToolchain.split('<flag value="Cocoa"/>').join('<flag value="Cocoa"/><flag value="-mmacosx-version-min=10.10"/>');
         }
         if (indexOfDeploymentTarget == -1) {
             macToolchain = macToolchain.split('<setenv name="MACOSX_DEPLOYMENT_TARGET"').join('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');
@@ -73,6 +77,22 @@ function postInstall() {
             macToolchain = macToolchain.split('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"').join('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/><!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"');
         }
         fs.writeFileSync(macToolchainPath, macToolchain);
+    }
+
+    // Patch some HXCPP C++ files with a ::cpp::Int64 fix (until the fix gets released)
+    console.log("Patch <::cpp::Int64> in C++ files");
+    var hxcppInt64PathList = [
+        path.join(hxcppPath, 'include/Array.h'),
+        path.join(hxcppPath, 'include/Dynamic.h'),
+        path.join(hxcppPath, 'include/hx/Class.h'),
+        path.join(hxcppPath, 'src/Array.cpp')
+    ];
+    for (hxcppInt64Path of hxcppInt64PathList) {
+        var cppData = '' + fs.readFileSync(hxcppInt64Path);
+        var newCppData = cppData.split('<::cpp::Int64>').join('< ::cpp::Int64>');
+        if (cppData != newCppData) {
+            fs.writeFileSync(hxcppInt64Path, newCppData);
+        }
     }
 
     // Patch haxe std with ceramic's overrides

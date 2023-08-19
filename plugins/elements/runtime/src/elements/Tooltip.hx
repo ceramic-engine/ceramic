@@ -14,6 +14,8 @@ class Tooltip extends Visual implements Component implements Observable {
 
     static var _point:Point = new Point(0, 0);
 
+    @observe public var theme:Theme = null;
+
     @observe public var content:String;
 
     var entity:Visual;
@@ -120,7 +122,9 @@ class Tooltip extends Visual implements Component implements Observable {
 
     function updateStyle() {
 
-        var theme = context.theme;
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
 
         text.color = theme.lightTextColor;
         text.font = theme.mediumFont;

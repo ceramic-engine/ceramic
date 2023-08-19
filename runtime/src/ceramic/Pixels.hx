@@ -114,6 +114,19 @@ class Pixels {
     }
 
     /**
+     * Create a pixels buffer from bytes with RGBA representation
+     */
+    public static function fromBytes(bytes:Bytes):UInt8Array {
+
+        #if (cpp || js)
+        return UInt8Array.fromBytes(bytes);
+        #else
+        return bytes.getData();
+        #end
+
+    }
+
+    /**
      * Get a pixel as `AlphaColor` at `x`,`y` coordinates on the given buffer
      * @param buffer The pixel buffer to read from
      * @param bufferWidth Image width
@@ -327,6 +340,80 @@ class Pixels {
         }
 
         return outPixels;
+
+    }
+
+    /**
+     * Flip the given pixels buffer on the Y axis
+     * @param buffer The pixel buffer to read from and write to
+     * @param bufferWidth Image width
+     */
+    public static function flipY(buffer:UInt8Array, bufferWidth:Int):Void {
+
+        var bufferHeight:Int = Std.int(buffer.length / (bufferWidth * 4));
+        var halfHeight:Int = Std.int(bufferHeight * 0.5);
+        var index0:Int = 0;
+        var index1:Int = 0;
+        var r:Int = 0;
+        var g:Int = 0;
+        var b:Int = 0;
+        var a:Int = 0;
+
+        for (y in 0...halfHeight) {
+            for (x in 0...bufferWidth) {
+                index0 = (y * bufferWidth + x) * 4;
+                index1 = ((bufferHeight - 1 - y) * bufferWidth + x) * 4;
+                r = buffer[index0];
+                g = buffer[index0+1];
+                b = buffer[index0+2];
+                a = buffer[index0+3];
+                buffer[index0] = buffer[index1];
+                buffer[index0+1] = buffer[index1+1];
+                buffer[index0+2] = buffer[index1+2];
+                buffer[index0+3] = buffer[index1+3];
+                buffer[index1] = r;
+                buffer[index1+1] = g;
+                buffer[index1+2] = b;
+                buffer[index1+3] = a;
+            }
+        }
+
+    }
+
+    /**
+     * Flip the given pixels buffer on the X axis
+     * @param buffer The pixel buffer to read from and write to
+     * @param bufferWidth Image width
+     */
+    public static function flipX(buffer:UInt8Array, bufferWidth:Int):Void {
+
+        var bufferHeight:Int = Std.int(buffer.length / (bufferWidth * 4));
+        var halfWidth:Int = Std.int(bufferWidth * 0.5);
+        var index0:Int = 0;
+        var index1:Int = 0;
+        var r:Int = 0;
+        var g:Int = 0;
+        var b:Int = 0;
+        var a:Int = 0;
+
+        for (y in 0...bufferHeight) {
+            for (x in 0...halfWidth) {
+                index0 = (y * bufferWidth + x) * 4;
+                index1 = (y * bufferWidth + bufferWidth - 1 - x) * 4;
+                r = buffer[index0];
+                g = buffer[index0+1];
+                b = buffer[index0+2];
+                a = buffer[index0+3];
+                buffer[index0] = buffer[index1];
+                buffer[index0+1] = buffer[index1+1];
+                buffer[index0+2] = buffer[index1+2];
+                buffer[index0+3] = buffer[index1+3];
+                buffer[index1] = r;
+                buffer[index1+1] = g;
+                buffer[index1+2] = b;
+                buffer[index1+3] = a;
+            }
+        }
 
     }
 

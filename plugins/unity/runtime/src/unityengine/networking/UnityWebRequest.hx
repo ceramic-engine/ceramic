@@ -15,6 +15,8 @@ extern class UnityWebRequest {
 
     static function Head(uri:String):UnityWebRequest;
 
+    function new();
+
     function Abort():Void;
 
     function Dispose():Void;
@@ -35,9 +37,19 @@ extern class UnityWebRequest {
 
     var responseCode(default, null):Any; // long
 
+    var url:String;
+
     var method:String;
 
     var timeout:Int;
+
+    var downloadHandler:DownloadHandler;
+
+    var uploadHandler:Any;
+
+    var disposeDownloadHandlerOnDispose:Bool;
+
+    var disposeUploadHandlerOnDispose:Bool;
 
 }
 

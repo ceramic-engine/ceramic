@@ -35,6 +35,7 @@ class Main {
 
         // Update
         ceramic.App.app.backend.emitUpdate(delta);
+        ceramic.App.app.backend.emitRender();
         #end
 
     }

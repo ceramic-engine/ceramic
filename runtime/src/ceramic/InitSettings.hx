@@ -178,7 +178,7 @@ class InitSettings {
     /**
      * Override app update delta time.
      * This can be used to ignore completely the actual elapsed time between frames
-     * and replaced it with an explicit delta time of your choice.
+     * and replace it with an explicit delta time of your choice.
      * This will affect timers, tween, systems update etc...
      * Use with caution.
      */
@@ -188,6 +188,34 @@ class InitSettings {
     }
     inline function set_overrideDelta(overrideDelta:Float):Float {
         return settings.overrideDelta = overrideDelta;
+    }
+
+
+    /**
+     * If set to `true` (default). Default mouse wheel events
+     * will be prevented. This is relevant when running the ceramic
+     * app from an `iframe` inside a page that can scroll.
+     */
+    public var preventDefaultMouseWheel(get,set):Bool;
+    inline function get_preventDefaultMouseWheel():Bool {
+        return settings.preventDefaultMouseWheel;
+    }
+    inline function set_preventDefaultMouseWheel(preventDefaultMouseWheel:Bool):Bool {
+        return settings.preventDefaultMouseWheel = preventDefaultMouseWheel;
+    }
+
+    /**
+     * If set to `true` (default). Default touch events
+     * will be prevented. This is relevant when running the ceramic
+     * app from an `iframe` inside a page that can scroll,
+     * on a touchscreen device.
+     */
+    public var preventDefaultTouches(get,set):Bool;
+    inline function get_preventDefaultTouches():Bool {
+        return settings.preventDefaultTouches;
+    }
+    inline function set_preventDefaultTouches(preventDefaultTouches:Bool):Bool {
+        return settings.preventDefaultTouches = preventDefaultTouches;
     }
 
     /**

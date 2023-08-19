@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.Files;
+import ceramic.ImageType;
 import ceramic.Path;
 import ceramic.Utils;
 import clay.Clay;
@@ -35,8 +36,8 @@ class Textures implements spec.Textures {
                 ceramic.App.app.onceImmediate(fn);
         };
 
-        // Create empty texture
-        path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
+        var isUrl:Bool = path.startsWith('http://') || path.startsWith('https://');
+        path = Path.isAbsolute(path) || isUrl ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
@@ -64,9 +65,11 @@ class Textures implements spec.Textures {
 
         // Remove ?something in path
         var cleanedPath = path;
-        var questionMarkIndex = cleanedPath.indexOf('?');
-        if (questionMarkIndex != -1) {
-            cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+        if (!isUrl) {
+            var questionMarkIndex = cleanedPath.indexOf('?');
+            if (questionMarkIndex != -1) {
+                cleanedPath = cleanedPath.substr(0, questionMarkIndex);
+            }
         }
 
         // Create callbacks list with first entry
@@ -78,7 +81,7 @@ class Textures implements spec.Textures {
             done(texture);
         }]);
 
-        var fullPath = Clay.app.assets.fullPath(cleanedPath);
+        var fullPath = isUrl ? cleanedPath : Clay.app.assets.fullPath(cleanedPath);
         var premultiplyAlpha:Bool = #if web true #else false #end;
         if (options != null && options.premultiplyAlpha != null) {
             premultiplyAlpha = options.premultiplyAlpha;
@@ -111,7 +114,7 @@ class Textures implements spec.Textures {
 
             // Transform image into texture
             var texture:clay.graphics.Texture = null;
-            //try {
+            try {
                 texture = clay.graphics.Texture.fromImage(image, premultiplyAlpha);
                 if (texture == null) {
                     doFail();
@@ -119,12 +122,12 @@ class Textures implements spec.Textures {
                 }
                 texture.id = path;
                 texture.init();
-            // }
-            // catch (e:Dynamic) {
-            //     ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
-            //     doFail();
-            //     return;
-            // }
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
+                doFail();
+                return;
+            }
 
             // Load seems successful, keep texture
             loadedTextures.set(path, texture);
@@ -153,6 +156,73 @@ class Textures implements spec.Textures {
 
     }
 
+    public function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, _done:Texture->Void):Void {
+
+        var id = 'bytes:' + (nextBytesIndex++);
+
+        var synchronous = options != null && options.loadMethod == SYNC;
+        var immediate = options != null ? options.immediate : null;
+        var done = function(texture:Texture) {
+            final fn = function() {
+                _done(texture);
+                _done = null;
+            };
+            if (immediate != null)
+                immediate.push(fn);
+            else
+                ceramic.App.app.onceImmediate(fn);
+        };
+
+        var premultiplyAlpha:Bool = #if web true #else false #end;
+        if (options != null && options.premultiplyAlpha != null) {
+            premultiplyAlpha = options.premultiplyAlpha;
+        }
+
+        inline function doFail() {
+            done(null);
+        }
+
+        // Load image
+        Clay.app.assets.imageFromBytes(clay.buffers.Uint8Array.fromBytes(bytes) #if web , type #else , !synchronous #end , function(image:clay.Image) {
+
+            if (image == null) {
+                doFail();
+                return;
+            }
+
+            // Transform image into texture
+            var texture:clay.graphics.Texture = null;
+            try {
+                texture = clay.graphics.Texture.fromImage(image, premultiplyAlpha);
+                if (texture == null) {
+                    doFail();
+                    return;
+                }
+                texture.id = id;
+                texture.init();
+            }
+            catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to create texture: ' + e);
+                doFail();
+                return;
+            }
+
+            // Load seems successful, keep texture
+            loadedTexturesRetainCount.set(id, 1);
+            done(texture);
+
+        });
+
+        // Needed to ensure a synchronous load will be done before the end of the frame
+        if (immediate != null) {
+            immediate.push(Immediate.flush);
+        }
+        else {
+            ceramic.App.app.onceImmediate(Immediate.flush);
+        }
+
+    }
+
     inline public function supportsHotReloadPath():Bool {
 
         return true;
@@ -162,6 +232,8 @@ class Textures implements spec.Textures {
     var nextRenderIndex:Int = 0;
 
     var nextPixelsIndex:Int = 0;
+
+    var nextBytesIndex:Int = 0;
 
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
@@ -290,6 +362,32 @@ class Textures implements spec.Textures {
                 (texture:clay.graphics.Texture).filterMin = NEAREST;
                 (texture:clay.graphics.Texture).filterMag = NEAREST;
         }
+
+    }
+
+    inline public function setTextureWrapS(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+            switch (wrap) {
+                case CLAMP:
+                    (texture: clay.graphics.Texture).wrapS = CLAMP_TO_EDGE;
+                case REPEAT:
+                    (texture: clay.graphics.Texture).wrapS = REPEAT;
+                case MIRROR:
+                    (texture: clay.graphics.Texture).wrapS = MIRRORED_REPEAT;
+            }
+
+    }
+
+    inline public function setTextureWrapT(texture:Texture, wrap:ceramic.TextureWrap): Void {
+
+            switch (wrap) {
+                case CLAMP:
+                    (texture: clay.graphics.Texture).wrapT = CLAMP_TO_EDGE;
+                case REPEAT:
+                    (texture: clay.graphics.Texture).wrapT = REPEAT;
+                case MIRROR:
+                    (texture: clay.graphics.Texture).wrapT = MIRRORED_REPEAT;
+            }
 
     }
 

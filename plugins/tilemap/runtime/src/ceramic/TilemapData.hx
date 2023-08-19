@@ -4,17 +4,32 @@ import tracker.Model;
 
 using ceramic.Extensions;
 
+#if plugin_ldtk
+import ceramic.LdtkData;
+#end
+
 /**
  * Tilemap data.
  * Strongly inspired from Tiled TMX format.
  * (https://doc.mapeditor.org/en/stable/reference/tmx-map-format/).
- * 
+ *
  * This is a `Model` class, which make it suitable for (optional) serialization
  * and observable data.
  */
 class TilemapData extends Model {
 
+    #if plugin_ldtk
+
+    @observe public var ldtkLevel:LdtkLevel = null;
+
+    #end
+
 /// Main properties
+
+    /**
+     * The map name, if any
+     */
+    @serialize public var name:String = null;
 
     /**
      * Map orientation, can be `ORTHOGONAL`, `ISOMETRIC`, `STAGGERED` or `HEXAGONAL`.
@@ -22,22 +37,12 @@ class TilemapData extends Model {
     @serialize public var orientation:TilemapOrientation = ORTHOGONAL;
 
     /**
-     * The width of a tile
-     */
-    @serialize public var tileWidth:Int = -1;
-
-    /**
-     * The height of a tile
-     */
-    @serialize public var tileHeight:Int = -1;
-
-    /**
-     * The map width in tiles
+     * The map width in pixels
      */
     @serialize public var width:Int = -1;
 
     /**
-     * The map height in tiles
+     * The map height in pixels
      */
     @serialize public var height:Int = -1;
 
@@ -69,10 +74,56 @@ class TilemapData extends Model {
      */
     @serialize public var backgroundColor:AlphaColor = new AlphaColor(Color.WHITE, 0);
 
+    /**
+     * The highest tile width this tilemap is having from its layers.
+     * Computed from each `tileWidth` field in each layer.
+     * @return Int
+     */
+    @compute public function maxTileWidth():Int {
+
+        var result:Int = -1;
+
+        var layers = this.layers;
+        if (layers != null) {
+            for (i in 0...layers.length) {
+                var layer = layers.unsafeGet(i);
+                var tileWidth = layer.tileWidth;
+                if (tileWidth > result)
+                    result = tileWidth;
+            }
+        }
+
+        return result;
+
+    }
+
+    /**
+     * The highest tile height this tilemap is having from its layers.
+     * Computed from each `tileHeight` field in each layer.
+     * @return Int
+     */
+    @compute public function maxTileHeight():Int {
+
+        var result:Int = -1;
+
+        var layers = this.layers;
+        if (layers != null) {
+            for (i in 0...layers.length) {
+                var layer = layers.unsafeGet(i);
+                var tileHeight = layer.tileHeight;
+                if (tileHeight > result)
+                    result = tileHeight;
+            }
+        }
+
+        return result;
+
+    }
+
 /// Sub objects
-    
+
     @serialize public var tilesets:Array<Tileset> = [];
-    
+
     @serialize public var layers:Array<TilemapLayerData> = [];
 
 /// Related asset
@@ -94,7 +145,7 @@ class TilemapData extends Model {
             layers[i].destroy();
         }
         layers = null;
-        
+
     }
 
 /// Helpers
@@ -143,33 +194,31 @@ class TilemapData extends Model {
     }
 
     /**
-     * A shorthand to set `tileWidth` and `tileHeight`
-     * @param tileWidth 
-     * @param tileHeight 
-     */
-    public function tileSize(tileWidth:Int, tileHeight:Int):Void {
-        this.tileWidth = tileWidth;
-        this.tileHeight = tileHeight;
-    }
-
-    /**
      * A shorthand to set `width` and `height`
-     * @param width 
-     * @param height 
+     * @param width
+     * @param height
      */
     public function size(width:Int, height:Int):Void {
         this.width = width;
         this.height = height;
     }
 
+    public function tileset(name:String):Tileset {
+        for (i in 0...tilesets.length) {
+            var tileset = tilesets.unsafeGet(i);
+            if (tileset.name == name) {
+                return tileset;
+            }
+        }
+        return null;
+    }
+
 /// Print
 
     override function toString():String {
-        
+
         return '' + {
             orientation: orientation,
-            tileWidth: tileWidth,
-            tileHeight: tileHeight,
             width: width,
             height: height,
             renderOrder: renderOrder,
