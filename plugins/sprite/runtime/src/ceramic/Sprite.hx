@@ -58,9 +58,9 @@ class Sprite<T=String> extends Visual {
         return frameOffsetY;
     }
 
-    public function frameOffset(anchorX:Float, anchorY:Float) {
-        this.frameOffsetX = anchorX;
-        this.frameOffsetY = anchorY;
+    public function frameOffset(frameOffsetX:Float, frameOffsetY:Float) {
+        this.frameOffsetX = frameOffsetX;
+        this.frameOffsetY = frameOffsetY;
     }
 
     public var sheet(default,set):SpriteSheet = null;
