@@ -476,6 +476,7 @@ class Text extends Visual {
             quad.posInLine = i - numCharsBeforeLine;
             quad.line = lineQuads.length - 1;
             quad.texture = usePrerenderedSize ? font.preRenderedPages.get(scaledPreRenderedSize).get(glyph.page) : font.pages.get(glyph.page);
+            quad.roundTranslation = quad.texture != null && quad.texture.filter == NEAREST ? 1 : 0;
             quad.shader = !usePrerenderedSize && font.pageShaders != null ? font.pageShaders.get(glyph.page) : null;
             quad.color = color;
             quad.depth = depth;
