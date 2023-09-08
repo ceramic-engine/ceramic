@@ -939,6 +939,11 @@ class LdtkEntityDefinition {
      */
     public var tags:Array<String>;
 
+    /**
+     * An array of field definitions that belong to this entity definition
+     */
+    public var fieldDefs:Array<LdtkFieldDefinition>;
+
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -961,6 +966,10 @@ class LdtkEntityDefinition {
                 tileset = defs.ldtkData.findTilesetDef(Std.int(json.get('tilesetId')));
             uid = Std.int(json.get('uid'));
             tags = LdtkDataHelpers.toStringArray(json.get('tags'));
+            var fieldDefsJson:Array<Dynamic> = json.get('fieldDefs');
+            fieldDefs = fieldDefsJson != null ? [for (i in 0...fieldDefsJson.length) {
+                new LdtkFieldDefinition(defs, fieldDefsJson[i]);
+            }] : [];
         }
 
     }
@@ -1011,6 +1020,21 @@ class LdtkEntityDefinition {
             return res;
         }
         return LdtkDataHelpers.HIDDEN_VALUE;
+
+    }
+
+    public function fieldDef(identifier:String):LdtkFieldDefinition {
+
+        if (this.fieldDefs != null) {
+            for (i in 0...this.fieldDefs.length) {
+                var fieldDef = this.fieldDefs[i];
+                if (fieldDef.identifier == identifier) {
+                    return fieldDef;
+                }
+            }
+        }
+
+        return null;
 
     }
 
@@ -2792,7 +2816,9 @@ class LdtkFieldInstance {
      */
     public var tile:LdtkTilesetRectangle;
 
-    public function new(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>) {
+    public function new(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>, ?def:LdtkFieldDefinition) {
+
+        this.def = def;
 
         if (json != null) {
             var defUid:Int = Std.int(json.get('defUid'));
@@ -3199,7 +3225,9 @@ class LdtkEntityInstance {
 
             var fieldInstancesJson:Array<Dynamic> = json.get('fieldInstances');
             fieldInstances = fieldInstancesJson != null ? [for (i in 0...fieldInstancesJson.length) {
-                new LdtkFieldInstance(ldtkData, ldtkWorld, fieldInstancesJson[i]);
+                var fieldInstanceJson:haxe.DynamicAccess<Dynamic> = fieldInstancesJson[i];
+                var identifier = fieldInstanceJson.get('__identifier');
+                new LdtkFieldInstance(ldtkData, ldtkWorld, fieldInstanceJson, def.fieldDef(identifier));
             }] : [];
         }
 
