@@ -2837,34 +2837,42 @@ class LdtkFieldInstance {
             tile = json.get('tile') != null ? new LdtkTilesetRectangle(ldtkData, json.get('tile')) : null;
 
             var rawValue:Any = json.get('__value');
-            if (rawValue != null) {
-                var type:String = json.get('__type');
-                var isArray = type.startsWith('Array<');
-                if (isArray) {
-                    type = type.substring(1, type.length - 1);
-                }
-                switch type {
-                    case 'Int' | 'Integer':
-                        value = Std.int(rawValue);
-                    case 'Float' | 'Bool' | 'Boolean' | 'String' | 'Text' | 'FilePath' | 'Multilines':
-                        value = rawValue;
-                    case 'Color':
-                        value = Color.fromString(rawValue);
-                    case 'Point':
-                        value = new Point(Std.int(Reflect.field(rawValue, 'cx')), Std.int(Reflect.field(rawValue, 'cy')));
-                    case 'TilesetRect':
-                        value = new LdtkTilesetRectangle(ldtkData, rawValue);
-                    case 'EntityRef':
-                        value = ldtkData != null ? ldtkData._resolveEntityInstance(rawValue, ldtkWorld) : null;
-                    default:
-                        value = rawValue;
-                }
-            }
-            else {
-                value = null;
+            var type:String = json.get('__type');
+            var isArray = type.startsWith('Array<');
+
+            if (isArray) {
+                type = type.substring(6, type.length - 1);
+                value = rawValue is Array ? [for (v in cast (rawValue, Array<Dynamic>)) {
+                    rawValueToValue(ldtkData, ldtkWorld, v, type);
+                }] : null;
+            } else {
+                value = rawValueToValue(ldtkData, ldtkWorld, rawValue, type);
             }
         }
 
+    }
+
+    static function rawValueToValue(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?rawValue:Any, ?type:String):Any {
+        if (rawValue == null) {
+            return null;
+        }
+
+        switch type {
+            case 'Int' | 'Integer':
+                return Std.int(rawValue);
+            case 'Float' | 'Bool' | 'Boolean' | 'String' | 'Text' | 'FilePath' | 'Multilines':
+                return rawValue;
+            case 'Color':
+                return Color.fromString(rawValue);
+            case 'Point':
+                return new Point(Std.int(Reflect.field(rawValue, 'cx')), Std.int(Reflect.field(rawValue, 'cy')));
+            case 'TilesetRect':
+                return new LdtkTilesetRectangle(ldtkData, rawValue);
+            case 'EntityRef':
+                return ldtkData != null ? ldtkData._resolveEntityInstance(rawValue, ldtkWorld) : null;
+            default:
+                return rawValue;
+        }
     }
 
     public function toString() {
