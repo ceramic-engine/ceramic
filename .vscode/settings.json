@@ -1,4 +1,5 @@
 {
     "haxe.executable": "tools/haxe",
-    "haxelib.executable": "tools/haxelib"
+    "haxelib.executable": "tools/haxelib",
+    "dotnet.defaultSolution": "disable"
 }

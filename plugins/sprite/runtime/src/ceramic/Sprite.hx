@@ -274,8 +274,6 @@ class Sprite<T=String> extends Visual {
         if (region != null) {
             quad.active = true;
             quad.tile = region;
-            var frameW = region.originalWidth * region.frameWidth / region.width;
-            var frameH = region.originalHeight * region.frameHeight / region.height;
             var quadX:Float = frameOffsetX;
             var quadY:Float = frameOffsetY;
             quad.pos(
