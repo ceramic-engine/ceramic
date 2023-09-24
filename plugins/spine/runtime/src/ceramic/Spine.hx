@@ -640,7 +640,7 @@ class Spine extends Visual {
                 foundMeshes.push(mesh);
                 mesh.indices = null;
                 mesh.uvs = null;
-				mesh.clip = null;
+                mesh.clip = null;
                 if (mesh.transform != null) {
                     TransformPool.recycle(mesh.transform);
                     mesh.transform = null;
@@ -667,7 +667,7 @@ class Spine extends Visual {
 
         if (destroyed) {
             slotMeshes = null;
-			slotClips = null;
+            slotClips = null;
         }
 
     }
@@ -1437,7 +1437,7 @@ class Spine extends Visual {
                                     alphaColor = new AlphaColor(Color.fromRGBFloat(r, g, b), Math.round(a * 255));
                                     if (mesh.colors == null) mesh.colors = [alphaColor];
                                     else mesh.colors[0] = alphaColor;
-									
+
                                     if (clipper.isClipping()) {
                                         mesh.clip = clipShape;
                                     } else {
@@ -1551,7 +1551,7 @@ class Spine extends Visual {
                 } else if (Std.isOfType(slot.attachment, ClippingAttachment)) {
                     clipAttachment = cast slot.attachment;
                     clipper.clipStart(slot, clipAttachment);
-					
+
                     clipShape = slotClips.getInline(slot.data.index);
 
                     if (clipShape == null) {
@@ -1568,7 +1568,7 @@ class Spine extends Visual {
                     clipShape.computeContent();
 
                     continue;
-				}
+                }
 
                 z++;
             }
