@@ -3082,7 +3082,7 @@ class LdtkLayerInstance {
                     autoLayerTiles.push(Std.int(tile.px[1]));
                     autoLayerTiles.push(Std.int(tile.src[0]));
                     autoLayerTiles.push(Std.int(tile.src[1]));
-                    autoLayerTiles.push(Math.round(tile.a * 4096));
+                    autoLayerTiles.push(Math.round((tile.a ?? 1.0) * 4096));
                 }
             }
             else {
@@ -3100,7 +3100,7 @@ class LdtkLayerInstance {
                     gridTiles.push(Std.int(tile.px[1]));
                     gridTiles.push(Std.int(tile.src[0]));
                     gridTiles.push(Std.int(tile.src[1]));
-                    gridTiles.push(Math.round(tile.a * 4096));
+                    gridTiles.push(Math.round((tile.a ?? 1.0) * 4096));
                 }
             }
             else {
