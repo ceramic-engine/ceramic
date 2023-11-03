@@ -40,7 +40,6 @@ class Project {
     /** A list of haxe libraryes required to make ceramic runtime work */
     public static var runtimeLibraries:Array<Dynamic> = [
         'format',
-        'hscript',
         'bind',
         'polyline',
         'tracker',

@@ -1,2 +1,9 @@
 plugin:
     name: Script
+
+    runtime:
+        if plugin_script:
+            +libs:
+                - hscript
+            +paths:
+                - {plugin:cwd}/runtime/src

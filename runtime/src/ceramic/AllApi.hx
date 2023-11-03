@@ -407,9 +407,9 @@ class AllApi {
 
     }
 
-    public static function configureHscript(interp:hscript.Interp):Void {
+    #if plugin_script
 
-        #if plugin_script
+    public static function configureHscript(interp:hscript.Interp):Void {
 
         interp.variables.set('app', ceramic.Shortcuts.app);
         interp.variables.set('screen', ceramic.Shortcuts.screen);
@@ -594,8 +594,8 @@ class AllApi {
         interp.variables.set('VisualTransition', ceramic.VisualTransition);
         interp.variables.set('WatchDirectory', ceramic.WatchDirectory);
 
-        #end
-
     }
+
+    #end
 
 }
