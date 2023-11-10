@@ -1,12 +1,10 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
 import earcut.Earcut;
-
+import poly2tri.Point as Poly2TriPoint;
 import poly2tri.Sweep;
 import poly2tri.SweepContext;
-import poly2tri.Point as Poly2TriPoint;
-
-import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
@@ -20,10 +18,54 @@ class Triangulate {
     static var poly2triSweepContext:SweepContext;
     static var poly2triSweep:Sweep;
 
+    static var tmpVertices:Array<Float> = null;
+    static var tmpIndices:Array<Int> = null;
+
     /**
      * Triangulate the given vertices and fills the indices array accordingly
      */
-    public static function triangulate(vertices:Array<Float>, indices:Array<Int>, ?holes:Array<Int>, method:TriangulateMethod = POLY2TRI):Void {
+    public extern inline static overload function triangulate(vertices:Array<Float>, indices:Array<Int>, ?holes:Array<Int>, method:TriangulateMethod = POLY2TRI):Void {
+        _triangulate(vertices, indices, holes, method);
+    }
+
+    /**
+     * Triangulate the given vertices and fills the indices array accordingly.
+     * Variant method that takes a range to operate only on a subset of vertices.
+     * Indices will be added to the given array.
+     */
+    public extern inline static overload function triangulate(vertices:Array<Float>, index:Int, length:Int, indices:Array<Int>, ?holes:Array<Int>, method:TriangulateMethod = POLY2TRI):Void {
+        _triangulateWithRange(vertices, index, length, indices, holes, method);
+    }
+
+    static function _triangulateWithRange(vertices:Array<Float>, index:Int, length:Int, indices:Array<Int>, holes:Array<Int>, method:TriangulateMethod):Void {
+
+        if (tmpVertices == null) {
+            tmpVertices = [];
+        }
+        if (tmpIndices == null) {
+            tmpIndices = [];
+        }
+
+        tmpVertices.setArrayLength(0);
+        tmpIndices.setArrayLength(0);
+
+        for (i in index...index+length) {
+            tmpVertices.push(vertices[i*2]);
+            tmpVertices.push(vertices[i*2+1]);
+        }
+
+        _triangulate(tmpVertices, tmpIndices, holes, method);
+
+        for (i in 0...tmpIndices.length) {
+            indices.push(index + tmpIndices[i]);
+        }
+
+        tmpVertices.setArrayLength(0);
+        tmpIndices.setArrayLength(0);
+
+    }
+
+    static function _triangulate(vertices:Array<Float>, indices:Array<Int>, holes:Array<Int>, method:TriangulateMethod):Void {
 
         // Empty indices data
         if (indices.length > 0) {
@@ -34,7 +76,7 @@ class Triangulate {
             case EARCUT:
                 // Perform triangulation with earcut (approximative but fast)
                 Earcut.earcut(vertices, holes, 2, indices);
-            
+
             case POLY2TRI: try {
                 // Perform triangulation with poly2tri (precise but maybe slightly slower)
                 if (poly2triSweepContext == null) {
@@ -112,12 +154,12 @@ class Triangulate {
                 }
 
                 poly2triSweep.triangulate();
-    
+
                 var triangles = poly2triSweepContext.triangles;
                 for (t in 0...triangles.length)
                 {
                     var points = triangles[t].points;
-                    for (i in 0...3) 
+                    for (i in 0...3)
                     {
                         indices.push(points[i].id);
                     }
