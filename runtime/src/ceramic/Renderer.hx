@@ -1073,6 +1073,13 @@ class Renderer extends Entity {
                 meshIndices = [];
                 mesh.wireframeIndices = meshIndices;
             }
+            if (meshIndicesColor) {
+                meshColors = mesh.wireframeColors;
+                if (meshColors == null) {
+                    meshColors = [];
+                    mesh.wireframeColors = meshColors;
+                }
+            }
             var i = 0;
             var n = 0;
             while (i < mesh.indices.length) {
@@ -1088,6 +1095,21 @@ class Renderer extends Entity {
                 n++;
                 meshIndices[n] = mesh.indices[i];
                 n++;
+                if (meshIndicesColor) {
+                    n -= 6;
+                    meshColors[n] = mesh.colors[i];
+                    n++;
+                    meshColors[n] = mesh.colors[i+1];
+                    n++;
+                    meshColors[n] = mesh.colors[i+1];
+                    n++;
+                    meshColors[n] = mesh.colors[i+2];
+                    n++;
+                    meshColors[n] = mesh.colors[i+2];
+                    n++;
+                    meshColors[n] = mesh.colors[i];
+                    n++;
+                }
                 i += 3;
             }
             if (meshIndices.length > n)

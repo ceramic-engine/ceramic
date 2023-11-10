@@ -209,6 +209,10 @@ class Mesh extends Visual {
     @:noCompletion
     @:allow(ceramic.Renderer)
     private var wireframeIndices:Array<Int> = null;
+
+    @:noCompletion
+    @:allow(ceramic.Renderer)
+    private var wireframeColors:Array<AlphaColor> = null;
     #end
 
 /// Texture destroyed
