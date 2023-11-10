@@ -231,7 +231,7 @@ class BezierEasing {
 
     inline static function cacheKey(x1:Float, y1:Float, x2:Float, y2:Float):Int {
 
-        var floatKey = x1 * 100 + y1 * 1000 + x2 * 10000 + y2 * 100000;
+        var floatKey = x1 * 10000 + y1 * 100000 + x2 * 1000000 + y2 * 10000000;
         return Std.int(floatKey);
 
     }
