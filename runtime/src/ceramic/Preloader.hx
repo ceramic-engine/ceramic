@@ -97,7 +97,14 @@ class Preloader extends Scene {
 
     }
 
-    function createProgressBar(yRatio:Float = 0.55, widthRatio:Float = 0.4):Void {
+    /**
+     * Create a progress bar that will be updated from current progress
+     * @param yRatio The vertical position of the progress bar, relative to screen height (from `0` (top) to `1` (bottom))
+     * @param widthRatio The progress bar width, relative to screen width (`1` meaning full width, `0.5` half width)
+     * @param backgroundColor The progress bar background color
+     * @param foregroundColor The progress bar foreground color
+     */
+    function createProgressBar(yRatio:Float = 0.55, widthRatio:Float = 0.4, backgroundColor:Color = 0x444444, foregroundColor:Color = 0xFFFFFF):Void {
 
         if (progressForeground != null)
             return;
@@ -106,7 +113,7 @@ class Preloader extends Scene {
         final progressHeight = Math.max(2, height * 0.005);
 
         progressBackground = new Quad();
-        progressBackground.color = 0x444444;
+        progressBackground.color = backgroundColor;
         progressBackground.depth = 1;
         progressBackground.roundTranslation = 1;
         progressBackground.anchor(0, 0.5);
@@ -118,7 +125,7 @@ class Preloader extends Scene {
         add(progressBackground);
 
         progressForeground = new Quad();
-        progressForeground.color = 0xFFFFFF;
+        progressForeground.color = foregroundColor;
         progressForeground.depth = 2;
         progressForeground.roundTranslation = 1;
         progressForeground.anchor(0, 0.5);
