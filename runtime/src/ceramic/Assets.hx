@@ -527,6 +527,22 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Move all assets owned by this `Assets` instance
+     * to the given `toAssets` object.
+     * @param toAssets
+     */
+    public function moveAll(toAssets:Assets):Void {
+
+        var toMove = [].concat(addedAssets);
+        for (i in 0...toMove.length) {
+            final asset = toMove[i];
+            removeAsset(asset);
+            toAssets.addAsset(asset);
+        }
+
+    }
+
 /// Load
 
     /**
