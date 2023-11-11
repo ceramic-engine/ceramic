@@ -147,6 +147,26 @@ class SceneSystem extends System {
 
         var prevScene = rootScenes.get(name);
 
+        // Detect if moving from another name
+        var movingFromName = null;
+        if (scene != null && scene.isRootScene) {
+            for (name => rootScene in rootScenes) {
+                if (rootScene == scene) {
+                    movingFromName = name;
+                    break;
+                }
+            }
+        }
+
+        if (movingFromName != null) {
+            if (movingFromName == name) {
+                return;
+            }
+            else {
+                rootScenes.original.remove(movingFromName);
+            }
+        }
+
         if (scene != prevScene) {
 
             if (scene == null) {
@@ -170,25 +190,59 @@ class SceneSystem extends System {
                 if (scene.destroyed)
                     throw 'Cannot assign a destroyed scene as root scene!';
 
-                scene.isRootScene = true;
-
                 var prevAssets = null;
-                rootScenes.original.set(name, scene);
-                if (name == 'main') {
-                    this.main = scene;
-                }
+                if (movingFromName == null) {
+                    scene.isRootScene = true;
 
-                scene.onDestroy(this, destroyedScene -> {
-
-                    var sceneInSlot = rootScenes.get(name);
-                    if (destroyedScene == sceneInSlot) {
-                        rootScenes.original.remove(name);
-                        if (name == 'main') {
-                            this.main = null;
-                        }
+                    rootScenes.original.set(name, scene);
+                    if (name == 'main') {
+                        this.main = scene;
                     }
 
-                });
+                    scene.onDestroy(this, destroyedScene -> {
+
+                        var rootName = null;
+                        if (scene != null && scene.isRootScene) {
+                            for (name => rootScene in rootScenes) {
+                                if (rootScene == destroyedScene) {
+                                    rootName = name;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (rootName != null) {
+                            rootScenes.original.remove(name);
+                            if (rootName == 'main' && this.main == destroyedScene) {
+                                this.main = null;
+                            }
+                        }
+
+                    });
+
+                    scene.onReplace(this, newScene -> {
+
+                        var rootName = null;
+                        if (scene != null && scene.isRootScene) {
+                            for (name => rootScene in rootScenes) {
+                                if (rootScene == scene) {
+                                    rootName = name;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (rootName != null) {
+                            set(rootName, newScene);
+                        }
+
+                    });
+                }
+                else {
+                    if (movingFromName == 'main') {
+                        this.main = null;
+                    }
+                }
 
                 if (prevScene != null) {
                     if (keepAssets) {
@@ -235,14 +289,16 @@ class SceneSystem extends System {
                     }
                 }
 
-                scene._assets = prevAssets;
-                if (bindToScreenSize) {
-                    scene.bindToScreenSize();
+                if (movingFromName == null) {
+                    scene._assets = prevAssets;
+                    if (bindToScreenSize) {
+                        scene.bindToScreenSize();
+                    }
+                    if (filter != null) {
+                        filter.content.add(scene);
+                    }
+                    scene._boot();
                 }
-                if (filter != null) {
-                    filter.content.add(scene);
-                }
-                scene._boot();
             }
         }
 

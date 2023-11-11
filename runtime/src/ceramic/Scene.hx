@@ -7,9 +7,24 @@ import tracker.Observable;
 @:autoBuild(ceramic.macros.SceneMacro.build())
 #end
 @:allow(ceramic.SceneSystem)
-class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer #end implements Observable {
+class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer #end implements Observable implements Preloadable {
 
     var _assets:Assets = null;
+
+    var _assetsProgress:Int = 0;
+
+    var _assetsTotal:Int = 0;
+
+    var _assetsFailure:Bool = false;
+
+    /**
+     * An event to replace this scene with a new one.
+     * By default, this has effect only if our current scene instance was initially assigned
+     * to the scene system, like when using `app.scenes.main = MyScene();`, but you
+     * could implement your own logic by listening to that event in other situations too.
+     * @param newScene
+     */
+    @event function replace(newScene:Scene);
 
     @observe var status:SceneStatus = NONE;
 
@@ -17,6 +32,24 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     function get_assets():Assets {
         if (_assets == null && !destroyed) {
             _assets = new Assets();
+
+            // These can be changed on scene subclasses if needed,
+            // but so far it should be a good compromise between
+            // fast loading of assets and still prevent screen
+            // from freezing to allow display (of progress) to update.
+            _assets.loadMethod = ASYNC;
+            _assets.scheduleMethod = PARALLEL;
+            _assets.delayBetweenXAssets = 4;
+
+            _assets.onProgress(this, (loaded, total, success) -> {
+                _assetsProgress = loaded;
+                _assetsTotal = total;
+            });
+            _assets.onceComplete(this, (success) -> {
+                if (!success) {
+                    _assetsFailure = true;
+                }
+            });
         }
         return _assets;
     }
@@ -278,6 +311,37 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
             case FADE_OUT | DISABLED:
                 log.warning('Cannot schedule callback on scene with status: $status');
                 return false;
+        }
+
+    }
+
+    @:noCompletion
+    public function requestPreloadUpdate(updatePreload:(progress:Int, total:Int, status:PreloadStatus)->Void):Void {
+
+        final total:Int = _assetsTotal >= 1 ? _assetsTotal : 1;
+
+        if (_assetsFailure) {
+            updatePreload(_assetsProgress, total, ERROR);
+        }
+        else {
+            switch status {
+                case NONE:
+                    updatePreload(0, 0, NONE);
+                case PRELOAD:
+                    updatePreload(_assetsProgress, total, LOADING);
+                case LOAD:
+                    updatePreload(_assetsProgress, total, LOADING);
+                case CREATE:
+                    updatePreload(total, total, LOADING);
+                case FADE_IN:
+                    updatePreload(total, total, SUCCESS);
+                case READY:
+                    updatePreload(total, total, SUCCESS);
+                case FADE_OUT:
+                    updatePreload(total, total, SUCCESS);
+                case DISABLED:
+                    updatePreload(total, total, SUCCESS);
+            }
         }
 
     }
