@@ -54,9 +54,14 @@ class EntityMacro {
         var resolvedStateEnums:Array<haxe.macro.Type> = null;
         var parentHold = localClass.superClass;
         var parent = parentHold != null ? parentHold.t : null;
+        var parentConstructor = null;
         while (parent != null) {
 
             var clazz = parent.get();
+
+            if (parentConstructor == null) {
+                parentConstructor = clazz.constructor?.get();
+            }
 
             if (!storeAllFieldInfo) {
                 for (meta in clazz.meta.get()) {
@@ -298,7 +303,44 @@ class EntityMacro {
                                     if (constructor == null) {
 
                                         // Implicit constructor override because it is needed to initialize components
-                                        // TODO make it work even if parent constructor has arguments
+
+                                        var constructorArgs = [];
+                                        var constructorExpr = new StringBuf();
+                                        constructorExpr.add('{ super(');
+
+                                        if (parentConstructor != null) {
+
+                                            var didResolveConstructorField = false;
+                                            try {
+                                                switch parentConstructor.type {
+                                                    case TFun(args, ret):
+                                                        didResolveConstructorField = true;
+                                                        if (args != null) {
+                                                            for (a in 0...args.length) {
+                                                                var arg = args[a];
+                                                                constructorArgs.push({
+                                                                    name: arg.name,
+                                                                    opt: arg.opt,
+                                                                    type: arg.t != null ? TypeTools.toComplexType(arg.t) : null
+                                                                });
+                                                                if (a > 0) {
+                                                                    constructorExpr.add(', ');
+                                                                }
+                                                                constructorExpr.add(arg.name);
+                                                            }
+                                                        }
+                                                    default:
+                                                }
+                                            }
+                                            catch (e:Dynamic) {
+                                                didResolveConstructorField = false;
+                                            }
+
+                                            if (!didResolveConstructorField) {
+                                                Context.warning('Failed to resolve parent constructor field for class ' + classPath, Context.currentPos());
+                                            }
+                                        }
+                                        constructorExpr.add('); }');
 
                                         constructor = {
                                             name: 'new',
@@ -307,11 +349,9 @@ class EntityMacro {
                                             access: [APublic],
                                             kind: FFun({
                                                 params: [],
-                                                args: [],
+                                                args: constructorArgs,
                                                 ret: null,
-                                                expr: macro {
-                                                    super();
-                                                }
+                                                expr: Context.parse(constructorExpr.toString(), Context.currentPos())
                                             }),
                                             pos: Context.currentPos()
                                         };
