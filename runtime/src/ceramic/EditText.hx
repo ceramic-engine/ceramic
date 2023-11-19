@@ -519,8 +519,12 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         #if web
         if (domInput != null) {
-            js.Browser.document.body.removeChild(domInput);
+            domInput.parentNode.removeChild(domInput);
             domInput = null;
+        }
+        if (domOverlay != null) {
+            domOverlay.parentNode.removeChild(domOverlay);
+            domOverlay = null;
         }
         #end
 
@@ -533,6 +537,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
     #if web
 
     var domInput:js.html.InputElement = null;
+
+    var domOverlay:js.html.DivElement = null;
 
     var domInputBlockSelection:Bool = false;
 
@@ -565,8 +571,34 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         }
 
         if (isMobileWeb) {
+            domOverlay = cast js.Browser.document.createElement('div');
+            domOverlay.style.display = 'none';
+            domOverlay.style.position = 'absolute';
+            domOverlay.style.left = '-1px';
+            domOverlay.style.top = '-1px';
+            domOverlay.style.width = '1px';
+            domOverlay.style.height = '1px';
+            domOverlay.style.overflow = 'hidden';
+            domOverlay.style.margin = '0';
+            domOverlay.style.padding = '0';
+            domOverlay.style.border = 'none';
+            domOverlay.style.borderRadius = '0';
+            domOverlay.style.outline = 'none';
+            domOverlay.style.userSelect = 'none';
+            domOverlay.style.zIndex = '999999';
+            domOverlay.style.opacity = '0';
+            domOverlay.style.backgroundColor = 'transparent';
+            #if clay
+            clay.Clay.app.runtime.bindCustomElementTouchEvents(domOverlay);
+            #end
+            domOverlay.addEventListener('touchstart', () -> {
+                domInput.focus();
+            });
+
             domInput = cast js.Browser.document.createElement('input');
             domInput.type = 'text';
+            domInput.className = 'edit-text';
+            domInput.style.display = 'block';
             domInput.style.position = 'absolute';
             domInput.style.left = '-1px';
             domInput.style.top = '-1px';
@@ -578,8 +610,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             domInput.style.border = 'none';
             domInput.style.borderRadius = '0';
             domInput.style.outline = 'none';
-            domInput.style.zIndex = '999999';
+            domInput.style.userSelect = 'none';
+            domInput.style.zIndex = '999998';
             domInput.style.opacity = '0';
+            domInput.style.backgroundColor = 'transparent';
             js.Syntax.code('{0}.webkitTapHighlightColor = "transparent"', domInput.style);
             domInput.addEventListener('click', () -> {
                 if (!inputActive) {
@@ -606,7 +640,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
                 }
                 domInputBlockHtmlInputEvent = false;
             });
-            js.Browser.document.body.appendChild(domInput);
+            js.Browser.document.getElementById('ceramic-app').appendChild(domInput);
+            js.Browser.document.getElementById('ceramic-app').appendChild(domOverlay);
             app.onBeginDraw(this, updateDomInputState);
         }
 
@@ -627,10 +662,28 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         final nativeW = matrix.transformX(inputRectX + inputRectW, inputRectY + inputRectH) / screen.nativeDensity - nativeX;
         final nativeH = matrix.transformY(inputRectX + inputRectW, inputRectY + inputRectH) / screen.nativeDensity - nativeY;
 
-        domInput.style.left = nativeX + 'px';
+        if (inputActive) {
+            domInput.style.left = (nativeX - 99999) + 'px';
+        }
+        else {
+            domInput.style.left = nativeX + 'px';
+        }
         domInput.style.top = nativeY + 'px';
         domInput.style.width = nativeW + 'px';
         domInput.style.height = nativeH + 'px';
+
+        if (domOverlay != null) {
+            if (inputActive) {
+                domOverlay.style.display = 'block';
+                domOverlay.style.left = nativeX + 'px';
+                domOverlay.style.top = nativeY + 'px';
+                domOverlay.style.width = nativeW + 'px';
+                domOverlay.style.height = nativeH + 'px';
+            }
+            else {
+                domOverlay.style.display = 'none';
+            }
+        }
 
         if (!inputActive && js.Browser.document.activeElement == domInput) {
             domInput.blur();
