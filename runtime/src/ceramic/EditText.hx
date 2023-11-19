@@ -75,6 +75,14 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorHeightFactor;
     }
 
+    public var textCursorWidth(default, set):Float;
+    function set_textCursorWidth(textCursorWidth:Float):Float {
+        this.textCursorWidth = textCursorWidth;
+        if (selectText != null)
+            selectText.textCursorWidth = textCursorWidth;
+        return textCursorWidth;
+    }
+
     public var disabled(default, set):Bool = false;
     function set_disabled(disabled:Bool):Bool {
         if (disabled == this.disabled) return disabled;
@@ -119,9 +127,17 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     var textCursorToggleVisibilityTime:Float = 1.0;
 
+    var inputRectX:Float = 0;
+
+    var inputRectY:Float = 0;
+
+    var inputRectW:Float = 0;
+
+    var inputRectH:Float = 0;
+
 /// Lifecycle
 
-    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1) {
+    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1, textCursorWidth:Float = 1) {
 
         super();
 
@@ -131,6 +147,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         this.textCursorOffsetX = textCursorOffsetX;
         this.textCursorOffsetY = textCursorOffsetY;
         this.textCursorHeightFactor = textCursorHeightFactor;
+        this.textCursorWidth = textCursorWidth;
 
     }
 
@@ -140,7 +157,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         selectText = cast entity.component('selectText');
         if (selectText == null) {
             selectText = new SelectText(
-                selectionColor, textCursorColor, textCursorOffsetX, textCursorOffsetY, textCursorHeightFactor
+                selectionColor, textCursorColor, textCursorOffsetX, textCursorOffsetY, textCursorHeightFactor, textCursorWidth
             );
             entity.component('selectText', selectText);
         }
@@ -152,6 +169,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         bindKeyBindings();
 
         app.onUpdate(this, handleAppUpdate);
+
+        #if web
+        handleMobileWebIfNeeded();
+        #end
 
     }
 
@@ -181,24 +202,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         var content = entity.content;
 
-        var rectTarget:ceramic.Visual = entity;
-        if (container != null) {
-            rectTarget = container;
-        }
-
-        var x = rectTarget.x;
-        var y = rectTarget.y;
-        var width = rectTarget.width;
-        var height = rectTarget.height;
-        var anchorX = rectTarget.anchorX;
-        var anchorY = rectTarget.anchorY;
-
-        rectTarget.visualToScreen(x - width * anchorX, y - height * anchorY, _point);
-        var screenLeft = _point.x;
-        var screenTop = _point.y;
-        rectTarget.visualToScreen(x - width * anchorX + width, y - height * anchorY + height, _point);
-        var screenRight = _point.x;
-        var screenBottom = _point.y;
+        computeInputRect();
 
         app.textInput.onUpdate(this, updateFromTextInput);
         app.textInput.onStop(this, handleStop);
@@ -213,10 +217,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         app.textInput.start(
             content,
-            screenLeft,
-            screenTop,
-            screenRight - screenLeft,
-            screenBottom - screenTop,
+            inputRectX,
+            inputRectY,
+            inputRectW,
+            inputRectH,
             multiline,
             selectionStart,
             selectionEnd,
@@ -254,7 +258,16 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         if (!inputActive) return;
 
+        #if web
+        if (domInput != null) {
+            domInput.value = text;
+        }
+        #end
+
         app.textInput.text = text;
+        entity.content = text;
+
+        updateFromInputSelection(app.textInput.selectionStart, app.textInput.selectionEnd);
 
     }
 
@@ -304,6 +317,20 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         // Update text content ourself
         entity.content = text;
 
+        // If there is a dom input, update it as well
+        #if web
+        if (domInput != null && domInput.value.length > text.length) {
+            domInput.value = text;
+            domInputBlockHtmlInputEvent = true;
+            app.offXUpdates(unBlockHtmlInputEvent);
+            app.onceXUpdates(this, 2, unBlockHtmlInputEvent);
+        }
+        else {
+            domInputBlockSelection = true;
+            app.oncePostFlushImmediate(this, () -> domInputBlockSelection = false);
+        }
+        #end
+
         // But allow external code to put another processed value if needed
         emitUpdate(text);
 
@@ -313,12 +340,30 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         app.textInput.updateSelection(selectionStart, selectionEnd, inverted);
 
+        // If there is a dom input, update it as well
+        #if web
+        if (!domInputBlockSelection && domInput != null && domInput.selectionStart > selectionStart && domInput.selectionEnd > selectionEnd) {
+            domInput.selectionStart = selectionStart;
+            domInput.selectionEnd = selectionEnd;
+        }
+        domInputBlockSelection = false;
+        #end
+
     }
 
     function updateFromInputSelection(selectionStart:Int, selectionEnd:Int):Void {
 
         selectText.selectionStart = selectionStart;
         selectText.selectionEnd = selectionEnd;
+
+        // If there is a dom input, update it as well
+        #if web
+        if (!domInputBlockSelection && domInput != null) {
+            domInput.selectionStart = selectionStart;
+            domInput.selectionEnd = selectionEnd;
+        }
+        domInputBlockSelection = false;
+        #end
 
     }
 
@@ -444,13 +489,155 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+/// Internal
+
+    function computeInputRect() {
+
+        var rectTarget:ceramic.Visual = entity;
+        if (container != null) {
+            rectTarget = container;
+        }
+
+        rectTarget.visualToScreen(0, 0, _point);
+        var screenLeft = _point.x;
+        var screenTop = _point.y;
+        rectTarget.visualToScreen(rectTarget.width, rectTarget.height, _point);
+        var screenRight = _point.x;
+        var screenBottom = _point.y;
+
+        inputRectX = screenLeft;
+        inputRectY = screenTop;
+        inputRectW = screenRight - screenLeft;
+        inputRectH = screenBottom - screenTop;
+
+    }
+
     override function destroy() {
 
         if (inputActive)
             stopInput();
 
+        #if web
+        if (domInput != null) {
+            js.Browser.document.body.removeChild(domInput);
+            domInput = null;
+        }
+        #end
+
         super.destroy();
 
     }
+
+/// Mobile web
+
+    #if web
+
+    var domInput:js.html.InputElement = null;
+
+    var domInputBlockSelection:Bool = false;
+
+    var domInputBlockHtmlInputEvent:Bool = false;
+
+    function unBlockHtmlInputEvent():Void {
+        domInputBlockHtmlInputEvent = false;
+    }
+
+    function handleMobileWebIfNeeded() {
+
+        // On mobile web (touch devices), we need to make sure the virtual
+        // keyboard is displayed. The only way to do that is by putting an
+        // HTML input element on top out editable text. The input element
+        // needs to be there so that it will catch the click/touch instead
+        // of our canvas like the default behaviour.
+
+        computeInputRect();
+
+        var ua = js.Browser.navigator != null ? js.Browser.navigator.userAgent : '';
+        var notMSStream:Bool = js.Syntax.code('!window.MSStream');
+        var isMobileWeb:Bool = false;
+        if (notMSStream && (ua.indexOf('iPhone') != -1 || ua.indexOf('iPad') != -1 || ua.indexOf('iPod') != -1)) {
+            // iOS
+            isMobileWeb = true;
+        }
+        else if (ua.toLowerCase().indexOf('android') != -1) {
+            // Android
+            isMobileWeb = true;
+        }
+
+        if (isMobileWeb) {
+            domInput = cast js.Browser.document.createElement('input');
+            domInput.type = 'text';
+            domInput.style.position = 'absolute';
+            domInput.style.left = '-1px';
+            domInput.style.top = '-1px';
+            domInput.style.width = '1px';
+            domInput.style.height = '1px';
+            domInput.style.overflow = 'hidden';
+            domInput.style.margin = '0';
+            domInput.style.padding = '0';
+            domInput.style.border = 'none';
+            domInput.style.borderRadius = '0';
+            domInput.style.outline = 'none';
+            domInput.style.zIndex = '999999';
+            domInput.style.opacity = '0';
+            js.Syntax.code('{0}.webkitTapHighlightColor = "transparent"', domInput.style);
+            domInput.addEventListener('click', () -> {
+                if (!inputActive) {
+                    startInput();
+                }
+            });
+            domInput.addEventListener('input', e -> {
+                if (inputActive) {
+                    if (domInputBlockHtmlInputEvent) {
+                        domInput.value = entity.content;
+                        domInput.selectionStart = selectText.selectionStart;
+                        domInput.selectionEnd = selectText.selectionEnd;
+                    }
+                    else {
+                        var value:String = js.Syntax.code('{0}.target.value', e);
+                        if (value.length > entity.content.length || (value.length > 0 && !value.startsWith(entity.content))) {
+                            entity.content = value;
+                            app.textInput.text = value;
+                            selectText.selectionStart = domInput.selectionStart;
+                            selectText.selectionEnd = domInput.selectionEnd;
+                            emitUpdate(value);
+                        }
+                    }
+                }
+                domInputBlockHtmlInputEvent = false;
+            });
+            js.Browser.document.body.appendChild(domInput);
+            app.onBeginDraw(this, updateDomInputState);
+        }
+
+        updateDomInputState();
+
+    }
+
+    function updateDomInputState() {
+
+        if (domInput == null)
+            return;
+
+        computeInputRect();
+
+        final matrix = @:privateAccess screen.matrix;
+        final nativeX = matrix.transformX(inputRectX, inputRectY) / screen.nativeDensity;
+        final nativeY = matrix.transformY(inputRectX, inputRectY) / screen.nativeDensity;
+        final nativeW = matrix.transformX(inputRectX + inputRectW, inputRectY + inputRectH) / screen.nativeDensity - nativeX;
+        final nativeH = matrix.transformY(inputRectX + inputRectW, inputRectY + inputRectH) / screen.nativeDensity - nativeY;
+
+        domInput.style.left = nativeX + 'px';
+        domInput.style.top = nativeY + 'px';
+        domInput.style.width = nativeW + 'px';
+        domInput.style.height = nativeH + 'px';
+
+        if (!inputActive && js.Browser.document.activeElement == domInput) {
+            domInput.blur();
+        }
+
+    }
+
+    #end
 
 }

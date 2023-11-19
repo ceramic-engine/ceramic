@@ -90,7 +90,13 @@ class TextInput implements Events {
         this.selectionStart = selectionStart;
         this.selectionEnd = selectionEnd;
 
-        app.backend.textInput.start(text, x, y, w, h);
+        final matrix = @:privateAccess screen.matrix;
+        final nativeX = matrix.transformX(x, y) / screen.nativeDensity;
+        final nativeY = matrix.transformY(x, y) / screen.nativeDensity;
+        final nativeW = matrix.transformX(x + w, y + h) / screen.nativeDensity - nativeX;
+        final nativeH = matrix.transformY(x + w, y + h) / screen.nativeDensity - nativeY;
+
+        app.backend.textInput.start(text, nativeX, nativeY, nativeW, nativeH);
         emitUpdate(text);
         emitSelection(selectionStart, selectionEnd);
 
