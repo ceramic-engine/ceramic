@@ -32,6 +32,8 @@ class SelectText extends Entity implements Component implements Observable {
 
     public var textCursorHeightFactor:Float = 1;
 
+    public var textCursorWidth:Float = 1;
+
     /**
      * Optional container on which pointer events are bound
      */
@@ -67,7 +69,7 @@ class SelectText extends Entity implements Component implements Observable {
 
 /// Lifecycle
 
-    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1) {
+    public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1, textCursorWidth:Float = 1) {
 
         super();
 
@@ -76,6 +78,7 @@ class SelectText extends Entity implements Component implements Observable {
         this.textCursorOffsetX = textCursorOffsetX;
         this.textCursorOffsetY = textCursorOffsetY;
         this.textCursorHeightFactor = textCursorHeightFactor;
+        this.textCursorWidth = textCursorWidth;
 
     }
 
@@ -143,7 +146,7 @@ class SelectText extends Entity implements Component implements Observable {
         var backgroundPad = Math.round(entity.pointSize * 0.1);
         var cursorPad = Math.round(entity.pointSize * (textCursorHeightFactor - 0.8));
         var selectionHeight = Math.ceil(entity.pointSize * 1.0);
-        var cursorWidth:Float = 1;
+        var cursorWidth:Float = textCursorWidth;
         var cursorHeight:Float = Math.ceil(entity.pointSize);
         var computedLineHeight = entity.lineHeight * entity.font.lineHeight * entity.pointSize / entity.font.pointSize;
         var lineBreakWidth:Float = entity.pointSize * 0.4;
