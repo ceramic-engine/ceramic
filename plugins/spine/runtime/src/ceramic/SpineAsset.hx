@@ -45,7 +45,7 @@ class SpineAsset extends Asset {
         handleTexturesDensityChange = true;
 
         if (this.options.scale != null) {
-            scale = Std.parseFloat(options.scale);
+            scale = Std.parseFloat(''+options.scale);
             if (Math.isNaN(scale)) {
                 ceramic.App.app.logger.warning('Invalid scale option: ' + options.scale);
                 scale = 1.0;
