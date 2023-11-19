@@ -506,7 +506,9 @@ class Assets extends Entity {
         if (kind == null) return parent != null ? parent.asset(idOrName, kind, variant) : null;
         var byName = assetsByKindAndName.get(kind);
         if (byName == null) return parent != null ? parent.asset(idOrName, kind, variant) : null;
-        return byName.get(name);
+        var result = byName.get(name);
+        if (result == null) return parent != null ? parent.asset(idOrName, kind, variant) : null;
+        return result;
 
     }
 
