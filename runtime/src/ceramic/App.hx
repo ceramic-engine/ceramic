@@ -1088,6 +1088,10 @@ class App extends Entity {
 
     function updatePreReady(delta:Float):Void {
 
+        #if sys
+        sys.thread.Thread.current().events.progress();
+        #end
+
         Assets.flushAllInstancesImmediate();
         flushImmediate();
 
@@ -1143,6 +1147,10 @@ class App extends Entity {
         Timer.update(delta, realDelta);
 
         Runner.tick();
+
+        #if sys
+        sys.thread.Thread.current().events.progress();
+        #end
 
         // Screen pointer over/out events detection
         screen.updatePointerOverState(delta);
