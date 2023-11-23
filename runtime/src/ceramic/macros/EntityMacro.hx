@@ -312,7 +312,7 @@ class EntityMacro {
 
                                             var didResolveConstructorField = false;
                                             try {
-                                                switch parentConstructor.type {
+                                                switch TypeTools.follow(parentConstructor.type) {
                                                     case TFun(args, ret):
                                                         didResolveConstructorField = true;
                                                         if (args != null) {
