@@ -194,4 +194,4 @@ class Logger extends Entity {
 
     }
 
-} //Log
+}
