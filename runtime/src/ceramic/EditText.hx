@@ -346,7 +346,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         // If there is a dom input, update it as well
         #if web
-        if (!domInputBlockSelection && domInput != null && domInput.selectionStart > selectionStart && domInput.selectionEnd > selectionEnd) {
+        if (!domInputBlockSelection && domInput != null) {
             domInput.selectionStart = selectionStart;
             domInput.selectionEnd = selectionEnd;
         }
@@ -603,13 +603,11 @@ class EditText extends Entity implements Component implements TextInputDelegate 
                     }
                     else {
                         var value:String = js.Syntax.code('{0}.target.value', e);
-                        if (value.length > entity.content.length || value.length == 0 || (value.length > 0 && !value.startsWith(entity.content))) {
-                            entity.content = value;
-                            app.textInput.text = value;
-                            selectText.selectionStart = domInput.selectionStart;
-                            selectText.selectionEnd = domInput.selectionEnd;
-                            emitUpdate(value);
-                        }
+                        entity.content = value;
+                        app.textInput.text = value;
+                        selectText.selectionStart = domInput.selectionStart;
+                        selectText.selectionEnd = domInput.selectionEnd;
+                        emitUpdate(value);
                     }
                 }
                 domInputBlockHtmlInputEvent = false;
