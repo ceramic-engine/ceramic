@@ -131,7 +131,7 @@ class EntityMacro {
         var componentFields = [];
 
         #if (!completion && !display)
-        var ownFields:Array<String> = null;
+        var ownFields:Array<Field> = null;
         #end
 
         var hasDestroyOverride = false;
@@ -501,7 +501,7 @@ class EntityMacro {
                     if (ownFields == null) {
                         ownFields = [];
                     }
-                    ownFields.push(field.name);
+                    ownFields.push(field);
                     newFields.push(field);
                 }
                 else if (hasMeta.bool(2)) { // has content meta
@@ -637,14 +637,85 @@ class EntityMacro {
                                     #if (!completion && !display)
                                     // Destroy owned entities as well
                                     if (ownFields != null) {
-                                        for (name in ownFields) {
-                                            exprs.unshift(macro {
-                                                var toDestroy = this.$name;
-                                                if (toDestroy != null) {
-                                                    toDestroy.destroy();
-                                                    this.$name = null;
-                                                }
-                                            });
+                                        for (ownField in ownFields) {
+                                            final name = ownField.name;
+                                            var complexType = null;
+                                            var resolvedType = null;
+                                            switch ownField.kind {
+                                                case FVar(t, e) | FProp(_, _, t, e):
+                                                    complexType = t;
+                                                    if (complexType == null && e != null) {
+                                                        switch e.expr {
+                                                            case ENew(t, params):
+                                                                complexType = TPath(t);
+                                                            case _:
+                                                        }
+                                                    }
+                                                    try {
+                                                        resolvedType = Context.resolveType(complexType, Context.currentPos());
+                                                    }
+                                                    catch (e:Dynamic) {}
+                                                case _:
+                                            }
+                                            var isArray = false;
+                                            var isMap = false;
+                                            switch resolvedType {
+                                                case TAbstract(t, params):
+                                                    final tStr = t.toString();
+                                                    if (params.length > 0) {
+                                                        isArray = tStr.endsWith('Array');
+                                                        isMap = tStr.endsWith('Map');
+                                                    }
+                                                case _:
+                                            }
+                                            if (isArray) {
+                                                exprs.unshift(macro {
+                                                    var toDestroy = this.$name;
+                                                    if (toDestroy != null) {
+                                                        var i = toDestroy.length - 1;
+                                                        while (i >= 0) {
+                                                            final item = toDestroy[i];
+                                                            if (item != null) {
+                                                                item.destroy();
+                                                            }
+                                                            i--;
+                                                        }
+                                                        this.$name = null;
+                                                    }
+                                                });
+                                            }
+                                            else if (isMap) {
+                                                exprs.unshift(macro {
+                                                    var toDestroy = this.$name;
+                                                    if (toDestroy != null) {
+                                                        var itemsToDestroy = null;
+                                                        for (key in toDestroy.keys()) {
+                                                            final item = toDestroy.get(key);
+                                                            if (item != null) {
+                                                                if (itemsToDestroy == null) {
+                                                                    itemsToDestroy = [];
+                                                                }
+                                                                itemsToDestroy.push(item);
+                                                            }
+                                                        }
+                                                        if (itemsToDestroy != null) {
+                                                            for (i in 0...itemsToDestroy.length) {
+                                                                itemsToDestroy[i].destroy();
+                                                            }
+                                                        }
+                                                        this.$name = null;
+                                                    }
+                                                });
+                                            }
+                                            else {
+                                                exprs.unshift(macro {
+                                                    var toDestroy = this.$name;
+                                                    if (toDestroy != null) {
+                                                        toDestroy.destroy();
+                                                        this.$name = null;
+                                                    }
+                                                });
+                                            }
                                         }
                                     }
                                     #end
