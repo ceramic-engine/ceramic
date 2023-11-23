@@ -215,6 +215,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         inputActive = true;
 
+        if (domInput != null) {
+            domInput.focus();
+        }
+
         app.textInput.start(
             content,
             inputRectX,
@@ -273,6 +277,8 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     public function focus() {
 
+        ceramic.Utils.printStackTrace();
+
         if (disabled)
             return;
 
@@ -319,7 +325,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         // If there is a dom input, update it as well
         #if web
-        if (domInput != null && domInput.value.length > text.length) {
+        if (domInput != null) {
             domInput.value = text;
             domInputBlockHtmlInputEvent = true;
             app.offXUpdates(unBlockHtmlInputEvent);
@@ -522,10 +528,6 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             domInput.parentNode.removeChild(domInput);
             domInput = null;
         }
-        if (domOverlay != null) {
-            domOverlay.parentNode.removeChild(domOverlay);
-            domOverlay = null;
-        }
         #end
 
         super.destroy();
@@ -537,8 +539,6 @@ class EditText extends Entity implements Component implements TextInputDelegate 
     #if web
 
     var domInput:js.html.InputElement = null;
-
-    var domOverlay:js.html.DivElement = null;
 
     var domInputBlockSelection:Bool = false;
 
@@ -571,30 +571,6 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         }
 
         if (isMobileWeb) {
-            domOverlay = cast js.Browser.document.createElement('div');
-            domOverlay.style.display = 'none';
-            domOverlay.style.position = 'absolute';
-            domOverlay.style.left = '-1px';
-            domOverlay.style.top = '-1px';
-            domOverlay.style.width = '1px';
-            domOverlay.style.height = '1px';
-            domOverlay.style.overflow = 'hidden';
-            domOverlay.style.margin = '0';
-            domOverlay.style.padding = '0';
-            domOverlay.style.border = 'none';
-            domOverlay.style.borderRadius = '0';
-            domOverlay.style.outline = 'none';
-            domOverlay.style.userSelect = 'none';
-            domOverlay.style.zIndex = '999999';
-            domOverlay.style.opacity = '0';
-            domOverlay.style.backgroundColor = 'transparent';
-            #if clay
-            clay.Clay.app.runtime.bindCustomElementTouchEvents(domOverlay);
-            #end
-            domOverlay.addEventListener('touchstart', () -> {
-                domInput.focus();
-            });
-
             domInput = cast js.Browser.document.createElement('input');
             domInput.type = 'text';
             domInput.className = 'edit-text';
@@ -611,7 +587,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             domInput.style.borderRadius = '0';
             domInput.style.outline = 'none';
             domInput.style.userSelect = 'none';
-            domInput.style.zIndex = '999998';
+            domInput.style.zIndex = '99999';
             domInput.style.opacity = '0';
             domInput.style.backgroundColor = 'transparent';
             js.Syntax.code('{0}.webkitTapHighlightColor = "transparent"', domInput.style);
@@ -623,13 +599,16 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             domInput.addEventListener('input', e -> {
                 if (inputActive) {
                     if (domInputBlockHtmlInputEvent) {
+                        trace(' -> yes, html input blocked');
                         domInput.value = entity.content;
                         domInput.selectionStart = selectText.selectionStart;
                         domInput.selectionEnd = selectText.selectionEnd;
                     }
                     else {
                         var value:String = js.Syntax.code('{0}.target.value', e);
+                        trace(' -> update from dom input (if applicable): ${value}');
                         if (value.length > entity.content.length || (value.length > 0 && !value.startsWith(entity.content))) {
+                            trace(' -> yes update');
                             entity.content = value;
                             app.textInput.text = value;
                             selectText.selectionStart = domInput.selectionStart;
@@ -641,7 +620,6 @@ class EditText extends Entity implements Component implements TextInputDelegate 
                 domInputBlockHtmlInputEvent = false;
             });
             js.Browser.document.getElementById('ceramic-app').appendChild(domInput);
-            js.Browser.document.getElementById('ceramic-app').appendChild(domOverlay);
             app.onBeginDraw(this, updateDomInputState);
         }
 
@@ -672,18 +650,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         domInput.style.width = nativeW + 'px';
         domInput.style.height = nativeH + 'px';
 
-        if (domOverlay != null) {
-            if (inputActive) {
-                domOverlay.style.display = 'block';
-                domOverlay.style.left = nativeX + 'px';
-                domOverlay.style.top = nativeY + 'px';
-                domOverlay.style.width = nativeW + 'px';
-                domOverlay.style.height = nativeH + 'px';
-            }
-            else {
-                domOverlay.style.display = 'none';
-            }
-        }
+        domInput.style.zIndex = (100 + Math.round(entity.computedDepth * 10000)) + 'px';
 
         if (!inputActive && js.Browser.document.activeElement == domInput) {
             domInput.blur();
