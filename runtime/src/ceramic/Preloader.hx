@@ -73,7 +73,7 @@ class Preloader extends Scene {
         ceramicLogo.anchor(0.5, 0.5);
         add(ceramicLogo);
 
-        final targetScale = Math.min(width * 0.2 / ceramicLogo.width, height * 0.4 / ceramicLogo.height);
+        final targetScale = Math.min(width * 0.2 / ceramicLogo.width, height * 0.2 / ceramicLogo.height);
         animateScale(ceramicLogo, targetScale, () -> {
             initPreloadable();
             createProgressBar();
@@ -104,13 +104,35 @@ class Preloader extends Scene {
      * @param backgroundColor The progress bar background color
      * @param foregroundColor The progress bar foreground color
      */
-    function createProgressBar(yRatio:Float = 0.55, widthRatio:Float = 0.4, backgroundColor:Color = 0x444444, foregroundColor:Color = 0xFFFFFF):Void {
+    function createProgressBar(yRatio:Float = -1, widthRatio:Float = -1, backgroundColor:Color = 0x444444, foregroundColor:Color = 0xFFFFFF):Void {
 
         if (progressForeground != null)
             return;
 
+        if (yRatio == -1) {
+            if (height > 0 && ceramicLogo != null) {
+                // Default value based on Ceramic Logo dimensions
+                final targetScale = Math.min(width * 0.2 / ceramicLogo.width, height * 0.2 / ceramicLogo.height);
+                yRatio = (ceramicLogo.y + ceramicLogo.height * (1 - ceramicLogo.anchorY) * (targetScale + 0.5)) / height;
+            }
+            else {
+                yRatio = 0.55;
+            }
+        }
+
+        if (widthRatio == -1) {
+            if (width > 0 && ceramicLogo != null) {
+                // Default value based on Ceramic Logo dimensions
+                final targetScale = Math.min(width * 0.2 / ceramicLogo.width, height * 0.2 / ceramicLogo.height);
+                widthRatio = Math.min(0.4, (ceramicLogo.width * targetScale * 2.5) / width);
+            }
+            else {
+                widthRatio = 0.4;
+            }
+        }
+
         final progressWidth = width * widthRatio;
-        final progressHeight = Math.max(2, height * 0.005);
+        final progressHeight = Math.max(2, Math.round(height * 0.006));
 
         progressBackground = new Quad();
         progressBackground.color = backgroundColor;
