@@ -410,11 +410,12 @@ class ColorFieldView extends FieldView {
         if (text.length == 8)
             text = text.substr(0, 6);
 
-        if (RE_HEX_COLOR.match(text)) {
-            setValue(this, Color.fromString('0x' + text));
+        var upperText = text.toUpperCase();
+        if (RE_HEX_COLOR.match(upperText)) {
+            setValue(this, Color.fromString('0x' + upperText));
         }
 
-        if (!RE_HEX_COLOR_ANY_LENGTH.match(text) || text.length > 6) {
+        if (!RE_HEX_COLOR_ANY_LENGTH.match(upperText) || upperText.length > 6) {
             updateFromValue();
         }
 
