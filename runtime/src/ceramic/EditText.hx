@@ -277,8 +277,6 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     public function focus() {
 
-        ceramic.Utils.printStackTrace();
-
         if (disabled)
             return;
 
@@ -599,16 +597,13 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             domInput.addEventListener('input', e -> {
                 if (inputActive) {
                     if (domInputBlockHtmlInputEvent) {
-                        trace(' -> yes, html input blocked');
                         domInput.value = entity.content;
                         domInput.selectionStart = selectText.selectionStart;
                         domInput.selectionEnd = selectText.selectionEnd;
                     }
                     else {
                         var value:String = js.Syntax.code('{0}.target.value', e);
-                        trace(' -> update from dom input (if applicable): ${value}');
-                        if (value.length > entity.content.length || (value.length > 0 && !value.startsWith(entity.content))) {
-                            trace(' -> yes update');
+                        if (value.length > entity.content.length || value.length == 0 || (value.length > 0 && !value.startsWith(entity.content))) {
                             entity.content = value;
                             app.textInput.text = value;
                             selectText.selectionStart = domInput.selectionStart;
