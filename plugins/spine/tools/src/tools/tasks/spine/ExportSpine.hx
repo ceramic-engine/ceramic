@@ -25,7 +25,6 @@ class ExportSpine extends tools.Task {
 
         // Get project info
         var projectPath = Path.join([cwd, 'ceramic.yml']);
-        var assetsPath = Path.join([cwd, 'assets']);
         var projectCachePath = Path.join([cwd, '.cache']);
         var tmpPath = Path.join([cwd, '.tmp']);
         var spineDefaultConfigPath = Path.join([cwd, 'resources/spine-config.json']);
@@ -98,6 +97,7 @@ class ExportSpine extends tools.Task {
 
             var spineConfigPath:String = null;
             var rename:DynamicAccess<String> = null;
+            var outputDir:String = 'assets';
 
             var path:String = null;
             if (Std.isOfType(rawItem, String)) {
@@ -115,6 +115,10 @@ class ExportSpine extends tools.Task {
                         print('  $key -> ${rename.get(key)}');
                     }
                 }
+                if (rawItem.output != null) {
+					print('Export to directory: '+rawItem.output);
+                    outputDir = rawItem.output;
+				}
             }
 
             if (path == null) {
@@ -254,9 +258,9 @@ class ExportSpine extends tools.Task {
             // Do the actual moving
             //
             for (groupName in skeletons.keys()) {
-                print('Add assets/' + groupName + '.spine');
+                print('Add ' + outputDir + '/' + groupName + '.spine');
 
-                var groupDir = Path.join([assetsPath, groupName + '.spine']);
+                var groupDir = Path.join([cwd, outputDir, groupName + '.spine']);
 
                 if (FileSystem.exists(groupDir)) {
                     Files.deleteRecursive(groupDir);
