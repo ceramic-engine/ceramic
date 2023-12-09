@@ -162,13 +162,19 @@ class TilemapLdtkParser {
             switch layerInstance.def.type {
                 case Tiles:
                     var tilesAlpha:Array<Float> = [];
-                    tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize, tilesAlpha);
-                    for (i in 0...tilesAlpha.length) {
-                        if (tilesAlpha[i] != 1.0) {
-                            tilemapLayerData.tilesAlpha = tilesAlpha;
-                            break;
-                        }
+                    var tilesOffsetX:Array<Int> = [];
+                    var tilesOffsetY:Array<Int> = [];
+                    tilemapLayerData.tiles = convertLdtkTiles(layerInstance.gridTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize, tilesAlpha, tilesOffsetX, tilesOffsetY);
+                    if (!allEqual(tilesAlpha, 1.0)) {
+                        tilemapLayerData.tilesAlpha = tilesAlpha;
                     }
+                    if (!allEqual(tilesOffsetX, 0)) {
+                        tilemapLayerData.tilesOffsetX = tilesOffsetX;
+                    }
+                    if (!allEqual(tilesOffsetY, 0)) {
+                        tilemapLayerData.tilesOffsetY = tilesOffsetY;
+                    }
+
                 case IntGrid | AutoLayer:
                     if (layerInstance.def.autoSourceLayerDefUid != -1) {
                         var autoSourceLayer = null;
@@ -188,12 +194,17 @@ class TilemapLdtkParser {
                         tilemapLayerData.tiles = [].concat(layerInstance.intGrid);
                     }
                     var tilesAlpha:Array<Float> = [];
-                    tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize, tilesAlpha);
-                    for (i in 0...tilesAlpha.length) {
-                        if (tilesAlpha[i] != 1.0) {
-                            tilemapLayerData.computedTilesAlpha = tilesAlpha;
-                            break;
-                        }
+                    var tilesOffsetX:Array<Int> = [];
+                    var tilesOffsetY:Array<Int> = [];
+                    tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize, tilesAlpha, tilesOffsetX, tilesOffsetY);
+                    if (!allEqual(tilesAlpha, 1.0)) {
+                        tilemapLayerData.computedTilesAlpha = tilesAlpha;
+                    }
+                    if (!allEqual(tilesOffsetX, 0)) {
+                        tilemapLayerData.computedTilesOffsetX = tilesOffsetX;
+                    }
+                    if (!allEqual(tilesOffsetY, 0)) {
+                        tilemapLayerData.computedTilesOffsetY = tilesOffsetY;
                     }
                 case Entities:
                     // Do not assign tiles
@@ -219,7 +230,7 @@ class TilemapLdtkParser {
 
     }
 
-    function convertLdtkTiles(ldtkTiles:Array<Int>, tileset:LdtkTilesetDefinition, cols:Int, rows:Int, gridSize:Int, tilesAlpha:Array<Float>):Array<TilemapTile> {
+    function convertLdtkTiles(ldtkTiles:Array<Int>, tileset:LdtkTilesetDefinition, cols:Int, rows:Int, gridSize:Int, tilesAlpha:Array<Float>, tilesOffsetX:Array<Int>, tilesOffsetY:Array<Int>):Array<TilemapTile> {
 
         if (ldtkTiles == null || ldtkTiles.length == 0)
             return null;
@@ -234,6 +245,8 @@ class TilemapLdtkParser {
         for (n in 0...numTiles) {
             result[n] = 0;
             tilesAlpha[n] = 1.0;
+            tilesOffsetX[n] = 0;
+            tilesOffsetY[n] = 0;
         }
 
         while (i < end) {
@@ -242,6 +255,8 @@ class TilemapLdtkParser {
             var flipBits:Int = ldtkTiles[i + 1];
             var col:Int = Math.round(ldtkTiles[i + 2] * 1.0 / gridSize);
             var row:Int = Math.round(ldtkTiles[i + 3] * 1.0 / gridSize);
+            var offsetX:Int = ldtkTiles[i + 2] - col * gridSize;
+            var offsetY:Int = ldtkTiles[i + 3] - row * gridSize;
             var alpha:Float = ldtkTiles[i + 6] * 1.0 / 4096.0;
 
             if (col >= 0 && col < cols && row >= 0 && row < rows) {
@@ -255,16 +270,39 @@ class TilemapLdtkParser {
                 tile.verticalFlip = (flipBits & 2 != 0);
 
                 var averageColor = tileset.averageColor(tileId);
-                var isOpaque = alpha == 1.0 && averageColor != AlphaColor.NONE && averageColor.alpha == 0xFF;
+                var isOpaque = alpha == 1.0 && averageColor != AlphaColor.NONE && averageColor.alpha == 0xFF && offsetX == 0 && offsetY == 0;
 
                 var index = row * cols + col;
                 if (isOpaque) {
-                    // Stacking opaque tile, so we can discard any tile behind
-                    var indexAbove = index + numTiles;
-                    while (indexAbove < result.length) {
-                        needsCleanup = true;
-                        result[indexAbove] = 0;
-                        indexAbove += numTiles;
+                    // Stacking opaque tile, so we can discard any tile behind that doesn't have offsets
+                    while (result[index] != 0) {
+                        if (tilesOffsetX[index] == 0 && tilesOffsetY[index] == 0) {
+                            // Found tile without offsets, discard it and shift all tiles above it downwards
+                            needsCleanup = true;
+                            var indexTarget = index;
+                            var indexSource = index + numTiles;
+                            while (indexSource < result.length) {
+                                result[indexTarget] = result[indexSource];
+                                tilesOffsetX[indexTarget] = tilesOffsetX[indexSource];
+                                tilesOffsetY[indexTarget] = tilesOffsetY[indexSource];
+
+                                indexTarget = indexSource;
+                                indexSource += numTiles;
+                            }
+                            result[indexTarget] = 0;
+                            tilesOffsetX[indexTarget] = 0;
+                            tilesOffsetY[indexTarget] = 0;
+                        } else {
+                            // Found tile with offsets, leave it in and stack on top
+                            index += numTiles;
+                            if (index >= result.length) {
+                                var start:Int = result.length;
+                                var end:Int = start + numTiles;
+                                for (n in start...end) {
+                                    result[n] = 0;
+                                }
+                            }
+                        }
                     }
                 }
                 else {
@@ -283,6 +321,8 @@ class TilemapLdtkParser {
 
                 result[index] = tile;
                 tilesAlpha[index] = alpha;
+                tilesOffsetX[index] = offsetX;
+                tilesOffsetY[index] = offsetY;
             }
 
             i += 7;
@@ -310,4 +350,14 @@ class TilemapLdtkParser {
 
     }
 
+}
+
+@generic
+function allEqual<T>(array:Array<T>, value:T): Bool {
+    for (i in 0...array.length) {
+        if (array[i] != value) {
+            return false;
+        }
+    }
+    return true;
 }
