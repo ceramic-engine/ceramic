@@ -315,9 +315,13 @@ class TilemapLayer extends Visual {
             if (layerData.visible) {
                 var tiles = layerData.computedTiles;
                 var tilesAlpha = layerData.computedTilesAlpha;
+                var tilesOffsetX = layerData.computedTilesOffsetX;
+                var tilesOffsetY = layerData.computedTilesOffsetY;
                 if (tiles == null) {
                     tiles = layerData.tiles;
                     tilesAlpha = layerData.tilesAlpha;
+                    tilesOffsetX = layerData.tilesOffsetX;
+                    tilesOffsetY = layerData.tilesOffsetY;
                 }
                 if (tiles != null) {
 
@@ -383,7 +387,15 @@ class TilemapLayer extends Visual {
                                     }
 
                                     var tileLeft = column * tileset.tileWidth;
+                                    if (tilesOffsetX != null) {
+                                        tileLeft += tilesOffsetX.unsafeGet(t);
+                                    }
+
                                     var tileTop = row * tileset.tileWidth;
+                                    if (tilesOffsetY != null) {
+                                        tileTop += tilesOffsetY.unsafeGet(t);
+                                    }
+
                                     var tileWidth = tileset.tileWidth;
                                     var tileHeight = tileset.tileHeight;
 

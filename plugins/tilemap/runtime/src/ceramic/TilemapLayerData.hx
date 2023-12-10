@@ -97,6 +97,16 @@ class TilemapLayerData extends Model {
     @serialize public var tilesAlpha:ReadOnlyArray<Float> = null;
 
     /**
+     * Per-tile x offset in pixels, or null if there is no offset
+     */
+    @serialize public var tilesOffsetX:ReadOnlyArray<Int> = null;
+
+    /**
+     * Per-tile y offset in pixels, or null if there is no offset
+     */
+    @serialize public var tilesOffsetY:ReadOnlyArray<Int> = null;
+
+    /**
      * Computed tiles, after applying auto-tiling (if any).
      * Will be `null` if no auto-tiling is used.
      */
@@ -106,6 +116,16 @@ class TilemapLayerData extends Model {
      * Per-computed tile alpha, or null if there is no custom alpha per computed tile
      */
     @observe public var computedTilesAlpha:ReadOnlyArray<Float> = null;
+
+    /**
+     * Per-computed tile x offset in pixels, or null if there is no offset per computed tile
+     */
+    @observe public var computedTilesOffsetX:ReadOnlyArray<Int> = null;
+
+    /**
+     * Per-computed tile y offset in pixels, or null if there is no offset per computed tile
+     */
+    @observe public var computedTilesOffsetY:ReadOnlyArray<Int> = null;
 
     /**
      * Is `true` if this layer has tiles. Some layers don't have tile and
