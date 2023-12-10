@@ -215,9 +215,11 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         inputActive = true;
 
+        #if web
         if (domInput != null) {
             domInput.focus();
         }
+        #end
 
         app.textInput.start(
             content,
