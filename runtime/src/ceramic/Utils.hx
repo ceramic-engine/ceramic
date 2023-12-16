@@ -720,4 +720,59 @@ class Utils {
         return a + (b - a) * t;
     }
 
+    /**
+     * Returns `true` if the current platform is iOS, which is the case
+     * when we are running a native iOS app or when we are running
+     * on web from an iOS mobile browser.
+     */
+    #if web
+    public static function isIos():Bool {
+        static var result:Int = -1;
+        if (result == -1) {
+            result = 0;
+            final ua = js.Browser.navigator != null ? js.Browser.navigator.userAgent : '';
+            final notMSStream:Bool = js.Syntax.code('!window.MSStream');
+            if (notMSStream && (ua.indexOf('iPhone') != -1 || ua.indexOf('iPad') != -1 || ua.indexOf('iPod') != -1)) {
+                result = 1;
+            }
+        }
+        return result != 0;
+    }
+    #elseif ios
+    public static function isIos():Bool {
+        return true;
+    }
+    #else
+    public static function isIos():Bool {
+        return false;
+    }
+    #end
+
+    /**
+     * Returns `true` if the current platform is Android, which is the case
+     * when we are running a native Android app or when we are running
+     * on web from an Android mobile browser.
+     */
+    #if web
+    public static function isAndroid():Bool {
+        static var result:Int = -1;
+        if (result == -1) {
+            result = 0;
+            final ua = js.Browser.navigator != null ? js.Browser.navigator.userAgent : '';
+            if (ua.toLowerCase().indexOf('android') != -1) {
+                result = 1;
+            }
+        }
+        return result != 0;
+    }
+    #elseif android
+    public static function isAndroid():Bool {
+        return true;
+    }
+    #else
+    public static function isAndroid():Bool {
+        return false;
+    }
+    #end
+
 }

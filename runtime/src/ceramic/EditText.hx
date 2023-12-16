@@ -560,15 +560,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         var ua = js.Browser.navigator != null ? js.Browser.navigator.userAgent : '';
         var notMSStream:Bool = js.Syntax.code('!window.MSStream');
-        var isMobileWeb:Bool = false;
-        if (notMSStream && (ua.indexOf('iPhone') != -1 || ua.indexOf('iPad') != -1 || ua.indexOf('iPod') != -1)) {
-            // iOS
-            isMobileWeb = true;
-        }
-        else if (ua.toLowerCase().indexOf('android') != -1) {
-            // Android
-            isMobileWeb = true;
-        }
+        var isMobileWeb:Bool = Utils.isIos() || Utils.isAndroid();
 
         if (isMobileWeb) {
             domInput = cast js.Browser.document.createElement('input');
