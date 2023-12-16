@@ -1855,6 +1855,32 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     }
 
+    /**
+     * Returns the first child matching the requested type or `null` otherwise.
+     * @param type The requested type
+     * @param recursive (optional) Recursive search in children
+     * @return A matching visual or `null`
+     */
+    public function childWithType<T:Visual>(type:Class<T>, recursive:Bool = true):T {
+
+        if (children != null) {
+            for (i in 0...children.length) {
+                var child = children.unsafeGet(i);
+                if (Std.isOfType(child, type)) return cast child;
+            }
+            if (recursive) {
+                for (i in 0...children.length) {
+                    var child = children.unsafeGet(i);
+                    var childResult = child.childWithType(type, true);
+                    if (childResult != null) return cast childResult;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
 /// Lifecycle
 
     /**
