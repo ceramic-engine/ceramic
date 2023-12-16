@@ -3,6 +3,8 @@ package ceramic;
 import ceramic.Assert.*;
 import ceramic.Visual;
 
+using ceramic.Extensions;
+
 @editable({
     implicitSizeUnlessNull: 'texture'
 })
@@ -154,6 +156,51 @@ class Quad extends Visual {
         flags = rotateFrame ? flags | FLAG_ROTATE_FRAME : flags & ~FLAG_ROTATE_FRAME;
         return rotateFrame;
     }
+
+#if ceramic_quad_float_attributes
+
+    public var floatAttributes:Array<Float> = null;
+
+    #if ceramic_quad_dark_color
+
+    /**
+     * Set a dark color to the quad.
+     * Only relevant is the shader (likely `TINT_BLACK`)
+     * is capable of using that.
+     */
+    public var darkColor(get,set):Color;
+    function get_darkColor():Color {
+        if (floatAttributes == null || floatAttributes.length < 3) {
+            return Color.BLACK;
+        }
+        else {
+            return Color.fromRGBFloat(
+                floatAttributes.unsafeGet(0),
+                floatAttributes.unsafeGet(1),
+                floatAttributes.unsafeGet(2)
+            );
+        }
+    }
+    function set_darkColor(darkColor:Color):Color {
+        if (floatAttributes == null) {
+            floatAttributes = [
+                darkColor.redFloat,
+                darkColor.greenFloat,
+                darkColor.blueFloat,
+                1.0
+            ];
+        }
+        else {
+            floatAttributes[0] = darkColor.redFloat;
+            floatAttributes[1] = darkColor.greenFloat;
+            floatAttributes[2] = darkColor.blueFloat;
+        }
+        return darkColor;
+    }
+
+    #end
+
+#end
 
 /// Lifecycle
 

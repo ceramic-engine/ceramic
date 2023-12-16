@@ -494,6 +494,10 @@ class Renderer extends Entity {
         var z:Float = this.z;
         var textureSlot:Float = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
 
+        #if ceramic_quad_float_attributes
+        var floatAttributes = quad.floatAttributes;
+        #end
+
     #if ceramic_debug_draw
         if (debugDraw && #if ceramic_debug_draw_all true #elseif ceramic_debug_multitexture activeShaderCanBatchMultipleTextures #else quad.id != null #end) {
             log.warning('* drawQuad(${quad.id != null ? quad.id : ''}) slot=$textureSlot texture=${lastTexture} stencil=$stencilClip clip=$lastClip');
@@ -538,9 +542,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -562,9 +581,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -586,9 +620,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -610,9 +659,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -636,9 +700,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -660,9 +739,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -687,9 +781,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
@@ -711,9 +820,24 @@ class Renderer extends Entity {
             }
             if (hasCustomAttributes) {
                 draw.beginFloatAttributes();
+                #if ceramic_quad_float_attributes
+                if (floatAttributes != null) {
+                    var floatAttributesLen = floatAttributes.length;
+                    for (l in 0...customFloatAttributesSize) {
+                        var attr = l < floatAttributesLen ? floatAttributes.unsafeGet(l) : 0.0;
+                        draw.putFloatAttribute(l, attr);
+                    }
+                }
+                else {
+                    for (l in 0...customFloatAttributesSize) {
+                        draw.putFloatAttribute(l, 0.0);
+                    }
+                }
+                #else
                 for (l in 0...customFloatAttributesSize) {
                     draw.putFloatAttribute(l, 0.0);
                 }
+                #end
                 draw.endFloatAttributes();
             }
 
