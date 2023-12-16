@@ -7,7 +7,7 @@ Pod::Spec.new do |spec|
   spec.summary          = 'Ceramic Ios Support library.'
   spec.source_files     = 'CeramicIosSupport/Support/*.{h,m}'
   spec.source           = { :git => 'https://github.com/ceramic-engine/ceramic.git' }
-  spec.platform         = :ios, "8.0"
+  spec.platform         = :ios, "11.0"
   spec.requires_arc     = true
   spec.frameworks       = 'Foundation'
 end
