@@ -35,6 +35,12 @@ class VisualTransition extends Entity implements Component {
     var yStart:Float = 0;
     var yEnd:Float = 0;
 
+    var depthChanged:Bool = false;
+    var depthTween:Tween = null;
+    var depthTarget:Float = 0;
+    var depthStart:Float = 0;
+    var depthEnd:Float = 0;
+
     var scaleXChanged:Bool = false;
     var scaleXTween:Tween = null;
     var scaleXTarget:Float = 0;
@@ -184,6 +190,7 @@ class VisualTransition extends Entity implements Component {
         anyPropertyChanged = false;
         xChanged = false;
         yChanged = false;
+        depthChanged = false;
         scaleXChanged = false;
         scaleYChanged = false;
         translateXChanged = false;
@@ -229,6 +236,7 @@ class VisualTransition extends Entity implements Component {
         //
         var xCurrent = entity.x;
         var yCurrent = entity.y;
+        var depthCurrent = entity.depth;
         var scaleXCurrent = entity.scaleX;
         var scaleYCurrent = entity.scaleY;
         var translateXCurrent = entity.translateX;
@@ -262,6 +270,7 @@ class VisualTransition extends Entity implements Component {
         // Update target values with initial values
         xTarget = xCurrent;
         yTarget = yCurrent;
+        depthTarget = depthCurrent;
         scaleXTarget = scaleXCurrent;
         scaleYTarget = scaleYCurrent;
         translateXTarget = translateXCurrent;
@@ -310,6 +319,8 @@ class VisualTransition extends Entity implements Component {
                     entity.x = xStart + (xEnd - xStart) * value;
                 if (yTween == propsTween)
                     entity.y = yStart + (yEnd - yStart) * value;
+                if (depthTween == propsTween)
+                    entity.depth = depthStart + (depthEnd - depthStart) * value;
                 if (scaleXTween == propsTween)
                     entity.scaleX = scaleXStart + (scaleXEnd - scaleXStart) * value;
                 if (scaleYTween == propsTween)
@@ -379,6 +390,8 @@ class VisualTransition extends Entity implements Component {
                     xTween = null;
                 if (yTween == propsTween)
                     yTween = null;
+                if (depthTween == propsTween)
+                    depthTween = null;
                 if (scaleXTween == propsTween)
                     scaleXTween = null;
                 if (scaleYTween == propsTween)
@@ -428,6 +441,11 @@ class VisualTransition extends Entity implements Component {
                 yTween = propsTween;
                 yStart = yCurrent;
                 yEnd = yTarget;
+            }
+            if (depthChanged) {
+                depthTween = propsTween;
+                depthStart = depthCurrent;
+                depthEnd = depthTarget;
             }
             if (scaleXChanged) {
                 scaleXTween = propsTween;
@@ -623,6 +641,17 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
     public function pos(x:Float, y:Float):Void {
         inline set_x(x);
         inline set_y(y);
+    }
+
+    public var depth(get, set):Float;
+    function get_depth():Float return this.depthTarget;
+    function set_depth(depth:Float):Float {
+        if (this.depthTween == null || depth != this.depthEnd) {
+            this.anyPropertyChanged = true;
+            this.depthChanged = true;
+        }
+        this.depthTarget = depth;
+        return depth;
     }
 
     public var scaleX(get, set):Float;
