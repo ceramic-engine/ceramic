@@ -1,11 +1,11 @@
 package tools;
 
-import tools.Context;
-import tools.Helpers;
-import tools.Vscode;
-import tools.Ide;
-import tools.Helpers.*;
 import backend.tools.BackendTools;
+import tools.Context;
+import tools.Helpers.*;
+import tools.Helpers;
+import tools.Ide;
+import tools.Vscode;
 
 @:keep
 class ToolsPlugin {
@@ -13,7 +13,7 @@ class ToolsPlugin {
     public var backend:BackendTools;
 
     static function main():Void {
-        
+
         var module:Dynamic = js.Node.module;
         module.exports = new ToolsPlugin();
 
@@ -52,15 +52,15 @@ class ToolsPlugin {
 
     }
 
-    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>) {
+    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>, hxmlOutput:String) {
 
         var backendName = 'clay';
 
         if (context.project != null && context.project.app != null) {
 
-            for (buildTargets in backend.getBuildTargets()) {
+            for (buildTarget in backend.getBuildTargets()) {
 
-                for (config in buildTargets.configs) {
+                for (config in buildTarget.configs) {
 
                     var name:String = null;
                     var kind:String = null;
@@ -77,14 +77,26 @@ class ToolsPlugin {
 
                     if (kind == null) continue;
 
+                    var targetArgs = [backendName, kind, buildTarget.name, '--setup', '--assets'];
+                    var selectArgs = [backendName, "hxml", buildTarget.name, "--setup"];
+
+                    if (hxmlOutput != null) {
+
+                        targetArgs.push('--hxml-output');
+                        targetArgs.push(hxmlOutput);
+
+                        selectArgs.push('--output');
+                        selectArgs.push(hxmlOutput);
+                    }
+
                     targets.push({
                         name: '$backendName / $name',
                         groups: ['build', backendName],
                         command: 'ceramic',
-                        args: [backendName, kind, buildTargets.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
+                        args: targetArgs,
                         select: {
                             command: 'ceramic',
-                            args: [backendName, "hxml", buildTargets.name, "--setup", "--output", "completion.hxml"]
+                            args: selectArgs
                         }
                     });
 

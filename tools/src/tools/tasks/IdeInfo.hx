@@ -1,9 +1,9 @@
 package tools.tasks;
 
+import haxe.Json;
+import haxe.io.Path;
 import tools.Helpers.*;
 import tools.Ide;
-import haxe.io.Path;
-import haxe.Json;
 
 using StringTools;
 
@@ -21,6 +21,8 @@ class IdeInfo extends tools.Task {
 
         var targets:Array<IdeInfoTargetItem> = [];
         var variants:Array<IdeInfoVariantItem> = [];
+
+        var hxmlOutput = extractArgValue(args, 'hxml-output');
 
         // Add app-related targets
         if (context.project != null && context.project.app != null) {
@@ -41,7 +43,7 @@ class IdeInfo extends tools.Task {
                     args: ['--debug']
                 }
             });
-    
+
             /*
             variants.push({
                 name: 'Distribution',
@@ -60,19 +62,26 @@ class IdeInfo extends tools.Task {
             for (plugin in context.plugins) {
                 if (plugin.name != null && plugin.name.toLowerCase() == defaultBackendName.toLowerCase()) {
                     if (plugin.extendIdeInfo != null) {
-                        plugin.extendIdeInfo(targets, variants);
+                        plugin.extendIdeInfo(targets, variants, hxmlOutput);
                     }
                 }
             }
             for (plugin in context.plugins) {
                 if (plugin.name == null || plugin.name.toLowerCase() != defaultBackendName.toLowerCase()) {
                     if (plugin.extendIdeInfo != null) {
-                        plugin.extendIdeInfo(targets, variants);
+                        plugin.extendIdeInfo(targets, variants, hxmlOutput);
                     }
                 }
             }
         }
         else if (context.project != null && context.project.plugin != null) {
+
+            var targetArgs = ["plugin", "hxml", "--tools", "--debug", "--completion"];
+
+            if (hxmlOutput != null) {
+                targetArgs.push('--output');
+                targetArgs.push(hxmlOutput);
+            }
 
             targets.push({
                 name: 'Tools Plugin',
@@ -80,7 +89,7 @@ class IdeInfo extends tools.Task {
                 args: ['plugin', 'build', '--tools'],
                 select: {
                     command: 'ceramic',
-                    args: ["plugin", "hxml", "--tools", "--debug", "--completion", "--output", "completion.hxml"]
+                    args: targetArgs
                 }
             });
 
@@ -179,7 +188,7 @@ class IdeInfo extends tools.Task {
                         });
                     }
                 }
-                
+
                 if (projectVariants != null) {
                     for (item in projectVariants) {
                         if (item == null || Std.isOfType(item, Bool) || Std.isOfType(item, Array) || Std.isOfType(item, Int) || Std.isOfType(item, Float)) {

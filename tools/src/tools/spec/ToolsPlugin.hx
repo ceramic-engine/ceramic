@@ -17,7 +17,7 @@ typedef ToolsPlugin = {
 
     @:optional function extendProject(project:Project):Void;
 
-    @:optional function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>):Void;
+    @:optional function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>, hxmlOutput:String):Void;
 
     @:optional function extendCompletionHxml(hxml:String):Void;
 

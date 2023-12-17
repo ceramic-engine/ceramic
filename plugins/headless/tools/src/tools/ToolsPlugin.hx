@@ -53,7 +53,7 @@ class ToolsPlugin {
 
     }
 
-    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>) {
+    public function extendIdeInfo(targets:Array<IdeInfoTargetItem>, variants:Array<IdeInfoVariantItem>, hxmlOutput:String) {
 
         var backendName = 'headless';
 
@@ -77,14 +77,26 @@ class ToolsPlugin {
 
                     if (kind == null) continue;
 
+                    var targetArgs = [backendName, kind, buildTarget.name, '--setup', '--assets'];
+                    var selectArgs = [backendName, "hxml", buildTarget.name, "--setup"];
+
+                    if (hxmlOutput != null) {
+
+                        targetArgs.push('--hxml-output');
+                        targetArgs.push(hxmlOutput);
+
+                        selectArgs.push('--output');
+                        selectArgs.push(hxmlOutput);
+                    }
+
                     targets.push({
                         name: '$backendName / $name',
                         groups: ['build', backendName],
                         command: 'ceramic',
-                        args: [backendName, kind, buildTarget.name, '--setup', '--assets', '--hxml-output', 'completion.hxml'],
+                        args: targetArgs,
                         select: {
                             command: 'ceramic',
-                            args: [backendName, "hxml", buildTarget.name, "--setup", "--output", "completion.hxml"]
+                            args: selectArgs
                         }
                     });
 
