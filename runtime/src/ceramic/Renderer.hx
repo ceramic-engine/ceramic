@@ -236,6 +236,7 @@ class Renderer extends Entity {
                                 lastRenderTarget = lastClip.computedRenderTarget;
                                 useRenderTarget(draw, lastRenderTarget);
 
+                                #if !ceramic_no_scissor
                                 // If we clip with a regular rectangle quad, we can use scissor(),
                                 // but in every other cases we need to use stencil buffer
                                 if (lastClip.asQuad != null && lastClip.asQuad.isRegular()) {
@@ -244,6 +245,7 @@ class Renderer extends Entity {
                                     scissorWithQuad(draw, lastClip.asQuad);
                                 }
                                 else {
+                                #end
                                     // Update stencil buffer
                                     lastClipIsRegular = false;
 
@@ -273,7 +275,9 @@ class Renderer extends Entity {
 
                                     draw.endDrawingInStencilBuffer();
                                     draw.drawWithStencilTest();
+                                #if !ceramic_no_scissor
                                 }
+                                #end
                             }
                         }
 
@@ -320,6 +324,12 @@ class Renderer extends Entity {
         activeShader = null;
         lastShader = null;
         useShader(draw, null);
+
+        #if !ceramic_no_scissor
+        if (lastClipIsRegular) {
+            draw.disableScissor();
+        }
+        #end
 
         // Default blending
         draw.setBlendFuncSeparate(
