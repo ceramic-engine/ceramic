@@ -219,24 +219,33 @@ class IdeInfo extends tools.Task {
                         }
                         var itemSelect:IdeInfoVariantSelectItem = null;
                         if (item.select != null) {
-                            if (Std.isOfType(item.select, Bool) || Std.isOfType(item.select, Array) || Std.isOfType(item.select, Int) || Std.isOfType(item.select, Float)) {
-                                fail('Invalid variant item select: ${item.select}');
-                            }
-                            if (item.select.args != null && !Std.isOfType(item.select.args, Array)) {
-                                fail('Invalid variant select args in ceramic.yml: ${item.select.args}');
-                            }
-                            var selectArgs:Array<String> = [];
-                            if (item.select.args != null) {
-                                var rawSelectArgs:Array<Dynamic> = item.select.args;
-                                if (rawSelectArgs.length > 0) {
-                                    for (rawArg in rawSelectArgs) {
-                                        selectArgs.push('' + rawArg);
-                                    }
+                            if (js.Syntax.code('({0}.select == "auto")', item) == true) {
+                                if (itemArgs != null && itemArgs.length > 0) {
+                                    itemSelect = {
+                                        args: itemArgs
+                                    };
                                 }
                             }
-                            itemSelect = {
-                                args: selectArgs
-                            };
+                            else {
+                                if (Std.isOfType(item.select, Bool) || Std.isOfType(item.select, Array) || Std.isOfType(item.select, Int) || Std.isOfType(item.select, Float)) {
+                                    fail('Invalid variant item select: ${item.select}');
+                                }
+                                if (item.select.args != null && !Std.isOfType(item.select.args, Array)) {
+                                    fail('Invalid variant select args in ceramic.yml: ${item.select.args}');
+                                }
+                                var selectArgs:Array<String> = [];
+                                if (item.select.args != null) {
+                                    var rawSelectArgs:Array<Dynamic> = item.select.args;
+                                    if (rawSelectArgs.length > 0) {
+                                        for (rawArg in rawSelectArgs) {
+                                            selectArgs.push('' + rawArg);
+                                        }
+                                    }
+                                }
+                                itemSelect = {
+                                    args: selectArgs
+                                };
+                            }
                         }
                         variants.push({
                             name: itemName,
