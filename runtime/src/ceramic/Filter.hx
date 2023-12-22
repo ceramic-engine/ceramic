@@ -63,6 +63,8 @@ class Filter extends Layer implements Observable {
 
     var meshDirty:Bool = false;
 
+    var neverEmptyQuad:Quad = null;
+
     /**
      * If set to `true`, when assigning `null` or
      * a new mesh intance to the `mesh` field will destroy
@@ -204,6 +206,35 @@ class Filter extends Layer implements Observable {
         this.density = density;
         contentDirty = true;
         return density;
+    }
+
+    /**
+     * By default, a render texture doesn't get rendered at all if there is no
+     * visual that has it as render target. That means if this `Filter`s content
+     * is empty, it will stop rendering. In some situations that's ok, but sometimes
+     * you'll still want to trigger the rendering no matter what. The `neverEmpty`
+     * property will ensure there is an off-screen 1x1 quad always there in the content
+     * that will force the render texture to be updated.
+     */
+    public var neverEmpty(default,set):Bool = false;
+    function set_neverEmpty(neverEmpty:Bool):Bool {
+        if (this.neverEmpty == neverEmpty) return neverEmpty;
+        this.neverEmpty = neverEmpty;
+        if (neverEmpty) {
+            if (neverEmptyQuad == null) {
+                neverEmptyQuad = new Quad();
+                neverEmptyQuad.size(1, 1);
+                neverEmptyQuad.pos(-999999999, -999999999);
+                content.add(neverEmptyQuad);
+            }
+        }
+        else {
+            if (neverEmptyQuad != null) {
+                neverEmptyQuad.destroy();
+                neverEmptyQuad = null;
+            }
+        }
+        return neverEmpty;
     }
 
     /**
@@ -564,6 +595,8 @@ class Filter extends Layer implements Observable {
             mesh = null;
             _mesh.destroy();
         }
+
+        neverEmpty = false;
 
         explicitRenderPendingResultCallbacks = null;
 
