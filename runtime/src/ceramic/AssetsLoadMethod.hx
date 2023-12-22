@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.macros.EnumAbstractMacro;
+
 enum abstract AssetsLoadMethod(Int) {
 
     /**
@@ -14,5 +16,9 @@ enum abstract AssetsLoadMethod(Int) {
      * This means calling `assets.load()` will trigger `complete` event synchronously if possible.
      */
     var SYNC = 2;
+
+    function toString() {
+        return EnumAbstractMacro.toStringSwitch(AssetsLoadMethod, abstract);
+    }
 
 }
