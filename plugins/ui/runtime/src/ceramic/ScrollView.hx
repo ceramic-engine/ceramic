@@ -1,7 +1,7 @@
 package ceramic;
 
-import ceramic.Scroller;
 import ceramic.ScrollDirection;
+import ceramic.Scroller;
 
 class ScrollView extends View {
 
@@ -37,6 +37,56 @@ class ScrollView extends View {
     }
     inline function set_direction(direction:ScrollDirection):ScrollDirection {
         return scroller.direction = direction;
+    }
+
+    /**
+     * Enable paging of the scroller so that
+     * everytime we stop dragging, it snaps to the closest page.
+     */
+    public var pagingEnabled(get,set):Bool;
+    inline function get_pagingEnabled():Bool {
+        return scroller.pagingEnabled;
+    }
+    inline function set_pagingEnabled(pagingEnabled:Bool):Bool {
+        return scroller.pagingEnabled = pagingEnabled;
+    }
+
+    /**
+     * When `pagingEnabled` is `true`, this is the size of a page.
+     * If kept to `-1` (default), it will use the scroller size.
+     */
+    public var pageSize(get,set):Float;
+    inline function get_pageSize():Float {
+        return scroller.pageSize;
+    }
+    inline function set_pageSize(pageSize:Float):Float {
+        return scroller.pageSize = pageSize;
+    }
+
+    /**
+     * When `pagingEnabled` is `true`, this is the spacing
+     * between each page.
+     */
+    public var pageSpacing(get,set):Float;
+    inline function get_pageSpacing():Float {
+        return scroller.pageSpacing;
+    }
+    inline function set_pageSpacing(pageSpacing:Float):Float {
+        return scroller.pageSpacing = pageSpacing;
+    }
+
+    /**
+     * When `pagingEnabled` is `true`, this threshold value
+     * will be used to move to a sibling page if the momentum
+     * is equal or above it.
+     * If kept to `-1` (default), it will use the page size.
+     */
+    public var pageMomentumThreshold(get,set):Float;
+    inline function get_pageMomentumThreshold():Float {
+        return scroller.pageMomentumThreshold;
+    }
+    inline function set_pageMomentumThreshold(pageMomentumThreshold:Float):Float {
+        return scroller.pageMomentumThreshold = pageMomentumThreshold;
     }
 
 /// Lifecycle
