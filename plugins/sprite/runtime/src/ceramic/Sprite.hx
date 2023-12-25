@@ -241,7 +241,7 @@ class Sprite<T=String> extends Visual {
         }
 
         // Increment time
-        time += delta / timeScale;
+        time += delta * timeScale;
 
     }
 
