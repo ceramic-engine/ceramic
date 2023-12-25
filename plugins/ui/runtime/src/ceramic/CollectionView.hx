@@ -432,7 +432,7 @@ class CollectionView extends ScrollView {
 
     }
 
-    public function smoothScrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE) {
+    public function smoothScrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE, duration:Float = 0.15, ?easing:Easing) {
 
         var targetScrollX = scroller.scrollX;
         var targetScrollY = scroller.scrollY;
@@ -446,7 +446,7 @@ class CollectionView extends ScrollView {
             targetScrollX = getTargetScrollXForItem(itemIndex, itemPosition);
         }
 
-        scroller.smoothScrollTo(targetScrollX, targetScrollY);
+        scroller.smoothScrollTo(targetScrollX, targetScrollY, duration, easing);
 
     }
 
