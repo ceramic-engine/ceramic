@@ -81,6 +81,9 @@ class Scroller extends Visual {
         var prevStatus = this.status;
         this.status = status;
         if (status == DRAGGING) {
+            if (pagingEnabled) {
+                pageIndexOnStartDrag = pageIndexFromScroll(scrollX, scrollY);
+            }
             emitDragStart();
         }
         else if (prevStatus == DRAGGING) {
@@ -360,7 +363,7 @@ class Scroller extends Visual {
 
     public var momentum(default,null):Float = 0;
 
-    var overScrollRelease:Bool = false;
+    var releaseSnap:Bool = false;
 
     var fromWheel:Bool = false;
 
@@ -373,8 +376,6 @@ class Scroller extends Visual {
     var tweenY:Tween = null;
 
     var animating:Bool = false;
-
-    var snapping:Bool = false;
 
     var pointerOnScroller:Bool = false;
 
@@ -435,7 +436,7 @@ class Scroller extends Visual {
 
     function mouseWheel(x:Float, y:Float):Void {
 
-        if (status == TOUCHING || status == DRAGGING || (!pointerOnScroller && !pointerOnScrollerChild)) {
+        if (pagingEnabled || status == TOUCHING || status == DRAGGING || (!pointerOnScroller && !pointerOnScrollerChild)) {
             // Did already put a finger on this scroller
             return;
         }
@@ -536,7 +537,6 @@ class Scroller extends Visual {
         if (hits && (!touchableStrictHierarchy || (firstDownListener != null && (firstDownListener == this || this.contains(firstDownListener, true))))) {
             // If it was bouncing, snapping..., it is not anymore
             animating = false;
-            snapping = false;
 
             // Stop any tween
             if (tweenX != null) tweenX.destroy();
@@ -596,19 +596,19 @@ class Scroller extends Visual {
             screen.offMultiTouchPointerUp(pointerUp);
 
             if (direction == VERTICAL) {
-                if (isOverScrollingTop() || isOverScrollingBottom()) {
-                    overScrollRelease = true;
+                if (pagingEnabled || isOverScrollingTop() || isOverScrollingBottom()) {
+                    releaseSnap = true;
                 }
                 else {
-                    overScrollRelease = false;
+                    releaseSnap = false;
                 }
             }
             else {
-                if (isOverScrollingLeft() || isOverScrollingRight()) {
-                    overScrollRelease = true;
+                if (pagingEnabled || isOverScrollingLeft() || isOverScrollingRight()) {
+                    releaseSnap = true;
                 }
                 else {
-                    overScrollRelease = false;
+                    releaseSnap = false;
                 }
             }
 
@@ -951,10 +951,10 @@ class Scroller extends Visual {
 
                 if (direction == VERTICAL) {
 
-                    if (animating || snapping) {
+                    if (animating) {
                         // Nothing to do
                     }
-                    else if (isOverScrollingTop() || isOverScrollingBottom()) {
+                    else if (pagingEnabled || isOverScrollingTop() || isOverScrollingBottom()) {
                         // bounce
                         bounceScroll();
                     }
@@ -971,10 +971,10 @@ class Scroller extends Visual {
                     }
                 }
                 else {
-                    if (animating || snapping) {
+                    if (animating) {
                         // Nothing to do
                     }
-                    else if (isOverScrollingLeft() || isOverScrollingRight()) {
+                    else if (pagingEnabled || isOverScrollingLeft() || isOverScrollingRight()) {
                         // bounce
                         bounceScroll();
                     }
@@ -1043,12 +1043,14 @@ class Scroller extends Visual {
         stopTweens();
 
         momentum = 0;
-        status = SCROLLING;
+        var scrolling = false;
 
         if (easing == null) easing = QUAD_EASE_IN_OUT;
 
         if (scrollX != this.scrollX) {
             animating = true;
+            status = SCROLLING;
+            scrolling = true;
 
             var tweenX = tween(easing, duration, this.scrollX, scrollX, function(scrollX, _) {
                 this.scrollX = scrollX;
@@ -1067,6 +1069,8 @@ class Scroller extends Visual {
 
         if (scrollY != this.scrollY) {
             animating = true;
+            status = SCROLLING;
+            scrolling = true;
 
             var tweenY = tween(easing, duration, this.scrollY, scrollY, function(scrollY, _) {
                 this.scrollY = scrollY;
@@ -1083,12 +1087,17 @@ class Scroller extends Visual {
             });
         }
 
+        if (!scrolling) {
+            animating = false;
+            status = IDLE;
+        }
+
     }
 
     public function snapTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
         momentum = 0;
-        snapping = true;
+        animating = true;
         stopTweens();
 
         status = SCROLLING;
@@ -1111,7 +1120,7 @@ class Scroller extends Visual {
 
         if (direction == VERTICAL) {
             if (tweenY != null) tweenY.destroy();
-            if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
+            if (!releaseSnap && (momentum > 0 || momentum < 0)) {
                 var easing:Easing = LINEAR;
                 var toY:Float;
                 if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
@@ -1181,7 +1190,7 @@ class Scroller extends Visual {
         }
         else {
             if (tweenX != null) tweenX.destroy();
-            if (!overScrollRelease && (momentum > 0 || momentum < 0)) {
+            if (!releaseSnap && (momentum > 0 || momentum < 0)) {
                 var easing:Easing = LINEAR;
                 var toX:Float;
                 if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
@@ -1226,7 +1235,11 @@ class Scroller extends Visual {
                 var easing:Easing = QUAD_EASE_OUT;
                 var fromX = scrollX;
                 var toX:Float;
-                if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
+                if (pagingEnabled) {
+                    var targetPage = computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
+                    toX = getTargetScrollXForPageIndex(targetPage);
+                }
+                else if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
                     toX = content.width - width;
                 }
                 else {
@@ -1250,4 +1263,118 @@ class Scroller extends Visual {
 
     }
 
-} //Scroller
+/// Paging
+
+    /**
+     * Enable paging of the scroller so that
+     * everytime we stop dragging, it snaps to the closest page.
+     */
+    public var pagingEnabled:Bool = false;
+
+    /**
+     * When `pagingEnabled` is `true`, this is the size of a page.
+     * If kept to `-1` (default), it will use the scroller size.
+     */
+    public var pageSize:Float = -1;
+
+    /**
+     * When `pagingEnabled` is `true`, this is the spacing
+     * between each page.
+     */
+    public var pageSpacing:Float = 0;
+
+    /**
+     * When `pagingEnabled` is `true`, this threshold value
+     * will be used to move to a sibling page if the momentum
+     * is equal or above it.
+     * If kept to `-1` (default), it will use the page size.
+     */
+    public var pageMomentumThreshold:Float = -1;
+
+    var pageIndexOnStartDrag:Int = 0;
+
+    public function pageIndexFromScroll(scrollX:Float, scrollY:Float):Int {
+
+        final scroll:Float = (direction == VERTICAL) ? scrollY : scrollX;
+        final actualPageSize:Float = pageSize > 0 ? pageSize : ((direction == VERTICAL) ? height : width);
+
+        final pageValue:Float = scroll / (actualPageSize + pageSpacing);
+        final basePageValue:Int = Math.floor(pageValue);
+        final pageRatio:Float = (pageValue - basePageValue) * (actualPageSize + pageSpacing) - pageSpacing;
+        final pageIndex:Int = basePageValue + (pageRatio >= actualPageSize * 0.5 ? 1 : 0);
+
+        return pageIndex;
+
+    }
+
+    function computeTargetPageIndex(scrollX:Float, scrollY:Float, momentum:Float, basePageIndex:Int):Int {
+
+        var pageIndex = pageIndexFromScroll(scrollX, scrollY);
+
+        final scroll:Float = (direction == VERTICAL) ? scrollY : scrollX;
+        final actualPageSize:Float = pageSize > 0 ? pageSize : ((direction == VERTICAL) ? height : width);
+
+        if (momentum <= -actualPageSize) {
+            pageIndex = basePageIndex + 1;
+        }
+        else if (momentum >= actualPageSize) {
+            pageIndex = basePageIndex - 1;
+        }
+
+        return pageIndex;
+
+    }
+
+    public function scrollToPageIndex(pageIndex:Int) {
+
+        var targetScrollX = this.scrollX;
+        var targetScrollY = this.scrollY;
+
+        if (direction == VERTICAL) {
+            // TODO
+        }
+        else {
+            targetScrollX = getTargetScrollXForPageIndex(pageIndex);
+        }
+
+        scrollTo(targetScrollX, targetScrollY);
+
+    }
+
+    public function smoothScrollToPageIndex(pageIndex:Int, duration:Float = 0.15, ?easing:Easing) {
+
+        var targetScrollX = this.scrollX;
+        var targetScrollY = this.scrollY;
+
+        if (direction == VERTICAL) {
+            // TODO
+        }
+        else {
+            targetScrollX = getTargetScrollXForPageIndex(pageIndex);
+        }
+
+        smoothScrollTo(targetScrollX, targetScrollY, duration, easing);
+
+    }
+
+    function getTargetScrollXForPageIndex(pageIndex:Int):Float {
+
+        if (direction == VERTICAL) {
+            return scrollX;
+        }
+
+        final actualPageSize:Float = pageSize > 0 ? pageSize : width;
+
+        var targetScrollX = pageIndex * (actualPageSize + pageSpacing);
+        if (content.width - width < scrollX) {
+            targetScrollX = content.width - width;
+        }
+        else if (scrollX < 0) {
+            targetScrollX = 0;
+        }
+
+        return targetScrollX;
+
+    }
+
+}
