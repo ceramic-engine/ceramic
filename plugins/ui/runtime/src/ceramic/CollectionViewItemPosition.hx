@@ -1,6 +1,8 @@
 package ceramic;
 
-@:enum abstract CollectionViewItemPosition(Int) {
+import ceramic.macros.EnumAbstractMacro;
+
+enum abstract CollectionViewItemPosition(Int) {
 
     var START = 0;
 
@@ -9,5 +11,9 @@ package ceramic;
     var END = 2;
 
     var ENSURE_VISIBLE = 3;
+
+    public function toString() {
+        return EnumAbstractMacro.toStringSwitch(CollectionViewItemPosition, abstract);
+    }
 
 }

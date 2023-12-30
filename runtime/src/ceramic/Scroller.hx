@@ -1166,7 +1166,11 @@ class Scroller extends Visual {
                 var easing:Easing = QUAD_EASE_OUT;
                 var fromY = scrollY;
                 var toY:Float;
-                if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
+                if (pagingEnabled) {
+                    var targetPage = _computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
+                    toY = getTargetScrollYForPageIndex(targetPage);
+                }
+                else if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
                     toY = content.height - height;
                 }
                 else {
@@ -1236,7 +1240,7 @@ class Scroller extends Visual {
                 var fromX = scrollX;
                 var toX:Float;
                 if (pagingEnabled) {
-                    var targetPage = computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
+                    var targetPage = _computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
                     toX = getTargetScrollXForPageIndex(targetPage);
                 }
                 else if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
@@ -1245,6 +1249,7 @@ class Scroller extends Visual {
                 else {
                     toX = 0;
                 }
+                animating = true;
                 var tweenX = tween(easing, duration * 2, fromX, toX, function(tx, _) {
                     scrollX = tx;
                 });
@@ -1300,18 +1305,21 @@ class Scroller extends Visual {
 
         final pageValue:Float = scroll / (actualPageSize + pageSpacing);
         final basePageValue:Int = Math.floor(pageValue);
-        final pageRatio:Float = (pageValue - basePageValue) * (actualPageSize + pageSpacing) - pageSpacing;
-        final pageIndex:Int = basePageValue + (pageRatio >= actualPageSize * 0.5 ? 1 : 0);
+        final pageRatio:Float = (pageValue - basePageValue) * ((actualPageSize + pageSpacing) / actualPageSize);
+        final pageIndex:Int = basePageValue + (pageRatio >= 0.5 ? 1 : 0);
 
         return pageIndex;
 
     }
 
-    function computeTargetPageIndex(scrollX:Float, scrollY:Float, momentum:Float, basePageIndex:Int):Int {
+    public extern inline overload function computeTargetPageIndex() {
+        return _computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
+    }
+
+    function _computeTargetPageIndex(scrollX:Float, scrollY:Float, momentum:Float, basePageIndex:Int):Int {
 
         var pageIndex = pageIndexFromScroll(scrollX, scrollY);
 
-        final scroll:Float = (direction == VERTICAL) ? scrollY : scrollX;
         final actualPageSize:Float = pageSize > 0 ? pageSize : ((direction == VERTICAL) ? height : width);
 
         if (momentum <= -actualPageSize) {
@@ -1331,7 +1339,7 @@ class Scroller extends Visual {
         var targetScrollY = this.scrollY;
 
         if (direction == VERTICAL) {
-            // TODO
+            targetScrollY = getTargetScrollYForPageIndex(pageIndex);
         }
         else {
             targetScrollX = getTargetScrollXForPageIndex(pageIndex);
@@ -1347,7 +1355,7 @@ class Scroller extends Visual {
         var targetScrollY = this.scrollY;
 
         if (direction == VERTICAL) {
-            // TODO
+            targetScrollY = getTargetScrollYForPageIndex(pageIndex);
         }
         else {
             targetScrollX = getTargetScrollXForPageIndex(pageIndex);
@@ -1357,7 +1365,7 @@ class Scroller extends Visual {
 
     }
 
-    function getTargetScrollXForPageIndex(pageIndex:Int):Float {
+    public function getTargetScrollXForPageIndex(pageIndex:Int):Float {
 
         if (direction == VERTICAL) {
             return scrollX;
@@ -1374,6 +1382,26 @@ class Scroller extends Visual {
         }
 
         return targetScrollX;
+
+    }
+
+    public function getTargetScrollYForPageIndex(pageIndex:Int):Float {
+
+        if (direction == HORIZONTAL) {
+            return scrollY;
+        }
+
+        final actualPageSize:Float = pageSize > 0 ? pageSize : height;
+
+        var targetScrollY = pageIndex * (actualPageSize + pageSpacing);
+        if (content.height - height < scrollY) {
+            targetScrollY = content.height - height;
+        }
+        else if (scrollY < 0) {
+            targetScrollY = 0;
+        }
+
+        return targetScrollY;
 
     }
 

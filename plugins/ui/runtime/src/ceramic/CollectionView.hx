@@ -6,7 +6,21 @@ using ceramic.Extensions;
 
 class CollectionView extends ScrollView {
 
-    public var collectionViewLayout:CollectionViewLayout = new CollectionViewFlowLayout();
+    public var collectionViewFlowLayout(default,null):CollectionViewFlowLayout;
+
+    public var collectionViewLayout(default,set):CollectionViewLayout;
+    function set_collectionViewLayout(collectionViewLayout:CollectionViewLayout):CollectionViewLayout {
+        if (this.collectionViewLayout != collectionViewLayout) {
+            this.collectionViewLayout = collectionViewLayout;
+            if (collectionViewLayout != null && Type.getClass(collectionViewLayout) == CollectionViewFlowLayout) {
+                this.collectionViewFlowLayout = cast collectionViewLayout;
+            }
+            else {
+                this.collectionViewFlowLayout = null;
+            }
+        }
+        return collectionViewLayout;
+    }
 
     public var dataSource(default,set):CollectionViewDataSource = null;
 
@@ -49,6 +63,8 @@ class CollectionView extends ScrollView {
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
+
+        collectionViewLayout = new CollectionViewFlowLayout();
 
         scroller.scrollTransform.onChange(this, computeVisibleItems);
 
@@ -140,7 +156,6 @@ class CollectionView extends ScrollView {
             }
         }
 
-        //scroller.scrollToBounds();
         computeVisibleItems();
 
     }
@@ -161,7 +176,7 @@ class CollectionView extends ScrollView {
                 var minFrameX = frame.x - scrollX;
                 var maxFrameX = frame.x + frame.width - scrollX;
                 var minFrameY = frame.y - scrollY;
-                var maxFrameY = frame.y + frame.width - scrollY;
+                var maxFrameY = frame.y + frame.height - scrollY;
 
                 if (x < minFrameX) {
                     diffX = maxFrameX - x;
@@ -278,38 +293,101 @@ class CollectionView extends ScrollView {
             }
         }
 
+        final shouldHandleInvisible = (itemsBehavior != FREEZE && itemsBehavior != LAZY);
+
         if (direction == VERTICAL) {
 
-            for (i in 0...frames.length) {
-                var frame = frames[i];
-                frame.visible = collectionViewLayout.isFrameVisible(this, frame);
+            if (collectionViewFlowLayout != null) {
+                // Optimized code
+                if (collectionViewFlowLayout.allItemsVisible) {
+                    for (i in 0...frames.length) {
+                        var frame = frames.unsafeGet(i);
+                        frame.visible = true;
+                        if (frame.width <= 0 || frame.height <= 0) {
+                            frame.visible = false;
+                        }
+                    }
+                }
+                else {
+                    final scrollTY = this.scroller.scrollTransform.ty;
+                    final visibleOutset = collectionViewFlowLayout.visibleOutset;
+                    final collectionViewHeight = this.height;
+                    for (i in 0...frames.length) {
+                        var frame = frames.unsafeGet(i);
+                        var minY = -scrollTY - visibleOutset;
+                        var maxY = minY + collectionViewHeight + visibleOutset * 2;
+                        frame.visible = (frame.y < maxY && frame.y + frame.height >= minY);
+                        if (frame.visible && frame.width <= 0 || frame.height <= 0) {
+                            frame.visible = false;
+                        }
+                        if (shouldHandleInvisible) handleInvisible(i, frame);
+                    }
+                }
+            }
+            else {
+                for (i in 0...frames.length) {
+                    var frame = frames.unsafeGet(i);
+                    frame.visible = collectionViewLayout.isFrameVisible(this, frame);
+                    if (frame.visible && frame.width <= 0 || frame.height <= 0) {
+                        frame.visible = false;
+                    }
 
-                // We first handle all invisible frames, so that we can harvest reusable views
-                // and provide them on new frames right after
-                if (itemsBehavior != FREEZE && itemsBehavior != LAZY) handleInvisible(i, frame);
+                    // We first handle all invisible frames, so that we can harvest reusable views
+                    // and provide them on new frames right after
+                    if (shouldHandleInvisible) handleInvisible(i, frame);
+                }
             }
 
             for (i in 0...frames.length) {
-                var frame = frames[i];
+                var frame = frames.unsafeGet(i);
                 handleVisible(i, frame);
             }
 
         } else {
 
-            for (i in 0...frames.length) {
-                var frame = frames[i];
-                frame.visible = collectionViewLayout.isFrameVisible(this, frame);
-                if (frame.visible && frame.width <= 0 || frame.height <= 0) {
-                    frame.visible = false;
+            if (collectionViewFlowLayout != null) {
+                // Optimized code
+                if (collectionViewFlowLayout.allItemsVisible) {
+                    for (i in 0...frames.length) {
+                        var frame = frames.unsafeGet(i);
+                        frame.visible = true;
+                        if (frame.width <= 0 || frame.height <= 0) {
+                            frame.visible = false;
+                        }
+                    }
                 }
+                else {
+                    final scrollTX = this.scroller.scrollTransform.tx;
+                    final visibleOutset = collectionViewFlowLayout.visibleOutset;
+                    final collectionViewWidth = this.width;
+                    for (i in 0...frames.length) {
+                        var frame = frames.unsafeGet(i);
+                        var minX = -scrollTX - visibleOutset;
+                        var maxX = minX + collectionViewWidth + visibleOutset * 2;
+                        frame.visible = (frame.x < maxX && frame.x + frame.width >= minX);
+                        if (frame.visible && frame.width <= 0 || frame.height <= 0) {
+                            frame.visible = false;
+                        }
+                        if (shouldHandleInvisible) handleInvisible(i, frame);
+                    }
+                }
+            }
+            else {
+                for (i in 0...frames.length) {
+                    var frame = frames[i];
+                    frame.visible = collectionViewLayout.isFrameVisible(this, frame);
+                    if (frame.visible && frame.width <= 0 || frame.height <= 0) {
+                        frame.visible = false;
+                    }
 
-                // We first handle all invisible frames, so that we can harvest reusable views
-                // and provide them on new frames right after
-                if (itemsBehavior != FREEZE && itemsBehavior != LAZY) handleInvisible(i, frame);
+                    // We first handle all invisible frames, so that we can harvest reusable views
+                    // and provide them on new frames right after
+                    if (shouldHandleInvisible) handleInvisible(i, frame);
+                }
             }
 
             for (i in 0...frames.length) {
-                var frame = frames[i];
+                var frame = frames.unsafeGet(i);
                 handleVisible(i, frame);
             }
         }

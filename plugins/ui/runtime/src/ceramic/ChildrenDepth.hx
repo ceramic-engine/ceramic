@@ -1,5 +1,7 @@
 package ceramic;
 
+import ceramic.macros.EnumAbstractMacro;
+
 /**
  * Control how children depth is sorted.
  */
@@ -24,5 +26,9 @@ enum abstract ChildrenDepth(Int) from Int to Int {
      * Depth if not set automatically.
      */
     var CUSTOM = 2;
+
+    public function toString() {
+        return EnumAbstractMacro.toStringSwitch(ChildrenDepth, abstract);
+    }
 
 }

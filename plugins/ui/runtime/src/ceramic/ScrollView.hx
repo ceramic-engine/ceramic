@@ -59,7 +59,7 @@ class ScrollView extends View {
     inline function get_pageSize():Float {
         return scroller.pageSize;
     }
-    inline function set_pageSize(pageSize:Float):Float {
+    function set_pageSize(pageSize:Float):Float {
         return scroller.pageSize = pageSize;
     }
 
@@ -71,7 +71,7 @@ class ScrollView extends View {
     inline function get_pageSpacing():Float {
         return scroller.pageSpacing;
     }
-    inline function set_pageSpacing(pageSpacing:Float):Float {
+    function set_pageSpacing(pageSpacing:Float):Float {
         return scroller.pageSpacing = pageSpacing;
     }
 
