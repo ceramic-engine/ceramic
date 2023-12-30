@@ -3,13 +3,18 @@ package ceramic;
 import ceramic.ScrollDirection;
 import ceramic.ScrollerStatus;
 import ceramic.Shortcuts.*;
+import tracker.Observable;
 
 @:keep
-class Scroller extends Visual {
+class Scroller extends Visual implements Observable {
 
     static var _point:Point = new Point(0, 0);
 
 /// Events
+
+    @event function animateStart();
+
+    @event function animateEnd();
 
     @event function dragStart();
 
@@ -74,7 +79,7 @@ class Scroller extends Visual {
         return roundScrollWhenIdle;
     }
 
-    public var status(default,set):ScrollerStatus = IDLE;
+    @observe public var status(default,set):ScrollerStatus = IDLE;
 
     function set_status(status:ScrollerStatus):ScrollerStatus {
         if (status == this.status) return status;
@@ -375,7 +380,19 @@ class Scroller extends Visual {
 
     var tweenY:Tween = null;
 
-    var animating:Bool = false;
+    public var animating(default,set):Bool = false;
+    function set_animating(animating:Bool):Bool {
+        if (this.animating != animating) {
+            this.animating = animating;
+            if (animating) {
+                emitAnimateStart();
+            }
+            else {
+                emitAnimateEnd();
+            }
+        }
+        return animating;
+    }
 
     var pointerOnScroller:Bool = false;
 
@@ -1349,23 +1366,23 @@ class Scroller extends Visual {
 
     }
 
-    public function smoothScrollToPageIndex(pageIndex:Int, duration:Float = 0.15, ?easing:Easing) {
+    public function smoothScrollToPageIndex(pageIndex:Int, duration:Float = 0.15, ?easing:Easing, allowOverscroll:Bool = false) {
 
         var targetScrollX = this.scrollX;
         var targetScrollY = this.scrollY;
 
         if (direction == VERTICAL) {
-            targetScrollY = getTargetScrollYForPageIndex(pageIndex);
+            targetScrollY = getTargetScrollYForPageIndex(pageIndex, allowOverscroll);
         }
         else {
-            targetScrollX = getTargetScrollXForPageIndex(pageIndex);
+            targetScrollX = getTargetScrollXForPageIndex(pageIndex, allowOverscroll);
         }
 
         smoothScrollTo(targetScrollX, targetScrollY, duration, easing);
 
     }
 
-    public function getTargetScrollXForPageIndex(pageIndex:Int):Float {
+    public function getTargetScrollXForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
         if (direction == VERTICAL) {
             return scrollX;
@@ -1374,18 +1391,20 @@ class Scroller extends Visual {
         final actualPageSize:Float = pageSize > 0 ? pageSize : width;
 
         var targetScrollX = pageIndex * (actualPageSize + pageSpacing);
-        if (content.width - width < scrollX) {
-            targetScrollX = content.width - width;
-        }
-        else if (scrollX < 0) {
-            targetScrollX = 0;
+        if (!allowOverscroll) {
+            if (content.width - width < targetScrollX) {
+                targetScrollX = content.width - width;
+            }
+            else if (targetScrollX < 0) {
+                targetScrollX = 0;
+            }
         }
 
         return targetScrollX;
 
     }
 
-    public function getTargetScrollYForPageIndex(pageIndex:Int):Float {
+    public function getTargetScrollYForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
         if (direction == HORIZONTAL) {
             return scrollY;
@@ -1394,11 +1413,13 @@ class Scroller extends Visual {
         final actualPageSize:Float = pageSize > 0 ? pageSize : height;
 
         var targetScrollY = pageIndex * (actualPageSize + pageSpacing);
-        if (content.height - height < scrollY) {
-            targetScrollY = content.height - height;
-        }
-        else if (scrollY < 0) {
-            targetScrollY = 0;
+        if (!allowOverscroll) {
+            if (content.height - height < targetScrollY) {
+                targetScrollY = content.height - height;
+            }
+            else if (targetScrollY < 0) {
+                targetScrollY = 0;
+            }
         }
 
         return targetScrollY;
