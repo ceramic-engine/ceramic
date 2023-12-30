@@ -131,7 +131,8 @@ class PagerView extends ScrollView {
         scroller.pagingEnabled = true;
         scroller.scrollTransform.onChange(this, computeLoadedPages);
 
-        scroller.onDragEnd(this, handleDragEnd);
+        scroller.onDragEnd(this, checkScrollerPosition);
+        scroller.onAnimateEnd(this, checkScrollerPosition);
 
     }
 
@@ -434,7 +435,7 @@ class PagerView extends ScrollView {
 
     }
 
-    function handleDragEnd() {
+    function checkScrollerPosition() {
 
         if (loop && numPages > 1) {
 
@@ -442,22 +443,24 @@ class PagerView extends ScrollView {
             if (targetPage < 0) {
                 while (targetPage < 0) {
                     targetPage += numPages;
+                    @:privateAccess scroller.pageIndexOnStartDrag += numPages;
                     if (direction == VERTICAL) {
-                        scroller.scrollY += contentSize;
+                        scroller.scrollY += contentSize + pageSpacing;
                     }
                     else {
-                        scroller.scrollX += contentSize;
+                        scroller.scrollX += contentSize + pageSpacing;
                     }
                 }
             }
             else if (targetPage >= numPages) {
                 while (targetPage >= numPages) {
                     targetPage -= numPages;
+                    @:privateAccess scroller.pageIndexOnStartDrag -= numPages;
                     if (direction == VERTICAL) {
-                        scroller.scrollY -= contentSize;
+                        scroller.scrollY -= contentSize + pageSpacing;
                     }
                     else {
-                        scroller.scrollX -= contentSize;
+                        scroller.scrollX -= contentSize + pageSpacing;
                     }
                 }
             }
@@ -468,15 +471,15 @@ class PagerView extends ScrollView {
 
 /// Helpers
 
-    public function getTargetScrollXForPageIndex(pageIndex:Int):Float {
+    public function getTargetScrollXForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
-        return scroller.getTargetScrollXForPageIndex(pageIndex);
+        return scroller.getTargetScrollXForPageIndex(pageIndex, allowOverscroll);
 
     }
 
-    public function getTargetScrollYForPageIndex(pageIndex:Int):Float {
+    public function getTargetScrollYForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
-        return scroller.getTargetScrollYForPageIndex(pageIndex);
+        return scroller.getTargetScrollYForPageIndex(pageIndex, allowOverscroll);
 
     }
 
@@ -488,7 +491,11 @@ class PagerView extends ScrollView {
 
     public function smoothScrollToPageIndex(pageIndex:Int, duration:Float = 0.15, ?easing:Easing) {
 
-        scroller.smoothScrollToPageIndex(pageIndex, duration, easing);
+        // When looping, we allow to overscroll because the looping logic will then "loop"
+        // the scroll position into a stable value after the transition has finished
+        final allowOverscroll = (loop && numPages > 1);
+
+        scroller.smoothScrollToPageIndex(pageIndex, duration, easing, allowOverscroll);
 
     }
 
