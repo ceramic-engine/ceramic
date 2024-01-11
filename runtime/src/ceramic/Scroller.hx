@@ -60,6 +60,17 @@ class Scroller extends Visual implements Observable {
     public var dragEnabled:Bool = true;
 
     /**
+     * If set to a value above zero, dragging should reach that
+     * value before the scroller start to actually move its content.
+     * In case the same value is reached in wrong direction (vertical vs horizontal),
+     * scroll will be entirely cancelled for the current touch.
+     * This can be useful if you want to perform custom behaviour depending
+     * on the direction of the drag, or if you want to nest two scrollers
+     * that have different directions.
+     */
+    public var dragThreshold:Float = 0.0;
+
+    /**
      * If set to a value above zero, scrollX and scrollY will be rounded when scroller is idle.
      *
      * ```haxe
@@ -140,9 +151,11 @@ class Scroller extends Visual implements Observable {
 
 /// Internal
 
-    var prevPointerX:Float = -999999;
+    var prevPointerX:Float = -99999999;
 
-    var prevPointerY:Float = -999999;
+    var prevPointerY:Float = -99999999;
+
+    var dragThresholdStatus:ScrollerDragThresholdStatus = NONE;
 
 /// Lifecycle
 
@@ -362,6 +375,10 @@ class Scroller extends Visual implements Observable {
 
     var pointerStart:Float = 0;
 
+    var pointerStartX:Float = 0;
+
+    var pointerStartY:Float = 0;
+
     var touchIndex:Int = -1;
 
     public var scrollVelocity(default,null):Velocity = null;
@@ -547,6 +564,8 @@ class Scroller extends Visual implements Observable {
             return;
         }
 
+        dragThresholdStatus = dragThreshold > 0 ? PENDING : NONE;
+
         // Does this touch intersect with our scroller?
         var hits = this.hits(info.x, info.y);
         var firstDownListener = hits && touchableStrictHierarchy ? @:privateAccess screen.matchFirstDownListener(info.x, info.y) : null;
@@ -570,10 +589,12 @@ class Scroller extends Visual implements Observable {
             }
 
             // Yes, then let's start touching
-            prevPointerX = -999999;
-            prevPointerY = -999999;
+            prevPointerX = -99999999;
+            prevPointerY = -99999999;
             status = TOUCHING;
             touchIndex = info.touchIndex;
+            pointerStartX = info.x;
+            pointerStartY = info.y;
             if (direction == VERTICAL) {
                 contentStart = scrollTransform.ty;
                 pointerStart = info.y;
@@ -713,7 +734,7 @@ class Scroller extends Visual implements Observable {
         }
         #end
 
-        if (delta == 0) return;
+        if (delta == 0 || dragThresholdStatus == CANCELED) return;
 
         var pointerX:Float = screen.pointerX;
         var pointerY:Float = screen.pointerY;
@@ -726,12 +747,34 @@ class Scroller extends Visual implements Observable {
             }
         }
 
+        if (dragThresholdStatus == PENDING) {
+            var diffX = Math.abs(pointerX - pointerStartX);
+            var diffY = Math.abs(pointerY - pointerStartY);
+            if (direction == VERTICAL) {
+                if (diffX > diffY && diffX >= dragThreshold) {
+                    dragThresholdStatus = CANCELED;
+                }
+                else if (diffY > diffX && diffY >= dragThreshold) {
+                    dragThresholdStatus = REACHED;
+                }
+            }
+            else {
+                if (diffY > diffX && diffY >= dragThreshold) {
+                    dragThresholdStatus = CANCELED;
+                }
+                else if (diffX > diffY && diffX >= dragThreshold) {
+                    dragThresholdStatus = REACHED;
+                }
+            }
+            if (dragThresholdStatus == CANCELED) return;
+        }
+
         #if ceramic_scroller_tweak_delta
         // Scroll is expected to work fine on 60 FPS
         // If FPS is lower (higher delta), compute more frames with shorter deltas
         var optimalDelta = 1.0 / 60;
         if (delta >= optimalDelta * 1.5) {
-            if (prevPointerX != -999999 && prevPointerY != -999999) {
+            if (prevPointerX != -99999999 && prevPointerY != -99999999) {
                 scrollUpdate((pointerX + prevPointerX) * 0.5, (pointerY + prevPointerY) * 0.5, delta * 0.5, delta * 0.5);
             }
             else {
@@ -758,8 +801,8 @@ class Scroller extends Visual implements Observable {
                 prevPointerX = pointerX;
                 prevPointerY = pointerY;
             default:
-                prevPointerX = -999999;
-                prevPointerY = -999999;
+                prevPointerX = -99999999;
+                prevPointerY = -99999999;
         }
 
         updateScrollbar();
@@ -1425,5 +1468,29 @@ class Scroller extends Visual implements Observable {
         return targetScrollY;
 
     }
+
+}
+
+enum abstract ScrollerDragThresholdStatus(Int) {
+
+    /**
+     * No status (irrelevant)
+     */
+    var NONE = 0;
+
+    /**
+     * Pending: we are waiting for a resolution of the status, either REACHED or CANCELED
+     */
+    var PENDING = 1;
+
+    /**
+     * Threshold has been reached, we can scroll!
+     */
+    var REACHED = 2;
+
+    /**
+     * Threshold not reached scroll canceled
+     */
+    var CANCELED = 3;
 
 }
