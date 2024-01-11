@@ -725,7 +725,11 @@ class Utils {
      * when we are running a native iOS app or when we are running
      * on web from an iOS mobile browser.
      */
-    #if web
+    #if ceramic_fake_ios
+    public static function isIos():Bool {
+        return true;
+    }
+    #elseif web
     public static function isIos():Bool {
         static var result:Int = -1;
         if (result == -1) {
@@ -742,6 +746,10 @@ class Utils {
     public static function isIos():Bool {
         return true;
     }
+    #elseif (cs && unity)
+    public static function isIos():Bool {
+        return untyped __cs__('UnityEngine.Application.platform == UnityEngine.RuntimePlatform.IPhonePlayer');
+    }
     #else
     public static function isIos():Bool {
         return false;
@@ -753,7 +761,11 @@ class Utils {
      * when we are running a native Android app or when we are running
      * on web from an Android mobile browser.
      */
-    #if web
+    #if ceramic_fake_android
+    public static function isAndroid():Bool {
+        return true;
+    }
+    #elseif web
     public static function isAndroid():Bool {
         static var result:Int = -1;
         if (result == -1) {
@@ -768,6 +780,10 @@ class Utils {
     #elseif android
     public static function isAndroid():Bool {
         return true;
+    }
+    #elseif (cs && unity)
+    public static function isAndroid():Bool {
+        return untyped __cs__('UnityEngine.Application.platform == UnityEngine.RuntimePlatform.Android');
     }
     #else
     public static function isAndroid():Bool {
