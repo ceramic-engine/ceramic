@@ -17,10 +17,10 @@ using StringTools;
  */
 class Dialogs {
 
-	/**
-	 * Opens a file picker
-	 * IMPORTANT: On non-electron web targets, the dialog will only open on click events
-	 */
+    /**
+     * Opens a file picker
+     * IMPORTANT: On non-electron web targets, the dialog will only open on click events
+     */
     public static function openFile(title:String, ?filters:Array<DialogsFileFilter>, done:(file:Null<String>)->Void) {
 
         #if (cpp && (mac || windows || linux))
