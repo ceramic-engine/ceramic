@@ -12,8 +12,15 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+/**
+ * A way to create filesystem dialogs
+ */
 class Dialogs {
 
+	/**
+	 * Opens a file picker
+	 * IMPORTANT: On non-electron web targets, the dialog will only open on click events
+	 */
     public static function openFile(title:String, ?filters:Array<DialogsFileFilter>, done:(file:Null<String>)->Void) {
 
         #if (cpp && (mac || windows || linux))
@@ -73,10 +80,29 @@ class Dialogs {
                 }
             }
         }
-        else {
-            log.warning('Dialogs not implemented on web without electron');
-            done(null);
-        }
+
+        #elseif web
+
+        final extensions:Array<String> = [
+            for (filter in filters) {
+                for (extension in filter.extensions) {
+                    '.$extension';
+                }
+            }
+        ];
+
+        var input: js.html.InputElement = cast js.Browser.document.createElement("input");
+        input.type = "file";
+        input.accept = extensions.join(",");
+
+        input.onchange = () -> {
+            var reader = new js.html.FileReader();
+            reader.readAsText(input.files[0]);
+            reader.onloadend = () -> {
+                done(reader.result);
+            };
+        };
+        input.click();
 
         #else
 
@@ -138,14 +164,10 @@ class Dialogs {
                 done(null);
             }
         }
-        else {
-            log.warning('Dialogs not implemented on web without electron');
-            done(null);
-        }
 
         #else
 
-        log.warning('Dialogs not implemented on this platform');
+        log.warning('openDirectory is not implemented on this platform');
         done(null);
 
         #end
@@ -210,14 +232,10 @@ class Dialogs {
                 }
             }
         }
-        else {
-            log.warning('Dialogs not implemented on web without electron');
-            done(null);
-        }
 
         #else
 
-        log.warning('Dialogs not implemented on this platform');
+        log.warning('saveFile is not implemented on this platform');
         done(null);
 
         #end
