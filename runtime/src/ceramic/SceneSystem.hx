@@ -242,6 +242,11 @@ class SceneSystem extends System {
                     if (movingFromName == 'main') {
                         this.main = null;
                     }
+
+                    rootScenes.original.set(name, scene);
+                    if (name == 'main') {
+                        this.main = scene;
+                    }
                 }
 
                 if (prevScene != null) {
