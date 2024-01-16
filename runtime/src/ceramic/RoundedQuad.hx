@@ -33,6 +33,20 @@ class RoundedQuad extends Shape {
      */
     @content public var radiusBottomLeft:Int = 0;
 
+    override public function set_width(width:Float):Float {
+        if (this.width == width) return width;
+        super.set_width(width);
+        contentDirty = true;
+        return width;
+    }
+
+    override public function set_height(height:Float):Float {
+        if (this.height == height) return height;
+        super.set_height(height);
+        contentDirty = true;
+        return height;
+    }
+
     override public function new() {
         super();
         autoComputeSize = false;
