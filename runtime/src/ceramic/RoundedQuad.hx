@@ -11,27 +11,27 @@ class RoundedQuad extends Shape {
      * Amount of corner segments
      * One to ten is going to be the sanest quantity
      */
-    public var segments:Int = 10;
+    @content public var segments:Int = 10;
 
     /**
      * Defines the radius of the top left
      */
-    public var radiusTopLeft:Int = 0;
+    @content public var radiusTopLeft:Int = 0;
 
     /**
      * Defines the radius of the top right
      */
-    public var radiusTopRight:Int = 0;
+    @content public var radiusTopRight:Int = 0;
 
     /**
      * Defines the radius of the bottom right
      */
-    public var radiusBottomRight:Int = 0;
+    @content public var radiusBottomRight:Int = 0;
 
     /**
      * Defines the radius of the bottom left
      */
-    public var radiusBottomLeft:Int = 0;
+    @content public var radiusBottomLeft:Int = 0;
 
     override public function new() {
         super();
@@ -39,6 +39,8 @@ class RoundedQuad extends Shape {
     }
 
     override function computeContent() {
+
+        points = [];
 
         // Define the relative coordinates for the radius
         var sine = [for (angle in 0...segments + 1) Math.sin(Math.PI / 2 * angle / segments)];
