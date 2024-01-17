@@ -5,7 +5,7 @@ import ceramic.Shape;
 /**
  * An extension of Shape that creates a nicely rounded rectangle
  */
-class RoundedQuad extends Shape {
+class RoundedRect extends Shape {
 
     /**
      * Amount of corner segments
@@ -88,9 +88,9 @@ class RoundedQuad extends Shape {
 
     }
 
-	/**
-	 * A shortcut for setting all of the corner radiuses at once
-	 */
+    /**
+     * A shortcut for setting all of the corner radiuses at once
+     */
     public function radius(topLeft:Int, ?topRight:Int, ?bottomRight:Int, ?bottomLeft:Int):Void {
         if (topRight == null && bottomRight == null && bottomLeft == null) {
             topRight = topLeft;
