@@ -62,13 +62,19 @@ class Scroller extends Visual implements Observable {
     /**
      * If set to a value above zero, dragging should reach that
      * value before the scroller start to actually move its content.
-     * In case the same value is reached in wrong direction (vertical vs horizontal),
+     * In case the same value (or `noDragThreshold` value if above zero) is reached in wrong direction (vertical vs horizontal),
      * scroll will be entirely cancelled for the current touch.
      * This can be useful if you want to perform custom behaviour depending
      * on the direction of the drag, or if you want to nest two scrollers
      * that have different directions.
      */
     public var dragThreshold:Float = 0.0;
+
+    /**
+     * If set to a value above zero, when reaching that value in wrong direction (vertical vs horizontal),
+     * scroll will be entirely cancelled for the current touch.
+     */
+    public var noDragThreshold:Float = 0.0;
 
     /**
      * If set to a value above zero, scrollX and scrollY will be rounded when scroller is idle.
@@ -750,8 +756,9 @@ class Scroller extends Visual implements Observable {
         if (dragThresholdStatus == PENDING) {
             var diffX = Math.abs(pointerX - pointerStartX);
             var diffY = Math.abs(pointerY - pointerStartY);
+            var oppositeDragThreshold = noDragThreshold > 0 ? noDragThreshold : dragThreshold;
             if (direction == VERTICAL) {
-                if (diffX > diffY && diffX >= dragThreshold) {
+                if ((noDragThreshold > 0 || diffX > diffY) && diffX >= oppositeDragThreshold) {
                     dragThresholdStatus = CANCELED;
                 }
                 else if (diffY > diffX && diffY >= dragThreshold) {
@@ -759,7 +766,7 @@ class Scroller extends Visual implements Observable {
                 }
             }
             else {
-                if (diffY > diffX && diffY >= dragThreshold) {
+                if ((noDragThreshold > 0 || diffY > diffX) && diffY >= oppositeDragThreshold) {
                     dragThresholdStatus = CANCELED;
                 }
                 else if (diffX > diffY && diffX >= dragThreshold) {
@@ -909,9 +916,13 @@ class Scroller extends Visual implements Observable {
 
             case TOUCHING:
 
+                var diffX = Math.abs(pointerX - pointerStartX);
+                var diffY = Math.abs(pointerY - pointerStartY);
+                var oppositeDragThreshold = noDragThreshold > 0 ? noDragThreshold : dragThreshold;
+
                 if (direction == VERTICAL) {
 
-                    if (Math.abs(pointerY - pointerStart) >= threshold) {
+                    if ((diffY > diffX && diffY >= Math.max(threshold, dragThreshold)) && !((noDragThreshold > 0 || diffX > diffY) && diffX >= oppositeDragThreshold)) {
                         status = DRAGGING;
                         fromWheel = false;
                         pointerStart = pointerY;
@@ -940,7 +951,7 @@ class Scroller extends Visual implements Observable {
                 }
                 else {
 
-                    if (Math.abs(pointerX - pointerStart) >= threshold) {
+                    if ((diffX > diffY && diffX >= Math.max(threshold, dragThreshold)) && !((noDragThreshold > 0 || diffY > diffX) && diffY >= oppositeDragThreshold)) {
                         status = DRAGGING;
                         fromWheel = false;
                         pointerStart = pointerX;
