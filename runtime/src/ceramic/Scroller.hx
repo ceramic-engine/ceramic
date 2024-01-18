@@ -271,22 +271,28 @@ class Scroller extends Visual implements Observable {
 
     public function scrollToBounds():Void {
 
-       if (direction == VERTICAL) {
-           if (content.height - height < scrollY) {
-               scrollY = content.height - height;
-           }
-           else if (scrollY < 0) {
-               scrollY = 0;
-           }
-       }
-       else {
-           if (content.width - width < scrollX) {
+        if (direction == VERTICAL) {
+            if (content.height <= height) {
+                scrollY = 0;
+            }
+            else if (content.height - height < scrollY) {
+                scrollY = content.height - height;
+            }
+            else if (scrollY < 0) {
+                scrollY = 0;
+            }
+        }
+        else {
+            if (content.width <= width) {
+                scrollX = 0;
+            }
+            else if (content.width - width < scrollX) {
                scrollX = content.width - width;
            }
            else if (scrollX < 0) {
                scrollX = 0;
            }
-       }
+        }
 
     }
 
@@ -1241,6 +1247,9 @@ class Scroller extends Visual implements Observable {
                     var targetPage = _computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
                     toY = getTargetScrollYForPageIndex(targetPage);
                 }
+                else if (content.height <= height) {
+                    toY = 0;
+                }
                 else if (Math.abs(scrollY - content.height + height) < Math.abs(scrollY)) {
                     toY = content.height - height;
                 }
@@ -1313,6 +1322,9 @@ class Scroller extends Visual implements Observable {
                 if (pagingEnabled) {
                     var targetPage = _computeTargetPageIndex(scrollX, scrollY, momentum, pageIndexOnStartDrag);
                     toX = getTargetScrollXForPageIndex(targetPage);
+                }
+                else if (content.width <= width) {
+                    toX = 0;
                 }
                 else if (Math.abs(scrollX - content.width + width) < Math.abs(scrollX)) {
                     toX = content.width - width;
