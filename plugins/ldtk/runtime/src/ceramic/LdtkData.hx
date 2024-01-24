@@ -2866,7 +2866,7 @@ class LdtkFieldInstance {
                 return Color.fromString(rawValue);
             case 'Point':
                 return new Point(Std.int(Reflect.field(rawValue, 'cx')), Std.int(Reflect.field(rawValue, 'cy')));
-            case 'TilesetRect':
+            case 'Tile':
                 return new LdtkTilesetRectangle(ldtkData, rawValue);
             case 'EntityRef':
                 return ldtkData != null ? ldtkData._resolveEntityInstance(rawValue, ldtkWorld) : null;
