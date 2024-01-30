@@ -3,7 +3,7 @@ package ceramic;
 /**
  * A typed (mouse) button id
  */
-@:enum abstract MouseButton(Int) from Int to Int {
+enum abstract MouseButton(Int) from Int to Int {
 
     /**
      * No mouse buttons

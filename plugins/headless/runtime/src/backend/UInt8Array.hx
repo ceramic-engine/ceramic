@@ -27,8 +27,8 @@ abstract UInt8ArrayImplHeadlessJS(js.lib.Uint8Array)
         return new js.lib.Uint8Array(_buffer, _byteOffset, _byteLength);
     }
 
-    @:arrayAccess @:extern inline function __set(idx:Int, val:UInt) : Void this[idx] = val;
-    @:arrayAccess @:extern inline function __get(idx:Int) : Int return this[idx];
+    @:arrayAccess extern inline function __set(idx:Int, val:UInt) : Void this[idx] = val;
+    @:arrayAccess extern inline function __get(idx:Int) : Int return this[idx];
 
 
         //non spec haxe conversions

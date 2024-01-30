@@ -2,17 +2,17 @@ package ceramic;
 
 /**
 * Copyright (c) 2012-2017 Alexander Gordeyko <axgord@gmail.com>. All rights reserved.
-* 
+*
 * Redistribution and use in source and binary forms, with or without modification, are
 * permitted provided that the following conditions are met:
-* 
+*
 * 1. Redistributions of source code must retain the above copyright notice, this list of
 *   conditions and the following disclaimer.
-* 
+*
 * 2. Redistributions in binary form must reproduce the above copyright notice, this list
 *   of conditions and the following disclaimer in the documentation and/or other materials
 *   provided with the distribution.
-* 
+*
 * THIS SOFTWARE IS PROVIDED BY ALEXANDER GORDEYKO ``AS IS'' AND ANY EXPRESS OR IMPLIED
 * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
 * FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL ALEXANDER GORDEYKO OR
@@ -27,7 +27,7 @@ package ceramic;
 /**
  `ReadOnlyArray` is an abstract over an ordinary `Array` which only exposes
  APIs that don't modify the instance, hence "read-only".
- 
+
  Note that this doesn't necessarily mean that the instance is *immutable*.
  Other code holding a reference to the underlying `Array` can still modify it,
  and the reference can be obtained with a `cast`.
@@ -35,7 +35,7 @@ package ceramic;
 @:forward(get, concat, copy, filter, indexOf, iterator, keyValueIterator, join, lastIndexOf, map, slice, contains, toString)
 abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> {
 
-    @:noCompletion @:arrayAccess @:extern inline public function arrayAccess(key:Int):T return this[key];
+    @:noCompletion @:arrayAccess extern inline public function arrayAccess(key:Int):T return this[key];
 
     /**
      * Returns the underlying (and mutable) data. Use at your own risk!

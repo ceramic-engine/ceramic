@@ -22,7 +22,7 @@ class EnumAbstractMacro {
         // Switch on the type and check if it's an abstract with @:enum metadata
         switch (type.follow()) {
             case TAbstract(_.get() => ab, _) if (ab.meta.has(":enum")):
-                // @:enum abstract values are actually static fields of the abstract implementation class,
+                // enum abstract values are actually static fields of the abstract implementation class,
                 // marked with @:enum and @:impl metadata. We generate an array of expressions that access those fields.
                 // Note that this is a bit of implementation detail, so it can change in future Haxe versions, but it's been
                 // stable so far.

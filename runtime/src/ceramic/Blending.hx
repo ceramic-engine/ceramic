@@ -1,6 +1,6 @@
 package ceramic;
 
-@:enum abstract Blending(Int) from Int to Int {
+enum abstract Blending(Int) from Int to Int {
 
     /**
      * Automatic/default blending in ceramic. Internally, this translates to premultiplied alpha blending as textures

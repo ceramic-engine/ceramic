@@ -4,7 +4,7 @@ package backend;
 
 typedef BlendMode = BlendModeImpl;
 
-@:enum abstract BlendModeImpl(Int) from Int to Int {
+enum abstract BlendModeImpl(Int) from Int to Int {
 
     var ZERO                    = 0;
     var ONE                     = 1;
@@ -22,7 +22,7 @@ typedef BlendMode = BlendModeImpl;
 
 #else
 
-@:enum abstract BlendMode(Int) from Int to Int {
+enum abstract BlendMode(Int) from Int to Int {
 
     var ZERO                    = 0;
     var ONE                     = 1;

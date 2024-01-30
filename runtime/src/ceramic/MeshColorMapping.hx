@@ -1,6 +1,6 @@
 package ceramic;
 
-@:enum abstract MeshColorMapping(Int) {
+enum abstract MeshColorMapping(Int) {
     /**
      * Map a single color to the whole mesh.
      */

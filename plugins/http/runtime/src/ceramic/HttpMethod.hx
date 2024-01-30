@@ -1,6 +1,6 @@
 package ceramic;
 
-@:enum abstract HttpMethod(String) from String to String {
+enum abstract HttpMethod(String) from String to String {
 
     var GET = "GET";
 
