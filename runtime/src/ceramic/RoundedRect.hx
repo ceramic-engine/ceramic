@@ -16,22 +16,22 @@ class RoundedRect extends Shape {
     /**
      * Defines the radius of the top left
      */
-    @content public var radiusTopLeft:Int = 0;
+    @content public var radiusTopLeft:Float = 0;
 
     /**
      * Defines the radius of the top right
      */
-    @content public var radiusTopRight:Int = 0;
+    @content public var radiusTopRight:Float = 0;
 
     /**
      * Defines the radius of the bottom right
      */
-    @content public var radiusBottomRight:Int = 0;
+    @content public var radiusBottomRight:Float = 0;
 
     /**
      * Defines the radius of the bottom left
      */
-    @content public var radiusBottomLeft:Int = 0;
+    @content public var radiusBottomLeft:Float = 0;
 
     override public function set_width(width:Float):Float {
         if (this.width == width) return width;
@@ -91,7 +91,7 @@ class RoundedRect extends Shape {
     /**
      * A shortcut for setting all of the corner radiuses at once
      */
-    public function radius(topLeft:Int, ?topRight:Int, ?bottomRight:Int, ?bottomLeft:Int):Void {
+    public function radius(topLeft:Float, ?topRight:Float, ?bottomRight:Float, ?bottomLeft:Float):Void {
         if (topRight == null && bottomRight == null && bottomLeft == null) {
             topRight = topLeft;
             bottomRight = topLeft;
