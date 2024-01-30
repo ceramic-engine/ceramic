@@ -164,7 +164,6 @@ import ceramic.Quad;
 import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
 import ceramic.ReadOnlyPoint;
-import ceramic.Rect;
 import ceramic.Renderer;
 import ceramic.RenderTexture;
 import ceramic.ReusableArray;
