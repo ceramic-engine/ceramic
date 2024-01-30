@@ -166,6 +166,12 @@ class Camera extends Entity {
      */
     public var contentTranslateY:Float = 0.0;
 
+    /**
+     * The transform to apply to the content
+     * in order to reflect camera position.
+     */
+    public var contentTransform:Transform = new Transform();
+
     var hasPrevTransform:Bool = false;
 
     var dx:Float = 0;
@@ -286,6 +292,12 @@ class Camera extends Entity {
 
         contentTranslateX = (contentX - x) + viewportWidth * 0.5;
         contentTranslateY = (contentY - y) + viewportHeight * 0.5;
+
+        contentTransform.identity();
+        contentTransform.translate(contentTranslateX, contentTranslateY);
+        contentTransform.translate(-viewportWidth * 0.5, -viewportHeight * 0.5);
+        contentTransform.scale(zoom, zoom);
+        contentTransform.translate(viewportWidth * 0.5, viewportHeight * 0.5);
 
     }
 
