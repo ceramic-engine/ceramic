@@ -164,6 +164,7 @@ jobs:
       - name: Build ceramic
         working-directory: ./node
         run: |
+          sudo -H pip install setuptools
           npm ci
           cd ../tools
           ./npm ci
