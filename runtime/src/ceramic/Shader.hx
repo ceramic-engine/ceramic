@@ -1,10 +1,10 @@
 package ceramic;
 
+import ceramic.AlphaColor;
 import ceramic.Assets;
 import ceramic.Color;
-import ceramic.AlphaColor;
-import ceramic.Texture;
 import ceramic.Shortcuts.*;
+import ceramic.Texture;
 
 using StringTools;
 
@@ -39,6 +39,11 @@ class Shader extends Entity {
     public var customAttributes:ReadOnlyArray<ShaderAttribute>;
 
     public var customFloatAttributesSize(default, null):Int;
+
+    var textureSlots:IntMap<Texture> = null;
+
+    @:allow(ceramic.App)
+    var usedTextures:Array<Texture> = null;
 
 /// Lifecycle
 
@@ -139,9 +144,26 @@ class Shader extends Entity {
 
     }
 
-    inline public function setTexture(name:String, slot:Int, texture:Texture):Void {
+    public function setTexture(name:String, slot:Int, texture:Texture):Void {
 
-        app.backend.shaders.setTexture(backendItem, name, slot, texture.backendItem);
+        if (textureSlots == null) {
+            textureSlots = new IntMap();
+            usedTextures = [];
+        }
+
+        // Remove previous texture (if any) at slot
+        final prevTexture = textureSlots.get(slot);
+        if (prevTexture != null) {
+            usedTextures.splice(usedTextures.indexOf(prevTexture), 1);
+        }
+
+        // Add new texture (if any) at slot
+        textureSlots.set(slot, texture);
+        if (texture != null) {
+            usedTextures.push(texture);
+        }
+
+        app.backend.shaders.setTexture(backendItem, name, slot, texture?.backendItem);
 
     }
 

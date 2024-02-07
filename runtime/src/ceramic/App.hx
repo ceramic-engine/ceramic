@@ -1447,10 +1447,22 @@ class App extends Entity {
                             if (visual.asQuad.texture != null) {
                                 visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
                             }
+                            if (visual.shader != null && visual.shader.usedTextures != null) {
+                                final usedTextures = visual.shader.usedTextures;
+                                for (t in 0...usedTextures.length) {
+                                    visual.computedRenderTarget.incrementDependingTextureCount(usedTextures.unsafeGet(t));
+                                }
+                            }
                         }
                         else if (visual.asMesh != null) {
                             if (visual.asMesh.texture != null) {
                                 visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                            }
+                            if (visual.shader != null && visual.shader.usedTextures != null) {
+                                final usedTextures = visual.shader.usedTextures;
+                                for (t in 0...usedTextures.length) {
+                                    visual.computedRenderTarget.incrementDependingTextureCount(usedTextures.unsafeGet(t));
+                                }
                             }
                         }
                     }
