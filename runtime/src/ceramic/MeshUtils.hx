@@ -184,7 +184,7 @@ class MeshUtils {
      * @param rows The number of rows in the grid
      * @return The generated uvs
      */
-    public static function createUVsGrid(?uvs:Array<Float>, columns:Int, rows:Int):Array<Float> {
+    public static function createUVsGrid(?uvs:Array<Float>, columns:Int, rows:Int, offsetX:Float = 0, offsetY:Float = 0):Array<Float> {
 
         var vertexCount:Int = (columns + 1) * (rows + 1);
         if (uvs == null) {
@@ -198,8 +198,8 @@ class MeshUtils {
         for (y in 0...(rows + 1)) {
             for (x in 0...(columns + 1)) {
 
-                var uvX:Float = x / columns;
-                var uvY:Float = y / rows;
+                var uvX:Float = (x + offsetX) / columns;
+                var uvY:Float = (y + offsetY) / rows;
 
                 uvs[index++] = uvX;
                 uvs[index++] = uvY;

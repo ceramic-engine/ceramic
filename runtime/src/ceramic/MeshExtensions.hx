@@ -257,8 +257,8 @@ class MeshExtensions {
      * @param columns The number of columns in the grid
      * @param rows The number of rows in the grid
      */
-    public static function createUVsGrid(mesh:Mesh, columns:Int, rows:Int):Void {
-        mesh.uvs = MeshUtils.createUVsGrid(mesh.uvs, columns, rows);
+    public static function createUVsGrid(mesh:Mesh, columns:Int, rows:Int, offsetX:Float = 0, offsetY:Float = 0):Void {
+        mesh.uvs = MeshUtils.createUVsGrid(mesh.uvs, columns, rows, offsetX, offsetY);
     }
 
 }
