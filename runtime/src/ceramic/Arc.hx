@@ -5,7 +5,7 @@ using ceramic.Extensions;
 /**
  * Convenience mesh subclass to draw arc, pie, ring or disc geometry
  * Ring: Angle `360`
- * Circle: Angle `360` - Border Position: `Inside`
+ * Circle: Angle `360` - Border Position: `INSIDE`
  * Pie: Radius and Thickness are `equal` - Border Position: `INSIDE`
  */
 @editable({ implicitSize: true })
