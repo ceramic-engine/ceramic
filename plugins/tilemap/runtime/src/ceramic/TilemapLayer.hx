@@ -430,7 +430,7 @@ class TilemapLayer extends Visual {
                                     quad.visible = true;
                                     quad.texture = tileset.image.texture;
                                     quad.frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
-                                    quad.frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2) + tileset.spacing;
+                                    quad.frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2 + tileset.spacing) + tileset.margin;
                                     quad.frameWidth = tileset.tileWidth;
                                     quad.frameHeight = tileset.tileHeight;
                                     quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
