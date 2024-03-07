@@ -31,7 +31,7 @@ class Logger extends Entity {
 
         if (!didInitOnce) {
             didInitOnce = true;
-#if ceramic_no_log
+#if ceramic_mute_logs
             haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
                 // Logs disabled
             };
@@ -49,6 +49,13 @@ class Logger extends Entity {
 
 /// Public API
 
+#if (!completion && ceramic_no_log)
+    inline public function debug(value:Dynamic, ?pos:haxe.PosInfos):Void {}
+    inline public function info(value:Dynamic, ?pos:haxe.PosInfos):Void {}
+    inline public function success(value:Dynamic, ?pos:haxe.PosInfos):Void {}
+    inline public function warning(value:Dynamic, ?pos:haxe.PosInfos):Void {}
+    inline public function error(value:Dynamic, ?pos:haxe.PosInfos):Void {}
+#else
     public function debug(value:Dynamic, ?pos:haxe.PosInfos):Void {
 
         if (!Runner.currentIsMainThread()) {
@@ -62,7 +69,7 @@ class Logger extends Entity {
             emitDebug(value, pos);
         }
 
-#if !ceramic_no_log
+#if !ceramic_mute_logs
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=magenta>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -87,7 +94,7 @@ class Logger extends Entity {
             emitInfo(value, pos);
         }
 
-#if !ceramic_no_log
+#if !ceramic_mute_logs
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=cyan>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -112,7 +119,7 @@ class Logger extends Entity {
             emitSuccess(value, pos);
         }
 
-#if !ceramic_no_log
+#if !ceramic_mute_logs
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=lime>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -137,7 +144,7 @@ class Logger extends Entity {
             emitWarning(value, pos);
         }
 
-#if !ceramic_no_log
+#if !ceramic_mute_logs
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -168,7 +175,7 @@ class Logger extends Entity {
             emitError(value, pos);
         }
 
-#if !ceramic_no_log
+#if !ceramic_mute_logs
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -185,6 +192,7 @@ class Logger extends Entity {
 #end
 
     }
+#end
 
     inline public function pushIndent() {
 
