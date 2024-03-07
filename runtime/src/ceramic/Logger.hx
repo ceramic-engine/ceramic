@@ -31,12 +31,18 @@ class Logger extends Entity {
 
         if (!didInitOnce) {
             didInitOnce = true;
+#if ceramic_no_log
+            haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
+                // Logs disabled
+            };
+#else
 #if unity
             haxe.Log.trace = function(v:Dynamic, ?pos:haxe.PosInfos):Void {
                 #if !ceramic_unity_no_log
                 untyped __cs__('UnityEngine.Debug.Log({0}+{1}+{2}+":"+{3})', v, '\n', pos.fileName, pos.lineNumber);
                 #end
             };
+#end
 #end
         }
     }
@@ -56,12 +62,14 @@ class Logger extends Entity {
             emitDebug(value, pos);
         }
 
+#if !ceramic_no_log
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=magenta>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
 #end
 #else
         haxe.Log.trace(prefixLines('[debug] ', value), pos);
+#end
 #end
 
     }
@@ -79,12 +87,14 @@ class Logger extends Entity {
             emitInfo(value, pos);
         }
 
+#if !ceramic_no_log
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=cyan>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
 #end
 #else
         haxe.Log.trace(prefixLines('[info] ', value), pos);
+#end
 #end
 
     }
@@ -102,12 +112,14 @@ class Logger extends Entity {
             emitSuccess(value, pos);
         }
 
+#if !ceramic_no_log
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.Log("<color=lime>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
 #end
 #else
         haxe.Log.trace(prefixLines('[success] ', value), pos);
+#end
 #end
 
     }
@@ -125,6 +137,7 @@ class Logger extends Entity {
             emitWarning(value, pos);
         }
 
+#if !ceramic_no_log
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogWarning("<color=yellow>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -137,6 +150,7 @@ class Logger extends Entity {
         }
 #else
         haxe.Log.trace(prefixLines('[warning] ', value), pos);
+#end
 #end
 
     }
@@ -154,6 +168,7 @@ class Logger extends Entity {
             emitError(value, pos);
         }
 
+#if !ceramic_no_log
 #if unity
 #if !ceramic_unity_no_log
         untyped __cs__('UnityEngine.Debug.LogError("<color=red>"+{0}+"</color>"+{1}+{2}+":"+{3})', value, '\n', pos.fileName, pos.lineNumber);
@@ -166,6 +181,7 @@ class Logger extends Entity {
         }
 #else
         haxe.Log.trace(prefixLines('[error] ', value), pos);
+#end
 #end
 
     }
