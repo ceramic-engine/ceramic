@@ -17,7 +17,6 @@ class Quad extends Visual {
 
     static var _degToRad = Visual._degToRad;
 
-    @editable
     public var color:Color = Color.WHITE;
 
     /**
@@ -26,7 +25,6 @@ class Quad extends Visual {
      * Children still behave and get drawn as before:
      * they don't inherit this property.
      */
-    @editable
     public var transparent(get,set):Bool;
     inline function get_transparent():Bool {
         return flags & FLAG_TRANSPARENT == FLAG_TRANSPARENT;
@@ -66,7 +64,6 @@ class Quad extends Visual {
     /**
      * The texture to use for this Quad object
      */
-    @editable
     public var texture(get,set):Texture;
     inline function get_texture():Texture {
         return _texture;
@@ -270,18 +267,5 @@ class Quad extends Visual {
         this.tile = null;
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('width', 100);
-        entityData.props.set('height', 100);
-
-    }
-
-#end
 
 }

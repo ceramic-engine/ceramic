@@ -85,7 +85,6 @@ class Scroller extends Visual implements Observable {
      * roundScrollWhenIdle = 2; // Half-pixel rounding
      * ```
      */
-    @editable
     public var roundScrollWhenIdle(default,set):Int = 1;
     function set_roundScrollWhenIdle(roundScrollWhenIdle:Int):Int {
         if (this.roundScrollWhenIdle == roundScrollWhenIdle) return roundScrollWhenIdle;

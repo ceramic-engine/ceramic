@@ -43,13 +43,10 @@ class Fragment extends Layer {
 
     public var fps(default,set):Int = 30;
 
-    @editable
     public var fragmentData(default,set):FragmentData = null;
 
-    @editable
     public var resizable:Bool = false;
 
-    @editable
     public var autoUpdateTimeline(default, set):Bool = true;
     function set_autoUpdateTimeline(autoUpdateTimeline:Bool):Bool {
         if (this.autoUpdateTimeline != autoUpdateTimeline) {
@@ -61,75 +58,11 @@ class Fragment extends Layer {
         return autoUpdateTimeline;
     }
 
-    /**
-     * Custom float value that can be used in editor
-     */
-    @editable({ group: 'floatsAB' })
-    public var floatA(default, set):Float = 0.0;
-    function set_floatA(floatA:Float):Float {
-        if (this.floatA != floatA) {
-            var prevFloatA = this.floatA;
-            this.floatA = floatA;
-            emitFloatAChange(floatA, prevFloatA);
-        }
-        return floatA;
-    }
-
-    /**
-     * Custom float value that can be used in editor
-     */
-    @editable({ group: 'floatsAB' })
-    public var floatB(default, set):Float = 0.0;
-    function set_floatB(floatB:Float):Float {
-        if (this.floatB != floatB) {
-            var prevFloatA = this.floatB;
-            this.floatB = floatB;
-            emitFloatBChange(floatB, prevFloatA);
-        }
-        return floatB;
-    }
-
-    /**
-     * Custom float value that can be used in editor
-     */
-    @editable({ group: 'floatsCD' })
-    public var floatC(default, set):Float = 0.0;
-    function set_floatC(floatC:Float):Float {
-        if (this.floatC != floatC) {
-            var prevFloatC = this.floatC;
-            this.floatC = floatC;
-            emitFloatCChange(floatC, prevFloatC);
-        }
-        return floatC;
-    }
-
-    /**
-     * Custom float value that can be used in editor
-     */
-    @editable({ group: 'floatsCD' })
-    public var floatD(default, set):Float = 0.0;
-    function set_floatD(floatD:Float):Float {
-        if (this.floatD != floatD) {
-            var prevFloatD = this.floatD;
-            this.floatD = floatD;
-            emitFloatDChange(floatD, prevFloatD);
-        }
-        return floatD;
-    }
-
     public var pendingLoads(default,null):Int = 0;
 
     public var timeline:Timeline = null;
 
     @event function ready();
-
-#if editor
-
-    @event function editableItemUpdate(item:FragmentItem);
-
-    var updatedEditableItems:Map<String,FragmentItem> = null;
-
-#end
 
 /// Internal
 
@@ -154,29 +87,11 @@ class Fragment extends Layer {
 
     /**
      * A static helper to get a fragment data object from fragment id.
-     * Fragments need to be cached first with `cacheFragmentData()`,
-     * unless an editor instance is being active.
+     * Fragments need to be cached first with `cacheFragmentData()`.
      * @param fragmentId
      * @return Null<FragmentData>
      */
     public static function getData(fragmentId:String):Null<FragmentData> {
-
-        #if editor
-        // When using editor, check if fragment exists in editor first
-        var editorInstance = editor.Editor.editor;
-        if (editorInstance != null) {
-            var model = editorInstance.model;
-            if (model != null) {
-                var project = model.project;
-                if (project != null) {
-                    var editorFragment = project.fragmentById(fragmentId);
-                    if (editorFragment != null) {
-                        return Json.parse(Json.stringify(editorFragment.toFragmentData()));
-                    }
-                }
-            }
-        }
-        #end
 
         return cachedFragmentData.get(fragmentId);
 
@@ -264,7 +179,7 @@ class Fragment extends Layer {
         }
 
         // Add fragment-level components
-        if (fragmentData != null #if editor && edited #end) {
+        if (fragmentData != null) {
             pendingLoads++;
             var converter = app.converters.get('ceramic.ReadOnlyMap<String,ceramic.Component>');
             converter.basicToField(
@@ -404,10 +319,6 @@ class Fragment extends Layer {
             frag.depthRange = 1;
         }
 
-#if editor
-        instance.edited = editedItems;
-#end
-
         // Set name
         if (instance.data.name == null && item.name != null) instance.data.name = item.name;
 
@@ -428,11 +339,6 @@ class Fragment extends Layer {
 
                 var nA = 0;
                 var nB = 0;
-
-                #if ceramic_fragment_legacy
-                if (a == 'components') nA++;
-                else if (b == 'components') nB++;
-                #end
 
                 return nA - nB;
 
@@ -510,24 +416,11 @@ class Fragment extends Layer {
             putTracksForItem(item.id);
         }
 
-#if editor
-        // Update editable fields from instance
-        computeInstanceContentIfNeeded(item.id, instance);
-        if (editedItems) {
-            updateEditableFieldsFromInstance(item.id);
-        }
-#end
-
         return instance;
 
     }
 
     private function putItemField(isFragment:Bool, item:FragmentItem, instance:Entity, field:String, value:Dynamic, converter:ConvertField<Dynamic,Dynamic>) {
-
-        #if editor
-        var isStillSync = true;
-        var shouldUpdateFromFields = false;
-        #end
 
         pendingLoads++;
         converter.basicToField(
@@ -553,22 +446,9 @@ class Fragment extends Layer {
                     }
                     else if (field != 'components') {
                         instance.setProperty(field, value);
-
-                        #if editor
-                        if (isStillSync) {
-                            shouldUpdateFromFields = true;
-                        }
-                        else {
-                            computeInstanceContentIfNeeded(item.id, instance);
-                            if (editedItems) {
-                                updateEditableFieldsFromInstance(item.id);
-                            }
-                        }
-                        #end
                     }
                     else {
                         onceReady(this, function() {
-                            // #if editor
                             var map:Map<String,Component> = null;
                             if (value != null) {
                                 map = cast value;
@@ -585,7 +465,7 @@ class Fragment extends Layer {
                             // For now don't remove any component, may change this later
                             if (instance.components != null) {
                                 for (k in instance.components.keys()) {
-                                    if (k != 'editable' && k != 'script') {
+                                    if (k != 'script') {
                                         if (map == null || map.get(k) == null) {
                                             instance.removeComponent(k);
                                         }
@@ -593,15 +473,6 @@ class Fragment extends Layer {
                                 }
                             }
                             */
-                            #if editor
-                            computeInstanceContentIfNeeded(item.id, instance);
-                            if (editedItems) {
-                                updateEditableFieldsFromInstance(item.id);
-                            }
-                            #end
-                            // #else
-                            // instance.setProperty(field, value);
-                            // #end
                         });
                     }
                 }
@@ -609,16 +480,6 @@ class Fragment extends Layer {
                 if (pendingLoads == 0) emitReady();
             }
         );
-
-        #if editor
-        isStillSync = false;
-        if (shouldUpdateFromFields) {
-            computeInstanceContentIfNeeded(item.id, instance);
-            if (editedItems) {
-                updateEditableFieldsFromInstance(item.id);
-            }
-        }
-        #end
 
     }
 
@@ -740,114 +601,6 @@ class Fragment extends Layer {
         removeAllItems();
 
     }
-
-#if editor
-
-    var emitEditableItemUpdateScheduled:Bool = false;
-
-    public function computeInstanceContentIfNeeded(itemId:String, ?entity:Entity) {
-
-        // Update editable fields from instance
-        if (entity == null) {
-            entity = get(itemId);
-        }
-        if (entity != null) {
-            var isVisual = Std.isOfType(entity, Visual);
-            if (isVisual) {
-                var visual:Visual = cast entity;
-                if (visual.contentDirty) {
-                    visual.computeContent();
-                }
-            }
-        }
-
-    }
-
-    public function updateEditableFieldsFromInstance(itemId:String, forceChange:Bool = false):Void {
-
-        if (!emitEditableItemUpdateScheduled) {
-            emitEditableItemUpdateScheduled = true;
-            app.onceImmediate(() -> {
-                if (!destroyed) {
-                    updateEditableFieldsFromInstance(itemId);
-                }
-            });
-            return;
-        }
-        else {
-            emitEditableItemUpdateScheduled = false;
-        }
-
-        // Get item
-        var item = getItem(itemId);
-        if (item == null) {
-            return;
-        }
-
-        // Get instance
-        var instance = get(item.id);
-        if (instance == null) {
-            return;
-        }
-
-        // Compute missing data (if any)
-        var editableFields = FieldInfo.editableFieldInfo(item.entity);
-        var hasChanged = false;
-        for (field in editableFields.keys()) {
-            var fieldType = FieldInfo.typeOf(item.entity, field);
-            var converter = fieldType != null ? app.converters.get(fieldType) : null;
-            var value:Dynamic = null;
-            if (converter != null) {
-                value = converter.fieldToBasic(instance, field, instance.getProperty(field));
-            } else {
-                value = instance.getProperty(field);
-                switch (Type.typeof(value)) {
-                    case TEnum(e):
-                        value = Std.string(value);
-                        var fieldInfo = editableFields.get(field);
-                        var metaEditable = fieldInfo.meta.get('editable');
-                        if (metaEditable != null && metaEditable.length > 0 && metaEditable[0].options != null) {
-                            var opts:Array<String> = metaEditable[0].options;
-                            for (opt in opts) {
-                                if (value.toLowerCase() == opt.toLowerCase()) {
-                                    value = opt;
-                                    break;
-                                }
-                            }
-                        }
-                    default:
-                        // Keep the value as is
-                }
-            }
-            if (field == 'components') {
-                // TODO?
-            }
-            else {
-                if (!Equal.equal(Reflect.field(item.props, field), value) || !Reflect.hasField(item.props, field)) {
-                    hasChanged = true;
-                    Reflect.setField(item.props, field, value);
-                }
-            }
-        }
-
-        if (hasChanged || forceChange) {
-            if (updatedEditableItems == null) {
-                updatedEditableItems = new Map();
-                app.onceUpdate(this, function(delta) {
-                    var prevUpdated = updatedEditableItems;
-                    updatedEditableItems = null;
-                    for (itemId in prevUpdated.keys()) {
-                        var anItem = prevUpdated.get(itemId);
-                        emitEditableItemUpdate(anItem);
-                    }
-                });
-            }
-            updatedEditableItems.set(item.id, item);
-        }
-
-    }
-
-#end
 
 /// Fragment components
 
@@ -1150,14 +903,6 @@ class Fragment extends Layer {
             // Apply timeline track changes to entity
             timelineTrack.apply();
         }
-
-        #if editor
-        // Update editable fields from instance
-        computeInstanceContentIfNeeded(entityId, entity);
-        if (editedItems) {
-            updateEditableFieldsFromInstance(entityId);
-        }
-        #end
 
     }
 

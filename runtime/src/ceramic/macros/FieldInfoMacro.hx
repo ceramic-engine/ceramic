@@ -1,15 +1,15 @@
 package ceramic.macros;
 
-import haxe.macro.TypeTools;
+import haxe.DynamicAccess;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.DynamicAccess;
+import haxe.macro.TypeTools;
 
-using haxe.macro.ExprTools;
 using StringTools;
+using haxe.macro.ExprTools;
 
 /**
- * Used to expose var/property field types and editable metadata to runtime.
+ * Used to expose var/property field types to runtime.
  * This is an alternative to marking classes with @:rtti which exposes much more informations than what we actually need.
  */
 class FieldInfoMacro {
@@ -18,14 +18,12 @@ class FieldInfoMacro {
 
         var fields = Context.getBuildFields();
 
-        var fieldInfoData:DynamicAccess<{type:String,?editable:Array<Expr>}> = {};
-        var storeEditableMeta = true;
+        var fieldInfoData:DynamicAccess<{type:String}> = {};
         var storeAllFieldInfo = true;
 
         for (field in fields) {
 
-            var editableMeta = storeEditableMeta ? getEditableMeta(field) : null;
-            if (editableMeta != null || storeAllFieldInfo && (field.access == null || field.access.indexOf(AStatic) == -1)) {
+            if (storeAllFieldInfo && (field.access == null || field.access.indexOf(AStatic) == -1)) {
                 switch(field.kind) {
                     case FieldType.FVar(type, expr) | FieldType.FProp(_, _, type, expr):
                         var resolvedType = Context.resolveType(type, Context.currentPos());
@@ -34,16 +32,13 @@ class FieldInfoMacro {
                             typeStr = complexTypeToString(type);
                         }
                         fieldInfoData.set(field.name, {
-                            type: typeStr,
-                            editable: editableMeta != null ? editableMeta.params : null
+                            type: typeStr
                         });
 
                     default:
-                        if (editableMeta != null)
-                            throw new Error("Only variable/property fields can be marked as editable", field.pos);
                 }
             }
-            
+
         }
 
         // Add field info
@@ -52,15 +47,6 @@ class FieldInfoMacro {
             var pos = Context.currentPos();
             for (name => info in fieldInfoData) {
                 var entries = [];
-                if (info.editable != null) {
-                    entries.push({
-                        expr: {
-                            expr: EArrayDecl(info.editable),
-                            pos: pos
-                        },
-                        field: 'editable'
-                    });
-                }
                 if (info.type != null) {
                     entries.push({
                         expr: {
@@ -94,20 +80,6 @@ class FieldInfoMacro {
         }
 
         return fields;
-
-    }
-
-    static function getEditableMeta(field:Field):MetadataEntry {
-
-        if (field.meta == null || field.meta.length == 0) return null;
-
-        for (meta in field.meta) {
-            if (meta.name == 'editable') {
-                return meta;
-            }
-        }
-
-        return null;
 
     }
 

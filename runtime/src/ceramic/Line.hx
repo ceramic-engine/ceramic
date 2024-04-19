@@ -25,7 +25,6 @@ class Line extends Mesh {
      * Note: when editing array content without reassigning it,
      * `contentDirty` must be set to `true` to let the line being updated accordingly.
      */
-    @editable
     public var points(default, set):Array<Float> = null;
     inline function set_points(points:Array<Float>):Array<Float> {
         this.points = points;
@@ -36,7 +35,6 @@ class Line extends Mesh {
     /**
      * The limit before miters turn into bevels. Default 10
      */
-    @editable
     public var miterLimit(default, set):Float = 10;
     inline function set_miterLimit(miterLimit:Float):Float {
         if (this.miterLimit == miterLimit) return miterLimit;
@@ -48,7 +46,6 @@ class Line extends Mesh {
     /**
      * The line thickness
      */
-    @editable({ slider: [1, 64] })
     public var thickness(default, set):Float = 1;
     inline function set_thickness(thickness:Float):Float {
         if (this.thickness == thickness) return thickness;
@@ -60,7 +57,6 @@ class Line extends Mesh {
     /**
      * The join type, can be `MITER` or `BEVEL`. Default `BEVEL`
      */
-    @editable
     public var join(default, set):LineJoin = BEVEL;
     inline function set_join(join:LineJoin):LineJoin {
         if (this.join == join) return join;
@@ -72,7 +68,6 @@ class Line extends Mesh {
     /**
      * The cap type. Can be `BUTT` or `SQUARE`. Default `BUTT`
      */
-    @editable
     public var cap(default, set):LineCap = BUTT;
     inline function set_cap(cap:LineCap):LineCap {
         if (this.cap == cap) return cap;
@@ -85,7 +80,6 @@ class Line extends Mesh {
      * If `loop` is `true`, will try to join the first and last
      * points together if they are identical. Default `false`
      */
-    @editable
     public var loop(default, set):Bool = false;
     inline function set_loop(loop:Bool):Bool {
         if (this.loop == loop) return loop;
@@ -97,7 +91,6 @@ class Line extends Mesh {
     /**
      * If set to `true`, width and heigh will be computed from line points.
      */
-    @editable({ label: 'Auto Size' })
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {
         if (this.autoComputeSize == autoComputeSize) return autoComputeSize;
@@ -157,21 +150,5 @@ class Line extends Mesh {
         }
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('thickness', 4);
-        entityData.props.set('points', [
-            0.0, 0.0,
-            100.0, 0.0
-        ]);
-
-    }
-
-#end
 
 }

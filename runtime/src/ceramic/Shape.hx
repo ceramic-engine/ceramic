@@ -28,7 +28,6 @@ class Shape extends Mesh {
      * Note: when editing array content without reassigning it,
      * `contentDirty` must be set to `true` to let the shape being updated accordingly.
      */
-    @editable({ minItems: 6, points: true })
     public var points(get, set):Array<Float>;
     inline function get_points():Array<Float> {
         return vertices;
@@ -39,7 +38,6 @@ class Shape extends Mesh {
         return points;
     }
 
-    @editable
     public var triangulation(default, set):TriangulateMethod = POLY2TRI;
     inline function set_triangulation(triangulation:TriangulateMethod) {
         if (this.triangulation != triangulation) {
@@ -56,7 +54,6 @@ class Shape extends Mesh {
      * Note: when editing array content without reassigning it,
      * `contentDirty` must be set to `true` to let the shape being updated accordingly.
      */
-    @editable
     public var holes:Array<Int> = null;
     inline function set_holes(holes:Array<Int>):Array<Int> {
         this.holes = holes;
@@ -67,7 +64,6 @@ class Shape extends Mesh {
     /**
      * If set to `true`, width and heigh will be computed from shape points.
      */
-    @editable({ label: 'Auto Size' })
     public var autoComputeSize(default, set):Bool = true;
     inline function set_autoComputeSize(autoComputeSize:Bool):Bool {
         if (this.autoComputeSize == autoComputeSize) return autoComputeSize;
@@ -93,7 +89,7 @@ class Shape extends Mesh {
 
     override function computeContent() {
 
-        if (vertices != null && vertices.length >= 6 #if editor && !editor.components.Editable.canSkipRender #end) {
+        if (vertices != null && vertices.length >= 6) {
 
             if (indices == null)
                 indices = [];
@@ -159,25 +155,6 @@ class Shape extends Mesh {
         }
 
         return super.initNapePhysics(type, space, shape, shapes, material);
-
-    }
-
-#end
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('width', 100);
-        entityData.props.set('height', 100);
-        entityData.props.set('points', [
-            0.0, 0.0,
-            100.0, 0.0,
-            100.0, 100.0,
-            0.0, 100.0
-        ]);
 
     }
 

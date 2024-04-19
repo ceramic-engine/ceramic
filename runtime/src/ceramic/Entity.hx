@@ -9,7 +9,6 @@ import tracker.DynamicEvents;
 #end
 
 
-@editable
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
@@ -532,7 +531,6 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      * Public components mapping. Contain components
      * created separately with `component()` or macro-based components as well.
      */
-    @editable
     public var components(get,set):ReadOnlyMap<String,Component>;
     #if !haxe_server inline #end function get_components():ReadOnlyMap<String,Component> {
         return _components;
@@ -656,14 +654,5 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         }
 
     }
-
-#if editor
-
-    /**
-     * If set to true, that means this entity is managed by editor.
-     */
-    public var edited:Bool = false;
-
-#end
 
 }

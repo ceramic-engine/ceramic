@@ -10,7 +10,6 @@ using ceramic.Extensions;
  * A visual to layout and display text.
  * Works with UTF-8 strings.
  */
-@editable({ implicitSize: true })
 class Text extends Visual {
 
     @event function glyphQuadsChange();
@@ -23,7 +22,6 @@ class Text extends Visual {
         return this.numLines;
     }
 
-    @editable
     public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
@@ -40,7 +38,6 @@ class Text extends Visual {
         return color;
     }
 
-    @editable({ multiline: true })
     public var content(default, set):String = '';
     function set_content(content:String):String {
         Assert.assert(content != null, 'Text.content should not be null');
@@ -50,7 +47,6 @@ class Text extends Visual {
         return content;
     }
 
-    @editable({ slider: [6, 600] })
     public var pointSize(default, set):Float = 20;
     function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
@@ -59,7 +55,6 @@ class Text extends Visual {
         return pointSize;
     }
 
-    @editable({ slider: [0, 10] })
     public var lineHeight(default, set):Float = 1.0;
     function set_lineHeight(lineHeight:Float):Float {
         if (this.lineHeight == lineHeight) return lineHeight;
@@ -68,7 +63,6 @@ class Text extends Visual {
         return lineHeight;
     }
 
-    @editable({ slider: [-100, 100] })
     public var letterSpacing(default, set):Float = 0.0;
     function set_letterSpacing(letterSpacing:Float):Float {
         if (this.letterSpacing == letterSpacing) return letterSpacing;
@@ -77,7 +71,6 @@ class Text extends Visual {
         return letterSpacing;
     }
 
-    @editable
     public var font(default, set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
 
@@ -162,7 +155,6 @@ class Text extends Visual {
         contentDirty = true;
     }
 
-    @editable
     public var align(default, set):TextAlign = LEFT;
     function set_align(align:TextAlign):TextAlign {
         if (this.align == align) return align;
@@ -175,7 +167,6 @@ class Text extends Visual {
      * If set to `true`, text will be displayed with line breaks
      * as needed so that it fits in the requested width.
      */
-    @editable
     public var fitWidth(default, set):Float = -1;
     function set_fitWidth(fitWidth:Float):Float {
         if (this.fitWidth == fitWidth) return fitWidth;
@@ -184,7 +175,6 @@ class Text extends Visual {
         return fitWidth;
     }
 
-    @editable
     public var maxLineDiff(default, set):Float = -1;
     function set_maxLineDiff(maxLineDiff:Float):Float {
         if (this.maxLineDiff == maxLineDiff) return maxLineDiff;
@@ -863,17 +853,5 @@ class Text extends Visual {
         }
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('content', entityData.entityId);
-
-    }
-
-#end
 
 }

@@ -25,18 +25,12 @@ class EntityMacro {
         var fields = Context.getBuildFields();
         var classPath = Context.getLocalClass().toString();
 
-        // Look for @editable, @fieldInfo or @autoFieldInfo meta
-        var fieldInfoData:DynamicAccess<{type:String,?editable:Array<Expr>,index:Int}> = null;
+        // Look for @fieldInfo or @autoFieldInfo meta
+        var fieldInfoData:DynamicAccess<{type:String,index:Int}> = null;
         var storeAllFieldInfo = false;
-        var storeEditableMeta = false;
         var localClass = Context.getLocalClass().get();
         for (meta in localClass.meta.get()) {
-            if (meta.name == 'editable') {
-                if (fieldInfoData == null)
-                    fieldInfoData = {};
-                storeEditableMeta = true;
-            }
-            else if (meta.name == 'fieldInfo' || meta.name == 'autoFieldInfo') {
+            if (meta.name == 'fieldInfo' || meta.name == 'autoFieldInfo') {
                 if (fieldInfoData == null)
                     fieldInfoData = {};
                 storeAllFieldInfo = true;
@@ -151,8 +145,7 @@ class EntityMacro {
 
             // Keep field info?
             if (fieldInfoData != null && !field.name.startsWith('unobserved') && (field.access == null || field.access.indexOf(AStatic) == -1)) {
-                var editableMeta = storeEditableMeta ? getEditableMeta(field) : null;
-                if (editableMeta != null || storeAllFieldInfo) {
+                if (storeAllFieldInfo) {
                     switch(field.kind) {
                         case FieldType.FVar(type, expr) | FieldType.FProp(_, _, type, expr):
                             var resolvedType = Context.resolveType(type, Context.currentPos());
@@ -162,13 +155,10 @@ class EntityMacro {
                             }
                             fieldInfoData.set(field.name, {
                                 type: typeStr,
-                                editable: editableMeta != null ? editableMeta.params : null,
                                 index: index
                             });
 
                         default:
-                            if (editableMeta != null)
-                                throw new Error("Only variable/property fields can be marked as editable", field.pos);
                     }
                 }
             }
@@ -736,15 +726,6 @@ class EntityMacro {
             var pos = Context.currentPos();
             for (name => info in fieldInfoData) {
                 var entries = [];
-                if (info.editable != null) {
-                    entries.push({
-                        expr: {
-                            expr: EArrayDecl(info.editable),
-                            pos: pos
-                        },
-                        field: 'editable'
-                    });
-                }
                 if (info.type != null) {
                     entries.push({
                         expr: {
@@ -959,20 +940,6 @@ class EntityMacro {
         }
 
         return flags;
-
-    }
-
-    static function getEditableMeta(field:Field):MetadataEntry {
-
-        if (field.meta == null || field.meta.length == 0) return null;
-
-        for (meta in field.meta) {
-            if (meta.name == 'editable') {
-                return meta;
-            }
-        }
-
-        return null;
 
     }
 

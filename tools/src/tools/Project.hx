@@ -148,20 +148,6 @@ class Project {
             }
         }
 
-        app.editable.push('ceramic.Entity');
-
-        app.editable.push('ceramic.Visual');
-        app.editable.push('ceramic.Layer');
-        app.editable.push('ceramic.Fragment');
-        app.editable.push('ceramic.Quad');
-        app.editable.push('ceramic.Text');
-        app.editable.push('ceramic.Mesh');
-        app.editable.push('ceramic.Shape');
-        app.editable.push('ceramic.Ngon');
-        app.editable.push('ceramic.Arc');
-        app.editable.push('ceramic.Line');
-        app.editable.push('ceramic.Particles');
-
         if (app.hxml == null) app.hxml = '';
 
         var appInfo:Dynamic = {};
@@ -177,8 +163,6 @@ class Project {
             appInfo.version = app.version;
         if (app.collections != null)
             appInfo.collections = app.collections;
-        if (app.editable != null)
-            appInfo.editable = app.editable;
 
         app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(appInfo));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
@@ -372,9 +356,6 @@ class ProjectLoader {
                 }
                 if (app.paths == null) {
                     app.paths = [];
-                }
-                if (app.editable == null) {
-                    app.editable = [];
                 }
                 if (app.hooks == null) {
                     app.hooks = [];

@@ -24,7 +24,6 @@ using StringTools;
 using ceramic.Extensions;
 using ceramic.SpinePlugin;
 
-@editable
 class Spine extends Visual {
 
 /// Internal
@@ -227,7 +226,6 @@ class Spine extends Visual {
     /**
      * Skeleton origin X
      */
-    @editable
     public var skeletonOriginX(default, set):Float = 0.5;
     function set_skeletonOriginX(skeletonOriginX:Float):Float {
         if (this.skeletonOriginX == skeletonOriginX) return skeletonOriginX;
@@ -239,7 +237,6 @@ class Spine extends Visual {
     /**
      * Skeleton origin Y
      */
-    @editable
     public var skeletonOriginY(default, set):Float = 0.5;
     function set_skeletonOriginY(skeletonOriginY:Float):Float {
         if (this.skeletonOriginY == skeletonOriginY) return skeletonOriginY;
@@ -251,7 +248,6 @@ class Spine extends Visual {
     /**
      * Skeleton scale
      */
-    @editable
     public var skeletonScale(default, set):Float = 1.0;
     function set_skeletonScale(skeletonScale:Float):Float {
         if (this.skeletonScale == skeletonScale) return skeletonScale;
@@ -263,7 +259,6 @@ class Spine extends Visual {
     /**
      * Force tint black even if skeleton doesn't need it
      */
-    @editable
     public var forceTintBlack(default, set):Bool = false;
     function set_forceTintBlack(forceTintBlack:Bool):Bool {
         if (this.forceTintBlack == forceTintBlack) return forceTintBlack;
@@ -275,7 +270,6 @@ class Spine extends Visual {
     /**
      * Hidden slots (slot blacklist)
      */
-    @editable
     public var hiddenSlots(default, set):IntBoolMap = null;
     function set_hiddenSlots(hiddenSlots:IntBoolMap):IntBoolMap {
         if (this.hiddenSlots == hiddenSlots) return hiddenSlots;
@@ -287,7 +281,6 @@ class Spine extends Visual {
     /**
      * Visible slots (slot whitelist)
      */
-    @editable
     public var visibleSlots(default, set):IntBoolMap = null;
     function set_visibleSlots(visibleSlots:IntBoolMap):IntBoolMap {
         if (this.visibleSlots == visibleSlots) return visibleSlots;
@@ -299,7 +292,6 @@ class Spine extends Visual {
     /**
      * Disabled slots
      */
-    @editable
     public var disabledSlots(default, set):IntBoolMap = null;
     function set_disabledSlots(disabledSlots:IntBoolMap):IntBoolMap {
         if (this.disabledSlots == disabledSlots) return disabledSlots;
@@ -311,7 +303,6 @@ class Spine extends Visual {
     /**
      * Animation triggers
      */
-    @editable
     public var animationTriggers(default, set):Map<String,String> = null;
     function set_animationTriggers(animationTriggers:Map<String,String>):Map<String,String> {
         if (this.animationTriggers == animationTriggers) return animationTriggers;
@@ -323,7 +314,6 @@ class Spine extends Visual {
     /**
      * Specify which slot to use to hit this visual or `-1` (default) is not using any.
      */
-    @editable
     public var hitWithSlotIndex(default, set):Int = -1;
     function set_hitWithSlotIndex(hitWithSlotIndex:Int):Int {
         if (this.hitWithSlotIndex == hitWithSlotIndex) return hitWithSlotIndex;
@@ -335,7 +325,6 @@ class Spine extends Visual {
      * Use first bounding box to hit this visual.
      * When this is set to `true`, `hitWithSlotIndex` value is ignored.
      */
-    @editable
     public var hitWithFirstBoundingBox(default, set):Bool = false;
     function set_hitWithFirstBoundingBox(hitWithFirstBoundingBox:Bool):Bool {
         if (this.hitWithFirstBoundingBox == hitWithFirstBoundingBox) return hitWithFirstBoundingBox;
@@ -352,7 +341,6 @@ class Spine extends Visual {
         return visible;
     }
 
-    @editable
     public var renderWhenInvisible(default, set):Bool = false;
     function set_renderWhenInvisible(renderWhenInvisible:Bool):Bool {
         if (this.renderWhenInvisible == renderWhenInvisible) return renderWhenInvisible;
@@ -374,7 +362,6 @@ class Spine extends Visual {
     /**
      * Tint color
      */
-    @editable
     public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
@@ -383,13 +370,11 @@ class Spine extends Visual {
         return color;
     }
 
-    @editable
     public var autoRenderOnAnimate:Bool = false;
 
     /**
      * The Spine data used to animate this animation.
      */
-    @editable
     public var spineData(default, set):SpineData = null;
     function set_spineData(spineData:SpineData):SpineData {
         if (this.spineData == spineData) return spineData;
@@ -506,7 +491,7 @@ class Spine extends Visual {
 
     var _settingNextAnimation = false;
 
-    @editable({ localCollection: 'animationList', empty: 0 })
+
     public var animation(default, set):String = null;
     function set_animation(animation:String):String {
         if (!_settingNextAnimation) {
@@ -530,7 +515,6 @@ class Spine extends Visual {
         return nextAnimations;
     }
 
-    @editable
     public var loop(default, set):Bool = true;
     function set_loop(loop:Bool):Bool {
         if (this.loop == loop) return loop;

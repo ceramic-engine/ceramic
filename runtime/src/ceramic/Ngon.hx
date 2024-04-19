@@ -2,10 +2,8 @@ package ceramic;
 
 using ceramic.Extensions;
 
-@editable({ implicitSize: true })
 class Ngon extends Mesh {
 
-    @editable({ slider: [3, 100] })
     public var sides(default,set):Int = 32;
     inline function set_sides(sides:Int):Int {
         if (this.sides == sides) return sides;
@@ -14,7 +12,6 @@ class Ngon extends Mesh {
         return sides;
     }
 
-    @editable({ slider: [0, 999] })
     public var radius(default,set):Float = 50;
     function set_radius(radius:Float):Float {
         if (this.radius == radius) return radius;
@@ -64,20 +61,5 @@ class Ngon extends Mesh {
         contentDirty = false;
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('anchorX', 0.5);
-        entityData.props.set('anchorY', 0.5);
-        entityData.props.set('sides', 32);
-        entityData.props.set('radius', 50);
-
-    }
-
-#end
 
 }

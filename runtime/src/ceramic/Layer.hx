@@ -65,17 +65,4 @@ class Layer extends Quad {
         return height;
     }
 
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('width', 100);
-        entityData.props.set('height', 100);
-
-    }
-
-#end
-
 }

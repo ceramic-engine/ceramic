@@ -64,7 +64,6 @@ class Mesh extends Visual {
      * of simply using bounds. This make the test substancially more expensive however.
      * Use only when needed.
      */
-    @editable
     public var complexHit:Bool = false;
 
 /// Lifecycle
@@ -91,7 +90,6 @@ class Mesh extends Visual {
     /**
      * On `Mesh` instances, can be used instead of colors array when the mesh is only composed of a single color.
      */
-    @editable
     public var color(get,set):Color;
     function get_color():Color {
         return if (floatColors != null && floatColors.length >= 3) {
@@ -124,13 +122,11 @@ class Mesh extends Visual {
     /**
      * An array of floats where each pair of numbers is treated as a coordinate location (x,y)
      */
-    @editable
     public var vertices:Array<Float> = [];
 
     /**
      * An array of integers or indexes, where every three indexes define a triangle.
      */
-    @editable
     public var indices:Array<Int> = [];
 
     /**
@@ -153,7 +149,6 @@ class Mesh extends Visual {
     /**
      * The texture used on the mesh (optional)
      */
-    @editable
     public var texture(default,set):Texture = null;
     #if !debug inline #end function set_texture(texture:Texture):Texture {
         if (this.texture == texture) return texture;
@@ -202,7 +197,6 @@ class Mesh extends Visual {
      * An array of normalized coordinates used to apply texture mapping.
      * Required if the texture is set.
      */
-    @editable
     public var uvs:Array<Float> = [];
 
     #if ceramic_wireframe
@@ -228,7 +222,7 @@ class Mesh extends Visual {
 
     override function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
-        if (complexHit #if editor || edited #end) {
+        if (complexHit) {
             // Convert x and y coordinate
             var testX = matrix.transformX(x, y);
             var testY = matrix.transformY(x, y);
@@ -455,34 +449,5 @@ class Mesh extends Visual {
         }
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('width', 100);
-        entityData.props.set('height', 100);
-        entityData.props.set('vertices', [
-            0.0, 0.0,
-            100.0, 0.0,
-            100.0, 100.0,
-            0.0, 100.0
-        ]);
-        entityData.props.set('indices', [
-            0, 1, 3,
-            1, 2, 3
-        ]);
-        entityData.props.set('uvs', [
-            0.0, 0.0,
-            1.0, 0.0,
-            1.0, 1.0,
-            0.0, 1.0
-        ]);
-
-    }
-
-#end
 
 }

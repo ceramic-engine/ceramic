@@ -30,7 +30,6 @@ using ceramic.Extensions;
 @:allow(ceramic.App)
 @:allow(ceramic.Screen)
 @:allow(ceramic.MeshPool)
-@editable()
 #if lua
 @dynamicEvents
 @:dce
@@ -1160,7 +1159,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Set to `false` to make this visual (and all of its children) invisible and not rendered.
      */
-    @editable({ group: 'active' })
     public var visible(default,set):Bool = true;
     function set_visible(visible:Bool):Bool {
         if (this.visible == visible) return visible;
@@ -1172,7 +1170,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Set to `false` to make this visual (and all of its children) not touchable
      */
-    @editable({ group: 'active' })
     public var touchable(default,set):Bool = true;
     function set_touchable(touchable:Bool):Bool {
         if (this.touchable == touchable) return touchable;
@@ -1188,7 +1185,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * In practice, it is advised to use integer values like `1`, `2`, `3`... to order your visuals,
      * like you would do with z-index on CSS elements.
      */
-    @editable({ group: 'depth' })
     public var depth(default,set):Float = 0;
     function set_depth(depth:Float):Float {
         if (this.depth == depth) return depth;
@@ -1233,8 +1229,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * visual.depthRange = -1;
      * ```
      */
-    @editable({ group: 'depth', label: 'Range' })
-    #if ceramic_no_depth_range
+        #if ceramic_no_depth_range
     public var depthRange(default,set):Float = -1;
     #else
     public var depthRange(default,set):Float = 1;
@@ -1250,7 +1245,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * The **x** position of this visual.
      * Relative to its parent, or screen if this visual has no parent.
      */
-    @editable({ group: 'position' })
     public var x(default,set):Float = 0;
     function set_x(x:Float):Float {
         if (this.x == x) return x;
@@ -1263,7 +1257,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * The **y** position of this visual.
      * Relative to its parent, or screen if this visual has no parent.
      */
-    @editable({ group: 'position' })
     public var y(default,set):Float = 0;
     function set_y(y:Float):Float {
         if (this.y == y) return y;
@@ -1275,7 +1268,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The **scaleX** value of this visual.
      */
-    @editable({ group: 'scale' })
     public var scaleX(default,set):Float = 1;
     function set_scaleX(scaleX:Float):Float {
         if (this.scaleX == scaleX) return scaleX;
@@ -1288,7 +1280,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The **scaleY** value of this visual.
      */
-    @editable({ group: 'scale' })
     public var scaleY(default,set):Float = 1;
     function set_scaleY(scaleY:Float):Float {
         if (this.scaleY == scaleY) return scaleY;
@@ -1301,7 +1292,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The **skewX** value of this visual.
      */
-    @editable({ group: 'skew' })
     public var skewX(default,set):Float = 0;
     function set_skewX(skewX:Float):Float {
         if (this.skewX == skewX) return skewX;
@@ -1314,7 +1304,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The **skewY** value of this visual.
      */
-    @editable({ group: 'skew' })
     public var skewY(default,set):Float = 0;
     function set_skewY(skewY:Float):Float {
         if (this.skewY == skewY) return skewY;
@@ -1331,7 +1320,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Use `1` to make it relative to the **right** of the visual, or `0.5` to make it
      * relative to the **horizontal center** of the visual.
      */
-    @editable({ group: 'anchor' })
     public var anchorX(default,set):Float = 0;
     function set_anchorX(anchorX:Float):Float {
         if (this.anchorX == anchorX) return anchorX;
@@ -1347,7 +1335,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Use `1` to make it relative to the **bottom** of the visual, or `0.5` to make it
      * relative to the **vertical center** of the visual.
      */
-    @editable({ group: 'anchor' })
     public var anchorY(default,set):Float = 0;
     function set_anchorY(anchorY:Float):Float {
         if (this.anchorY == anchorY) return anchorY;
@@ -1362,7 +1349,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Some subclasses of `Visual` are computing it automatically
      * like `Text` from its textual content or `Quad` when a texture is assigned to it.
      */
-    @editable({ min: 0, group: 'size' })
     public var width(get,set):Float;
     var _width:Float = 0;
     function get_width():Float {
@@ -1381,7 +1367,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Some subclasses of `Visual` are computing it automatically
      * like `Text` from its textual content or `Quad` when a texture is assigned to it.
      */
-    @editable({ min: 0, group: 'size' })
     public var height(get,set):Float;
     var _height:Float = 0;
     function get_height():Float {
@@ -1405,7 +1390,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      *
      * May be useful to render pixel perfect scenes onto `ceramic.Filter`.
      */
-    @editable
     public var roundTranslation(default,set):Int = -1;
     function set_roundTranslation(roundTranslation:Int):Int {
         if (this.roundTranslation == roundTranslation) return roundTranslation;
@@ -1418,7 +1402,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Rotation of the visual in degrees.
      * The center of the rotation depends on `anchorX` and `anchorY`.
      */
-    @editable({ slider: [0, 360], degrees: true })
     public var rotation(default,set):Float = 0;
     function set_rotation(rotation:Float):Float {
         if (this.rotation == rotation) return rotation;
@@ -1431,7 +1414,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Alpha of the visual. Must be a value between `0` (transparent) and `1` (fully opaque)
      */
-    @editable({ slider: [0, 1] })
     public var alpha(default,set):Float = 1;
     function set_alpha(alpha:Float):Float {
         if (this.alpha == alpha) return alpha;
@@ -1446,7 +1428,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * the visual with a `tx` value of `translateX`.
      * Only recommended for advanced usage as `x` property should be used in general instead.
      */
-    @editable({ group: 'translate' })
     public var translateX(get, set):Float;
     inline function get_translateX():Float {
         return transform != null ? transform.tx : 0;
@@ -1476,7 +1457,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * the visual with a `ty` value of `translateY`.
      * Only recommended for advanced usage as `y` property should be used in general instead.
      */
-    @editable({ group: 'translate' })
     public var translateY(get, set):Float;
     inline function get_translateY():Float {
         return transform != null ? transform.ty : 0;
@@ -1528,7 +1508,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Assign a shader to this visual.
      * When none is assigned, default shader will be used.
      */
-    @editable
     public var shader(default, set):Shader = null;
     function set_shader(shader:Shader):Shader {
         return this.shader = shader;
@@ -3117,18 +3096,5 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         size(ceramic.App.app.screen.width, ceramic.App.app.screen.height);
 
     }
-
-#if editor
-
-/// Editor
-
-    public static function editorSetupEntity(entityData:editor.model.EditorEntityData) {
-
-        entityData.props.set('width', 100);
-        entityData.props.set('height', 100);
-
-    }
-
-#end
 
 }

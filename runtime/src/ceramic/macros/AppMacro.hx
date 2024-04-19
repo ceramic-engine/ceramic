@@ -1,16 +1,16 @@
 package ceramic.macros;
 
+import haxe.Json;
+import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.io.Path;
-import haxe.Json;
 
 using StringTools;
 
 class AppMacro {
 
     static var computedInfo:Dynamic;
-    
+
     static public function getComputedInfo(rawInfo:String):Dynamic {
 
         if (AppMacro.computedInfo == null) AppMacro.computedInfo = computeInfo(rawInfo);
@@ -28,24 +28,6 @@ class AppMacro {
 
         var data = getComputedInfo(Context.definedValue('app_info'));
 
-        // Load editable types from ceramic.yml
-        for (key in Reflect.fields(data.editable)) {
-            var val = Reflect.field(data.editable, key);
-            if (Std.isOfType(val, String)) {
-                #if editor
-                Context.getType(val);
-                #end
-            }
-            else {
-                for (k in Reflect.fields(val)) {
-                    var v = Reflect.field(val, k);
-                    #if editor
-                    Context.getType(v);
-                    #end
-                }
-            }
-        }
-
         // Load collection types from ceramic.yml
         for (key in Reflect.fields(data.collections)) {
             var val = Reflect.field(data.collections, key);
@@ -60,7 +42,7 @@ class AppMacro {
                 }
             }
         }
-        
+
         var expr = Context.makeExpr(data, Context.currentPos());
 
         fields.push({
@@ -95,7 +77,6 @@ class AppMacro {
 
         // Add required info
         if (data.collections == null) data.collections = {};
-        if (data.editable == null) data.editable = [];
 
         return data;
 
@@ -108,7 +89,7 @@ class AppMacro {
         for (key in Reflect.fields(data)) {
 
             var val = Reflect.field(data, key);
-            
+
             if (Std.isOfType(val, Array)) {
                 var items:Dynamic = {};
                 var list:Array<Dynamic> = val;

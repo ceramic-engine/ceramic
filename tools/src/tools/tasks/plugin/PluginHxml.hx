@@ -1,11 +1,11 @@
 package tools.tasks.plugin;
 
-import tools.Helpers.*;
-import tools.Project;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -21,11 +21,10 @@ class PluginHxml extends tools.Task {
 
         var isToolsKind = extractArgFlag(args, 'tools', true);
         var isRuntimeKind = extractArgFlag(args, 'runtime', true);
-        var isEditorKind = extractArgFlag(args, 'editor', true);
 
         var completionFlag = extractArgFlag(args, 'completion', true);
 
-        if ((isToolsKind && isRuntimeKind) || (isToolsKind && isEditorKind) || (isRuntimeKind && isEditorKind)) {
+        if (isToolsKind && isRuntimeKind) {
             fail('Ambiguous plugin kind.');
         }
 
@@ -40,12 +39,6 @@ class PluginHxml extends tools.Task {
             kinds.push(Runtime);
             if (!context.defines.exists('runtime')) {
                 context.defines.set('runtime', '');
-            }
-        }
-        if (isEditorKind) {
-            kinds.push(Editor);
-            if (!context.defines.exists('editor')) {
-                context.defines.set('editor', '');
             }
         }
 
@@ -130,7 +123,7 @@ class PluginHxml extends tools.Task {
         -js index.js
         -debug
         ' + extraHxml.join("\n");
-        
+
         // Make every hxml paths absolute (to simplify IDE integration)
         //
         var hxmlData = tools.Hxml.parse(rawHxml);
