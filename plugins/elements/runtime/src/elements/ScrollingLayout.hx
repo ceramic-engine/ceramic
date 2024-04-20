@@ -5,8 +5,12 @@ import ceramic.ScrollView;
 import ceramic.Shortcuts.*;
 import ceramic.View;
 import ceramic.ViewLayoutMask;
+import elements.Context.context;
+import tracker.Observable;
 
-class ScrollingLayout<T:View> extends ScrollView {
+class ScrollingLayout<T:View> extends ScrollView implements Observable {
+
+    @observe public var theme:Theme = null;
 
     public var layoutView(default, null):T;
 
@@ -44,6 +48,8 @@ class ScrollingLayout<T:View> extends ScrollView {
         #if !(ios || android)
         scroller.dragEnabled = false;
         #end
+
+        autorun(updateStyle);
 
         app.onPostUpdate(this, handlePostUpdate);
 
@@ -108,6 +114,16 @@ class ScrollingLayout<T:View> extends ScrollView {
                 }
             }
         }
+
+    }
+
+    function updateStyle() {
+
+        var theme = this.theme;
+        if (theme == null)
+            theme = context.theme;
+
+        borderAlpha = theme.windowBorderAlpha;
 
     }
 

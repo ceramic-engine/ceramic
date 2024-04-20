@@ -24,6 +24,12 @@ class WindowData extends Model {
 
     @serialize public var expanded:Bool = true;
 
+    @serialize public var header:Bool = true;
+
+    @serialize public var scrollbar:ScrollbarVisibility = AUTO_ADD;
+
+    public var computedContentHeight:Float = 0;
+
     var itemIndex:Int = 0;
 
     public var items(default, null):ReadOnlyArray<WindowItem> = [];

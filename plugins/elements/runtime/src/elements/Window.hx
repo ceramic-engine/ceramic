@@ -41,6 +41,8 @@ class Window extends ColumnLayout implements Observable {
 
     @observe public var collapsible:Bool = true;
 
+    @observe public var header:Bool = true;
+
     @observe public var titleAlign:TextAlign = LEFT;
 
     public var movable:Bool = true;
@@ -147,6 +149,7 @@ class Window extends ColumnLayout implements Observable {
         onTitleAlignChange(this, titleAlignChange);
         onClosableChange(this, closableChange);
         onCollapsibleChange(this, collapsibleChange);
+        onHeaderChange(this, headerChange);
 
         autorun(updateStyle);
 
@@ -303,6 +306,16 @@ class Window extends ColumnLayout implements Observable {
         else {
             expandView.active = false;
             titleView.paddingLeft = titleAlign == LEFT ? 5 : 0;
+        }
+
+    }
+
+    function headerChange(header:Bool, prevHeader:Bool):Void {
+
+        if (header != prevHeader) {
+            if (headerView != null) {
+                headerView.active = header;
+            }
         }
 
     }

@@ -638,6 +638,13 @@ class Im {
         // until Im.end() is called
         windowData.collapsible = true;
 
+        // Mark as header as active but value can be changed
+        // until Im.end() is called
+        windowData.header = true;
+
+        // Mark scrollbar as AUTO_ADD by default
+        windowData.scrollbar = AUTO_ADD;
+
         // Mark as titleAlign LEFT but value can be changed
         // until Im.end() is called
         windowData.titleAlign = LEFT;
@@ -1011,6 +1018,16 @@ class Im {
 
     }
 
+    public static function scrollbar(visibility:ScrollbarVisibility):Void {
+
+        var windowData = _currentWindowData;
+
+        windowData.scrollbar = visibility;
+
+        windowData.movable = false;
+
+    }
+
     public static function focus():Void {
 
         var windowData = _currentWindowData;
@@ -1027,6 +1044,14 @@ class Im {
 
         windowData.collapsible = false;
         windowData.expanded = true;
+
+    }
+
+    public static function header(header:Bool):Void {
+
+        var windowData = _currentWindowData;
+
+        windowData.header = header;
 
     }
 
@@ -2035,6 +2060,7 @@ class Im {
             window.movable = windowData.movable;
             window.collapsible = windowData.collapsible;
             window.titleAlign = windowData.titleAlign;
+            window.header = windowData.header;
 
             if (!windowData.expanded) {
                 var prevContentView = window.contentView;
@@ -2074,13 +2100,26 @@ class Im {
             else {
                 var form = windowData.form;
                 var needsContentRebuild = false;
-                var overflowScroll = windowData.height != ViewSize.auto();
+
+                var overflowScroll = (windowData.height != ViewSize.auto()) && switch windowData.scrollbar {
+                    case AUTO_ADD:
+                        trace('computed=${windowData.computedContentHeight} height=${windowData.height}');
+                        windowData.computedContentHeight > windowData.height;
+                    case AUTO_SHOW:
+                        true;
+                    case ALWAYS:
+                        true;
+                    case NEVER:
+                        false;
+                }
 
                 inline function createScrollingLayout(container:ColumnLayout) {
                     container.paddingRight = 12;
                     var scroll = new ScrollingLayout(container, true);
+                    scroll.theme = windowData.theme;
                     scroll.checkChildrenOfView = form;
                     var scrollbar = new Scrollbar();
+                    scrollbar.active = false;
                     scrollbar.inset(2, 1, 1, 2);
                     scroll.scroller.scrollbar = scrollbar;
                     scroll.transparent = true;
@@ -2310,6 +2349,42 @@ class Im {
                     window.y = windowData.y;
                 });
             }
+
+            // We update window computed height after we are sure its content layout is done
+            ViewSystem.shared.onceEndLateUpdate(window, function(delta) {
+                if (window.contentView != null) {
+                    if (window.contentView is ScrollingLayout) {
+                        var scroll:ScrollingLayout<ColumnLayout> = cast window.contentView;
+                        windowData.computedContentHeight = scroll.contentView.height;
+
+                        if (windowData.scrollbar == AUTO_SHOW || windowData.scrollbar == AUTO_ADD) {
+                            final makeActive = (windowData.computedContentHeight > windowData.height);
+                            final scrollbar = scroll.scroller.scrollbar;
+                            if (scrollbar != null) {
+                                if (!makeActive) {
+                                    scrollbar.active = false;
+                                }
+                                app.onceUpdate(scrollbar, _ -> {
+                                    scrollbar.active = makeActive;
+                                });
+                            }
+                        }
+                        else if (windowData.scrollbar == ALWAYS) {
+                            final scrollbar = scroll.scroller.scrollbar;
+                            if (scrollbar != null && !scrollbar.active) {
+                                app.onceUpdate(scrollbar, _ -> {
+                                    if (windowData.scrollbar == ALWAYS) {
+                                        scrollbar.active = true;
+                                    }
+                                });
+                            }
+                        }
+                    }
+                    else {
+                        windowData.computedContentHeight = window.contentView.height;
+                    }
+                }
+            });
         }
 
         // Done with this window
