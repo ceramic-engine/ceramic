@@ -71,7 +71,7 @@ process.chdir(appFiles);
 
 // App icon
 if (process.platform == 'darwin') {
-    app.dock.setIcon(path.join(__dirname, 'resources/AppIcon.png'));
+    app.dock.setIcon(path.join(__dirname, 'resources/AppIcon-mac.png'));
 }
 
 // App flags
