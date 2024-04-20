@@ -40,6 +40,14 @@ class Theme extends Model {
         return font != null ? font : app.assets.font(settings.defaultFont);
     }
 
+    @serialize public var customBoldFont:BitmapFont = null;
+
+    public var boldFont(get,never):BitmapFont;
+    function get_boldFont():BitmapFont {
+        var font = customBoldFont;
+        return font != null ? font : app.assets.font(settings.defaultFont);
+    }
+
 /// Borders colors
 
     @serialize public var lighterBorderColor:Color = 0x999999;
@@ -73,6 +81,8 @@ class Theme extends Model {
     @serialize public var formItemSpacing:Float = 6;
 
     @serialize public var formPadding:Float = 6;
+
+    @serialize public var tabsMarginY:Float = 6;
 
 /// Field
 
@@ -157,6 +167,7 @@ class Theme extends Model {
         toTheme.highlightPendingColor = highlightPendingColor;
         toTheme.formItemSpacing = formItemSpacing;
         toTheme.formPadding = formPadding;
+        toTheme.tabsMarginY = tabsMarginY;
         toTheme.focusedFieldSelectionColor = focusedFieldSelectionColor;
         toTheme.focusedFieldBorderColor = focusedFieldBorderColor;
         toTheme.overlayBackgroundColor = overlayBackgroundColor;
@@ -176,6 +187,8 @@ class Theme extends Model {
         toTheme.windowBackgroundAlpha = windowBackgroundAlpha;
         toTheme.windowBorderColor = windowBorderColor;
         toTheme.windowBorderAlpha = windowBorderAlpha;
+
+        toTheme._clonedIndex = _index;
 
         return toTheme;
 
@@ -285,6 +298,8 @@ class Theme extends Model {
 
 /// Internals for Im
 
+    static var _nextIndex:Int = 1;
+
     @:allow(elements.Im)
     private var _tint:Color = Color.NONE;
 
@@ -299,5 +314,11 @@ class Theme extends Model {
 
     @:allow(elements.Im)
     private var _used:Bool = false;
+
+    @:allow(elements.Im)
+    private var _index:Int = (_nextIndex = (_nextIndex + 1) % 999999999);
+
+    @:allow(elements.Im)
+    private var _clonedIndex:Int = -1;
 
 }

@@ -8,6 +8,8 @@ class LabelView extends TextView implements Observable {
 
     @observe public var theme:Theme = null;
 
+    @observe public var bold:Bool = false;
+
     @observe public var disabled:Bool = false;
 
     public function new() {
@@ -38,7 +40,7 @@ class LabelView extends TextView implements Observable {
             textColor = theme.lightTextColor;
         }
 
-        font = theme.mediumFont;
+        font = bold ? theme.boldFont : theme.mediumFont;
 
     }
 

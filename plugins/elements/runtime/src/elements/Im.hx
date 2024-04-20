@@ -1,6 +1,5 @@
 package elements;
 
-import ceramic.Pool;
 #if !macro
 import ceramic.Assert.assert;
 import ceramic.AssetId;
@@ -21,6 +20,7 @@ import ceramic.IntMap;
 import ceramic.KeyBinding;
 import ceramic.KeyCode;
 import ceramic.LongPress;
+import ceramic.Pool;
 import ceramic.Quad;
 import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
@@ -130,9 +130,19 @@ class Im {
 
     static var _flex:Int = 1;
 
+    static var _bold:Bool = false;
+
+    static var _pointSize:Int = 12;
+
+    static var _preRenderedSize:Int = -1;
+
     static var _assets:Assets = null;
 
     static var _theme:Theme = null;
+
+    static var _explicitTheme:Theme = null;
+
+    static var _themeClonedIndex:Int = -1;
 
     static var _themeTint:Color = Color.NONE;
 
@@ -541,6 +551,11 @@ class Im {
             ImSystem.shared.createView();
         }
 
+        // Reset text settings
+        pointSize();
+        preRenderedSize();
+        bold(false);
+
         // Get or create window
         var id = extractId(key);
 
@@ -887,6 +902,10 @@ class Im {
         _updateTheme();
     }
 
+    public static function bold(bold:Bool):Void {
+        _bold = bold;
+    }
+
     private static function _updateTheme():Void {
 
         initIfNeeded();
@@ -898,7 +917,7 @@ class Im {
 
         for (i in 0..._themePool.length) {
             var theme = _themePool[i];
-            if (theme._tint == _themeTint && theme._altTint == _themeAltTint && theme._backgroundColor == _themeBackgroundColor && theme._textColor == _themeTextColor) {
+            if (theme._tint == _themeTint && theme._altTint == _themeAltTint && theme._backgroundColor == _themeBackgroundColor && theme._textColor == _themeTextColor || theme._clonedIndex == _themeClonedIndex) {
                 theme._used = true;
                 resolvedTheme = theme;
                 break;
@@ -910,9 +929,10 @@ class Im {
                 var theme = _themePool[i];
                 if (!theme._used) {
                     theme._used = true;
-                    if (theme._tint != _themeTint || theme._altTint != _themeAltTint || theme._backgroundColor != _themeBackgroundColor || theme._textColor != _themeTextColor) {
+                    if (theme._tint != _themeTint || theme._altTint != _themeAltTint || theme._backgroundColor != _themeBackgroundColor || theme._textColor != _themeTextColor || theme._clonedIndex != _themeClonedIndex) {
 
-                        _imTheme.clone(theme);
+                        (_explicitTheme ?? _imTheme).clone(theme);
+                        _themeClonedIndex = theme._clonedIndex;
 
                         if (_themeTint != Color.NONE) {
                             theme.applyTint(_themeTint);
@@ -945,7 +965,8 @@ class Im {
             var theme = new Theme();
             theme._used = true;
 
-            _imTheme.clone(theme);
+            (_explicitTheme ?? _imTheme).clone(theme);
+            _themeClonedIndex = theme._clonedIndex;
 
             if (_themeTint != Color.NONE) {
                 theme.applyTint(_themeTint);
@@ -970,7 +991,7 @@ class Im {
             resolvedTheme = theme;
         }
 
-        theme(resolvedTheme);
+        _themeInternal(resolvedTheme);
 
     }
 
@@ -993,6 +1014,21 @@ class Im {
     }
 
     public static function theme(theme:Theme):Void {
+
+        initIfNeeded();
+
+        _explicitTheme = theme;
+
+        if (theme == null) {
+            theme = _imTheme;
+        }
+
+        _theme = theme;
+        _theme.backgroundInFormLayout = true;
+
+    }
+
+    static function _themeInternal(theme:Theme):Void {
 
         initIfNeeded();
 
@@ -1990,6 +2026,18 @@ class Im {
 
     }
 
+    public static function pointSize(pointSize:Int = 12):Void {
+
+        _pointSize = pointSize;
+
+    }
+
+    public static function preRenderedSize(preRenderedSize:Int = -1):Void {
+
+        _preRenderedSize = preRenderedSize;
+
+    }
+
     public static function text(value:String, ?align:TextAlign):Void {
 
         var windowData = _currentWindowData;
@@ -2012,6 +2060,15 @@ class Im {
             case CENTER: 2;
         };
         item.row = _inRow ? _currentRowIndex : -1;
+        item.bool0 = _bold;
+
+        item.int2 = _pointSize;
+        if (_preRenderedSize > 0) {
+            item.int3 = _preRenderedSize;
+        }
+        else {
+            item.int3 = Math.ceil((_pointSize + 7.9) / 5) * 5;
+        }
 
         windowData.addItem(item);
 

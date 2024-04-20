@@ -50,6 +50,8 @@ class WindowItem {
 
     public var int2:Int = 0;
 
+    public var int3:Int = 0;
+
     public var labelPosition:Int = 0;
 
     public var disabled:Bool = false;
@@ -266,6 +268,7 @@ class WindowItem {
         int0 = 0;
         int1 = 0;
         int2 = 0;
+        int3 = 0;
         labelPosition = 0;
         disabled = false;
         theme = null;
@@ -958,6 +961,9 @@ class WindowItem {
         text.disabled = disabled;
         text.viewWidth = ViewSize.fill();
         text.theme = theme;
+        text.bold = bool0;
+        text.pointSize = int2;
+        text.preRenderedSize = int3;
         return text;
 
     }
@@ -1181,8 +1187,8 @@ class WindowItem {
             tabs.tabThemes = cast anyArray0;
         }
         tabs.selectedIndex = stringArray0.indexOf(string0);
-        tabs.marginX = context.theme.formPadding;
-        tabs.marginY = context.theme.formPadding * 0.5;
+        tabs.marginX = theme.formPadding;
+        tabs.marginY = theme.tabsMarginY;
 
         if (justCreated) {
 
