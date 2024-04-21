@@ -1133,15 +1133,15 @@ class Im {
 
     }
 
-    public static extern inline overload function list(height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+    public static extern inline overload function list(height:Float = -1, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
         return _list(height, true, items, selected, sortable, lockable, trashable, duplicable);
     }
 
-    public static extern inline overload function list(bigItems:Bool, height:Float, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+    public static extern inline overload function list(bigItems:Bool, height:Float = -1, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
         return _list(height, !bigItems, items, selected, sortable, lockable, trashable, duplicable);
     }
 
-    private static function _list(height:Float, smallItems:Bool, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
+    private static function _list(height:Float = -1, smallItems:Bool, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
 
         var windowData = _currentWindowData;
 
@@ -2157,10 +2157,10 @@ class Im {
             else {
                 var form = windowData.form;
                 var needsContentRebuild = false;
+                var canReuseViews = true;
 
                 var overflowScroll = (windowData.height != ViewSize.auto()) && switch windowData.scrollbar {
                     case AUTO_ADD:
-                        trace('computed=${windowData.computedContentHeight} height=${windowData.height}');
                         windowData.computedContentHeight > windowData.height;
                     case AUTO_SHOW:
                         true;
@@ -2189,11 +2189,23 @@ class Im {
                         var scroll:ScrollingLayout<ColumnLayout> = cast window.contentView;
                         if (!overflowScroll) {
                             // Changed from overflow scroll to no overflow
-                            needsContentRebuild = true;
                             var container = scroll.layoutView;
                             if (container.parent != null)
                                 container.parent.remove(container);
                             window.contentView = container;
+
+                            container.paddingRight = 0;
+                            needsContentRebuild = true;
+
+                            var views = form.subviews;
+                            if (views == null)
+                                return;
+                            for (i in 0...views.length) {
+                                var view = views[i];
+                                if (!view.active)
+                                    continue;
+                                view.visible = true;
+                            }
                         }
                         else {
                             scroll.viewSize(ViewSize.fill(), windowData.height);
@@ -2299,7 +2311,7 @@ class Im {
                     for (i in 0...windowData.numItems) {
                         var item = windowItems.unsafeGet(i);
                         var view = views[i];
-                        var reuseView = (item.previous != null && item.isSameItem(item.previous));
+                        var reuseView = canReuseViews && (item.previous != null && item.isSameItem(item.previous));
                         if (view == null || !reuseView) {
                             if (view != null) {
                                 if (view is VisualContainerView) {
@@ -2409,7 +2421,7 @@ class Im {
 
             // We update window computed height after we are sure its content layout is done
             ViewSystem.shared.onceEndLateUpdate(window, function(delta) {
-                if (window.contentView != null) {
+                if (window.contentView != null && windowData.height > 0) {
                     if (window.contentView is ScrollingLayout) {
                         var scroll:ScrollingLayout<ColumnLayout> = cast window.contentView;
                         windowData.computedContentHeight = scroll.contentView.height;
@@ -2439,6 +2451,13 @@ class Im {
                     }
                     else {
                         windowData.computedContentHeight = window.contentView.height;
+                        if (windowData.scrollbar == AUTO_ADD && windowData.computedContentHeight > windowData.height) {
+                            final contentView = window.contentView;
+                            contentView.visible = false;
+                            app.onceUpdate(contentView, _ -> {
+                                contentView.visible = true;
+                            });
+                        }
                     }
                 }
             });

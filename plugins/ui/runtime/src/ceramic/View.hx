@@ -383,10 +383,18 @@ class View extends Layer {
 
     }
 
-    inline public function resetComputedSize():Void {
+    inline public function resetComputedSize(recursive:Bool = false):Void {
 
         computedWidth = -1;
         persistedComputedWidth = -1;
+
+        if (recursive) {
+            if (subviews != null) {
+                for (i in 0...subviews.length) {
+                    subviews[i].resetComputedSize(true);
+                }
+            }
+        }
 
     }
 

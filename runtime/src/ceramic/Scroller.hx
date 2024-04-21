@@ -245,7 +245,7 @@ class Scroller extends Visual implements Observable {
 
     override function interceptPointerDown(hittingVisual:Visual, x:Float, y:Float, touchIndex:Int, buttonId:Int):Bool {
 
-        if (!allowPointerOutside && !hits(x, y)) {
+        if (scrollEnabled && !allowPointerOutside && !hits(x, y)) {
             return true;
         }
 
@@ -255,11 +255,13 @@ class Scroller extends Visual implements Observable {
 
     override function interceptPointerOver(hittingVisual:Visual, x:Float, y:Float):Bool {
 
-        var doesHit = hits(x, y);
-        pointerOnScrollerChild = doesHit && !Std.isOfType(hittingVisual, Scroller);
+        if (scrollEnabled) {
+            var doesHit = hits(x, y);
+            pointerOnScrollerChild = doesHit && !Std.isOfType(hittingVisual, Scroller);
 
-        if (!allowPointerOutside && !doesHit) {
-            return true;
+            if (!allowPointerOutside && !doesHit) {
+                return true;
+            }
         }
 
         return false;

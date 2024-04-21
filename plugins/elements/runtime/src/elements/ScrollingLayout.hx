@@ -103,6 +103,8 @@ class ScrollingLayout<T:View> extends ScrollView implements Observable {
                 return;
             for (i in 0...views.length) {
                 var view = views[i];
+                if (!view.active)
+                    continue;
 
                 var viewY = view.y;
                 var viewHeight = view.height;

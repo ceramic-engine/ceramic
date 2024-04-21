@@ -1164,7 +1164,15 @@ class WindowItem {
             });
         }
         list.viewWidth = ViewSize.fill();
-        list.viewHeight = float0;
+        if (float0 > 0) {
+            list.viewHeight = float0;
+            list.scrollEnabled = true;
+        }
+        else {
+            final itemSize = list.smallItems ? ListView.CELL_HEIGHT_SMALL : ListView.CELL_HEIGHT_LARGE;
+            list.viewHeight = list.items.length * itemSize;
+            list.scrollEnabled = false;
+        }
         return list;
 
     }

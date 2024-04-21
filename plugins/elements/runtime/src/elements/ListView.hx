@@ -16,6 +16,10 @@ using ceramic.Extensions;
 @:allow(elements.ListViewDataSource)
 class ListView extends View implements Observable {
 
+    public static final CELL_HEIGHT_SMALL:Int = 30;
+
+    public static final CELL_HEIGHT_LARGE:Int = 39;
+
     @event function moveItemAboveItem(itemIndex:Int, otherItemIndex:Int);
 
     @event function moveItemBelowItem(itemIndex:Int, otherItemIndex:Int);
@@ -53,6 +57,8 @@ class ListView extends View implements Observable {
 
     @observe public var smallItems:Bool = false;
 
+    @observe public var scrollEnabled:Bool = true;
+
     public var autoCheckLocked:Bool = true;
 
     public function new(items:Array<Dynamic>) {
@@ -74,8 +80,21 @@ class ListView extends View implements Observable {
         dataSource = new ListViewDataSource(this);
 
         autorun(updateFromItems);
+        autorun(updateFromScrollEnabled);
 
         app.onUpdate(this, checkLockedIfNeeded);
+
+    }
+
+    function updateFromScrollEnabled() {
+
+        final scrollEnabled = this.scrollEnabled;
+
+        unobserve();
+
+        final scroller = collectionView.scroller;
+        scroller.scrollEnabled = scrollEnabled;
+        scroller.scrollbar.active = scrollEnabled;
 
     }
 
@@ -83,6 +102,7 @@ class ListView extends View implements Observable {
 
         var items = this.items;
         var smallItems = this.smallItems;
+        var scrollEnabled = this.scrollEnabled; // Needed to recompute items width
 
         unobserve();
 
@@ -173,8 +193,8 @@ class ListViewDataSource implements CollectionViewDataSource {
     /** Get the item frame at the requested index. */
     public function collectionViewItemFrameAtIndex(collectionView:CollectionView, itemIndex:Int, frame:CollectionViewItemFrame):Void {
 
-        frame.width = collectionView.width - 12;
-        frame.height = listView.smallItems ? 30 : 39; // TODO adapt depending on kind of list item
+        frame.width = collectionView.width - (listView.scrollEnabled ? 12 : 0);
+        frame.height = listView.smallItems ? ListView.CELL_HEIGHT_SMALL : ListView.CELL_HEIGHT_LARGE; // TODO adapt depending on kind of list item
 
     }
 

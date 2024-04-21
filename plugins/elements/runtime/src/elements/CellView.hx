@@ -4,6 +4,7 @@ import ceramic.Click;
 import ceramic.Color;
 import ceramic.ColumnLayout;
 import ceramic.LayersLayout;
+import ceramic.Point;
 import ceramic.RowLayout;
 import ceramic.Scroller;
 import ceramic.Shortcuts.*;
@@ -26,6 +27,8 @@ using elements.Tooltip;
 class CellView extends LayersLayout implements Observable {
 
     static var _notVisibleTransform:Transform = null;
+
+    static var _point:Point = new Point(0, 0);
 
     @observe public var theme:Theme = null;
 
@@ -490,6 +493,16 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    function firstEnabledParentScroller():Scroller {
+
+        var scroller = firstParentWithClass(Scroller);
+        while (scroller != null && !scroller.scrollEnabled) {
+            scroller = scroller.firstParentWithClass(Scroller);
+        }
+        return scroller;
+
+    }
+
     function handleDragChange(dragging:Bool, wasDragging:Bool) {
         if (dragging == wasDragging)
             return;
@@ -500,7 +513,7 @@ class CellView extends LayersLayout implements Observable {
             dragAutoScroll = 0;
             draggingCellDragY = 0;
             this.transform = _notVisibleTransform;
-            var scroller = firstParentWithClass(Scroller);
+            var scroller = firstEnabledParentScroller();
             if (scroller != null) {
                 dragStartScrollY = scroller.scrollY;
             }
@@ -534,11 +547,11 @@ class CellView extends LayersLayout implements Observable {
 
         if (dragging) {
 
-            // Move other thiss from drag
+            // Move other this from drag
             //
 
             var dragExtra = 0.0;
-            var scroller = this.firstParentWithClass(Scroller);
+            var scroller = this.firstEnabledParentScroller();
             if (scroller != null) {
                 dragExtra = scroller.scrollY - dragStartScrollY;
             }
@@ -550,16 +563,44 @@ class CellView extends LayersLayout implements Observable {
 
             // Scroll container if reaching bounds with drag
             //
-            var scroller = this.firstParentWithClass(Scroller);
+            final scroller = this.firstEnabledParentScroller();
+            final container = firstParentWithClass(Scroller) ?? scroller;
             if (scroller != null) {
-                if (this.y + this.height + draggingCellDragY + dragExtra > scroller.height + scroller.scrollY) {
-                    dragAutoScroll = (this.y + this.height + draggingCellDragY + dragExtra) - (scroller.height + scroller.scrollY);
-                }
-                else if (this.y + draggingCellDragY + dragExtra < scroller.scrollY) {
-                    dragAutoScroll = (this.y + draggingCellDragY + dragExtra) - scroller.scrollY;
+
+                if (container != scroller) {
+                    // Active scroller is not the container
+
+                    scroller.visualToScreen(0, 0, _point);
+                    final scrollerTop = _point.y;
+                    scroller.visualToScreen(0, scroller.height, _point);
+                    final scrollerBottom = _point.y;
+
+                    draggingCell.visualToScreen(0, 0, _point);
+                    final draggingTop = _point.y;
+                    draggingCell.visualToScreen(0, draggingCell.height, _point);
+                    final draggingBottom = _point.y;
+
+                    if (draggingBottom > scrollerBottom) {
+                        dragAutoScroll = draggingBottom - scrollerBottom;
+                    }
+                    else if (draggingTop < scrollerTop) {
+                        dragAutoScroll = draggingTop - scrollerTop;
+                    }
+                    else {
+                        dragAutoScroll = 0;
+                    }
                 }
                 else {
-                    dragAutoScroll = 0;
+                    // Active scroller is the same as the container
+                    if (this.y + this.height + draggingCellDragY + dragExtra > scroller.height + scroller.scrollY) {
+                        dragAutoScroll = (this.y + this.height + draggingCellDragY + dragExtra) - (scroller.height + scroller.scrollY);
+                    }
+                    else if (this.y + draggingCellDragY + dragExtra < scroller.scrollY) {
+                        dragAutoScroll = (this.y + draggingCellDragY + dragExtra) - scroller.scrollY;
+                    }
+                    else {
+                        dragAutoScroll = 0;
+                    }
                 }
             }
         }
@@ -622,7 +663,7 @@ class CellView extends LayersLayout implements Observable {
     function scrollFromDragIfNeeded(delta:Float) {
 
         if (dragAutoScroll != 0) {
-            var scroller = this.firstParentWithClass(Scroller);
+            var scroller = this.firstEnabledParentScroller();
             if (scroller != null) {
                 var prevScrollY = scroller.scrollY;
                 scroller.scrollY += dragAutoScroll * delta * 10;

@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.CollectionView;
 import ceramic.Filter;
+import ceramic.Scroller;
 import ceramic.Shortcuts.*;
 import elements.Context.context;
 import elements.Scrollbar;
@@ -65,6 +66,17 @@ class CellCollectionView extends CollectionView implements Observable {
 
         filter.pos(0, 0);
         filter.size(width, height);
+
+        // Prevent nested filters messing scroll events
+        // TODO: find a better solution?
+        if (firstParentWithClass(Scroller) != null) {
+            filter.enabled = false;
+            clip = this;
+        }
+        else {
+            filter.enabled = true;
+            clip = null;
+        }
 
         super.layout();
 
