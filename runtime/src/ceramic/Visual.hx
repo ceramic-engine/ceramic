@@ -3043,6 +3043,11 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         // Bind to screen transform
         ceramic.App.app.screen.reverseMatrix.onChange(this, _bindToNativeScreenSizeCallback);
+        ceramic.App.app.onPreUpdate(this, _ -> {
+            if (this.width != ceramic.App.app.screen.nativeWidth || this.height != ceramic.App.app.screen.nativeHeight) {
+                size(ceramic.App.app.screen.nativeWidth, ceramic.App.app.screen.nativeHeight);
+            }
+        });
         _bindToNativeScreenSizeCallback();
 
     }
