@@ -684,6 +684,8 @@ class WindowItem {
         }
         #end
 
+        field.disabled = disabled;
+
         if (labeled != null) {
             labeled.viewWidth = ViewSize.fill();
         }

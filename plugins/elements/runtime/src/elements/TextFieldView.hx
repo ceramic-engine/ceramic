@@ -210,11 +210,12 @@ class TextFieldView extends BaseTextFieldView {
         var displayedText = textValue;
         var placeholder = this.placeholder;
         var focused = this.focused;
+        var disabled = this.disabled;
 
         unobserve();
 
         placeholderView.content = placeholder != null ? placeholder : '';
-        placeholderView.visible = (displayedText == '' && !focused);
+        placeholderView.visible = (displayedText == '' && (!focused || disabled));
 
         reobserve();
 
