@@ -8,6 +8,8 @@ class TextUtils {
 
     static final RE_PREFIXED = ~/^(.*?)([0-9]+)$/;
 
+    static final RE_NUMERIC_PREFIX = ~/^[0-9]+/;
+
     static final RE_SPACES = ~/\s+/;
 
     public static function toFieldLabel(str:String):String {
@@ -132,6 +134,18 @@ class TextUtils {
 
         str = RE_SPACES.replace(str, '_');
         str = Slug.encode(str, _slugUpperCase);
+        return str;
+
+    }
+
+    public static function sanitizeToIdentifier(str:String):String {
+
+        str = RE_NUMERIC_PREFIX.replace(str, '');
+        str = RE_SPACES.replace(str, '_');
+        str = Slug.encode(str, {
+            lower: false,
+            replacement: '_'
+        });
         return str;
 
     }

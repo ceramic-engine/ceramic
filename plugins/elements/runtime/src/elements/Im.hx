@@ -1403,15 +1403,16 @@ class Im {
             var prevValue = item.previous.string0;
             var newValue = item.previous.string1;
             var submitted = item.previous.bool1;
+            var blurred = item.previous.bool3;
             if (newValue != prevValue) {
                 item.string0 = newValue;
                 item.string1 = newValue;
                 Im.writeString(value, newValue);
                 _markChanged();
-                return Flags.fromValues(true, submitted).toInt();
+                return Flags.fromValues(true, submitted, blurred).toInt();
             }
             else {
-                return Flags.fromValues(false, submitted).toInt();
+                return Flags.fromValues(false, submitted, blurred).toInt();
             }
         }
 

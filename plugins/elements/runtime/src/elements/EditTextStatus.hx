@@ -22,4 +22,9 @@ abstract EditTextStatus(Int) from Int to Int {
         return Flags.fromInt(this).bool(1);
     }
 
+    public var blurred(get,never):Bool;
+    inline function get_blurred():Bool {
+        return Flags.fromInt(this).bool(2);
+    }
+
 }
