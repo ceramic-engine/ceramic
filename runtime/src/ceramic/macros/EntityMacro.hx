@@ -26,6 +26,8 @@ class EntityMacro {
         var classPath = Context.getLocalClass().toString();
 
         // Look for @fieldInfo or @autoFieldInfo meta
+        // Also look for @noCheckStateMachineFields
+        var checkStateMachineFields = true;
         var fieldInfoData:DynamicAccess<{type:String,index:Int}> = null;
         var storeAllFieldInfo = false;
         var localClass = Context.getLocalClass().get();
@@ -34,6 +36,23 @@ class EntityMacro {
                 if (fieldInfoData == null)
                     fieldInfoData = {};
                 storeAllFieldInfo = true;
+            }
+            else if (meta.name == 'stateMachine') {
+                if (meta.params != null && meta.params.length > 0) {
+                    switch meta.params[0].expr {
+                        case EObjectDecl(fields):
+                            for (f in fields) {
+                                if (f.field == 'checkFields') {
+                                    switch f.expr.expr {
+                                        case EConst(CIdent(s)) if (s == 'false'):
+                                            checkStateMachineFields = false;
+                                        case _:
+                                    }
+                                }
+                            }
+                        case _:
+                    }
+                }
             }
         }
 
@@ -130,7 +149,6 @@ class EntityMacro {
 
         var hasDestroyOverride = false;
         var index = 0;
-        var checkStateMachineFields = true; // Always true for now
 
         var constructorFn = null;
         var toAppendInConstructorSuper:Array<Expr> = null;
