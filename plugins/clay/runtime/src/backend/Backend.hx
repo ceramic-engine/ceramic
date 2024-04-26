@@ -57,6 +57,10 @@ class Backend implements tracker.Events implements spec.Backend {
 
         clay.Clay.app.config.updateRate = fps > 0 ? 1.0 / fps : 0;
 
+        #if (mac || windows || linux)
+        clay.Clay.app.runtime.minFrameTime = fps > 0 ? (1.0 / fps) * 0.75 : 0.005;
+        #end
+
     }
 
 /// Events
