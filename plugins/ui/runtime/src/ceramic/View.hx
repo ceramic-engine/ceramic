@@ -465,6 +465,29 @@ class View extends Layer {
 
     }
 
+    #if !ceramic_soft_inline inline #end public function layoutDependsOnParent():Bool {
+
+        var result = false;
+
+        if (!ViewSize.isStandard(viewWidth)) {
+            result = true;
+        }
+        else if (!ViewSize.isStandard(viewHeight)) {
+            result = true;
+        }
+        else if (computedSize != null) {
+            if (computedSize.parentWidth == ComputedViewSize.NO_SIZE || !ViewSize.isPercent(viewWidth)) {
+                result = true;
+            }
+            else if (computedSize.parentHeight == ComputedViewSize.NO_SIZE || !ViewSize.isPercent(viewHeight)) {
+                result = true;
+            }
+        }
+
+        return result;
+
+    }
+
 /// Overrides
 
     override function set_active(active:Bool):Bool {
@@ -985,9 +1008,10 @@ class View extends Layer {
 
         if (hasAnyDirty) {
             // Mark all parent-of-dirty views as dirty as well
+            // if the conditions are met
             for (i in 0...toUpdate.length) {
                 var view = toUpdate.unsafeGet(i);
-                _markParentsAsLayoutDirty(view);
+                _markParentsAsLayoutDirtyIfNeeded(view);
             }
 
             // Reset computed sizes
@@ -1021,15 +1045,18 @@ class View extends Layer {
 
     }
 
-    inline static function _markParentsAsLayoutDirty(view:View):Void {
+    inline static function _markParentsAsLayoutDirtyIfNeeded(view:View):Void {
 
-        if (view.layoutDirty) {
+        if (view.layoutDirty && view.layoutDependsOnParent()) {
             var root = view;
 
             var parentView = root.parentView;
             while (parentView != null) {
                 root = parentView;
                 root.layoutDirty = true;
+                if (!root.layoutDependsOnParent()) {
+                    break;
+                }
                 parentView = root.parentView;
             }
         }
