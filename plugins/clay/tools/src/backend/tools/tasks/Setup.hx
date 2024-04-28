@@ -221,6 +221,9 @@ class Setup extends tools.Task {
             if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
                 targetFlags += '\n' + '-D clay_use_glew';
             }
+            if (target.name == 'windows' && !context.defines.exists('ceramic_no_clay_gl_finish')) {
+                targetFlags += '\n' + '-D clay_gl_finish';
+            }
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
         }
 
