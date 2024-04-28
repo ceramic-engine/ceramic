@@ -66,4 +66,11 @@ class Shortcuts {
      */
     inline public static function reobserve():Void { tracker.Autorun.reobserve(); }
 
+    /**
+     * Unbinds and destroys current `autorun`. The name `cease()` has been chosed there
+     * so that it is unlikely to collide with other more common names suchs as `stop`, `unbind` etc...
+     * and should make it more recognizable, along with `observe()` and `unobserve()`.
+     */
+    inline public static function cease():Void { tracker.Autorun.cease(); }
+
 }
