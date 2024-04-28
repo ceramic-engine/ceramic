@@ -10,14 +10,9 @@ class CrossX extends Visual {
 
     var quad1:Quad;
 
-    public var thickness(default, set):Float = 2;
-    function set_thickness(thickness:Float):Float {
-        if (this.thickness != thickness) {
-            this.thickness = thickness;
-            contentDirty = true;
-        }
-        return color;
-    }
+    @content public var thickness:Float = 2;
+
+    @content public var internalScale:Float = 1;
 
     public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
@@ -73,9 +68,11 @@ class CrossX extends Visual {
 
         quad0.pos(width * 0.5, height * 0.5);
         quad0.size(width * 0.7, thickness);
+        quad0.scale(internalScale);
 
         quad1.pos(quad0.x, quad0.y);
         quad1.size(quad0.width, quad0.height);
+        quad1.scale(internalScale);
 
     }
 
