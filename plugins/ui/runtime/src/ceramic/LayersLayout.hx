@@ -7,7 +7,7 @@ class LayersLayout extends View {
         super();
 
         transparent = true;
-        
+
     }
 
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
@@ -23,6 +23,9 @@ class LayersLayout extends View {
         #end
 
         super.computeSize(parentWidth, parentHeight, parentLayoutMask, persist);
+
+        var computedWidth = computedSize.computedWidth;
+        var computedHeight = computedSize.computedHeight;
 
         var layoutMask = ViewLayoutMask.FLEXIBLE;
         var hasExplicitWidth = !ViewSize.isAuto(viewWidth);
@@ -56,13 +59,13 @@ class LayersLayout extends View {
                     view.computeSizeIfNeeded(computedWidth, computedHeight, layoutMask, false);
 
                     // Compute maximum width
-                    if (view.computedWidth > maximumWidth) {
-                        maximumWidth = view.computedWidth;
+                    if (view.computedSize.computedWidth > maximumWidth) {
+                        maximumWidth = view.computedSize.computedWidth;
                     }
 
                     // Compute maximum height
-                    if (view.computedHeight > maximumHeight) {
-                        maximumHeight = view.computedHeight;
+                    if (view.computedSize.computedHeight > maximumHeight) {
+                        maximumHeight = view.computedSize.computedHeight;
                     }
                 }
             }
@@ -85,7 +88,7 @@ class LayersLayout extends View {
         // Recompute sub-sizes, but this time using the global computed height of the linear layout
         if (persist) {
             var persistingLayoutMask = layoutMask;
-            
+
             if (subviews != null) {
                 for (i in 0...subviews.length) {
                     var view = subviews.unsafeGet(i);
@@ -101,7 +104,10 @@ class LayersLayout extends View {
         computedHeight += paddingTop + paddingBottom;
 
         if (persist) {
-            persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
+            persistComputedSize(parentWidth, parentHeight, parentLayoutMask, computedWidth, computedHeight);
+        }
+        else {
+            assignComputedSize(computedWidth, computedHeight);
         }
 
         #if ceramic_debug_layout
@@ -135,8 +141,8 @@ class LayersLayout extends View {
                     // Apply size
                     view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE, false);
                     view.size(
-                        view.computedWidth,
-                        view.computedHeight
+                        view.computedSize.computedWidth,
+                        view.computedSize.computedHeight
                     );
 
                     // Apply paddings, offsets, compensate anchors

@@ -19,14 +19,9 @@ class View extends Layer {
     public var subviews:ReadOnlyArray<View> = null;
 
     /**
-     * Width after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
+     * ComputedSize after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
      */
-    public var computedWidth:Float = -1;
-
-    /**
-     * Height after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
-     */
-    public var computedHeight:Float = -1;
+    public var computedSize:ComputedViewSize = null;
 
     /**
      * Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
@@ -181,7 +176,23 @@ class View extends Layer {
      */
     public var canLayout:Bool;
 
+    #if ceramic_debug_layout_dirty
+    static var _lastLayoutDirtyFrame:Int = -1;
+    public var layoutDirty(default,set):Bool = true;
+    function set_layoutDirty(layoutDirty:Bool):Bool {
+        if (this.layoutDirty != layoutDirty) {
+            this.layoutDirty = layoutDirty;
+            if (layoutDirty && ceramic.Shortcuts.app.frame != _lastLayoutDirtyFrame) {
+                _lastLayoutDirtyFrame = ceramic.Shortcuts.app.frame;
+                ceramic.Utils.printStackTrace();
+                ceramic.Shortcuts.log.debug('layoutDirty ($_lastLayoutDirtyFrame)');
+            }
+        }
+        return layoutDirty;
+    }
+    #else
     public var layoutDirty:Bool = true;
+    #end
 
 /// Border
 
@@ -342,51 +353,85 @@ class View extends Layer {
 
 /// Computed size context
 
-    var persistedParentLayoutMask:ViewLayoutMask = ViewLayoutMask.FLEXIBLE;
+    var persistedComputedSizes:Array<ComputedViewSize> = [];
 
-    var persistedParentWidth:Float = -1;
+    #if !ceramic_soft_inline inline #end function persistedComputedSizeForContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Null<ComputedViewSize> {
 
-    var persistedParentHeight:Float = -1;
+        var result = null;
 
-    var persistedComputedWidth:Float = -1;
+        if (computedSize != null && computedSize.parentWidth == parentWidth && computedSize.parentHeight == parentHeight && computedSize.parentLayoutMask == parentLayoutMask) {
+            result = computedSize;
+        }
+        else {
+            for (i in 0...persistedComputedSizes.length) {
+                final computedSize = persistedComputedSizes.unsafeGet(i);
+                if (computedSize.parentWidth == parentWidth && computedSize.parentHeight == parentHeight && computedSize.parentLayoutMask == parentLayoutMask) {
+                    result = computedSize;
+                    break;
+                }
+            }
+        }
 
-    var persistedComputedHeight:Float = -1;
-
-    /*inline public function shouldRecomputeSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
-
-        return computedWidth == -1 || persistedComputedWidth || parentWidth != persistedParentWidth || parentHeight != persistedParentHeight;
-
-    } //shouldRecomputeSizeWithContext*/
-
-    inline public function persistComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Void {
-
-        // Could be improved to persist multiple sizes with different contextes,
-        // but for now, this will do OK
-
-        persistedParentWidth = parentWidth;
-        persistedParentHeight = parentHeight;
-        persistedParentLayoutMask = parentLayoutMask;
-        persistedComputedWidth = computedWidth;
-        persistedComputedHeight = computedHeight;
+        return result;
 
     }
 
-    inline public function hasPersistentComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
+    #if !ceramic_soft_inline inline #end public function persistComputedSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, computedWidth:Float, computedHeight:Float):ComputedViewSize {
 
-        // Could be improved to persist multiple sizes with different contextes,
-        // but for now, this will do OK
+        if (computedWidth != ComputedViewSize.NO_SIZE && computedHeight != ComputedViewSize.NO_SIZE) {
+            var computedSize = persistedComputedSizeForContext(parentWidth, parentHeight, parentLayoutMask);
+            if (computedSize == null) {
+                computedSize = ComputedViewSize.get();
+                computedSize.parentWidth = parentWidth;
+                computedSize.parentHeight = parentHeight;
+                computedSize.parentLayoutMask = parentLayoutMask;
+            }
+            computedSize.computedWidth = computedWidth;
+            computedSize.computedHeight = computedHeight;
+            this.computedSize = computedSize;
+        }
 
-        return persistedParentLayoutMask == parentLayoutMask
-            && persistedParentWidth == parentWidth
-            && persistedParentHeight == parentHeight
-            && persistedComputedWidth != -1;
+        var prevComputedSize = this.computedSize;
+        if (prevComputedSize.parentWidth == ComputedViewSize.NO_SIZE && prevComputedSize.parentHeight == ComputedViewSize.NO_SIZE) {
+            prevComputedSize.recycle();
+        }
+
+        return this.computedSize;
 
     }
 
-    inline public function resetComputedSize(recursive:Bool = false):Void {
+    #if !ceramic_soft_inline inline #end public function assignComputedSize(computedWidth:Float, computedHeight:Float):ComputedViewSize {
 
-        computedWidth = -1;
-        persistedComputedWidth = -1;
+        var computedSize = this.computedSize;
+        if (computedSize == null || computedSize.parentWidth != ComputedViewSize.NO_SIZE && computedSize.parentHeight != ComputedViewSize.NO_SIZE) {
+            computedSize = ComputedViewSize.get();
+        }
+
+        computedSize.parentWidth = ComputedViewSize.NO_SIZE;
+        computedSize.parentHeight = ComputedViewSize.NO_SIZE;
+        computedSize.computedWidth = computedWidth;
+        computedSize.computedHeight = computedHeight;
+
+        this.computedSize = computedSize;
+
+        return computedSize;
+
+    }
+
+    #if !ceramic_soft_inline inline #end public function hasPersistentComputedSizeWithContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Bool {
+
+        var computedSize = persistedComputedSizeForContext(parentWidth, parentHeight, parentLayoutMask);
+        return computedSize != null;
+
+    }
+
+    #if !ceramic_soft_inline inline #end public function resetComputedSize(recursive:Bool = false):Void {
+
+        computedSize = null;
+
+        while (persistedComputedSizes.length > 0) {
+            persistedComputedSizes.pop().recycle();
+        }
 
         if (recursive) {
             if (subviews != null) {
@@ -395,6 +440,28 @@ class View extends Layer {
                 }
             }
         }
+
+    }
+
+    #if !ceramic_soft_inline inline #end public function shouldResetComputedSize():Bool {
+
+        var shouldReset = false;
+
+        if (layoutDirty) {
+            shouldReset = true;
+        }
+        else {
+            var parentView = this.parentView;
+            while (parentView != null) {
+                if (parentView.layoutDirty) {
+                    shouldReset = true;
+                    break;
+                }
+                parentView = parentView.parentView;
+            }
+        }
+
+        return shouldReset;
 
     }
 
@@ -572,6 +639,15 @@ class View extends Layer {
         // Remove view from global list
         _allViews.splice(_allViews.indexOf(this), 1);
 
+        // Recycle computed size objects
+        if (this.persistedComputedSizes != null) {
+            var persistedComputedSizes = this.persistedComputedSizes;
+            this.persistedComputedSizes = null;
+            for (i in 0...persistedComputedSizes.length) {
+                persistedComputedSizes.unsafeGet(i).recycle();
+            }
+        }
+
         // Parent destroy
         super.destroy();
 
@@ -629,7 +705,9 @@ class View extends Layer {
      */
     inline public function applyComputedSize():Void {
 
-        size(computedWidth, computedHeight);
+        if (computedSize != null) {
+            size(computedSize.computedWidth, computedSize.computedHeight);
+        }
 
     }
 
@@ -638,6 +716,14 @@ class View extends Layer {
      * Typically used to compute image size with _scale to fit_ requirements and similar
      */
     public function computeSizeWithIntrinsicBounds(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool, intrinsicWidth:Float, intrinsicHeight:Float):Float {
+
+        var computedWidth:Float = ComputedViewSize.NO_SIZE;
+        var computedHeight:Float = ComputedViewSize.NO_SIZE;
+
+        if (computedSize != null) {
+            computedWidth = computedSize.computedWidth;
+            computedHeight = computedSize.computedHeight;
+        }
 
         var shouldComputeWidth = false;
         var shouldComputeHeight = false;
@@ -746,7 +832,10 @@ class View extends Layer {
         }
 
         if (persist) {
-            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
+            persistComputedSize(parentWidth, parentHeight, layoutMask, computedWidth, computedHeight);
+        }
+        else {
+            assignComputedSize(computedWidth, computedHeight);
         }
 
         return appliedScale;
@@ -755,11 +844,8 @@ class View extends Layer {
 
     inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
-        if (hasPersistentComputedSizeWithContext(parentWidth, parentHeight, layoutMask)) {
-            computedWidth = persistedComputedWidth;
-            computedHeight = persistedComputedHeight;
-        }
-        else {
+        computedSize = persistedComputedSizeForContext(parentWidth, parentHeight, layoutMask);
+        if (computedSize == null) {
             computeSize(parentWidth, parentHeight, layoutMask, persist);
         }
 
@@ -767,8 +853,13 @@ class View extends Layer {
 
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
-        // As soon as we compute size, layout gets dirty and should be recomputed again
-        layoutDirty = true;
+        var computedWidth = ComputedViewSize.NO_SIZE;
+        var computedHeight = ComputedViewSize.NO_SIZE;
+
+        // As soon as we compute size, layout gets dirty and should be recomputed again,
+        // unless the layout mask is fixed or the view has explicit width or height
+        if (layoutMask != ViewLayoutMask.FIXED && (!ViewSize.isStandard(viewWidth) || !ViewSize.isStandard(viewHeight)))
+            layoutDirty = true;
 
         // Compute width
         if (ViewSize.isAuto(viewWidth)) {
@@ -821,7 +912,10 @@ class View extends Layer {
         }
 
         if (persist) {
-            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
+            persistComputedSize(parentWidth, parentHeight, layoutMask, computedWidth, computedHeight);
+        }
+        else {
+            assignComputedSize(computedWidth, computedHeight);
         }
 
     }
@@ -902,7 +996,9 @@ class View extends Layer {
             //  - view's own layout is dirty
             for (i in 0..._allViews.length) {
                 var view = _allViews.unsafeGet(i);
-                view.resetComputedSize();
+                if (view.shouldResetComputedSize()) {
+                    view.resetComputedSize();
+                }
             }
 
             // Then emit layout event by starting from the top-level views

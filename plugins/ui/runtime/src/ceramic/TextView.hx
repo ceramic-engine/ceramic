@@ -138,8 +138,6 @@ class TextView extends View {
 
     }
 
-    var persistedFitWidth:Float = -1;
-
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
 
         #if ceramic_debug_layout
@@ -148,6 +146,9 @@ class TextView extends View {
         #end
 
         super.computeSize(parentWidth, parentHeight, layoutMask, persist);
+
+        var computedWidth = computedSize.computedWidth;
+        var computedHeight = computedSize.computedHeight;
 
         var shouldComputeWidth = false;
         var shouldComputeHeight = false;
@@ -237,8 +238,11 @@ class TextView extends View {
         computedHeight = Math.round(computedHeight);
 
         if (persist) {
-            persistedFitWidth = text.fitWidth;
-            persistComputedSizeWithContext(parentWidth, parentHeight, layoutMask);
+            final computedSize = persistComputedSize(parentWidth, parentHeight, layoutMask, computedWidth, computedHeight);
+            computedSize.computedFitWidth = text.fitWidth;
+        }
+        else {
+            assignComputedSize(computedWidth, computedHeight);
         }
 
         #if ceramic_debug_layout
@@ -261,8 +265,8 @@ class TextView extends View {
         #end
 
         // Match text fit width with persisted computed width, if any
-        if (persistedComputedWidth != -1) {
-            text.fitWidth = persistedFitWidth;
+        if (computedSize != null && computedSize.computedFitWidth != ComputedViewSize.NO_SIZE) {
+            text.fitWidth = computedSize.computedFitWidth;
         }
         else {
             text.fitWidth = -1;

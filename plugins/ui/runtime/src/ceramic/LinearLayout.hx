@@ -83,8 +83,14 @@ class LinearLayout extends View {
         ceramic.Shortcuts.log.pushIndent();
         #end
 
+        var computedWidth = ComputedViewSize.NO_SIZE;
+        var computedHeight = ComputedViewSize.NO_SIZE;
+
         if (direction == VERTICAL) {
             super.computeSize(parentWidth, parentHeight, parentLayoutMask, persist);
+            computedWidth = computedSize.computedWidth;
+            computedHeight = computedSize.computedHeight;
+
             var layoutMask = ViewLayoutMask.FLEXIBLE_HEIGHT;
             var hasExplicitWidth = !ViewSize.isAuto(viewWidth);
             var hasExplicitHeight = !ViewSize.isAuto(viewHeight);
@@ -135,12 +141,12 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(computedWidth, computedHeight, layoutMask, false);
 
                             // Compute maximum width
-                            if (view.computedWidth > maximumWidth) {
-                                maximumWidth = view.computedWidth;
+                            if (view.computedSize.computedWidth > maximumWidth) {
+                                maximumWidth = view.computedSize.computedWidth;
                             }
 
                             // Add height
-                            childrenHeight += view.computedHeight;
+                            childrenHeight += view.computedSize.computedHeight;
                         }
                         else {
                             numFill += view.flex;
@@ -173,8 +179,8 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(computedWidth, fillHeight * view.flex, subLayoutMask, false);
 
                             // Compute maximum width
-                            if (view.computedWidth > maximumWidth) {
-                                maximumWidth = view.computedWidth;
+                            if (view.computedSize.computedWidth > maximumWidth) {
+                                maximumWidth = view.computedSize.computedWidth;
                             }
                         }
                     }
@@ -226,6 +232,9 @@ class LinearLayout extends View {
         }
         else {
             super.computeSize(parentWidth, parentHeight, parentLayoutMask, persist);
+            computedWidth = computedSize.computedWidth;
+            computedHeight = computedSize.computedHeight;
+
             var layoutMask = ViewLayoutMask.FLEXIBLE_WIDTH;
             var hasExplicitWidth = !ViewSize.isAuto(viewWidth);
             var hasExplicitHeight = !ViewSize.isAuto(viewHeight);
@@ -276,12 +285,12 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(computedWidth, computedHeight, layoutMask, false);
 
                             // Compute maximum height
-                            if (view.computedHeight > maximumHeight) {
-                                maximumHeight = view.computedHeight;
+                            if (view.computedSize.computedHeight > maximumHeight) {
+                                maximumHeight = view.computedSize.computedHeight;
                             }
 
                             // Add width
-                            childrenWidth += view.computedWidth;
+                            childrenWidth += view.computedSize.computedWidth;
                         }
                         else {
                             numFill += view.flex;
@@ -314,8 +323,8 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(fillWidth * view.flex, computedHeight, subLayoutMask, false);
 
                             // Compute maximum height
-                            if (view.computedHeight > maximumHeight) {
-                                maximumHeight = view.computedHeight;
+                            if (view.computedSize.computedHeight > maximumHeight) {
+                                maximumHeight = view.computedSize.computedHeight;
                             }
                         }
                     }
@@ -367,7 +376,10 @@ class LinearLayout extends View {
         }
 
         if (persist) {
-            persistComputedSizeWithContext(parentWidth, parentHeight, parentLayoutMask);
+            persistComputedSize(parentWidth, parentHeight, parentLayoutMask, computedWidth, computedHeight);
+        }
+        else {
+            assignComputedSize(computedWidth, computedHeight);
         }
 
         #if ceramic_debug_layout
@@ -432,10 +444,10 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_HEIGHT, true);
                             view.x = paddingLeft;
                             view.size(
-                                Math.min(paddedWidth, view.computedWidth),
-                                view.computedHeight
+                                Math.min(paddedWidth, view.computedSize.computedWidth),
+                                view.computedSize.computedHeight
                             );
-                            h += view.computedHeight;
+                            h += view.computedSize.computedHeight;
                         }
                         else {
                             numFill += view.flex;
@@ -532,10 +544,10 @@ class LinearLayout extends View {
                             view.computeSizeIfNeeded(paddedWidth, paddedHeight, ViewLayoutMask.FLEXIBLE_WIDTH, true);
                             view.y = paddingTop;
                             view.size(
-                                view.computedWidth,
-                                Math.min(paddedHeight, view.computedHeight)
+                                view.computedSize.computedWidth,
+                                Math.min(paddedHeight, view.computedSize.computedHeight)
                             );
-                            w += view.computedWidth;
+                            w += view.computedSize.computedWidth;
                         }
                         else {
                             numFill += view.flex;
