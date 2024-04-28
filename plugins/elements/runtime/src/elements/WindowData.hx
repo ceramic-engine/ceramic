@@ -41,6 +41,8 @@ class WindowData extends Model {
 
     public var form:FormLayout = null;
 
+    public var scrollable:Bool = false;
+
     public var used:Bool = true;
 
     public var justClosed:Bool = false;

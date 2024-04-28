@@ -94,9 +94,9 @@ class VisualContainerView extends View implements Observable {
             var visualParent:Visual = filter != null ? filter.content : this;
             if (visual.parent != visualParent) {
                 visualParent.add(visual);
+                layoutDirty = true;
             }
             visual.active = true;
-            layoutDirty = true;
         }
         return visual;
     }

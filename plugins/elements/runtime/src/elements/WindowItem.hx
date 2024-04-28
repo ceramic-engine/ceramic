@@ -100,6 +100,8 @@ class WindowItem {
 
     public var visual:Visual = null;
 
+    public var intArray0:Array<Int> = null;
+
     public var stringArray0:Array<String> = null;
 
     public var stringArray1:Array<String> = null;
@@ -295,6 +297,7 @@ class WindowItem {
         any3 = null;
         any4 = null;
         any5 = null;
+        intArray0 = null;
         stringArray0 = null;
         stringArray1 = null;
         anyArray0 = null;
@@ -1204,6 +1207,9 @@ class WindowItem {
 
         if (!Equal.equal(tabs.tabs, stringArray1)) {
             tabs.tabs = stringArray1;
+        }
+        if (!Equal.equal(tabs.tabStates, intArray0)) {
+            tabs.tabStates = cast intArray0;
         }
         if (!Equal.equal(tabs.tabThemes, anyArray0)) {
             tabs.tabThemes = cast anyArray0;

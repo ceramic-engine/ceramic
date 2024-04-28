@@ -68,18 +68,18 @@ class ScrollingLayout<T:View> extends ScrollView implements Observable {
 
         if (direction == VERTICAL) {
             layoutView.computeSize(width, height, ViewLayoutMask.INCREASE_HEIGHT, true);
-            layoutView.size(layoutView.computedWidth, Math.max(layoutView.computedHeight, height));
+            layoutView.size(layoutView.computedSize.computedWidth, Math.max(layoutView.computedSize.computedHeight, height));
 
-            if (layoutView.computedHeight - scroller.scrollY < height) {
-                scroller.scrollY = layoutView.computedHeight - height;
+            if (layoutView.computedSize.computedHeight - scroller.scrollY < height) {
+                scroller.scrollY = layoutView.computedSize.computedHeight - height;
             }
 
         } else {
             layoutView.computeSize(width, height, ViewLayoutMask.INCREASE_WIDTH, true);
-            layoutView.size(Math.max(layoutView.computedWidth, width), layoutView.computedHeight);
+            layoutView.size(Math.max(layoutView.computedSize.computedWidth, width), layoutView.computedSize.computedHeight);
 
-            if (layoutView.computedWidth - scroller.scrollX < width) {
-                scroller.scrollX = layoutView.computedWidth - width;
+            if (layoutView.computedSize.computedWidth - scroller.scrollX < width) {
+                scroller.scrollX = layoutView.computedSize.computedWidth - width;
             }
         }
 

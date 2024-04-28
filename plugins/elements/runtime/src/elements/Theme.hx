@@ -122,6 +122,10 @@ class Theme extends Model {
 
     @serialize public var tabsBorderColor:Color = 0x636363;
 
+    @serialize public var disabledTabTextAlpha:Float = 0.5;
+
+    @serialize public var disabledTabBorderAlpha:Float = 0.5;
+
 /// Window
 
     @serialize public var windowBackgroundColor:Color = 0x1C1C1C;

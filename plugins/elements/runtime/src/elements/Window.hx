@@ -7,6 +7,7 @@ import ceramic.DoubleClick;
 import ceramic.Point;
 import ceramic.Quad;
 import ceramic.RowLayout;
+import ceramic.ScrollView;
 import ceramic.Shortcuts.*;
 import ceramic.TextAlign;
 import ceramic.TextView;
@@ -44,6 +45,11 @@ class Window extends ColumnLayout implements Observable {
     @observe public var header:Bool = true;
 
     @observe public var titleAlign:TextAlign = LEFT;
+
+    @compute public function scrolls():Bool {
+        var contentView = this.contentView;
+        return (contentView != null && contentView is ScrollView);
+    }
 
     public var movable:Bool = true;
 

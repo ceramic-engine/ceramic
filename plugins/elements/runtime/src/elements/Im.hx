@@ -715,9 +715,13 @@ class Im {
         item.kind = TABS;
         item.string0 = Im.readString(selected);
         item.string1 = item.string0;
+
+        // TODO recycle arrays
+        item.intArray0 = [];
         item.stringArray0 = [];
         item.stringArray1 = [];
         item.anyArray0 = [];
+
         item.any0 = selected;
 
         windowData.addItem(item);
@@ -775,6 +779,7 @@ class Im {
 
         var tabItem = _currentTabBarItem[_currentTabBarItem.length - 1];
 
+        tabItem.intArray0.push(_fieldsDisabled ? 1 : 0);
         tabItem.stringArray0.push(id);
         tabItem.stringArray1.push(title);
         tabItem.anyArray0.push(_theme);
@@ -1011,6 +1016,12 @@ class Im {
     static function get_currentTheme():Theme {
         initIfNeeded();
         return _theme;
+    }
+
+    public static var current(get,never):WindowData;
+    static function get_current():WindowData {
+        initIfNeeded();
+        return _currentWindowData;
     }
 
     public static function theme(theme:Theme):Void {
@@ -2170,6 +2181,7 @@ class Im {
                     case NEVER:
                         false;
                 }
+                windowData.scrollable = overflowScroll;
 
                 inline function createScrollingLayout(container:ColumnLayout) {
                     container.paddingRight = 12;

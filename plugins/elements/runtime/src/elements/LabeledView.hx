@@ -138,9 +138,11 @@ class LabeledView<T:View> extends RowLayout implements Observable {
 
     function handleLabelClick() {
 
-        if (view is FieldView) {
-            var field:FieldView = cast view;
-            field.focus();
+        if (!disabled) {
+            if (view is FieldView) {
+                var field:FieldView = cast view;
+                field.focus();
+            }
         }
 
     }

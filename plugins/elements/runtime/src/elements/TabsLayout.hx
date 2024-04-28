@@ -42,6 +42,8 @@ class TabsLayout extends RowLayout implements Observable {
 
     @observe public var tabs:ReadOnlyArray<String> = [];
 
+    @observe public var tabStates:ReadOnlyArray<TabState> = [];
+
     @observe public var tabThemes:ReadOnlyArray<Theme> = [];
 
     @observe var tabViews:Array<TextView> = [];
@@ -167,6 +169,10 @@ class TabsLayout extends RowLayout implements Observable {
         });
         #end
 
+        tabView.autorun(() -> {
+            tabView.touchable = (tabStates[index] != DISABLED);
+        });
+
     }
 
     override function layout() {
@@ -278,9 +284,12 @@ class TabsLayout extends RowLayout implements Observable {
         if (tabViews != null) {
             for (i in 0...tabViews.length) {
                 var tabView = tabViews.unsafeGet(i);
+
                 var tabTheme = tabThemes[i];
                 if (tabTheme == null)
                     tabTheme = theme;
+
+                var tabDisabled = (tabStates[i] == DISABLED);
 
                 tabView.borderLeftSize = 1;
                 tabView.borderRightSize = 1;
@@ -291,6 +300,8 @@ class TabsLayout extends RowLayout implements Observable {
 
                 if (i == selectedIndex) {
                     tabView.textColor = tabTheme.lightTextColor;
+                    tabView.textAlpha = 1;
+                    tabView.borderAlpha = 1;
                     if (theme.backgroundInFormLayout) {
                         tabView.transparent = false;
                         tabView.alpha = tabTheme.windowBackgroundAlpha;
@@ -302,14 +313,26 @@ class TabsLayout extends RowLayout implements Observable {
                     }
                     selectedTheme = tabTheme;
                 }
-                else if (i == hoverIndex) {
+                else if (!tabDisabled && i == hoverIndex) {
                     tabView.textColor = tabTheme.mediumTextColor;
+                    tabView.textAlpha = 1;
+                    tabView.borderAlpha = 1;
                     tabView.transparent = false;
                     tabView.alpha = tabTheme.tabsHoverBackgroundAlpha;
                     tabView.color = tabTheme.tabsHoverBackgroundColor;
                 }
+                else if (tabDisabled) {
+                    tabView.textColor = tabTheme.darkTextColor;
+                    tabView.textAlpha = tabTheme.disabledTabTextAlpha;
+                    tabView.borderAlpha = tabTheme.disabledTabBorderAlpha;
+                    tabView.transparent = false;
+                    tabView.alpha = tabTheme.tabsBackgroundAlpha;
+                    tabView.color = tabTheme.tabsBackgroundColor;
+                }
                 else {
                     tabView.textColor = tabTheme.darkTextColor;
+                    tabView.textAlpha = 1;
+                    tabView.borderAlpha = 1;
                     tabView.transparent = false;
                     tabView.alpha = tabTheme.tabsBackgroundAlpha;
                     tabView.color = tabTheme.tabsBackgroundColor;
