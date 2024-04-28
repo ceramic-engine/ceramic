@@ -485,7 +485,7 @@ class EntityMacro {
                                     }
                                     this.$fieldName = $i{fieldName};
                                     if (this.$fieldName != null) {
-                                        component($v{fieldName}, this.$fieldName);
+                                        component($v{fieldName}, this.$fieldName, true);
                                         return this.$fieldName;
                                     }
                                     removeComponent($v{fieldName});

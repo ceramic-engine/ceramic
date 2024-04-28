@@ -578,7 +578,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      */
     @:noCompletion var _components:Map<String,Component> = null;
 
-    public function component<C:Component>(?name:String, ?component:C):C {
+    public function component<C:Component>(?name:String, ?component:C, hasField:Bool = false):C {
 
         if (name == null && component == null) {
             throw 'Invalid component() call: either `name` or `component` should be provided at least.';
@@ -626,6 +626,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
                     if (existing == component) {
                         _components.remove(name);
                     }
+                }
+                // Set related field to null, if any
+                if (hasField && name != null) {
+                    Reflect.setProperty(this, name, null);
                 }
             });
             @:privateAccess component.bindAsComponent();
