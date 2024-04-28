@@ -673,9 +673,11 @@ class Screen extends Entity implements Observable {
                         visualHits = visual.hits(x, y);
                         if (visualHits) {
                             visualIntercepts = visual.interceptPointerDown(visual, x, y, touchIndex, buttonId);
-                            #if ceramic_debug_touch
-                            log.debug('visual intercepts pointer down: $visual (parent=${visual.parent})');
-                            #end
+                            if (visualIntercepts) {
+                                #if ceramic_debug_touch
+                                log.debug('visual intercepts pointer down: $visual (parent=${visual.parent})');
+                                #end
+                            }
                         }
                     }
                     if ((visualHits && !visualIntercepts) ||
