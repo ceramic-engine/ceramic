@@ -88,6 +88,8 @@ class BaseTextFieldView extends FieldView {
 
     public var autocompleteMaxResults:Int = 10;
 
+    public var autocompleteOnFocus:Bool = false;
+
     public var clipSuggestions:Bool = false;
 
 /// Internal
@@ -115,11 +117,21 @@ class BaseTextFieldView extends FieldView {
             }
         });
 
+        onFocusedChange(this, handleAutocompleteOnFocus);
+
     }
 
     override function didLostFocus() {
 
         super.didLostFocus();
+
+    }
+
+    function handleAutocompleteOnFocus(focused:Bool, prevFocused:Bool) {
+
+        if (focused && !prevFocused && autocompleteOnFocus && autocompleteCandidates != null && autocompleteCandidates.length > 0) {
+            updateAutocompleteSuggestions(true);
+        }
 
     }
 

@@ -33,7 +33,7 @@ class ImSystem extends System {
         filter.depth = 1000;
         filter.density = screen.nativeDensity;
         filter.enabled = true;
-
+        filter.autoRender = false;
         view = new View();
         view.transparent = true;
         view.depth = 1000;
@@ -46,6 +46,15 @@ class ImSystem extends System {
         filter.onResize(this, (width, height) -> {
             view.size(width, height);
         });
+
+    }
+
+    @:allow(elements.Im)
+    function requestRender():Void {
+
+        if (filter != null && filter.renderTexture != null) {
+            filter.renderTexture.renderDirty = true;
+        }
 
     }
 

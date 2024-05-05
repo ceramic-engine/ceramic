@@ -650,6 +650,7 @@ class WindowItem {
             field.multiline = bool0;
             field.placeholder = string3;
             field.autocompleteCandidates = stringArray0;
+            field.autocompleteOnFocus = bool3;
         }
         else if (kind == EDIT_FLOAT) {
             if (justCreated) {

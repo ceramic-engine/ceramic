@@ -43,6 +43,8 @@ class WindowData extends Model {
 
     public var scrollable:Bool = false;
 
+    public var didScrollWithHeight:Int = -1;
+
     public var used:Bool = true;
 
     public var justClosed:Bool = false;
@@ -54,6 +56,8 @@ class WindowData extends Model {
     public var collapsible:Bool = true;
 
     public var overlay:Bool = false;
+
+    public var overlayTheme:Theme = null;
 
     public var overlayClicked:Bool = false;
 

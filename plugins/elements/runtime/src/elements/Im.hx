@@ -189,6 +189,8 @@ class Im {
 
     static var _imTheme:Theme;
 
+    static var _shouldSkipRender:Bool = false;
+
     public static function initIfNeeded():Void {
 
         if (context.view == null) {
@@ -220,6 +222,8 @@ class Im {
     @:noCompletion public static function beginFrame():Void {
 
         initIfNeeded();
+
+        _shouldSkipRender = false;
 
         _imTheme.backgroundInFormLayout = true;
 
@@ -422,6 +426,14 @@ class Im {
             windowData.endFrame();
         }
 
+        if (Im._numUsedWindows > 0) {
+            ViewSystem.shared.onceEndLateUpdate(ImSystem.shared, _ -> {
+                if (!_shouldSkipRender) {
+                    ImSystem.shared.requestRender();
+                }
+            });
+        }
+
     }
 
     public static function depth(depth:Float):Void {
@@ -597,7 +609,12 @@ class Im {
                 _orderedWindows.remove(window);
             });
             window.id = id;
+
+            // When we just created a window, we make it inactive
+            // and should skip render to prevent flickering
+            _shouldSkipRender = true;
             window.active = false;
+
             window.pos(windowData.x, windowData.y);
             window.viewHeight = ViewSize.auto();
             window.onHeaderDoubleClick(window, function() {
@@ -660,6 +677,19 @@ class Im {
         // Mark scrollbar as AUTO_ADD by default
         windowData.scrollbar = AUTO_ADD;
 
+        // Keep some data up to date to handle `AUTO_ADD_STAY`
+        if (windowData.scrollable) {
+            if (windowData.didScrollWithHeight < -1) {
+                windowData.didScrollWithHeight++;
+            }
+            else if (windowData.didScrollWithHeight > -1 && window != null && window.height > windowData.didScrollWithHeight) {
+                windowData.didScrollWithHeight = -2;
+            }
+            else if (window != null) {
+                windowData.didScrollWithHeight = Math.round(Math.max(windowData.didScrollWithHeight, window.height));
+            }
+        }
+
         // Mark as titleAlign LEFT but value can be changed
         // until Im.end() is called
         windowData.titleAlign = LEFT;
@@ -667,6 +697,7 @@ class Im {
         // Mark as no overlay but value can be changed
         // until Im.end() is called
         windowData.overlay = false;
+        windowData.overlayTheme = null;
 
         windowData.width = width;
         windowData.height = height;
@@ -1107,6 +1138,7 @@ class Im {
         var windowData = _currentWindowData;
 
         windowData.overlay = true;
+        windowData.overlayTheme = _theme;
 
         if (windowData.overlayClicked) {
             windowData.overlayClicked = false;
@@ -1385,7 +1417,7 @@ class Im {
 
     }
 
-    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>, focused:Bool = false):EditTextStatus {
+    public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>, focused:Bool = false, autocompleteOnFocus:Bool = true):EditTextStatus {
 
         var windowData = _currentWindowData;
 
@@ -1405,6 +1437,7 @@ class Im {
         item.string2 = title;
         item.string3 = placeholder;
         item.stringArray0 = autocompleteCandidates;
+        item.bool3 = autocompleteOnFocus;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);
@@ -2174,6 +2207,8 @@ class Im {
                 var overflowScroll = (windowData.height != ViewSize.auto()) && switch windowData.scrollbar {
                     case AUTO_ADD:
                         windowData.computedContentHeight > windowData.height;
+                    case AUTO_ADD_STAY:
+                        windowData.computedContentHeight > windowData.height || windowData.didScrollWithHeight >= 0;
                     case AUTO_SHOW:
                         true;
                     case ALWAYS:
@@ -2409,8 +2444,9 @@ class Im {
                     });
                     context.view.add(window.overlay);
                 }
-                window.overlay.color = context.theme.overlayBackgroundColor;
-                window.overlay.alpha = context.theme.overlayBackgroundAlpha;
+                var theme = windowData.overlayTheme ?? context.theme;
+                window.overlay.color = theme.overlayBackgroundColor;
+                window.overlay.alpha = theme.overlayBackgroundAlpha;
                 window.overlay.pos(0, 0);
                 window.overlay.size(screen.nativeWidth, screen.nativeHeight);
             }
@@ -2439,23 +2475,27 @@ class Im {
                         var scroll:ScrollingLayout<ColumnLayout> = cast window.contentView;
                         windowData.computedContentHeight = scroll.contentView.height;
 
-                        if (windowData.scrollbar == AUTO_SHOW || windowData.scrollbar == AUTO_ADD) {
+                        if (windowData.scrollbar == AUTO_SHOW || windowData.scrollbar == AUTO_ADD || (windowData.scrollbar == AUTO_ADD_STAY && windowData.didScrollWithHeight < 0)) {
                             final makeActive = (windowData.computedContentHeight > windowData.height);
                             final scrollbar = scroll.scroller.scrollbar;
                             if (scrollbar != null) {
                                 if (!makeActive) {
                                     scrollbar.active = false;
                                 }
+                                else {
+                                    _shouldSkipRender = !scrollbar.active;
+                                }
                                 app.onceUpdate(scrollbar, _ -> {
                                     scrollbar.active = makeActive;
                                 });
                             }
                         }
-                        else if (windowData.scrollbar == ALWAYS) {
+                        else if (windowData.scrollbar == ALWAYS || (windowData.scrollbar == AUTO_ADD_STAY && windowData.didScrollWithHeight >= 0)) {
                             final scrollbar = scroll.scroller.scrollbar;
                             if (scrollbar != null && !scrollbar.active) {
+                                _shouldSkipRender = !scrollbar.active;
                                 app.onceUpdate(scrollbar, _ -> {
-                                    if (windowData.scrollbar == ALWAYS) {
+                                    if (windowData.scrollbar == ALWAYS || (windowData.scrollbar == AUTO_ADD_STAY && windowData.didScrollWithHeight >= 0)) {
                                         scrollbar.active = true;
                                     }
                                 });
@@ -2464,9 +2504,10 @@ class Im {
                     }
                     else {
                         windowData.computedContentHeight = window.contentView.height;
-                        if (windowData.scrollbar == AUTO_ADD && windowData.computedContentHeight > windowData.height) {
+                        if ((windowData.scrollbar == AUTO_ADD || windowData.scrollbar == AUTO_ADD_STAY) && windowData.computedContentHeight > windowData.height) {
                             final contentView = window.contentView;
                             contentView.visible = false;
+                            _shouldSkipRender = true;
                             app.onceUpdate(contentView, _ -> {
                                 contentView.visible = true;
                             });
