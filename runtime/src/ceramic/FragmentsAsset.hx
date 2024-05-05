@@ -45,7 +45,13 @@ class FragmentsAsset extends Asset {
 
             if (text != null) {
                 try {
-                    this.fragments = Json.parse(text);
+                    var rawFragments = Json.parse(text);
+                    if (Reflect.hasField(rawFragments, 'version')) {
+                        this.fragments = fromRawFragments(rawFragments);
+                    }
+                    else {
+                        this.fragments = rawFragments;
+                    }
                 } catch (e:Dynamic) {
                     status = BROKEN;
                     log.error('Failed to parse fragments at path: $path');
@@ -62,6 +68,116 @@ class FragmentsAsset extends Asset {
             }
 
         });
+
+    }
+
+    static function fromRawFragments(rawFragments:Dynamic):DynamicAccess<FragmentData> {
+
+        var fragments:DynamicAccess<FragmentData> = {};
+
+        var version = Std.int(rawFragments.version);
+        if (version == 1) {
+            // This is a newer fragments file format that needs to be processed
+            // in order to be compatible with runtime format.
+            var rawFragmentsList:Array<Dynamic> = rawFragments.fragments;
+            if (rawFragmentsList != null) {
+                for (rawFragment in rawFragmentsList) {
+
+                    var fragmentData:FragmentData = {
+                        id: rawFragment.id,
+                        data: rawFragment.data ?? {},
+                        width: rawFragment.width,
+                        height: rawFragment.height,
+                        components: rawFragment.components ?? {}
+                    };
+
+                    if (Reflect.hasField(rawFragment, 'color')) {
+                        fragmentData.color = Color.fromString(rawFragment.color);
+                    }
+
+                    if (Reflect.hasField(rawFragment, 'transparent')) {
+                        fragmentData.transparent = (rawFragment.transparent == true);
+                    }
+
+                    var schema:Dynamic = rawFragments.schema;
+                    var items:Array<FragmentItem> = [];
+
+                    if (Reflect.hasField(rawFragment, 'visuals')) {
+                        var rawVisuals:Array<Dynamic> = rawFragment.visuals;
+                        for (rawVisual in rawVisuals) {
+
+                            var visualData:FragmentItem = {
+                                id: rawVisual.id,
+                                data: rawVisual.data ?? {},
+                                entity: rawVisual.entity,
+                                components: rawVisual.components ?? {},
+                                props: {}
+                            }
+
+                            for (key in Reflect.fields(rawVisual)) {
+                                switch key {
+                                    case 'entity':
+                                        final entity:String = Reflect.field(rawVisual, key);
+                                        if (schema != null && entity != null && Reflect.hasField(schema, entity)) {
+                                            visualData.schema = Reflect.field(schema, entity);
+                                        }
+                                    case 'kind' | 'id' | 'locked' | 'components' | 'data':
+                                    case _:
+                                        Reflect.setField(
+                                            visualData.props,
+                                            key,
+                                            Reflect.field(rawVisual, key)
+                                        );
+                                }
+                            }
+
+                            items.push(visualData);
+                        }
+                    }
+
+                    if (Reflect.hasField(rawFragment, 'entities')) {
+                        var rawEntities:Array<Dynamic> = rawFragment.entities;
+                        for (rawEntity in rawEntities) {
+
+                            var entityData:FragmentItem = {
+                                id: rawEntity.id,
+                                data: rawEntity.data ?? {},
+                                entity: rawEntity.entity,
+                                components: rawEntity.components ?? {},
+                                props: {}
+                            }
+
+                            for (key in Reflect.fields(rawEntity)) {
+                                switch key {
+                                    case 'entity':
+                                        final entity:String = Reflect.field(rawEntity, key);
+                                        if (schema != null && entity != null && Reflect.hasField(schema, entity)) {
+                                            entityData.schema = Reflect.field(schema, entity);
+                                        }
+                                    case 'kind' | 'id' | 'locked' | 'components' | 'data':
+                                    case _:
+                                        Reflect.setField(
+                                            entityData.props,
+                                            key,
+                                            Reflect.field(rawEntity, key)
+                                        );
+                                }
+                            }
+
+                            items.push(entityData);
+                        }
+                    }
+
+                    fragmentData.items = items;
+                    fragments.set(fragmentData.id, fragmentData);
+                }
+            }
+        }
+        else {
+            log.warning('Unsupported fragments file version: $version');
+        }
+
+        return fragments;
 
     }
 

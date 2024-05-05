@@ -5,7 +5,7 @@ import haxe.DynamicAccess;
 
 /**
  * Extract field information from a given class type.
- * This is expected to only work with Entity subclasses marked with @editable, @fieldInfo or @autoFieldInfo
+ * This is expected to only work with Entity subclasses marked with @fieldInfo or @autoFieldInfo
  * or classes using FieldInfoMacro.
  */
 class FieldInfo {

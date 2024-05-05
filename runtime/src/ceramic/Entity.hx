@@ -15,24 +15,23 @@ import tracker.DynamicEvents;
 #if (!macro && (display || completion))
 @:autoBuild(ceramic.macros.EntityMacro.buildForCompletion())
 #end
+#if ceramic_entity_field_info
+@autoFieldInfo
+#end
 class Entity #if ceramic_entity_base extends EntityBase #end implements Events implements Lazy {
 
 /// Statics
 
-    #if (!macro && !display && !completion)
+    #if (ceramic_entity_field_info && (!macro && !display && !completion))
     /**
      * Field info
      */
     @:noCompletion public static var _fieldInfo(default, null) = {
         components: {
-            editable: [],
             type: 'ceramic.ReadOnlyMap<String,ceramic.Component>',
             index: 1
         },
         scriptContent: {
-            editable: [{
-                label: 'Script'
-            }],
             type: 'ceramic.ScriptContent',
             index: 2
         }

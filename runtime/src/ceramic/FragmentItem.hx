@@ -32,4 +32,10 @@ typedef FragmentItem = {
      */
     @:optional var data:Dynamic<Dynamic>;
 
+    /**
+     * Schema of this fragment item providing
+     * a mapping of field names and their respective type.
+     */
+    @:optional var schema:Dynamic<String>;
+
 }

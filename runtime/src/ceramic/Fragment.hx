@@ -17,22 +17,6 @@ using ceramic.Extensions;
 })
 class Fragment extends Layer {
 
-    @event function floatAChange(floatA:Float, prevFloatA:Float);
-
-    @event function floatBChange(floatB:Float, prevFloatB:Float);
-
-    @event function floatCChange(floatC:Float, prevFloatC:Float);
-
-    @event function floatDChange(floatD:Float, prevFloatD:Float);
-
-    /**
-     * Emit this event to change current location.
-     * Behavior depends on how this event is handled and does nothing by default.
-     */
-    @event public function location(location:String);
-
-    public var editedItems(default,null):Bool = false;
-
     public var assets(default,null):Assets = null;
 
     public var entities(default,null):Array<Entity>;
@@ -62,7 +46,26 @@ class Fragment extends Layer {
 
     public var timeline:Timeline = null;
 
-    @event function ready();
+    public var ready(default,null):Bool = false;
+
+    @event function _ready();
+
+    public function scheduleWhenReady(owner:Entity, cb:()->Void) {
+
+        if (ready) {
+            cb();
+        }
+        else {
+            onceReady(owner, cb);
+        }
+
+    }
+
+    function willEmitReady() {
+
+        ready = true;
+
+    }
 
 /// Internal
 
@@ -99,11 +102,10 @@ class Fragment extends Layer {
 
 /// Lifecycle
 
-    public function new(?assets:Assets, editedItems:Bool = false) {
+    public function new(?assets:Assets) {
 
         super();
 
-        this.editedItems = editedItems;
         this.assets = assets;
 
         entities = [];
@@ -345,7 +347,7 @@ class Fragment extends Layer {
             });
 
             for (field in orderedProps) {
-                var fieldType = FieldInfo.typeOf(item.entity, field);
+                var fieldType = typeOfItemField(item, field);
                 var value:Dynamic = Reflect.field(item.props, field);
                 var converter = fieldType != null ? app.converters.get(fieldType) : null;
                 if (converter != null) {
@@ -368,7 +370,7 @@ class Fragment extends Layer {
             }
 
             // Components
-            var fieldType = FieldInfo.typeOf(item.entity, 'components');
+            var fieldType = typeOfItemField(item, 'components');
             var value:Dynamic = item.components;
             var converter = fieldType != null ? app.converters.get(fieldType) : null;
             if (converter != null) {
@@ -384,7 +386,7 @@ class Fragment extends Layer {
         if (existing == null) {
 
             // If instance has an assets property, set it from our fragment context
-            if (FieldInfo.typeOf(item.entity, 'assets') == 'ceramic.Assets') {
+            if (typeOfItemField(item, 'assets') == 'ceramic.Assets') {
                 instance.setProperty('assets', assets);
             }
 
@@ -417,6 +419,20 @@ class Fragment extends Layer {
         }
 
         return instance;
+
+    }
+
+    private function typeOfItemField(item:FragmentItem, field:String):String {
+
+        return if (item.schema != null) {
+            // Use type provided by fragment data
+            Reflect.field(item.schema, field);
+        }
+        else {
+            // Try to resolve type from reflection if we
+            // don't have the info from the fragment data
+            FieldInfo.typeOf(item.entity, field);
+        }
 
     }
 
@@ -764,6 +780,7 @@ class Fragment extends Layer {
                 log.warning('Cannot update timeline track $trackId: failed to resolve entity type');
                 return;
             }
+            // TODO avoid using FieldInfo for new format
             var entityInfo = FieldInfo.types(entityType);
             var entityFieldType = entityInfo != null ? entityInfo.get(field) : null;
             if (entityFieldType == null) {
@@ -1053,5 +1070,23 @@ class Fragment extends Layer {
         }
         return paused;
     }
+
+    #if ceramic_fragment_float_events
+    @event function floatAChange(floatA:Float, prevFloatA:Float);
+
+    @event function floatBChange(floatB:Float, prevFloatB:Float);
+
+    @event function floatCChange(floatC:Float, prevFloatC:Float);
+
+    @event function floatDChange(floatD:Float, prevFloatD:Float);
+    #end
+
+    #if ceramic_fragment_location_event
+    /**
+     * Emit this event to change current location.
+     * Behavior depends on how this event is handled and does nothing by default.
+     */
+    @event public function location(location:String);
+    #end
 
 }
