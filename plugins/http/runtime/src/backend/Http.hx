@@ -22,7 +22,7 @@ import tink.http.Fetch;
 import tink.http.Header;
 #end
 
-#if sys
+#if (cpp || cs || sys || nodejs || hxnodejs || node)
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -825,7 +825,7 @@ class Http implements spec.Http {
         });
         return;
 
-        #elseif (cpp || cs)
+        #elseif (cpp || cs || sys || nodejs || hxnodejs || node)
 
         // Ensure we can write the file at the desired location
         if (FileSystem.exists(tmpTargetPath)) {
@@ -924,6 +924,55 @@ class Http implements spec.Http {
 
         var monoBehaviour = Main.monoBehaviour;
         untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+
+        #elseif (nodejs || hxnodejs || node)
+
+        var isSSL = url.startsWith('https');
+        var http = isSSL ? js.Node.require('https') : js.Node.require('http');
+        var fs = js.Node.require('fs');
+        var responded = false;
+
+        var request = http.get(url, function(response:Dynamic) {
+
+            // Check if the request was successful
+            if (response.statusCode != 200) {
+                log.error('Failed to download $url at path $targetPath. Status code: ${response.statusCode}');
+                done(null);
+                return;
+            }
+
+            // Create a writable stream to save the file
+            var fileStream:Dynamic = fs.createWriteStream(tmpTargetPath);
+            response.pipe(fileStream);
+
+            fileStream.on('finish', function() {
+                fileStream.close();
+                if (!responded) {
+                    responded = true;
+                    finishDownload();
+                }
+            });
+
+            fileStream.on('error', function(error:Dynamic) {
+                if (!responded) {
+                    responded = true;
+                    log.error('Failed to download $url at path $targetPath. Stream error: $error');
+                    done(null);
+                    fs.unlink(tmpTargetPath, () -> {});
+                }
+            });
+
+            response.on('error', function(error:Dynamic) {
+                if (!responded) {
+                    responded = true;
+                    log.error('Failed to download $url at path $targetPath. Response error: $error');
+                    done(null);
+                    fs.unlink(tmpTargetPath, () -> {});
+                }
+            });
+
+        });
+        return;
 
         #end
 
