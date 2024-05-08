@@ -67,4 +67,44 @@ class EnumAbstractMacro {
         }
     }
 
+    public static macro function fromStringSwitch(typePath:Expr, e:Expr):Expr {
+
+        var type = Context.getType(typePath.toString());
+
+        switch (type.follow()) {
+            case TAbstract(_.get() => ab, _) if (ab.meta.has(":enum")):
+
+                var first:Expr = null;
+                var cases:Array<Case> = [];
+                for (field in ab.impl.get().statics.get()) {
+                    if (field.meta.has(":enum") && field.meta.has(":impl")) {
+                        var fieldName = field.name;
+                        cases.push({
+                            values: [macro $v{fieldName}],
+                            expr: macro $typePath.$fieldName
+                        });
+
+                        if (first == null) {
+                            first = macro {
+                                throw "Cannot convert \"" + str_ + "\" to " + $v{ab.name};
+                                $typePath.$fieldName;
+                            }
+                        }
+                    }
+                }
+
+                var strAssign = macro var str_ = $e;
+                var strRef = macro str_;
+
+                return { pos: e.pos, expr: EBlock([
+                    strAssign,
+                    { pos: e.pos, expr: ESwitch(strRef, cases, first) }
+                ])};
+
+            default:
+                // The given type is not an abstract, or doesn't have @:enum metadata, show a nice error message.
+                throw new Error(type.toString() + " should be enum abstract", typePath.pos);
+        }
+    }
+
 }
