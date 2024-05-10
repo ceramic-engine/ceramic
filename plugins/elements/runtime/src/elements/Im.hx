@@ -1437,7 +1437,7 @@ class Im {
         item.string2 = title;
         item.string3 = placeholder;
         item.stringArray0 = autocompleteCandidates;
-        item.bool3 = autocompleteOnFocus;
+        item.bool4 = autocompleteOnFocus;
         item.row = _inRow ? _currentRowIndex : -1;
 
         windowData.addItem(item);

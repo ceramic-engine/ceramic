@@ -76,6 +76,8 @@ class WindowItem {
 
     public var bool3:Bool = false;
 
+    public var bool4:Bool = false;
+
     public var string0:String = null;
 
     public var string1:String = null;
@@ -286,6 +288,7 @@ class WindowItem {
         bool1 = false;
         bool2 = false;
         bool3 = false;
+        bool4 = false;
         string0 = null;
         string1 = null;
         string2 = null;
@@ -650,7 +653,7 @@ class WindowItem {
             field.multiline = bool0;
             field.placeholder = string3;
             field.autocompleteCandidates = stringArray0;
-            field.autocompleteOnFocus = bool3;
+            field.autocompleteOnFocus = bool4;
         }
         else if (kind == EDIT_FLOAT) {
             if (justCreated) {
