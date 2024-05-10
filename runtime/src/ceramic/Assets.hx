@@ -1059,14 +1059,14 @@ class Assets extends Entity {
             throw 'Cannot watch directory when using web target! (unless using electron runner and `ceramic_use_electron` define)';
             #else
             path = ceramic.macros.DefinesMacro.getDefine('assets_path');
-
-            // Pre-multiply images alpha on the fly because we are reading from source assets
-            if (defaultImageOptions == null) {
-                defaultImageOptions = {};
-            }
-            defaultImageOptions.premultiplyAlpha = true;
             #end
         }
+
+        // Pre-multiply images alpha on the fly because we are reading from source assets
+        if (defaultImageOptions == null) {
+            defaultImageOptions = {};
+        }
+        defaultImageOptions.premultiplyAlpha = true;
 
         if (hotReload) {
             this.hotReload = hotReload;
