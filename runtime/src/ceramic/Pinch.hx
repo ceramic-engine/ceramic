@@ -63,6 +63,8 @@ class Pinch extends Entity implements Component {
 
     var secondTouchLastY:Float = -1;
 
+    var simulatingPinch:Bool = false;
+
     public function new() {
 
         super();
@@ -72,12 +74,30 @@ class Pinch extends Entity implements Component {
         screen.onMultiTouchPointerDown(this, pointerDown);
         screen.onMultiTouchPointerUp(this, pointerUp);
         screen.onMultiTouchPointerMove(this, pointerMove);
+        input.onKeyDown(this, keyDown);
+        input.onKeyUp(this, keyUp);
 
     }
 
     function bindAsComponent():Void {
 
         // Nothing to do but that needs to be there
+
+    }
+
+    function keyDown(key:Key) {
+
+        if (key.keyCode == LALT || key.keyCode == RALT) {
+            pinchStatusDirty = true;
+        }
+
+    }
+
+    function keyUp(key:Key) {
+
+        if (key.keyCode == LALT || key.keyCode == RALT) {
+            pinchStatusDirty = true;
+        }
 
     }
 
@@ -108,6 +128,8 @@ class Pinch extends Entity implements Component {
     function update(delta:Float) {
 
         var justTouching = false;
+        var simulateKeyPressed = (input.keyPressed(LALT) || input.keyPressed(RALT));
+        var simulatePinch = false;
 
         if (pinchStatusDirty) {
             pinchStatusDirty = false;
@@ -122,6 +144,13 @@ class Pinch extends Entity implements Component {
                 }
             }
             if (numTouches >= 2) {
+                if (status == NONE) {
+                    status = TOUCHING;
+                    justTouching = true;
+                }
+            }
+            else if (simulateKeyPressed && screen.isPointerDown && (visual == null || visual.hits(screen.pointerX, screen.pointerY))) {
+                simulatePinch = true;
                 if (status == NONE) {
                     status = TOUCHING;
                     justTouching = true;
@@ -142,7 +171,7 @@ class Pinch extends Entity implements Component {
             return;
 
         // Resolve proper touch indexes
-        if (justTouching) {
+        if (justTouching || simulatePinch) {
             firstTouchIndex = NO_INDEX;
             secondTouchIndex = NO_INDEX;
         }
@@ -150,7 +179,24 @@ class Pinch extends Entity implements Component {
         var first:Touch = firstTouchIndex != NO_INDEX ? screen.touches.get(firstTouchIndex) : null;
         var second:Touch = secondTouchIndex != NO_INDEX ? screen.touches.get(secondTouchIndex) : null;
 
-        if (first == null || second == null) {
+        if (simulatePinch) {
+            first = {
+                x: screen.pointerX,
+                y: screen.pointerY,
+                index: -1,
+                deltaX: screen.pointerDeltaX,
+                deltaY: screen.pointerDeltaY
+            };
+            // TODO
+            second = {
+                x: first.x,
+                y: first.y,
+                index: -1,
+                deltaX: -first.deltaX,
+                deltaY: -first.deltaY
+            };
+        }
+        else if (first == null || second == null) {
 
             // If somehow we don't find the touches we were using previously,
             // or if it's the first time we need them, we walk through
@@ -223,6 +269,28 @@ class Pinch extends Entity implements Component {
             firstTouchLastY = firstTouchStartY;
             secondTouchLastX = secondTouchStartX;
             secondTouchLastY = secondTouchStartY;
+        }
+        else {
+            final startOriginX = (firstTouchStartX + secondTouchStartX) * 0.5;
+            final startOriginY = (firstTouchStartY + secondTouchStartY) * 0.5;
+            if (first == null) {
+                first = {
+                    x: startOriginX * 2 - second.x,
+                    y: startOriginY * 2 - second.y,
+                    index: -1,
+                    deltaX: -second.deltaX,
+                    deltaY: -second.deltaY
+                };
+            }
+            else if (second == null) {
+                second = {
+                    x: startOriginX * 2 - first.x,
+                    y: startOriginY * 2 - first.y,
+                    index: -1,
+                    deltaX: -first.deltaX,
+                    deltaY: -first.deltaY
+                };
+            }
         }
 
         if (pinchMoveDirty) {
