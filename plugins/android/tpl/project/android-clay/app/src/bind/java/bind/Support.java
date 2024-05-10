@@ -41,9 +41,9 @@ public class Support {
 
     }
 
-    public interface Func3<A1,A2,A3,A4,A5,A6,A7,A8,A9,T> {
+    public interface Func3<A1,A2,A3,T> {
 
-        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9);
+        T run(A1 arg1, A2 arg2, A3 arg3);
 
     }
 
@@ -83,6 +83,48 @@ public class Support {
 
     }
 
+    public interface Func10<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10);
+
+    }
+
+    public interface Func11<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11);
+
+    }
+
+    public interface Func12<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12);
+
+    }
+
+    public interface Func13<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13);
+
+    }
+
+    public interface Func14<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14);
+
+    }
+
+    public interface Func15<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15);
+
+    }
+
+    public interface Func16<A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,T> {
+
+        T run(A1 arg1, A2 arg2, A3 arg3, A4 arg4, A5 arg5, A6 arg6, A7 arg7, A8 arg8, A9 arg9, A10 arg10, A11 arg11, A12 arg12, A13 arg13, A14 arg14, A15 arg15, A16 arg16);
+
+    }
+
 /// Android context
 
     private static Object sContext = null;
@@ -112,15 +154,15 @@ public class Support {
 
     static native void nativeInit();
 
-    static native void releaseHaxeObject(String address);
+    static native void releaseHObject(String address);
 
 /// Helpers for native
 
-    public static class HaxeObject {
+    public static class HObject {
 
         public String address;
 
-        public HaxeObject(String address) {
+        public HObject(String address) {
             this.address = address;
         }
 
@@ -144,7 +186,7 @@ public class Support {
 
         runInNativeThread(new Runnable() {
             public void run() {
-                Support.releaseHaxeObject(address);
+                Support.releaseHObject(address);
             }
         });
 
@@ -163,10 +205,10 @@ public class Support {
 
         if (value == null) return null;
         if (value instanceof List) {
-            return toJSONArray((List<Object>)value).toString();
+            return toJSONArray((List<Object>)value);
         }
         else if (value instanceof Map) {
-            return toJSONObject((Map<String,Object>)value).toString();
+            return toJSONObject((Map<String,Object>)value);
         }
         else {
             return value;
@@ -214,7 +256,7 @@ public class Support {
             Iterator<String> keys = json.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
-                Object value = json.get(key);
+                Object value = json.isNull(key) ? null : json.get(key);
                 if (value instanceof JSONArray) {
                     map.put(key, fromJSONArray((JSONArray)value));
                 }
@@ -240,7 +282,7 @@ public class Support {
             int len = json.length();
             List<Object> list = new ArrayList<>(len);
             for (int i = 0; i < len; i++) {
-                Object value = json.get(i);
+                Object value = json.isNull(i) ? null : json.get(i);
                 if (value instanceof JSONArray) {
                     list.add(fromJSONArray((JSONArray)value));
                 }
@@ -411,14 +453,15 @@ public class Support {
     /** Called by native/JNI to run a Runnable from its thread */
     public static void runAwaitingNativeRunnables() {
 
+        ArrayList<Runnable> toRun = new ArrayList<>();
         synchronized (sNativeRunnables) {
             if (sNativeRunnableStackThread == null) sNativeRunnableStackThread = Thread.currentThread();
             nativeSetHasRunnables(0);
-            List<Runnable> toRun = sNativeRunnables;
-            sNativeRunnables = new ArrayList<>();
-            for (Runnable r : toRun) {
-                r.run();
-            }
+            toRun.addAll(sNativeRunnables);
+            sNativeRunnables.clear();
+        }
+        for (Runnable r : toRun) {
+            r.run();
         }
 
     }
