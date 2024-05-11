@@ -207,6 +207,7 @@ class Web extends tools.Task {
             var cmdArgs = ['--app-files', webAppFilesPath];
 
             if (context.debug) {
+                print('Remote debug enabled (port: 9223)');
                 cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
             }
 

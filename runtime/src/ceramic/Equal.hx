@@ -21,9 +21,29 @@ class Equal {
             }
             return false;
         }
+        else if (Reflect.isObject(a) && Type.getClass(a) == null) {
+            if (Reflect.isObject(b) && Type.getClass(b) == null) {
+                return objectFieldsEqual(a, b);
+            }
+            return false;
+        }
 
         return false;
 
+    }
+
+    public static function objectFieldsEqual(a:Any, b:Any):Bool {
+        for (field in Reflect.fields(a)) {
+            if (!Reflect.hasField(b, field) || !equal(Reflect.field(a, field), Reflect.field(b, field))) {
+                return false;
+            }
+        }
+        for (field in Reflect.fields(b)) {
+            if (!Reflect.hasField(a, field)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     #if cs

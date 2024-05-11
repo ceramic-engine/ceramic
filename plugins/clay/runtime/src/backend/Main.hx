@@ -103,7 +103,7 @@ class Main {
                     var _stack = valueException.stack;
                 }
 
-                var stack = (''+error.stack).split("\n");
+                var stack = error != null ? (''+error.stack).split("\n") : [];
                 var len = stack.length;
                 var i = len - 1;
                 var file = '';
