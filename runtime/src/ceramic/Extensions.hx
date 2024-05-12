@@ -1,6 +1,7 @@
 package ceramic;
 
 import haxe.io.Bytes;
+import tracker.Autorun;
 
 /**
  * A bunch of static extensions to make life easier.
@@ -226,5 +227,21 @@ class Extensions<T> {
     }
 
 #end
+
+/// Autorun extensions
+
+    public static function waitUntil(entity:Entity, condition:()->Bool, callback:()->Void):Autorun {
+
+        return entity.autorun(() -> {
+            final result = condition();
+            Autorun.unobserve();
+            if (result) {
+                Autorun.cease();
+                callback();
+            }
+            Autorun.reobserve();
+        });
+
+    }
 
 }
