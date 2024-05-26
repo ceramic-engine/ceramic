@@ -15,6 +15,8 @@ class ImSystem extends System {
 
     var view:View = null;
 
+    var makeFilterActive:Int = 0;
+
     public function new() {
 
         super();
@@ -108,8 +110,28 @@ class ImSystem extends System {
 
         Im.endFrame();
 
-        if (filter != null)
-            filter.active = (Im._numUsedWindows > 0);
+        if (filter != null) {
+
+            // This logic is basically ensuring we wait for a
+            // full frame to re-display the filter when going
+            // back from inactive
+
+            if (Im._numUsedWindows > 0) {
+                if (makeFilterActive < 2) {
+                    makeFilterActive++;
+                }
+            }
+            else {
+                makeFilterActive = 0;
+            }
+
+            if (makeFilterActive == 0) {
+                filter.active = false;
+            }
+            else if (makeFilterActive == 2) {
+                filter.active = true;
+            }
+        }
 
     }
 
