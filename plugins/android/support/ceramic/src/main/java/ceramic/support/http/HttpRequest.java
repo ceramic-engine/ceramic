@@ -1,13 +1,7 @@
 package ceramic.support.http;
 
-import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
-
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -19,17 +13,16 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import bind.Support;
 
 /**
  * Created by jeremyfa on 13/10/2016.
  */
-public class HttpRequest extends AsyncTask<String, Void, Void> {
+public class HttpRequest {
 
     public interface Listener {
         void onComplete(int statusCode, String statusMessage, String content, byte[] binaryContent, String downloadPath, Map<String,String> headers);
@@ -45,16 +38,40 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
     private String mTargetDownloadPath;
     private String mFinalDownloadPath;
     private Map<String,String> mHeaders;
+    private boolean mExecuting = false;
+
+    private static ExecutorService sExecutor = null;
 
     public HttpRequest(Map<String,Object> params, String downloadPath, Listener listener) {
+
         mParams = params;
         mFinalDownloadPath = null;
         mTargetDownloadPath = downloadPath;
         mListener = listener;
     }
 
-    @Override
-    protected Void doInBackground(String... strings) {
+    public HttpRequest execute() {
+
+        if (!mExecuting) {
+            mExecuting = true;
+
+            if (sExecutor == null) {
+                sExecutor = Executors.newCachedThreadPool();
+            }
+
+            sExecutor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    doInBackground();
+                }
+            });
+        }
+
+        return this;
+
+    }
+
+    private void doInBackground() {
 
         try {
             Map<String,Object> params = mParams;
@@ -157,34 +174,62 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                     contentType = "application/octet-stream";
 
                 if (downloadFile == null) {
-                    if (contentType.toLowerCase().startsWith("text/")) {
+                    if (!isBinaryMimeType(contentType)) {
                         // Text content
-                        BufferedReader br = new BufferedReader(new InputStreamReader(connection.getInputStream(), "UTF-8"));
-                        String line;
-                        StringBuilder responseOutput = new StringBuilder();
-                        while ((line = br.readLine()) != null) {
-                            responseOutput.append(line);
-                            responseOutput.append('\n');
+                        InputStream is = null;
+                        try {
+                            is = mStatusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+                        } catch (Throwable ee) {
+                            ee.printStackTrace();
+                            if (mStatusCode >= 200 && mStatusCode < 300) {
+                                mStatusCode = 0;
+                            }
                         }
-                        br.close();
 
-                        mContent = responseOutput.toString();
+                        if (is != null) {
+                            BufferedReader br = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+                            String line;
+                            StringBuilder responseOutput = new StringBuilder();
+                            while ((line = br.readLine()) != null) {
+                                responseOutput.append(line);
+                                responseOutput.append('\n');
+                            }
+                            br.close();
+
+                            mContent = responseOutput.toString();
+                        }
+                        else {
+                            mContent = null;
+                        }
                         mBinaryContent = null;
                     }
                     else {
                         // Binary content
-                        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-
-                        int nRead;
-                        byte[] data = new byte[16384];
-                        InputStream is = connection.getInputStream();
-                        while ((nRead = is.read(data, 0, data.length)) != -1) {
-                            buffer.write(data, 0, nRead);
+                        InputStream is = null;
+                        try {
+                            is = mStatusCode >= 400 ? connection.getErrorStream() : connection.getInputStream();
+                        } catch (Throwable ee) {
+                            ee.printStackTrace();
+                            if (mStatusCode >= 200 && mStatusCode < 300) {
+                                mStatusCode = 0;
+                            }
                         }
-                        is.close();
 
+                        if (is != null) {
+                            int nRead;
+                            byte[] data = new byte[16384];
+                            ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                            while ((nRead = is.read(data, 0, data.length)) != -1) {
+                                buffer.write(data, 0, nRead);
+                            }
+                            is.close();
+
+                            mBinaryContent = buffer.toByteArray();
+                        }
+                        else {
+                            mBinaryContent = null;
+                        }
                         mContent = null;
-                        mBinaryContent = buffer.toByteArray();
                     }
                 }
                 else if (mStatusCode >= 200 && mStatusCode < 300) {
@@ -212,7 +257,6 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 }
 
             } catch (Throwable e) {
-                Log.e("CERAMIC", "Http error: " + e.getMessage());
                 e.printStackTrace();
 
                 mStatusCode = 0;
@@ -245,7 +289,40 @@ public class HttpRequest extends AsyncTask<String, Void, Void> {
                 }
             }
         });
+    }
+    private static boolean isBinaryMimeType(String type) {
+        int semicolonIndex = type.indexOf(';');
+        if (semicolonIndex != -1) {
+            type = type.substring(0, semicolonIndex);
+        }
 
-        return null;
+        type = type.trim().toLowerCase();
+
+        if (type.startsWith("text/")) {
+            return false;
+        }
+
+        switch (type) {
+            case "text/html":
+            case "text/css":
+            case "text/xml":
+            case "application/javascript":
+            case "application/atom+xml":
+            case "application/rss+xml":
+            case "text/mathml":
+            case "text/plain":
+            case "text/vnd.sun.j2me.app-descriptor":
+            case "text/vnd.wap.wml":
+            case "text/x-component":
+            case "image/svg+xml":
+            case "application/json":
+            case "application/rtf":
+            case "application/x-perl":
+            case "application/xhtml+xml":
+            case "application/xspf+xml":
+                return false;
+            default:
+                return true;
+        }
     }
 }
