@@ -5,9 +5,6 @@ import ceramic.Shortcuts.*;
 /**
  * Just a regular quad (transparent by default) with a few addition to make it more convenient when used as a layer
  */
-@editable({
-    implicitSizeUnlessNull: 'texture'
-})
 class Layer extends Quad {
 
     @event function resize(width:Float, height:Float);

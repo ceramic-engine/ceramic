@@ -11,15 +11,6 @@ using ceramic.Extensions;
 /**
  * Draw shapes by triangulating vertices automatically, with optional holes in it.
  */
-@editable({
-    implicitSize: true,
-    highlight: {
-        points: 'points',
-        minPoints: 3,
-        maxPoints: 999999999
-    },
-    disable: ['texture', 'vertices', 'indices', 'uvs']
-})
 class Shape extends Mesh {
 
     /**

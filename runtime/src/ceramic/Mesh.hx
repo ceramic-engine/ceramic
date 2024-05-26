@@ -8,40 +8,6 @@ using ceramic.Extensions;
 /**
  * Draw anything composed of triangles/vertices.
  */
-@editable({
-    highlight: {
-        points: 'vertices'
-    },
-    helpers: [{
-        name: 'Grid',
-        method: 'grid',
-        params: [{
-            name: 'Columns',
-            type: 'Int',
-            value: 1,
-            slider: [1, 64]
-        }, {
-            name: 'Rows',
-            type: 'Int',
-            value: 1,
-            slider: [1, 64]
-        }]
-    },{
-        name: 'Grid From Texture',
-        method: 'gridFromTexture',
-        params: [{
-            name: 'Columns',
-            type: 'Int',
-            value: 1,
-            slider: [1, 64]
-        }, {
-            name: 'Rows',
-            type: 'Int',
-            value: 1,
-            slider: [1, 64]
-        }]
-    }]
-})
 @:allow(ceramic.MeshPool)
 class Mesh extends Visual {
 

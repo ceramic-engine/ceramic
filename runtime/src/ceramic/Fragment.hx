@@ -12,9 +12,6 @@ using ceramic.Extensions;
 /**
  * A fragment is a group of visuals rendered from data (.fragment file)
  */
-@editable({
-    implicitSizeUnlessTrue: 'resizable'
-})
 class Fragment extends Layer {
 
     public var assets(default,null):Assets = null;

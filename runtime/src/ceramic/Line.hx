@@ -7,15 +7,6 @@ using ceramic.Extensions;
 /**
  * Display lines composed of multiple segments, curves...
  */
-@editable({
-    implicitSize: true,
-    highlight: {
-        points: 'points',
-        minPoints: 2,
-        maxPoints: 999999999
-    },
-    disable: ['texture', 'vertices', 'indices', 'uvs']
-})
 class Line extends Mesh {
 
     static var _stroke:Stroke = new Stroke();

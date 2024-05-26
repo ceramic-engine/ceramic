@@ -5,9 +5,6 @@ import ceramic.Visual;
 
 using ceramic.Extensions;
 
-@editable({
-    implicitSizeUnlessNull: 'texture'
-})
 class Quad extends Visual {
 
     private inline static final FLAG_TRANSPARENT:Int = 16; // 1 << 4

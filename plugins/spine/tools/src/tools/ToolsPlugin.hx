@@ -43,7 +43,6 @@ class ToolsPlugin {
 
                 // Add spine files module path
                 app.paths.push(Path.join([context.plugins.get('Spine').path, 'runtime/src']));
-                app.editable.push('ceramic.Spine');
 
                 // Add hook to generate gen/assets/Spines.hx & related
                 app.hooks.push({

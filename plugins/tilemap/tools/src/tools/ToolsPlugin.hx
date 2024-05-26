@@ -38,7 +38,6 @@ class ToolsPlugin {
             var plugins:Array<String> = app.plugins;
             if (plugins.indexOf('tilemap') != -1) {
                 app.paths.push(Path.join([context.plugins.get('Tilemap').path, 'runtime/src']));
-                app.editable.push('ceramic.Tilemap');
             }
         }
 

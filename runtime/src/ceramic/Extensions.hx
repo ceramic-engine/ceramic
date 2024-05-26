@@ -228,20 +228,4 @@ class Extensions<T> {
 
 #end
 
-/// Autorun extensions
-
-    public static function waitUntil(entity:Entity, condition:()->Bool, callback:()->Void):Autorun {
-
-        return entity.autorun(() -> {
-            final result = condition();
-            Autorun.unobserve();
-            if (result) {
-                Autorun.cease();
-                callback();
-            }
-            Autorun.reobserve();
-        });
-
-    }
-
 }
