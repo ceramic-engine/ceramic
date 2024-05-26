@@ -31,7 +31,7 @@
     
     [super viewDidAppear:animated];
     
-    /*// Test HTTP
+    //*// Test HTTP
     //
     NSLog(@"Test HTTP Request...");
     [Http sendHTTPRequest:@{
@@ -41,15 +41,17 @@
                                 NSLog(@"error: %@", response[@"error"]);
                                 NSLog(@"headers: %@", response[@"headers"]);
                                 NSLog(@"content: %@", response[@"content"]);
-    }];*/
+    }];
+    //*/
     
-    NSLog(@"Test HTTP Download...");
+    /*//NSLog(@"Test HTTP Download...");
     [Http download:@{
                      @"url": @"http://lorempixel.com/1920/1920/abstract/"
                      } targetPath:@"someFile.jpg" done:^(NSString *fullPath) {
         // Result
         NSLog(@"Result: %@", fullPath);
     }];
+     //*/
     
 }
 

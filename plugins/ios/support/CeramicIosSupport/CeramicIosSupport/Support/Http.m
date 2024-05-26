@@ -86,7 +86,7 @@
                 
                 // Content
                 if (data) {
-                    if ([[contentType lowercaseString] hasPrefix:@"text/"]) {
+                    if (![self isBinaryMimeType:[contentType lowercaseString]]) {
                         // Text content
                         if ([[contentType lowercaseString] containsString:@"charset=iso-8859-1"]) {
                             // Convert from ISO-8859-1 to UTF-8 if needed
@@ -254,6 +254,49 @@
 }
 
 #pragma mark - Internal
+
++ (BOOL)isBinaryMimeType:(NSString *)type {
+    static NSArray *nonBinaryTypes = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        nonBinaryTypes = @[
+            @"text/html",
+            @"text/css",
+            @"text/xml",
+            @"application/javascript",
+            @"application/atom+xml",
+            @"application/rss+xml",
+            @"text/mathml",
+            @"text/plain",
+            @"text/vnd.sun.j2me.app-descriptor",
+            @"text/vnd.wap.wml",
+            @"text/x-component",
+            @"image/svg+xml",
+            @"application/json",
+            @"application/rtf",
+            @"application/x-perl",
+            @"application/xhtml+xml",
+            @"application/xspf+xml"
+        ];
+    });
+
+    NSRange semicolonRange = [type rangeOfString:@";"];
+    if (semicolonRange.location != NSNotFound) {
+        type = [type substringToIndex:semicolonRange.location];
+    }
+
+    type = [[type stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] lowercaseString];
+
+    if ([type hasPrefix:@"text/"]) {
+        return NO;
+    }
+
+    if ([nonBinaryTypes containsObject:type]) {
+        return NO;
+    }
+
+    return YES;
+}
 
 + (NSMutableURLRequest *)requestWithParams:(NSDictionary *)params {
     
