@@ -277,7 +277,7 @@ detect(port, (err, _port) => {
         port = _port;
     }
 
-    console.log('Create http server (port: ' + port + ')');
+    console.log('Create http server: http://127.0.0.1:' + port + '');
 
     // Dispatch info
     var expressServer = server.listen(port);
