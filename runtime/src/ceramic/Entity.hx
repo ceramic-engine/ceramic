@@ -475,6 +475,17 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     }
 
+    /**
+     * Call autorun() on all methods marked with `@autorun` meta.
+     * This is not supposed to be called by user code unless
+     * initialising an object without calling its constructor
+     */
+    @:noCompletion function _autorunMarkedMethods() {
+
+        // Override in subclasses
+
+    }
+
 /// Tween
 
     public function tween(?easing:Easing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
