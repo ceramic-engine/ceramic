@@ -496,7 +496,15 @@ class Fragment extends Layer {
 
     }
 
-    public function get(itemId:String):Entity {
+    public extern inline overload function get(itemId:String):Entity {
+        return _get(itemId);
+    }
+
+    public extern inline overload function get<T:Entity>(itemId:String, type:Class<T>):T {
+        return _getWithType(itemId, type);
+    }
+
+    function _get(itemId:String):Entity {
 
         for (entity in entities) {
             if (entity.id == itemId) {
@@ -507,6 +515,14 @@ class Fragment extends Layer {
 
         return null;
 
+    }
+
+    function _getWithType<T:Entity>(itemId:String, type:Class<T>):T {
+        final entity:Entity = _get(itemId);
+        if (entity != null) {
+            return cast entity;
+        }
+        return null;
     }
 
     @:noCompletion @:deprecated
