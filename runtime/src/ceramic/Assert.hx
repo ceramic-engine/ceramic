@@ -11,7 +11,7 @@ class Assert {
      */
     macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
 
-#if (debug || ceramic_assert)
+        #if (debug || ceramic_assert)
         var str = haxe.macro.ExprTools.toString(expr);
 
         reason = switch(reason) {
@@ -28,9 +28,9 @@ class Assert {
                 throw $v{str} + $reason;
             }
         }
-#else
+        #else
         return macro null;
-#end
+        #end
 
     }
 

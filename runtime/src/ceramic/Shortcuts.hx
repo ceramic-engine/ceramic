@@ -1,16 +1,24 @@
 package ceramic;
 
+#if macro
+import haxe.macro.Context;
+import haxe.macro.Expr;
+import haxe.macro.ExprTools;
+#else
 import ceramic.App;
 import ceramic.Screen;
 import ceramic.Settings;
 import ceramic.System;
 import haxe.PosInfos;
+#end
 
 /**
  * Shortcuts adds convenience identifiers to access ceramic app, screen, ...
  * Use it by adding `import ceramic.Shortcuts.*;` in your files.
  */
 class Shortcuts {
+
+    #if !macro
 
     /**
      * Shared app instance
@@ -72,5 +80,82 @@ class Shortcuts {
      * and should make it more recognizable, along with `observe()` and `unobserve()`.
      */
     inline public static function cease():Void { tracker.Autorun.cease(); }
+
+    #end
+
+    /**
+     * Wait until the observable condition becomes true to execute the callback once (and only once). Creates an `Autorun` instance and returns it.
+     * Usage:
+     * ```haxe
+     * // Resulting autorun attached to "this" if available and a valid entity
+     * until(something == true, callback);
+     * // Add "null" if you don't want it to be attached to anything
+     * until(null, something == true, callback);
+     * // Attach to another entity
+     * until(entity, something == true, callback);
+     * ```
+     */
+    macro public static function until(exprs:Array<Expr>):ExprOf<tracker.Autorun> {
+
+        var condition;
+        var callback;
+        var instance;
+
+        if (exprs.length > 2) {
+            condition = exprs[1];
+            callback = exprs[2];
+            instance = exprs[0];
+        }
+        else {
+            condition = exprs[0];
+            callback = exprs[1];
+            try {
+                // We try to resolve `this` type.
+                // If it succeeds, we can attach the autorun to it
+                Context.typeExpr(macro this);
+                instance = macro this;
+            }
+            catch (e) {
+                // If `this` typing failed, it's likely because
+                // it is not available and we are calling from
+                // a static, class method, let's not use it then
+                instance = macro null;
+            }
+        }
+
+        return macro @:privateAccess tracker.Until._until($instance, function() {
+            return $condition;
+        }, $callback);
+
+    }
+
+    /**
+     * Assert the expression evaluates to `true`.
+     * This check is only done in `debug` builds and doesn't affect `release` builds.
+     */
+    macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
+
+        #if (debug || ceramic_assert)
+        var str = ExprTools.toString(expr);
+
+        reason = switch(reason) {
+            case macro null: macro ' (Assertion failure)';
+            case _: macro ' (' + $reason + ')';
+        }
+
+        return macro @:pos(Context.currentPos()) {
+            if (!$expr) {
+                #if ceramic_assert_print_stack
+                ceramic.Utils.printStackTrace();
+                #end
+                ceramic.App.app.logger.error($v{str} + $reason);
+                throw $v{str} + $reason;
+            }
+        }
+        #else
+        return macro null;
+        #end
+
+    }
 
 }
