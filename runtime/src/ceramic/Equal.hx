@@ -21,6 +21,18 @@ class Equal {
             }
             return false;
         }
+        else if (Std.isOfType(a, haxe.ds.StringMap)) {
+            if (Std.isOfType(b, haxe.ds.StringMap)) {
+                return stringMapEqual(a, b);
+            }
+            return false;
+        }
+        else if (Std.isOfType(a, haxe.ds.IntMap)) {
+            if (Std.isOfType(b, haxe.ds.IntMap)) {
+                return intMapEqual(a, b);
+            }
+            return false;
+        }
         else if (Reflect.isObject(a) && Type.getClass(a) == null) {
             if (Reflect.isObject(b) && Type.getClass(b) == null) {
                 return objectFieldsEqual(a, b);
@@ -69,6 +81,42 @@ class Equal {
                 return false;
             }
         }
+        return true;
+
+    }
+
+    public static function stringMapEqual(a:haxe.ds.StringMap<Any>, b:haxe.ds.StringMap<Any>):Bool {
+
+        for (key => val in a) {
+            if (!b.exists(key))
+                return false;
+            if (b.get(key) != val)
+                return false;
+        }
+
+        for (key in b.keys()) {
+            if (!a.exists(key))
+                return false;
+        }
+
+        return true;
+
+    }
+
+    public static function intMapEqual(a:haxe.ds.IntMap<Any>, b:haxe.ds.IntMap<Any>):Bool {
+
+        for (key => val in a) {
+            if (!b.exists(key))
+                return false;
+            if (b.get(key) != val)
+                return false;
+        }
+
+        for (key in b.keys()) {
+            if (!a.exists(key))
+                return false;
+        }
+
         return true;
 
     }
