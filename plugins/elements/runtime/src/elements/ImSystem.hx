@@ -15,7 +15,7 @@ class ImSystem extends System {
 
     var view:View = null;
 
-    var makeFilterActive:Int = 0;
+    var makeFilterActive:Int = -2;
 
     public function new() {
 
@@ -122,13 +122,20 @@ class ImSystem extends System {
                 }
             }
             else {
-                makeFilterActive = 0;
+                if (makeFilterActive > -2) {
+                    makeFilterActive--;
+                }
+                if (makeFilterActive > -2 && filter.renderTexture != null) {
+                    filter.renderTexture.renderDirty = true;
+                }
             }
 
-            if (makeFilterActive == 0) {
+            if (makeFilterActive == -1) {
+                filter.neverEmpty = false;
                 filter.active = false;
             }
             else if (makeFilterActive == 2) {
+                filter.neverEmpty = true;
                 filter.active = true;
             }
         }

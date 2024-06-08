@@ -2170,6 +2170,7 @@ class Im {
                     window.contentView = null;
                     prevContentView.destroy();
                     windowData.form = null;
+                    windowData.filler = null;
                 }
                 if (windowItems != null) {
                     for (i in 0...windowData.numItems) {
@@ -2201,6 +2202,7 @@ class Im {
             }
             else {
                 var form = windowData.form;
+                var filler = windowData.filler;
                 var needsContentRebuild = false;
                 var canReuseViews = true;
 
@@ -2229,6 +2231,18 @@ class Im {
                     scroll.scroller.scrollbar = scrollbar;
                     scroll.transparent = true;
                     scroll.viewSize(ViewSize.fill(), windowData.height);
+                    var scrollbarBackground = new Quad();
+                    scrollbarBackground.id = 'scrollbar-bg';
+                    scrollbarBackground.transparent = false;
+                    scrollbarBackground.pos(scroll.width - 12, 0);
+                    scrollbarBackground.size(12, scroll.height);
+                    scrollbarBackground.alpha = windowData.theme.windowBackgroundAlpha;
+                    scrollbarBackground.color = windowData.theme.windowBackgroundColor;
+                    scroll.onResize(scrollbarBackground, (width, height) -> {
+                        scrollbarBackground.pos(width - 12, 0);
+                        scrollbarBackground.size(12, height);
+                    });
+                    scroll.add(scrollbarBackground);
                     window.contentView = scroll;
                 }
 
@@ -2283,6 +2297,13 @@ class Im {
                     container.viewSize(ViewSize.auto(), ViewSize.auto());
                     container.add(form);
 
+                    filler = new View();
+                    filler.viewSize(ViewSize.fill(), 0);
+                    filler.transparent = false;
+                    container.add(filler);
+
+                    windowData.filler = filler;
+
                     if (overflowScroll) {
                         createScrollingLayout(container);
                     }
@@ -2294,6 +2315,20 @@ class Im {
                 if (form != null) {
                     form.tabFocus.focusRoot = window;
                     form.theme = windowData.theme;
+                }
+
+                if (filler != null) {
+                    filler.alpha = windowData.theme.windowBackgroundAlpha;
+                    filler.color = windowData.theme.windowBackgroundColor;
+                }
+
+                if (window.contentView != null && window.contentView is ScrollingLayout) {
+                    var rawScrollbarBackground = window.contentView.childWithId('scrollbar-bg');
+                    if (rawScrollbarBackground != null) {
+                        var scrollbarBackground:Quad = cast rawScrollbarBackground;
+                        scrollbarBackground.alpha = windowData.theme.windowBackgroundAlpha;
+                        scrollbarBackground.color = windowData.theme.windowBackgroundColor;
+                    }
                 }
 
                 var windowItems = windowData.items;
@@ -2512,6 +2547,9 @@ class Im {
                                 contentView.visible = true;
                             });
                         }
+                    }
+                    if (windowData.filler != null && windowData.form != null) {
+                        windowData.filler.viewHeight = Math.max(0, windowData.height - windowData.form.height);
                     }
                 }
             });

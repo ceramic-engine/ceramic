@@ -2,6 +2,7 @@ package elements;
 
 import ceramic.ReadOnlyArray;
 import ceramic.TextAlign;
+import ceramic.View;
 import ceramic.ViewSize;
 import elements.Context.context;
 import tracker.Model;
@@ -40,6 +41,8 @@ class WindowData extends Model {
     public var theme:Theme = null;
 
     public var form:FormLayout = null;
+
+    public var filler:View = null;
 
     public var scrollable:Bool = false;
 
