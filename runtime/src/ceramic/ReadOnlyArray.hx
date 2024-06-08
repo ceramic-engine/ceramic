@@ -33,7 +33,7 @@ package ceramic;
  and the reference can be obtained with a `cast`.
  */
 @:forward(get, concat, copy, filter, indexOf, iterator, keyValueIterator, join, lastIndexOf, map, slice, contains, toString)
-abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> {
+abstract ReadOnlyArray<T>(Array<T>) from Array<T> to Iterable<T> to Array<T> {
 
     @:noCompletion @:arrayAccess extern inline public function arrayAccess(key:Int):T return this[key];
 
