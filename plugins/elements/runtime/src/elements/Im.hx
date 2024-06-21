@@ -1083,12 +1083,12 @@ class Im {
 
     }
 
-    public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0):Void {
+    public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0, roundXY:Bool = true):Void {
 
         var windowData = _currentWindowData;
 
-        windowData.targetX = x;
-        windowData.targetY = y;
+        windowData.targetX = roundXY ? Math.round(x) : x;
+        windowData.targetY = roundXY ? Math.round(y) : y;
         windowData.targetAnchorX = anchorX;
         windowData.targetAnchorY = anchorY;
 
