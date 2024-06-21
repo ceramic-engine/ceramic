@@ -55,6 +55,30 @@ class SeedRandom {
 // Public API
 
     /**
+     * Shuffle an Array. This operation affects the array in place.
+     * The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle). Adapted to use seeded random instead
+     * of built-in `Math.random()`
+     */
+    public function shuffle<T>(arr:Array<T>):Void
+    {
+        inline function int(from:Int, to:Int):Int
+        {
+            return from + Math.floor(((to - from + 1) * random()));
+        }
+
+        if (arr != null) {
+            for (i in 0...arr.length) {
+                var j = int(0, arr.length - 1);
+                var a = arr[i];
+                var b = arr[j];
+                arr[i] = b;
+                arr[j] = a;
+            }
+        }
+
+    }
+
+    /**
      * Returns a float number between [0,1)
      */
     public inline function random():Float {
