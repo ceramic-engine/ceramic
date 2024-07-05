@@ -791,4 +791,11 @@ class Utils {
     }
     #end
 
+    /**
+     * Returns `1` if the value is above or equal to zero, `-1` otherwise
+     */
+    inline public static function sign(value:Float):Float {
+        return value >= 0 ? 1 : -1;
+    }
+
 }
