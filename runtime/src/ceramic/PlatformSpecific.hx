@@ -27,7 +27,7 @@ class PlatformSpecific {
         #if (bind && android && (snow || clay))
         // A hook to flush java runnables that need to be run from Haxe thread
         ceramic.App.app.onUpdate(null, function(_) {
-            bind.java.Support.flushRunnables();
+            bind.java.Support.flushHaxeQueue();
         });
         #end
 
