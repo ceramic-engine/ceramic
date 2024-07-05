@@ -96,7 +96,7 @@ class bind_AppAndroidInterface {
             });
         } else {
             final String name_java_ = name;
-            final HaxeObject done_java_hobj_ = done == null ? null : new HaxeObject(done);
+            final HObject done_java_hobj_ = done == null ? null : new HObject(done);
             final Runnable done_java_ = done == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
@@ -260,7 +260,7 @@ class bind_AppAndroidInterface {
                 }
             });
         } else {
-            final HaxeObject onPause_java_hobj_ = onPause == null ? null : new HaxeObject(onPause);
+            final HObject onPause_java_hobj_ = onPause == null ? null : new HObject(onPause);
             final Runnable onPause_java_ = onPause == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {
@@ -317,7 +317,7 @@ class bind_AppAndroidInterface {
                 }
             });
         } else {
-            final HaxeObject onResume_java_hobj_ = onResume == null ? null : new HaxeObject(onResume);
+            final HObject onResume_java_hobj_ = onResume == null ? null : new HObject(onResume);
             final Runnable onResume_java_ = onResume == null ? null : new Runnable() {
                 public void run() {
                     bind.Support.runInNativeThread(new Runnable() {

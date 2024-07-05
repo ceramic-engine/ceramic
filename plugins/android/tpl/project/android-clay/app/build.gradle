@@ -3,13 +3,12 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion '31.0.0'
+    compileSdk 34
 
     defaultConfig {
         applicationId "mycompany.myapp"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdk 34
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a" /*, "x86", "x86_64"*/
         }
