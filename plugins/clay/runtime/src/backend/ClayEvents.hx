@@ -68,9 +68,15 @@ class ClayEvents extends clay.Events {
 
     var handleReady:()->Void;
 
+    var gamepadsEnabled:Bool = true;
+
     function new(handleReady:()->Void) {
 
         this.handleReady = handleReady;
+
+        #if (ios || ceramic_no_gamepad)
+        gamepadsEnabled = false;
+        #end
 
         configureGamepadMapping();
 
@@ -342,7 +348,7 @@ class ClayEvents extends clay.Events {
 
     override function gamepadAxis(id:Int, axisId:Int, value:Float, timestamp:Float) {
 
-        #if !(ios || android) // No gamepad on ios & android for now
+        if (!gamepadsEnabled) return;
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);
@@ -379,13 +385,11 @@ class ClayEvents extends clay.Events {
         backend.input.emitGamepadAxis(id, axisId, event.value);
         #end
 
-        #end
-
     }
 
     override function gamepadDown(id:Int, buttonId:Int, value:Float, timestamp:Float) {
 
-        #if !(ios || android)
+        if (!gamepadsEnabled) return;
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);
@@ -424,13 +428,11 @@ class ClayEvents extends clay.Events {
             backend.input.emitGamepadDown(id, buttonId);
         }
 
-        #end
-
     }
 
     override function gamepadUp(id:Int, buttonId:Int, value:Float, timestamp:Float) {
 
-        #if !(ios || android)
+        if (!gamepadsEnabled) return;
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);
@@ -469,8 +471,6 @@ class ClayEvents extends clay.Events {
             backend.input.emitGamepadUp(id, buttonId);
         }
 
-        #end
-
     }
 
     override function gamepadGyro(id:Int, dx:Float, dy:Float, dz:Float, timestamp:Float) {
@@ -479,7 +479,9 @@ class ClayEvents extends clay.Events {
 
         // Will use native bridge instead
 
-        #elseif !(ios || android)
+        #else
+
+        if (!gamepadsEnabled) return;
 
         if (!activeGamepads.exists(id) && !removedGamepads.exists(id)) {
             activeGamepads.set(id, true);
@@ -505,7 +507,7 @@ class ClayEvents extends clay.Events {
 
     override function gamepadDevice(id:Int, name:String, type:GamepadDeviceEventType, timestamp:Float) {
 
-        #if !(ios || android)
+        if (!gamepadsEnabled) return;
 
         if (type == GamepadDeviceEventType.DEVICE_REMOVED) {
             if (activeGamepads.exists(id)) {
@@ -535,8 +537,6 @@ class ClayEvents extends clay.Events {
                 backend.input.emitGamepadEnable(id, name);
             }
         }
-
-        #end
 
     }
 
