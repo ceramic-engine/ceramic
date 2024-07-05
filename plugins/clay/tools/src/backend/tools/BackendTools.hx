@@ -97,8 +97,10 @@ class BackendTools implements tools.spec.BackendTools {
             name: 'android',
             displayName: 'Android',
             configs: [
-                Run('Run Android'),
-                Build('Build Android'),
+                Run('Run Android (Project)', ['--open-project']),
+                Run('Run Android (APK)', ['--run-apk']),
+                Build('Build Android (Project)'),
+                Build('Build Android (APK)', ['--build-apk']),
                 Clean('Clean Android')
             ]
         });

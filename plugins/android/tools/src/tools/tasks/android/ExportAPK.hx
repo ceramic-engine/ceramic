@@ -48,21 +48,23 @@ class ExportAPK extends tools.Task {
         }
         FileSystem.createDirectory(buildPath);
 
-        // Depending on the build tools, apk may not be at the same place. Yea...
-        var androidAPKPath = Path.join([buildPath, 'outputs/apk/app-release.apk']);
-        var androidAPKPath2 = Path.join([buildPath, 'outputs/apk/release/app-release.apk']);
+        final doRun = extractArgFlag(args, 'run');
+
+        final androidVariant = context.debug ? 'debug' : (doRun ? 'debugNativeRel' : 'release');
+
+        final assembleVariant = 'assemble' + androidVariant.charAt(0).toUpperCase() + androidVariant.substring(1);
+        final installVariant = 'install' + androidVariant.charAt(0).toUpperCase() + androidVariant.substring(1);
+
+        var androidAPKPath = Path.join([buildPath, 'outputs/apk/$androidVariant/app-$androidVariant.apk']);
 
         // Delete previous apk if any
         if (FileSystem.exists(androidAPKPath)) {
             FileSystem.deleteFile(androidAPKPath);
         }
-        if (FileSystem.exists(androidAPKPath2)) {
-            FileSystem.deleteFile(androidAPKPath2);
-        }
 
         // Export APK
         var result = command('./gradlew', [
-            'assembleRelease', '--stacktrace'
+            (doRun ? installVariant : assembleVariant), '--stacktrace'
         ], { cwd: Path.join([cwd, 'project/android']) });
         if (result.status != 0) {
             fail('Gradle build failed with status ' + result.status);
@@ -70,15 +72,45 @@ class ExportAPK extends tools.Task {
 
         // Check that APK has been generated
         if (!FileSystem.exists(androidAPKPath)) {
-            if (!FileSystem.exists(androidAPKPath2)) {
-                fail('Expected APK file not found at $androidAPKPath or $androidAPKPath2');
-            } else {
-                // Always export to the same path for consistency sake
-                FileSystem.rename(androidAPKPath2, androidAPKPath);
-            }
+            fail('Expected APK file not found at $androidAPKPath');
         }
 
         success('Generated APK file at path: $androidAPKPath');
+
+        if (doRun) {
+            final os = Sys.systemName();
+            final sdkPath = AndroidUtils.sdkPath();
+            if (sdkPath == null) {
+                fail('Cannot run APK because Android SDK was not found (set ANDROID_HOME environment variable in your system to solve this).');
+            }
+            else {
+                var packageName:String = Reflect.field(project.app, 'package');
+                packageName = packageName.replace('-', '');
+
+                final adb = Path.join([sdkPath, 'platform-tools', os == 'Windows' ? 'adb.exe' : 'adb']);
+
+                command(adb, ['shell', 'monkey', '-p', packageName, '-c', 'android.intent.category.LAUNCHER', '1']);
+
+                final pidofResult = command(adb, ['shell', 'pidof', '-s', packageName]);
+                if (pidofResult.status == 0) {
+                    final pid = pidofResult.stdout.trim();
+                    if (pid == '') {
+                        fail('The app does not seem to be running...');
+                    }
+
+                    js.Node.setInterval(function() {
+                        ChildProcess.execFile(adb, ['shell', 'pidof', '-s', packageName], (error, stdout, stderr) -> {
+                            if (stdout == null || (''+stdout).trim() != pid) {
+                                print('The app has been closed, exiting.');
+                                Sys.exit(0);
+                            }
+                        });
+                    }, 1000);
+
+                    AndroidUtils.commandWithLogcatOutput(adb, ['logcat', '--pid=$pid']);
+                }
+            }
+        }
 
     }
 

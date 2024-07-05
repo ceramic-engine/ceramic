@@ -22,6 +22,9 @@ android {
         debug {
             jniDebuggable true
         }
+        debugNativeRel {
+            initWith debug
+        }
     }
 
     sourceSets {
@@ -56,6 +59,9 @@ tasks.whenTaskAdded { task ->
         task.dependsOn haxeBuildDebug
     }
     else if (task.name == 'packageRelease' || task.name == 'generateReleaseSources') {
+        task.dependsOn haxeBuildRelease
+    }
+    else if (task.name == 'packageDebugNativeRel' || task.name == 'generateDebugNativeRelSources') {
         task.dependsOn haxeBuildRelease
     }
 }

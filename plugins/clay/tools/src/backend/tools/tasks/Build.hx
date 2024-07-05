@@ -294,7 +294,14 @@ class Build extends tools.Task {
         }
         // Android
         else if (action == 'run' && target.name == 'android') {
-            runTask('android studio', ['--open']);
+            final runApk = extractArgFlag(args, 'run-apk');
+            final buildApk = extractArgFlag(args, 'build-apk');
+            final openProject = extractArgFlag(args, 'open-project');
+            var androidStudioArgs = [];
+            if (runApk) androidStudioArgs.push('--run-apk');
+            if (buildApk) androidStudioArgs.push('--build-apk');
+            if (openProject) androidStudioArgs.push('--open-project');
+            runTask('android studio', androidStudioArgs);
             runHooks(cwd, args, project.app.hooks, 'end run');
         }
         // Web

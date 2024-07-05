@@ -1,9 +1,9 @@
 package tools;
 
 enum BuildConfig {
-    Build(displayName:String);
-    Run(displayName:String);
-    Clean(displayName:String);
+    Build(displayName:String, ?extraArgs:Array<String>);
+    Run(displayName:String, ?extraArgs:Array<String>);
+    Clean(displayName:String, ?extraArgs:Array<String>);
 }
 
 @:structInit

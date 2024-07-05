@@ -1,14 +1,14 @@
 package tools.tasks.android;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Colors;
-import haxe.io.Path;
 import haxe.Json;
-import sys.FileSystem;
-import sys.io.File;
+import haxe.io.Path;
 import js.node.Os;
 import npm.AppleScript;
+import sys.FileSystem;
+import sys.io.File;
+import tools.Colors;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -40,73 +40,65 @@ class AndroidStudio extends tools.Task {
 
         var os = Sys.systemName();
 
-        if (os == 'Mac' && FileSystem.exists(androidProjectFile)) {
+        final openProject = extractArgFlag(args, 'open-project');
+        final runApk = extractArgFlag(args, 'run-apk');
+        final buildApk = runApk || extractArgFlag(args, 'build-apk');
 
-            // Build or Run?
-            var doOpen = extractArgFlag(args, 'build') || extractArgFlag(args, 'open');
-            var doRun = extractArgFlag(args, 'run');
+        if (openProject) {
 
-            // Open project
-            if (doRun) {
-                print('Open and run Android Studio project');
-            }
-            else if (doOpen) {
+            if (os == 'Mac' && FileSystem.exists(androidProjectFile)) {
+
+                // Open project
+
                 print('Open Android Studio project');
-            }
-            else {
-                return;
-            }
 
-            Sync.run(function(done) {
+                Sync.run(function(done) {
 
-                var script = '
-                    activate application "Android Studio"
-                    tell application "Android Studio"
-                        open "$androidProjectPath"
-                    end tell
-';
-
-                if (doRun) {
-                    script += '
-                    tell application "System Events"
-                        tell process "Android Studio"
-                            keystroke "r" using control down
+                    var script = '
+                        activate application "Android Studio"
+                        tell application "Android Studio"
+                            open "$androidProjectPath"
                         end tell
-                    end tell
 ';
-                }
 
-                AppleScript.execString(script, function(err, rtn) {
-                    if (err != null) {
-                        fail(''+err);
-                    }
-                    done();
+                    AppleScript.execString(script, function(err, rtn) {
+                        if (err != null) {
+                            fail(''+err);
+                        }
+                        done();
+                    });
                 });
-            });
 
-        }
-        else if (os == 'Windows' && FileSystem.exists(androidProjectFile)) {
+            }
+            else if (os == 'Windows' && FileSystem.exists(androidProjectFile)) {
 
-            // Open project
+                // Open project
 
-            var homedir:String = untyped Os.homedir();
-            var androidStudioExePath:String = null;
+                var homedir:String = untyped Os.homedir();
+                var androidStudioExePath:String = null;
 
-            for (drive in getWindowsDrives()) {
-                var tryPath = '$drive:/Program Files/Android/Android Studio/bin/studio64.exe';
-                if (FileSystem.exists(tryPath)) {
-                    androidStudioExePath = tryPath;
-                    break;
+                for (drive in getWindowsDrives()) {
+                    var tryPath = '$drive:/Program Files/Android/Android Studio/bin/studio64.exe';
+                    if (FileSystem.exists(tryPath)) {
+                        androidStudioExePath = tryPath;
+                        break;
+                    }
                 }
-            }
 
-            if (androidStudioExePath == null) {
-                fail('Android Studio does\'t seem to be installed.\nInstall it from: https://developer.android.com/studio');
-            }
+                if (androidStudioExePath == null) {
+                    fail('Android Studio does\'t seem to be installed.\nInstall it from: https://developer.android.com/studio');
+                }
 
-            success('Project is ready at path: ' + androidProjectPath);
-            print('Open it from Android Studio to run/build it.');
-            command(androidStudioExePath, [], { detached: true });
+                success('Project is ready at path: ' + androidProjectPath);
+                print('Open it from Android Studio to run/build it.');
+                command(androidStudioExePath, [], { detached: true });
+
+            }
+        }
+
+        if (buildApk) {
+
+            runTask('android export apk', runApk ? ['--run'] : []);
 
         }
 

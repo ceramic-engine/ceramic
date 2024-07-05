@@ -64,20 +64,30 @@ class ToolsPlugin {
 
                     var name:String = null;
                     var kind:String = null;
+                    var extraArgs:Array<String> = [];
 
                     switch (config) {
-                        case Build(name_):
+                        case Build(name_, extraArgs_):
                             name = name_;
                             kind = 'build';
-                        case Run(name_):
+                            if (extraArgs_ != null) {
+                                extraArgs = extraArgs_;
+                            }
+                        case Run(name_, extraArgs_):
                             name = name_;
                             kind = 'run';
-                        case Clean(name_):
+                            if (extraArgs_ != null) {
+                                extraArgs = extraArgs_;
+                            }
+                        case Clean(name_, extraArgs_):
+                            if (extraArgs_ != null) {
+                                extraArgs = extraArgs_;
+                            }
                     }
 
                     if (kind == null) continue;
 
-                    var targetArgs = [backendName, kind, buildTarget.name, '--setup', '--assets'];
+                    var targetArgs = [backendName, kind, buildTarget.name, '--setup', '--assets'].concat(extraArgs);
                     var selectArgs = [backendName, "hxml", buildTarget.name, "--setup"];
 
                     if (hxmlOutput != null) {
