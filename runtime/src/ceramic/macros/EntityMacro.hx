@@ -172,15 +172,17 @@ class EntityMacro {
                 if (storeAllFieldInfo) {
                     switch(field.kind) {
                         case FieldType.FVar(type, expr) | FieldType.FProp(_, _, type, expr):
-                            var resolvedType = Context.resolveType(type, Context.currentPos());
-                            var typeStr = complexTypeToString(TypeTools.toComplexType(resolvedType));
-                            if (typeStr == 'StdTypes') {
-                                typeStr = complexTypeToString(type);
+                            if (type != null) {
+                                var resolvedType = Context.resolveType(type, Context.currentPos());
+                                var typeStr = complexTypeToString(TypeTools.toComplexType(resolvedType));
+                                if (typeStr == 'StdTypes') {
+                                    typeStr = complexTypeToString(type);
+                                }
+                                fieldInfoData.set(field.name, {
+                                    type: typeStr,
+                                    index: index
+                                });
                             }
-                            fieldInfoData.set(field.name, {
-                                type: typeStr,
-                                index: index
-                            });
 
                         default:
                     }
