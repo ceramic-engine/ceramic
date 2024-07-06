@@ -77,6 +77,9 @@ class Arc extends Mesh {
 
         inline MeshExtensions.createArc(this, radius, angle, thickness, sides, borderPosition);
 
+        this.width = radius * 2;
+        this.height = radius * 2;
+
         contentDirty = false;
 
     }

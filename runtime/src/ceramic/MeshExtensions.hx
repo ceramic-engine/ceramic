@@ -186,10 +186,7 @@ class MeshExtensions {
             case MIDDLE: thickness * 0.5;
         }
 
-        mesh.width = radius * 2;
-        mesh.height = radius * 2;
-
-        for (i in 0...count+1) {
+        for (i in 0...count+(angle != 360 ? 1 : 0)) {
 
             var rawX = Math.cos(angleOffset + sidesOverTwoPi * i);
             var rawY = Math.sin(angleOffset + sidesOverTwoPi * i);
@@ -216,6 +213,16 @@ class MeshExtensions {
                 indices.push(n + 3);
             }
 
+        }
+
+        if (angle == 360) {
+            var n = (count - 1) * 2;
+            indices.push(n);
+            indices.push(n + 1);
+            indices.push(0);
+            indices.push(n + 1);
+            indices.push(0);
+            indices.push(1);
         }
 
     }
