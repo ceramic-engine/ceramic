@@ -1256,6 +1256,9 @@ class App extends Entity {
         emitFinishDraw();
         #end
 
+        // Tween end frame
+        Tween.endFrame();
+
         // Swap display (if backends needs to)
         backend.draw.swap();
 

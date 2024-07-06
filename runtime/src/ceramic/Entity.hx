@@ -488,9 +488,35 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
 /// Tween
 
+    /**
+     * Start a **tween** associated with this entity.
+     * @param easing The easing to use
+     * @param duration The duration of the tween
+     * @param fromValue The start value of the tween
+     * @param toValue The end value of the tween
+     * @param update An update function called at each iteration of the tween
+     * @return The instance of the created `Tween` object
+     */
     public function tween(?easing:Easing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         return Tween.start(this, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
+
+    }
+
+    /**
+     * Start an eager **tween** associated with this entity. This is
+     * the same as a regular tween, except that it will start updating
+     * itself using current frame's delta time instead of next frame like in a regular tween.
+     * @param easing The easing to use
+     * @param duration The duration of the tween
+     * @param fromValue The start value of the tween
+     * @param toValue The end value of the tween
+     * @param update An update function called at each iteration of the tween
+     * @return The instance of the created `Tween` object
+     */
+    public function eagerTween(?easing:Easing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+
+        return Tween.eagerStart(this, easing, duration, fromValue, toValue, update #if ceramic_debug_entity_allocs , pos #end);
 
     }
 

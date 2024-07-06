@@ -25,9 +25,15 @@ class Tween extends Entity {
 
     var toValue:Float;
 
+    var eager:Bool;
+
     var computedEasing:Void->Void;
 
     var customEasing:Float->Float = null;
+
+    var didCallImmediateStart:Bool = false;
+
+    var didTickThisFrame:Bool = false;
 
 /// Lifecycle
 
@@ -68,6 +74,9 @@ class Tween extends Entity {
 
     inline function updateFromTick(delta:Float):Void {
 
+        // Let us know if we "ticked" this tween this frame
+        didTickThisFrame = true;
+
         if (owner != null && owner.destroyed) {
             destroy();
         }
@@ -99,9 +108,19 @@ class Tween extends Entity {
 
     }
 
-    function immediateStart() {
+    public function immediateStart() {
 
-        emitUpdate(fromValue, 0);
+        if (didCallImmediateStart) return;
+        didCallImmediateStart = true;
+
+        if (!didTickThisFrame) {
+            if (eager) {
+                updateFromTick(ceramic.Shortcuts.app.delta);
+            }
+            else {
+                emitUpdate(fromValue, 0);
+            }
+        }
 
     }
 
@@ -123,9 +142,21 @@ class Tween extends Entity {
     static var _tweens:Array<Tween> = [];
     static var _iteratedTweens:Array<Tween> = [];
 
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
+
+        if (handleValueTime != null)
+            instance.onUpdate(owner, handleValueTime);
+
+        return instance;
+
+    }
+
+    public static function eagerStart(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+
+        var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
+        instance.eager = true;
 
         if (handleValueTime != null)
             instance.onUpdate(owner, handleValueTime);
@@ -147,7 +178,20 @@ class Tween extends Entity {
         for (i in 0...len) {
             var tween = _iteratedTweens.unsafeGet(i);
             _iteratedTweens.unsafeSet(i, null);
-            tween.updateFromTick(delta);
+            if (!tween.didTickThisFrame) {
+                tween.updateFromTick(delta);
+            }
+        }
+
+    }
+
+    static function endFrame():Void {
+
+        // At the end of the frame, reset the didTick flag
+        var len = _tweens.length;
+        for (i in 0...len) {
+            var tween = _tweens.unsafeGet(i);
+            tween.didTickThisFrame = false;
         }
 
     }

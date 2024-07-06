@@ -176,7 +176,15 @@ class VisualTransition extends Entity implements Component {
 
 /// Public API
 
-    public function run(?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
+    inline public function run(?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
+        return _run(easing, duration, false, cb);
+    }
+
+    inline public function eagerRun(?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
+        return _run(easing, duration, true, cb);
+    }
+
+    function _run(easing:Easing, duration:Float, eager:Bool, cb:VisualTransitionProperties->Void):Null<Tween> {
 
         final NO_VALUE_FLOAT:Float = -999999999;
 
@@ -311,7 +319,7 @@ class VisualTransition extends Entity implements Component {
 
         if (anyPropertyChanged) {
 
-            propsTween = entity.tween(easing, duration, 0, 1, (value, _) -> {
+            var tweenUpdate:(value:Float, time:Float)->Void = (value, _) -> {
 
                 // Change values linked to this tween
                 //
@@ -384,7 +392,9 @@ class VisualTransition extends Entity implements Component {
                 if (viewHeightTween == propsTween)
                     asView.viewHeight = viewHeightStart + (viewHeightEnd - viewHeightStart) * value;
                 #end
-            });
+            };
+            propsTween = eager ? entity.eagerTween(easing, duration, 0, 1, tweenUpdate) : entity.tween(easing, duration, 0, 1, tweenUpdate);
+            tweenUpdate = null;
             propsTween.onDestroy(this, propsTween -> {
                 if (xTween == propsTween)
                     xTween = null;
@@ -569,7 +579,7 @@ class VisualTransition extends Entity implements Component {
         }
         else {
 
-            propsTween = entity.tween(easing, duration, 0, 1, null);
+            propsTween = eager ? entity.eagerTween(easing, duration, 0, 1, null) : entity.tween(easing, duration, 0, 1, null);
 
         }
 
@@ -609,6 +619,18 @@ class VisualTransition extends Entity implements Component {
         }
 
         return transitionComponent.run(easing, duration, cb);
+
+    }
+
+    public static function eagerTransition(visual:Visual, ?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
+
+        var transitionComponent:VisualTransition = cast visual.component('transition');
+        if (transitionComponent == null) {
+            transitionComponent = new VisualTransition();
+            visual.component('transition', transitionComponent);
+        }
+
+        return transitionComponent.eagerRun(easing, duration, cb);
 
     }
 
