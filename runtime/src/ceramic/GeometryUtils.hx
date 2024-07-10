@@ -53,6 +53,26 @@ class GeometryUtils {
     }
 
     /**
+     * Returns `true` if the circle at point `(x0,y0)` with a radius `r0` interects
+     * with the other circle at point `(x1,y1)` with a radius `r1`
+     */
+    public static function intersectCircles(x0:Float, y0:Float, r0:Float, x1:Float, y1:Float, r1:Float):Bool {
+
+        // Calculate the squared distance between the two circles' centers
+        var dx = x1 - x0;
+        var dy = y1 - y0;
+        var distanceSquared = dx * dx + dy * dy;
+
+        // Calculate the squared sum of the radii
+        var radiiSum = r0 + r1;
+        var radiiSumSquared = radiiSum * radiiSum;
+
+        // The circles intersect if the squared distance between their centers is less than or equal to the squared sum of their radii
+        return distanceSquared <= radiiSumSquared;
+
+    }
+
+    /**
      * Returns the distance between point (x1, y1) and point (x2, y2)
      */
     public static inline function distance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
