@@ -64,7 +64,7 @@ class Helpers {
 
         // To get absolute path in haxe log output
         // Then, we process it to make it more readable, with colors etc...
-        context.defines.set('absolute-path', '');
+        //context.defines.set('absolute-path', '');
 
         // Add target defines
         if (target != null && context.backend != null) {
@@ -860,6 +860,65 @@ class Helpers {
 
     }
 
+    public static function simplifyAbsolutePath(absolutePath:String, ?relativeToPath:String):String {
+
+        if (relativeToPath == null) {
+            relativeToPath = context.cwd;
+        }
+
+        var result = getRelativePath(absolutePath, relativeToPath);
+        if (result.length < absolutePath.length) {
+            return result;
+        }
+
+        return absolutePath;
+
+    }
+
+    public extern inline overload static function formatFileLink(path:String, line:Int):String {
+
+        return _formatFileLink(path, ''+line);
+
+    }
+
+    public extern inline overload static function formatFileLink(path:String, line:String):String {
+
+        return _formatFileLink(path, line);
+
+    }
+
+    static function _formatFileLink(path:String, line:String):String {
+
+        var cwd = context.cwd;
+
+        if (context.vscode) {
+            var absolutePath = Path.isAbsolute(path) ? Path.normalize(path) : Path.normalize(Path.join([cwd, path]));
+            var vscodePath = 'vscode://file${absolutePath}:${line}';
+            var name = Path.withoutDirectory(absolutePath);
+            var basePath = Path.directory(absolutePath);
+            var numSlashes = 1;
+            if (context.defines.exists('log_file_subdirectories')) {
+                numSlashes = Std.parseInt(context.defines.get('log_file_subdirectories')) ?? 1;
+            }
+            for (_ in 0...numSlashes) {
+                var subdir = Path.withoutDirectory(basePath).replace('/', '').trim();
+                if (subdir == basePath.replace('/', '').trim() || subdir == '') {
+                    trace('BREAK: subdir=$subdir basePath.replace().trim()=${basePath.replace('/', '').trim()}');
+                    break;
+                }
+                basePath = Path.directory(basePath);
+                name = subdir + '/' + name;
+            }
+            if (name.endsWith('.hx')) {
+                name = name.substring(0, name.length - 3);
+            }
+            return '\u001b]8;;${vscodePath}\u001b\\${name}:${line}\u001b]8;;\u001b\\';
+        }
+
+        return path + ':' + line;
+
+    }
+
     public static function formatLineOutput(cwd:String, input:String):String {
 
         if (!context.colors) {
@@ -873,20 +932,21 @@ class Helpers {
             var relativePath = RE_HAXE_ERROR.matched(1);
             var lineNumber = RE_HAXE_ERROR.matched(2);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.vscode) {
                 var charsBefore = 'characters ' + RE_HAXE_ERROR.matched(4) + '-' + RE_HAXE_ERROR.matched(5);
                 var charsAfter = 'characters ' + (Std.parseInt(RE_HAXE_ERROR.matched(4))#if (haxe_ver < 4) + 1 #end) + '-' + (Std.parseInt(RE_HAXE_ERROR.matched(5))#if (haxe_ver < 4) + 1 #end);
                 input = input.replace(charsBefore, charsAfter);
             }
-            input = input.replace(relativePath, absolutePath);
+            input = input.replace(relativePath, finalPath);
             if (context.colors) {
                 if (input.indexOf(': Warning :') != -1) {
-                    input = '$absolutePath:$lineNumber: '.gray() + input.replace(': Warning :', ':').substr('$absolutePath:$lineNumber:'.length + 1).yellow();
+                    input = '${formatFileLink(finalPath, lineNumber)}: '.gray() + input.replace(': Warning :', ':').substr('$finalPath:$lineNumber:'.length + 1).yellow();
                 } else {
-                    input = '$absolutePath:$lineNumber: '.gray() + input.substr('$absolutePath:$lineNumber:'.length + 1).red();
+                    input = '$finalPath:$lineNumber: '.gray() + input.substr('$finalPath:$lineNumber:'.length + 1).red();
                 }
             } else {
-                input = '$absolutePath:$lineNumber: ' + input.substr('$absolutePath:$lineNumber:'.length + 1);
+                input = '$finalPath:$lineNumber: ' + input.substr('$finalPath:$lineNumber:'.length + 1);
             }
         }
         else if (RE_STACK_FILE_LINE.match(input)) {
@@ -894,10 +954,11 @@ class Helpers {
             var relativePath = RE_STACK_FILE_LINE.matched(2);
             var lineNumber = RE_STACK_FILE_LINE.matched(3);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.colors) {
-                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol '.red() + '$absolutePath:$lineNumber'.gray());
+                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol '.red() + formatFileLink(finalPath, lineNumber).gray());
             } else {
-                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol $absolutePath:$lineNumber');
+                input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol $finalPath:$lineNumber');
             }
         }
         else if (RE_STACK_FILE_LINE_BIS.match(input)) {
@@ -905,16 +966,18 @@ class Helpers {
             var relativePath = RE_STACK_FILE_LINE_BIS.matched(2);
             var lineNumber = RE_STACK_FILE_LINE_BIS.matched(3);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.colors) {
-                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol '.red() + '$absolutePath:$lineNumber'.gray());
+                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol '.red() + formatFileLink(finalPath, lineNumber).gray());
             } else {
-                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol $absolutePath:$lineNumber');
+                input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol $finalPath:$lineNumber');
             }
         }
         else if (RE_TRACE_FILE_LINE.match(input)) {
             var relativePath = RE_TRACE_FILE_LINE.matched(1);
             var lineNumber = RE_TRACE_FILE_LINE.matched(2);
             var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var finalPath = simplifyAbsolutePath(absolutePath);
             input = input.replace(RE_TRACE_FILE_LINE.matched(0), '');
             if (context.colors) {
                 if (input.startsWith('[info] ')) {
@@ -930,9 +993,9 @@ class Helpers {
                 } else if (input.startsWith('characters ')) {
                     input = input.red();
                 }
-                input += ' $absolutePath:$lineNumber'.gray();
+                input += ' ' + formatFileLink(finalPath, lineNumber).gray();
             } else {
-                input += ' $absolutePath:$lineNumber';
+                input += ' $finalPath:$lineNumber';
             }
         }
         else if (RE_JS_FILE_LINE.match(input)) {

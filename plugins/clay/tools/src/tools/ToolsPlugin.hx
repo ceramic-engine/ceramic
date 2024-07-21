@@ -90,6 +90,10 @@ class ToolsPlugin {
                     var targetArgs = [backendName, kind, buildTarget.name, '--setup', '--assets'].concat(extraArgs);
                     var selectArgs = [backendName, "hxml", buildTarget.name, "--setup"];
 
+                    if (context.vscode) {
+                        targetArgs.push('--vscode-editor');
+                    }
+
                     if (hxmlOutput != null) {
 
                         targetArgs.push('--hxml-output');
