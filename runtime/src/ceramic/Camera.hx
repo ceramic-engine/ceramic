@@ -174,10 +174,6 @@ class Camera extends Entity {
 
     var hasPrevTransform:Bool = false;
 
-    var dx:Float = 0;
-
-    var dy:Float = 0;
-
     final averageFrameTime:Float = 1.0 / 60;
 
     public function new() {
@@ -186,7 +182,7 @@ class Camera extends Entity {
 
     }
 
-    public function update(delta:Float):Void {
+    function internalUpdate(delta:Float):Void {
 
         if (contentWidth <= 0 || contentHeight <= 0) {
             return;
@@ -196,6 +192,9 @@ class Camera extends Entity {
 
         var speedX = delta * trackSpeedX * zoom;
         var speedY = delta * trackSpeedY * zoom;
+
+        var dx:Float = 0;
+        var dy:Float = 0;
 
         // Follow target (if any)
         if (followTarget) {
@@ -289,6 +288,36 @@ class Camera extends Entity {
                 y = contentHeight - viewportHeight * invertedZoom * 0.5;
             }
         }
+
+    }
+
+    public function update(delta:Float):Void {
+
+        internalUpdate(delta);
+
+        updateContentTransform();
+
+    }
+
+    public function stabilize(maxUpdates:Int = 128, delta:Float = 0.1, thresholdX:Float = 0.01, thresholdY:Float = 0.01) {
+
+        for (_ in 0...maxUpdates) {
+
+            var prevX = x;
+            var prevY = y;
+
+            internalUpdate(delta);
+
+            if (Math.abs(x - prevX) < thresholdX && Math.abs(y - prevY) < thresholdY) {
+                break;
+            }
+        }
+
+        updateContentTransform();
+
+    }
+
+    public function updateContentTransform() {
 
         contentTranslateX = (contentX - x) + viewportWidth * 0.5;
         contentTranslateY = (contentY - y) + viewportHeight * 0.5;
