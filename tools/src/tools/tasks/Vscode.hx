@@ -125,17 +125,37 @@ class Vscode extends tools.Task {
         // Save launch.json (for debugging)
         var vscodeLaunch = {
             "version": "0.2.0",
+            "compounds": [
+                {
+                    "name": "Ceramic / Web",
+                    "configurations": [
+                        "Ceramic / Web (Attach)",
+                        "Ceramic / Web (Build & Run)"
+                    ]
+                }
+            ],
             "configurations": [
                 {
-                    "name": "Debug Web",
+                    "name": "Ceramic / Web (Attach)",
                     "type": "chrome",
                     "request": "attach",
                     "port": 9223,
                     "webRoot": "${workspaceFolder}/project/web",
+                    "timeout": 30000,
                     "sourceMaps": true,
-                    "disableNetworkCache": true,
                     "smartStep": true
-                }
+                },
+                {
+                    "name": "Ceramic / Web (Build & Run)",
+                    "request": "launch",
+                    "type": "node",
+                    "cwd": "${workspaceFolder}",
+                    "console": "integratedTerminal",
+                    "runtimeExecutable": "ceramic",
+                    "runtimeArgs": [
+                        "clay", "run", "web", "--setup", "--asset", "--debug", "--vscode-editor"
+                    ],
+                },
             ]
         };
 
