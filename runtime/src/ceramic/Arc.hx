@@ -5,8 +5,8 @@ using ceramic.Extensions;
 /**
  * Convenience mesh subclass to draw arc, pie, ring or disc geometry
  * Ring: Angle `360`
- * Circle: Angle `360` - Border Position: `INSIDE`
- * Pie: Radius and Thickness are `equal` - Border Position: `INSIDE`
+ * Pie Segment: Radius and Thickness are `equal` - Border Position: `INSIDE`
+ * Circle: Angle `360` - Radius and Thickness are `equal` - Border Position: `INSIDE`
  */
 class Arc extends Mesh {
 
