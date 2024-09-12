@@ -894,16 +894,16 @@ class Helpers {
         if (context.vscode) {
             var absolutePath = Path.isAbsolute(path) ? Path.normalize(path) : Path.normalize(Path.join([cwd, path]));
             var vscodePath = 'vscode://file${absolutePath}:${line}';
-            var name = Path.withoutDirectory(absolutePath);
-            var basePath = Path.directory(absolutePath);
+            var normalizedPath = Path.normalize(path);
+            var name = Path.withoutDirectory(normalizedPath);
+            var basePath = Path.directory(normalizedPath);
             var numSlashes = 1;
             if (context.defines.exists('log_file_subdirectories')) {
                 numSlashes = Std.parseInt(context.defines.get('log_file_subdirectories')) ?? 1;
             }
             for (_ in 0...numSlashes) {
                 var subdir = Path.withoutDirectory(basePath).replace('/', '').trim();
-                if (subdir == basePath.replace('/', '').trim() || subdir == '') {
-                    trace('BREAK: subdir=$subdir basePath.replace().trim()=${basePath.replace('/', '').trim()}');
+                if (subdir == basePath.replace('/', '').trim() || subdir == '' || subdir == '..' || subdir == '.') {
                     break;
                 }
                 basePath = Path.directory(basePath);

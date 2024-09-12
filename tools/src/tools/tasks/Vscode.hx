@@ -123,7 +123,7 @@ class Vscode extends tools.Task {
         }
 
         // Save launch.json (for debugging)
-        var vscodeLaunch = {
+        var vscodeLaunch:Dynamic = {
             "version": "0.2.0",
             "compounds": [
                 {
@@ -134,7 +134,7 @@ class Vscode extends tools.Task {
                     ]
                 }
             ],
-            "configurations": [
+            "configurations": ([
                 {
                     "name": "Ceramic / Web (Attach)",
                     "type": "chrome",
@@ -156,7 +156,7 @@ class Vscode extends tools.Task {
                         "clay", "run", "web", "--setup", "--asset", "--debug", "--vscode-editor"
                     ],
                 },
-            ]
+            ] : Array<Dynamic>)
         };
 
         if (!settingsOnly) {
