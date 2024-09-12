@@ -183,6 +183,19 @@ class Text extends Visual {
         return maxLineDiff;
     }
 
+    /**
+     * If provided, will be called for each glyph to display, giving the chance
+     * to override the character code to display.
+     * This can be used for example to display password-like fields, when used with `EditText` component:
+     *
+     * ```haxe
+     * var text = new Text();
+     * text.glyphCode = (_, _) -> '*'.code;
+     * text.content = 'Som2 pas!wOrd';
+     * ```
+     */
+    public var glyphCode:(charCode:Int, pos:Int)->Int = null;
+
 /// Overrides
 
     override function set_depth(depth:Float):Float {
@@ -327,6 +340,14 @@ class Text extends Visual {
         if (content == '' || (content.length > 0 && content.charAt(content.length - 1) == "\n")) {
             addTrailingSpace = true;
             content += ' ';
+        }
+        if (glyphCode != null) {
+            var newContent = new StringBuf();
+            for (i in 0...content.length) {
+                final code = content.charCodeAt(i);
+                newContent.addChar(glyphCode(code, i));
+            }
+            content = newContent.toString();
         }
         var len = content.length;
 
