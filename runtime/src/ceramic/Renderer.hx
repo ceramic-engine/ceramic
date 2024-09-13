@@ -1200,6 +1200,34 @@ class Renderer extends Entity {
         // Let backend know we will start sending mesh data
         draw.beginDrawMesh(mesh); // TODO pass mesh info
 
+    #if (debug || ceramic_debug_mesh_colors)
+        if (meshFloatColors != null) {
+            if (meshSingleColor && meshFloatColors.length < 4) {
+                log.error('Trying to draw mesh $mesh with a single color but floatColors array is too short. It must have at least 4 elements (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+            else if (meshIndicesColor && meshFloatColors.length < meshIndices.length * 4) {
+                log.error('Trying to draw mesh $mesh with indices colors but floatColors array is too short. It must have at least ${meshIndices.length * 4} elements (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+            else if (meshFloatColors.length < meshVertices.length * 2) {
+                log.error('Trying to draw mesh $mesh with vertices colors but floatColors array is too short. It must have at least ${meshVertices.length * 2} elements (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+        }
+        else if (meshColors != null) {
+            if (meshSingleColor && meshColors.length < 1) {
+                log.error('Trying to draw mesh $mesh with a single color but colors array is too short. Add at least 1 element or assign a valid color' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+            else if (meshIndicesColor && meshColors.length < meshIndices.length) {
+                log.error('Trying to draw mesh $mesh with indices colors but colors array is too short. It must have at least ${meshIndices.length} elements' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+            else if (meshColors.length < Math.round(meshVertices.length / 2)) {
+                log.error('Trying to draw mesh $mesh with vertices colors but colors array is too short. It must have at least ${Math.round(meshVertices.length / 2)} elements' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            }
+        }
+        else {
+            log.error('Trying to draw mesh $mesh with no colors. Either set mesh.color, mesh.colors or mesh.floatColors' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+        }
+    #end
+
     #if ceramic_wireframe
         if (lastWireframe) {
             meshIndices = mesh.wireframeIndices;
