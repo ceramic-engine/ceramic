@@ -57,6 +57,7 @@ class Tools {
             dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),
             variant: 'standard',
             vscode: false,
+            vscodeUriScheme: 'vscode',
             muted: false,
             plugins: new Map(),
             unbuiltPlugins: new Map(),
@@ -231,6 +232,19 @@ class Tools {
         if (index != -1) {
             context.vscode = true;
             args.splice(index, 1);
+        }
+
+        // VSCode (URI Scheme)
+        index = args.indexOf('--vscode-uri-scheme');
+        if (index != -1) {
+            if (index + 1 >= args.length) {
+                fail('A value is required after --vscode-uri-scheme argument.');
+            }
+            context.vscodeUriScheme = args[index + 1];
+            args.splice(index, 2);
+        }
+        else {
+            context.vscodeUriScheme = 'vscode';
         }
 
         // Load project

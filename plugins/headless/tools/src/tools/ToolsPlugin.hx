@@ -82,6 +82,10 @@ class ToolsPlugin {
 
                     if (context.vscode) {
                         targetArgs.push('--vscode-editor');
+                        if (context.vscodeUriScheme != 'vscode') {
+                            targetArgs.push('--vscode-uri-scheme');
+                            targetArgs.push(context.vscodeUriScheme);
+                        }
                     }
 
                     if (hxmlOutput != null) {

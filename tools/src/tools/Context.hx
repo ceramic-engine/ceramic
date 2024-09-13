@@ -11,7 +11,7 @@ typedef Context = {
 
     /** If `true`, debug is enabled. */
     var debug:Bool;
-    
+
     /** The defines computed by project and args. */
     var defines:Map<String,String>;
 
@@ -38,21 +38,24 @@ typedef Context = {
 
     /** Tells whether this ceramic is the one executed from whithin and electron app (Ceramic Editor). */
     var isEmbeddedInElectron:Bool;
-    
+
     /** Absolute path to `.ceramic` directory. */
     var dotCeramicPath:String;
-    
+
     /** Default plugins path (embedded with ceramic itself). */
     var defaultPluginsPath:String;
 
     /** Project's plugins path (specific to the current project) */
     var projectPluginsPath:String;
-    
+
     /** Whether we are running a variant configuration or not. */
     var variant:String;
 
     /** Whether this command is triggered by `Visual Studio Code` or not. */
     var vscode:Bool;
+
+    /** The VSCode URI scheme to use (might be different depending on which VSCode variant is calling us). */
+    var vscodeUriScheme:String;
 
     /** Set to `true` to mute logging. */
     var muted:Bool;
