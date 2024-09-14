@@ -26,6 +26,11 @@ class Button extends TextView implements Observable implements TabFocusable {
 
 /// Properties
 
+    /**
+     * If this field is managed by a WindowItem, this is the WindowItem.
+     */
+    public var windowItem:WindowItem = null;
+
     public var pressed(get,never):Bool;
     inline function get_pressed():Bool {
         return click.pressed;

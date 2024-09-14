@@ -59,6 +59,11 @@ class ListView extends View implements Observable {
 
     @observe public var scrollEnabled:Bool = true;
 
+    /**
+     * If this field is managed by a WindowItem, this is the WindowItem.
+     */
+    public var windowItem:WindowItem = null;
+
     public var autoCheckLocked:Bool = true;
 
     public function new(items:Array<Dynamic>) {

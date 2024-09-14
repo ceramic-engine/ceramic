@@ -38,6 +38,11 @@ class TabsLayout extends RowLayout implements Observable {
         return marginY;
     }
 
+    /**
+     * If this field is managed by a WindowItem, this is the WindowItem.
+     */
+    public var windowItem:WindowItem = null;
+
     @observe public var selectedIndex:Int = -1;
 
     @observe public var tabs:ReadOnlyArray<String> = [];

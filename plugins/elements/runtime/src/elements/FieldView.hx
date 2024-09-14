@@ -24,6 +24,11 @@ class FieldView extends LinearLayout implements Observable implements TabFocusab
 
     }
 
+    /**
+     * If this field is managed by a WindowItem, this is the WindowItem.
+     */
+    public var windowItem:WindowItem = null;
+
 /// Internal
 
     var focusedThisFrame:Bool = false;

@@ -16,7 +16,6 @@ import tracker.Autorun.unobserve;
 
 using StringTools;
 using ceramic.Extensions;
-using elements.WindowItem.WindowItemExtensions;
 
 /**
  * A simple class to hold window item data.
@@ -452,7 +451,7 @@ class WindowItem {
                 field = new SelectFieldView();
             }
         }
-        field.data = this;
+        field.windowItem = this;
         field.list = stringArray0;
         field.nullValueText = string1;
         field.theme = theme;
@@ -501,7 +500,7 @@ class WindowItem {
                 field = new BooleanFieldView();
             }
         }
-        field.data = this;
+        field.windowItem = this;
         field.theme = theme;
         var intValue = field.value ? 1 : 0;
         if (intValue != int0) {
@@ -509,7 +508,7 @@ class WindowItem {
         }
         if (justCreated) {
             field.onValueChange(null, function(value, prevValue) {
-                field.windowItem().int1 = value ? 1 : 0;
+                field.windowItem.int1 = value ? 1 : 0;
             });
         }
 
@@ -528,7 +527,7 @@ class WindowItem {
 
     static function _selectSetIntValue(field:SelectFieldView, value:String):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         final index = field.list.indexOf(value);
         item.int1 = index;
 
@@ -562,8 +561,8 @@ class WindowItem {
             }
         }
 
-        var previous = field.windowItem();
-        field.data = this;
+        var previous = field.windowItem;
+        field.windowItem = this;
         field.theme = theme;
 
         if (justCreated) {
@@ -587,7 +586,7 @@ class WindowItem {
     static function _editColorSetValue(field:ColorFieldView, value:Color):Void {
 
         field.value = value;
-        field.windowItem().int1 = value;
+        field.windowItem.int1 = value;
 
     }
 
@@ -628,8 +627,8 @@ class WindowItem {
             }
         }
 
-        var previous = field.windowItem();
-        field.data = this;
+        var previous = field.windowItem;
+        field.windowItem = this;
         field.theme = theme;
 
         if (kind == EDIT_TEXT) {
@@ -711,26 +710,26 @@ class WindowItem {
 
     static function _editTextSetValue(field:BaseTextFieldView, value:String):Void {
 
-        field.windowItem().string1 = value;
+        field.windowItem.string1 = value;
 
     }
 
     static function _editTextSubmit(field:BaseTextFieldView):Void {
 
-        field.windowItem().bool1 = true;
+        field.windowItem.bool1 = true;
 
     }
 
     static function _editTextBlur(field:BaseTextFieldView):Void {
 
-        field.windowItem().bool3 = true;
+        field.windowItem.bool3 = true;
 
     }
 
     static function _editFloatSetTextValue(field:BaseTextFieldView, textValue:String):Void {
 
         if (!_editFloatOrIntOperations(field, textValue)) {
-            var item = field.windowItem();
+            var item = field.windowItem;
             var minValue = -999999999; // Allow lower value at this stage because we are typing
             var maxValue = item.float4;
             var round = item.int0;
@@ -741,7 +740,7 @@ class WindowItem {
 
     static function _editFloatSetEmptyValue(field:BaseTextFieldView):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var minValue = item.float3;
         var maxValue = item.float4;
         var round = item.int0;
@@ -751,7 +750,7 @@ class WindowItem {
 
     static function _editFloatSetValue(field:BaseTextFieldView, value:Dynamic):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var minValue = item.float3;
         var maxValue = item.float4;
         var floatValue:Float = value;
@@ -763,7 +762,7 @@ class WindowItem {
 
     static function _editFloatFinishEditing(field:BaseTextFieldView):Void {
 
-        var item = field.windowItem();
+        var item = field.windowItem;
         var minValue = item.float3;
         var maxValue = item.float4;
         var round = item.int0;
@@ -776,7 +775,7 @@ class WindowItem {
     static function _editIntSetTextValue(field:BaseTextFieldView, textValue:String):Void {
 
         if (!_editFloatOrIntOperations(field, textValue)) {
-            var item = field.windowItem();
+            var item = field.windowItem;
             var minValue = -999999999; // Allow lower value at this stage because we are typing
             var maxValue = Std.int(item.float4);
             SanitizeTextField.setTextValueToInt(field, textValue, minValue, maxValue);
@@ -786,7 +785,7 @@ class WindowItem {
 
     static function _editIntSetEmptyValue(field:BaseTextFieldView):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var minValue = Std.int(item.float3);
         var maxValue = Std.int(item.float4);
         item.int1 = SanitizeTextField.setEmptyToInt(field, minValue, maxValue);
@@ -795,7 +794,7 @@ class WindowItem {
 
     static function _editIntSetValue(field:BaseTextFieldView, value:Dynamic):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var minValue = item.float3;
         var maxValue = item.float4;
         var intValue:Int = value;
@@ -807,7 +806,7 @@ class WindowItem {
 
     static function _editIntFinishEditing(field:BaseTextFieldView):Void {
 
-        var item = field.windowItem();
+        var item = field.windowItem;
         var minValue = Std.int(item.float3);
         var maxValue = Std.int(item.float4);
         if (!SanitizeTextField.applyFloatOrIntOperationsIfNeeded(field, field.textValue, minValue, maxValue, true, 0)) {
@@ -881,8 +880,8 @@ class WindowItem {
             }
         }
 
-        var previous = field.windowItem();
-        field.data = this;
+        var previous = field.windowItem;
+        field.windowItem = this;
         field.theme = theme;
 
         if (kind == SLIDE_FLOAT) {
@@ -937,7 +936,7 @@ class WindowItem {
 
     static function _slideFloatSetValue(field:BaseTextFieldView, value:Float):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var sliderField:SliderFieldView = cast field;
         var minValue = item.float3;
         var maxValue = item.float4;
@@ -952,7 +951,7 @@ class WindowItem {
 
     static function _slideIntSetValue(field:BaseTextFieldView, value:Float):Void {
 
-        final item = field.windowItem();
+        final item = field.windowItem;
         var sliderField:SliderFieldView = cast field;
         var minValue = item.float3;
         var maxValue = item.float4;
@@ -1003,10 +1002,10 @@ class WindowItem {
         if (button.enabled != bool0) {
             button.enabled = bool0;
         }
-        button.data = this;
+        button.windowItem = this;
         if (justCreated) {
             button.onClick(null, function() {
-                var windowItem:WindowItem = button.hasData ? button.data : null;
+                var windowItem:WindowItem = button.windowItem;
                 if (windowItem != null) {
                     windowItem._buttonClick();
                 }
@@ -1040,12 +1039,12 @@ class WindowItem {
         list.duplicable = flags.bool(3);
         list.smallItems = flags.bool(4);
         list.items = any0;
-        list.data = this;
+        list.windowItem = this;
         list.selectedIndex = int0;
         list.theme = theme;
         if (justCreated) {
             list.onSelectedIndexChange(null, (selectedIndex, _) -> {
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     windowItem.int1 = selectedIndex;
                 }
@@ -1071,7 +1070,7 @@ class WindowItem {
                 }
                 list.selectedIndex = newSelectedIndex;
                 list.items = newItems;
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     windowItem.any1 = newItems;
                 }
@@ -1097,7 +1096,7 @@ class WindowItem {
                 }
                 list.selectedIndex = newSelectedIndex;
                 list.items = newItems;
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     windowItem.any1 = newItems;
                 }
@@ -1121,7 +1120,7 @@ class WindowItem {
                 }
                 list.selectedIndex = newSelectedIndex;
                 list.items = newItems;
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     windowItem.any1 = newItems;
                     var trashedList:Array<Dynamic> = windowItem.any2;
@@ -1141,7 +1140,7 @@ class WindowItem {
                         newItems.push(items[i]);
                     }
                 }
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     var justLockedList:Array<Dynamic> = windowItem.any3;
                     if (justLockedList == null) {
@@ -1160,7 +1159,7 @@ class WindowItem {
                         newItems.push(items[i]);
                     }
                 }
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     var justUnlockedList:Array<Dynamic> = windowItem.any4;
                     if (justUnlockedList == null) {
@@ -1173,7 +1172,7 @@ class WindowItem {
             list.onDuplicateItem(null, itemIndex -> {
                 var items = list.items;
                 var toDuplicate = items[itemIndex];
-                var windowItem:WindowItem = list.hasData ? list.data : null;
+                var windowItem:WindowItem = list.windowItem;
                 if (windowItem != null) {
                     var toDuplicateList:Array<Dynamic> = windowItem.any5;
                     if (toDuplicateList == null) {
@@ -1207,7 +1206,7 @@ class WindowItem {
             tabs = new TabsLayout();
         }
 
-        tabs.data = this;
+        tabs.windowItem = this;
 
         if (!Equal.equal(tabs.tabs, stringArray1)) {
             tabs.tabs = stringArray1;
@@ -1225,7 +1224,7 @@ class WindowItem {
         if (justCreated) {
 
             tabs.onSelectedIndexChange(null, (index, prevIndex) -> {
-                var windowItem:WindowItem = tabs.hasData ? tabs.data : null;
+                var windowItem:WindowItem = tabs.windowItem;
                 if (windowItem != null) {
                     if (index >= 0) {
                         windowItem.string1 = windowItem.stringArray0[index];
@@ -1242,14 +1241,6 @@ class WindowItem {
 
         return tabs;
 
-    }
-
-}
-
-private class WindowItemExtensions {
-
-    inline public static function windowItem(field:FieldView):WindowItem {
-        return field.hasData ? field.data : null;
     }
 
 }

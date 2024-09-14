@@ -40,6 +40,8 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
 /// Properties
 
+    #if ceramic_entity_data
+
     @:noCompletion var _data:Dynamic = null;
 
     public var hasData(get,never):Bool;
@@ -55,6 +57,8 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     function set_data(data:Dynamic):Dynamic {
         return _data = data;
     }
+
+    #end
 
     public var id:String = null;
 

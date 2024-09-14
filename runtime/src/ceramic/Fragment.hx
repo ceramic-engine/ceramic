@@ -318,6 +318,7 @@ class Fragment extends Layer {
             frag.depthRange = 1;
         }
 
+        #if ceramic_entity_data
         // Set name
         if (instance.data.name == null && item.name != null) instance.data.name = item.name;
 
@@ -327,6 +328,7 @@ class Fragment extends Layer {
                 Reflect.setField(instance.data, key, Reflect.field(item.data, key));
             }
         }
+        #end
 
         // Copy item properties
         if (item.props != null) {
@@ -529,9 +531,16 @@ class Fragment extends Layer {
     public function getItemInstanceByName(name:String):Entity {
 
         for (entity in entities) {
+            #if ceramic_entity_data
             if (entity.data.name == name) {
 
                 return entity;
+
+            }
+            else #end if (entity.id == name) {
+
+                return entity;
+
             }
         }
 
