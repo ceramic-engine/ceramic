@@ -28,9 +28,9 @@ class Triangle extends Mesh {
 
 /// Lifecycle
 
-    public function new() {
+    public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
-        super();
+        super(#if ceramic_debug_entity_allocs pos #end);
 
         vertices = [
             0.0, 0.0,
