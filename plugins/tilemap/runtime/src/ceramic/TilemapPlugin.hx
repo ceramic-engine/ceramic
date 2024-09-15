@@ -103,10 +103,12 @@ class TilemapPlugin {
      */
     public static function getTilemapParser(assets:Assets):TilemapParser {
 
-        var tilemapParser:TilemapParser = assets.data.tilemapParser;
+        final data = EntityData.data(assets);
+
+        var tilemapParser:TilemapParser = data.tilemapParser;
         if (tilemapParser == null) {
             tilemapParser = new TilemapParser();
-            assets.data.tilemapParser = tilemapParser;
+            data.tilemapParser = tilemapParser;
         }
         return tilemapParser;
 
@@ -119,10 +121,12 @@ class TilemapPlugin {
      */
     public static function getRawTsxCache(assets:Assets):Map<String,String> {
 
-        var rawTsxCache:Map<String,String> = assets.data.rawTsxCache;
+        final data = EntityData.data(assets);
+
+        var rawTsxCache:Map<String,String> = data.rawTsxCache;
         if (rawTsxCache == null) {
             rawTsxCache = new Map<String,String>();
-            assets.data.rawTsxCache = rawTsxCache;
+            data.rawTsxCache = rawTsxCache;
         }
         return rawTsxCache;
 
