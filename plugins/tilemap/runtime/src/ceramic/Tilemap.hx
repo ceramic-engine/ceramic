@@ -339,9 +339,52 @@ class Tilemap extends Quad {
     }
 
     /**
+     * Returns `true` if the tilemap has at least one tile at the given `x` and `y` position. Optionally query this for a specific layer instead of all layers.
+     */
+    public function hasTileAtPosition(x:Float, y:Float, ?layerName:String, checkWithComputedTiles:Bool = false):Bool {
+
+        var result:Bool = false;
+
+        var tilemapData = this.tilemapData;
+        if (tilemapData != null) {
+
+            var layers = this.layers;
+            if (layers != null) {
+                for (i in 0...layers.length) {
+                    var layer = layers.unsafeGet(i);
+                    var layerData = layer.layerData;
+                    if (layerData != null && (layerName == null || layerData.name == layerName)) {
+
+                        var tileWidth = layerData.tileWidth;
+                        var tileHeight = layerData.tileHeight;
+
+                        var offsetX = layerData.offsetX + layerData.x * tileWidth;
+                        var offsetY = layerData.offsetY + layerData.y * tileHeight;
+
+                        var column = Math.floor((x - offsetX) / tileWidth);
+                        var row = Math.floor((y - offsetY) / tileHeight);
+
+                        if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
+                            var tile = checkWithComputedTiles ? layerData.computedTileByColumnAndRow(column, row) : layerData.tileByColumnAndRow(column, row);
+                            var gid = tile.gid;
+                            if (gid > 0) {
+                                result = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+
+    }
+
+    /**
      * Returns `true` if the tilemap should collide at the given `x` and `y` position with an object going to the given `direction`.
      */
-    public function shouldCollideAtPosition(x:Float, y:Float, direction:arcade.Direction = NONE):Bool {
+    public function shouldCollideAtPosition(x:Float, y:Float, direction:arcade.Direction = NONE, ?layerName:String):Bool {
 
         var result:Bool = false;
 
@@ -356,7 +399,7 @@ class Tilemap extends Quad {
                 for (i in 0...computedCollidableLayers.length) {
                     var layer = computedCollidableLayers.unsafeGet(i);
                     var layerData = layer.layerData;
-                    if (layerData != null) {
+                    if (layerData != null && (layerName == null || layerData.name == layerName)) {
 
                         var tileWidth = layerData.tileWidth;
                         var tileHeight = layerData.tileHeight;
