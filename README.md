@@ -16,7 +16,7 @@ https://ceramic-engine.com
 
 Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as well as multiple libraries used internally, but is also possible thanks to the following works:
 
-* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by Sven Bergström** which was used as a transitional backend before `clay` backend was ready. Some snippets of Ceramic still directly come from `luxe`.
+* **[Luxe Engine (alpha)](https://luxeengine.com/alpha/) by ruby0x1** which was used as a transitional backend before `clay` backend was ready. Some snippets of Ceramic still directly come from `luxe`.
 
 * **[HaxeFlixel's FlxColor class](https://github.com/HaxeFlixel/flixel/blob/a59545015a65a42b8f24b08262ac80de020deb37/flixel/util/FlxColor.hx) by Joe Williamson** which was ported into  to `ceramic.Color` and `ceramic.AlphaColor` classes.
 
