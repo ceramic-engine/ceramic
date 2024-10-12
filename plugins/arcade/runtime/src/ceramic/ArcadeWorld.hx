@@ -1183,6 +1183,8 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             var offsetX = layerData.offsetX + layerData.x * tileWidth;
             var offsetY = layerData.offsetY + layerData.y * tileHeight;
 
+            Assert.assert(tileWidth > 0 && tileHeight > 0, 'Cannot collide or overlap with tilemap layer because tile size $tileWidth x $tileHeight is invalid');
+
             var tiles = layer.checkCollisionWithComputedTiles ? layerData.computedTiles : layerData.tiles;
             var checkCollisionValues = layer.checkCollisionValues;
 
