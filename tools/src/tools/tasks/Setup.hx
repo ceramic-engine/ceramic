@@ -62,6 +62,9 @@ class Setup extends tools.Task {
             // Get and run backend's setup task
             context.backend.runSetup(cwd, args, target, context.variant);
 
+            // Update context haxe paths
+            extractHaxePaths(cwd, args);
+
             // Update tasks?
             if (extractArgFlag(args, 'vscode')) {
 

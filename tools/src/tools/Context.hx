@@ -1,5 +1,7 @@
 package tools;
 
+import tools.HaxeLibrary;
+
 /** Current tools execution context */
 typedef Context = {
 
@@ -96,5 +98,11 @@ typedef Context = {
     /** If `true`, data will be printed line by line instead of as a single chunk of data.
         This is sometimes needed to prevent some truncated bug (seen in vscode + spawn) */
     var printSplitLines:Bool;
+
+    /** List of available haxe libraries in the current project */
+    var haxeLibraries:Array<HaxeLibrary>;
+
+    /** List of paths pointing to haxe files with current build settings */
+    var haxePaths:Array<String>;
 
 }

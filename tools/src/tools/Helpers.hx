@@ -64,7 +64,9 @@ class Helpers {
 
         // To get absolute path in haxe log output
         // Then, we process it to make it more readable, with colors etc...
-        //context.defines.set('absolute-path', '');
+        if (context.debug) {
+            context.defines.set('absolute-path', '');
+        }
 
         // Add target defines
         if (target != null && context.backend != null) {
@@ -93,6 +95,103 @@ class Helpers {
             }
         }
         context.defines.set('ceramic_extra_assets_paths', Json.stringify(Json.stringify(extraAssetsPaths)));
+
+    }
+
+    public static function extractHaxePaths(cwd:String, args:Array<String>):Void {
+
+        // Add backend-specific paths
+        var target = null;
+        var rawHxml = null;
+        if (context.backend != null) {
+
+            var availableTargets = context.backend.getBuildTargets();
+            var targetName = getTargetName(args, availableTargets);
+
+            if (targetName != null) {
+                // Find target from name
+                //
+                for (aTarget in availableTargets) {
+
+                    if (aTarget.name == targetName) {
+                        target = aTarget;
+                        break;
+                    }
+
+                }
+            }
+
+            if (target != null) {
+                rawHxml = context.backend.getHxml(cwd, args, target, context.variant);
+            }
+        }
+
+        if (rawHxml != null) {
+            // Use HXML to know which haxe paths we link to
+            var hxmlOriginalCwd = context.backend.getHxmlCwd(cwd, args, target, context.variant);
+
+            // Let plugins extend HXML
+            for (plugin in context.plugins) {
+                if (plugin.extendCompletionHxml != null) {
+
+                    var prevBackend = context.backend;
+                    context.backend = plugin.backend;
+
+                    plugin.extendCompletionHxml(rawHxml);
+
+                    context.backend = prevBackend;
+                }
+            }
+
+            // Walk through HXML data
+            var hxmlData = tools.Hxml.parse(rawHxml);
+            var haxePaths = [];
+
+            var i = 0;
+            while (i < hxmlData.length - 1) {
+                var arg = hxmlData[i];
+                if (arg == '-cp' || arg == '--class-path') {
+                    i++;
+                    var path = hxmlData[i];
+                    if (!Path.isAbsolute(path)) {
+                        path = Path.normalize(Path.join([hxmlOriginalCwd, path]));
+                        if (FileSystem.exists(path) && FileSystem.isDirectory(path)) {
+                            haxePaths.push(path);
+                        }
+                    }
+                }
+                else if (arg == '-lib' || arg == '--library') {
+                    i++;
+                    var rawLibName = hxmlData[i];
+                    var colonIndex = rawLibName.indexOf(':');
+                    var libName = rawLibName;
+                    var libVersion = null;
+                    if (colonIndex != -1) {
+                        libName = rawLibName.substring(0, colonIndex);
+                        libVersion = rawLibName.substring(colonIndex + 1);
+                    }
+                    var haxeLibrary = null;
+                    for (item in context.haxeLibraries) {
+                        if (item.name == libName) {
+                            haxeLibrary = item;
+                            break;
+                        }
+                    }
+                    if (haxeLibrary != null) {
+                        for (path in resolveLibraryHaxePaths(cwd, haxeLibrary, libVersion)) {
+                            haxePaths.push(path);
+                        }
+                    }
+                }
+
+                i++;
+            }
+
+            context.haxePaths = haxePaths;
+        }
+        else {
+            context.haxePaths = [];
+        }
 
     }
 
@@ -394,6 +493,94 @@ class Helpers {
     public static function commandExists(name:String):Bool {
 
         return npm.CommandExists.existsSync(name);
+
+    }
+
+    public static function resolveAvailableHaxeLibraries(cwd:String):Array<HaxeLibrary> {
+
+        var haxelibRepoPath = Path.join([cwd, '.haxelib']);
+        var result:Array<HaxeLibrary> = [];
+
+        if (FileSystem.exists(haxelibRepoPath) && FileSystem.isDirectory(haxelibRepoPath)) {
+            for (libPath in FileSystem.readDirectory(haxelibRepoPath)) {
+                var fullLibPath = Path.join([haxelibRepoPath, libPath]);
+                if (FileSystem.isDirectory(fullLibPath)) {
+                    var devPath = Path.join([fullLibPath, '.dev']);
+                    var currentPath = Path.join([fullLibPath, '.current']);
+
+                    var lib:HaxeLibrary = {
+                        name: libPath,
+                        dev: FileSystem.exists(devPath) ? File.getContent(devPath).trim() : null,
+                        current: FileSystem.exists(currentPath) ? File.getContent(currentPath).trim() : null,
+                        versions: []
+                    };
+
+                    for (versionPath in FileSystem.readDirectory(fullLibPath)) {
+                        if (versionPath != '.dev' && fullLibPath != '.current') {
+                            lib.versions.push(versionPath);
+                        }
+                    }
+
+                    result.push(lib);
+                }
+            }
+        }
+
+        return result;
+
+    }
+
+    public static function resolveLibraryHaxePaths(cwd:String, lib:HaxeLibrary, version:String):Array<String> {
+
+        var result = [];
+        var libVersionPath = null;
+
+        if (version == null || version.trim().length == 0) {
+            version = lib.current;
+            if (version == null && lib.dev != null && lib.dev.trim().length > 0) {
+                version = 'dev';
+            }
+        }
+
+        if (version != null && version.trim().length > 0) {
+            if (version == 'dev') {
+                libVersionPath = lib.dev;
+            }
+            else {
+                libVersionPath = version;
+            }
+        }
+
+        if (libVersionPath != null) {
+            if (!Path.isAbsolute(libVersionPath)) {
+                libVersionPath = Path.join([cwd, '.haxelib', lib.name, libVersionPath.replace('.', ',')]);
+            }
+            if (fileExists(libVersionPath)) {
+                var haxelibJsonPath = Path.join([libVersionPath, 'haxelib.json']);
+                if (fileExists(haxelibJsonPath)) {
+                    try {
+                        var haxelibJson = Json.parse(File.getContent(haxelibJsonPath));
+                        if (haxelibJson.classPath != null) {
+                            var classPath = Path.join([libVersionPath, haxelibJson.classPath]);
+                            if (fileExists(classPath)) {
+                                result.push(classPath);
+                            }
+                            else {
+                                result.push(libVersionPath);
+                            }
+                        }
+                    }
+                    catch (e:Dynamic) {
+                        result.push(libVersionPath);
+                    }
+                }
+                else {
+                    result.push(libVersionPath);
+                }
+            }
+        }
+
+        return result;
 
     }
 
@@ -912,10 +1099,57 @@ class Helpers {
             if (name.endsWith('.hx')) {
                 name = name.substring(0, name.length - 3);
             }
-            return '\u001b]8;;${vscodePath}\u001b\\${name}:${line}\u001b]8;;\u001b\\';
+            if (fileExists(absolutePath)) {
+                return '\u001b]8;;${vscodePath}\u001b\\${name}:${line}\u001b]8;;\u001b\\';
+            }
+            else {
+                return Colors.gray('${name}:${line}');
+            }
         }
 
         return path + ':' + line;
+
+    }
+
+    public static function fileExists(path:String):Bool {
+
+        static var existCache = new Map<String,Bool>();
+
+        var result = false;
+
+        if (existCache.exists(path)) {
+            result = existCache.get(path) == true;
+        }
+        else {
+            result = FileSystem.exists(path);
+            existCache.set(path, result);
+        }
+
+        return result;
+
+    }
+
+    public static function resolveAbsolutePath(cwd:String, relativePath:String):String {
+
+        if (Path.isAbsolute(relativePath)) {
+            return relativePath;
+        }
+
+        var resolvedPath = Path.normalize(Path.join([cwd, relativePath]));
+
+        if (!fileExists(resolvedPath)) {
+            if (context.haxePaths != null) {
+                for (haxePath in context.haxePaths) {
+                    var testPath = Path.normalize(Path.join([haxePath, relativePath]));
+                    if (fileExists(testPath)) {
+                        resolvedPath = testPath;
+                        break;
+                    }
+                }
+            }
+        }
+
+        return resolvedPath;
 
     }
 
@@ -931,7 +1165,7 @@ class Helpers {
         if (RE_HAXE_ERROR.match(input)) {
             var relativePath = RE_HAXE_ERROR.matched(1);
             var lineNumber = RE_HAXE_ERROR.matched(2);
-            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : resolveAbsolutePath(cwd, relativePath);
             var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.vscode) {
                 var charsBefore = 'characters ' + RE_HAXE_ERROR.matched(4) + '-' + RE_HAXE_ERROR.matched(5);
@@ -953,7 +1187,7 @@ class Helpers {
             var symbol = RE_STACK_FILE_LINE.matched(1);
             var relativePath = RE_STACK_FILE_LINE.matched(2);
             var lineNumber = RE_STACK_FILE_LINE.matched(3);
-            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : resolveAbsolutePath(cwd, relativePath);
             var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.colors) {
                 input = input.replace(RE_STACK_FILE_LINE.matched(0), '$symbol '.red() + formatFileLink(finalPath, lineNumber).gray());
@@ -965,7 +1199,7 @@ class Helpers {
             var symbol = RE_STACK_FILE_LINE_BIS.matched(1);
             var relativePath = RE_STACK_FILE_LINE_BIS.matched(2);
             var lineNumber = RE_STACK_FILE_LINE_BIS.matched(3);
-            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : resolveAbsolutePath(cwd, relativePath);
             var finalPath = simplifyAbsolutePath(absolutePath);
             if (context.colors) {
                 input = input.replace(RE_STACK_FILE_LINE_BIS.matched(0), '$symbol '.red() + formatFileLink(finalPath, lineNumber).gray());
@@ -976,7 +1210,7 @@ class Helpers {
         else if (RE_TRACE_FILE_LINE.match(input)) {
             var relativePath = RE_TRACE_FILE_LINE.matched(1);
             var lineNumber = RE_TRACE_FILE_LINE.matched(2);
-            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : Path.normalize(Path.join([cwd, relativePath]));
+            var absolutePath = Path.isAbsolute(relativePath) ? relativePath : resolveAbsolutePath(cwd, relativePath);
             var finalPath = simplifyAbsolutePath(absolutePath);
             input = input.replace(RE_TRACE_FILE_LINE.matched(0), '');
             if (context.colors) {

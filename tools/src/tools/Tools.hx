@@ -71,7 +71,9 @@ class Tools {
             ceramicVersion: null,
             assetsChanged: false,
             iconsChanged: false,
-            printSplitLines: (args.indexOf('--print-split-lines') != -1)
+            printSplitLines: (args.indexOf('--print-split-lines') != -1),
+            haxePaths: [],
+            haxeLibraries: []
         };
 
         // Check if we are embedded in electron
@@ -186,6 +188,9 @@ class Tools {
             args.splice(index, 2);
         }
 
+        // Available libraries
+        context.haxeLibraries = resolveAvailableHaxeLibraries(cwd);
+
         // Variant
         index = args.indexOf('--variant');
         if (index != -1) {
@@ -279,6 +284,9 @@ class Tools {
 
                 // Extract defines (if any)
                 extractDefines(cwd, args);
+
+                // Extract haxe paths (if any)
+                extractHaxePaths(cwd, args);
 
                 // Set correct task
                 context.rootTask = task;

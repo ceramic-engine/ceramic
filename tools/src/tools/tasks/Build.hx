@@ -87,6 +87,9 @@ class Build extends tools.Task {
             checkProjectHaxelibSetup(cwd, args);
             installMissingLibsIfNeeded(cwd, args, project);
             context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
+
+            // Update context haxe paths
+            extractHaxePaths(cwd, args);
         }
 
         // Update assets, if needed
