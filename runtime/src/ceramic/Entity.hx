@@ -441,6 +441,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 #end
 
         var _autorun = new Autorun(run, afterRun #if (ceramic_debug_entity_allocs && tracker_debug_entity_allocs) , pos #end);
+        _autorun.owner = this;
         run = null;
         afterRun = null;
 

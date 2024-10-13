@@ -720,6 +720,12 @@ class EntityMacro {
                                                         isArray = tStr.endsWith('Array');
                                                         isMap = tStr.endsWith('Map');
                                                     }
+                                                case TInst(t, params):
+                                                    final tStr = t.toString();
+                                                    if (params.length > 0) {
+                                                        isArray = tStr.endsWith('Array');
+                                                        isMap = tStr.endsWith('Map');
+                                                    }
                                                 case _:
                                             }
                                             if (isArray) {
