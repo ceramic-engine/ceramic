@@ -361,9 +361,9 @@ class Asset extends Entity implements Observable {
         var className = className();
 
         if (path != null && path.trim() != '') {
-            return '$className($name $path)';
+            return '$className($fullName $path)';
         } else {
-            return '$className($name)';
+            return '$className($fullName)';
         }
 
     }

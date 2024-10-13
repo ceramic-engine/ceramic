@@ -517,14 +517,14 @@ class Assets extends Entity {
         asset.offDestroy(assetDestroyed);
 
         var byName = assetsByKindAndName.get(asset.kind);
-        var toRemove = byName.get(asset.name);
+        var toRemove = byName.get(asset.fullName);
 
         if (asset != toRemove) {
-            throw 'Cannot remove asset $asset if it was not added at the first place.';
+            throw 'Cannot remove asset $asset if it was not added at the first place (existing: $toRemove).';
         }
 
         addedAssets.remove(asset);
-        byName.remove(asset.name);
+        byName.remove(asset.fullName);
         asset.owner = null;
 
     }
