@@ -3058,7 +3058,7 @@ class LdtkLayerInstance {
 
                 var entityInstancesJson:Array<Dynamic> = json.get('entityInstances');
                 entityInstances = entityInstancesJson != null ? [for (i in 0...entityInstancesJson.length) {
-                    ldtkData._resolveEntityInstance(entityInstancesJson[i], ldtkWorld);
+                    ldtkData._resolveEntityInstance(entityInstancesJson[i], ldtkWorld, this);
                 }] : null;
             }
 
