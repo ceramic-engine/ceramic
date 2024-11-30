@@ -15,7 +15,7 @@ class IntMap<V> {
 
     inline static var RESERVED_GAP = 2;
 
-    static final RET_NULL:V = null;
+    static final RET_NULL:Any = null;
 
     var _keys:IntIntMap;
 
