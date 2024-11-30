@@ -6,17 +6,30 @@ import ceramic.Path;
 
 using ceramic.Extensions;
 
+/**
+ * A bitmap font implementation that handles both regular bitmap fonts and MSDF (Multi-channel Signed Distance Field) fonts.
+ * This class manages font textures, character data, kerning, and optional pre-rendering of characters.
+ * It supports multiple texture pages and custom shaders, particularly useful for MSDF fonts.
+ */
 class BitmapFont extends Entity {
 
     /**
-     * The map of font texture pages to their id.
+     * Maps texture page IDs to their corresponding textures.
+     * A bitmap font can span multiple texture pages to accommodate large character sets.
      */
     public var pages:IntMap<Texture> = new IntMap(16, 0.5, true);
 
     /**
-     * The bitmap font fontData.
+     * The core data structure containing all font information including
+     * character metrics, kerning data, and texture coordinates.
      */
     private var fontData(default, set):BitmapFontData;
+
+    /**
+     * Updates font data and initializes special characters like space and no-break space.
+     * @param fontData The new font data to set
+     * @return The updated font data
+     */
     function set_fontData(fontData:BitmapFontData) {
 
         this.fontData = fontData;
@@ -63,38 +76,51 @@ class BitmapFont extends Entity {
     inline function get_kernings():IntMap<IntFloatMap> { return fontData.kernings; }
     inline function set_kernings(kernings:IntMap<IntFloatMap>):IntMap<IntFloatMap> { return fontData.kernings = kernings; }
 
+    /**
+     * Indicates if this font is an MSDF (Multi-channel Signed Distance Field) font.
+     * MSDF fonts provide superior scaling quality compared to regular bitmap fonts.
+     */
     public var msdf(get,never):Bool;
     inline function get_msdf():Bool { return fontData.distanceField != null && fontData.distanceField.fieldType == 'msdf'; }
 
     /**
-     * Cached reference of the ' '(32) character, for sizing on tabs/spaces
+     * Cached reference to the space character (ASCII 32).
+     * Used for efficient spacing calculations in text rendering.
      */
     public var spaceChar:BitmapFontCharacter;
 
     /**
-     * Shaders used to render the characters. If null, uses default shader.
-     * When loading MSDF fonts, ceramic's MSDF shader will be assigned here.
-     * Stored per page
+     * Custom shaders used for rendering characters, stored per texture page.
+     * Automatically set up for MSDF fonts using ceramic's MSDF shader.
      */
     public var pageShaders:Map<Int,Shader> = null;
 
     /**
-     * When using MSDF fonts, or fonts with custom shaders, it is possible to pre-render characters
-     * onto a RenderTexture to use it like a regular texture later with default shader.
-     * Useful in some situations to reduce draw calls.
+     * Pre-rendered textures for different font sizes, stored per page and size.
+     * Used to optimize rendering performance by caching commonly used sizes.
      */
     public var preRenderedPages:Map<Int,Map<Int,Texture>> = null;
 
     /**
-     * When a page is being pre-rendered, it will be referenced here, until the rendering is finished.
-     * This is needed to prevent parallel renders of the same requested texture, giving us unexpected duplicate textures
+     * Internal tracking of ongoing pre-render operations.
+     * Prevents duplicate rendering requests for the same texture.
      */
     var _preRenderingPages:Map<Int,Map<Int,Array<Void->Void>>> = null;
 
+    /**
+     * Reference to the asset that created this font.
+     * Used for proper resource management.
+     */
     public var asset:Asset;
 
 /// Lifecycle
 
+    /**
+     * Creates a new BitmapFont instance.
+     * @param fontData The font data containing metrics and character information
+     * @param pages A map of texture file paths to their corresponding textures
+     * @throws String if fontData or pages are null
+     */
     public function new(fontData:BitmapFontData, pages:Map<String,Texture>) {
 
         super();
@@ -135,6 +161,10 @@ class BitmapFont extends Entity {
 
     }
 
+    /**
+     * Cleans up all resources associated with this font including textures,
+     * shaders, and pre-rendered pages.
+     */
     override function destroy() {
 
         super.destroy();
@@ -171,6 +201,11 @@ class BitmapFont extends Entity {
 
 /// Public API
 
+    /**
+     * Checks if the font needs to be pre-rendered at a specific pixel size.
+     * @param pixelSize The target size in pixels
+     * @return True if pre-rendering is needed, false otherwise
+     */
     public function needsToPreRenderAtSize(pixelSize:Int):Bool {
 
         if (preRenderedPages == null || !preRenderedPages.exists(pixelSize))
@@ -186,6 +221,12 @@ class BitmapFont extends Entity {
 
     }
 
+    /**
+     * Pre-renders the font at a specific pixel size.
+     * Useful for optimizing rendering performance for frequently used sizes.
+     * @param pixelSize The target size in pixels
+     * @param done Callback function called when pre-rendering is complete
+     */
     public function preRenderAtSize(pixelSize:Int, done:Void->Void):Void {
 
         var numPending = 0;
@@ -204,6 +245,12 @@ class BitmapFont extends Entity {
 
     }
 
+    /**
+     * Internal method to pre-render a specific texture page at given size.
+     * @param id The texture page ID
+     * @param pixelsSize The target size in pixels
+     * @param done Callback function called when pre-rendering is complete
+     */
     function preRenderPage(id:Int, pixelsSize:Int, done:Void->Void):Void {
 
         if (preRenderedPages == null) {
@@ -296,8 +343,11 @@ class BitmapFont extends Entity {
     }
 
     /**
-     * Returns the kerning between two glyphs, or 0 if none.
-     * A glyph int id is the value from 'c'.charCodeAt(0)
+     * Gets the kerning amount between two characters.
+     * Kerning improves text appearance by adjusting the space between specific character pairs.
+     * @param first The character code of the first glyph
+     * @param second The character code of the second glyph
+     * @return The kerning amount (0 if no kerning is defined)
      */
     public inline function kerning(first:Int, second:Int) {
 

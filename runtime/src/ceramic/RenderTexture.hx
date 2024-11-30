@@ -34,6 +34,8 @@ class RenderTexture extends Texture {
 
     public var priority(default, null):Float = 0;
 
+    @:noCompletion public var incomingEdges:Int = 0;
+
     #if ceramic_texture_first_stamp_prerender
     var _didStampOnce:Bool = false;
     #end

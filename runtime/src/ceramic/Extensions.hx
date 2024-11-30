@@ -1,7 +1,8 @@
 package ceramic;
 
+#if cs
 import haxe.io.Bytes;
-import tracker.Autorun;
+#end
 
 /**
  * A bunch of static extensions to make life easier.

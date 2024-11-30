@@ -153,21 +153,43 @@ class App extends Entity {
      */
     @event function terminate();
 
-/// Immediate update event, custom implementation
+/// Immediate update system
 
+    /**
+     * Array of callbacks to be executed immediately before the next frame.
+     * These callbacks are guaranteed to run before visual updates and rendering.
+     */
     var immediateCallbacks:Array<Void->Void> = [];
 
+    /**
+     * Current capacity of immediate callbacks array to optimize array operations
+     */
     var immediateCallbacksCapacity:Int = 0;
 
+    /**
+     * Current number of pending immediate callbacks
+     */
     var immediateCallbacksLen:Int = 0;
 
+    /**
+     * Array of callbacks to be executed after all immediate callbacks are done
+     */
     var postFlushImmediateCallbacks:Array<Void->Void> = [];
 
+    /**
+     * Current capacity of post flush immediate callbacks array
+     */
     var postFlushImmediateCallbacksCapacity:Int = 0;
 
+    /**
+     * Current number of pending post flush immediate callbacks
+     */
     var postFlushImmediateCallbacksLen:Int = 0;
 
 #if ceramic_use_component_initializers
+    /**
+     * Map of component initializers used to create components from serialized data
+     */
     public var componentInitializers:Map<String,Array<Dynamic>->Component> = new Map();
 #end
 
@@ -357,12 +379,28 @@ class App extends Entity {
 
     }
 
+    /**
+     * Extended updates system that allows scheduling callbacks after X update frames.
+     * Provides a pooled handler system to efficiently manage delayed callbacks.
+     */
     var _xUpdatesHandlersPool:Pool<AppXUpdatesHandler> = new Pool<AppXUpdatesHandler>();
 
+    /**
+     * Active handlers for the extended updates system
+     */
     var _xUpdatesHandlers:Array<AppXUpdatesHandler> = [];
 
+    /**
+     * Temporary array to store callbacks that need to be called immediately
+     */
     var _xUpdatesToCallNow:Array<Void->Void> = [];
 
+    /**
+     * Schedule a callback to be executed after a specific number of update frames.
+     * @param owner The entity that owns this callback (used to prevent execution if owner is destroyed)
+     * @param numUpdates Number of update frames to wait before executing the callback
+     * @param callback The function to execute after numUpdates frames
+     */
     public function onceXUpdates(owner:Entity, numUpdates:Int, callback:Void->Void):Void {
 
         var handler = _xUpdatesHandlersPool.get();
@@ -386,6 +424,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Remove a previously scheduled extended update callback
+     * @param callback The callback to remove
+     */
     public function offXUpdates(callback:Void->Void):Void {
 
         var needsClean = false;
@@ -405,6 +447,9 @@ class App extends Entity {
 
     }
 
+    /**
+     * Internal method to handle execution of extended update callbacks
+     */
     function tickOnceXUpdates():Void {
 
         var numToCall = 0;
@@ -755,6 +800,15 @@ class App extends Entity {
 
     }
 
+    /**
+     * When backend is ready, initialize core systems and load default assets.
+     * Steps:
+     * 1. Initialize persistent data and text input
+     * 2. Bind settings
+     * 3. Run pre-init callbacks
+     * 4. Initialize field converters and collections
+     * 5. Load default shaders, fonts and textures
+     */
     function backendReady():Void {
 
         backend.onUpdate(this, updatePreReady);
@@ -854,6 +908,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Bind app settings to their corresponding backend implementations.
+     * Currently handles FPS target synchronization.
+     */
     function bindSettings():Void {
 
         settings.onTargetFpsChange(this, function(targetFps, prevTargetFps) {
@@ -865,6 +923,13 @@ class App extends Entity {
 
     }
 
+    /**
+     * Initialize all field converters used to transform field data in Fragment instances.
+     * Registers default converters for common types like:
+     * - Textures, Fonts, Colors
+     * - Maps and Arrays
+     * - Components
+     */
     function initFieldConverters():Void {
 
         converters.set('ceramic.Texture', new ConvertTexture());
@@ -887,6 +952,12 @@ class App extends Entity {
 
     }
 
+    /**
+     * Initialize collections from app info configuration.
+     * Loads collection data from assets and instantiates collection entries.
+     * @param collections The collections container
+     * @param info Optional info object containing collection definitions
+     */
     function initCollections(collections:AutoCollections, ?info:Dynamic):Void {
 
         if (info == null)
@@ -950,12 +1021,20 @@ class App extends Entity {
 
     }
 
+    /**
+     * Called when all default assets are loaded.
+     * Proceeds with running any pending loaders.
+     */
     function assetsLoaded():Void {
 
         runNextLoader();
 
     }
 
+    /**
+     * Run pending loaders sequentially until none remain,
+     * then trigger app ready state.
+     */
     function runNextLoader():Void {
 
         if (loaders.length > 0) {
@@ -973,6 +1052,14 @@ class App extends Entity {
     static var _entities:Array<Entity> = [];
     #end
 
+    /**
+     * Initialize app ready state:
+     * - Run platform specific initialization
+     * - Setup debug entity tracking if enabled
+     * - Configure screen
+     * - Setup update/render pipeline
+     * - Configure input handling
+     */
     function runReady():Void {
 
         // Platform specific code (which is not in backend code)
@@ -1087,6 +1174,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Update method called before the app is fully ready.
+     * Handles basic asset and immediate callback processing.
+     */
     function updatePreReady(delta:Float):Void {
 
         #if sys
@@ -1102,6 +1193,16 @@ class App extends Entity {
     var _pendingFinishDraw:Bool = false;
     #end
 
+    /**
+     * Main update method called every frame once the app is ready.
+     * Handles:
+     * - Frame timing and FPS management
+     * - System updates
+     * - Input processing
+     * - Visual hierarchy updates
+     * - Entity lifecycle
+     * @param realDelta Actual time elapsed since last frame
+     */
     function update(realDelta:Float):Void {
 
         #if ceramic_pending_finish_draw
@@ -1241,6 +1342,14 @@ class App extends Entity {
 
     }
 
+    /**
+     * Main render method called every frame.
+     * Handles the complete rendering pipeline:
+     * - Begins draw phase
+     * - Renders all visible visuals
+     * - Ends draw phase
+     * - Handles display buffer swapping
+     */
     function render():Void {
 
         // Begin draw
@@ -1264,6 +1373,11 @@ class App extends Entity {
 
     }
 
+    /**
+     * Add a visual to be managed by the app.
+     * Visual will be added to the update/render pipeline at the
+     * end of the update step of current frame, before rendering.
+     */
     @:noCompletion
     inline public function addVisual(visual:Visual):Void {
 
@@ -1271,6 +1385,11 @@ class App extends Entity {
 
     }
 
+    /**
+     * Remove a visual from app management.
+     * Visual will be removed from update/render pipeline at the
+     * end of the update step of current frame, before rendering.
+     */
     @:noCompletion
     inline public function removeVisual(visual:Visual):Void {
 
@@ -1278,6 +1397,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Synchronize pending visuals into the main visuals list.
+     * @return True if any visuals were synchronized
+     */
     function syncPendingVisuals():Bool {
 
         if (pendingVisuals.length > 0) {
@@ -1297,6 +1420,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Remove destroyed visuals from the main visuals list.
+     * Uses an efficient gap-closing algorithm to maintain array density.
+     */
     function syncDestroyedVisuals():Void {
 
         if (destroyedVisuals.length > 0) {
@@ -1339,6 +1466,14 @@ class App extends Entity {
 
     }
 
+    /**
+     * Update all managed visuals, handling:
+     * - Touch state
+     * - Content updates
+     * - Transform changes
+     * - Render target dependencies
+     * - Visibility state
+     */
     @:noCompletion
     #if (!debug && !ceramic_debug_perf) inline #end public function updateVisuals(visuals:Array<Visual>) {
 
@@ -1477,6 +1612,10 @@ class App extends Entity {
 
     }
 
+    /**
+     * Recompute visual hierarchy when depth values have changed.
+     * Updates computed depth values for all visuals and their children.
+     */
     @:noCompletion
     public function computeHierarchy() {
 
@@ -1503,35 +1642,97 @@ class App extends Entity {
 
     }
 
-    @:noCompletion
-    #if (!debug && !ceramic_debug_perf) inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
+    /**
+     * An array queue used to sort render textures based on their priority before computing them.
+     * Not meant to be accessed directly.
+     */
+    @:noCompletion private var _computeRenderTexturesPriorityQueue:Array<RenderTexture> = [];
 
-        if (renderTextures.length == 0)
+    /**
+     * Compute render texture priorities to handle proper rendering order
+     * when textures depend on each other.
+     * Uses Kahn's algorithm for topological sorting.
+     * @param renderTextures Array of render textures to process
+     */
+    @:noCompletion
+    #if (!debug && !ceramic_debug_perf) inline #end
+    public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
+
+        final len = renderTextures.length;
+
+        if (len == 0)
             return;
 
-        // Not so sure about the robustness of this in some edge cases,
-        // but this 2-pass walk to update priorities works better than stable sort
-        var len = renderTextures.length;
+        // Reset priorities and incoming edges
         for (i in 0...len) {
             var renderTexture = renderTextures.unsafeGet(i);
             renderTexture.priority = 0;
+            renderTexture.incomingEdges = 0;
         }
-        for (n in 0...2) {
+
+        // Count dependencies
+        for (i in 0...len) {
+            var a = renderTextures.unsafeGet(i);
+            for (j in 0...len) {
+                var b = renderTextures.unsafeGet(j);
+                if (a.dependsOnTexture(b)) {
+                    a.incomingEdges++;
+                }
+            }
+        }
+
+        // Start with nodes that have no dependencies
+        var queueLength = 0;
+        for (i in 0...len) {
+            var texture = renderTextures.unsafeGet(i);
+            if (texture.incomingEdges == 0) {
+                _computeRenderTexturesPriorityQueue[queueLength++] = texture;
+            }
+        }
+
+        // Process queue
+        var currentPriority = 0;
+        var queueIndex = 0;
+        while (queueIndex < queueLength) {
+            var current = _computeRenderTexturesPriorityQueue[queueIndex++];
+            current.priority = currentPriority++;
+
+            // Update priorities of textures that depend on current
             for (i in 0...len) {
-                var a = renderTextures.unsafeGet(i);
-                for (j in 0...len) {
-                    var b = renderTextures.unsafeGet(j);
-                    if (a.dependsOnTexture(b) && b.priority <= a.priority) {
-                        b.priority = a.priority + 1;
+                var texture = renderTextures.unsafeGet(i);
+                if (texture.dependsOnTexture(current)) {
+                    var edges = texture.incomingEdges - 1;
+                    texture.incomingEdges = edges;
+                    if (edges == 0) {
+                        _computeRenderTexturesPriorityQueue[queueLength++] = texture;
                     }
                 }
             }
         }
 
+        // Handle any remaining cyclic dependencies by assigning incrementing priorities
+        for (i in 0...len) {
+            var texture = renderTextures.unsafeGet(i);
+            if (texture.incomingEdges > 0) {
+                texture.priority = currentPriority++;
+            }
+        }
+
+        // Clear queue array references
+        for (i in 0...queueLength) {
+            _computeRenderTexturesPriorityQueue[i] = null;
+        }
+
     }
 
+    /**
+     * Sort visuals based on their computed depth and other properties.
+     * Emits events before and after sorting to allow custom sorting tweaks.
+     * @param visuals Array of visuals to sort
+     */
     @:noCompletion
-    #if (!debug && !ceramic_debug_perf) inline #end public function sortVisuals(visuals:Array<Visual>) {
+    #if (!debug && !ceramic_debug_perf) inline #end
+    public function sortVisuals(visuals:Array<Visual>) {
 
         // Emit event before sorting visuals (last moment we can tweak visuals sorting)
         emitBeginSortVisuals();
