@@ -1648,6 +1648,7 @@ class App extends Entity {
      */
     @:noCompletion private var _computeRenderTexturesPriorityQueue:Array<RenderTexture> = [];
 
+    #if ceramic_new_texture_priority_sort
     /**
      * Compute render texture priorities to handle proper rendering order
      * when textures depend on each other.
@@ -1670,13 +1671,14 @@ class App extends Entity {
             renderTexture.incomingEdges = 0;
         }
 
-        // Count dependencies
+        // Count dependencies - REVERSED from before
         for (i in 0...len) {
             var a = renderTextures.unsafeGet(i);
             for (j in 0...len) {
                 var b = renderTextures.unsafeGet(j);
+                // When A depends on B, increment B's incoming edges
                 if (a.dependsOnTexture(b)) {
-                    a.incomingEdges++;
+                    b.incomingEdges++;
                 }
             }
         }
@@ -1697,10 +1699,11 @@ class App extends Entity {
             var current = _computeRenderTexturesPriorityQueue[queueIndex++];
             current.priority = currentPriority++;
 
-            // Update priorities of textures that depend on current
+            // Look for textures that this one depends on
             for (i in 0...len) {
                 var texture = renderTextures.unsafeGet(i);
-                if (texture.dependsOnTexture(current)) {
+                // When current depends on texture, decrement texture's edges
+                if (current.dependsOnTexture(texture)) {
                     var edges = texture.incomingEdges - 1;
                     texture.incomingEdges = edges;
                     if (edges == 0) {
@@ -1710,7 +1713,7 @@ class App extends Entity {
             }
         }
 
-        // Handle any remaining cyclic dependencies by assigning incrementing priorities
+        // Handle remaining cyclic dependencies
         for (i in 0...len) {
             var texture = renderTextures.unsafeGet(i);
             if (texture.incomingEdges > 0) {
@@ -1722,8 +1725,38 @@ class App extends Entity {
         for (i in 0...queueLength) {
             _computeRenderTexturesPriorityQueue[i] = null;
         }
+    }
+
+    #else
+
+    @:noCompletion
+    #if (!debug && !ceramic_debug_perf) inline #end public function computeRenderTexturesPriority(renderTextures:Array<RenderTexture>) {
+
+        if (renderTextures.length == 0)
+            return;
+
+        // Not so sure about the robustness of this in some edge cases,
+        // but this 2-pass walk to update priorities works better than stable sort
+        var len = renderTextures.length;
+        for (i in 0...len) {
+            var renderTexture = renderTextures.unsafeGet(i);
+            renderTexture.priority = 0;
+        }
+        for (n in 0...2) {
+            for (i in 0...len) {
+                var a = renderTextures.unsafeGet(i);
+                for (j in 0...len) {
+                    var b = renderTextures.unsafeGet(j);
+                    if (a.dependsOnTexture(b) && b.priority <= a.priority) {
+                        b.priority = a.priority + 1;
+                    }
+                }
+            }
+        }
 
     }
+
+    #end
 
     /**
      * Sort visuals based on their computed depth and other properties.
