@@ -2,15 +2,16 @@ package ceramic.macros;
 
 #if macro
 
-import haxe.macro.Context;
+import haxe.Json;
+import haxe.Serializer;
+import haxe.Unserializer;
+import haxe.crypto.Md5;
+import haxe.io.Path;
 import haxe.macro.Compiler;
+import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.TypeTools;
 import haxe.macro.TypedExprTools;
-import haxe.Serializer;
-import haxe.Unserializer;
-import haxe.io.Path;
-import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -39,10 +40,11 @@ class ExportApi {
             return;
         }
 
-        var ceramicRootPath = Context.definedValue('ceramic_root_path');
+        var ceramicRootPath = DefinesMacro.jsonDefinedValue('ceramic_root_path');
         if (ceramicRootPath == null) {
             return;
         }
+        ceramicRootPath = Json.parse(Json.parse(ceramicRootPath)));
         var allApiPath = Path.join([ceramicRootPath, 'runtime', 'src', 'ceramic', 'AllApi.hx']);
         var allApiContent = File.getContent(allApiPath);
 
@@ -142,7 +144,7 @@ class ExportApi {
             dts.add('var y: number;\n');
             dts.add('var z: number;\n');
             dts.add('\n');
-            
+
             for (typeName in typesToExport.keys()) {
                 var type = Context.getType(typeName);
                 if (type != null) {

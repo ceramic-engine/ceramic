@@ -2,12 +2,12 @@ package ceramic.macros;
 
 #if macro
 
-import haxe.macro.Context;
-import haxe.macro.Expr;
+import haxe.Json;
 import haxe.Serializer;
 import haxe.Unserializer;
 import haxe.io.Path;
-import haxe.Json;
+import haxe.macro.Context;
+import haxe.macro.Expr;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -29,7 +29,7 @@ class MacroCache {
         if (cacheFilePath == null) {
             return;
         }
-        
+
         loadEntries();
 
         var isCompletion = Context.defined('completion');
@@ -72,7 +72,7 @@ class MacroCache {
 
     static function getCacheFilePath():String {
 
-        var targetPath = Context.definedValue('target_path');
+        var targetPath = DefinesMacro.jsonDefinedValue('target_path');
 
         if (targetPath == null) {
             return null;

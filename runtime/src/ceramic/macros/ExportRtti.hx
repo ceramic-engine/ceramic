@@ -2,14 +2,14 @@ package ceramic.macros;
 
 #if macro
 
+import haxe.Json;
+import haxe.Serializer;
+import haxe.Unserializer;
+import haxe.crypto.Md5;
+import haxe.io.Path;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 import haxe.macro.TypedExprTools;
-import haxe.Serializer;
-import haxe.Unserializer;
-import haxe.io.Path;
-import haxe.Json;
-import haxe.crypto.Md5;
 import sys.FileSystem;
 import sys.io.File;
 
@@ -84,7 +84,7 @@ class ExportRtti {
         });
 
         Context.onAfterGenerate(function() {
-            
+
             for (typeName in rttiTypes.keys()) {
                 var type = Context.getType(typeName);
                 if (type != null) {
@@ -95,7 +95,7 @@ class ExportRtti {
                                     if (field.name == '__rtti') {
                                         var rtti = TypedExprTools.toString(field.expr());
                                         rtti = Json.parse(rtti.substr('[Const:String] '.length));
-                                        
+
                                         // Save result
                                         var xmlPath = Path.join([rttiPath, Md5.encode(typeName + '.xml')]);
                                         File.saveContent(xmlPath, rtti);
@@ -119,7 +119,7 @@ class ExportRtti {
 
     static function getRttiPath():String {
 
-        var targetPath = Context.definedValue('target_path');
+        var targetPath = DefinesMacro.jsonDefinedValue('target_path');
 
         if (targetPath == null) {
             return null;

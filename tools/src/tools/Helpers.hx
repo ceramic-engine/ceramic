@@ -45,9 +45,9 @@ class Helpers {
 
         // Add generic defines
         context.defines.set('ceramic', context.ceramicVersion);
-        context.defines.set('assets_path', Path.join([cwd, 'assets']));
-        context.defines.set('ceramic_assets_path', Path.join([context.ceramicToolsPath, 'assets']));
-        context.defines.set('ceramic_root_path', context.ceramicRootPath);
+        context.defines.set('assets_path', Json.stringify(Path.join([cwd, 'assets'])));
+        context.defines.set('ceramic_assets_path', Json.stringify(Path.join([context.ceramicToolsPath, 'assets'])));
+        context.defines.set('ceramic_root_path', Json.stringify(context.ceramicRootPath));
         context.defines.set('HXCPP_STACK_LINE', '');
         context.defines.set('HXCPP_STACK_TRACE', '');
 

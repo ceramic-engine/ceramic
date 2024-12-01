@@ -1,15 +1,15 @@
 package backend.tools;
 
-import tools.UnityMeta;
-import tools.UnityShader;
-import tools.UnityProject;
-import tools.Helpers.*;
-import tools.Images;
-import tools.Files;
+import haxe.Json;
 import haxe.io.Path;
-
 import sys.FileSystem;
 import sys.io.File;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Images;
+import tools.UnityMeta;
+import tools.UnityProject;
+import tools.UnityShader;
 
 using StringTools;
 
@@ -30,7 +30,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function getBuildTargets():Array<tools.BuildTarget> {
 
         var targets:Array<tools.BuildTarget> = [];
-        
+
         targets.push({
             name: 'unity',
             displayName: 'Unity',
@@ -114,10 +114,10 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set(target.name, '');
 
         var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
-        defines.set('target_path', hxmlProjectPath);
+        defines.set('target_path', Json.stringify(hxmlProjectPath));
 
         var unityProjectPath = UnityProject.resolveUnityProjectPath(cwd, context.project);
-        defines.set('target_assets_path', Path.join([unityProjectPath, 'Assets', 'Ceramic', 'Resources', 'assets']));
+        defines.set('target_assets_path', Json.stringify(Path.join([unityProjectPath, 'Assets', 'Ceramic', 'Resources', 'assets'])));
 
         return defines;
 

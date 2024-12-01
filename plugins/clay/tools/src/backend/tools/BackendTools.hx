@@ -1,5 +1,6 @@
 package backend.tools;
 
+import haxe.Json;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
@@ -146,8 +147,8 @@ class BackendTools implements tools.spec.BackendTools {
         }
 
         var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
-        defines.set('target_path', outTargetPath);
-        defines.set('target_assets_path', Path.join([outTargetPath, 'assets']));
+        defines.set('target_path', Json.stringify(outTargetPath));
+        defines.set('target_assets_path', Json.stringify(Path.join([outTargetPath, 'assets'])));
 
         return defines;
 

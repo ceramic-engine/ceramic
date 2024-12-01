@@ -20,13 +20,13 @@ class SpineMacros {
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
-        var assetsPath = Context.definedValue('assets_path');
+        var assetsPath = DefinesMacro.jsonDefinedValue('assets_path');
         var ceramicPluginsAssetsPathsRaw = Context.definedValue('ceramic_extra_assets_paths');
         var ceramicPluginsAssetsPaths:Array<String> = [];
         if (ceramicPluginsAssetsPathsRaw != null) {
             ceramicPluginsAssetsPaths = Json.parse(Json.parse(ceramicPluginsAssetsPathsRaw));
         }
-        var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
+        var ceramicAssetsPath = DefinesMacro.jsonDefinedValue('ceramic_assets_path');
 
         AssetsMacro.initData(assetsPath, ceramicPluginsAssetsPathsRaw, ceramicAssetsPath);
         var nameFields = AssetsMacro.computeNames(fields, pos, 'spine', ['spine'], true);

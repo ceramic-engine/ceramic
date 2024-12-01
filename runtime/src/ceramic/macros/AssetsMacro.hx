@@ -30,7 +30,7 @@ class AssetsMacro {
         trace(Context.getLocalClass() + ' -> BEGIN AssetsMacro.buildNames($kind, $extensions, $dir)');
         #end
 
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), Context.definedValue('ceramic_assets_path'));
+        initData(DefinesMacro.jsonDefinedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), DefinesMacro.jsonDefinedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();
@@ -138,7 +138,7 @@ class AssetsMacro {
 
     macro static public function buildLists():Array<Field> {
 
-        initData(Context.definedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), Context.definedValue('ceramic_assets_path'));
+        initData(DefinesMacro.jsonDefinedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), DefinesMacro.jsonDefinedValue('ceramic_assets_path'));
 
         var fields = Context.getBuildFields();
         var pos = Context.currentPos();

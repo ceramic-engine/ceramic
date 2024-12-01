@@ -14,6 +14,38 @@ class DefinesMacro {
     }
 
     /**
+     * Shorthand for retrieving compiler flag values that are double encoded to JSON.
+     */
+    public static macro function getJsonJsonDefine(key:String):haxe.macro.Expr {
+        var raw = haxe.macro.Context.definedValue(key);
+        var value = raw != null ? Json.parse(Json.parse(raw)) : null;
+        return macro $v{value};
+    }
+
+    /**
+     * Shorthand for retrieving compiler flag values that are single encoded to JSON.
+     */
+    public static macro function getJsonDefine(key:String):haxe.macro.Expr {
+        var raw = haxe.macro.Context.definedValue(key);
+        var value = raw != null ? Json.parse(raw) : null;
+        return macro $v{value};
+    }
+
+    #if macro
+    public static function jsonJsonDefinedValue(key:String):String {
+        var raw = haxe.macro.Context.definedValue(key);
+        var value = raw != null ? haxe.Json.parse(haxe.Json.parse(raw)) : null;
+        return value;
+    }
+
+    public static function jsonDefinedValue(key:String):String {
+        var raw = haxe.macro.Context.definedValue(key);
+        var value = raw != null ? haxe.Json.parse(raw) : null;
+        return value;
+    }
+    #end
+
+    /**
      * Shorthand for retrieving compiler flag values as `Float`.
      */
     public static macro function getFloatDefine(key:String):haxe.macro.Expr {

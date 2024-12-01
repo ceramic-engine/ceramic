@@ -29,8 +29,8 @@ class CollectionsMacro {
         var data = ceramic.macros.AppMacro.getComputedInfo(Context.definedValue('app_info'));
         var pos = Context.currentPos();
 
-        var assetsPath = Context.definedValue('assets_path');
-        var ceramicAssetsPath = Context.definedValue('ceramic_assets_path');
+        var assetsPath = DefinesMacro.jsonDefinedValue('assets_path');
+        var ceramicAssetsPath = DefinesMacro.jsonDefinedValue('ceramic_assets_path');
         var pluginsAssetsPaths:Array<String> = [];
         var pluginsAssetsPathsRaw = Context.definedValue('ceramic_extra_assets_paths');
         if (pluginsAssetsPathsRaw != null) {

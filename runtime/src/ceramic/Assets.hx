@@ -1042,7 +1042,7 @@ class Assets extends Entity {
      * Behavior may differ depending on the platfom.
      * When using web target via electron, be sure to add `ceramic_use_electron` define.
      * @param path
-     *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getDefine('assets_path')`
+     *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getJsonDefine('assets_path')`
      *     to watch default asset path in project. It's the path that will be used if none is provided
      * @param hotReload
      *     `true` by default. Will enable hot reload of assets when related file changes on disk
@@ -1058,7 +1058,7 @@ class Assets extends Entity {
             #if (web && !ceramic_use_electron)
             throw 'Cannot watch directory when using web target! (unless using electron runner and `ceramic_use_electron` define)';
             #else
-            path = ceramic.macros.DefinesMacro.getDefine('assets_path');
+            path = ceramic.macros.DefinesMacro.getJsonDefine('assets_path');
             #end
         }
 

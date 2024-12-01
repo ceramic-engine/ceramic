@@ -1,12 +1,12 @@
 package backend.tools;
 
-import tools.Helpers.*;
-import tools.Images;
-import tools.Files;
+import haxe.Json;
 import haxe.io.Path;
-
 import sys.FileSystem;
 import sys.io.File;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Images;
 
 using StringTools;
 
@@ -27,7 +27,7 @@ class BackendTools implements tools.spec.BackendTools {
     public function getBuildTargets():Array<tools.BuildTarget> {
 
         var targets:Array<tools.BuildTarget> = [];
-        
+
         targets.push({
             name: 'node',
             displayName: 'Node',
@@ -37,7 +37,7 @@ class BackendTools implements tools.spec.BackendTools {
                 Clean('Clean Node')
             ]
         });
-        
+
         // targets.push({
         //     name: 'lua',
         //     displayName: 'Lua',
@@ -117,8 +117,8 @@ class BackendTools implements tools.spec.BackendTools {
         defines.set(target.name, '');
 
         var hxmlProjectPath = target.outPath('headless', cwd, context.debug, variant);
-        defines.set('target_path', hxmlProjectPath);
-        defines.set('target_assets_path', Path.join([hxmlProjectPath, 'assets']));
+        defines.set('target_path', Json.stringify(hxmlProjectPath));
+        defines.set('target_assets_path', Json.stringify(Path.join([hxmlProjectPath, 'assets'])));
 
         return defines;
 
@@ -152,7 +152,7 @@ class BackendTools implements tools.spec.BackendTools {
         if (dstAssetsPath == null) {
             dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
         }
-        
+
         var assetsPrefix = '';
         if (context.defines.get('ceramic_assets_prefix') != null) {
             assetsPrefix = context.defines.get('ceramic_assets_prefix');
