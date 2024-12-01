@@ -355,7 +355,7 @@ class View extends Layer {
 
     var persistedComputedSizes:Array<ComputedViewSize> = [];
 
-    #if !ceramic_soft_inline inline #end function persistedComputedSizeForContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Null<ComputedViewSize> {
+    #if (!ceramic_soft_inline && !debug) inline #end function persistedComputedSizeForContext(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask):Null<ComputedViewSize> {
 
         var result = null;
 
@@ -662,15 +662,6 @@ class View extends Layer {
         // Remove view from global list
         _allViews.splice(_allViews.indexOf(this), 1);
 
-        // Recycle computed size objects
-        if (this.persistedComputedSizes != null) {
-            var persistedComputedSizes = this.persistedComputedSizes;
-            this.persistedComputedSizes = null;
-            for (i in 0...persistedComputedSizes.length) {
-                persistedComputedSizes.unsafeGet(i).recycle();
-            }
-        }
-
         // Parent destroy
         super.destroy();
 
@@ -679,6 +670,15 @@ class View extends Layer {
 
         // Clean, if it was not null
         customParentView = null;
+
+        // Recycle computed size objects
+        if (this.persistedComputedSizes != null) {
+            var persistedComputedSizes = this.persistedComputedSizes;
+            this.persistedComputedSizes = null;
+            for (i in 0...persistedComputedSizes.length) {
+                persistedComputedSizes.unsafeGet(i).recycle();
+            }
+        }
 
     }
 
@@ -865,7 +865,7 @@ class View extends Layer {
 
     }
 
-    inline public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
+    #if !debug inline #end public function computeSizeIfNeeded(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
         computedSize = persistedComputedSizeForContext(parentWidth, parentHeight, layoutMask);
         if (computedSize == null) {
