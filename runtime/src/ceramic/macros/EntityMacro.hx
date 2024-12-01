@@ -26,7 +26,7 @@ class EntityMacro {
         var classPath = Context.getLocalClass().toString();
 
         // Look for @fieldInfo or @autoFieldInfo meta
-        // Also look for @noCheckStateMachineFields
+        // Also look for @stateMachine({ checkFields: false })
         var checkStateMachineFields = true;
         var fieldInfoData:DynamicAccess<{type:String,index:Int}> = null;
         var storeAllFieldInfo = false;
