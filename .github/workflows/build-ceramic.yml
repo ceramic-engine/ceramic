@@ -5,46 +5,27 @@ on:
       - v**
 jobs:
 
-  setup-release:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Setup release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
-      - name: Save upload URL
-        working-directory: .
-        run: |
-          echo '${{ steps.create_release.outputs.upload_url }}' > upload_url.txt
-      - name: Upload saved file
-        uses: actions/upload-artifact@v3
-        with:
-          name: upload_url
-          path: upload_url.txt
-          retention-days: 1
-
   build-ceramic-windows:
-    needs: setup-release
     runs-on: windows-2022
     steps:
-      - uses: actions/checkout@v2
+
+      - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Checkout submodules
         run: git submodule update --init --recursive
+
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: '14.19.1'
+
       - name: Setup NPM
         working-directory: .
         run: |
           npm install -g npm@8.12.1
+
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -54,6 +35,7 @@ jobs:
           echo $HAXEPATH >> $GITHUB_PATH
           echo $NEKOPATH
           echo $HAXEPATH
+
       - name: Build ceramic
         working-directory: ./node
         run: |
@@ -64,6 +46,7 @@ jobs:
           cd ../runner
           ../tools/npm ci
           cd ..
+
       - name: Cleanup
         working-directory: .
         run: |
@@ -78,15 +61,18 @@ jobs:
           Remove-Item './neko'
           Remove-Item './ceramic'
           cd ..
+
       - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+
       - name: Check ceramic version
         working-directory: ./tools
         run: |
           $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
           ./ceramic version --check-tag $GIT_TAG
+
       - name: Create zip archive
         working-directory: .
         run: |
@@ -95,45 +81,49 @@ jobs:
           $ZIP_DESTINATION = 'ceramic-windows.zip'
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
+
       - name: Retrieve upload URL
         uses: actions/download-artifact@v2
         with:
           name: upload_url
+
       - name: Pass upload URL
         working-directory: .
         id: release_url
         run: |
           $UPLOAD_URL = $(cat upload_url.txt)
           echo "UPLOAD_URL=$UPLOAD_URL" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
-      - name: Upload release asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Files
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.release_url.outputs.UPLOAD_URL }}
-          asset_path: ./ceramic-windows.zip
-          asset_name: ceramic-windows.zip
-          asset_content_type: application/zip
+          retention-days: 1
+          name: ceramic-windows.zip
+          path: ceramic-windows.zip
+          compression-level: 0
 
 
   build-ceramic-mac:
-    needs: setup-release
-    runs-on: macos-12
+    runs-on: macos-14
     steps:
-      - uses: actions/checkout@v2
+
+      - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Checkout submodules
         run: git submodule update --init --recursive
+
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: '14.19.1'
+
       - name: Setup NPM
         working-directory: .
         run: |
           sudo npm install -g npm@8.12.1
+
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -156,11 +146,12 @@ jobs:
           sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
           sudo ln -s $NEKOPATH                      /usr/local/lib/neko
           sudo ln -s $NEKOPATH/libneko.dylib        /usr/local/lib/libneko.dylib
-          sudo ln -s $NEKOPATH/libneko.2.3.0.dylib  /usr/local/lib/libneko.2.3.0.dylib
+          sudo ln -s $NEKOPATH/libneko.2.4.0.dylib  /usr/local/lib/libneko.2.4.0.dylib
           sudo ln -s $NEKOPATH/libneko.2.dylib      /usr/local/lib/libneko.2.dylib
           set +x
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
+
       - name: Build ceramic
         working-directory: ./node
         run: |
@@ -172,6 +163,7 @@ jobs:
           cd ../runner
           ../tools/npm ci
           cd ..
+
       - name: Cleanup
         working-directory: .
         run: |
@@ -185,54 +177,61 @@ jobs:
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
           cd ..
+
       - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+
       - name: Check ceramic version
         working-directory: ./tools
         run: |
           GIT_TAG=${GITHUB_REF/refs\/tags\//}
           ./ceramic version --check-tag $GIT_TAG
+
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
+
       - name: Retrieve upload URL
         uses: actions/download-artifact@v2
         with:
           name: upload_url
+
       - name: Pass upload URL
         working-directory: .
         id: release_url
         run: |
           echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
-      - name: Upload release asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Files
+        uses: actions/upload-artifact@v4
         with:
-          upload_url: ${{ steps.release_url.outputs.UPLOAD_URL }}
-          asset_path: ./ceramic-mac.zip
-          asset_name: ceramic-mac.zip
-          asset_content_type: application/zip
+          retention-days: 1
+          name: ceramic-mac.zip
+          path: ceramic-mac.zip
+          compression-level: 0
 
   build-ceramic-linux:
-    needs: setup-release
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v2
+
+      - uses: actions/checkout@v4
         with:
           submodules: true
+
       - name: Checkout submodules
         run: git submodule update --init --recursive
+
       - name: Setup Node.js
         uses: actions/setup-node@v1
         with:
           node-version: '14.19.1'
+
       - name: Setup NPM
         working-directory: .
         run: |
           sudo npm install -g npm@8.12.1
+
       - name: Setup Haxe
         working-directory: .
         run: |
@@ -260,6 +259,7 @@ jobs:
           sudo ldconfig /usr/local/lib
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
+
       - name: Build ceramic
         working-directory: ./node
         run: |
@@ -270,6 +270,7 @@ jobs:
           cd ../runner
           ../tools/npm ci
           cd ..
+
       - name: Cleanup
         working-directory: .
         run: |
@@ -283,41 +284,87 @@ jobs:
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
           cd ..
+
       - name: Run ceramic
         working-directory: ./tools
         run: |
           ./ceramic
+
       - name: Check ceramic version
         working-directory: ./tools
         run: |
           GIT_TAG=${GITHUB_REF/refs\/tags\//}
           ./ceramic version --check-tag $GIT_TAG
+
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
+
       - name: Retrieve upload URL
         uses: actions/download-artifact@v2
         with:
           name: upload_url
+
       - name: Pass upload URL
         working-directory: .
         id: release_url
         run: |
           echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
-      - name: Upload release asset
-        id: upload-release-asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.release_url.outputs.UPLOAD_URL }}
-          asset_path: ./ceramic-linux.zip
-          asset_name: ceramic-linux.zip
-          asset_content_type: application/zip
 
-  generate-api-docs:
+      - name: Upload Files
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 1
+          name: ceramic-linux.zip
+          path: ceramic-linux.zip
+          compression-level: 0
+
+  create-release:
     needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
     runs-on: ubuntu-22.04
     steps:
+
+      - name: Download ceramic-windows.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-windows.zip
+          path: ceramic-windows.zip
+
+      - name: Download ceramic-mac.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-mac.zip
+          path: ceramic-mac.zip
+
+      - name: Download ceramic-linux.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-linux.zip
+          path: ceramic-linux.zip
+
+      - name: Extract tag name
+        id: extract_tag
+        run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: ${{ env.TAG_NAME }}
+          body: |
+            Ceramic ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          files: |
+            ceramic-windows.zip
+            ceramic-mac.zip
+            ceramic-linux.zip
+
+  generate-api-docs:
+    needs: [create-release]
+    runs-on: ubuntu-22.04
+    steps:
+
       - name: Dispatch event
         uses: ceramic-engine/repository-dispatch@v1
         with:
