@@ -2841,6 +2841,14 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             throw 'A visual cannot add itself as child!';
         }
 
+        if (visual == null) {
+            throw 'A visual cannot add a null child!';
+        }
+
+        if (visual.destroyed) {
+            throw 'A visual cannot add an already destroyed child!';
+        }
+
         if (visual.parent != this) {
 
             App.app.hierarchyDirty = true;
