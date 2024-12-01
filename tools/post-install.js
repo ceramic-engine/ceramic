@@ -23,8 +23,8 @@ function postInstall() {
     spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxcpp', '../git/hxcpp', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcpp', '4.3.2', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
     spawnSync(haxelib, ['install', 'build.hxml', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
 

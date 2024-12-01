@@ -101,3 +101,6 @@
 [submodule "git/fuzzaldrin"]
 	path = git/fuzzaldrin
 	url = https://github.com/jeremyfa/fuzzaldrin.git
+[submodule "git/hxcpp"]
+	path = git/hxcpp
+	url = git@github.com:ceramic-engine/hxcpp.git
