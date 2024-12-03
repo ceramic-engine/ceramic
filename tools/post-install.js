@@ -95,6 +95,11 @@ function postInstall() {
         }
     }
 
+    // Build HXCPP
+    console.log("Build hxcpp");
+    spawnSync(haxe, ['compile.hxml'], { stdio: "inherit", cwd: path.join(__dirname, 'git/hxcpp/tools/run') });
+    spawnSync(haxe, ['compile.hxml'], { stdio: "inherit", cwd: path.join(__dirname, 'git/hxcpp/tools/hxcpp') });
+
     // Patch haxe std with ceramic's overrides
     /*var haxeStdDir = path.join(__dirname, 'node_modules/haxe/downloads/haxe/std');
     var overrideHaxeStdDir = path.join(__dirname, '../haxe/std');
