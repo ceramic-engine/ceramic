@@ -82,18 +82,6 @@ jobs:
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
 
-      - name: Retrieve upload URL
-        uses: actions/download-artifact@v2
-        with:
-          name: upload_url
-
-      - name: Pass upload URL
-        working-directory: .
-        id: release_url
-        run: |
-          $UPLOAD_URL = $(cat upload_url.txt)
-          echo "UPLOAD_URL=$UPLOAD_URL" | Out-File -FilePath $Env:GITHUB_OUTPUT -Encoding utf8 -Append
-
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
@@ -192,17 +180,6 @@ jobs:
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
 
-      - name: Retrieve upload URL
-        uses: actions/download-artifact@v2
-        with:
-          name: upload_url
-
-      - name: Pass upload URL
-        working-directory: .
-        id: release_url
-        run: |
-          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
-
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
@@ -298,17 +275,6 @@ jobs:
 
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
-
-      - name: Retrieve upload URL
-        uses: actions/download-artifact@v2
-        with:
-          name: upload_url
-
-      - name: Pass upload URL
-        working-directory: .
-        id: release_url
-        run: |
-          echo 'UPLOAD_URL='$(cat upload_url.txt) >> $GITHUB_OUTPUT
 
       - name: Upload Files
         uses: actions/upload-artifact@v4
