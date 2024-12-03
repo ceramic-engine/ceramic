@@ -102,18 +102,11 @@ jobs:
       - name: Checkout submodules
         run: git submodule update --init --recursive
 
-      # - name: Setup Node.js
-      #   uses: actions/setup-node@v4
-      #   with:
-      #     node-version: '14.19.1'
-
       - name: Setup Node.js
-        run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          nvm install 14.19.1
-          nvm use 14.19.1
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14.19.1'
+          architecture: 'x64'
 
       - name: Setup NPM
         working-directory: .
@@ -148,13 +141,23 @@ jobs:
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
 
+      - name: Extract node binaries and modules
+        run: |
+          mkdir -p tmp-ceramic
+          curl -L https://github.com/ceramic-engine/ceramic/releases/download/v1.5.0/ceramic-mac.zip -o tmp-ceramic.zip
+          unzip tmp-ceramic.zip -d tmp-ceramic
+          rm -rf ./node
+          rm -rf ./tools/node_modules
+          cp -R ./tmp-ceramic/node ./
+          cp -R ./tmp-ceramic/tools/node_modules ./tools/
+          rm -rf tmp-ceramic
+          rm tmp-ceramic.zip
+
       - name: Build ceramic
         working-directory: ./node
         run: |
-          sudo -H pip install setuptools
           npm ci
           cd ../tools
-          ./npm ci
           ./node post-install.js
           cd ../runner
           ../tools/npm ci
