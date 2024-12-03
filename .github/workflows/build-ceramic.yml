@@ -17,7 +17,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: '14.19.1'
 
@@ -103,7 +103,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: '14.19.1'
 
@@ -200,7 +200,7 @@ jobs:
         run: git submodule update --init --recursive
 
       - name: Setup Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: '14.19.1'
 
