@@ -102,10 +102,18 @@ jobs:
       - name: Checkout submodules
         run: git submodule update --init --recursive
 
+      # - name: Setup Node.js
+      #   uses: actions/setup-node@v4
+      #   with:
+      #     node-version: '14.19.1'
+
       - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '14.19.1'
+        run: |
+          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          nvm install 14.19.1
+          nvm use 14.19.1
 
       - name: Setup NPM
         working-directory: .
