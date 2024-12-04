@@ -144,8 +144,8 @@ jobs:
       - name: Extract node binaries and modules
         run: |
           mkdir -p tmp-ceramic
-          curl -L https://github.com/ceramic-engine/ceramic/releases/download/v1.5.0/ceramic-mac.zip -o tmp-ceramic.zip
-          unzip tmp-ceramic.zip -d tmp-ceramic
+          curl -L -s https://github.com/ceramic-engine/ceramic/releases/download/v1.5.0/ceramic-mac.zip -o tmp-ceramic.zip
+          unzip -q tmp-ceramic.zip -d tmp-ceramic
           rm -rf ./node
           rm -rf ./tools/node_modules
           cp -R ./tmp-ceramic/node ./
@@ -299,24 +299,25 @@ jobs:
     needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
 
       - name: Download ceramic-windows.zip
         uses: actions/download-artifact@v4
         with:
           name: ceramic-windows.zip
-          path: ceramic-windows.zip
+          path: .
 
       - name: Download ceramic-mac.zip
         uses: actions/download-artifact@v4
         with:
           name: ceramic-mac.zip
-          path: ceramic-mac.zip
+          path: .
 
       - name: Download ceramic-linux.zip
         uses: actions/download-artifact@v4
         with:
           name: ceramic-linux.zip
-          path: ceramic-linux.zip
+          path: .
 
       - name: Extract tag name
         id: extract_tag
@@ -327,7 +328,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref }}
-          name: ${{ env.TAG_NAME }}
+          name: Ceramic ${{ env.TAG_NAME }}
           body: |
             Ceramic ${{ env.TAG_NAME }}
           draft: false
