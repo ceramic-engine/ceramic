@@ -175,10 +175,6 @@ import ceramic.SceneStatus;
 import ceramic.Screen;
 import ceramic.ScreenOrientation;
 import ceramic.ScreenScaling;
-import ceramic.Script;
-import ceramic.ScriptContent;
-import ceramic.ScriptModule;
-import ceramic.ScriptUtils;
 import ceramic.ScrollDirection;
 import ceramic.Scroller;
 import ceramic.ScrollerStatus;
@@ -254,6 +250,13 @@ import ceramic.VisibleBounds;
 import ceramic.Visual;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
+
+#if plugin_script
+import ceramic.Script;
+import ceramic.ScriptContent;
+import ceramic.ScriptModule;
+import ceramic.ScriptUtils;
+#end
 
 #if plugin_http
 import ceramic.Http;
