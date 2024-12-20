@@ -1,13 +1,13 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import sys.FileSystem;
-import sys.io.File;
 import haxe.io.Path;
-import npm.DetectPort;
+import sys.io.File;
+import timestamp.Timestamp;
+import tools.DetectPort;
+import tools.Helpers.*;
 
-using tools.Colors;
 using StringTools;
+using tools.Colors;
 
 class HaxeServer extends tools.Task {
 
@@ -18,7 +18,7 @@ class HaxeServer extends tools.Task {
     }
 
     override function run(cwd:String, args:Array<String>):Void {
-        
+
         // Find a free port
         //
         var port:Int = 7000;
@@ -28,43 +28,42 @@ class HaxeServer extends tools.Task {
             port = Std.parseInt(customPort);
         }
 
-        Sync.run(function(done) {
-            // Listen to a free port
-            DetectPort.detect(port, function(err:Dynamic, _port) {
-
-                if (err) {
-                    fail(err);
-                }
-
-                if (port != _port) {
-                    // Other port suggested
-                    port = _port;
-                }
-
-                done();
-
-            });
-        });
+        port = DetectPort.detect(port);
 
         print('Start Haxe compilation server on port $port');
         haxe(['--version']);
 
-        // Keep a file updated in home directory to let other ceramic scripts detect
-        // that a haxe server is running
-        var homedir:String = untyped js.Syntax.code("require('os').homedir()");
-        js.Node.setTimeout(function() {
-            File.saveContent(Path.join([homedir, '.ceramic-haxe-server']), '' + port);
-        }, 100);
-        js.Node.setInterval(function() {
-            Files.touch(Path.join([homedir, '.ceramic-haxe-server']));
-        }, 1000);
+        var homedir:String = homedir();
 
         // Start server
         var haxeArgs = ['--wait', '' + port];
         if (verbose) {
             haxeArgs.unshift('-v');
         }
-        haxe(haxeArgs);
+
+        var didCreate = false;
+        var checkpoint = Timestamp.now();
+
+        haxe(haxeArgs, {
+            tick: () -> {
+                // Keep a file updated in home directory to let other ceramic scripts detect
+                // that a haxe server is running
+                final now = Timestamp.now();
+                if (!didCreate) {
+                    if (now - checkpoint >= 0.1) {
+                        checkpoint = now;
+                        didCreate = true;
+                        File.saveContent(Path.join([homedir, '.ceramic-haxe-server']), '' + port);
+                    }
+                }
+                else {
+                    if (now - checkpoint >= 1.0) {
+                        checkpoint = now;
+                        Files.touch(Path.join([homedir, '.ceramic-haxe-server']));
+                    }
+                }
+            }
+        });
 
     }
 

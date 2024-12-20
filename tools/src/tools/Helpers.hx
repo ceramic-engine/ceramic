@@ -2,10 +2,7 @@ package tools;
 
 import haxe.Json;
 import haxe.io.Path;
-import js.node.ChildProcess;
-import npm.StreamSplitter;
-import npm.StripAnsi;
-import npm.Yaml;
+import process.Process;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Project;
@@ -16,6 +13,8 @@ using tools.Colors;
 class Helpers {
 
     public static var context:Context;
+
+    public static var timer:Timer = new Timer();
 
     public static function extractDefines(cwd:String, args:Array<String>):Void {
 
@@ -132,12 +131,12 @@ class Helpers {
 
             // Let plugins extend HXML
             for (plugin in context.plugins) {
-                if (plugin.extendCompletionHxml != null) {
+                if (plugin.instance?.extendCompletionHxml != null) {
 
                     var prevBackend = context.backend;
-                    context.backend = plugin.backend;
+                    context.backend = plugin.instance.backend;
 
-                    plugin.extendCompletionHxml(rawHxml);
+                    plugin.instance.extendCompletionHxml(rawHxml);
 
                     context.backend = prevBackend;
                 }
@@ -215,85 +214,24 @@ class Helpers {
 
     public static function computePlugins() {
 
-        context.plugins = new Map();
-        context.unbuiltPlugins = new Map();
+        final plugins:Map<String,tools.spec.ToolsPlugin> = new Map();
+        context.plugins = plugins;
 
-        var plugins:Map<String,{
-            name:String, // plugin name
-            path:String, // plugin path on disk
-            runtime:Dynamic // runtime additional config
-        }> = new Map();
+        final defaultPlugins:Array<Dynamic> = tools.Plugin.defaults();
+        final pluginConstructs:Dynamic = tools.Plugin.constructs();
 
-        inline function handlePluginProjectPath(pluginsDir:String, pluginProjectPath:String, file:String) {
+        for (info in defaultPlugins) {
 
-            if (FileSystem.exists(pluginProjectPath)) {
-                // Extract info
-                try {
-                    var str = File.getContent(pluginProjectPath)
-                        .replace('{plugin:cwd}', Path.join([pluginsDir, file]))
-                        .replace('{cwd}', context.cwd)
-                    ;
-                    var info = Yaml.parse(str);
-                    if (info != null && info.plugin != null && info.plugin.name != null) {
-                        plugins.set((''+info.plugin.name).toLowerCase(), {
-                            name: info.plugin.name,
-                            path: Path.join([pluginsDir, file]),
-                            runtime: info.plugin.runtime
-                        });
-                    }
-                    else {
-                        warning('Invalid plugin: ' + pluginProjectPath);
-                    }
-                }
-                catch (e:Dynamic) {
-                    error('Failed to parse plugin config: ' + pluginProjectPath);
-                }
-            }
+            final instance = Reflect.field(pluginConstructs, info.plugin.id);
 
-        }
+            plugins.set(info.plugin.id, {
+                path: info.plugin.path,
+                id: info.plugin.id,
+                name: info.plugin.name,
+                runtime: info.plugin.runtime,
+                instance: instance
+            });
 
-        // Default plugins
-        var files = FileSystem.readDirectory(context.defaultPluginsPath);
-        for (file in files) {
-            var pluginProjectPath = Path.join([context.defaultPluginsPath, file, 'ceramic.yml']);
-            handlePluginProjectPath(context.defaultPluginsPath, pluginProjectPath, file);
-        }
-
-        // Project plugins
-        if (FileSystem.exists(Path.join([context.cwd, 'ceramic.yml']))) {
-            if (FileSystem.exists(context.projectPluginsPath) && FileSystem.isDirectory(context.projectPluginsPath)) {
-                var files = FileSystem.readDirectory(context.projectPluginsPath);
-                for (file in files) {
-                    var pluginProjectPath = Path.join([context.projectPluginsPath, file, 'ceramic.yml']);
-                    handlePluginProjectPath(context.projectPluginsPath, pluginProjectPath, file);
-                }
-            }
-        }
-
-        for (key in plugins.keys()) {
-            var info = plugins.get(key);
-            var name:String = info.name;
-            var path:String = info.path;
-            var runtime:Dynamic = info.runtime;
-            try {
-                if (!Path.isAbsolute(path)) path = Path.normalize(Path.join([context.dotCeramicPath, '..', path]));
-
-                var pluginIndexPath = Path.join([path, 'index.js']);
-                if (FileSystem.exists(pluginIndexPath)) {
-                    var plugin:tools.spec.ToolsPlugin = js.Node.require(pluginIndexPath);
-                    plugin.path = Path.directory(js.node.Require.resolve(pluginIndexPath));
-                    plugin.name = name;
-                    plugin.runtime = runtime;
-                    context.plugins.set(name, plugin);
-                }
-                else {
-                    context.unbuiltPlugins.set(name, { path: path, name: name, runtime: runtime });
-                }
-            }
-            catch (e:Dynamic) {
-                untyped console.error(e);
-                error('Error when loading plugin: ' + path);
-            }
         }
 
     }
@@ -311,7 +249,7 @@ class Helpers {
         if (Sys.systemName() == 'Windows') {
             return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), actualArgs, { cwd: cwd, mute: mute });
         } else {
-            return command(Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node']), [Path.join([context.ceramicToolsPath, 'ceramic'])].concat(actualArgs), { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, 'ceramic']), actualArgs, { cwd: cwd, mute: mute });
         }
 
     }
@@ -324,9 +262,7 @@ class Helpers {
         if (context.printSplitLines) {
             var parts = message.split("\n");
             for (part in parts) {
-                Sync.run(function(done) {
-                    js.Node.setTimeout(done, 0);
-                });
+                Sys.sleep(0.001);
                 stdoutWrite(part+"\n");
             }
         }
@@ -374,50 +310,34 @@ class Helpers {
 
     public static function stdoutWrite(input:String) {
 
-        if (isElectronProxy()) {
-            var parts = (''+input).split("\n");
-            var i = 0;
-            while (i < parts.length) {
-                var part = parts[i];
-                part = part.replace("\r", '');
-                js.Node.process.stdout.write(new js.node.Buffer(part).toString('base64')+(i + 1 < parts.length ? "\n" : ''), 'ascii');
-                i++;
-            }
-        }
-        else {
-            js.Node.process.stdout.write(input);
-        }
+        Sys.stdout().writeString(input);
 
     }
 
     public static function stderrWrite(input:String) {
 
-        if (isElectronProxy()) {
-            var parts = (''+input).split("\n");
-            var i = 0;
-            while (i < parts.length) {
-                var part = parts[i];
-                part = part.replace("\r", '');
-                js.Node.process.stderr.write(new js.node.Buffer(part).toString('base64')+(i + 1 < parts.length ? "\n" : ''), 'ascii');
-                i++;
-            }
-        }
-        else {
-            js.Node.process.stderr.write(input);
-        }
+        Sys.stderr().writeString(input);
 
     }
 
     public static function fail(message:String):Void {
 
         error(message);
-        js.Node.process.exit(1);
+        Sys.exit(1);
 
+    }
+
+    public static function homedir():String {
+        #if windows
+        return Sys.getEnv("USERPROFILE");
+        #else
+        return Sys.getEnv("HOME");
+        #end
     }
 
     public static function runningHaxeServerPort():Int {
 
-        var homedir:String = untyped js.Syntax.code("require('os').homedir()");
+        var homedir:String = homedir();
         var infoPath = Path.join([homedir, '.ceramic-haxe-server']);
         var mtime = Files.getLastModified(infoPath);
         var currentTime = Date.now().getTime() / 1000;
@@ -431,21 +351,21 @@ class Helpers {
 
     }
 
-    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
     }
 
-    public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }) {
+    public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void }) {
 
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return commandWithChecksAndLogs(Path.join([context.ceramicToolsPath, haxe]), args, options);
 
     }
 
-    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
 
@@ -455,8 +375,7 @@ class Helpers {
         else {
             options = {
                 cwd: options.cwd,
-                mute: options.mute,
-                detached: options.detached
+                mute: options.mute
             };
         }
 
@@ -475,13 +394,13 @@ class Helpers {
 
     }
 
-    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
         return command('haxelib', args, options);
 
     }
 
-    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
         var node = Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node']);
         if (Sys.systemName() == 'Windows')
@@ -490,9 +409,42 @@ class Helpers {
 
     }
 
-    public static function commandExists(name:String):Bool {
+    /** Checks if a command exists by searching through PATH directories. */
+    public static function commandExists(command:String):Bool {
 
-        return npm.CommandExists.existsSync(name);
+        // Get system PATH
+        var path = Sys.getEnv("PATH");
+        if (path == null) return false;
+
+        // Split PATH into individual directories
+        var variants = [];
+        #if windows
+        var pathSeparator = ";";
+        variants.push('$command.exe');
+        variants.push('$command.cmd');
+        variants.push('$command.bat');
+        #else
+        var pathSeparator = ":";
+        variants.push(command);
+        #end
+
+        var paths = path.split(pathSeparator);
+
+        // Search each directory in PATH
+        for (d in 0...paths.length) {
+            final dir = paths[d];
+            if (dir == "" || !FileSystem.exists(dir) || !FileSystem.isDirectory(dir)) continue;
+
+            for (v in 0...variants.length) {
+                final variant = variants[v];
+                final fullPath = Path.join([dir, variant]);
+                if (FileSystem.exists(fullPath)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
 
     }
 
@@ -743,7 +695,7 @@ class Helpers {
     /** Like `command()`, but will perform additional checks and log formatting,
         compared to a regular `command()` call. Use it to run compilers and run apps.
         @return status code */
-    public static function commandWithChecksAndLogs(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String }):Int {
+    public static function commandWithChecksAndLogs(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void }):Int {
 
         if (options == null) {
             options = { cwd: null, logCwd: null };
@@ -756,67 +708,55 @@ class Helpers {
         var cwd = options.cwd;
         var logCwd = options.logCwd;
 
-        Sync.run(function(done) {
-
-            var proc = null;
-            if (args == null) {
-                proc = ChildProcess.spawn(name, { cwd: cwd });
-            } else {
-                proc = ChildProcess.spawn(name, args, { cwd: cwd });
+        // Handle Windows, again...
+        if (Sys.systemName() == 'Windows') {
+            // npm
+            if (name == 'npm' || name == 'node' || name == 'ceramic' || name == 'haxe' || name == 'haxelib' || name == 'neko') {
+                name = name + '.cmd';
             }
+        }
 
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.on('data', function(data:Dynamic) {
-                out.write(data);
-            });
-            proc.on('exit', function(code:Int) {
-                status = code;
-                if (done != null) {
-                    var _done = done;
-                    done = null;
-                    _done();
-                }
-            });
-            proc.on('close', function(code:Int) {
-                status = code;
-                if (done != null) {
-                    var _done = done;
-                    done = null;
-                    _done();
-                }
-            });
-            out.encoding = 'utf8';
-            out.on('token', function(token:String) {
-                token = formatLineOutput(logCwd, token);
-                stdoutWrite(token + "\n");
-            });
-            out.on('done', function() {
-            });
-            out.on('error', function(err) {
-            });
+        final proc = new Process(name, args, options.cwd);
 
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.on('data', function(data:Dynamic) {
-                err.write(data);
-            });
-            err.encoding = 'utf8';
-            err.on('token', function(token:String) {
-                token = formatLineOutput(logCwd, token);
-                stderrWrite(token + "\n");
-            });
-            err.on('error', function(err) {
-            });
+        proc.inherit_file_descriptors = false;
 
+        var stdout = new SplitStream('\n'.code, line -> {
+            line = formatLineOutput(logCwd, line);
+            stdoutWrite(line + "\n");
+        });
+
+        var stderr = new SplitStream('\n'.code, line -> {
+            line = formatLineOutput(logCwd, line);
+            stderrWrite(line + "\n");
+        });
+
+        proc.read_stdout = data -> {
+            stdout.add(data);
+        };
+
+        proc.read_stderr = data -> {
+            stderr.add(data);
+        };
+
+        proc.create();
+
+        final tick = options.tick;
+        status = proc.tick_until_exit_status(() -> {
+            Runner.tick();
+            timer.update();
+            if (tick != null) {
+                tick();
+            }
         });
 
         return status;
 
     }
 
-    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool }) {
+    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
         if (options == null) {
-            options = { cwd: null, mute: false, detached: false };
+            options = { cwd: null, mute: false };
         }
 
         if (context.muted) options.mute = true;
@@ -824,8 +764,8 @@ class Helpers {
         if (options.cwd == null) options.cwd = context.cwd;
 
         var result = {
-            stdout: '',
-            stderr: '',
+            stdout: null,
+            stderr: null,
             status: 0
         };
 
@@ -837,62 +777,54 @@ class Helpers {
             }
         }
 
-        var spawnOptions:Dynamic = { cwd: options.cwd };
+        final proc = new Process(name, args, options.cwd);
 
         if (options.detached) {
-            //var out = js.node.Fs.openSync('./out.log', 'a');
-            //var err = js.node.Fs.openSync('./out.log', 'a');
-            spawnOptions.detached = true;
-            spawnOptions.stdio = ['ignore', 'ignore', 'ignore'];
+            proc.detach_process = true;
+        }
 
-            var proc = null;
-            if (args == null) {
-                proc = ChildProcess.spawn(name, spawnOptions);
-            } else {
-                proc = ChildProcess.spawn(name, args, spawnOptions);
-            }
-            proc.unref();
+        var stdout:StringBuf = null;
+        var stderr:StringBuf = null;
+
+        if (options.mute) {
+
+            proc.inherit_file_descriptors = false;
+
+            stdout = new StringBuf();
+            stderr = new StringBuf();
+
+            proc.read_stdout = data -> {
+                stdout.add(data);
+            };
+
+            proc.read_stderr = data -> {
+                stderr.add(data);
+            };
+
         }
         else {
-            // Needed for haxe/haxelib commands
-            /*var originalPATH:String = untyped process.env.PATH;
-            if (originalPATH != null) {
-                spawnOptions.env = { PATH: Path.normalize(context.ceramicToolsPath) + ';' + originalPATH };
-            }*/
 
-            Sync.run(function(done) {
-                var proc = null;
-                if (args == null) {
-                    proc = ChildProcess.spawn(name, spawnOptions);
-                } else {
-                    proc = ChildProcess.spawn(name, args, spawnOptions);
-                }
+            proc.inherit_file_descriptors = true;
 
-                proc.stdout.on('data', function(input) {
-                    result.stdout += input.toString();
-                    if (!options.mute) {
-                        stdoutWrite(input.toString());
-                    }
-                });
+        }
 
-                proc.stderr.on('data', function(input) {
-                    result.stderr += input.toString();
-                    if (!options.mute) {
-                        stderrWrite(input.toString());
-                    }
-                });
+        proc.create();
 
-                proc.on('error', function(err) {
-                    error(err + ' (' + options.cwd + ')');
-                    fail('Failed to run command: ' + name + (args != null && args.length > 0 ? ' ' + args.join(' ') : ''));
-                });
+        final tick = options.tick;
+        result.status = proc.tick_until_exit_status(() -> {
+            Runner.tick();
+            timer.update();
+            if (tick != null) {
+                tick();
+            }
+        });
 
-                proc.on('close', function(code) {
-                    result.status = code;
-                    done();
-                });
+        if (stdout != null) {
+            result.stdout = stdout.toString();
+        }
 
-            });
+        if (stderr != null) {
+            result.stderr = stderr.toString();
         }
 
         return result;
@@ -901,7 +833,7 @@ class Helpers {
 
     public static function runTask(taskCommand, ?args:Array<String>, addContextArgs:Bool = true, allowMissingTask:Bool = false):Bool {
 
-        var task = context.tasks.get(taskCommand);
+        var task = context.task(taskCommand);
         if (task == null) {
             var err = 'Cannot run task because `ceramic $taskCommand` command doesn\'t exist.';
             if (allowMissingTask) {
@@ -982,7 +914,7 @@ class Helpers {
         // Compute target from args
         var targetArgIndex = 1;
         if (args.length > 1) {
-            if (context.tasks.exists(args[0] + ' ' + args[1])) {
+            if (context.hasTask(args[0] + ' ' + args[1])) {
                 targetArgIndex++;
             }
         }
@@ -1153,10 +1085,20 @@ class Helpers {
 
     }
 
+    private static final RE_STRIP_ANSI = ~/[\x1B\x9B](?:[@-Z\\-_]|\[[0-?]*[ -\/]*[@-~]|\].*?(?:\x07|\x1B\\))/g;
+
+    /** Strips all ANSI escape sequences from a string including colors, styles,
+        operating system commands, and other control sequences. */
+    public static function stripAnsi(str:String):String {
+        if (str == null) return null;
+        if (str.length == 0) return "";
+        return RE_STRIP_ANSI.replace(str, "");
+    }
+
     public static function formatLineOutput(cwd:String, input:String):String {
 
         if (!context.colors) {
-            input = StripAnsi.stripAnsi(input);
+            input = stripAnsi(input);
         }
 
         // We don't want \r char to mess up everything (windows)
@@ -1395,18 +1337,6 @@ class Helpers {
 
     }
 
-    public static function isElectron():Bool {
-
-        return js.Node.process.versions['electron'] != null;
-
-    }
-
-    public static function isElectronProxy():Bool {
-
-        return js.Node.global.isElectronProxy != null;
-
-    }
-
     static var RE_HXCPP_LINE_MARKER = ~/^(HXLINE|HXDLIN)\([^)]+\)/;
 
     public static function stripHxcppLineMarkers(cppContent:String):String {
@@ -1567,4 +1497,5 @@ class Helpers {
         }
 
     }
+
 }

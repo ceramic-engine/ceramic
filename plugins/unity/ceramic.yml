@@ -1,7 +1,8 @@
 plugin:
     name: Unity
+    tools: tools.UnityPlugin
 
     runtime:
         if unity:
             +assets:
-                - {plugin:cwd}/assets
+                - '{plugin:cwd}/assets'

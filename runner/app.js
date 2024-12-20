@@ -1,12 +1,14 @@
 
 const path = require('path');
-const url = require('url');
 const fs = require('fs');
 
 const express = require('express')
-const detect = require('detect-port')
+const { detect } = require('detect-port')
 
 const spawn = require('child_process').spawn;
+
+const remoteMain = require('@electron/remote/main');
+remoteMain.initialize();
 
 // Electron
 const electron = require('electron');
@@ -77,9 +79,6 @@ if (process.platform == 'darwin') {
 // App flags
 app.commandLine.appendSwitch('force_high_performance_gpu');
 
-// Allow reusing processes (will be the default on electron 9+ anyway)
-app.allowRendererProcessReuse = true;
-
 // App name
 app.setName(appName);
 exports.app = app;
@@ -114,17 +113,16 @@ function createWindow() {
         resizable: true,
         fullscreenable: true,
         movable: true,
-        nodeIntegration: true,
         title: appName,
         backgroundColor: '#000000',
-        enableRemoteModule: true,
         icon: path.join(__dirname, 'resources/AppIcon.png'),
-        // We don't want to bother with access control policy, other targets don't anyway
         webPreferences: {
             webSecurity: false,
-            nodeIntegration: true
+            nodeIntegration: true,
+            contextIsolation: false
         }
     });
+    remoteMain.enable(mainWindow.webContents);
     exports.mainWindow = mainWindow;
 
     /*mainWindow.webContents.on('did-finish-load', function() {

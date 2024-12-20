@@ -6,4 +6,4 @@ plugin:
             +libs:
                 - arcade
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'

@@ -1,13 +1,11 @@
 package tools.tasks.images;
 
-import tools.Helpers.*;
-import tools.Images;
+import haxe.DynamicAccess;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
-import haxe.DynamicAccess;
-
-import npm.Glob;
+import tools.Helpers.*;
+import tools.Images;
 
 using tools.Colors;
 
@@ -61,7 +59,7 @@ class ExportImages extends tools.Task {
                 scales = item.scale;
             }
 
-            for (srcPath in Glob.sync(Path.join([cwd, from]))) {
+            for (srcPath in Glob.find(Path.join([cwd, from]))) {
 
                 var srcName = Path.withoutExtension(Path.withoutDirectory(srcPath));
                 var rawData = Images.getRaw(srcPath);
@@ -76,13 +74,13 @@ class ExportImages extends tools.Task {
 
                     print('Export $targetName ($targetWidth x $targetHeight)');
 
-                    Images.resize(srcPath, targetPath, targetWidth, targetHeight);
+                    Images.resizeFile(srcPath, targetPath, targetWidth, targetHeight);
                 }
 
             }
 
         }
-        
+
 
     }
 

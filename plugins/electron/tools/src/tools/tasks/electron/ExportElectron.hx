@@ -2,9 +2,6 @@ package tools.tasks.electron;
 
 import haxe.Json;
 import haxe.io.Path;
-import js.node.ChildProcess;
-import js.node.Os;
-import npm.StreamSplitter;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
@@ -24,7 +21,7 @@ class ExportElectron extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
-        var pluginPath = context.plugins.get('Electron').path;
+        var pluginPath = context.plugins.get('electron').path;
 
         var electronProjectPath = Path.join([cwd, 'project/electron']);
         var electronProjectFilePath = Path.join([electronProjectPath, 'app.js']);

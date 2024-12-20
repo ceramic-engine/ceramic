@@ -1,7 +1,7 @@
 package tools.tasks.android;
 
 import haxe.io.Path;
-import js.node.ChildProcess;
+import process.Process;
 import sys.FileSystem;
 import sys.io.File;
 import tools.AndroidProject;
@@ -98,14 +98,22 @@ class ExportAPK extends tools.Task {
                         fail('The app does not seem to be running...');
                     }
 
-                    js.Node.setInterval(function() {
-                        ChildProcess.execFile(adb, ['shell', 'pidof', '-s', packageName], (error, stdout, stderr) -> {
-                            if (stdout == null || (''+stdout).trim() != pid) {
+                    Runner.runInBackground(() -> {
+                        while (true) {
+                            var result = new StringBuf();
+                            final proc = new Process(adb, ['shell', 'pidof', '-s', packageName]);
+                            proc.read_stdout = data -> {
+                                result.add(data);
+                            };
+                            proc.create();
+                            proc.tick_until_exit_status();
+                            if (result.toString().trim() != pid) {
                                 print('The app has been closed, exiting.');
                                 Sys.exit(0);
                             }
-                        });
-                    }, 1000);
+                            Sys.sleep(1.0);
+                        }
+                    });
 
                     AndroidUtils.commandWithLogcatOutput(adb, ['logcat', '--pid=$pid']);
                 }

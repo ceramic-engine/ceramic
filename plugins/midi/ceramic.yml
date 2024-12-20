@@ -4,7 +4,7 @@ plugin:
     runtime:
         if plugin_midi:
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'
             if mac || linux || windows:
                 +libs:
                     - linc_rtmidi

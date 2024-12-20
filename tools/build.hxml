@@ -1,8 +1,15 @@
 -cp src
--main tools.Index
--lib hxnodejs
--lib hxnodejs-ws
--lib hscript
--lib jsasync:1.2.3
--js index.js
--debug
+--main tools.Ceramic
+--library generate
+--library yaml
+--library linc_stb
+--library linc_process
+--library linc_timestamp
+--cpp build
+-D HXCPP_DEBUG_LINK
+-D HXCPP_STACK_LINE
+-D HXCPP_STACK_TRACE
+-D HXCPP_CHECK_POINTER
+-D HXCPP_CPP11
+-D safeMode
+--macro tools.Plugin.addDefaultPlugins()

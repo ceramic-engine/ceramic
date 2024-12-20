@@ -2,9 +2,6 @@ package tools.tasks.windows;
 
 import haxe.Json;
 import haxe.io.Path;
-import js.node.ChildProcess;
-import js.node.Os;
-import npm.StreamSplitter;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Colors;
@@ -32,7 +29,7 @@ class Windows extends tools.Task {
         var appIconPath = Path.join([windowsProjectPath, 'app.ico']);
 
         var doRun = extractArgFlag(args, 'run');
-        var pluginPath = context.plugins.get('Windows').path;
+        var pluginPath = context.plugins.get('windows').path;
 
         // Create mac app package if needed
         WindowsApp.createWindowsAppIfNeeded(cwd, project);
@@ -88,7 +85,7 @@ class Windows extends tools.Task {
         );
 
         if (status != 0) {
-            js.Node.process.exit(status);
+            Sys.exit(status);
         }
 
     }

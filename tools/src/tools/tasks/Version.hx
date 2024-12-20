@@ -1,9 +1,8 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import haxe.io.Path;
 import haxe.Json;
-import js.node.Os;
+import haxe.io.Path;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -42,7 +41,7 @@ class Version extends tools.Task {
         }
 
         var toolsPath = context.ceramicToolsPath;
-        var homedir:String = untyped Os.homedir();
+        var homedir:String = homedir();
 
         // Git version?
         var hash:String = null;
@@ -61,7 +60,7 @@ class Version extends tools.Task {
         if (context.isEmbeddedInElectron && toolsPath.endsWith('/Contents/Resources/app/node_modules/ceramic-tools')) {
             toolsPath = toolsPath.substring(0, toolsPath.length - '/Contents/Resources/app/node_modules/ceramic-tools'.length);
         }
-        
+
         print(context.ceramicVersion + ' (' + toolsPath + ')' + (date != null ? ' $date' : ''));
 
     }

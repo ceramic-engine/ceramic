@@ -206,14 +206,17 @@ class PlatformSpecific {
 
     #if (web && ceramic_use_electron)
     static var testedElectronAvailability:Bool = false;
+    static var testedElectronRemoteAvailability:Bool = false;
     static var electron:Null<Dynamic> = null;
+    static var electronRemote:Null<Dynamic> = null;
 
     inline public static function resolveElectron():Null<Dynamic> {
 
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
-                electron = js.Syntax.code("require('electron')");
+                final remote = electronRemote();
+                electron = js.Syntax.code("{0}.require('electron')", remote);
             }
             catch (e:Dynamic) {}
         }
@@ -226,9 +229,9 @@ class PlatformSpecific {
 
         resolveElectron();
 
-        if (electron != null) {
+        if (electronRemote != null) {
 
-            var required:Dynamic = js.Syntax.code("{0}.remote.require({1})", electron, module);
+            var required:Dynamic = js.Syntax.code("{0}.require({1})", electronRemote, module);
             return required;
 
         }
@@ -240,14 +243,15 @@ class PlatformSpecific {
 
     public static function electronRemote():Null<Dynamic> {
 
-        resolveElectron();
+        if (!testedElectronRemoteAvailability) {
+            testedElectronRemoteAvailability = true;
+            try {
+                electronRemote = js.Syntax.code("require('@electron/remote')");
+            }
+            catch (e:Dynamic) {}
+        }
 
-        if (electron != null) {
-            return electron.remote;
-        }
-        else {
-            return null;
-        }
+        return electronRemote;
 
     }
 

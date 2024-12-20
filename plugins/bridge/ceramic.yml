@@ -5,6 +5,6 @@ plugin:
         if plugin_bridge:
             if web:
                 +paths:
-                  - {plugin:cwd}/runtime/src
+                  - '{plugin:cwd}/runtime/src'
                 +defines:
                     - ceramic_native_bridge

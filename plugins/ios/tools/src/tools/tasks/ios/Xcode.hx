@@ -1,12 +1,11 @@
 package tools.tasks.ios;
 
-import npm.AppleScript;
-import tools.Helpers.*;
-import tools.IosProject;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
+import tools.IosProject;
 
 using StringTools;
 
@@ -65,7 +64,7 @@ class Xcode extends tools.Task {
             // Plug local pods dependencies
             var podfile = File.getContent(podfilePath);
             var prevPodfile = podfile;
-            
+
             if (project.app.podspecs != null) {
                 var podspecs:Array<String> = project.app.podspecs;
                 var lines = podfile.split("\n");
@@ -111,7 +110,7 @@ class Xcode extends tools.Task {
             var podsDir = Path.join([cwd, 'project/ios/Pods']);
             if (!FileSystem.exists(podsDir) || podfile != prevPodfile || extractArgFlag(args, 'pods')) {
                 // Initial pod install
-                var task = context.tasks.get('ios pod install');
+                var task = context.task('ios pod install');
                 if (task == null) {
                     warning('Cannot install pods because `ceramic pod install` command doesn\'t exist.');
                     warning('Did you enable ceramic\'s ios plugin?');
@@ -132,35 +131,13 @@ class Xcode extends tools.Task {
             return;
         }
 
-        // Run one script to open the project. Don't run it yet as it make take
-        // some time if Xcode, or the project were not opened.
-        Sync.run(function(done) {
-
-            var script = '
-                activate application "Xcode"
-                tell application "Xcode"
-                    open "$appleScriptProjectPath"
-                end tell
-';
-
-            if (doBuild || doRun) {
-                print('Tell Xcode to ' + (doRun ? 'run' : 'build') + ' application');
-                script += '
-                tell application "System Events"
-                    tell process "Xcode"
-                        keystroke "' + (doRun ? 'r' : 'b' ) + '" using command down
-                    end tell
-                end tell
-';
-            }
-
-            AppleScript.execString(script, function(err, rtn) {
-                if (err != null) {
-                    fail(''+err);
-                }
-                done();
-            });
-        });
+        command('bash', [
+            Path.join([context.plugins.get('ios').path, 'resources/open-xcode.sh']),
+            '-p',
+            appleScriptProjectPath,
+            '-a',
+            doRun ? 'run' : 'build'
+        ]);
 
     }
 

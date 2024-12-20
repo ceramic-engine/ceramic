@@ -1,17 +1,13 @@
 package tools.tasks.mac;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Colors;
-import tools.Files;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-
-import js.node.Os;
-import js.node.ChildProcess;
-import npm.StreamSplitter;
+import tools.Colors;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
 
 using StringTools;
 
@@ -45,6 +41,9 @@ class Mac extends tools.Task {
         }
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug' : 'Main']), macAppBinaryFile);
 
+        // Ensure it's still executable
+        command('chmod', ['+x', macAppBinaryFile]);
+
         // Stop if not running
         if (!doRun) return;
 
@@ -58,7 +57,7 @@ class Mac extends tools.Task {
         );
 
         if (status != 0) {
-            js.Node.process.exit(status);
+            Sys.exit(status);
         }
 
     }

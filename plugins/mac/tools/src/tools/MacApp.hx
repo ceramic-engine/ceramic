@@ -1,17 +1,18 @@
 package tools;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Files;
-import tools.Templates;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
+import tools.Templates;
 
 class MacApp {
 
     public static function createMacAppIfNeeded(cwd:String, project:Project):Void {
-        
+
         var macProjectPath = Path.join([cwd, 'project/mac']);
+        var defaultMacAppPath = Path.join([macProjectPath, 'myapp.app']);
         var macAppPath = Path.join([macProjectPath, project.app.name + '.app']);
         var macAppInfoFile = Path.join([macAppPath, 'Contents', 'Info.plist']);
         var macAppAssetsPath = Path.join([macAppPath, 'Contents', 'Resources', 'assets']);
@@ -34,7 +35,7 @@ class MacApp {
             Files.deleteRecursive(macAppPath);
 
             // Plugin path
-            var pluginPath = context.plugins.get('Mac').path;
+            var pluginPath = context.plugins.get('mac').path;
 
             // Create directory if needed
             if (!FileSystem.exists(macProjectPath)) {
@@ -72,6 +73,11 @@ class MacApp {
             replacementsInContents['My App'] = project.app.displayName;
             replacementsInContents['myapp'] = (''+project.app.name).toLowerCase();
             Templates.replaceInContents(macProjectPath, replacementsInContents);
+
+            // Delete remaining template folders, if any
+            if (FileSystem.exists(defaultMacAppPath) && FileSystem.isDirectory(defaultMacAppPath)) {
+                Files.deleteRecursive(defaultMacAppPath);
+            }
 
             // Put assets back
             if (FileSystem.exists(tmpAppAssetsPath)) {

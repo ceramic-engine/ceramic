@@ -1,20 +1,27 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"type": "ceramic",
-			"args": "active configuration",
-			"problemMatcher": [
-				"$haxe-absolute",
-				"$haxe",
-				"$haxe-error",
-				"$haxe-trace"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"label": "ceramic: active configuration"
-		}
-	]
+    "displayName": "▷ Tools",
+    "description": "haxe build.hxml",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "command": "node",
+            "args": [
+                "tools/install"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$haxe"
+        }
+    ],
+    "version": "2.0.0",
+    "chooserIndex": 0
 }

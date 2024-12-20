@@ -1,11 +1,9 @@
 package tools;
 
+import haxe.io.Path;
+import sys.FileSystem;
 import tools.Helpers.*;
 import tools.Project;
-
-import sys.FileSystem;
-
-import haxe.io.Path;
 
 class UnityProject {
 
@@ -36,7 +34,7 @@ class UnityProject {
     }
 
     public static function createUnityProjectIfNeeded(cwd:String, project:Project):Void {
-        
+
         var unityProjectName = project.app.name;
         var unityProjectPath = resolveUnityProjectPath(cwd, project);
         var unityProjectScenesPath = Path.join([unityProjectPath, 'Assets', 'Scenes']);
@@ -58,7 +56,7 @@ class UnityProject {
             }
 
             // Plugin path
-            var pluginPath = context.plugins.get('Unity').path;
+            var pluginPath = context.plugins.get('unity').path;
 
             // Create directory if needed
             if (!FileSystem.exists(unityProjectPath)) {

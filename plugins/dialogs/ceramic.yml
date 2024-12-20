@@ -1,5 +1,6 @@
 plugin:
     name: Dialogs
+    tools: tools.DialogsPlugin
 
     runtime:
         if plugin_dialogs:

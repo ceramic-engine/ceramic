@@ -1,7 +1,8 @@
 plugin:
     name: Headless
+    tools: tools.HeadlessPlugin
 
     runtime:
         if headless:
             +assets:
-                - {plugin:cwd}/assets
+                - '{plugin:cwd}/assets'

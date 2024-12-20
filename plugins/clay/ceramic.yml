@@ -1,7 +1,8 @@
 plugin:
     name: Clay
+    tools: tools.ClayPlugin
 
     runtime:
         if clay:
             +assets:
-                - {plugin:cwd}/assets
+                - '{plugin:cwd}/assets'

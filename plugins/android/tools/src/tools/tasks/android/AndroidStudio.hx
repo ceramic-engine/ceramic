@@ -2,8 +2,6 @@ package tools.tasks.android;
 
 import haxe.Json;
 import haxe.io.Path;
-import js.node.Os;
-import npm.AppleScript;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Colors;
@@ -52,29 +50,16 @@ class AndroidStudio extends tools.Task {
 
                 print('Open Android Studio project');
 
-                Sync.run(function(done) {
-
-                    var script = '
-                        activate application "Android Studio"
-                        tell application "Android Studio"
-                            open "$androidProjectPath"
-                        end tell
-';
-
-                    AppleScript.execString(script, function(err, rtn) {
-                        if (err != null) {
-                            fail(''+err);
-                        }
-                        done();
-                    });
-                });
+                command('bash', [
+                    Path.join([context.plugins.get('android').path, 'resources/open-android-studio-mac.sh'])
+                ]);
 
             }
             else if (os == 'Windows' && FileSystem.exists(androidProjectFile)) {
 
                 // Open project
 
-                var homedir:String = untyped Os.homedir();
+                var homedir:String = homedir();
                 var androidStudioExePath:String = null;
 
                 for (drive in getWindowsDrives()) {

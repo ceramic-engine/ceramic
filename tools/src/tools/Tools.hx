@@ -2,7 +2,6 @@ package tools;
 
 import haxe.Json;
 import haxe.io.Path;
-import npm.Fiber;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
@@ -12,29 +11,12 @@ using StringTools;
 
 class Tools {
 
-/// Global
-
-    static function main():Void {
-
-        // Expose new Tools(cwd, args).run()
-        var module:Dynamic = js.Node.module;
-        module.exports = runInFiber;
-
-    }
-
-    static function runInFiber(cwd:String, args:Array<String>, ceramicPath:String) {
-
-        // Wrap execution inside a fiber to allow calling
-        // Async code pseudo-synchronously
-        Fiber.fiber(function() {
-            run(cwd, args, ceramicPath);
-        }).run();
-
-    }
-
 /// Run
 
     static function run(cwd:String, args:Array<String>, ceramicPath:String) {
+
+        // Initialize internal background runner
+        Runner.init();
 
         // Check windows args paths
         fixWindowsArgsPaths(args);
@@ -52,19 +34,18 @@ class Tools {
             ceramicGitDepsPath: Path.normalize(Path.join([ceramicPath, '../git'])),
             defaultPluginsPath: Path.normalize(Path.join([ceramicPath, '../plugins'])),
             projectPluginsPath: Path.normalize(Path.join([cwd, 'plugins'])),
-            homeDir: '' + js.Node.require('os').homedir(),
+            homeDir: '' + homedir(),
             isLocalDotCeramic: false,
-            dotCeramicPath: '' + Path.join([js.Node.require('os').homedir(), '.ceramic']),
+            dotCeramicPath: '' + Path.join([homedir(), '.ceramic']),
             variant: 'standard',
             vscode: false,
             vscodeUriScheme: 'vscode',
             muted: false,
             plugins: new Map(),
-            unbuiltPlugins: new Map(),
             backend: null,
             cwd: cwd,
             args: args,
-            tasks: new Map(),
+            tasks: [],
             plugin: null,
             rootTask: null,
             isEmbeddedInElectron: false,
@@ -87,18 +68,15 @@ class Tools {
         }
 
         // Compute ceramic version
-        var version = js.Node.require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
-        var versionPath = Path.join([js.Node.__dirname, 'version']);
-        if (FileSystem.exists(versionPath)) {
-            version = File.getContent(versionPath);
-        }
-        if (commandExists('git')) {
-            var hash:String = command('git', ['rev-parse', '--short', 'HEAD'], { cwd: context.ceramicToolsPath, mute: true }).stdout.trim();
-            if (hash != null && hash != '') {
-                version += '-$hash';
-            }
-        }
-        context.ceramicVersion = version;
+        //var version = require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
+        // TODO embedded hash
+        // if (commandExists('git')) {
+        //     var hash:String = command('git', ['rev-parse', '--short', 'HEAD'], { cwd: context.ceramicToolsPath, mute: true }).stdout.trim();
+        //     if (hash != null && hash != '') {
+        //         version += '-$hash';
+        //     }
+        // }
+        context.ceramicVersion = ceramicVersion();
 
         // Compute .ceramic path (global or local)
         var localDotCeramic = Path.join([context.cwd, '.ceramic']);
@@ -113,32 +91,28 @@ class Tools {
         // Compute plugins
         computePlugins();
 
-        context.tasks.set('version', new tools.tasks.Version());
-        context.tasks.set('help', new tools.tasks.Help());
-        context.tasks.set('server', new tools.tasks.Server());
-        context.tasks.set('query', new tools.tasks.Query());
+        context.addTask('version', new tools.tasks.Version());
+        context.addTask('help', new tools.tasks.Help());
 
-        context.tasks.set('init', new tools.tasks.Init());
-        context.tasks.set('vscode', new tools.tasks.Vscode());
-        context.tasks.set('link', new tools.tasks.Link());
-        context.tasks.set('unlink', new tools.tasks.Unlink());
-        context.tasks.set('path', new tools.tasks.Path());
-        context.tasks.set('info', new tools.tasks.Info());
-        context.tasks.set('libs', new tools.tasks.Libs());
-        context.tasks.set('hxml', new tools.tasks.Hxml());
-        //context.tasks.set('module', new tools.tasks.Module());
+        context.addTask('init', new tools.tasks.Init());
+        context.addTask('vscode', new tools.tasks.Vscode());
+        context.addTask('link', new tools.tasks.Link());
+        context.addTask('unlink', new tools.tasks.Unlink());
+        context.addTask('path', new tools.tasks.Path());
+        context.addTask('info', new tools.tasks.Info());
+        context.addTask('libs', new tools.tasks.Libs());
+        context.addTask('hxml', new tools.tasks.Hxml());
 
-        context.tasks.set('font', new tools.tasks.Font());
+        context.addTask('font', new tools.tasks.Font());
 
-        context.tasks.set('haxe server', new tools.tasks.HaxeServer());
+        context.addTask('haxe server', new tools.tasks.HaxeServer());
 
-        context.tasks.set('plugin hxml', new tools.tasks.plugin.PluginHxml());
-        context.tasks.set('plugin build', new tools.tasks.plugin.BuildPlugin());
-        context.tasks.set('plugin list', new tools.tasks.plugin.ListPlugins());
+        context.addTask('plugin hxml', new tools.tasks.plugin.PluginHxml());
+        context.addTask('plugin list', new tools.tasks.plugin.ListPlugins());
 
-        context.tasks.set('ide info', new tools.tasks.IdeInfo());
+        context.addTask('ide info', new tools.tasks.IdeInfo());
 
-        context.tasks.set('images export', new tools.tasks.images.ExportImages());
+        context.addTask('images export', new tools.tasks.images.ExportImages());
 
         //#end
 
@@ -151,7 +125,9 @@ class Tools {
                 var prevPlugin = context.plugin;
                 context.plugin = plugin;
 
-                plugin.init(context);
+                if (plugin.instance != null) {
+                    plugin.instance.init(context);
+                }
 
                 context.plugin = prevPlugin;
             }
@@ -264,17 +240,17 @@ class Tools {
         }
         else {
             var taskName = args[0];
-            if (args.length >= 3 && context.tasks.exists(taskName + ' ' + args[1] + ' ' + args[2])) {
+            if (args.length >= 3 && context.hasTask(taskName + ' ' + args[1] + ' ' + args[2])) {
                 taskName = taskName + ' ' + args[1] + ' ' + args[2];
             }
-            else if (args.length >= 2 && context.tasks.exists(taskName + ' ' + args[1])) {
+            else if (args.length >= 2 && context.hasTask(taskName + ' ' + args[1])) {
                 taskName = taskName + ' ' + args[1];
             }
 
-            if (context.tasks.exists(taskName)) {
+            if (context.hasTask(taskName)) {
 
                 // Get task
-                var task = context.tasks.get(taskName);
+                var task = context.task(taskName);
 
                 // Set correct backend
                 context.backend = @:privateAccess task.backend;
@@ -295,13 +271,17 @@ class Tools {
                 task.run(cwd, args);
 
                 // Ceramic end
-                js.Node.process.exit(0);
+                Sys.exit(0);
 
             } else {
                 fail('Unknown command: $taskName');
             }
         }
 
+    }
+
+    public static function ceramicVersion():String {
+        return 'vTODO';
     }
 
 }

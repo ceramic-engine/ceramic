@@ -1,5 +1,6 @@
 plugin:
     name: Electron
+    tools: tools.ElectronPlugin
 
     runtime:
         if web && plugin_electron:

@@ -6,4 +6,4 @@ plugin:
             +libs:
                 - ase
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'

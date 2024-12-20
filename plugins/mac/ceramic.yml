@@ -1,2 +1,3 @@
 plugin:
     name: Mac
+    tools: tools.MacPlugin

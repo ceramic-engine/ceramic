@@ -1,5 +1,6 @@
 plugin:
     name: Http
+    tools: tools.HttpPlugin
 
     runtime:
         if plugin_http:

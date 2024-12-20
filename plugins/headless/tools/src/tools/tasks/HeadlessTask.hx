@@ -3,8 +3,8 @@ package tools.tasks;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import tools.Helpers.*;
 import tools.Files;
+import tools.Helpers.*;
 
 using StringTools;
 
@@ -28,7 +28,7 @@ class HeadlessTask extends tools.Task {
             fail('Task name argument is required');
         }
 
-        var task = context.tasks.get('headless run');
+        var task = context.task('headless run');
         var taskArgs = [
             "headless",
             "run",

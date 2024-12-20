@@ -1,17 +1,24 @@
 package tools.spec;
 
 import tools.Ide;
-import tools.Vscode;
 
 typedef ToolsPlugin = {
 
     var path:String;
 
-    var backend:BackendTools;
+    var id:String;
 
     var name:String;
 
     var runtime:Dynamic;
+
+    var instance:ToolsPluginInstance;
+
+}
+
+typedef ToolsPluginInstance = {
+
+    var backend:BackendTools;
 
     function init(context:Context):Void;
 

@@ -1,7 +1,6 @@
 package tools;
 
-import js.node.ChildProcess;
-import npm.StreamSplitter;
+import process.Process;
 import tools.Helpers.*;
 
 class AndroidUtils {
@@ -38,26 +37,24 @@ class AndroidUtils {
 
     static function resolvePaths() {
 
-        final env:Dynamic = js.Syntax.code('process.env');
-
-        if (env.ANDROID_HOME != null) {
-            _sdkPath = env.ANDROID_HOME;
+        if (Sys.getEnv('ANDROID_HOME') != null) {
+            _sdkPath = Sys.getEnv('ANDROID_HOME');
         }
-        else if (env.ANDROID_SDK != null) {
-            _sdkPath = env.ANDROID_SDK;
+        else if (Sys.getEnv('ANDROID_SDK') != null) {
+            _sdkPath = Sys.getEnv('ANDROID_SDK');
         }
-        else if (env.ANDROID_SDK_ROOT != null) {
-            _sdkPath = env.ANDROID_SDK_ROOT;
+        else if (Sys.getEnv('ANDROID_SDK_ROOT') != null) {
+            _sdkPath = Sys.getEnv('ANDROID_SDK_ROOT');
         }
 
-        if (env.ANDROID_NDK_HOME != null) {
-            _ndkPath = env.ANDROID_NDK_HOME;
+        if (Sys.getEnv('ANDROID_NDK_HOME') != null) {
+            _ndkPath = Sys.getEnv('ANDROID_NDK_HOME');
         }
-        else if (env.ANDROID_NDK != null) {
-            _ndkPath = env.ANDROID_NDK;
+        else if (Sys.getEnv('ANDROID_NDK') != null) {
+            _ndkPath = Sys.getEnv('ANDROID_NDK');
         }
-        else if (env.ANDROID_NDK_ROOT != null) {
-            _ndkPath = env.ANDROID_NDK_ROOT;
+        else if (Sys.getEnv('ANDROID_NDK_ROOT') != null) {
+            _ndkPath = Sys.getEnv('ANDROID_NDK_ROOT');
         }
 
     }
@@ -78,60 +75,36 @@ class AndroidUtils {
         var cwd = options.cwd;
         var logCwd = options.logCwd;
 
-        Sync.run(function(done) {
+        final proc = new Process(name, args, options.cwd);
 
-            var proc = null;
-            if (args == null) {
-                proc = ChildProcess.spawn(name, { cwd: cwd });
-            } else {
-                proc = ChildProcess.spawn(name, args, { cwd: cwd });
+        proc.inherit_file_descriptors = false;
+
+        var stdout = new SplitStream('\n'.code, line -> {
+            if (line != null && RE_ANDROID_LOG_TRACE.match(line)) {
+                line = RE_ANDROID_LOG_TRACE.matched(1);
+                line = formatLineOutput(logCwd, line);
+                stdoutWrite(line + "\n");
             }
+        });
 
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.on('data', function(data:Dynamic) {
-                out.write(data);
-            });
-            proc.on('exit', function(code:Int) {
-                status = code;
-                if (done != null) {
-                    var _done = done;
-                    done = null;
-                    _done();
-                }
-            });
-            proc.on('close', function(code:Int) {
-                status = code;
-                if (done != null) {
-                    var _done = done;
-                    done = null;
-                    _done();
-                }
-            });
-            out.encoding = 'utf8';
-            out.on('token', function(token:String) {
-                if (token != null && RE_ANDROID_LOG_TRACE.match(token)) {
-                    token = RE_ANDROID_LOG_TRACE.matched(1);
-                    token = formatLineOutput(logCwd, token);
-                    stdoutWrite(token + "\n");
-                }
-            });
-            out.on('done', function() {
-            });
-            out.on('error', function(err) {
-            });
+        var stderr = new SplitStream('\n'.code, line -> {
+            line = formatLineOutput(logCwd, line);
+            stderrWrite(line + "\n");
+        });
 
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.on('data', function(data:Dynamic) {
-                err.write(data);
-            });
-            err.encoding = 'utf8';
-            err.on('token', function(token:String) {
-                token = formatLineOutput(logCwd, token);
-                stderrWrite(token + "\n");
-            });
-            err.on('error', function(err) {
-            });
+        proc.read_stdout = data -> {
+            stdout.add(data);
+        };
 
+        proc.read_stderr = data -> {
+            stderr.add(data);
+        };
+
+        proc.create();
+
+        final status = proc.tick_until_exit_status(() -> {
+            Runner.tick();
+            timer.update();
         });
 
         return status;

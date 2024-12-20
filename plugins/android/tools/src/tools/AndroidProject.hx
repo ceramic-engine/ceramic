@@ -6,7 +6,6 @@ import sys.io.File;
 import tools.Files;
 import tools.Helpers.*;
 import tools.Project;
-import tools.Sync;
 import tools.Templates;
 
 using StringTools;
@@ -34,7 +33,7 @@ class AndroidProject {
             }
 
             // Plugin path
-            var pluginPath = context.plugins.get('Android').path;
+            var pluginPath = context.plugins.get('android').path;
 
             // Create directory if needed
             if (!FileSystem.exists(androidProjectPath)) {
@@ -250,7 +249,7 @@ class AndroidProject {
         var builtFile:String;
         var targetFile:String;
 
-        var androidLibsPath = Path.join([context.plugins.get('Android').path, 'resources', 'libs']);
+        var androidLibsPath = Path.join([context.plugins.get('android').path, 'resources', 'libs']);
 
         if (archs.contains('armv7')) {
             builtFile = Path.join([androidLibsPath, 'armeabi-v7a/libc++_shared.so']);

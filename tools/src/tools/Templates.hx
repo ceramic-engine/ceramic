@@ -1,14 +1,10 @@
 package tools;
 
-import npm.Glob;
-import npm.IsTextOrBinary;
-import npm.Handlebars;
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 import tools.Helpers.*;
 import tools.Project;
-import haxe.io.Path;
-import sys.io.File;
-import sys.FileSystem;
-import js.node.Fs;
 
 using StringTools;
 
@@ -20,7 +16,8 @@ class Templates {
 
         // Perform content replaces
         //
-        for (filePath in Glob.sync(Path.join([projectPath, '**']), {dot: true})) {
+        for (filePathItem in Files.getFlatDirectory(projectPath)) {
+            var filePath = Path.join([projectPath, filePathItem]);
 
             // Check if file is a text file
             var isTextFile = false;
@@ -28,12 +25,12 @@ class Templates {
             // If file is not a directory
             var textExts = 'strings m h json xcworkspacedata pbxproj pch plist yml yaml xml iml'.split(' ');
             var binaryExts = 'png jpg jpeg data zip a'.split(' ');
-            if (!Fs.lstatSync(filePath).isDirectory()) {
+            if (FileSystem.exists(filePath) && !FileSystem.isDirectory(filePath)) {
 
                 // Check extension
                 var fileExt = filePath.indexOf('.') == -1 ? null : filePath.substr(filePath.indexOf('.') + 1);
                 if (fileExt == null || fileExt.trim() == '') {
-                    isTextFile = IsTextOrBinary.isTextSync(filePath, Fs.readFileSync(filePath));
+                    isTextFile = IsTextOrBinary.isText(filePath, File.getBytes(filePath));
                 }
                 else if (textExts.indexOf(fileExt) != -1) {
                     isTextFile = true;
@@ -42,7 +39,7 @@ class Templates {
                     isTextFile = false;
                 }
                 else {
-                    isTextFile = IsTextOrBinary.isTextSync(filePath, Fs.readFileSync(filePath));
+                    isTextFile = IsTextOrBinary.isText(filePath, File.getBytes(filePath));
                 }
 
                 // If it is a text file, perform replace
@@ -73,7 +70,8 @@ class Templates {
 
                 var didRenameAFile = false;
 
-                for (filePath in Glob.sync(Path.join([projectPath, '**']), {dot: true})) {
+                for (filePathItem in Files.getFlatDirectory(projectPath)) {
+                    var filePath = Path.join([projectPath, filePathItem]);
                     if (FileSystem.exists(filePath) && filePath.indexOf(key) != -1) {
                         var newFilePath = projectPath + filePath.substr(projectPath.length).replace(key, value);
                         if (newFilePath != filePath) {
@@ -81,7 +79,7 @@ class Templates {
                             if (!FileSystem.exists(newDir)) {
                                 FileSystem.createDirectory(newDir);
                             }
-                            Fs.renameSync(filePath, newFilePath);
+                            FileSystem.rename(filePath, newFilePath);
                             didRenameAFile = true;
                         }
                     }
@@ -90,37 +88,6 @@ class Templates {
                 if (!didRenameAFile) break;
             }
         }
-
-    }
-
-    public static function evalTemplate(tplPath:String, project:Project, ?extraContext:Dynamic):String {
-
-        // Create context
-        //
-        var context:Dynamic = {};
-        context.ceramicToolsPath = context.ceramicToolsPath;
-        context.projectPath = context.cwd;
-        context.defines = context.defines;
-
-        var app = project.app;
-
-        for (key in Reflect.fields(app)) {
-            Reflect.setField(context, key, Reflect.field(app, key));
-        }
-
-        if (extraContext != null) {
-            for (key in Reflect.fields(extraContext)) {
-                Reflect.setField(context, key, Reflect.field(extraContext, key));
-            }
-        }
-
-        // Get template contents
-        var templateContents = sys.io.File.getContent(tplPath);
-
-        // Create handlebars template
-        var template = Handlebars.compile(templateContents);
-
-        return template(context);
 
     }
 

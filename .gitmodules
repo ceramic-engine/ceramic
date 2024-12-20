@@ -104,3 +104,9 @@
 [submodule "git/hxcpp"]
 	path = git/hxcpp
 	url = https://github.com/ceramic-engine/hxcpp.git
+[submodule "git/yaml"]
+	path = git/yaml
+	url = https://github.com/ceramic-engine/yaml.git
+[submodule "git/linc_process"]
+	path = git/linc_process
+	url = https://github.com/jeremyfa/linc_process.git

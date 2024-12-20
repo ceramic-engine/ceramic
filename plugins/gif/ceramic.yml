@@ -6,4 +6,4 @@ plugin:
             +libs:
                 - gif
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'

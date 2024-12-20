@@ -61,15 +61,15 @@ class IdeInfo extends tools.Task {
             var defaultBackendName = 'clay';
             for (plugin in context.plugins) {
                 if (plugin.name != null && plugin.name.toLowerCase() == defaultBackendName.toLowerCase()) {
-                    if (plugin.extendIdeInfo != null) {
-                        plugin.extendIdeInfo(targets, variants, hxmlOutput);
+                    if (plugin.instance?.extendIdeInfo != null) {
+                        plugin.instance.extendIdeInfo(targets, variants, hxmlOutput);
                     }
                 }
             }
             for (plugin in context.plugins) {
                 if (plugin.name == null || plugin.name.toLowerCase() != defaultBackendName.toLowerCase()) {
-                    if (plugin.extendIdeInfo != null) {
-                        plugin.extendIdeInfo(targets, variants, hxmlOutput);
+                    if (plugin.instance?.extendIdeInfo != null) {
+                        plugin.instance.extendIdeInfo(targets, variants, hxmlOutput);
                     }
                 }
             }
@@ -219,7 +219,7 @@ class IdeInfo extends tools.Task {
                         }
                         var itemSelect:IdeInfoVariantSelectItem = null;
                         if (item.select != null) {
-                            if (js.Syntax.code('({0}.select == "auto")', item) == true) {
+                            if ((item.select:Any) == "auto") {
                                 if (itemArgs != null && itemArgs.length > 0) {
                                     itemSelect = {
                                         args: itemArgs

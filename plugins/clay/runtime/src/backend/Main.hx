@@ -70,7 +70,7 @@ class Main {
         var userAgent = js.Browser.navigator.userAgent.toLowerCase();
         if (userAgent.indexOf(' electron/') > -1) {
             try {
-                var electronApp:Dynamic = untyped js.Syntax.code("require('electron').remote.require('./app.js');");
+                var electronApp:Dynamic = untyped js.Syntax.code("require('@electron/remote').require('./app.js');");
                 if (electronApp.isCeramicRunner) {
                     ElectronRunner.electronRunner = electronApp;
                 }

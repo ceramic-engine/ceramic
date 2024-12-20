@@ -16,7 +16,7 @@ class Compile extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        // Add ios flag
+        // Add android flag
         if (!context.defines.exists('android')) {
             context.defines.set('android', '');
         }

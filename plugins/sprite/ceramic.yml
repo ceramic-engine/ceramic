@@ -4,6 +4,6 @@ plugin:
     runtime:
         if plugin_sprite:
             +generated:
-                - {plugin:cwd}/tpl/generated
+                - '{plugin:cwd}/tpl/generated'
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'

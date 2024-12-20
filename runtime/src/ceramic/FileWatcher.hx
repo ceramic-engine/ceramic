@@ -1,8 +1,8 @@
 package ceramic;
 
 #if (sys || hxnodejs || nodejs || node)
-import sys.io.File;
 import sys.FileSystem;
+import sys.io.File;
 #end
 
 /**
@@ -34,7 +34,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
-                electron = js.Syntax.code("require('electron')");
+                electron = ceramic.PlatformSpecific.resolveElectron();
             }
             catch (e:Dynamic) {}
         }
@@ -123,10 +123,10 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
                     watchedFile.mtime = mtime;
                     if (checkContent) {
                         var content = getContent(path);
-    
+
                         if (content != watchedFile.content) {
                             watchedFile.content = content;
-                            
+
                             // File content has changed, notify
                             for (i in 0...watchedFile.updateCallbacks.length) {
                                 watchedFile.updateCallbacks[i](watchedFile.content);
@@ -162,7 +162,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return FileSystem.exists(path) && !FileSystem.isDirectory(path);
         #elseif web
         if (electron != null) {
-            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
+            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
             return fs.existsSync(path);
         }
         else {
@@ -182,7 +182,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return stat.mtime.getTime();
         #elseif web
         if (electron != null) {
-            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
+            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
             var stat = fs.statSync(path);
             if (stat == null) return -1;
             return stat.mtime.getTime();
@@ -202,7 +202,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return File.getContent(path);
         #elseif web
         if (electron != null) {
-            var fs = js.Syntax.code("{0}.remote.require('fs')", electron);
+            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
             return fs.readFileSync(path, 'utf8');
         }
         else {

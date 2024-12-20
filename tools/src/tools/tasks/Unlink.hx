@@ -1,8 +1,8 @@
 package tools.tasks;
 
-import tools.Helpers.*;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Helpers.*;
 
 class Unlink extends tools.Task {
 
@@ -18,7 +18,7 @@ class Unlink extends tools.Task {
             command('rm', ['ceramic'], { cwd: '/usr/local/bin' });
         }
         else if (Sys.systemName() == 'Windows') {
-            var haxePath = js.Node.process.env['HAXEPATH'];
+            var haxePath = Sys.getEnv('HAXEPATH');
             if (haxePath == null || !FileSystem.exists(Path.join([haxePath, 'ceramic.cmd']))) {
                 fail('There is nothing to unlink.');
             }

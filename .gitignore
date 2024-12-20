@@ -39,3 +39,4 @@ plugin-build.hxml
 /runner/node_modules
 /.haxelib
 completion.hxml
+tools/build

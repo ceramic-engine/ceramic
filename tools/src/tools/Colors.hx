@@ -7,283 +7,208 @@ class Colors {
     public static function black(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:black|]' + str + '[|/color:black|]';
         } else {
-            return npm.Colors.black(str);
+            return "\u001b[30m" + str + "\u001b[0m";
         }
     }
+
     public static function red(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:red|]' + str + '[|/color:red|]';
         } else {
-            return npm.Colors.red(str);
+            return "\u001b[31m" + str + "\u001b[0m";
         }
     }
+
     public static function green(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:green|]' + str + '[|/color:green|]';
         } else {
-            return npm.Colors.green(str);
+            return "\u001b[32m" + str + "\u001b[0m";
         }
     }
+
     public static function yellow(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:yellow|]' + str + '[|/color:yellow|]';
         } else {
-            return npm.Colors.yellow(str);
+            return "\u001b[33m" + str + "\u001b[0m";
         }
     }
+
     public static function blue(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:blue|]' + str + '[|/color:blue|]';
         } else {
-            return npm.Colors.blue(str);
+            return "\u001b[34m" + str + "\u001b[0m";
         }
     }
+
     public static function magenta(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:magenta|]' + str + '[|/color:magenta|]';
         } else {
-            return npm.Colors.magenta(str);
+            return "\u001b[35m" + str + "\u001b[0m";
         }
     }
+
     public static function cyan(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:cyan|]' + str + '[|/color:cyan|]';
         } else {
-            return npm.Colors.cyan(str);
+            return "\u001b[36m" + str + "\u001b[0m";
         }
     }
+
     public static function white(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:white|]' + str + '[|/color:white|]';
         } else {
-            return npm.Colors.white(str);
+            return "\u001b[37m" + str + "\u001b[0m";
         }
     }
+
     public static function gray(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:gray|]' + str + '[|/color:gray|]';
         } else {
-            return npm.Colors.gray(str);
+            return "\u001b[90m" + str + "\u001b[0m";
         }
     }
+
     public static function grey(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:grey|]' + str + '[|/color:grey|]';
         } else {
-            return npm.Colors.grey(str);
+            return "\u001b[90m" + str + "\u001b[0m";
         }
     }
 
     public static function bgBlack(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgBlack|]' + str + '[|/color:bgBlack|]';
         } else {
-            return npm.Colors.bgBlack(str);
+            return "\u001b[40m" + str + "\u001b[0m";
         }
     }
+
     public static function bgRed(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgRed|]' + str + '[|/color:bgRed|]';
         } else {
-            return npm.Colors.bgRed(str);
+            return "\u001b[41m" + str + "\u001b[0m";
         }
     }
+
     public static function bgGreen(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgGreen|]' + str + '[|/color:bgGreen|]';
         } else {
-            return npm.Colors.bgGreen(str);
+            return "\u001b[42m" + str + "\u001b[0m";
         }
     }
+
     public static function bgYellow(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgYellow|]' + str + '[|/color:bgYellow|]';
         } else {
-            return npm.Colors.bgYellow(str);
+            return "\u001b[43m" + str + "\u001b[0m";
         }
     }
+
     public static function bgBlue(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgBlue|]' + str + '[|/color:bgBlue|]';
         } else {
-            return npm.Colors.bgBlue(str);
+            return "\u001b[44m" + str + "\u001b[0m";
         }
     }
+
     public static function bgMagenta(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgMagenta|]' + str + '[|/color:bgMagenta|]';
         } else {
-            return npm.Colors.bgMagenta(str);
+            return "\u001b[45m" + str + "\u001b[0m";
         }
     }
+
     public static function bgCyan(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgCyan|]' + str + '[|/color:bgCyan|]';
         } else {
-            return npm.Colors.bgCyan(str);
+            return "\u001b[46m" + str + "\u001b[0m";
         }
     }
+
     public static function bgWhite(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bgWhite|]' + str + '[|/color:bgWhite|]';
         } else {
-            return npm.Colors.bgWhite(str);
+            return "\u001b[47m" + str + "\u001b[0m";
         }
     }
 
     public static function reset(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:reset|]' + str + '[|/color:reset|]';
         } else {
-            return npm.Colors.reset(str);
-        }
-    }
-    public static function bold(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:bold|]' + str + '[|/color:bold|]';
-        } else {
-            return npm.Colors.bold(str);
-        }
-    }
-    public static function dim(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:dim|]' + str + '[|/color:bladimck|]';
-        } else {
-            return npm.Colors.dim(str);
-        }
-    }
-    public static function italic(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:italic|]' + str + '[|/color:italic|]';
-        } else {
-            return npm.Colors.italic(str);
-        }
-    }
-    public static function underline(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:underline|]' + str + '[|/color:underline|]';
-        } else {
-            return npm.Colors.underline(str);
-        }
-    }
-    public static function inverse(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:inverse|]' + str + '[|/color:inverse|]';
-        } else {
-            return npm.Colors.inverse(str);
-        }
-    }
-    public static function hidden(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:hidden|]' + str + '[|/color:hidden|]';
-        } else {
-            return npm.Colors.hidden(str);
-        }
-    }
-    public static function strikethrough(str:String):String {
-        if (!context.colors) {
-            return str;
-        } else if (isElectronProxy()) {
-            return '[|color:strikethrough|]' + str + '[|/color:strikethrough|]';
-        } else {
-            return npm.Colors.strikethrough(str);
+            return "\u001b[0m" + str + "\u001b[0m";
         }
     }
 
-    public static function rainbow(str:String):String {
+    public static function bold(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:rainbow|]' + str + '[|/color:rainbow|]';
         } else {
-            return npm.Colors.rainbow(str);
+            return "\u001b[1m" + str + "\u001b[0m";
         }
     }
-    public static function zebra(str:String):String {
+
+    public static function dim(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:zebra|]' + str + '[|/color:zebra|]';
         } else {
-            return npm.Colors.zebra(str);
+            return "\u001b[2m" + str + "\u001b[0m";
         }
     }
-    public static function america(str:String):String {
+
+    public static function italic(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:america|]' + str + '[|/color:america|]';
         } else {
-            return npm.Colors.america(str);
+            return "\u001b[3m" + str + "\u001b[0m";
         }
     }
-    public static function trap(str:String):String {
+
+    public static function underline(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:trap|]' + str + '[|/color:trap|]';
         } else {
-            return npm.Colors.trap(str);
+            return "\u001b[4m" + str + "\u001b[0m";
         }
     }
-    public static function random(str:String):String {
+
+    public static function inverse(str:String):String {
         if (!context.colors) {
             return str;
-        } else if (isElectronProxy()) {
-            return '[|color:random|]' + str + '[|/color:random|]';
         } else {
-            return npm.Colors.random(str);
+            return "\u001b[7m" + str + "\u001b[0m";
+        }
+    }
+
+    public static function hidden(str:String):String {
+        if (!context.colors) {
+            return str;
+        } else {
+            return "\u001b[8m" + str + "\u001b[0m";
+        }
+    }
+
+    public static function strikethrough(str:String):String {
+        if (!context.colors) {
+            return str;
+        } else {
+            return "\u001b[9m" + str + "\u001b[0m";
         }
     }
 

@@ -1,16 +1,16 @@
 package tools;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Files;
-import tools.Templates;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
+import tools.Templates;
 
 class WebProject {
 
     public static function createWebProjectIfNeeded(cwd:String, project:Project):Void {
-        
+
         var webProjectPath = Path.join([cwd, 'project/web']);
         var webProjectFile = Path.join([webProjectPath, 'index.html']);
 
@@ -18,7 +18,7 @@ class WebProject {
         if (!FileSystem.exists(webProjectFile)) {
 
             // Plugin path
-            var pluginPath = context.plugins.get('Web').path;
+            var pluginPath = context.plugins.get('web').path;
 
             // Create directory if needed
             if (!FileSystem.exists(webProjectPath)) {

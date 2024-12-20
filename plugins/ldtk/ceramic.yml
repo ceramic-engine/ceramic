@@ -4,4 +4,4 @@ plugin:
     runtime:
         if plugin_ldtk:
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'

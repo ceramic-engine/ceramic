@@ -1,12 +1,12 @@
 package tools.tasks;
 
-import tools.Helpers.*;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
-import haxe.io.Path;
+import tools.Helpers.*;
 
-using tools.Colors;
 using StringTools;
+using tools.Colors;
 
 class Help extends tools.Task {
 
@@ -113,15 +113,15 @@ class Help extends tools.Task {
                 }
             }
         }
-        
+
         if (commandName != null) {
-            var task = context.tasks.get(commandName);
+            var task = context.task(commandName);
             if (task == null) {
                 fail('Unknown command: $commandName');
             }
 
             var info = task.info(cwd);
-            
+
             lines.push('');
             lines.push(tab + b('COMMAND'));
             lines.push(tab + 'ceramic ' + commandName + '    ' + g(info));
@@ -136,12 +136,12 @@ class Help extends tools.Task {
                     if (noLtText.length > item0Len)
                         item0Len = noLtText.length;
                 }
-                
+
                 for (item in helpData) {
                     lines.push(tab + ltu(noltlen(item[0], item0Len)) + '    ' + g(item[1]));
                 }
             }
-                
+
             print(lines.join("\n") + "\n");
 
             return;
@@ -161,16 +161,16 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
   _|_|_|    _|_|_|  _|         _|_|_|  _|    _|    _|  _|    _|_|_|
 
         */
-        lines.push('                                              
-                                                         '+bg('_|')+'            
-    '+bg('_|_|_|')+'    '+bg('_|_|')+'    '+bg('_|')+'  '+bg('_|_|')+'   '+bg('_|_|_|')+'  '+bg('_|_|_|')+'  '+bg('_|_|')+'          '+bg('_|_|_|')+'  
-  '+bg('_|')+'        '+bg('_|_|_|_|')+'  '+bg('_|_|')+'     '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'        
-  '+bg('_|')+'        '+bg('_|')+'        '+bg('_|')+'       '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'        
+        lines.push('
+                                                         '+bg('_|')+'
+    '+bg('_|_|_|')+'    '+bg('_|_|')+'    '+bg('_|')+'  '+bg('_|_|')+'   '+bg('_|_|_|')+'  '+bg('_|_|_|')+'  '+bg('_|_|')+'          '+bg('_|_|_|')+'
+  '+bg('_|')+'        '+bg('_|_|_|_|')+'  '+bg('_|_|')+'     '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'
+  '+bg('_|')+'        '+bg('_|')+'        '+bg('_|')+'       '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'  '+bg('_|')+'
     '+bg('_|_|_|')+'    '+bg('_|_|_|')+'  '+bg('_|')+'         '+bg('_|_|_|')+'  '+bg('_|')+'    '+bg('_|')+'    '+bg('_|')+'  '+bg('_|')+'    '+bg('_|_|_|'));
-        
+
         var logo = lines[lines.length-1];
         var logoLines = logo.replace("\r","").split("\n");
-        logoLines[1] += ' ' + green(version);
+        logoLines[1] += '             ' + green(version);
         lines[lines.length-1] = logoLines.join("\n");
 
         lines.push("\n");
@@ -181,20 +181,15 @@ _|        _|        _|       _|    _|  _|    _|    _|  _|  _|
 
         lines.push(tab + b('COMMANDS'));
 
-        var allTasks = new Map<String,tools.Task>();
-
-        for (key in context.tasks.keys()) {
-            allTasks.set(key, context.tasks.get(key));
-        }
-
         var maxTaskLen = 0;
-        for (key in allTasks.keys()) {
-            maxTaskLen = cast Math.max(maxTaskLen, key.length);
+        for (taskEntry in context.tasks) {
+            maxTaskLen = cast Math.max(maxTaskLen, taskEntry.key.length);
         }
-        
+
         var i = 0;
-        for (key in allTasks.keys()) {
-            var task:tools.Task = allTasks.get(key);
+        for (taskEntry in context.tasks) {
+            var task:tools.Task = taskEntry.task;
+            var key:String = taskEntry.key;
 
             var prevBackend = context.backend;
             context.backend = task.backend;

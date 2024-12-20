@@ -2,13 +2,10 @@ package tools.tasks.web;
 
 import haxe.Json;
 import haxe.io.Path;
-import js.node.ChildProcess;
-import js.node.Os;
-import npm.Chokidar;
-import npm.Fiber;
-import npm.StreamSplitter;
+import process.Process;
 import sys.FileSystem;
 import sys.io.File;
+import timestamp.Timestamp;
 import tools.Colors;
 import tools.Files;
 import tools.Helpers.*;
@@ -28,7 +25,7 @@ class Web extends tools.Task {
 
         var project = ensureCeramicProject(cwd, args, App);
 
-        var pluginPath = context.plugins.get('Web').path;
+        var pluginPath = context.plugins.get('web').path;
         var tplProjectPath = Path.join([pluginPath, 'tpl/project/web']);
 
         var webProjectPath = Path.join([cwd, 'project/web']);
@@ -202,176 +199,96 @@ class Web extends tools.Task {
 
         var status = 0;
 
-        Sync.run(function(done) {
+        var cmdArgs = ['--app-files', webAppFilesPath];
 
-            var cmdArgs = ['--app-files', webAppFilesPath];
+        if (context.debug) {
+            print('Remote debug enabled (port: 9223)');
+            cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
+        }
 
-            if (context.debug) {
-                print('Remote debug enabled (port: 9223)');
-                cmdArgs = ['--remote-debugging-port=9223'].concat(cmdArgs);
+        if (doWatch) {
+            cmdArgs.push('--watch');
+            cmdArgs.push(jsName + '.js');
+        }
+
+        if (useNativeBridge) {
+            cmdArgs.push('--native-bridge');
+        }
+
+        if (screenshotPath != null) {
+            if (!Path.isAbsolute(screenshotPath)) {
+                screenshotPath = Path.join([cwd, screenshotPath]);
+            }
+            cmdArgs.push('--screenshot');
+            cmdArgs.push(screenshotPath);
+
+            if (screenshotDelay != null) {
+                cmdArgs.push('--screenshot-delay');
+                cmdArgs.push(screenshotDelay);
             }
 
-            if (doWatch) {
-                cmdArgs.push('--watch');
-                cmdArgs.push(jsName + '.js');
+            if (screenshotThenQuit) {
+                cmdArgs.push('--screenshot-then-quit');
             }
+        }
 
-            if (useNativeBridge) {
-                cmdArgs.push('--native-bridge');
-            }
+        cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
 
-            if (screenshotPath != null) {
-                if (!Path.isAbsolute(screenshotPath)) {
-                    screenshotPath = Path.join([cwd, screenshotPath]);
-                }
-                cmdArgs.push('--screenshot');
-                cmdArgs.push(screenshotPath);
+        var proc = null;
 
-                if (screenshotDelay != null) {
-                    cmdArgs.push('--screenshot-delay');
-                    cmdArgs.push(screenshotDelay);
-                }
+        if (Sys.systemName() == 'Windows') {
+            proc = new Process(
+                'node_modules/electron/dist/electron.exe',
+                cmdArgs,
+                context.ceramicRunnerPath
+            );
+        }
+        else if (Sys.systemName() == 'Mac') {
+            proc = new Process(
+                'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron',
+                cmdArgs,
+                context.ceramicRunnerPath
+            );
+        }
+        else {
+            proc = new Process(
+                'node_modules/electron/dist/electron',
+                cmdArgs,
+                context.ceramicRunnerPath
+            );
+        }
 
-                if (screenshotThenQuit) {
-                    cmdArgs.push('--screenshot-then-quit');
-                }
-            }
-
-            cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
-
-            var proc = null;
-
-            if (Sys.systemName() == 'Windows') {
-                proc = ChildProcess.spawn(
-                    Path.join([context.ceramicRunnerPath, 'electron.cmd']),
-                    cmdArgs,
-                    {
-                        cwd: context.ceramicRunnerPath/*,
-                        env: {
-                            ELECTRON_ENABLE_LOGGING: '1'
-                        }*/
-                    }
-                );
-            } else {
-                proc = ChildProcess.spawn(
-                    Path.join([context.ceramicToolsPath, 'node']),
-                    ['node_modules/.bin/' + 'electron'].concat(cmdArgs),
-                    {
-                        cwd: context.ceramicRunnerPath/*,
-                        env: {
-                            ELECTRON_ENABLE_LOGGING: '1'
-                        }*/
-                    }
-                );
-            }
-
-            var out = StreamSplitter.splitter("\n");
-            proc.stdout.pipe(untyped out);
-            proc.on('close', function(code:Int) {
-                status = code;
-            });
-            out.encoding = 'utf8';
-            out.on('token', function(token) {
-                token = formatLineOutput(outTargetPath, token);
-                stdoutWrite(token + "\n");
-            });
-            out.on('done', function() {
-                if (done != null) {
-                    done();
-                    done = null;
-                }
-            });
-            out.on('error', function(err) {
-                warning(''+err);
-            });
-
-            var err = StreamSplitter.splitter("\n");
-            proc.stderr.pipe(untyped err);
-            err.encoding = 'utf8';
-            err.on('token', function(token) {
-                if (electronErrors) {
-                    token = formatLineOutput(outTargetPath, token);
-                    stderrWrite(token + "\n");
-                }
-            });
-            err.on('error', function(err) {
-                warning(''+err);
-            });
-
-            // if (doHotReload) {
-            //     // JS hot reload server
-
-            //     var argPort = extractArgValue(args, 'hot-reload-port');
-            //     var port = argPort != null ? Std.parseInt(argPort) : 3220;
-            //     if (port < 1024) {
-            //         fail('Invalid port $argPort');
-            //     }
-
-            //     var server = new HotReloadServer(
-            //         webProjectPath,
-            //         project.app.name + '.js',
-            //         port
-            //     );
-
-            //     var watcher = Chokidar.watch([
-            //         Path.join([cwd, 'src/**/*.hx']),
-            //         Path.join([webProjectPath, project.app.name + '.js'])
-            //     ], {
-            //         ignoreInitial: true,
-            //         cwd: cwd
-            //     });
-
-            //     var scheduledDelay:Dynamic = null;
-            //     var building = false;
-
-            //     function doBuild() {
-
-            //         if (building) {
-            //             js.Node.setTimeout(doBuild, 500);
-            //             return;
-            //         }
-
-            //         scheduledDelay = null;
-
-            //         var buildArgs = ['build', 'web', '--variant', context.variant];
-            //         if (context.debug)
-            //             buildArgs.push('--debug');
-            //         Fiber.fiber(function() {
-            //             building = true;
-            //             runTask('luxe build', buildArgs);
-            //             building = false;
-            //         }).run();
-
-            //     }
-
-            //     function scheduleBuild() {
-
-            //         if (scheduledDelay != null)
-            //             js.Node.clearTimeout(scheduledDelay);
-
-            //         scheduledDelay = js.Node.setTimeout(doBuild, 500);
-
-            //     }
-
-            //     watcher.on('add', (path, stats) -> {
-            //         print('Added: $path');
-            //         if (path.endsWith('.hx')) {
-            //             scheduleBuild();
-            //         }
-            //     });
-            //     watcher.on('change', (path, stats) -> {
-            //         print('Changed: $path');
-            //         if (path.endsWith('.hx')) {
-            //             scheduleBuild();
-            //         }
-            //         else if (path.endsWith('.js')) {
-            //             print('reload server');
-            //             server.reload();
-            //         }
-            //     });
-            // }
-
+        var out = new SplitStream('\n'.code, line -> {
+            line = formatLineOutput(outTargetPath, line);
+            stdoutWrite(line + "\n");
         });
+
+        var err = new SplitStream('\n'.code, line -> {
+            if (electronErrors) {
+                line = formatLineOutput(outTargetPath, line);
+                stderrWrite(line + "\n");
+            }
+        });
+
+        proc.read_stdout = data -> {
+            out.add(data);
+        };
+
+        proc.read_stderr = data -> {
+            err.add(data);
+        };
+
+        proc.create();
+
+        final time = Timestamp.now();
+        final status = proc.tick_until_exit_status(() -> {
+            Runner.tick();
+            timer.update();
+        });
+
+        if (status != 0 && (Timestamp.now() - time) < 5.0) {
+            fail('Failed to start electron: exited with status $status');
+        }
 
     }
 

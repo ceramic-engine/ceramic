@@ -1,10 +1,9 @@
 package tools;
 
-import sys.FileSystem;
-import haxe.io.Path;
 import haxe.DynamicAccess;
-import js.node.Fs;
-import js.node.ChildProcess;
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 
 using StringTools;
 
@@ -18,8 +17,8 @@ class Files {
         if (file1Exists != file2Exists) return false;
         if (!file1Exists && !file2Exists) return false;
 
-        var time1 = Fs.statSync(filePath1).mtime.getTime();
-        var time2 = Fs.statSync(filePath2).mtime.getTime();
+        var time1 = FileSystem.stat(filePath1).mtime.getTime();
+        var time2 = FileSystem.stat(filePath2).mtime.getTime();
 
         return Math.abs(time1 - time2) < 1000; // 1 second tolerance
 
@@ -32,9 +31,9 @@ class Files {
 
         if (!file1Exists || !file2Exists) return;
 
-        var utime = Math.round(Fs.statSync(srcFilePath).mtime.getTime() / 1000.0);
+        var mtime = FileSystem.stat(srcFilePath).mtime.getTime();
 
-        Fs.utimesSync(dstFilePath, cast utime, cast utime);
+        Native.fileUTime(dstFilePath, mtime);
 
     }
 
@@ -42,7 +41,7 @@ class Files {
 
         if (!FileSystem.exists(filePath)) return -1;
 
-        return Math.round(Fs.statSync(filePath).mtime.getTime() / 1000.0);
+        return Math.round(FileSystem.stat(filePath).mtime.getTime() / 1000.0);
 
     }
 
@@ -54,11 +53,11 @@ class Files {
             }
             sys.io.File.saveContent(filePath, '');
         }
-        var utime = Date.now().getTime() / 1000.0;
-        Fs.utimesSync(filePath, cast utime, cast utime);
+
+        Native.fileUTimeNow(filePath);
 
     }
-    
+
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
         var result:Array<String> = [];
@@ -158,7 +157,7 @@ class Files {
     }
 
     public static function deleteRecursive(toDelete:String):Void {
-        
+
         if (!FileSystem.exists(toDelete)) return;
 
         // Use shell if available
@@ -272,7 +271,7 @@ class Files {
             else {
                 sys.io.File.copy(srcPath, dstPath);
             }
-            
+
         }
 
     }
@@ -298,7 +297,7 @@ class Files {
             else if (fileSuffix == null || filePath.endsWith(fileSuffix)) {
                 output.set(filePath, getLastModified(filePath));
             }
-            
+
         }
 
         return output;

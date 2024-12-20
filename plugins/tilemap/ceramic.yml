@@ -1,9 +1,10 @@
 plugin:
     name: Tilemap
+    tools: tools.TilemapPlugin
 
     runtime:
         if plugin_tilemap:
             +libs:
                 - format-tiled
             +generated:
-                - {plugin:cwd}/tpl/generated
+                - '{plugin:cwd}/tpl/generated'

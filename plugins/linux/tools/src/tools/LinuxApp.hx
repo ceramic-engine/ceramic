@@ -1,16 +1,16 @@
 package tools;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.Files;
-import tools.Templates;
 import haxe.io.Path;
 import sys.FileSystem;
+import tools.Files;
+import tools.Helpers.*;
+import tools.Project;
+import tools.Templates;
 
 class LinuxApp {
 
     public static function createLinuxAppIfNeeded(cwd:String, project:Project):Void {
-        
+
         var linuxProjectPath = Path.join([cwd, 'project/linux']);
         var linuxAppPath = Path.join([linuxProjectPath, project.app.name]);
         var linuxAppAssetsPath = Path.join([linuxAppPath, 'assets']);
@@ -33,7 +33,7 @@ class LinuxApp {
             Files.deleteRecursive(linuxAppPath);
 
             // Plugin path
-            var pluginPath = context.plugins.get('Linux').path;
+            var pluginPath = context.plugins.get('linux').path;
 
             // Create directory if needed
             if (!FileSystem.exists(linuxProjectPath)) {

@@ -1,0 +1,177 @@
+#!/usr/bin/env node
+
+var spawnSync = require('child_process').spawnSync;
+var fs = require('fs');
+var path = require('path');
+
+var args = process.argv.slice(2);
+function argumentFlag(argName) {
+    const index = args.indexOf(`--${argName}`);
+    if (index !== -1) {
+        return true;
+    }
+    return false;
+}
+
+var debug = argumentFlag('debug');
+
+function install() {
+
+    process.chdir(__dirname);
+
+    var haxelib = process.platform == 'win32' ? 'haxelib.cmd' : './haxelib';
+    var haxe = process.platform == 'win32' ? 'haxe.cmd' : './haxe';
+
+    // Install dependencies
+    var haxelibRepoPath = path.join(__dirname, '..', '.haxelib');
+    if (!fs.existsSync(haxelibRepoPath)) {
+        fs.mkdirSync(haxelibRepoPath);
+    }
+    spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'yaml', '../git/yaml/src', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'linc_stb', '../git/linc_stb', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'linc_process', '../git/linc_process', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'linc_timestamp', '../git/linc_timestamp', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hxcpp', '../git/hxcpp', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+
+    // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
+    var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
+    var androidClangToolchainPath = path.join(hxcppPath, 'toolchain/android-toolchain-clang.xml');
+    var androidClangToolchain = '' + fs.readFileSync(androidClangToolchainPath);
+    var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+    var indexOfStaticLibcpp = androidClangToolchain.indexOf('="-static-libstdc++" />');
+    var indexOfPlatform16 = androidClangToolchain.indexOf('<set name="PLATFORM_NUMBER" value="16" />');
+    if (indexOfOptimFlag == -1 || indexOfStaticLibcpp != -1 || indexOfPlatform16 != -1) {
+        console.log("Patch hxcpp android-clang toolchain");
+        if (indexOfOptimFlag == -1)
+            androidClangToolchain = androidClangToolchain.split('<flag value="-fpic"/>').join('<flag value="-fpic"/>\n  <flag value="-O2" unless="debug"/>');
+        if (indexOfStaticLibcpp != -1)
+            androidClangToolchain = androidClangToolchain.split('="-static-libstdc++" />').join('="-static-libstdc++" if="HXCPP_LIBCPP_STATIC" />');
+        if (indexOfPlatform16 != -1)
+            androidClangToolchain = androidClangToolchain.split('<set name="PLATFORM_NUMBER" value="16" />').join('<set name="PLATFORM_NUMBER" value="21" />');
+        fs.writeFileSync(androidClangToolchainPath, androidClangToolchain);
+    }
+
+
+    // Patch hxcpp toolchain on iOS
+    // See: https://github.com/HaxeFoundation/hxcpp/issues/764
+    // And more recently some odd bug with iOS 15 + iphone 12 or above that needs more investigation
+    var iphoneToolchainPath = path.join(hxcppPath, 'toolchain/iphoneos-toolchain.xml');
+    var iphoneToolchain = '' + fs.readFileSync(iphoneToolchainPath);
+    var indexOfO2 = iphoneToolchain.indexOf('<flag value="-O2" unless="debug"/>');
+    if (indexOfO2 != -1) {
+        console.log("Patch hxcpp iphoneos toolchain");
+        iphoneToolchain = iphoneToolchain.split('<flag value="-O2" unless="debug"/>').join('<flag value="-O2" unless="debug || HXCPP_OPTIM_O1"/><flag value="-O1" if="HXCPP_OPTIM_O1" unless="debug"/>');
+        fs.writeFileSync(iphoneToolchainPath, iphoneToolchain);
+    }
+
+    // Patch hxcpp toolchain on Mac
+    // To ensure binaries are explicitly compatible starting from macos 10.10+
+    var macToolchainPath = path.join(hxcppPath, 'toolchain/mac-toolchain.xml');
+    var macToolchain = '' + fs.readFileSync(macToolchainPath);
+    var indexOfMacosXVersion = macToolchain.indexOf('<flag value="-mmacosx-version-min=10.10"/>');
+    var indexOfDeploymentTarget = macToolchain.indexOf('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/>');
+    if (indexOfMacosXVersion == -1 || indexOfDeploymentTarget == -1) {
+        console.log("Patch hxcpp mac toolchain");
+        if (indexOfMacosXVersion == -1) {
+            macToolchain = macToolchain.split('<flag value="Cocoa"/>').join('<flag value="Cocoa"/><flag value="-mmacosx-version-min=10.10"/>');
+        }
+        if (indexOfDeploymentTarget == -1) {
+            macToolchain = macToolchain.split('<setenv name="MACOSX_DEPLOYMENT_TARGET"').join('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET"');
+            macToolchain = macToolchain.split(' unless="MACOSX_DEPLOYMENT_TARGET"/>').join(' unless="MACOSX_DEPLOYMENT_TARGET"/>-->');
+            macToolchain = macToolchain.split(' unless="MACOSX_DEPLOYMENT_TARGET" />').join(' unless="MACOSX_DEPLOYMENT_TARGET" />-->');
+            macToolchain = macToolchain.split('<!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"').join('<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.10"/><!--<setenv name="MACOSX_DEPLOYMENT_TARGET" value="10.9"');
+        }
+        fs.writeFileSync(macToolchainPath, macToolchain);
+    }
+
+    // Patch some HXCPP C++ files with a ::cpp::Int64 fix (until the fix gets released)
+    console.log("Patch <::cpp::Int64> in C++ files");
+    var hxcppInt64PathList = [
+        path.join(hxcppPath, 'include/Array.h'),
+        path.join(hxcppPath, 'include/Dynamic.h'),
+        path.join(hxcppPath, 'include/hx/Class.h'),
+        path.join(hxcppPath, 'src/Array.cpp')
+    ];
+    for (hxcppInt64Path of hxcppInt64PathList) {
+        var cppData = '' + fs.readFileSync(hxcppInt64Path);
+        var newCppData = cppData.split('<::cpp::Int64>').join('< ::cpp::Int64>');
+        if (cppData != newCppData) {
+            fs.writeFileSync(hxcppInt64Path, newCppData);
+        }
+    }
+
+    if (process.platform == 'darwin') {
+        console.log("Build tools for mac");
+
+        spawnSync(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        if (debug) {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-arm64'));
+        }
+        else {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic'), path.join(__dirname, 'build/ceramic-arm64'));
+        }
+
+        spawnSync(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        if (debug) {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-x86_64'));
+        }
+        else {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic'), path.join(__dirname, 'build/ceramic-x86_64'));
+        }
+
+        if (fs.existsSync(path.join(__dirname, 'ceramic'))) {
+            fs.unlinkSync(path.join(__dirname, 'ceramic'));
+        }
+
+        spawnSync('lipo', [
+            '-create', 'ceramic-arm64', 'ceramic-x86_64',
+            '-output', '../ceramic'
+        ], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+    }
+    else if (process.platform == 'win32') {
+        console.log("Build tools for windows");
+
+        spawnSync(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+
+        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+
+        if (fs.existsSync(path.join(__dirname, 'ceramic.exe'))) {
+            fs.unlinkSync(path.join(__dirname, 'ceramic.exe'));
+        }
+
+        if (debug) {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic-debug.exe'), path.join(__dirname, 'ceramic.exe'));
+        }
+        else {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic.exe'), path.join(__dirname, 'ceramic.exe'));
+        }
+    }
+    else {
+        console.log("Build tools for linux");
+
+        spawnSync(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+
+        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+
+        if (fs.existsSync(path.join(__dirname, 'ceramic'))) {
+            fs.unlinkSync(path.join(__dirname, 'ceramic'));
+        }
+
+        if (debug) {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'ceramic'));
+        }
+        else {
+            fs.renameSync(path.join(__dirname, 'build/Ceramic'), path.join(__dirname, 'ceramic'));
+        }
+    }
+
+}
+
+install();

@@ -141,7 +141,7 @@ class Build extends tools.Task {
         if (isRun) {
             // Keep a file updated in home directory to let other ceramic scripts detect
             // that a haxe server is running
-            var homedir:String = untyped js.Syntax.code("require('os').homedir()");
+            var homedir:String = homedir();
             var time = '' + Date.now().getTime();
             var hash = Md5.encode(cwd);
             var ceramicRunDir = Path.join([homedir, '.ceramic-run']);
@@ -155,12 +155,12 @@ class Build extends tools.Task {
                 FileSystem.createDirectory(ceramicRunDir);
             }
             File.saveContent(ceramicRunFile, time);
-            js.Node.setInterval(function() {
+            timer.interval(0.5, () -> {
                 if (File.getContent(ceramicRunFile) != time) {
                     print('Stop run task (a new one is being run).');
                     Sys.exit(0);
                 }
-            }, 500);
+            });
         }
 
         // Get and run backend's build task

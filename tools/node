@@ -1,3 +1,0 @@
-#!/bin/bash
-export PATH=${0%/*}':'$PATH
-"${0%/*}"/../node/node_modules/.bin/node "$@"

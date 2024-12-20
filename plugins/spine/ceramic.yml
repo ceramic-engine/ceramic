@@ -1,5 +1,7 @@
 plugin:
     name: Spine
+    tools: tools.SpinePlugin
+
     libs:
         - generate
 

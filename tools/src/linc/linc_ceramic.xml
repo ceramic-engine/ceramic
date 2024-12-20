@@ -1,0 +1,11 @@
+<xml>
+
+    <files id='haxe'>
+
+        <compilerflag value='-I${LINC_CERAMIC_PATH}linc/' />
+
+        <file name='${LINC_CERAMIC_PATH}linc/linc_ceramic.cpp' />
+
+    </files>
+
+</xml>

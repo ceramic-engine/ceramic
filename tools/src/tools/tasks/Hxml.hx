@@ -110,12 +110,12 @@ class Hxml extends tools.Task {
 
             // Let plugins extend completion HXML
             for (plugin in context.plugins) {
-                if (plugin.extendCompletionHxml != null) {
+                if (plugin.instance?.extendCompletionHxml != null) {
 
                     var prevBackend = context.backend;
-                    context.backend = plugin.backend;
+                    context.backend = plugin.instance.backend;
 
-                    plugin.extendCompletionHxml(rawHxml);
+                    plugin.instance.extendCompletionHxml(rawHxml);
 
                     context.backend = prevBackend;
                 }

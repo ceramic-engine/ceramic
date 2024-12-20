@@ -1,2 +1,3 @@
 plugin:
     name: Windows
+    tools: tools.WindowsPlugin

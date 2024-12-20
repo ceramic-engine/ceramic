@@ -2,7 +2,6 @@ package tools;
 
 import haxe.Json;
 import haxe.io.Path;
-import npm.Yaml;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
@@ -51,8 +50,6 @@ class Project {
 
 /// Properties
 
-    // TODO use project format typedefs
-
     public var app:Dynamic<Dynamic>;
 
     public var plugin:Dynamic<Dynamic>;
@@ -87,7 +84,7 @@ class Project {
         // Parse YAML
         //
         try {
-            var parsed = Yaml.parse(data);
+            var parsed:Dynamic = Yaml.parse(data);
 
             if (parsed.app == null) {
                 if (parsed.plugin != null) {
@@ -128,7 +125,7 @@ class Project {
             fail('Unable to read project at path $path: $e');
         }
 
-        app = ProjectLoader.loadAppConfig(data, context.defines, context.plugins, context.unbuiltPlugins);
+        app = ProjectLoader.loadAppConfig(data, context.defines, context.plugins);
 
         // Add path
         app.path = Path.isAbsolute(path) ? path : Path.normalize(Path.join([context.cwd, path]));
@@ -136,12 +133,12 @@ class Project {
         // Extend app config from tools plugin code
         if (context.plugins != null) {
             for (plugin in context.plugins) {
-                if (plugin.extendProject != null) {
+                if (plugin.instance?.extendProject != null) {
 
                     var prevPlugin = context.plugin;
                     context.plugin = plugin;
 
-                    plugin.extendProject(this);
+                    plugin.instance.extendProject(this);
 
                     context.plugin = prevPlugin;
                 }
@@ -244,8 +241,7 @@ class ProjectLoader {
     public static function loadAppConfig(
         input:String,
         defines:Map<String,String>,
-        plugins:Map<String, tools.spec.ToolsPlugin>,
-        unbuiltPlugins:Map<String, {path:String, name:String, runtime:Dynamic}>
+        plugins:Map<String, tools.spec.ToolsPlugin>
     ):Dynamic<Dynamic> {
 
         var app:Dynamic<Dynamic> = null;
@@ -253,7 +249,7 @@ class ProjectLoader {
         // Parse YAML
         //
         try {
-            var parsed = Yaml.parse(input);
+            var parsed:Dynamic = Yaml.parse(input);
 
             if (parsed.app == null) {
                 if (parsed.plugin != null) {
@@ -325,22 +321,8 @@ class ProjectLoader {
                     if (plugin.runtime != null) {
                         Reflect.setField(
                             app,
-                            'if true || plugin_runtime_' + (pluginI++),
-                            Json.parse(Json.stringify(plugin.runtime)) // Copy to prevent plugin to be modified
-                        );
-                    }
-                }
-            }
-
-            // Also use unbuilt plugins for runtime info
-            // (unbuilt plugin include plugins without any tool extension)
-            if (unbuiltPlugins != null) {
-                for (plugin in unbuiltPlugins) {
-                    if (plugin.runtime != null) {
-                        Reflect.setField(
-                            app,
-                            'if true || plugin_runtime_' + (pluginI++),
-                            Json.parse(Json.stringify(plugin.runtime)) // Copy to prevent plugin to be modified
+                            'if true || plugin_runtime_' + (pluginI++), // Just a unique condition that is always true, to work with merging system
+                            Json.parse(Json.stringify(plugin.runtime).replace('{plugin:cwd}', plugin.path).replace('{cwd}', context.cwd)) // Copy to prevent plugin to be modified, and perform some replaces
                         );
                     }
                 }
@@ -451,7 +433,7 @@ class ProjectLoader {
         // Parse YAML
         //
         try {
-            var parsed = Yaml.parse(input);
+            var parsed:Dynamic = Yaml.parse(input);
 
             if (parsed.plugin == null) {
                 if (parsed.app != null) {
@@ -568,35 +550,21 @@ class ProjectLoader {
         // Parse conditionals
         for (key in Reflect.fields(data)) {
             if (key.startsWith('if ')) {
-                // Check if condition evaluates to true with current context
-                //
-                var parser = new hscript.Parser();
-                var condition = parser.parseString('(' + key.substring(3) + ');');
-
-                // Extract identifiers from condition
-                var identifiers = extractIdentifiers(key.substring(3));
 
                 // Setup context from defines
-                var interp = new hscript.Interp();
+                var variables = new Map<String,Any>();
                 for (defKey in defines.keys()) {
                     var val = defines.get(defKey);
-                    interp.variables.set(defKey, val == null || val.trim() == '' ? true : val);
+                    variables.set(defKey, val == null || val.trim() == '' ? true : val);
                 }
 
                 // Add os-specific defines
-                interp.variables.set('os_' + Sys.systemName().toLowerCase(), true);
-
-                // Add missing identifiers used in expression, if any
-                for (identifier in identifiers) {
-                    if (!interp.variables.exists(identifier)) {
-                        interp.variables.set(identifier, false);
-                    }
-                }
+                variables.set('os_' + Sys.systemName().toLowerCase(), true);
 
                 // Evaluate condition
                 var result:Bool = false;
                 try {
-                    result = interp.execute(condition);
+                    result = Condition.evaluate(key.substring(3), variables);
                 } catch (e:Dynamic) {
                     warning('Error when evaluating expression \'' + key.substring(3) + '\': ' + e);
                 }
@@ -670,7 +638,7 @@ class ProjectLoader {
                 // Add in mapping
                 else if (!Std.isOfType(orig, String) && !Std.isOfType(orig, Bool) && !Std.isOfType(orig, Int) && !Std.isOfType(orig, Float)) {
                     for (subKey in Reflect.fields(value)) {
-                        var subValue = Reflect.field(value, subKey);
+                        var subValue:Dynamic = Reflect.field(value, subKey);
                         Reflect.setField(orig, subKey, subValue);
                     }
                 }
@@ -741,7 +709,10 @@ class ProjectLoader {
 
         for (part in cleaned.split(' ')) {
             if (RE_IDENTIFIER.match(part)) {
-                identifiers.set(part, true);
+                var lowerCasePart = part.toLowerCase();
+                if (lowerCasePart != 'true' && lowerCasePart != 'false' && lowerCasePart != 'null') {
+                    identifiers.set(part, true);
+                }
             }
         }
 

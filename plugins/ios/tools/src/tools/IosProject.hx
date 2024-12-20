@@ -1,25 +1,20 @@
 package tools;
 
+import haxe.SysTools;
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
+import tools.Files;
 import tools.Helpers.*;
 import tools.Project;
 import tools.Templates;
-import tools.Sync;
-import tools.Files;
-import haxe.io.Path;
-#if (haxe_ver >= 4)
-import haxe.SysTools;
-#end
-import sys.io.File;
-import sys.FileSystem;
-
-import js.node.ChildProcess;
 
 using StringTools;
 
 class IosProject {
 
     public static function createIosProjectIfNeeded(cwd:String, project:Project):Void {
-        
+
         var iosProjectName = project.app.name;
         var iosProjectPath = Path.join([cwd, 'project', 'ios']);
         var iosProjectFile = Path.join([iosProjectPath, iosProjectName + '.xcodeproj']);
@@ -40,14 +35,13 @@ class IosProject {
             }
 
             // Plugin path
-            var pluginPath = context.plugins.get('iOS').path;
+            var pluginPath = context.plugins.get('ios').path;
 
             // Create directory if needed
             if (!FileSystem.exists(iosProjectPath)) {
                 FileSystem.createDirectory(iosProjectPath);
             }
 
-            // Copy from template project
             // Copy from template project
             var backendName:String = 'clay'; // Default to clay
             if (context.backend != null) {
@@ -101,39 +95,6 @@ class IosProject {
                 }
                 FileSystem.rename(tmpProjectAssetsPath, iosProjectAssetsPath);
             }
-        }
-
-    }
-
-    public static function updateBuildNumber(cwd:String, project:Project) {
-
-        var iosProjectName = project.app.name;
-        var iosProjectPath = Path.join([cwd, 'project/ios']);
-        var iosProjectInfoPlistFile = Path.join([iosProjectPath, 'project/project-Info.plist']);
-
-        if (!FileSystem.exists(iosProjectInfoPlistFile)) {
-            warning('Cannot update build number because info plist file doesn\'t exist at path: $iosProjectInfoPlistFile');
-        }
-        else {
-            // Compute target build number from current time
-            var targetBuildNumber = Std.parseInt(DateTools.format(Date.now(), '%Y%m%d%H%M').substr(2));
-            // Extract current build number
-            #if (haxe_ver < 4)
-            var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + StringTools.quoteUnixArg(iosProjectInfoPlistFile))).trim());
-            #else
-            var currentBuildNumber = Std.parseInt(('' + ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Print CFBundleVersion' " + SysTools.quoteUnixArg(iosProjectInfoPlistFile))).trim());
-            #end
-            // Increment if needed
-            if (currentBuildNumber == targetBuildNumber) {
-                targetBuildNumber++;
-            }
-            print('Update build number to $targetBuildNumber');
-            // Saved updated build number
-            #if (haxe_ver < 4)
-            ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion " + targetBuildNumber + "' " + StringTools.quoteUnixArg(iosProjectInfoPlistFile));
-            #else
-            ChildProcess.execSync("/usr/libexec/PlistBuddy -c 'Set :CFBundleVersion " + targetBuildNumber + "' " + SysTools.quoteUnixArg(iosProjectInfoPlistFile));
-            #end
         }
 
     }

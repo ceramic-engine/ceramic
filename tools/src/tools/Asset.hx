@@ -22,4 +22,10 @@ class Asset {
 
     }
 
+    function toString() {
+
+        return '[$rootDirectory+$name]';
+
+    }
+
 }

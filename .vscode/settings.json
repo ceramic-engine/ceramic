@@ -1,5 +1,11 @@
 {
     "haxe.executable": "tools/haxe",
     "haxelib.executable": "tools/haxelib",
-    "dotnet.defaultSolution": "disable"
+    "dotnet.defaultSolution": "disable",
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.inactiveRegionOpacity": 1,
+    "haxe.enableCompilationServer": false,
+    "haxe.configurations": [
+        ["--cwd", "tools", "build.hxml", "-D", "completion"]
+    ]
 }

@@ -1,13 +1,12 @@
 package tools.tasks.unity;
 
+import haxe.Json;
+import haxe.io.Path;
+import sys.FileSystem;
+import sys.io.File;
 import tools.Files;
 import tools.Helpers.*;
 import tools.UnityProject;
-import haxe.io.Path;
-import haxe.Json;
-import sys.FileSystem;
-import sys.io.File;
-import npm.AppleScript;
 
 using StringTools;
 
@@ -59,34 +58,24 @@ class Project extends tools.Task {
 
                     print('Open project with Unity Editor...');
 
-                    Sync.run(function(done) {
+                    command('bash', [
+                        Path.join([context.plugins.get('unity').path, 'resources/open-unity-mac.sh']),
+                        '-p',
+                        unityProjectPath
+                    ]);
 
-                        var script = '
-                            activate application "Unity"
-                            tell application "Unity"
-                                open "$unityProjectPath"
-                            end tell
-';
-        
-                        AppleScript.execString(script, function(err, rtn) {
-                            if (err != null) {
-                                fail(''+err);
-                            }
-                            done();
-                        });
-                    });
                 }
                 else if (os == 'Windows') {
 
                     // Just trying windows, not sure it works
 
                     print('Open project with Unity Editor...');
-        
+
                     var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
-        
+
                     var cmd = Path.join([unityEditorPath, 'Unity.exe']);
                     var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
-        
+
                     command(cmd, ['-openfile', ceramicScenePath], { detached: true });
 
                 }
@@ -97,12 +86,12 @@ class Project extends tools.Task {
                 if (os == 'Mac') {
 
                     print('Open project with Unity Editor...');
-        
+
                     var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
-        
+
                     var cmd = Path.join([unityEditorPath, 'Contents/MacOS/Unity']);
                     var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
-        
+
                     command(cmd, ['-openfile', ceramicScenePath], { detached: true });
                 }
                 else if (os == 'Windows') {
@@ -110,12 +99,12 @@ class Project extends tools.Task {
                     // Just trying windows, not sure it works
 
                     print('Open project with Unity Editor...');
-        
+
                     var unityEditorPath = UnityEditor.resolveUnityEditorPath(cwd, project);
-        
+
                     var cmd = Path.join([unityEditorPath, 'Unity.exe']);
                     var ceramicScenePath = Path.join([projectPath, 'Assets/Scenes/CeramicScene.unity']);
-        
+
                     command(cmd, ['-openfile', ceramicScenePath], { detached: true });
 
                 }

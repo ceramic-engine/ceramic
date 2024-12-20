@@ -6,6 +6,6 @@ plugin:
             +libs:
                 - fuzzaldrin
             +paths:
-                - {plugin:cwd}/runtime/src
+                - '{plugin:cwd}/runtime/src'
             +assets:
-                - {plugin:cwd}/assets
+                - '{plugin:cwd}/assets'

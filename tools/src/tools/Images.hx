@@ -1,33 +1,26 @@
 package tools;
 
-#if (haxe_ver < 4)
-import js.html.Uint8Array;
-#else
-import js.lib.Uint8Array;
-#end
 import haxe.Json;
+import haxe.io.Bytes;
+import haxe.io.BytesData;
 import haxe.io.Path;
-import npm.Sharp.sharp;
-import npm.ToIco.toIco;
+import haxe.io.UInt8Array;
+import stb.Image as StbImage;
+import stb.ImageResize as StbImageResize;
+import stb.ImageResize.StbImageResizeData;
+import stb.ImageResize.StbImageResizePixelLayout;
+import stb.ImageWrite as StbImageWrite;
 import sys.FileSystem;
 
 typedef RawImageData = {
 
-    var pixels:Uint8Array;
+    var pixels:UInt8Array;
 
     var width:Int;
 
     var height:Int;
 
     var channels:Int;
-
-}
-
-typedef ImageMetadata = {
-
-    var width:Int;
-
-    var height:Int;
 
 }
 
@@ -55,29 +48,17 @@ class Images {
 
     public static function getRaw(srcPath:String):RawImageData {
 
-        var pixels:Uint8Array = null;
+        var pixels:UInt8Array = null;
         var width:Int;
         var height:Int;
         var channels:Int;
 
-        Sync.run(function(done) {
+        var info = StbImage.load(srcPath);
 
-            sharp(srcPath)
-            .raw()
-            .toBuffer(function(err, data, info) {
-
-                if (err != null) throw err;
-
-                pixels = data;
-                width = info.width;
-                height = info.height;
-                channels = info.channels;
-
-                done();
-
-            });
-
-        });
+        width = info.w;
+        height = info.h;
+        channels = info.comp;
+        pixels = UInt8Array.fromBytes(Bytes.ofData(info.bytes));
 
         return {
             pixels: pixels,
@@ -90,29 +71,16 @@ class Images {
 
     public static function saveRaw(dstPath:String, data:RawImageData):Void {
 
-        Sync.run(function(done) {
+        var bytes = data.pixels.getData().bytes;
 
-            sharp(data.pixels, {
-                raw: {
-                    width: data.width,
-                    height: data.height,
-                    channels: data.channels
-                }
-            })
-            .png()
-            .toFile(dstPath, function(err, info) {
-
-                if (err != null) throw err;
-
-                done();
-
-            });
-
-        });
+        StbImageWrite.write_png(
+            dstPath, data.width, data.height, data.channels,
+            bytes.getData(), 0, bytes.length, data.width * data.channels
+        );
 
     }
 
-    public static function premultiplyAlpha(pixels:Uint8Array):Void {
+    public static function premultiplyAlpha(pixels:UInt8Array):Void {
 
         var count = pixels.length;
         var index = 0;
@@ -134,119 +102,140 @@ class Images {
 
     }
 
-    public static function resize(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float, padTop:Float = 0, padRight:Float = 0, padBottom:Float = 0, padLeft:Float = 0):Void {
+    public static function resizeRaw(data:RawImageData, targetWidth:Float, targetHeight:Float, padTop:Float = 0, padRight:Float = 0, padBottom:Float = 0, padLeft:Float = 0):RawImageData {
 
-        Sync.run(function(done) {
+        // If downscaling to lower than 50% of original size, do it
+        // in multiple passes to prevent aliasing
+        while (targetWidth < data.width * 0.5 || targetHeight < data.height * 0.5) {
+            data = resizeRaw(data, Math.ceil(data.width * 0.5), Math.ceil(data.height * 0.5));
+        }
 
-            // Create target directory if needed
-            var dirname = Path.directory(dstPath);
-            if (!FileSystem.exists(dirname)) {
-                FileSystem.createDirectory(dirname);
+        var bytes = data.pixels.getData().bytes;
+        var outputW = Math.round(targetWidth);
+        var outputH = Math.round(targetHeight);
+
+        var dstData:StbImageResizeData = StbImageResize.resize_uint8_linear(
+            bytes.getData(), 0, bytes.length,
+            data.width, data.height, 0,
+            outputW, outputH, 0,
+            StbImageResizePixelLayout.STBIR_RGBA, data.channels
+        );
+
+        var pixels = UInt8Array.fromBytes(Bytes.ofData(dstData.bytes));
+
+        if (padTop > 0 || padRight > 0 || padBottom > 0 || padLeft > 0) {
+            pixels = padPixels(pixels, outputW, outputH, data.channels, padTop, padRight, padBottom, padLeft);
+        }
+
+        return {
+            pixels: pixels,
+            channels: data.channels,
+            width: outputW,
+            height: outputH
+        };
+
+    }
+
+    public static function resizeFile(srcPath:String, dstPath:String, targetWidth:Float, targetHeight:Float, padTop:Float = 0, padRight:Float = 0, padBottom:Float = 0, padLeft:Float = 0):Void {
+
+        final origRaw = getRaw(srcPath);
+
+        final resizedRaw = resizeRaw(
+            origRaw,
+            targetWidth, targetHeight,
+            padTop, padRight, padBottom, padLeft
+        );
+
+        saveRaw(
+            dstPath,
+            resizedRaw
+        );
+
+    }
+
+    public static function padPixels(pixels:UInt8Array, width:Int, height:Int, channels:Int, padTop:Float, padRight:Float, padBottom:Float, padLeft:Float):UInt8Array {
+
+        // Calculate new dimensions with padding
+        var newWidth = Math.round(width + padLeft + padRight);
+        var newHeight = Math.round(height + padTop + padBottom);
+
+        // Create new array for padded image
+        var paddedPixels = new UInt8Array(newWidth * newHeight * channels);
+
+        // Convert padding to integers
+        var topPad = Math.round(padTop);
+        var leftPad = Math.round(padLeft);
+
+        // Copy original pixels to new array with offset
+        for (y in 0...height) {
+            for (x in 0...width) {
+                var srcPos = (y * width + x) * channels;
+                var dstPos = ((y + topPad) * newWidth + (x + leftPad)) * channels;
+
+                // Copy all channels for this pixel
+                for (c in 0...channels) {
+                    paddedPixels[dstPos + c] = pixels[srcPos + c];
+                }
             }
+        }
 
-            if (padTop == 0 && padRight == 0 && padBottom == 0 && padLeft == 0) {
-                sharp(
-                    srcPath
-                ).resize(
-                    Math.round(targetWidth), Math.round(targetHeight)
-                ).toFile(
-                    dstPath,
-                    function(err, info) {
-                        if (err != null) throw err;
-    
-                        done();
-                    }
-                );
-            }
-            else {
-                sharp(
-                    srcPath
-                ).resize(
-                    Math.round(targetWidth), Math.round(targetHeight)
-                ).extend({
-                    top: Math.round(padTop),
-                    right: Math.round(padTop),
-                    bottom: Math.round(padBottom),
-                    left: Math.round(padLeft),
-                    background: {
-                        r: 0,
-                        g: 0,
-                        b: 0,
-                        alpha: 0
-                    }
-                }).toFile(
-                    dstPath,
-                    function(err, info) {
-                        if (err != null) throw err;
-    
-                        done();
-                    }
-                );
-            }
-
-        });
+        return paddedPixels;
 
     }
 
     public static function createIco(srcPath:String, dstPath:String, targetWidth:Float = 256, targetHeight:Float = 256):Void {
 
-        Sync.run(function(done) {
+        // TODO check that it works
 
-            // Create target directory if needed
-            var dirname = Path.directory(dstPath);
-            if (!FileSystem.exists(dirname)) {
-                FileSystem.createDirectory(dirname);
-            }
+        var output = new haxe.io.BytesOutput();
+        output.bigEndian = false;
 
-            sharp(
-                srcPath
-            ).resize(
-                Math.round(targetWidth), Math.round(targetHeight)
-            ).toBuffer(function(err, data, info) {
+        var sizes = [16, 24, 32, 48, 64, 128, 256];
+        var validSizes = sizes.filter(size -> size <= targetWidth && size <= targetHeight);
+        var srcData = getRaw(srcPath);
 
-                if (err != null) throw err;
+        // Write ICO header
+        output.writeInt16(0);
+        output.writeInt16(1);
+        output.writeInt16(validSizes.length);
 
-                toIco([data], {resize: true, sizes: [16, 24, 32, 48, 64, 128, 256]})
-                .then(function(buffer:js.node.Buffer) {
+        // Calculate initial directory offset
+        var currentOffset = 6 + (validSizes.length * 16);
+        var directory = new haxe.io.BytesOutput();
+        var imageData = new haxe.io.BytesOutput();
 
-                    js.node.Fs.writeFileSync(dstPath, buffer);
+        for (size in validSizes) {
+            var resized = resizeRaw(srcData, size, size);
+            var resizedBytes = resized.pixels.getData().bytes;
 
-                    done();
+            var pngByteData = StbImageWrite.write_png_to_mem(
+                resized.width, resized.height, resized.channels,
+                resizedBytes.getData(), 0, resizedBytes.length,
+                resized.width * resized.channels
+            );
 
-                },
-                function(err) {
-                    throw err;
-                });
+            var pngData = Bytes.ofData(pngByteData);
 
-            });
+            // Write directory entry
+            directory.writeInt8(size == 256 ? 0 : size);
+            directory.writeInt8(size == 256 ? 0 : size);
+            directory.writeInt8(0);
+            directory.writeInt8(0);
+            directory.writeInt16(1);
+            directory.writeInt16(32);
+            directory.writeInt32(pngData.length);
+            directory.writeInt32(currentOffset);
 
-        });
+            // Update offset and write PNG data
+            currentOffset += pngData.length;
+            imageData.writeBytes(pngData, 0, pngData.length);
+        }
 
-    }
+        // Combine all parts
+        output.writeBytes(directory.getBytes(), 0, directory.length);
+        output.writeBytes(imageData.getBytes(), 0, imageData.length);
 
-    public function metadata(path:String):ImageMetadata {
-
-        var width:Float = 0;
-        var height:Float = 0;
-
-        Sync.run(function(done) {
-
-            sharp(
-                path
-            ).metadata(function(err, meta) {
-                if (err != null) throw err;
-
-                width = meta.width;
-                height = meta.height;
-
-            });
-
-        });
-
-        return {
-            width: Math.round(width),
-            height: Math.round(height)
-        };
+        sys.io.File.saveBytes(dstPath, output.getBytes());
 
     }
 

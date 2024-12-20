@@ -23,7 +23,7 @@ ${Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node'])} ${Pat
             command('chmod', ['+x', 'ceramic'], { cwd: '/usr/local/bin', mute: true });
         }
         else if (Sys.systemName() == 'Windows') {
-            var haxePath = js.Node.process.env['HAXEPATH'];
+            var haxePath = Sys.getEnv('HAXEPATH');
             if (haxePath == null || !FileSystem.exists(haxePath)) {
                 fail('Haxe must be installed on this machine in order to link ceramic command.');
             }

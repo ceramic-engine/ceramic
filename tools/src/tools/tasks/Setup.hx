@@ -1,7 +1,6 @@
 package tools.tasks;
 
 import haxe.io.Path;
-import js.node.Os;
 import sys.FileSystem;
 import tools.Helpers.*;
 
@@ -28,7 +27,11 @@ class Setup extends tools.Task {
 
         if (context.backend != null) {
 
+            print('CONTEXT BACKEND NOT NULL: ' + context.backend);
+
             var availableTargets = context.backend.getBuildTargets();
+
+            print('TARGETS: ' + availableTargets);
             var targetName = getTargetName(args, availableTargets);
 
             if (targetName == null) {
