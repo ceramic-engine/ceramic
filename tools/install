@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 
-var spawnSync = require('child_process').spawnSync;
-var fs = require('fs');
-var path = require('path');
+const spawn = require('child_process').spawn;
+const execSync = require('child_process').execSync;
+const fs = require('fs');
+const path = require('path');
 
-var args = process.argv.slice(2);
+const args = process.argv.slice(2);
 function argumentFlag(argName) {
     const index = args.indexOf(`--${argName}`);
     if (index !== -1) {
@@ -13,9 +14,47 @@ function argumentFlag(argName) {
     return false;
 }
 
-var debug = argumentFlag('debug');
+const debug = argumentFlag('debug');
 
-function install() {
+function command(cmd, args, options) {
+
+    if (args == null) args = [];
+    if (options == null) options = {};
+    if (options.cwd == null) options.cwd = process.cwd();
+
+    if (process.platform == 'win32') {
+        options.shell = cmd.endsWith('.exe') ? false : true;
+        args = [].concat(args);
+        for (let i = 0; i < args.length; i++) {
+            args[i] = '"' + args[i].replace(/"/g, '""') + '"';
+        }
+    }
+
+    console.log('\n> ' + cmd + ' ' + args.join(' '));
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(cmd, args, {
+            stdio: 'inherit',
+            cwd: options.cwd,
+            env: process.env,
+            shell: options.shell
+        });
+
+        child.on('close', (code) => {
+            if (code !== 0) {
+                reject(new Error(`Child process exited with code ${code}`));
+            } else {
+                resolve(code);
+            }
+        });
+
+        child.on('error', (error) => {
+            reject(error);
+        });
+    });
+}
+
+async function install() {
 
     process.chdir(__dirname);
 
@@ -27,19 +66,19 @@ function install() {
     if (!fs.existsSync(haxelibRepoPath)) {
         fs.mkdirSync(haxelibRepoPath);
     }
-    spawnSync(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'yaml', '../git/yaml/src', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'linc_stb', '../git/linc_stb', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'linc_process', '../git/linc_process', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'linc_timestamp', '../git/linc_timestamp', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'hxcpp', '../git/hxcpp', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { stdio: "inherit", cwd: __dirname });
-    spawnSync(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { stdio: "inherit", cwd: __dirname });
+    await command(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'yaml', '../git/yaml/src', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'linc_stb', '../git/linc_stb', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'linc_process', '../git/linc_process', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'linc_timestamp', '../git/linc_timestamp', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'hxnodejs', '../git/hxnodejs', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'hxcpp', '../git/hxcpp', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
-    var hxcppPath = (''+spawnSync(haxelib, ['path', 'hxcpp']).stdout).split("\n")[0].trim();
+    var hxcppPath = execSync('haxelib path hxcpp').toString().split("\n")[0].trim();
     var androidClangToolchainPath = path.join(hxcppPath, 'toolchain/android-toolchain-clang.xml');
     var androidClangToolchain = '' + fs.readFileSync(androidClangToolchainPath);
     var indexOfOptimFlag = androidClangToolchain.indexOf('<flag value="-O2" unless="debug"/>');
@@ -108,8 +147,8 @@ function install() {
     if (process.platform == 'darwin') {
         console.log("Build tools for mac");
 
-        spawnSync(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
-        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-arm64'));
         }
@@ -117,8 +156,8 @@ function install() {
             fs.renameSync(path.join(__dirname, 'build/Ceramic'), path.join(__dirname, 'build/ceramic-arm64'));
         }
 
-        spawnSync(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
-        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-x86_64'));
         }
@@ -130,17 +169,17 @@ function install() {
             fs.unlinkSync(path.join(__dirname, 'ceramic'));
         }
 
-        spawnSync('lipo', [
+        await command('lipo', [
             '-create', 'ceramic-arm64', 'ceramic-x86_64',
             '-output', '../ceramic'
-        ], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        ], { cwd: path.join(__dirname, 'build') });
     }
     else if (process.platform == 'win32') {
         console.log("Build tools for windows");
 
-        spawnSync(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
 
-        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
 
         if (fs.existsSync(path.join(__dirname, 'ceramic.exe'))) {
             fs.unlinkSync(path.join(__dirname, 'ceramic.exe'));
@@ -156,9 +195,9 @@ function install() {
     else {
         console.log("Build tools for linux");
 
-        spawnSync(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { stdio: "inherit", cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
 
-        spawnSync('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { stdio: "inherit", cwd: path.join(__dirname, 'build') });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
 
         if (fs.existsSync(path.join(__dirname, 'ceramic'))) {
             fs.unlinkSync(path.join(__dirname, 'ceramic'));
@@ -174,4 +213,10 @@ function install() {
 
 }
 
-install();
+(async () => {
+    try {
+        await install();
+    } catch (error) {
+        console.error(error);
+    }
+})();
