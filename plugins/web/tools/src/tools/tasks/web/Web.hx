@@ -238,7 +238,7 @@ class Web extends tools.Task {
 
         if (Sys.systemName() == 'Windows') {
             proc = new Process(
-                'node_modules/electron/dist/electron.exe',
+                Path.join([context.ceramicRunnerPath, 'node_modules\\electron\\dist\\electron.exe']),
                 cmdArgs,
                 context.ceramicRunnerPath
             );
