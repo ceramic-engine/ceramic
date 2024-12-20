@@ -705,7 +705,6 @@ class Helpers {
 
         var status = 0;
 
-        var cwd = options.cwd;
         var logCwd = options.logCwd;
 
         // Handle Windows, again...

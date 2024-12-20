@@ -4,7 +4,13 @@
 #include "./linc_ceramic.h"
 #include <ctime>
 #include <fstream>
+
+#ifdef _WIN32
+#include <sys/utime.h>
+#else
 #include <utime.h>
+#endif
+
 #include <sys/stat.h>
 #include <string>
 
