@@ -185,13 +185,16 @@ class Images {
 
     public static function createIco(srcPath:String, dstPath:String, targetWidth:Float = 256, targetHeight:Float = 256):Void {
 
-        // TODO check that it works
+        if (!sys.FileSystem.exists(srcPath)) {
+            throw 'Source file not found: $srcPath';
+        }
 
         var output = new haxe.io.BytesOutput();
         output.bigEndian = false;
 
         var sizes = [16, 24, 32, 48, 64, 128, 256];
         var validSizes = sizes.filter(size -> size <= targetWidth && size <= targetHeight);
+
         var srcData = getRaw(srcPath);
 
         // Write ICO header
@@ -205,7 +208,9 @@ class Images {
         var imageData = new haxe.io.BytesOutput();
 
         for (size in validSizes) {
+
             var resized = resizeRaw(srcData, size, size);
+
             var resizedBytes = resized.pixels.getData().bytes;
 
             var pngByteData = StbImageWrite.write_png_to_mem(
@@ -217,10 +222,10 @@ class Images {
             var pngData = Bytes.ofData(pngByteData);
 
             // Write directory entry
-            directory.writeInt8(size == 256 ? 0 : size);
-            directory.writeInt8(size == 256 ? 0 : size);
-            directory.writeInt8(0);
-            directory.writeInt8(0);
+            directory.writeByte(size >= 256 ? 0 : size);
+            directory.writeByte(size >= 256 ? 0 : size);
+            directory.writeByte(0);
+            directory.writeByte(0);
             directory.writeInt16(1);
             directory.writeInt16(32);
             directory.writeInt32(pngData.length);
@@ -231,11 +236,17 @@ class Images {
             imageData.writeBytes(pngData, 0, pngData.length);
         }
 
-        // Combine all parts
-        output.writeBytes(directory.getBytes(), 0, directory.length);
-        output.writeBytes(imageData.getBytes(), 0, imageData.length);
+        var directoryBytes = directory.getBytes();
+        var imageDataBytes = imageData.getBytes();
 
-        sys.io.File.saveBytes(dstPath, output.getBytes());
+        // Combine all parts
+        output.writeBytes(directoryBytes, 0, directoryBytes.length);
+        output.writeBytes(imageDataBytes, 0, imageDataBytes.length);
+
+        var finalBytes = output.getBytes();
+
+        // Save the final ICO file
+        sys.io.File.saveBytes(dstPath, finalBytes);
 
     }
 

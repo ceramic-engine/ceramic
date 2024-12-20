@@ -43,7 +43,7 @@ class Windows extends tools.Task {
         // Update app icon
         if (FileSystem.exists(appIconPath)) {
             command(Path.join([pluginPath, 'resources', 'rcedit.exe']), [
-                windowsAppExe, '--set-icon', appIconPath
+                Path.withoutDirectory(windowsAppExe), '--set-icon', Path.withoutDirectory(appIconPath)
             ], {
                 cwd: windowsProjectPath
             });
