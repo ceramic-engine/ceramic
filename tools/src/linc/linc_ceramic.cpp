@@ -33,8 +33,8 @@ namespace linc {
             const char* cpath = path.c_str();
 
             struct utimbuf new_times;
-            new_times.actime = static_cast<time_t>(mtime);  // access time
-            new_times.modtime = static_cast<time_t>(mtime); // modification time
+            new_times.actime = static_cast<time_t>(mtime / 1000);  // access time
+            new_times.modtime = static_cast<time_t>(mtime / 1000); // modification time
 
             utime(cpath, &new_times);
 
