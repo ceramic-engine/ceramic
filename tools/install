@@ -177,12 +177,12 @@ async function install() {
     else if (process.platform == 'win32') {
         console.log("Build tools for windows");
 
-        await command(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation', '-D', 'NO_PRECOMPILED_HEADERS'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
 
         let haxelibCmd = fs.readFileSync(path.join(__dirname, 'haxelib.cmd'), 'utf8');
         haxelibCmd = haxelibCmd.split('/../').join('/../../');
         fs.writeFileSync(path.join(__dirname, 'build', 'haxelib.cmd'), haxelibCmd);
-        await command(haxelib, ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64', '-DNO_PRECOMPILED_HEADERS'], { cwd: path.join(__dirname, 'build') });
+        await command(haxelib, ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
 
         if (fs.existsSync(path.join(__dirname, 'ceramic.exe'))) {
             fs.unlinkSync(path.join(__dirname, 'ceramic.exe'));
