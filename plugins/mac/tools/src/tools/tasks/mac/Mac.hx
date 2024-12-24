@@ -53,7 +53,9 @@ class Mac extends tools.Task {
         var status = commandWithChecksAndLogs(
             project.app.name + '.app/Contents/MacOS/' + project.app.name,
             [],
-            { cwd: macProjectPath, logCwd: outTargetPath }
+            { cwd: macProjectPath, logCwd: outTargetPath, filter: (line:String) -> {
+                return line.indexOf('UNSUPPORTED (log once): POSSIBLE ISSUE: unit') != -1 && line.indexOf('GLD_TEXTURE_INDEX_2D is unloadable and bound to sampler type (Float)') != -1;
+            } }
         );
 
         if (status != 0) {

@@ -1,15 +1,24 @@
 #!/bin/bash
-export PATH=${0%/*}':'$PATH
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+export PATH=$SCRIPT_DIR':'$PATH
 if [ "$(uname)" == "Darwin" ]; then
-    export HAXEPATH=${0%/*}/../git/haxe-binary/mac/haxe
-    export NEKOPATH=${0%/*}/../git/haxe-binary/mac/neko
+    export HAXEPATH=$SCRIPT_DIR/../git/haxe-binary/mac/haxe
+    export NEKOPATH=$SCRIPT_DIR/../git/haxe-binary/mac/neko
     export PATH=$HAXEPATH:$NEKOPATH:$PATH
     export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
-    "${0%/*}"/../git/haxe-binary/mac/neko/neko "$@"
+    "$SCRIPT_DIR"/../git/haxe-binary/mac/neko/neko "$@"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    export HAXEPATH=${0%/*}/../git/haxe-binary/linux/haxe
-    export NEKOPATH=${0%/*}/../git/haxe-binary/linux/neko
-    export PATH=$HAXEPATH:$NEKOPATH:$PATH
-    export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
-    "${0%/*}"/../git/haxe-binary/linux/neko/neko "$@"
+    if [ "$(uname -m)" == "aarch64" ]; then
+        export HAXEPATH=$SCRIPT_DIR/../git/haxe-binary/linux-arm64/haxe
+        export NEKOPATH=$SCRIPT_DIR/../git/haxe-binary/linux-arm64/neko
+        export PATH=$HAXEPATH:$NEKOPATH:$PATH
+        export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
+        "$SCRIPT_DIR"/../git/haxe-binary/linux-arm64/neko/neko "$@"
+    else
+        export HAXEPATH=$SCRIPT_DIR/../git/haxe-binary/linux-64/haxe
+        export NEKOPATH=$SCRIPT_DIR/../git/haxe-binary/linux-64/neko
+        export PATH=$HAXEPATH:$NEKOPATH:$PATH
+        export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
+        "$SCRIPT_DIR"/../git/haxe-binary/linux-64/neko/neko "$@"
+    fi
 fi

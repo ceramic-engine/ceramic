@@ -12,4 +12,4 @@
 -D HXCPP_CHECK_POINTER
 -D HXCPP_CPP11
 -D safeMode
---macro tools.Plugin.addDefaultPlugins()
+--macro tools.macros.ToolsMacros.addDefaultPlugins()

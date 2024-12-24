@@ -6,6 +6,7 @@ import process.Process;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Project;
+import tools.macros.ToolsMacros;
 
 using StringTools;
 using tools.Colors;
@@ -217,8 +218,8 @@ class Helpers {
         final plugins:Map<String,tools.spec.ToolsPlugin> = new Map();
         context.plugins = plugins;
 
-        final defaultPlugins:Array<Dynamic> = tools.Plugin.defaults();
-        final pluginConstructs:Dynamic = tools.Plugin.constructs();
+        final defaultPlugins:Array<Dynamic> = ToolsMacros.pluginDefaults();
+        final pluginConstructs:Dynamic = ToolsMacros.pluginConstructs();
 
         for (info in defaultPlugins) {
 
@@ -358,7 +359,7 @@ class Helpers {
 
     }
 
-    public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void }) {
+    public static function haxeWithChecksAndLogs(args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void, ?filter:(line:String)->Bool }) {
 
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return commandWithChecksAndLogs(Path.join([context.ceramicToolsPath, haxe]), args, options);
@@ -695,7 +696,7 @@ class Helpers {
     /** Like `command()`, but will perform additional checks and log formatting,
         compared to a regular `command()` call. Use it to run compilers and run apps.
         @return status code */
-    public static function commandWithChecksAndLogs(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void }):Int {
+    public static function commandWithChecksAndLogs(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?logCwd:String, ?tick:()->Void, ?filter:(line:String)->Bool }):Int {
 
         if (options == null) {
             options = { cwd: null, logCwd: null };
@@ -725,8 +726,10 @@ class Helpers {
         });
 
         var stderr = new SplitStream('\n'.code, line -> {
-            line = formatLineOutput(logCwd, line);
-            stderrWrite(line + "\n");
+            if (options.filter == null || !options.filter(line)) {
+                line = formatLineOutput(logCwd, line);
+                stderrWrite(line + "\n");
+            }
         });
 
         proc.read_stdout = data -> {

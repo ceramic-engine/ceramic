@@ -6,6 +6,7 @@ import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
 import tools.Helpers;
+import tools.macros.ToolsMacros;
 
 using StringTools;
 
@@ -281,7 +282,8 @@ class Tools {
     }
 
     public static function ceramicVersion():String {
-        return 'vTODO';
+        static final fullVersion = '${ToolsMacros.ceramicVersion()}-${ToolsMacros.gitCommitShortHash()}';
+        return fullVersion;
     }
 
 }

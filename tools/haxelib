@@ -1,6 +1,11 @@
 #!/bin/bash
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 if [ "$(uname)" == "Darwin" ]; then
-    "${0%/*}"/../git/haxe-binary/mac/haxe/haxelib "$@"
+    "$SCRIPT_DIR"/../git/haxe-binary/mac/haxe/haxelib "$@"
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
-    "${0%/*}"/../git/haxe-binary/linux/haxe/haxelib "$@"
+    if [ "$(uname -m)" == "aarch64" ]; then
+        "$SCRIPT_DIR"/../git/haxe-binary/linux-arm64/haxe/haxelib "$@"
+    else
+        "$SCRIPT_DIR"/../git/haxe-binary/linux-64/haxe/haxelib "$@"
+    fi
 fi

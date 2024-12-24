@@ -223,8 +223,8 @@ jobs:
       - name: Setup Haxe
         working-directory: .
         run: |
-          export NEKOPATH=$PWD'/git/haxe-binary/linux/neko'
-          export HAXEPATH=$PWD'/git/haxe-binary/linux/haxe'
+          export NEKOPATH=$PWD'/git/haxe-binary/linux-64/neko'
+          export HAXEPATH=$PWD'/git/haxe-binary/linux-64/haxe'
           echo 'neko path: '$NEKOPATH
           echo 'haxe path: '$HAXEPATH
           sudo mkdir -p /usr/local/bin
@@ -241,7 +241,7 @@ jobs:
           sudo ln -s $NEKOPATH/nekotools            /usr/local/bin/nekotools
           sudo ln -s $NEKOPATH                      /usr/local/lib/neko
           sudo ln -s $NEKOPATH/libneko.so           /usr/local/lib/libneko.so
-          sudo ln -s $NEKOPATH/libneko.so.2.3.0     /usr/local/lib/libneko.so.2.3.0
+          sudo ln -s $NEKOPATH/libneko.so.2.4.0     /usr/local/lib/libneko.so.2.4.0
           sudo ln -s $NEKOPATH/libneko.so.2         /usr/local/lib/libneko.so.2
           sudo ldconfig
           sudo ldconfig /usr/local/lib

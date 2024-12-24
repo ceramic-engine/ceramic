@@ -1,4 +1,4 @@
-package tools;
+package tools.macros;
 
 #if macro
 import haxe.io.Path;
@@ -9,15 +9,15 @@ import sys.FileSystem;
 import sys.io.File;
 #end
 
-class Plugin {
+class ToolsMacros {
 
-    macro public static function defaults():Expr {
+    macro public static function pluginDefaults():Expr {
 
         return macro $v{pluginData};
 
     }
 
-    macro public static function constructs():Expr {
+    macro public static function pluginConstructs():Expr {
 
         var result = new StringBuf();
 
@@ -53,6 +53,33 @@ class Plugin {
         }
 
         return macro null;
+
+    }
+
+    public static macro function ceramicVersion():Expr {
+
+        #if !display
+        return macro $v{haxe.Json.parse(File.getContent('package.json')).version};
+        #else
+        return macro "";
+        #end
+
+    }
+
+    public static macro function gitCommitHash():Expr {
+
+        final commitHash = _gitCommitHash();
+        return macro $v{commitHash};
+
+    }
+
+    public static macro function gitCommitShortHash():Expr {
+
+        var commitHash:String = _gitCommitHash();
+        if (commitHash != null && commitHash.length > 7) {
+            commitHash = commitHash.substr(0, 7);
+        }
+        return macro $v{commitHash};
 
     }
 
@@ -99,6 +126,28 @@ class Plugin {
         }
 
         Sys.println('plugins: ' + pluginIds.join(', '));
+
+    }
+
+    static function _gitCommitHash():String {
+
+        static var _commitHash:String = null;
+
+        if (_commitHash == null) {
+            #if !display
+            var process = new sys.io.Process('git', ['rev-parse', 'HEAD']);
+            if (process.exitCode() != 0) {
+                var message = process.stderr.readAll().toString();
+                var pos = Context.currentPos();
+                Context.error("Cannot execute `git rev-parse HEAD`. " + message, pos);
+            }
+            _commitHash = process.stdout.readLine();
+            #else
+            _commitHash = "";
+            #end
+        }
+
+        return _commitHash;
 
     }
 

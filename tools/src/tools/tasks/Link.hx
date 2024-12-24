@@ -18,7 +18,7 @@ class Link extends tools.Task {
         if (Sys.systemName() == 'Mac' || Sys.systemName() == 'Linux') {
             command('rm', ['ceramic'], { cwd: '/usr/local/bin', mute: true });
             var script = '#!/bin/bash
-${Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node'])} ${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
+${Path.join([context.ceramicToolsPath, 'ceramic'])} "$@"';
             File.saveContent('/usr/local/bin/ceramic', script);
             command('chmod', ['+x', 'ceramic'], { cwd: '/usr/local/bin', mute: true });
         }

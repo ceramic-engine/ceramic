@@ -16,6 +16,16 @@ function argumentFlag(argName) {
 
 const debug = argumentFlag('debug');
 
+function isLinuxArm64() {
+    try {
+        const arch = execSync('uname -m').toString().trim();
+        return arch == 'aarch64';
+    } catch (error) {
+        console.error('Error detecting architecture:', error);
+        return null;
+    }
+}
+
 function command(cmd, args, options) {
 
     if (args == null) args = [];
@@ -182,6 +192,7 @@ async function install() {
         let haxelibCmd = fs.readFileSync(path.join(__dirname, 'haxelib.cmd'), 'utf8');
         haxelibCmd = haxelibCmd.split('/../').join('/../../');
         fs.writeFileSync(path.join(__dirname, 'build', 'haxelib.cmd'), haxelibCmd);
+
         await command(haxelib, ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
 
         if (fs.existsSync(path.join(__dirname, 'ceramic.exe'))) {
@@ -200,7 +211,12 @@ async function install() {
 
         await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
 
-        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
+        if (isLinuxArm64()) {
+            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { cwd: path.join(__dirname, 'build') });
+        }
+        else {
+            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
+        }
 
         if (fs.existsSync(path.join(__dirname, 'ceramic'))) {
             fs.unlinkSync(path.join(__dirname, 'ceramic'));
