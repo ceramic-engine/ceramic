@@ -579,7 +579,7 @@ class InputMapImpl<T> extends InputMapBase {
                 var prevValue = _axisValue(targetIndex);
                 var value = converter.value;
                 if (prevValue != value) {
-                    axisValues[targetIndex] = value;
+                    axisValues[targetIndex] = value / 1000.0;
                     var k = keyForIndex(targetIndex);
                     if (enabled)
                         emitAxis(k, value);
