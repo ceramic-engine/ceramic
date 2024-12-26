@@ -220,13 +220,14 @@ class Helpers {
 
         final defaultPlugins:Array<Dynamic> = ToolsMacros.pluginDefaults();
         final pluginConstructs:Dynamic = ToolsMacros.pluginConstructs();
+        final pluginsPath = Path.join([context.ceramicRootPath, 'plugins']);
 
         for (info in defaultPlugins) {
 
             final instance = Reflect.field(pluginConstructs, info.plugin.id);
 
             plugins.set(info.plugin.id, {
-                path: info.plugin.path,
+                path: Path.join([pluginsPath, info.plugin.id]),
                 id: info.plugin.id,
                 name: info.plugin.name,
                 runtime: info.plugin.runtime,

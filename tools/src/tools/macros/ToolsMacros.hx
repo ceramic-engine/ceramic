@@ -100,7 +100,6 @@ class ToolsMacros {
                 final pluginYml:Dynamic = Yaml.parse(File.getContent(pluginYmlPath));
                 pluginIds.push(pluginBaseName);
                 pluginYml.plugin.id = pluginBaseName;
-                pluginYml.plugin.path = pluginPath;
                 pluginData.push(pluginYml);
 
                 final pluginToolsSrcPath = Path.join([pluginPath, 'tools/src']);
