@@ -253,7 +253,7 @@ class Web extends tools.Task {
         else {
             proc = new Process(
                 'node_modules/electron/dist/electron',
-                cmdArgs,
+                cmdArgs.concat(['--no-sandbox']),
                 context.ceramicRunnerPath
             );
         }
