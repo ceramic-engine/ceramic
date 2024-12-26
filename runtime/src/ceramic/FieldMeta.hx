@@ -66,7 +66,7 @@ class FieldMeta {
                             computedMeta = new Map();
                             metaMapForClass.set(fieldName, computedMeta);
                         }
-                        var fieldMeta = Reflect.field(info, fieldName);
+                        var fieldMeta:Dynamic = Reflect.field(info, fieldName);
                         if (fieldMeta != null) {
                             for (metaName in Reflect.fields(fieldMeta)) {
                                 if (!computedMeta.exists(metaName)) {

@@ -2,11 +2,11 @@ package ceramic;
 
 import haxe.DynamicAccess;
 
+using StringTools;
 #if (ceramic && !macro)
 import ceramic.Shortcuts.*;
 #end
 
-using StringTools;
 
 /**
  * Utilities to parse CSV and related
@@ -171,7 +171,7 @@ class Csv {
     public static function stringify(items:Array<Dynamic>, ?fields:Array<String>):String {
 
         inline function addEscaped(output:StringBuf, input:String) {
-            
+
             if (input.length == 0) return;
             output.add('"');
             for (i in 0...input.length) {
@@ -212,7 +212,7 @@ class Csv {
             n = 0;
             for (field in fields) {
                 if (n++ > 0) output.add(',');
-                var value = Reflect.field(item, field);
+                var value:Dynamic = Reflect.field(item, field);
                 addEscaped(output, value != null ? Std.string(value) : '');
             }
         }

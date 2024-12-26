@@ -30,7 +30,7 @@ class AppMacro {
 
         // Load collection types from ceramic.yml
         for (key in Reflect.fields(data.collections)) {
-            var val = Reflect.field(data.collections, key);
+            var val:Dynamic = Reflect.field(data.collections, key);
             if (Std.isOfType(val, String)) {
                 Context.getType(val);
             }
@@ -88,7 +88,7 @@ class AppMacro {
 
         for (key in Reflect.fields(data)) {
 
-            var val = Reflect.field(data, key);
+            var val:Dynamic = Reflect.field(data, key);
 
             if (Std.isOfType(val, Array)) {
                 var items:Dynamic = {};

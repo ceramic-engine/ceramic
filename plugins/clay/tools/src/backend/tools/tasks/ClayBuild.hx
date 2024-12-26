@@ -212,7 +212,7 @@ class ClayBuild extends tools.Task {
         }
 
         // Compile c++ for host platform on default architecture (expecting 64bit)
-        if (target.name == 'windows' || target.name == 'linux') {
+        if (target.name == 'windows') {
             // Could move that to some plugin later, maybe
             var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
             if (context.defines.exists('HXCPP_M32')) {
@@ -262,6 +262,19 @@ class ClayBuild extends tools.Task {
                 #end
             }
             runTask('mac compile', ['--archs', archs.trim()]);
+        }
+
+        // Compile c++ for Linux on requested architectures
+        if (target.name == 'linux') {
+            if (archs == null || archs.trim() == '') {
+                #if linux_arm64
+                archs = 'arm64';
+                #end
+                #if linux_x86_64
+                archs = 'x86_64';
+                #end
+            }
+            runTask('linux compile', ['--archs', archs.trim()]);
         }
 
         // Hook

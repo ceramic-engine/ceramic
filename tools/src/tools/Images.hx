@@ -102,6 +102,40 @@ class Images {
 
     }
 
+    public static function blackAndWhiteToWhiteAlpha(data:RawImageData):RawImageData {
+
+        var pixels = data.pixels;
+        var channels = data.channels;
+        var count = pixels.length;
+
+        var inIndex = 0;
+        var outIndex = 0;
+
+        var result = new UInt8Array(data.width * data.height * 4);
+
+        while (inIndex < count) {
+
+            var a = pixels[inIndex+0];
+
+            result[outIndex+0] = 255;
+            result[outIndex+1] = 255;
+            result[outIndex+2] = 255;
+            result[outIndex+3] = a;
+
+            inIndex += channels;
+            outIndex += 4;
+
+        }
+
+        return {
+            pixels: result,
+            channels: 4,
+            width: data.width,
+            height: data.height
+        };
+
+    }
+
     public static function resizeRaw(data:RawImageData, targetWidth:Float, targetHeight:Float, padTop:Float = 0, padRight:Float = 0, padBottom:Float = 0, padLeft:Float = 0):RawImageData {
 
         // If downscaling to lower than 50% of original size, do it

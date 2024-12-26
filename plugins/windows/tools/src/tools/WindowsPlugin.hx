@@ -18,7 +18,9 @@ class WindowsPlugin {
         Helpers.context = context;
 
         // Add tasks
+        #if windows
         context.addTask('windows app', new tools.tasks.windows.Windows());
+        #end
 
     }
 

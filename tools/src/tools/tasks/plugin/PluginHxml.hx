@@ -94,7 +94,7 @@ class PluginHxml extends tools.Task {
         }
 
         for (key in Reflect.fields(project.plugin.defines)) {
-            var val = Reflect.field(project.plugin.defines, key);
+            var val:Dynamic = Reflect.field(project.plugin.defines, key);
             if (val == true) {
                 extraHxml.push('-D $key');
             } else {

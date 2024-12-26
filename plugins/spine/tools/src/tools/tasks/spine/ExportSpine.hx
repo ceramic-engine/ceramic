@@ -305,7 +305,7 @@ class ExportSpine extends tools.Task {
                                     // Attachments
                                     if (skin.attachments != null) {
                                         for (k1 in Reflect.fields(skin.attachments)) {
-                                            var val = Reflect.field(skin.attachments, k1);
+                                            var val:Dynamic = Reflect.field(skin.attachments, k1);
                                             for (k2 in Reflect.fields(val)) {
                                                 var v:{skin:String} = Reflect.field(val, k2);
                                                 if (v.skin != null) {
@@ -322,7 +322,7 @@ class ExportSpine extends tools.Task {
                                 // Update animations referencing skins
                                 if (parsed.animations != null) {
                                     for (key in Reflect.fields(parsed.animations)) {
-                                        var animation = Reflect.field(parsed.animations, key);
+                                        var animation:Dynamic = Reflect.field(parsed.animations, key);
 
                                         // Deform
                                         if (animation.deform != null) {

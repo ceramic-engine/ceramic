@@ -55,7 +55,7 @@ class Module {
 
         if (project.app.modules == null) fail('ceramic.yml need a modules: key');
 
-        var info = Reflect.field(project.app.modules, moduleName);
+        var info:Dynamic = Reflect.field(project.app.modules, moduleName);
         if (info == null) {
             fail('Missing module info for: $moduleName in ceramic.yml');
         }
@@ -74,7 +74,7 @@ class Module {
 
         if (project.app.modules == null) fail('ceramic.yml need a modules: key');
 
-        var info = Reflect.field(project.app.modules, moduleName);
+        var info:Dynamic = Reflect.field(project.app.modules, moduleName);
         if (info == null) {
             fail('Missing module info for: $moduleName in ceramic.yml');
         }
@@ -91,7 +91,7 @@ class Module {
 
         if (project.app.modules == null) fail('ceramic.yml need a modules: key');
 
-        var info = Reflect.field(project.app.modules, moduleName);
+        var info:Dynamic = Reflect.field(project.app.modules, moduleName);
         if (info == null) {
             fail('Missing module info for: $moduleName in ceramic.yml');
         }

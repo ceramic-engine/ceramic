@@ -15,10 +15,10 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
         export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
         "$SCRIPT_DIR"/../git/haxe-binary/linux-arm64/neko/neko "$@"
     else
-        export HAXEPATH=$SCRIPT_DIR/../git/haxe-binary/linux-64/haxe
-        export NEKOPATH=$SCRIPT_DIR/../git/haxe-binary/linux-64/neko
+        export HAXEPATH=$SCRIPT_DIR/../git/haxe-binary/linux-x86_64/haxe
+        export NEKOPATH=$SCRIPT_DIR/../git/haxe-binary/linux-x86_64/neko
         export PATH=$HAXEPATH:$NEKOPATH:$PATH
         export DYLD_FALLBACK_LIBRARY_PATH=$NEKOPATH
-        "$SCRIPT_DIR"/../git/haxe-binary/linux-64/neko/neko "$@"
+        "$SCRIPT_DIR"/../git/haxe-binary/linux-x86_64/neko/neko "$@"
     fi
 fi

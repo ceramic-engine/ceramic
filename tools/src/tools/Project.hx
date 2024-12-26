@@ -292,7 +292,7 @@ class ProjectLoader {
                 }
                 for (key in Reflect.fields(app.defines)) {
                     if (!defines.exists(key)) {
-                        var val = Reflect.field(app.defines, key);
+                        var val:Dynamic = Reflect.field(app.defines, key);
                         defines.set(key, val == true ? '' : '' + val);
                     }
                 }
@@ -407,7 +407,7 @@ class ProjectLoader {
             if (app.defines != null) {
                 for (key in Reflect.fields(app.defines)) {
                     if (!defines.exists(key)) {
-                        var val = Reflect.field(app.defines, key);
+                        var val:Dynamic = Reflect.field(app.defines, key);
                         defines.set(key, val == true ? '' : '' + val);
                     }
                 }
@@ -481,7 +481,7 @@ class ProjectLoader {
                 }
                 for (key in Reflect.fields(plugin.defines)) {
                     if (!defines.exists(key)) {
-                        var val = Reflect.field(plugin.defines, key);
+                        var val:Dynamic = Reflect.field(plugin.defines, key);
                         defines.set(key, val == true ? '' : '' + val);
                     }
                 }
@@ -504,7 +504,7 @@ class ProjectLoader {
             if (plugin.defines != null) {
                 for (key in Reflect.fields(plugin.defines)) {
                     if (!defines.exists(key)) {
-                        var val = Reflect.field(plugin.defines, key);
+                        var val:Dynamic = Reflect.field(plugin.defines, key);
                         defines.set(key, val == true ? '' : '' + val);
                     }
                 }

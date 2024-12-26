@@ -18,7 +18,10 @@ class LinuxPlugin {
         Helpers.context = context;
 
         // Add tasks
+        #if linux
         context.addTask('linux app', new tools.tasks.linux.Linux());
+        context.addTask('linux compile', new tools.tasks.linux.Compile());
+        #end
 
     }
 

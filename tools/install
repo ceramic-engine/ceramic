@@ -209,12 +209,12 @@ async function install() {
     else {
         console.log("Build tools for linux");
 
-        await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
-
         if (isLinuxArm64()) {
+            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_arm64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
             await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { cwd: path.join(__dirname, 'build') });
         }
         else {
+            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_x86_64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
             await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
         }
 

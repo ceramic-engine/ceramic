@@ -6,6 +6,8 @@ import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
 
+using StringTools;
+
 class Font extends Task {
 
 /// Lifecycle
@@ -16,6 +18,7 @@ class Font extends Task {
             ['--font <path to font>', 'The ttf/otf font file to convert'],
             ['--out <output directory>', 'The output directory'],
             ['--msdf', 'If used, export with multichannel distance field'],
+            ['--msdf-range', 'Sets the distance field range in pixels (default: 2)'],
             ['--size <font size>', 'The font size to export (default: 42)'],
             ['--factor <factor>', 'A precision factor (advanced usage, default: 4)'],
             ['--charset', 'Characters to use as charset'],
@@ -34,317 +37,214 @@ class Font extends Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        fail('Utility not supported with new Ceramic tools (yet)');
+        var fontPath = extractArgValue(args, 'font');
+        var outputPath = extractArgValue(args, 'out');
+        var charset = extractArgValue(args, 'charset');
+        var charsetFile = extractArgValue(args, 'charset-file');
+        var msdf = extractArgFlag(args, 'msdf');
+        var msdfRange = extractArgValue(args, 'msdf-range') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'msdf-range'))) : 2;
+        var bold = extractArgFlag(args, 'bold');
+        var italic = extractArgFlag(args, 'italic');
+        var padding:Int = extractArgValue(args, 'padding') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'padding'))) : 2;
+        var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
+        var offsetX:Float = extractArgValue(args, 'offset-x') != null ? Std.parseFloat(extractArgValue(args, 'offset-x')) : 0;
+        var offsetY:Float = extractArgValue(args, 'offset-y') != null ? Std.parseFloat(extractArgValue(args, 'offset-y')) : 0;
 
-        // var isWindows = (Sys.systemName() == 'Windows');
+        if (fontPath == null) {
+            fail('--font argument is required');
+        }
 
-        // var fontPath = extractArgValue(args, 'font');
-        // var outputPath = extractArgValue(args, 'out');
-        // var charset = extractArgValue(args, 'charset');
-        // var charsetFile = extractArgValue(args, 'charset-file');
-        // var msdf = extractArgFlag(args, 'msdf');
-        // var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
-        // var offsetX:Float = extractArgValue(args, 'offset-x') != null ? Std.parseFloat(extractArgValue(args, 'offset-x')) : 0;
-        // var offsetY:Float = extractArgValue(args, 'offset-y') != null ? Std.parseFloat(extractArgValue(args, 'offset-y')) : 0;
+        if (outputPath == null) {
+            outputPath = cwd;
+        }
 
-        // if (fontPath == null) {
-        //     fail('--font argument is required');
-        // }
+        if (charset == null) {
+            if (charsetFile != null) {
+                if (!Path.isAbsolute(charsetFile)) {
+                    charsetFile = Path.join([cwd, charsetFile]);
+                }
+                charset = File.getContent(charsetFile);
+            }
 
-        // if (outputPath == null) {
-        //     outputPath = cwd;
-        // }
+            if (charset == null) {
+                charset = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿœŒ€£";
+            }
+        }
 
-        // if (charset == null) {
-        //     charset = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿœŒ€£";
-        // }
+        if (!Path.isAbsolute(fontPath))
+            fontPath = Path.normalize(Path.join([cwd, fontPath]));
 
-        // if (!Path.isAbsolute(fontPath))
-        //     fontPath = Path.normalize(Path.join([cwd, fontPath]));
+        if (!Path.isAbsolute(outputPath))
+            outputPath = Path.normalize(Path.join([cwd, outputPath]));
 
-        // if (!Path.isAbsolute(outputPath))
-        //     outputPath = Path.normalize(Path.join([cwd, outputPath]));
+        var tmpDir = Path.join([cwd, '.tmp']);
+        if (FileSystem.exists(tmpDir)) {
+            Files.deleteRecursive(tmpDir);
+        }
+        FileSystem.createDirectory(tmpDir);
 
-        // var tmpDir = Path.join([cwd, '.tmp']);
-        // if (FileSystem.exists(tmpDir)) {
-        //     Files.deleteRecursive(tmpDir);
-        // }
-        // FileSystem.createDirectory(tmpDir);
+        var ttfName = Path.withoutDirectory(fontPath);
+        var rawName = Path.withoutExtension(ttfName);
 
-        // var ttfName = Path.withoutDirectory(fontPath);
-        // var rawName = Path.withoutExtension(ttfName);
+        // Copy font
+        var tmpFontPath = Path.join([tmpDir, ttfName]);
+        File.copy(fontPath, tmpFontPath);
 
-        // // Copy font
-        // var tmpFontPath = Path.join([tmpDir, ttfName]);
-        // File.copy(fontPath, tmpFontPath);
+        // Add charset file
+        var tmpCharsetPath = Path.join([tmpDir, 'charset.txt']);
+        File.saveContent(tmpCharsetPath, '"' + charset.replace('"', '\\"') + '"');
 
-        // // Add charset file
-        // var charsetPath = Path.join([tmpDir, 'charset.txt']);
-        // if (charsetFile != null) {
-        //     if (!Path.isAbsolute(charsetFile)) {
-        //         charsetFile = Path.join([cwd, charsetFile]);
-        //     }
-        //     charsetPath = charsetFile;
-        // }
-        // else {
-        //     File.saveContent(charsetPath, charset);
-        // }
+        final msdfAtlasGen:String = switch Sys.systemName() {
+            case 'Windows': Path.join([context.ceramicGitDepsPath, 'msdf-atlas-gen-binary', 'windows', 'msdf-atlas-gen.exe']);
+            case 'Mac': Path.join([context.ceramicGitDepsPath, 'msdf-atlas-gen-binary', 'mac', 'msdf-atlas-gen']);
+            case 'Linux':
+                #if linux_arm64
+                Path.join([context.ceramicGitDepsPath, 'msdf-atlas-gen-binary', 'linux-arm64', 'msdf-atlas-gen']);
+                #else
+                Path.join([context.ceramicGitDepsPath, 'msdf-atlas-gen-binary', 'linux-x86_64', 'msdf-atlas-gen']);
+                #end
+            case _: null;
+        }
 
-        // var factor = 0.25;
-        // var rawFactor = extractArgValue(args, 'factor');
-        // if (rawFactor != null)
-        //     factor = 1.0 / Std.parseFloat(rawFactor);
+        if (msdfAtlasGen == null) {
+            fail('Command not available on this platform: msdf-atlas-gen');
+        }
 
-        // var msdfCmd = Path.join([context.ceramicToolsPath, 'node_modules/msdf-bmfont-xml/cli.js']);
+        var tmpImagePath = Path.join([tmpDir, '$rawName.png']);
+        var tmpJsonPath = Path.join([tmpDir, '$rawName.json']);
 
-        // if (msdf) {
-        //     // Run generator (export msdf with factor)
-        //     node([
-        //         msdfCmd,
-        //         tmpFontPath,
-        //         '-f', 'json',
-        //         '-s', '' + Math.round(size / factor),
-        //         '-i', charsetPath,
-        //         '-t', 'msdf',
-        //         //'--pot',
-        //         '-p', '2',
-        //         '-d', '2',
-        //         '--factor', '' + Math.round(1.0 / factor),
-        //         '--smart-size'
-        //     ], { cwd: tmpDir });
-        // }
-        // else {
-        //     // Run generator (export vector file)
-        //     node([
-        //         msdfCmd,
-        //         tmpFontPath,
-        //         '-f', 'json',
-        //         '-s', '' + size,
-        //         '-i', charsetPath,
-        //         '-t', 'msdf',
-        //         '-v', //'--pot',
-        //         '-p', '2',
-        //         //'-d', '2',
-        //         '--factor', '1',
-        //         '--smart-size'
-        //     ], { cwd: tmpDir });
+        command(msdfAtlasGen, [
+            '-charset', tmpCharsetPath,
+            '-font', tmpFontPath,
+            '-type', msdf ? 'msdf' : 'softmask',
+            '-format', 'png',
+            '-imageout', tmpImagePath,
+            '-json', tmpJsonPath,
+            '-outerpxpadding', '$padding',
+            '-size', Std.string(Math.round(size))
+        ].concat(msdf ? [
+            '-pxrange', '$msdfRange',
+        ] : []));
 
-        //     factor = 1;
-        // }
+        // Make the image transparent, if not using msdf
+        if (!msdf) {
+            var image = Images.getRaw(tmpImagePath);
+            image = Images.blackAndWhiteToWhiteAlpha(image);
+            Images.saveRaw('$rawName.png', image);
+        }
+        else {
+            File.copy(tmpImagePath, '$rawName.png');
+        }
 
-        // // Extract font data
-        // var jsonPath = Path.join([tmpDir, rawName + '.json']);
-        // var json = Json.parse(File.getContent(jsonPath));
+        // Extract font data
+        var json:Dynamic = Json.parse(File.getContent(tmpJsonPath));
 
-        // // Generate fnt data
-        // var fnt = '';
+        // Generate fnt data
+        var fnt = '';
 
-        // fnt += 'info';
-        // fnt += ' face=' + Json.stringify(rawName);
-        // fnt += ' size=' + Math.round(Std.parseFloat(json.info.size) * factor);
-        // fnt += ' bold=' + json.info.bold;
-        // fnt += ' italic=' + json.info.italic;
-        // fnt += ' unicode=' + json.info.unicode;
-        // fnt += ' stretchH=' + json.info.stretchH;
-        // fnt += ' smooth=' + json.info.smooth;
-        // fnt += ' aa=' + json.info.aa;
-        // if (!msdf) {
-        //     var padding:Array<String> = json.info.padding;
-        //     var spacing:Array<String> = json.info.spacing;
-        //     padding = padding.map((s) -> {
-        //         '' + (Std.parseFloat(s) * factor);
-        //     });
-        //     spacing = spacing.map((s) -> {
-        //         '' + (Std.parseFloat(s) * factor);
-        //     });
-        //     fnt += ' padding=' + padding.join(',');
-        //     fnt += ' spacing=' + spacing.join(',');
-        // }
-        // else {
-        //     fnt += ' padding=' + (json.info.padding:Array<String>).join(',');
-        //     fnt += ' spacing=' + (json.info.spacing:Array<String>).join(',');
-        // }
-        // fnt += ' charset=""';
-        // fnt += '\n';
+        fnt += 'info';
+        fnt += ' face=' + Json.stringify(rawName);
+        fnt += ' size=' + Math.round(json.atlas.size);
+        fnt += ' bold=' + (bold ? '1' : '0');
+        fnt += ' italic=' + (italic ? '1' : '0');
+        fnt += ' unicode=1';
+        fnt += ' stretchH=100';
+        fnt += ' smooth=1';
+        fnt += ' aa=1';
+        fnt += ' padding=$padding,$padding,$padding,$padding';
+        fnt += ' spacing=0,0';
+        fnt += ' charset=""';
+        fnt += '\n';
 
-        // fnt += 'common';
-        // fnt += ' lineHeight=' + Math.round(Std.parseFloat(json.common.lineHeight) * factor);
-        // fnt += ' base=' + Math.round(Std.parseFloat(json.common.base) * factor);
-        // fnt += ' scaleW=' + json.common.scaleW;
-        // fnt += ' scaleH=' + json.common.scaleH;
-        // fnt += ' pages=' + json.common.pages;
-        // fnt += ' packed=' + json.common.packed;
-        // fnt += ' alphaChnl=' + json.common.alphaChnl;
-        // fnt += ' redChnl=' + json.common.redChnl;
-        // fnt += ' greenChnl=' + json.common.greenChnl;
-        // fnt += ' blueChnl=' + json.common.blueChnl;
-        // fnt += '\n';
+        var lineHeight = Math.round(json.metrics.lineHeight * json.atlas.size);
+        var base = Math.round(json.metrics.ascender * json.atlas.size);
+        fnt += 'common';
+        fnt += ' lineHeight=' + lineHeight;
+        fnt += ' base=' + base;
+        fnt += ' scaleW=' + json.atlas.width;
+        fnt += ' scaleH=' + json.atlas.height;
+        fnt += ' pages=1';
+        fnt += ' packed=0';
+        fnt += ' alphaChnl=0';
+        fnt += ' redChnl=0';
+        fnt += ' greenChnl=0';
+        fnt += ' blueChnl=0';
+        fnt += '\n';
 
-        // if (msdf) {
-        //     fnt += 'distanceField';
-        //     fnt += ' fieldType=' + json.distanceField.fieldType;
-        //     fnt += ' distanceRange=' + json.distanceField.distanceRange;
-        //     fnt += '\n';
-        // }
+        if (msdf) {
+            fnt += 'distanceField';
+            fnt += ' fieldType=' + json.atlas.type;
+            fnt += ' distanceRange=' + json.atlas.distanceRange;
+            fnt += '\n';
+        }
 
-        // var base:Float = Std.parseFloat(json.common.base);
+        fnt += 'page id=0 file=' + Json.stringify('$rawName.png') + '\n';
+        fnt += 'chars count=' + json.glyphs.length;
+        fnt += '\n';
 
-        // var pngFiles = [];
-        // var i = 0;
-        // for (page in (json.pages:Array<String>)) {
+        final allGlyphs:Array<Dynamic> = json.glyphs;
+        for (i in 0...allGlyphs.length) {
+            final glyph:Dynamic = allGlyphs[i];
 
-        //     pngFiles.push(page);
+            fnt += 'char';
+            fnt += ' id=' + glyph.unicode;
+            fnt += ' index=' + i;
+            fnt += ' char=' + Json.stringify(String.fromCharCode(glyph.unicode));
 
-        //     var chars:Array<Dynamic> = json.chars;
+            if (glyph.atlasBounds != null) {
+                var width = Math.round(glyph.atlasBounds.right - glyph.atlasBounds.left);
+                var height = Math.round(glyph.atlasBounds.top - glyph.atlasBounds.bottom);
+                fnt += ' width=' + width;
+                fnt += ' height=' + height;
 
-        //     fnt += 'page id=' + i + ' file=' + Json.stringify(page) + '\n';
-        //     fnt += 'chars count=' + chars.length;
-        //     fnt += '\n';
+                var xoffset:Float = 0;
+                var yoffset:Float = 0;
+                if (glyph.planeBounds != null) {
+                    xoffset = glyph.planeBounds.left * json.atlas.size;
+                    yoffset = (1 - glyph.planeBounds.top) * json.atlas.size;
+                }
+                fnt += ' xoffset=' + xoffset;
+                fnt += ' yoffset=' + yoffset;
+                fnt += ' x=' + glyph.atlasBounds.left;
+                fnt += ' y=' + (json.atlas.height - glyph.atlasBounds.top);
+            }
+            else {
+                fnt += ' width=0';
+                fnt += ' height=0';
+                fnt += ' xoffset=0';
+                fnt += ' yoffset=0';
+                fnt += ' x=0';
+                fnt += ' y=0';
+            }
 
-        //     for (char in chars) {
+            fnt += ' xadvance=' + (glyph.advance * json.atlas.size);
+            fnt += ' chnl=15';
+            fnt += ' page=0';
+            fnt += '\n';
 
-        //         //var yoffset:Float = Std.parseFloat(char.yoffset);
+        }
 
-        //         fnt += 'char';
-        //         fnt += ' id=' + char.id;
-        //         fnt += ' index=' + char.index;
-        //         fnt += ' char=' + Json.stringify(char.char);
-        //         if (msdf) {
-        //             fnt += ' width=' + char.width;
-        //             fnt += ' height=' + char.height;
-        //         }
-        //         else {
-        //             fnt += ' width=' + (Std.parseFloat(char.width) * factor);
-        //             fnt += ' height=' + (Std.parseFloat(char.height) * factor);
-        //         }
-        //         fnt += ' xoffset=' + (Std.parseFloat(char.xoffset) * factor + offsetX);
-        //         fnt += ' yoffset=' + (Std.parseFloat(char.yoffset) * factor + offsetY);
-        //         fnt += ' xadvance=' + (Std.parseFloat(char.xadvance) * factor);
-        //         fnt += ' chnl=' + char.chnl;
-        //         fnt += ' x=' + char.x;
-        //         fnt += ' y=' + char.y;
-        //         fnt += ' page=' + char.page;
-        //         fnt += '\n';
-        //     }
+        var kernings:Array<Dynamic> = json.kerning;
+        if (kernings != null && kernings.length > 0) {
 
-        //     i++;
-        // }
+            fnt += 'kernings count=' + kernings.length + '\n';
 
-        // var kernings:Array<Dynamic> = json.kernings;
-        // if (kernings != null && kernings.length > 0) {
+            for (kerning in kernings) {
+                fnt += 'kerning';
+                fnt += ' first=' + kerning.unicode1;
+                fnt += ' second=' + kerning.unicode2;
+                fnt += ' amount=' + Math.round(kerning.advance * json.atlas.size);
+                fnt += '\n';
+            }
 
-        //     fnt += 'kernings count=' + kernings.length + '\n';
+        }
 
-        //     for (kerning in kernings) {
-        //         fnt += 'kerning';
-        //         fnt += ' first=' + kerning.first;
-        //         fnt += ' second=' + kerning.second;
-        //         fnt += ' amount=' + (Std.parseFloat(kerning.amount) * factor);
-        //         fnt += '\n';
-        //     }
+        // Final export
+        var fntPath = Path.join([outputPath, rawName + '.fnt']);
+        File.saveContent(fntPath, fnt);
 
-        // }
-
-        // // Create regular textures from svg files, if msdf is disabled
-        // if (!msdf) {
-        //     for (pngFile in pngFiles) {
-
-        //         var pngRawName = Path.withoutExtension(pngFile);
-
-        //         var svgPath = Path.join([tmpDir, pngRawName + '.svg']);
-        //         var pngPath = Path.join([tmpDir, pngRawName + '.png']);
-        //         var flatPngPath = Path.join([tmpDir, pngRawName + '-flat.png']);
-
-        //         // Generate a regular png texture from svg if msdf is disabled
-        //         Sync.run(function(done) {
-
-        //             // Get png dimensions
-        //             sharp(
-        //                 pngPath
-        //             )
-        //             .raw()
-        //             .toBuffer(function(err, data, info) {
-
-        //                 if (err != null) throw err;
-
-        //                 var width:Float = info.width;
-        //                 var height:Float = info.height;
-
-        //                 // Somehow we may need to slightly adjust crop position to make it right
-        //                 var offsetX = 2;
-        //                 var offsetY = 0;
-
-        //                 // Save svg as png with same dimensions
-        //                 sharp(
-        //                     svgPath
-        //                 )
-        //                 .extract({
-        //                     left: offsetX, top: offsetY, width: width, height: height
-        //                 })
-        //                 .resize(
-        //                     Math.round(width * factor),
-        //                     Math.round(height * factor)
-        //                 )
-        //                 .toFile(
-        //                     flatPngPath,
-        //                     function(err, info) {
-        //                         if (err != null) throw err;
-        //                         done();
-        //                     }
-        //                 );
-
-        //             });
-
-        //         });
-
-        //         Sync.run(function(done) {
-
-        //             // Make the png white
-        //             sharp(
-        //                 flatPngPath
-        //             )
-        //             .raw()
-        //             .toBuffer(function(err, data, info:Dynamic) {
-        //                 var pixels:Uint8Array = data;
-        //                 var len = pixels.length;
-        //                 var i = 0;
-        //                 while (i < len) {
-        //                     pixels[i + 0] = 255;
-        //                     pixels[i + 1] = 255;
-        //                     pixels[i + 2] = 255;
-        //                     i += 4;
-        //                 }
-        //                 sharp(pixels, {
-        //                     raw: {
-        //                         width: info.width,
-        //                         height: info.height,
-        //                         channels: info.channels
-        //                     }
-        //                 })
-        //                 .png()
-        //                 .toFile(flatPngPath, function(err, info) {
-        //                     if (err != null) throw err;
-        //                     done();
-        //                 });
-        //             });
-
-        //         });
-
-        //         FileSystem.deleteFile(pngPath);
-        //         FileSystem.rename(flatPngPath, pngPath);
-        //     }
-        // }
-
-        // // Final export
-        // var fntPath = Path.join([outputPath, rawName + '.fnt']);
-        // File.saveContent(fntPath, fnt);
-        // for (pngFile in pngFiles) {
-        //     var pngPath = Path.join([tmpDir, pngFile]);
-        //     File.copy(pngPath, Path.join([outputPath, Path.withoutDirectory(pngPath)]));
-        // }
-
-        // // Remove temporary files
-        // Files.deleteRecursive(tmpDir);
+        // Remove temporary files
+        //Files.deleteRecursive(tmpDir);
 
     }
 
