@@ -1,8 +1,8 @@
 name: Build ceramic
 on:
   push:
-    tags:
-      - v**
+    # tags:
+    #   - v**
 jobs:
 
   build-ceramic-windows:
@@ -19,12 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14.19.1'
-
-      - name: Setup NPM
-        working-directory: .
-        run: |
-          npm install -g npm@8.12.1
+          node-version: 22
 
       - name: Setup Haxe
         working-directory: .
@@ -37,29 +32,24 @@ jobs:
           echo $HAXEPATH
 
       - name: Build ceramic
-        working-directory: ./node
+        working-directory: .
         run: |
-          npm ci
-          cd ../tools
-          ./npm ci
-          ./node post-install.js
+          cd tools
+          node ./install
           cd ../runner
-          ../tools/npm ci
+          npm ci
           cd ..
 
       - name: Cleanup
         working-directory: .
         run: |
-          Remove-Item 'git/haxe-binary/linux' -Recurse
+          Remove-Item 'git/haxe-binary/linux-x86_64' -Recurse
+          Remove-Item 'git/haxe-binary/linux-arm64' -Recurse
           Remove-Item 'git/haxe-binary/mac' -Recurse
           cd tools
-          Remove-Item './npm'
-          Remove-Item './npx'
-          Remove-Item './node'
           Remove-Item './haxe'
           Remove-Item './haxelib'
           Remove-Item './neko'
-          Remove-Item './ceramic'
           cd ..
 
       - name: Run ceramic
@@ -67,11 +57,11 @@ jobs:
         run: |
           ./ceramic
 
-      - name: Check ceramic version
-        working-directory: ./tools
-        run: |
-          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
-          ./ceramic version --check-tag $GIT_TAG
+      # - name: Check ceramic version
+      #   working-directory: ./tools
+      #   run: |
+      #     $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+      #     ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
         working-directory: .
@@ -105,13 +95,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14.19.1'
-          architecture: 'x64'
-
-      - name: Setup NPM
-        working-directory: .
-        run: |
-          sudo npm install -g npm@8.12.1
+          node-version: 22
 
       - name: Setup Haxe
         working-directory: .
@@ -141,37 +125,22 @@ jobs:
           echo 'neko: '$(neko -version)
           echo 'haxe: '$(haxe --version)
 
-      - name: Extract node binaries and modules
-        run: |
-          mkdir -p tmp-ceramic
-          curl -L -s https://github.com/ceramic-engine/ceramic/releases/download/v1.5.0/ceramic-mac.zip -o tmp-ceramic.zip
-          unzip -q tmp-ceramic.zip -d tmp-ceramic
-          rm -rf ./node
-          rm -rf ./tools/node_modules
-          cp -R ./tmp-ceramic/node ./
-          cp -R ./tmp-ceramic/tools/node_modules ./tools/
-          rm -rf tmp-ceramic
-          rm tmp-ceramic.zip
-
       - name: Build ceramic
-        working-directory: ./node
+        working-directory: .
         run: |
-          npm ci
-          cd ../tools
-          ./node post-install.js
+          cd tools
+          node ./install
           cd ../runner
-          ../tools/npm ci
+          npm ci
           cd ..
 
       - name: Cleanup
         working-directory: .
         run: |
-          rm -rf git/haxe-binary/linux
+          rm -rf git/haxe-binary/linux-x86_64
+          rm -rf git/haxe-binary/linux-arm64
           rm -rf git/haxe-binary/windows
           cd tools
-          rm -f ./npm.cmd
-          rm -f ./npx.cmd
-          rm -f ./node.cmd
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
@@ -182,11 +151,11 @@ jobs:
         run: |
           ./ceramic
 
-      - name: Check ceramic version
-        working-directory: ./tools
-        run: |
-          GIT_TAG=${GITHUB_REF/refs\/tags\//}
-          ./ceramic version --check-tag $GIT_TAG
+      # - name: Check ceramic version
+      #   working-directory: ./tools
+      #   run: |
+      #     GIT_TAG=${GITHUB_REF/refs\/tags\//}
+      #     ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
@@ -199,7 +168,7 @@ jobs:
           path: ceramic-mac.zip
           compression-level: 0
 
-  build-ceramic-linux:
+  build-ceramic-linux-x86_64:
     runs-on: ubuntu-22.04
     steps:
 
@@ -213,12 +182,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '14.19.1'
-
-      - name: Setup NPM
-        working-directory: .
-        run: |
-          sudo npm install -g npm@8.12.1
+          node-version: 22
 
       - name: Setup Haxe
         working-directory: .
@@ -249,25 +213,21 @@ jobs:
           echo 'haxe: '$(haxe --version)
 
       - name: Build ceramic
-        working-directory: ./node
+        working-directory: .
         run: |
-          npm ci
-          cd ../tools
-          ./npm ci
-          ./node post-install.js
+          cd tools
+          node ./install
           cd ../runner
-          ../tools/npm ci
+          npm ci
           cd ..
 
       - name: Cleanup
         working-directory: .
         run: |
           rm -rf git/haxe-binary/mac
+          rm -rf git/haxe-binary/linux-arm64
           rm -rf git/haxe-binary/windows
           cd tools
-          rm -f ./npm.cmd
-          rm -f ./npx.cmd
-          rm -f ./node.cmd
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
           rm -f ./ceramic.cmd
@@ -278,75 +238,183 @@ jobs:
         run: |
           ./ceramic
 
-      - name: Check ceramic version
-        working-directory: ./tools
-        run: |
-          GIT_TAG=${GITHUB_REF/refs\/tags\//}
-          ./ceramic version --check-tag $GIT_TAG
+      # - name: Check ceramic version
+      #   working-directory: ./tools
+      #   run: |
+      #     GIT_TAG=${GITHUB_REF/refs\/tags\//}
+      #     ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
-        run: zip --symlinks -9 -r 'ceramic-linux.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-linux-x86_64.zip' . -x ".git/*" ".github/*"
 
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
           retention-days: 1
-          name: ceramic-linux.zip
-          path: ceramic-linux.zip
+          name: ceramic-linux-x86_64.zip
+          path: ceramic-linux-x86_64.zip
           compression-level: 0
 
-  create-release:
-    needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
+  build-ceramic-linux-arm64:
     runs-on: ubuntu-22.04
     steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - uses: actions/checkout@v4
-
-      - name: Download ceramic-windows.zip
-        uses: actions/download-artifact@v4
         with:
-          name: ceramic-windows.zip
-          path: .
+          submodules: true
 
-      - name: Download ceramic-mac.zip
-        uses: actions/download-artifact@v4
+      - name: Checkout submodules
+        run: git submodule update --init --recursive
+
+      - name: Create Dockerfile
+        run: |
+          cat > Dockerfile << 'EOL'
+          FROM --platform=$TARGETPLATFORM ubuntu:22.04
+          ARG NODE_VERSION
+
+          # Install dependencies
+          RUN apt-get update && apt-get install -y \
+              curl \
+              git \
+              zip \
+              sudo \
+              build-essential \
+              && rm -rf /var/lib/apt/lists/*
+
+          # Setup Node.js
+          RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
+              && apt-get install -y nodejs
+
+          # Copy repository contents
+          COPY . /ceramic
+          WORKDIR /ceramic
+
+          # Setup Haxe
+          ENV NEKOPATH=/ceramic/git/haxe-binary/linux-arm64/neko \
+              HAXEPATH=/ceramic/git/haxe-binary/linux-arm64/haxe
+
+          RUN mkdir -p /usr/local/bin /usr/local/lib /usr/local/share/haxe \
+              && ln -s $HAXEPATH/haxe /usr/local/bin/haxe \
+              && ln -s $HAXEPATH/haxelib /usr/local/bin/haxelib \
+              && ln -s $HAXEPATH/haxe-bin /usr/local/bin/haxe-bin \
+              && ln -s $HAXEPATH/haxelib-bin /usr/local/bin/haxelib-bin \
+              && ln -s $HAXEPATH/std /usr/local/share/haxe/std \
+              && ln -s $NEKOPATH/neko /usr/local/bin/neko \
+              && ln -s $NEKOPATH/nekoc /usr/local/bin/nekoc \
+              && ln -s $NEKOPATH/nekoml /usr/local/bin/nekoml \
+              && ln -s $NEKOPATH/nekotools /usr/local/bin/nekotools \
+              && ln -s $NEKOPATH /usr/local/lib/neko \
+              && ln -s $NEKOPATH/libneko.so /usr/local/lib/libneko.so \
+              && ln -s $NEKOPATH/libneko.so.2.4.0 /usr/local/lib/libneko.so.2.4.0 \
+              && ln -s $NEKOPATH/libneko.so.2 /usr/local/lib/libneko.so.2 \
+              && ldconfig \
+              && ldconfig /usr/local/lib
+
+          # Build ceramic
+          RUN cd tools \
+              && node ./install \
+              && cd ../runner \
+              && npm ci \
+              && cd ..
+
+          # Cleanup
+          RUN rm -rf git/haxe-binary/mac \
+              && rm -rf git/haxe-binary/linux-x86_64 \
+              && rm -rf git/haxe-binary/windows \
+              && cd tools \
+              && rm -f ./haxe.cmd \
+              && rm -f ./neko.cmd \
+              && rm -f ./ceramic.cmd
+
+          # Run ceramic
+          RUN cd tools && ./ceramic
+
+          # Create artifact
+          RUN zip --symlinks -9 -r 'ceramic-linux-arm64.zip' . -x ".git/*" ".github/*"
+          EOL
+
+      - name: Build in ARM64 container
+        uses: docker/build-push-action@v5
         with:
-          name: ceramic-mac.zip
-          path: .
+          context: .
+          platforms: linux/arm64
+          load: true
+          tags: ceramic-builder:latest
+          build-args: |
+            NODE_VERSION=22
+          file: ./Dockerfile
 
-      - name: Download ceramic-linux.zip
-        uses: actions/download-artifact@v4
+      - name: Copy artifact from container
+        run: |
+          docker cp $(docker create ceramic-builder:latest):/ceramic/ceramic-linux-arm64.zip .
+
+      - name: Upload Files
+        uses: actions/upload-artifact@v4
         with:
-          name: ceramic-linux.zip
-          path: .
+          retention-days: 1
+          name: ceramic-linux-arm64.zip
+          path: ceramic-linux-arm64.zip
+          compression-level: 0
 
-      - name: Extract tag name
-        id: extract_tag
-        run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+  # create-release:
+  #   needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
+  #   runs-on: ubuntu-22.04
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Create Release
-        id: create_release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref }}
-          name: Ceramic ${{ env.TAG_NAME }}
-          body: |
-            Ceramic ${{ env.TAG_NAME }}
-          draft: false
-          prerelease: false
-          files: |
-            ceramic-windows.zip
-            ceramic-mac.zip
-            ceramic-linux.zip
+  #     - name: Download ceramic-windows.zip
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ceramic-windows.zip
+  #         path: .
 
-  generate-api-docs:
-    needs: [create-release]
-    runs-on: ubuntu-22.04
-    steps:
+  #     - name: Download ceramic-mac.zip
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ceramic-mac.zip
+  #         path: .
 
-      - name: Dispatch event
-        uses: ceramic-engine/repository-dispatch@v1
-        with:
-          token: ${{ secrets.PAT_PUBLIC }}
-          repository: ceramic-engine/api-docs
-          event-type: deploy-api-docs
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+  #     - name: Download ceramic-linux.zip
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: ceramic-linux.zip
+  #         path: .
+
+  #     - name: Extract tag name
+  #       id: extract_tag
+  #       run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         name: Ceramic ${{ env.TAG_NAME }}
+  #         body: |
+  #           Ceramic ${{ env.TAG_NAME }}
+  #         draft: false
+  #         prerelease: false
+  #         files: |
+  #           ceramic-windows.zip
+  #           ceramic-mac.zip
+  #           ceramic-linux.zip
+
+  # generate-api-docs:
+  #   needs: [create-release]
+  #   runs-on: ubuntu-22.04
+  #   steps:
+
+  #     - name: Dispatch event
+  #       uses: ceramic-engine/repository-dispatch@v1
+  #       with:
+  #         token: ${{ secrets.PAT_PUBLIC }}
+  #         repository: ceramic-engine/api-docs
+  #         event-type: deploy-api-docs
+  #         client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
