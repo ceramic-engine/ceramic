@@ -200,7 +200,7 @@ class Assets extends Entity {
         var textExtensions = info.textExtensions();
         var soundExtensions = info.soundExtensions();
         var shaderExtensions = info.shaderExtensions();
-        var fontExtensions = ['fnt'];
+        var fontExtensions = ['fnt', 'ttf', 'otf'];
         var atlasExtensions = ['atlas'];
         var databaseExtensions = ['csv'];
         var fragmentsExtensions = ['fragments'];

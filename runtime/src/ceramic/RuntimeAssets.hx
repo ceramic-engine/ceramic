@@ -96,7 +96,7 @@ class RuntimeAssets {
             case 'text': app.backend.info.textExtensions();
             case 'sound': app.backend.info.soundExtensions();
             case 'shader': app.backend.info.shaderExtensions();
-            case 'font': ['fnt'];
+            case 'font': ['fnt', 'ttf', 'otf'];
             case 'atlas': ['atlas'];
             case 'database': ['csv'];
             case 'fragments': ['fragments'];
