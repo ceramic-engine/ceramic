@@ -1,8 +1,10 @@
 name: Build ceramic
 on:
   push:
-    # tags:
-    #   - v**
+    branches:
+      - '**'
+    tags:
+      - v**
 jobs:
 
   build-ceramic-windows:
@@ -57,11 +59,12 @@ jobs:
         run: |
           ./ceramic
 
-      # - name: Check ceramic version
-      #   working-directory: ./tools
-      #   run: |
-      #     $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
-      #     ./ceramic version --check-tag $GIT_TAG
+      - name: Check ceramic version
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ./tools
+        run: |
+          $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+          ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
         working-directory: .
@@ -151,11 +154,12 @@ jobs:
         run: |
           ./ceramic
 
-      # - name: Check ceramic version
-      #   working-directory: ./tools
-      #   run: |
-      #     GIT_TAG=${GITHUB_REF/refs\/tags\//}
-      #     ./ceramic version --check-tag $GIT_TAG
+      - name: Check ceramic version
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ./tools
+        run: |
+          GIT_TAG=${GITHUB_REF/refs\/tags\//}
+          ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
@@ -167,6 +171,7 @@ jobs:
           name: ceramic-mac.zip
           path: ceramic-mac.zip
           compression-level: 0
+
 
   build-ceramic-linux-x86_64:
     runs-on: ubuntu-22.04
@@ -238,11 +243,12 @@ jobs:
         run: |
           ./ceramic
 
-      # - name: Check ceramic version
-      #   working-directory: ./tools
-      #   run: |
-      #     GIT_TAG=${GITHUB_REF/refs\/tags\//}
-      #     ./ceramic version --check-tag $GIT_TAG
+      - name: Check ceramic version
+        if: startsWith(github.ref, 'refs/tags/')
+        working-directory: ./tools
+        run: |
+          GIT_TAG=${GITHUB_REF/refs\/tags\//}
+          ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-linux-x86_64.zip' . -x ".git/*" ".github/*"
@@ -363,58 +369,67 @@ jobs:
           path: ceramic-linux-arm64.zip
           compression-level: 0
 
-  # create-release:
-  #   needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
-  #   runs-on: ubuntu-22.04
-  #   steps:
-  #     - uses: actions/checkout@v4
+  create-release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux-x86_64, build-ceramic-linux-arm64]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Download ceramic-windows.zip
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: ceramic-windows.zip
-  #         path: .
+      - name: Download ceramic-windows.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-windows.zip
+          path: .
 
-  #     - name: Download ceramic-mac.zip
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: ceramic-mac.zip
-  #         path: .
+      - name: Download ceramic-mac.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-mac.zip
+          path: .
 
-  #     - name: Download ceramic-linux.zip
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: ceramic-linux.zip
-  #         path: .
+      - name: Download ceramic-linux-x86_64.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-linux-x86_64.zip
+          path: .
 
-  #     - name: Extract tag name
-  #       id: extract_tag
-  #       run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
+      - name: Download ceramic-linux-arm64.zip
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-linux-arm64.zip
+          path: .
 
-  #     - name: Create Release
-  #       id: create_release
-  #       uses: softprops/action-gh-release@v2
-  #       with:
-  #         tag_name: ${{ github.ref }}
-  #         name: Ceramic ${{ env.TAG_NAME }}
-  #         body: |
-  #           Ceramic ${{ env.TAG_NAME }}
-  #         draft: false
-  #         prerelease: false
-  #         files: |
-  #           ceramic-windows.zip
-  #           ceramic-mac.zip
-  #           ceramic-linux.zip
+      - name: Extract tag name
+        id: extract_tag
+        run: echo "TAG_NAME=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-  # generate-api-docs:
-  #   needs: [create-release]
-  #   runs-on: ubuntu-22.04
-  #   steps:
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref }}
+          name: Ceramic ${{ env.TAG_NAME }}
+          body: |
+            Ceramic ${{ env.TAG_NAME }}
+          draft: false
+          prerelease: false
+          files: |
+            ceramic-windows.zip
+            ceramic-mac.zip
+            ceramic-linux-x86_64.zip
+            ceramic-linux-arm64.zip
 
-  #     - name: Dispatch event
-  #       uses: ceramic-engine/repository-dispatch@v1
-  #       with:
-  #         token: ${{ secrets.PAT_PUBLIC }}
-  #         repository: ceramic-engine/api-docs
-  #         event-type: deploy-api-docs
-  #         client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+  generate-api-docs:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [create-release]
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Dispatch event
+        uses: ceramic-engine/repository-dispatch@v1
+        with:
+          token: ${{ secrets.PAT_PUBLIC }}
+          repository: ceramic-engine/api-docs
+          event-type: deploy-api-docs
+          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
