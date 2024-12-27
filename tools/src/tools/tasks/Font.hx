@@ -45,6 +45,7 @@ class Font extends Task {
         var msdfRange = extractArgValue(args, 'msdf-range') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'msdf-range'))) : 2;
         var bold = extractArgFlag(args, 'bold');
         var italic = extractArgFlag(args, 'italic');
+        var outputInTmp = extractArgFlag(args, 'output-in-tmp');
         var padding:Int = extractArgValue(args, 'padding') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'padding'))) : 2;
         var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
         var offsetX:Float = extractArgValue(args, 'offset-x') != null ? Std.parseFloat(extractArgValue(args, 'offset-x')) : 0;
@@ -55,7 +56,12 @@ class Font extends Task {
         }
 
         if (outputPath == null) {
-            outputPath = cwd;
+            if (outputInTmp) {
+                outputPath = TempDirectory.tempDir('font') ?? Path.join([cwd, '.tmp']);
+            }
+            else {
+                outputPath = cwd;
+            }
         }
 
         if (charset == null) {
@@ -77,7 +83,7 @@ class Font extends Task {
         if (!Path.isAbsolute(outputPath))
             outputPath = Path.normalize(Path.join([cwd, outputPath]));
 
-        var tmpDir = Path.join([cwd, '.tmp']);
+        var tmpDir = TempDirectory.tempDir('font') ?? Path.join([cwd, '.tmp']);
         if (FileSystem.exists(tmpDir)) {
             Files.deleteRecursive(tmpDir);
         }
@@ -124,16 +130,18 @@ class Font extends Task {
             '-size', Std.string(Math.round(size))
         ].concat(msdf ? [
             '-pxrange', '$msdfRange',
-        ] : []));
+        ] : []), {
+            mute: outputInTmp
+        });
 
         // Make the image transparent, if not using msdf
         if (!msdf) {
             var image = Images.getRaw(tmpImagePath);
             image = Images.blackAndWhiteToWhiteAlpha(image);
-            Images.saveRaw('$rawName.png', image);
+            Images.saveRaw(Path.join([outputPath, '$rawName.png']), image);
         }
         else {
-            File.copy(tmpImagePath, '$rawName.png');
+            File.copy(tmpImagePath, Path.join([outputPath, '$rawName.png']));
         }
 
         // Extract font data
@@ -244,7 +252,12 @@ class Font extends Task {
         File.saveContent(fntPath, fnt);
 
         // Remove temporary files
-        //Files.deleteRecursive(tmpDir);
+        Files.deleteRecursive(tmpDir);
+
+        // Print output path, if using "output in tmp"
+        if (outputInTmp) {
+            print(outputPath);
+        }
 
     }
 
