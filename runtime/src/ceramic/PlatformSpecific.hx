@@ -207,8 +207,8 @@ class PlatformSpecific {
     #if (web && ceramic_use_electron)
     static var testedElectronAvailability:Bool = false;
     static var testedElectronRemoteAvailability:Bool = false;
-    static var electron:Null<Dynamic> = null;
-    static var electronRemote:Null<Dynamic> = null;
+    static var _electron:Null<Dynamic> = null;
+    static var _electronRemote:Null<Dynamic> = null;
 
     inline public static function resolveElectron():Null<Dynamic> {
 
@@ -216,12 +216,12 @@ class PlatformSpecific {
             testedElectronAvailability = true;
             try {
                 final remote = electronRemote();
-                electron = js.Syntax.code("{0}.require('electron')", remote);
+                _electron = js.Syntax.code("{0}.require('electron')", remote);
             }
             catch (e:Dynamic) {}
         }
 
-        return electron;
+        return _electron;
 
     }
 
@@ -229,9 +229,9 @@ class PlatformSpecific {
 
         resolveElectron();
 
-        if (electronRemote != null) {
+        if (_electronRemote != null) {
 
-            var required:Dynamic = js.Syntax.code("{0}.require({1})", electronRemote, module);
+            var required:Dynamic = js.Syntax.code("{0}.require({1})", _electronRemote, module);
             return required;
 
         }
@@ -246,12 +246,12 @@ class PlatformSpecific {
         if (!testedElectronRemoteAvailability) {
             testedElectronRemoteAvailability = true;
             try {
-                electronRemote = js.Syntax.code("require('@electron/remote')");
+                _electronRemote = js.Syntax.code("require('@electron/remote')");
             }
             catch (e:Dynamic) {}
         }
 
-        return electronRemote;
+        return _electronRemote;
 
     }
 
