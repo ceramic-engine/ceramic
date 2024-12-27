@@ -1,7 +1,7 @@
 package ceramic;
 
-import ceramic.Path;
 import ceramic.Assert.assert;
+import ceramic.Path;
 
 class WatchDirectory extends Entity {
 
@@ -34,9 +34,9 @@ class WatchDirectory extends Entity {
         #if js
         if (!didTryRequireChokidar) {
             didTryRequireChokidar = true;
-            fs = ceramic.PlatformSpecific.nodeRequire('fs');
+            fs = ceramic.Platform.nodeRequire('fs');
             if (fs != null)
-                chokidar = ceramic.PlatformSpecific.nodeRequire('chokidar');
+                chokidar = ceramic.Platform.nodeRequire('chokidar');
         }
         #end
 
@@ -55,7 +55,7 @@ class WatchDirectory extends Entity {
             startingToWatchDirectories = new Map();
 
         assert(!watchedDirectories.exists(path) && !startingToWatchDirectories.exists(path), 'Directory is already being watched at path $path');
-        
+
         startingToWatchDirectories.set(path, true);
 
         Runner.runInBackground(() -> {
@@ -65,7 +65,7 @@ class WatchDirectory extends Entity {
                     return;
                 startingToWatchDirectories.remove(path);
                 watchedDirectories.original.set(path, newFilesModificationTime);
-                
+
                 #if js
                 if (chokidar != null) {
                     if (chokidarUpdatedFilesByWatchedDirectory == null) {
@@ -206,7 +206,7 @@ class WatchDirectory extends Entity {
         else {
 
         #end
-        
+
         var previousFilesModificationTime = watchedDirectories.get(path);
         Runner.runInBackground(() -> {
             var newFilesModificationTime = computeFilesModificationTime(path);
@@ -252,7 +252,7 @@ class WatchDirectory extends Entity {
         #if js
         }
         #end
-        
+
     }
 
     function computeFilesModificationTime(path:String):ReadOnlyMap<String, Float> {

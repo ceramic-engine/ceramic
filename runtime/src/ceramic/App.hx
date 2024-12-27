@@ -5,7 +5,7 @@ import ceramic.Assets;
 import ceramic.BitmapFont;
 import ceramic.CollectionEntry;
 import ceramic.ConvertField;
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 import ceramic.Settings;
 import ceramic.Shortcuts.*;
 import ceramic.Texture;
@@ -796,7 +796,7 @@ class App extends Entity {
      */
     public function quit() {
 
-        PlatformSpecific.quit();
+        Platform.quit();
 
     }
 
@@ -1063,7 +1063,7 @@ class App extends Entity {
     function runReady():Void {
 
         // Platform specific code (which is not in backend code)
-        PlatformSpecific.postAppInit();
+        Platform.postAppInit();
 
         emitReady();
 

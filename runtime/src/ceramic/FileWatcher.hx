@@ -34,7 +34,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         if (!testedElectronAvailability) {
             testedElectronAvailability = true;
             try {
-                electron = ceramic.PlatformSpecific.resolveElectron();
+                electron = ceramic.Platform.resolveElectron();
             }
             catch (e:Dynamic) {}
         }
@@ -162,7 +162,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return FileSystem.exists(path) && !FileSystem.isDirectory(path);
         #elseif web
         if (electron != null) {
-            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
+            var fs = ceramic.Platform.nodeRequire('fs');
             return fs.existsSync(path);
         }
         else {
@@ -182,7 +182,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return stat.mtime.getTime();
         #elseif web
         if (electron != null) {
-            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
+            var fs = ceramic.Platform.nodeRequire('fs');
             var stat = fs.statSync(path);
             if (stat == null) return -1;
             return stat.mtime.getTime();
@@ -202,7 +202,7 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
         return File.getContent(path);
         #elseif web
         if (electron != null) {
-            var fs = ceramic.PlatformSpecific.nodeRequire('fs');
+            var fs = ceramic.Platform.nodeRequire('fs');
             return fs.readFileSync(path, 'utf8');
         }
         else {

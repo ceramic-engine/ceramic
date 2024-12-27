@@ -15,12 +15,12 @@ import sys.io.File;
 
 
 /**
- * An internal class that encapsulate platform-specific code.
+ * A class that encapsulate platform-specific code.
  * We usually want platform-specific code to be located in a backend,
  * but it may happen that sometimes creating a backend interface is overkill.
  * That's where this comes handy.
  */
-class PlatformSpecific {
+class Platform {
 
     public static function postAppInit():Void {
 
@@ -300,5 +300,95 @@ class PlatformSpecific {
         #end
 
     }
+
+    /**
+     * Executes the given command asynchronously
+     * @param cmd The command to run
+     * @param args (optional) The command arguments, which will be automatically escaped
+     * @param callback The callback, called when the command has finished
+     */
+    public static function exec(cmd:String, ?args:Array<String>, callback:(code:Int, stdout:String, stderr:String)->Void):Void {
+
+        #if ((web && ceramic_use_electron) || node || nodejs || hxnodejs)
+
+        var childProcess = nodeRequire('child_process');
+
+        if (args == null) {
+            args = [];
+        }
+
+        var isWindows:Bool = false;
+        if (_execIsWindowsValue == 0) {
+            #if (node || nodejs || hxnodejs)
+            isWindows = js.Syntax.code('process.platform == "win32"');
+            #else
+            final os:Dynamic = nodeRequire('os');
+            isWindows = os.platform() == 'win32';
+            #end
+            _execIsWindowsValue = (isWindows ? 1 : -1);
+        }
+        else {
+            isWindows = (_execIsWindowsValue == 1);
+        }
+        var options = {
+            shell: isWindows ? (StringTools.endsWith(cmd, '.exe') ? false : true) : false
+        };
+
+        if (options.shell) {
+            args = [].concat(args);
+            for (i in 0...args.length) {
+                args[i] = isWindows ? haxe.SysTools.quoteWinArg(args[i], false) : haxe.SysTools.quoteUnixArg(args[i]);
+            }
+        }
+
+        var proc = childProcess.spawn(cmd, args, options);
+        var stdout = new StringBuf();
+        var stderr = new StringBuf();
+        proc.stdout.on('data', function(data:String) {
+            stdout.add(data);
+        });
+        proc.stderr.on('data', function(data:String) {
+            stderr.add(data);
+        });
+        proc.on('close', function(code:Int) {
+            callback(code, stdout.toString(), stderr.toString());
+        });
+        proc.on('error', function(err:Dynamic) {
+            stderr.add(Std.string(err));
+            callback(-1, stdout.toString(), stderr.toString());
+        });
+
+        #elseif sys
+
+        Runner.runInBackground(() -> {
+
+            final proc = new sys.io.Process(cmd, args, false);
+            final code = proc.exitCode();
+            final stdout = proc.stdout.readAll().toString();
+            final stderr = proc.stderr.readAll().toString();
+            proc.close();
+
+            Runner.runInMain(() -> {
+                callback(code, stdout, stderr);
+                callback = null;
+            });
+
+        });
+
+        #else
+
+        static var _execDidLogError = false;
+        if (!_execDidLogError) {
+            _execDidLogError = true;
+            log.error('exec() is not supported on this platform!');
+        }
+        callback(-1, null, null);
+
+        #end
+
+    }
+
+    private static var _execIsWindowsValue:Int = 0;
+    private static var _execDidLogError:Bool = false;
 
 }

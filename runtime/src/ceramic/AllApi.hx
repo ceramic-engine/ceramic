@@ -156,7 +156,7 @@ import ceramic.Path;
 import ceramic.PersistentData;
 import ceramic.PixelArt;
 import ceramic.Pixels;
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 import ceramic.Point;
 import ceramic.Pool;
 import ceramic.PremultiplyAlpha;

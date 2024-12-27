@@ -5,7 +5,7 @@ import dialogs.Dialogs as LincDialogs;
 #end
 
 #if (web && ceramic_use_electron)
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 #end
 
 import ceramic.Shortcuts.*;
@@ -39,7 +39,7 @@ class Dialogs {
 
         #elseif (web && ceramic_use_electron)
 
-        var remote = PlatformSpecific.electronRemote();
+        var remote = Platform.electronRemote();
         if (remote != null) {
             var dialog:Dynamic = remote.dialog;
             var options:Dynamic = {
@@ -100,7 +100,7 @@ class Dialogs {
 
         #elseif (web && ceramic_use_electron)
 
-        var remote = PlatformSpecific.electronRemote();
+        var remote = Platform.electronRemote();
         if (remote != null) {
             var dialog:Dynamic = remote.dialog;
             var options:Dynamic = {
@@ -177,7 +177,7 @@ class Dialogs {
 
         #elseif (web && ceramic_use_electron)
 
-        var remote = PlatformSpecific.electronRemote();
+        var remote = Platform.electronRemote();
         if (remote != null) {
             var dialog:Dynamic = remote.dialog;
             var options:Dynamic = {

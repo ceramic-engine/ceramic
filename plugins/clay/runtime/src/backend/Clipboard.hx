@@ -19,7 +19,7 @@ class Clipboard implements spec.Clipboard {
     public function new() {
 
         #if (web && ceramic_use_electron)
-        var electron = ceramic.PlatformSpecific.resolveElectron();
+        var electron = ceramic.Platform.resolveElectron();
         if (electron == null) {
             #if ceramic_browser_clipboard
             // Electron allowed but not available, fallback to browser
@@ -95,7 +95,7 @@ class Clipboard implements spec.Clipboard {
     public function getText():String {
 
         #if (web && ceramic_use_electron)
-        var electron = ceramic.PlatformSpecific.resolveElectron();
+        var electron = ceramic.Platform.resolveElectron();
         if (electron != null) {
             var text = electron.clipboard.readText();
             return text;
@@ -115,7 +115,7 @@ class Clipboard implements spec.Clipboard {
         clipboardText = text;
 
         #if (web && ceramic_use_electron)
-        var electron = ceramic.PlatformSpecific.resolveElectron();
+        var electron = ceramic.Platform.resolveElectron();
         if (electron != null) {
             electron.clipboard.writeText(text);
             ceramic.Timer.delay(null, 0.1, () -> {

@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.App.app;
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 
 using StringTools;
 #if (sys || node || nodejs)

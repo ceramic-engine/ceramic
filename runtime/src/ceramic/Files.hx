@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.Path;
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 
@@ -140,7 +140,7 @@ class Files {
     #elseif (web && ceramic_use_electron)
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
         var result:Array<String> = [];
 
         if (fs == null) {
@@ -197,7 +197,7 @@ class Files {
         if (stat == null) return -1;
         return stat.mtime.getTime() / 1000.0;
         #elseif (web && ceramic_use_electron)
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
         if (fs != null) {
             var stat = fs.statSync(path);
             if (stat == null) return -1;
@@ -400,7 +400,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('deleteFile() is not supported on this target without fs module');
@@ -426,7 +426,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('getContent() is not supported on this target without fs module');
@@ -453,7 +453,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('getBytes() is not supported on this target without fs module');
@@ -481,7 +481,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('saveContent() is not supported on this target without fs module');
@@ -506,7 +506,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('saveBytes() is not supported on this target without fs module');
@@ -532,7 +532,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('createDirectory() is not supported on this target without fs module');
@@ -577,7 +577,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('exists() is not supported on this target without fs module');
@@ -610,7 +610,7 @@ class Files {
 
         #elseif (web && ceramic_use_electron)
 
-        var fs = PlatformSpecific.nodeRequire('fs');
+        var fs = Platform.nodeRequire('fs');
 
         if (fs == null) {
             log.warning('isDirectory() is not supported on this target without fs module');

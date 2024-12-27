@@ -1,10 +1,10 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
 
 class Assets extends tools.Task {
 
@@ -121,19 +121,6 @@ class Assets extends tools.Task {
                 }
             }
         }
-
-        // // Add ceramic plugins assets (if not overrided by project assets)
-        // for (plugin in context.plugins) {
-        //     var pluginAssetsPaths = Path.join([plugin.path, 'assets']);
-        //     if (FileSystem.exists(pluginAssetsPaths) && FileSystem.isDirectory(pluginAssetsPaths)) {
-        //         for (name in Files.getFlatDirectory(pluginAssetsPaths)) {
-        //             if (!names.exists(name)) {
-        //                 assets.push(new tools.Asset(name, pluginAssetsPaths));
-        //                 names.set(name, true);
-        //             }
-        //         }
-        //     }
-        // }
 
         // Add ceramic default assets (if not overrided by project or plugins assets)
         if (FileSystem.exists(ceramicAssetsPath)) {

@@ -1,7 +1,7 @@
 package ceramic;
 
 import ceramic.Assert.assert;
-import ceramic.PlatformSpecific;
+import ceramic.Platform;
 import ceramic.Shortcuts.*;
 import haxe.CallStack;
 import haxe.io.Bytes;
@@ -30,7 +30,7 @@ class Utils {
 
     inline public static function getRtti<T>(c:Class<T>):Classdef {
 
-        return PlatformSpecific.getRtti(c);
+        return Platform.getRtti(c);
 
     }
 
@@ -638,7 +638,7 @@ class Utils {
 
         #elseif (web && ceramic_use_electron)
 
-        var childProcess = PlatformSpecific.nodeRequire('child_process');
+        var childProcess = Platform.nodeRequire('child_process');
         var opt:Dynamic = {};
         var detached = false;
         if (options != null) {

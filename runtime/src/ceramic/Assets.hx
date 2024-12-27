@@ -1154,7 +1154,7 @@ class Assets extends Entity {
 
     inline public static function getAssetsPath():String {
 
-        return PlatformSpecific.getAssetsPath();
+        return Platform.getAssetsPath();
 
     }
 
