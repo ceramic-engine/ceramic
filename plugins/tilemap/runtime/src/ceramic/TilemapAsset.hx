@@ -510,7 +510,7 @@ class TilemapAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload tilemap (file has changed)');
             #if plugin_ldtk
             ldtkExternalSources = null;
@@ -533,7 +533,7 @@ class TilemapAsset extends Asset {
                         newTime = newFiles.get(source);
                     }
 
-                    if (newTime > previousTime) {
+                    if (newTime != previousTime) {
                         log.info('Reload tilemap (external file has changed)');
                         ldtkExternalSources = null;
                         load();

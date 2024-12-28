@@ -14,9 +14,6 @@ class AndroidPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         context.addTask('android bind', new tools.tasks.android.Bind());
         context.addTask('android compile', new tools.tasks.android.Compile());

@@ -14,9 +14,6 @@ class IosPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         context.addTask('ios bind', new tools.tasks.ios.Bind());
         context.addTask('ios xcode', new tools.tasks.ios.Xcode());

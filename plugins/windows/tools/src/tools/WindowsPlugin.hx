@@ -14,9 +14,6 @@ class WindowsPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         #if windows
         context.addTask('windows app', new tools.tasks.windows.Windows());

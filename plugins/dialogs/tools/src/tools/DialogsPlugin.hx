@@ -14,9 +14,6 @@ class DialogsPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
     }
 
     public function extendProject(project:Project):Void {

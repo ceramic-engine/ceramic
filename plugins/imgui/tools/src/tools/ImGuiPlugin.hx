@@ -14,9 +14,6 @@ class ImGuiPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         context.addTask('imgui setup js', new tools.tasks.imgui.SetupJS());
 

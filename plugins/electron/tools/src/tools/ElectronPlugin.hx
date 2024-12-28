@@ -14,9 +14,6 @@ class ElectronPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         context.addTask('electron project', new tools.tasks.electron.ExportElectron());
 

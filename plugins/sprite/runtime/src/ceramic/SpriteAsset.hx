@@ -288,7 +288,7 @@ class SpriteAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload sprite (file has changed)');
             load();
         }

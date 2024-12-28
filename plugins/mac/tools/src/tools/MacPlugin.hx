@@ -14,9 +14,6 @@ class MacPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         #if mac
         context.addTask('mac app', new tools.tasks.mac.Mac());

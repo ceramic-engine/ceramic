@@ -18,9 +18,6 @@ class UnityPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Set backend
         var prevBackend = context.backend;
         backend = new UnityBackendTools();

@@ -338,7 +338,7 @@ class SpineAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload spine (file has changed)');
             load();
         }

@@ -14,9 +14,6 @@ class LinuxPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         #if linux
         context.addTask('linux app', new tools.tasks.linux.Linux());

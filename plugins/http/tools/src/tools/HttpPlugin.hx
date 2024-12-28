@@ -19,9 +19,6 @@ class HttpPlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
     }
 
     var didCheckTinkFuture = false;

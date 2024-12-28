@@ -14,9 +14,6 @@ class SpinePlugin {
 
     public function init(context:Context):Void {
 
-        // Use same context as parent
-        Helpers.context = context;
-
         // Add tasks
         context.addTask('spine export', new tools.tasks.spine.ExportSpine());
         context.addTask('spine run', new tools.tasks.spine.RunSpine());
