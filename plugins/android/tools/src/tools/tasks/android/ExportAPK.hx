@@ -78,6 +78,9 @@ class ExportAPK extends tools.Task {
         success('Generated APK file at path: $androidAPKPath');
 
         if (doRun) {
+            // Prevent multiple instances running
+            InstanceManager.makeUnique('run ~ ' + context.cwd);
+
             final os = Sys.systemName();
             final sdkPath = AndroidUtils.sdkPath();
             if (sdkPath == null) {

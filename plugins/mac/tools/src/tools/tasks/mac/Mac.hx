@@ -47,6 +47,9 @@ class Mac extends tools.Task {
         // Stop if not running
         if (!doRun) return;
 
+        // Prevent multiple instances running
+        InstanceManager.makeUnique('run ~ ' + context.cwd);
+
         // Run project
         print('Start app');
 

@@ -193,6 +193,9 @@ class Web extends tools.Task {
         // Stop if not running
         if (!doRun) return;
 
+        // Prevent multiple instances running
+        InstanceManager.makeUnique('run ~ ' + context.cwd);
+
         // Run project through electron/ceramic-runner
         print('Start ceramic runner');
         var webAppFilesPath = Path.join([cwd, 'project/web']);
