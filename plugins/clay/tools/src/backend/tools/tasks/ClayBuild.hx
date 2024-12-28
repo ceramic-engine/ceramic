@@ -7,6 +7,7 @@ import sys.FileSystem;
 import sys.io.File;
 import tools.Files;
 import tools.Helpers.*;
+import tools.InstanceManager;
 
 using StringTools;
 using tools.Colors;
@@ -63,6 +64,11 @@ class ClayBuild extends tools.Task {
                 action = 'run';
             case Clean(displayName):
                 action = 'clean';
+        }
+
+        if (action == 'run') {
+            // Prevent multiple instances running
+            InstanceManager.makeUnique('run ~ ' + cwd);
         }
 
         if (action == 'clean') {

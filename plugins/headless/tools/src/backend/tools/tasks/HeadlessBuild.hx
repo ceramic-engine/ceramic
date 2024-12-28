@@ -3,6 +3,7 @@ package backend.tools.tasks;
 import haxe.io.Path;
 import sys.FileSystem;
 import tools.Helpers.*;
+import tools.InstanceManager;
 
 using StringTools;
 
@@ -51,6 +52,11 @@ class HeadlessBuild extends tools.Task {
                 action = 'run';
             case Clean(displayName):
                 action = 'clean';
+        }
+
+        if (action == 'run') {
+            // Prevent multiple instances running
+            InstanceManager.makeUnique('run ~ ' + cwd);
         }
 
         if (action == 'clean') {
