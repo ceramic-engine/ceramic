@@ -78,7 +78,7 @@ class DatabaseAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload database (file has changed)');
             load();
         }

@@ -302,6 +302,79 @@ class Platform {
     }
 
     /**
+     * Executes the given Ceramic command asynchronously.
+     * This will work only on desktop platforms that have a valid Ceramic installation available.
+     * When the app has been launched by Ceramic itself, the same CLI tool will be used.
+     * Otherwise, it will look for a `ceramic` command available in `PATH`
+     * @param cmd The command to run
+     * @param args (optional) The command arguments, which will be automatically escaped
+     * @param callback The callback, called when the command has finished (or failed)
+     */
+    public static function runCeramic(args:Array<String>, callback:(code:Int, stdout:String, stderr:String)->Void):Void {
+
+        var cmd = Platform.getEnv('CERAMIC_CLI');
+        if (cmd == null)
+            cmd = isWindows() ? 'ceramic.exe' : 'ceramic';
+
+        log.debug('ceramic ' + args.join(' '));
+        exec(cmd, args, callback);
+
+    }
+
+    public static function getEnv(key:String):String {
+
+        #if ((web && ceramic_use_electron) || node || nodejs || hxnodejs)
+        try {
+            return js.Syntax.code('process.env[{0}]', key);
+        }
+        catch (e:Any) {
+            return null;
+        }
+        #elseif (sys || cs)
+        return Sys.getEnv(key);
+        #else
+        return null;
+        #end
+
+    }
+
+    public static function isWindows():Bool {
+
+        #if ((web && ceramic_use_electron) || node || nodejs || hxnodejs)
+        var isWindows:Bool = false;
+        if (_isWindowsValue == 0) {
+            try {
+                #if (node || nodejs || hxnodejs)
+                isWindows = js.Syntax.code('process.platform == "win32"');
+                #else
+                final os:Dynamic = nodeRequire('os');
+                isWindows = os.platform() == 'win32';
+                #end
+            }
+            catch (e:Any) {
+                isWindows = false;
+            }
+            _isWindowsValue = (isWindows ? 1 : -1);
+        }
+        else {
+            isWindows = (_isWindowsValue == 1);
+        }
+        return isWindows;
+        #elseif windows
+        return true;
+        #elseif sys
+        var isWindows:Bool = false;
+        if (_isWindowsValue == 0) {
+            _isWindowsValue = ((Sys.systemName() == 'Windows') ? 1 : -1);
+        }
+        return (_isWindowsValue == 1);
+        #else
+        return false;
+        #end
+
+    }
+
+    /**
      * Executes the given command asynchronously
      * @param cmd The command to run
      * @param args (optional) The command arguments, which will be automatically escaped
@@ -317,19 +390,8 @@ class Platform {
             args = [];
         }
 
-        var isWindows:Bool = false;
-        if (_execIsWindowsValue == 0) {
-            #if (node || nodejs || hxnodejs)
-            isWindows = js.Syntax.code('process.platform == "win32"');
-            #else
-            final os:Dynamic = nodeRequire('os');
-            isWindows = os.platform() == 'win32';
-            #end
-            _execIsWindowsValue = (isWindows ? 1 : -1);
-        }
-        else {
-            isWindows = (_execIsWindowsValue == 1);
-        }
+        final isWindows = isWindows();
+
         var options = {
             shell: isWindows ? (StringTools.endsWith(cmd, '.exe') ? false : true) : false
         };
@@ -388,7 +450,7 @@ class Platform {
 
     }
 
-    private static var _execIsWindowsValue:Int = 0;
+    private static var _isWindowsValue:Int = 0;
     private static var _execDidLogError:Bool = false;
 
 }

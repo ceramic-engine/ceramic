@@ -202,10 +202,35 @@ class ClayBackendTools implements tools.spec.BackendTools {
 
     }
 
+    public function getDstAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
+
+        var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
+
+        return switch (target.name) {
+            case 'mac':
+                Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+            case 'ios':
+                Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
+            case 'android':
+                Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
+            case 'windows' | 'linux' | 'web':
+                Path.join([cwd, 'project', target.name, 'assets']);
+            default:
+                Path.join([outTargetPath, 'assets']);
+        };
+
+    }
+
+    public function getTransformedAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
+
+        var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
+        return Path.join([outTargetPath, 'transformedAssets']);
+
+    }
+
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var newAssets:Array<tools.Asset> = [];
-        var outTargetPath = target.outPath('clay', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         var assetsChanged = false;
 
@@ -217,18 +242,7 @@ class ClayBackendTools implements tools.spec.BackendTools {
         var premultiplyAlpha = (target.name != 'web');
 
         if (dstAssetsPath == null) {
-            switch (target.name) {
-                case 'mac':
-                    dstAssetsPath = Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
-                case 'ios':
-                    dstAssetsPath = Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
-                case 'android':
-                    dstAssetsPath = Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
-                case 'windows' | 'linux' | 'web':
-                    dstAssetsPath = Path.join([cwd, 'project', target.name, 'assets']);
-                default:
-                    dstAssetsPath = Path.join([outTargetPath, 'assets']);
-            }
+            dstAssetsPath = getDstAssetsPath(cwd, target, variant);
         }
 
         // Add/update missing assets

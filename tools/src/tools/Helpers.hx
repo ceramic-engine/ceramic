@@ -249,7 +249,7 @@ class Helpers {
         }
 
         if (Sys.systemName() == 'Windows') {
-            return command(Path.join([context.ceramicToolsPath, 'ceramic.cmd']), actualArgs, { cwd: cwd, mute: mute });
+            return command(Path.join([context.ceramicToolsPath, 'ceramic.exe']), actualArgs, { cwd: cwd, mute: mute });
         } else {
             return command(Path.join([context.ceramicToolsPath, 'ceramic']), actualArgs, { cwd: cwd, mute: mute });
         }
@@ -719,6 +719,12 @@ class Helpers {
 
         final proc = new Process(name, args, options.cwd);
 
+        if (Sys.systemName() == 'Windows') {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic.exe']));
+        } else {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic']));
+        }
+
         proc.inherit_file_descriptors = false;
 
         var stdout = new SplitStream('\n'.code, line -> {
@@ -774,13 +780,18 @@ class Helpers {
 
         // Handle Windows, again...
         if (Sys.systemName() == 'Windows') {
-            // npm
             if (name == 'npm' || name == 'node' || name == 'ceramic' || name == 'haxe' || name == 'haxelib' || name == 'neko') {
                 name = name + '.cmd';
             }
         }
 
         final proc = new Process(name, args, options.cwd);
+
+        if (Sys.systemName() == 'Windows') {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic.exe']));
+        } else {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic']));
+        }
 
         if (options.detached) {
             proc.detach_process = true;

@@ -1,0 +1,4 @@
+plugin:
+    name: Font
+    tools: tools.FontPlugin
+

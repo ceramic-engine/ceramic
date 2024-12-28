@@ -251,7 +251,7 @@ class AtlasAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload atlas (file has changed)');
             load();
         }

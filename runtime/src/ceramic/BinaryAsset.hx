@@ -76,7 +76,7 @@ class BinaryAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload binary (file has changed)');
             load();
         }

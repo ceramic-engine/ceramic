@@ -52,6 +52,8 @@ class Tools {
             isEmbeddedInElectron: false,
             ceramicVersion: null,
             assetsChanged: false,
+            assetsTransformers: [],
+            tempDirs: [],
             iconsChanged: false,
             printSplitLines: (args.indexOf('--print-split-lines') != -1),
             haxePaths: [],
@@ -103,10 +105,11 @@ class Tools {
         context.addTask('info', new tools.tasks.Info());
         context.addTask('libs', new tools.tasks.Libs());
         context.addTask('hxml', new tools.tasks.Hxml());
-
-        context.addTask('font', new tools.tasks.Font());
+        context.addTask('assets', new tools.tasks.Assets());
 
         context.addTask('haxe server', new tools.tasks.HaxeServer());
+
+        context.addTask('tmp dir', new tools.tasks.TmpDir());
 
         context.addTask('plugin hxml', new tools.tasks.plugin.PluginHxml());
         context.addTask('plugin list', new tools.tasks.plugin.ListPlugins());

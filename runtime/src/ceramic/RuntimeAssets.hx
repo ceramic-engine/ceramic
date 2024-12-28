@@ -15,6 +15,44 @@ import sys.FileSystem;
  */
 class RuntimeAssets {
 
+    var transformedDir:String = null;
+    var didQueryTransformedDir:Int = 0;
+    var pendingTransformedDirCallbacks:Array<(transformedDir:String)->Void> = null;
+    public function requestTransformedDir(callback:(transformedDir:String)->Void):Void {
+        if (didQueryTransformedDir == 2) {
+            app.onceImmediate(() -> callback(transformedDir));
+        }
+        else if (didQueryTransformedDir == 1) {
+            if (pendingTransformedDirCallbacks == null) {
+                pendingTransformedDirCallbacks = [];
+            }
+            pendingTransformedDirCallbacks.push(callback);
+        }
+        else {
+            didQueryTransformedDir = 1;
+            Platform.runCeramic(['tmp', 'dir'], (code, out, err) -> {
+                if (code == 0) {
+                    var result = out.trim();
+                    if (result.length > 0 && Files.exists(result)) {
+                        transformedDir = result;
+                    }
+                }
+                else {
+                    app.logger.error('Failed to resolve tmp dir: $code / $err');
+                }
+                didQueryTransformedDir = 2;
+                callback(transformedDir);
+                if (pendingTransformedDirCallbacks != null) {
+                    var transformedDirCallbacks = pendingTransformedDirCallbacks;
+                    pendingTransformedDirCallbacks = null;
+                    for (cb in transformedDirCallbacks) {
+                        cb(transformedDir);
+                    }
+                }
+            });
+        }
+    }
+
     var allAssets:Array<String> = null;
 
     var allAssetDirs:Array<String> = null;

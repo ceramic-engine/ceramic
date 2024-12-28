@@ -2,6 +2,7 @@ package tools.tasks.mac;
 
 import haxe.io.Path;
 import sys.FileSystem;
+import sys.io.File;
 import tools.Helpers.*;
 
 using StringTools;
@@ -80,13 +81,19 @@ class Compile extends tools.Task {
             }
         }
 
-        if (allBinaries.length > 0) {
+        if (allBinaries.length > 1) {
             // Need to merge archs with lipo
             print('Create universal binary');
             command('lipo', [
                 '-create'].concat(allBinaries).concat([
                 '-output', Path.join([outTargetPath, 'cpp', baseBinary])
             ]));
+        }
+        else if (allBinaries.length == 1) {
+            FileSystem.rename(
+                allBinaries[0],
+                Path.join([outTargetPath, 'cpp', baseBinary])
+            );
         }
 
     }

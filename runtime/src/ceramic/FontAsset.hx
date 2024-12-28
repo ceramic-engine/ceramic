@@ -3,6 +3,8 @@ package ceramic;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
 
+using StringTools;
+
 class FontAsset extends Asset {
 
 /// Events
@@ -16,6 +18,8 @@ class FontAsset extends Asset {
     public var pages:Map<String,Texture> = null;
 
     @observe public var font:BitmapFont = null;
+
+    var transformedPath:String = null;
 
 /// Lifecycle
 
@@ -53,20 +57,31 @@ class FontAsset extends Asset {
             return;
         }
 
-        log.info('Load font $path');
+        // TTF/OTF fonts don't exist at runtime, so if the name is that,
+        // we resolve the converted bitmap font .fnt path instead
+        var actualPath = path;
 
+        var lowerCasePath = actualPath.toLowerCase();
+        if (lowerCasePath.endsWith('.ttf') || lowerCasePath.endsWith('.otf')) {
+            actualPath = actualPath.substring(0, actualPath.length - 4) + '.fnt';
+        }
+
+        log.info('Load font $actualPath');
+        if (transformedPath != null) {
+            actualPath = Path.join([transformedPath, actualPath]);
+        }
 
         // Use runtime assets if provided
         assets.runtimeAssets = runtimeAssets;
 
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
-        asset.path = path;
+        asset.path = actualPath;
         assets.addAsset(asset);
         assets.onceComplete(this, function(success) {
 
             var text = asset.text;
-            var relativeFontPath = Path.directory(path);
+            var relativeFontPath = Path.directory(actualPath);
             if (relativeFontPath == '') relativeFontPath = '.';
 
             if (text != null) {
@@ -93,6 +108,7 @@ class FontAsset extends Asset {
                         asset.handleTexturesDensityChange = false;
 
                         asset.path = pathInfo.path;
+
                         assets.addAsset(asset);
                         assetList.push(asset);
 
@@ -233,9 +249,37 @@ class FontAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload font (file has changed)');
-            load();
+
+            var lowerCasePath = path.toLowerCase();
+            if (owner?.runtimeAssets != null && lowerCasePath.endsWith('.ttf') || lowerCasePath.endsWith('.otf')) {
+                var actualPath = path;
+                owner.runtimeAssets.requestTransformedDir(transformedDir -> {
+                    Platform.runCeramic([
+                        'assets',
+                        '--filter', path,
+                        '--from', owner.runtimeAssets.path,
+                        '--to', transformedDir,
+                        '--list-changed'
+                    ],
+                    (code, out, err) -> {
+                        if (code == 0) {
+                            transformedPath = transformedDir;
+                            var changed:Array<String> = Json.parse(out.trim());
+                            for (absolutePath in changed) {
+                                log.debug('Updated on the fly: $absolutePath');
+                                Assets.incrementReloadCount(absolutePath);
+                            }
+                            load();
+                        }
+                    });
+                });
+            }
+            else {
+                load();
+            }
+
         }
 
     }

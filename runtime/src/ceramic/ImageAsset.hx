@@ -291,7 +291,7 @@ class ImageAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload texture (file has changed)');
             load();
         }

@@ -20,26 +20,46 @@ class Assets extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Transform/copy project's assets for " + context.backend.name + " backend and given target.";
+        if (context.backend == null) {
+            return "Transform/copy assets.";
+        }
+        else {
+            return "Transform/copy project's assets for " + context.backend.name + " backend and given target.";
+        }
 
     }
 
     override function run(cwd:String, args:Array<String>):Void {
 
+        var filter = extractArgValue(args, 'filter');
+        var regex = filter != null ? Glob.toEReg(filter) : null;
+
+        var noBackendTransform = (context.backend == null) || extractArgFlag(args, 'no-backend-transform');
+
         var fromArg = extractArgValue(args, 'from', true);
         var toArg = extractArgValue(args, 'to', true);
         var processIcons = false;
+
+        var isProjectAssets = false;
 
         var fromPath = null;
         var toPath = null;
 
         var project = null;
 
+        var changedPaths:Array<String> = [];
+        var listChanged = extractArgFlag(args, 'list-changed');
+
         // We are either processing assets for current project
         // or with provided source and destination
         if (fromArg == null || toArg == null) {
+            isProjectAssets = true;
             processIcons = true;
             project = ensureCeramicProject(cwd, args, App);
+
+            // Never filter when doing project assets
+            filter = null;
+            regex = null;
         }
         else {
             fromPath = fromArg;
@@ -62,10 +82,10 @@ class Assets extends tools.Task {
             }
         }
 
-        var availableTargets = context.backend.getBuildTargets();
-        var targetName = getTargetName(args, availableTargets);
+        var availableTargets = context.backend != null ? context.backend.getBuildTargets() : [];
+        var targetName = context.backend != null ? getTargetName(args, availableTargets) : null;
 
-        if (targetName == null) {
+        if (targetName == null && context.backend != null) {
             fail('You must specify a target to transform/copy assets to.');
         }
 
@@ -81,7 +101,7 @@ class Assets extends tools.Task {
 
         }
 
-        if (target == null) {
+        if (target == null && context.backend != null) {
             fail('Unknown target: $targetName');
         }
 
@@ -100,52 +120,103 @@ class Assets extends tools.Task {
         // Add assets
         if (FileSystem.exists(assetsPath)) {
             for (name in Files.getFlatDirectory(assetsPath)) {
-                assets.push(new tools.Asset(name, assetsPath));
-                names.set(name, true);
+                if (regex == null || regex.match(name)) {
+                    assets.push(new tools.Asset(name, assetsPath));
+                    names.set(name, true);
+                }
             }
         }
 
-        // Add extra asset paths
-        if (project != null) {
-            var extraAssets:Array<String> = project.app.assets;
-            if (extraAssets != null) {
-                for (extraAssetsPath in extraAssets) {
-                    if (FileSystem.exists(extraAssetsPath) && FileSystem.isDirectory(extraAssetsPath)) {
-                        for (name in Files.getFlatDirectory(extraAssetsPath)) {
-                            if (!names.exists(name)) {
-                                assets.push(new tools.Asset(name, extraAssetsPath));
-                                names.set(name, true);
+        // Compute destination assets path
+        var dstAssetsPath = toPath;
+        var transformedAssetsPath = null;
+        if (!noBackendTransform) {
+            if (dstAssetsPath == null) {
+                dstAssetsPath = context.backend.getDstAssetsPath(
+                    cwd,
+                    target,
+                    context.variant
+                );
+            }
+            if (transformedAssetsPath == null) {
+                transformedAssetsPath = context.backend.getTransformedAssetsPath(
+                    cwd,
+                    target,
+                    context.variant
+                );
+            }
+        }
+        else if (transformedAssetsPath == null && !isProjectAssets && toPath != null) {
+            transformedAssetsPath = toPath;
+        }
+        else {
+            transformedAssetsPath = TempDirectory.tempDir('transformedAssets');
+            context.tempDirs.push(transformedAssetsPath);
+        }
+
+        // If no specific path is specified, that means we are
+        // transforming project's assets, so let's involve every extra asset path
+        // including the ones provided by plugins
+        if (isProjectAssets) {
+
+            print('Update project assets');
+
+            // Add extra asset paths
+            if (project != null) {
+                var extraAssets:Array<String> = project.app.assets;
+                if (extraAssets != null) {
+                    for (extraAssetsPath in extraAssets) {
+                        if (FileSystem.exists(extraAssetsPath) && FileSystem.isDirectory(extraAssetsPath)) {
+                            for (name in Files.getFlatDirectory(extraAssetsPath)) {
+                                if (!names.exists(name)) {
+                                    if (regex == null || regex.match(name)) {
+                                        assets.push(new tools.Asset(name, extraAssetsPath));
+                                        names.set(name, true);
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-        }
 
-        // Add ceramic default assets (if not overrided by project or plugins assets)
-        if (FileSystem.exists(ceramicAssetsPath)) {
-            for (name in Files.getFlatDirectory(ceramicAssetsPath)) {
-                if (!names.exists(name)) {
-                    assets.push(new tools.Asset(name, ceramicAssetsPath));
+            // Add ceramic default assets (if not overrided by project or plugins assets)
+            if (FileSystem.exists(ceramicAssetsPath)) {
+                for (name in Files.getFlatDirectory(ceramicAssetsPath)) {
+                    if (!names.exists(name)) {
+                        if (regex == null || regex.match(name)) {
+                            assets.push(new tools.Asset(name, ceramicAssetsPath));
+                        }
+                    }
                 }
             }
         }
+        else {
+            // In other situations, we are explicitly processing assets from and to specific paths
+        }
 
-        print('Update project assets');
+        // Transform assets with high level transformers
+        if (!FileSystem.exists(transformedAssetsPath)) {
+            FileSystem.createDirectory(transformedAssetsPath);
+        }
+        var transformedAssets = assets;
+        for (transformer in context.assetsTransformers) {
+            transformedAssets = transformer.transform(transformedAssets, transformedAssetsPath, changedPaths);
+        }
 
-        // Transform/copy assets
-        var transformedAssets = context.backend.transformAssets(
-            cwd,
-            assets,
-            target,
-            context.variant,
-            listOnly,
-            toPath
-        );
+        if (!noBackendTransform) {
+            // Transform/copy assets with backend
+            transformedAssets = context.backend.transformAssets(
+                cwd,
+                transformedAssets,
+                target,
+                context.variant,
+                listOnly,
+                toPath
+            );
+        }
 
-        if (transformedAssets.length > 0) {
-
-            var dstAssetsPath = transformedAssets[0].rootDirectory;
+        if (isProjectAssets && transformedAssets.length > 0 && dstAssetsPath != null) {
 
             // Add _assets.json listing
             //
@@ -196,7 +267,7 @@ class Assets extends tools.Task {
             }
         }
 
-        if (context.assetsChanged || context.iconsChanged) {
+        if (isProjectAssets && context.backend != null && (context.assetsChanged || context.iconsChanged)) {
             // Invalidate project files last modified times because assets or icons have changed
             // in order to ensure build will be reprocessed again
             var outPath = target.outPath(context.backend.name, cwd, context.debug, context.variant);
@@ -208,6 +279,10 @@ class Assets extends tools.Task {
             if (FileSystem.exists(lastModifiedListFileDebug)) {
                 FileSystem.deleteFile(lastModifiedListFileDebug);
             }
+        }
+
+        if (listChanged) {
+            print(Json.stringify(changedPaths));
         }
 
     }

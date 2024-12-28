@@ -221,7 +221,7 @@ class WatchDirectory extends Entity {
                     didChange = true;
                     break;
                 }
-                else if (mtime > previousFilesModificationTime.get(path)) {
+                else if (mtime != previousFilesModificationTime.get(path)) {
                     // Modification time has changed
                     didChange = true;
                     break;

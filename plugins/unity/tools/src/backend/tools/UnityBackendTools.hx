@@ -142,6 +142,20 @@ class UnityBackendTools implements tools.spec.BackendTools {
 
     }
 
+    public function getDstAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
+
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
+        return Path.join([hxmlProjectPath, 'assets']);
+
+    }
+
+    public function getTransformedAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
+
+        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
+        return Path.join([hxmlProjectPath, 'transformedAssets']);
+
+    }
+
     public function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset> {
 
         var nonTxtExtensions = [
@@ -163,10 +177,9 @@ class UnityBackendTools implements tools.spec.BackendTools {
         ];
 
         var newAssets:Array<tools.Asset> = [];
-        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
         var validDstPaths:Map<String,Bool> = new Map();
         if (dstAssetsPath == null) {
-            dstAssetsPath = Path.join([hxmlProjectPath, 'assets']);
+            dstAssetsPath = getDstAssetsPath(cwd, target, variant);
         }
 
         var unityProjectPath = UnityProject.resolveUnityProjectPath(cwd, context.project);

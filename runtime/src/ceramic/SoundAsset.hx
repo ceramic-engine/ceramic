@@ -129,7 +129,7 @@ class SoundAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload sound (file has changed)');
             load();
         }

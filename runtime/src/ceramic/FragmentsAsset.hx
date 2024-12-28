@@ -195,7 +195,7 @@ class FragmentsAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload fragments (file has changed)');
             load();
         }

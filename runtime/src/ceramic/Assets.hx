@@ -1101,7 +1101,7 @@ class Assets extends Entity {
                 var realPathKey = realAssetPath(key, runtimeAssets);
                 newLastModifiedByRealAssetPath.set(realPathKey, value);
                 if (lastModifiedByRealAssetPath.exists(realPathKey)) {
-                    if (value > lastModifiedByRealAssetPath.get(realPathKey)) {
+                    if (value != lastModifiedByRealAssetPath.get(realPathKey)) {
                         incrementReloadCount(realPathKey);
                     }
                 }
@@ -1199,6 +1199,8 @@ class Assets extends Entity {
 
     static function incrementReloadCount(realAssetPath:String) {
 
+        realAssetPath = Path.normalize(realAssetPath);
+
         if (Assets.reloadCountByRealAssetPath == null)
             Assets.reloadCountByRealAssetPath = new Map();
 
@@ -1212,6 +1214,8 @@ class Assets extends Entity {
     }
 
     public static function getReloadCount(realAssetPath:String):Int {
+
+        realAssetPath = Path.normalize(realAssetPath);
 
         if (Assets.reloadCountByRealAssetPath == null || !Assets.reloadCountByRealAssetPath.exists(realAssetPath))
             return 0;

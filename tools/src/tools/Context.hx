@@ -90,6 +90,12 @@ class Context  {
     /** A flag to tell whether one asset or more have changed since last asset pass */
     public var assetsChanged:Bool;
 
+    /** Assets transformers, such as converters to transform TTF/OTF to Bitmap font and so on... */
+    public var assetsTransformers:Array<tools.spec.TransformAssets>;
+
+    /** List of temporary directories that have been created and not cleaned up automatically */
+    public var tempDirs:Array<String>;
+
     /** A flag to tell whether one icon or more have changed since last icon pass */
     public var iconsChanged:Bool;
 

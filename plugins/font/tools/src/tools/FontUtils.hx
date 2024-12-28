@@ -1,4 +1,4 @@
-package tools.tasks;
+package tools;
 
 import haxe.Json;
 import haxe.io.Path;
@@ -8,61 +8,45 @@ import tools.Helpers.*;
 
 using StringTools;
 
-class Font extends Task {
+class FontUtils {
 
-/// Lifecycle
+    public static function createBitmapFont(options:{
+        fontPath:String,
+        ?outputPath:String,
+        ?charset:String,
+        ?quiet:Bool,
+        ?charsetFile:String,
+        ?msdf:Bool,
+        ?msdfRange:Int,
+        ?bold:Bool,
+        ?italic:Bool,
+        ?padding:Int,
+        ?size:Float,
+        ?offsetX:Float,
+        ?offsetY:Float
+    }) {
 
-    override public function help(cwd:String):Array<Array<String>> {
+        var cwd = context.cwd;
 
-        return [
-            ['--font <path to font>', 'The ttf/otf font file to convert'],
-            ['--out <output directory>', 'The output directory'],
-            ['--msdf', 'If used, export with multichannel distance field'],
-            ['--msdf-range', 'Sets the distance field range in pixels (default: 2)'],
-            ['--size <font size>', 'The font size to export (default: 42)'],
-            ['--factor <factor>', 'A precision factor (advanced usage, default: 4)'],
-            ['--charset', 'Characters to use as charset'],
-            ['--charset-file', 'A text file containing characters to use as charset'],
-            ['--offset-x', 'Move every character by this X offset'],
-            ['--offset-y', 'Move every character by this Y offset']
-        ];
+        var fontPath:String = options.fontPath;
+        var outputPath:String = options.outputPath;
+        var charset:String = options.charset;
+        var quiet:Bool = options.quiet ?? false;
+        var charsetFile:String = options.charsetFile;
+        var msdf:Bool = options.msdf ?? false;
+        var msdfRange:Int = options.msdfRange ?? 2;
+        var bold:Bool = options.bold ?? false;
+        var italic:Bool = options.italic ?? false;
+        var padding:Int = options.padding ?? 2;
+        var size:Float = options.size ?? 42;
+        var offsetX:Float = options.offsetX ?? 0;
+        var offsetY:Float = options.offsetY ?? 0;
 
-    }
+        if (!Path.isAbsolute(fontPath))
+            fontPath = Path.normalize(Path.join([cwd, fontPath]));
 
-    override public function info(cwd:String):String {
-
-        return "Utility to convert ttf/otf font to bitmap font compatible with ceramic";
-
-    }
-
-    override function run(cwd:String, args:Array<String>):Void {
-
-        var fontPath = extractArgValue(args, 'font');
-        var outputPath = extractArgValue(args, 'out');
-        var charset = extractArgValue(args, 'charset');
-        var charsetFile = extractArgValue(args, 'charset-file');
-        var msdf = extractArgFlag(args, 'msdf');
-        var msdfRange = extractArgValue(args, 'msdf-range') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'msdf-range'))) : 2;
-        var bold = extractArgFlag(args, 'bold');
-        var italic = extractArgFlag(args, 'italic');
-        var outputInTmp = extractArgFlag(args, 'output-in-tmp');
-        var padding:Int = extractArgValue(args, 'padding') != null ? Math.round(Std.parseFloat(extractArgValue(args, 'padding'))) : 2;
-        var size:Float = extractArgValue(args, 'size') != null ? Std.parseFloat(extractArgValue(args, 'size')) : 42;
-        var offsetX:Float = extractArgValue(args, 'offset-x') != null ? Std.parseFloat(extractArgValue(args, 'offset-x')) : 0;
-        var offsetY:Float = extractArgValue(args, 'offset-y') != null ? Std.parseFloat(extractArgValue(args, 'offset-y')) : 0;
-
-        if (fontPath == null) {
-            fail('--font argument is required');
-        }
-
-        if (outputPath == null) {
-            if (outputInTmp) {
-                outputPath = TempDirectory.tempDir('font') ?? Path.join([cwd, '.tmp']);
-            }
-            else {
-                outputPath = cwd;
-            }
-        }
+        if (!Path.isAbsolute(outputPath))
+            outputPath = Path.normalize(Path.join([cwd, outputPath]));
 
         if (charset == null) {
             if (charsetFile != null) {
@@ -76,12 +60,6 @@ class Font extends Task {
                 charset = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~¡¢£¤¥¦§¨©ª«¬­®¯°±²³´µ¶·¸¹º»¼½¾¿ÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖ×ØÙÚÛÜÝÞßàáâãäåæçèéêëìíîïðñòóôõö÷øùúûüýþÿœŒ€£";
             }
         }
-
-        if (!Path.isAbsolute(fontPath))
-            fontPath = Path.normalize(Path.join([cwd, fontPath]));
-
-        if (!Path.isAbsolute(outputPath))
-            outputPath = Path.normalize(Path.join([cwd, outputPath]));
 
         var tmpDir = TempDirectory.tempDir('font') ?? Path.join([cwd, '.tmp']);
         if (FileSystem.exists(tmpDir)) {
@@ -119,7 +97,7 @@ class Font extends Task {
         var tmpImagePath = Path.join([tmpDir, '$rawName.png']);
         var tmpJsonPath = Path.join([tmpDir, '$rawName.json']);
 
-        command(msdfAtlasGen, [
+        final result = command(msdfAtlasGen, [
             '-charset', tmpCharsetPath,
             '-font', tmpFontPath,
             '-type', msdf ? 'msdf' : 'softmask',
@@ -131,7 +109,7 @@ class Font extends Task {
         ].concat(msdf ? [
             '-pxrange', '$msdfRange',
         ] : []), {
-            mute: outputInTmp
+            mute: quiet
         });
 
         // Make the image transparent, if not using msdf
@@ -254,10 +232,8 @@ class Font extends Task {
         // Remove temporary files
         Files.deleteRecursive(tmpDir);
 
-        // Print output path, if using "output in tmp"
-        if (outputInTmp) {
-            print(outputPath);
-        }
+        // Return `true` if the command didn't fail
+        return result.status == 0;
 
     }
 

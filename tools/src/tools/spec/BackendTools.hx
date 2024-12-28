@@ -33,6 +33,12 @@ interface BackendTools {
     /** Run backend framework (dependency) update/install **/
     function runUpdate(cwd:String, args:Array<String>):Void;
 
+    /** Get the destination assets path from the given info */
+    function getDstAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String;
+
+    /** Get the transformed assets path from the given info */
+    function getTransformedAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String;
+
     /** Transform and get assets for the given backend and build target */
     function transformAssets(cwd:String, assets:Array<tools.Asset>, target:tools.BuildTarget, variant:String, listOnly:Bool, ?dstAssetsPath:String):Array<tools.Asset>;
 

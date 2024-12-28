@@ -75,7 +75,7 @@ class TextAsset extends Asset {
             newTime = newFiles.get(path);
         }
 
-        if (newTime > previousTime) {
+        if (newTime != previousTime) {
             log.info('Reload text (file has changed)');
             load();
         }

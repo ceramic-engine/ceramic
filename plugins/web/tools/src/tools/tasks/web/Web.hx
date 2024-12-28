@@ -258,6 +258,12 @@ class Web extends tools.Task {
             );
         }
 
+        if (Sys.systemName() == 'Windows') {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic.exe']));
+        } else {
+            proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic']));
+        }
+
         var out = new SplitStream('\n'.code, line -> {
             line = formatLineOutput(outTargetPath, line);
             stdoutWrite(line + "\n");
