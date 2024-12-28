@@ -293,6 +293,10 @@ class Web extends tools.Task {
         final status = proc.tick_until_exit_status(() -> {
             Runner.tick();
             timer.update();
+            if (context.shouldExit) {
+                proc.kill(false);
+                Sys.exit(0);
+            }
         });
 
         if (status != 0 && (Timestamp.now() - time) < 5.0) {

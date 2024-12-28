@@ -754,6 +754,10 @@ class Helpers {
             if (tick != null) {
                 tick();
             }
+            if (context.shouldExit) {
+                proc.kill(false);
+                Sys.exit(0);
+            }
         });
 
         return status;
@@ -828,6 +832,10 @@ class Helpers {
             timer.update();
             if (tick != null) {
                 tick();
+            }
+            if (context.shouldExit) {
+                proc.kill(false);
+                Sys.exit(0);
             }
         });
 

@@ -57,7 +57,8 @@ class Tools {
             iconsChanged: false,
             printSplitLines: (args.indexOf('--print-split-lines') != -1),
             haxePaths: [],
-            haxeLibraries: []
+            haxeLibraries: [],
+            shouldExit: false
         };
 
         // Check if we are embedded in electron

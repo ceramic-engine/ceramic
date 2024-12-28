@@ -99,6 +99,9 @@ class Context  {
     /** A flag to tell whether one icon or more have changed since last icon pass */
     public var iconsChanged:Bool;
 
+    /** Set to `true` if the cli tools should exit */
+    public var shouldExit:Bool;
+
     /** If `true`, data will be printed line by line instead of as a single chunk of data.
         This is sometimes needed to prevent some truncated bug (seen in vscode + spawn) */
     public var printSplitLines:Bool;

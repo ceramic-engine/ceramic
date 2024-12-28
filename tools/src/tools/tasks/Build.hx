@@ -138,7 +138,7 @@ class Build extends tools.Task {
                 break;
             }
         }
-        if (isRun) {
+        /*if (isRun) {
             // Keep a file updated in home directory to let other ceramic scripts detect
             // that a haxe server is running
             var homedir:String = homedir();
@@ -161,7 +161,7 @@ class Build extends tools.Task {
                     Sys.exit(0);
                 }
             });
-        }
+        }*/
 
         // Get and run backend's build task
         context.backend.runBuild(cwd, args, target, context.variant, configIndex);

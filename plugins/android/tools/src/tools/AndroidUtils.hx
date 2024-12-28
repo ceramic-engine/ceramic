@@ -72,7 +72,6 @@ class AndroidUtils {
 
         var status = 0;
 
-        var cwd = options.cwd;
         var logCwd = options.logCwd;
 
         final proc = new Process(name, args, options.cwd);
@@ -105,6 +104,10 @@ class AndroidUtils {
         final status = proc.tick_until_exit_status(() -> {
             Runner.tick();
             timer.update();
+            if (context.shouldExit) {
+                proc.kill(false);
+                Sys.exit(0);
+            }
         });
 
         return status;

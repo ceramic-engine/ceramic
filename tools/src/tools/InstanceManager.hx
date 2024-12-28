@@ -4,6 +4,7 @@ import haxe.crypto.Md5;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import sys.thread.Mutex;
 import sys.thread.Thread;
 import tools.Helpers.*;
 
@@ -12,22 +13,22 @@ import tools.Helpers.*;
  */
 class InstanceManager {
 
+    private static var lockFile:String = null;
+    private static var onQuitCallback:()->Void;
+    private static var checkInterval:Float;
+
     public static function makeUnique(identifier:String):Void {
 
-        final instanceManager = new InstanceManager(
+        if (InstanceManager.lockFile != null) return;
+
+        InstanceManager.init(
             identifier,
             () -> {
-                Sys.exit(0);
+                context.shouldExit = true;
             }
         );
 
     }
-
-    private var lockFile:String;
-    private var watchThread:Thread;
-    private var shouldRun:Bool;
-    private var onQuitCallback:()->Void;
-    private var checkInterval:Float;
 
     /**
      * Creates a new instance manager
@@ -35,19 +36,18 @@ class InstanceManager {
      * @param onQuit Callback that will be called when this instance should quit
      * @param checkIntervalMs How often to check for changes (in milliseconds)
      */
-    public function new(identifier:String, onQuit:()->Void, checkIntervalMs:Float = 1000) {
+    static function init(identifier:String, onQuit:()->Void, checkInterval:Float = 0.01) {
         quitExisting(identifier);
 
-        this.onQuitCallback = onQuit;
-        this.checkInterval = checkIntervalMs / 1000.0; // Convert to seconds
-        this.shouldRun = true;
+        InstanceManager.onQuitCallback = onQuit;
+        InstanceManager.checkInterval = checkInterval;
 
         // Create the lock file path
         var hash = Md5.encode(identifier);
         var homeDir = homedir();
 
         var ceramicDir = Path.join([homeDir, ".ceramic"]);
-        this.lockFile = Path.join([ceramicDir, 'instance-${hash}.lock']);
+        InstanceManager.lockFile = Path.join([ceramicDir, 'instance-${hash}.lock']);
 
         // Ensure .ceramic directory exists
         if (!FileSystem.exists(ceramicDir)) {
@@ -61,40 +61,35 @@ class InstanceManager {
     /**
      * Initializes the file watching thread and writes initial lock file
      */
-    private function initializeWatcher():Void {
+    private static function initializeWatcher():Void {
         // Write initial lock file with current timestamp
         updateLockFile();
 
-        // Start watcher thread
-        watchThread = Thread.create(() -> {
-            var lastMod = FileSystem.stat(lockFile).mtime;
-
-            while (shouldRun) {
-                try {
-                    Sys.sleep(checkInterval);
-
-                    if (!FileSystem.exists(lockFile)) {
-                        // Lock file was deleted, recreate it
-                        updateLockFile();
-                        lastMod = FileSystem.stat(lockFile).mtime;
-                        continue;
-                    }
-
-                    var currentMod = FileSystem.stat(lockFile).mtime;
-                    if (currentMod.getTime() > lastMod.getTime()) {
-                        // File was modified by another instance
-                        shouldRun = false;
-                        if (onQuitCallback != null) {
-                            onQuitCallback();
-                        }
-                        break;
-                    }
-
-                    lastMod = currentMod;
+        // Start watcher
+        var lastMod = FileSystem.stat(lockFile).mtime;
+        var clearInterval = null;
+        clearInterval = timer.interval(InstanceManager.checkInterval, () -> {
+            try {
+                if (!FileSystem.exists(lockFile)) {
+                    // Lock file was deleted, recreate it
+                    updateLockFile();
+                    lastMod = FileSystem.stat(lockFile).mtime;
+                    return;
                 }
-                catch (e:Dynamic) {
-                    print('Error in watcher thread: $e');
+
+                var currentMod = FileSystem.stat(lockFile).mtime;
+                if (currentMod.getTime() > lastMod.getTime()) {
+                    // File was modified by another instance
+                    if (onQuitCallback != null) {
+                        onQuitCallback();
+                    }
+                    clearInterval();
                 }
+
+                lastMod = currentMod;
+            }
+            catch (e:Dynamic) {
+                print('Error in watcher: $e');
             }
         });
     }
@@ -102,7 +97,7 @@ class InstanceManager {
     /**
      * Updates the lock file to signal presence to other instances
      */
-    private function updateLockFile():Void {
+    private static function updateLockFile():Void {
         try {
             File.saveContent(lockFile, Std.string(Sys.time()));
         }
@@ -115,7 +110,6 @@ class InstanceManager {
      * Call this when your application is shutting down
      */
     public function dispose():Void {
-        shouldRun = false;
         try {
             if (FileSystem.exists(lockFile)) {
                 FileSystem.deleteFile(lockFile);
