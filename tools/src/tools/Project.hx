@@ -42,8 +42,6 @@ class Project {
         'bind',
         'polyline',
         'tracker',
-        'earcut',
-        'poly2tri',
         'hsluv',
         'bin-packing'
     ];

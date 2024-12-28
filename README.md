@@ -52,7 +52,7 @@ Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as we
 
 * **[Extrude Polyline](https://github.com/mattdesl/extrude-polyline) by Matt DesLauriers**, via Haxe port used in Ceramic to draw lines.
 
-* **[Earcut](https://github.com/mapbox/earcut) from Mapbox**, via Haxe port to triangulate shapes.
+* **[LibGDX](https://github.com/libgdx/libgdx)**, used as a reference for polygon triangulation.
 
 * **[Haxe Format Tiled](https://github.com/Yanrishatum/haxe-format-tiled) by Pavel Alexandrov** to parse Tiled Map Editor's TMX format.
 

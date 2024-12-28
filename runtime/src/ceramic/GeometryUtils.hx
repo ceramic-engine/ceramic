@@ -165,4 +165,32 @@ class GeometryUtils {
 
     }
 
+    /**
+     * Returns whether the polygon vertices are ordered clockwise or counterclockwise.
+     * @param vertices Array of polygon vertices as [x,y,x,y,...]
+     * @param offset Starting index in the array
+     * @param count Number of array indices to use
+     * @return true if clockwise, false if counterclockwise
+     */
+    public static function isClockwise(vertices:Array<Float>, offset:Int, count:Int):Bool {
+        if (count <= 2) return false;
+
+        var area:Float = 0;
+        var last:Int = offset + count - 2;
+        var x1:Float = vertices[last];
+        var y1:Float = vertices[last + 1];
+
+        var i:Int = offset;
+        while (i <= last) {
+            var x2:Float = vertices[i];
+            var y2:Float = vertices[i + 1];
+            area += x1 * y2 - x2 * y1;
+            x1 = x2;
+            y1 = y2;
+            i += 2;
+        }
+
+        return area < 0;
+    }
+
 }

@@ -623,8 +623,6 @@ class Helpers {
         ensureHaxelibDevToCeramicGit('hsluv', cwd, 'haxe');
         ensureHaxelibDevToCeramicGit('spine-hx', cwd);
         ensureHaxelibDevToCeramicGit('polyline', cwd);
-        ensureHaxelibDevToCeramicGit('earcut', cwd);
-        ensureHaxelibDevToCeramicGit('poly2tri', cwd);
         ensureHaxelibDevToCeramicGit('generate', cwd);
         ensureHaxelibDevToCeramicGit('format-tiled', cwd);
         ensureHaxelibDevToCeramicGit('imgui-hx', cwd);

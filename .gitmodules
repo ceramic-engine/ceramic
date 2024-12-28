@@ -25,9 +25,6 @@
 [submodule "git/generate"]
 	path = git/generate
 	url = https://github.com/jeremyfa/generate.git
-[submodule "git/earcut"]
-	path = git/earcut
-	url = https://github.com/ceramic-engine/earcut.git
 [submodule "git/format-tiled"]
 	path = git/format-tiled
 	url = https://github.com/ceramic-engine/format-tiled.git
@@ -56,9 +53,6 @@
 [submodule "git/linc_dialogs"]
 	path = git/linc_dialogs
 	url = https://github.com/ceramic-engine/linc_dialogs.git
-[submodule "git/poly2tri"]
-	path = git/poly2tri
-	url = https://github.com/ceramic-engine/poly2tri.git
 [submodule "git/clay"]
 	path = git/clay
 	url = https://github.com/ceramic-engine/clay.git
