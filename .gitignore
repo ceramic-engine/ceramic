@@ -42,3 +42,4 @@ plugin-build.hxml
 /.haxelib
 completion.hxml
 tools/build
+/tools/dump

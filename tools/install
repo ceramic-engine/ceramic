@@ -158,7 +158,7 @@ async function install() {
         console.log("Build tools for mac");
 
         await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
-        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { cwd: path.join(__dirname, 'build') });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-arm64'));
         }
@@ -167,7 +167,7 @@ async function install() {
         }
 
         await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
-        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
+        await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-x86_64'));
         }
@@ -193,7 +193,7 @@ async function install() {
         haxelibCmd = haxelibCmd.split('/../').join('/../../');
         fs.writeFileSync(path.join(__dirname, 'build', 'haxelib.cmd'), haxelibCmd);
 
-        await command(haxelib, ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
+        await command(haxelib, ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
 
         if (fs.existsSync(path.join(__dirname, 'ceramic.exe'))) {
             fs.unlinkSync(path.join(__dirname, 'ceramic.exe'));
@@ -211,11 +211,11 @@ async function install() {
 
         if (isLinuxArm64()) {
             await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_arm64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
-            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'], { cwd: path.join(__dirname, 'build') });
+            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         }
         else {
             await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_x86_64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
-            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'], { cwd: path.join(__dirname, 'build') });
+            await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         }
 
         if (fs.existsSync(path.join(__dirname, 'ceramic'))) {
