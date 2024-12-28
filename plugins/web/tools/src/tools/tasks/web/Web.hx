@@ -248,14 +248,14 @@ class Web extends tools.Task {
         }
         else if (Sys.systemName() == 'Mac') {
             proc = new Process(
-                'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron',
+                Path.join([context.ceramicRunnerPath, 'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron']),
                 cmdArgs,
                 context.ceramicRunnerPath
             );
         }
         else {
             proc = new Process(
-                'node_modules/electron/dist/electron',
+                Path.join([context.ceramicRunnerPath, 'node_modules/electron/dist/electron']),
                 cmdArgs.concat(['--no-sandbox']),
                 context.ceramicRunnerPath
             );

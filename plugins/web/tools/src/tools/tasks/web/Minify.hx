@@ -1,6 +1,7 @@
 package tools.tasks.web;
 
 import haxe.io.Path;
+import process.Process;
 import sys.FileSystem;
 import sys.io.File;
 import tools.Helpers.*;
@@ -22,12 +23,9 @@ class Minify extends tools.Task {
         var jsName:String = project.app.name;
 
         var webProjectPath = Path.join([cwd, 'project/web']);
-        //var jsFilePath = Path.join([webProjectPath, jsName + '.js']);
 
-        var terserCmd = Path.join([context.ceramicToolsPath, 'node_modules/terser/bin/terser']);
-
-        var cmdArgs = [terserCmd];
-
+        var cmdArgs = [];
+        cmdArgs.push(Path.join([context.plugins.get('web').path, 'resources/uglifyjs/node_modules/.bin/uglifyjs']));
         cmdArgs.push('$jsName.js');
 
         print('Minify javascript');
@@ -47,7 +45,6 @@ class Minify extends tools.Task {
 
         cmdArgs.push('--compress');
         cmdArgs.push('--mangle');
-        cmdArgs.push('--keep-classnames');
         cmdArgs.push('--keep-fnames');
 
         cmdArgs.push('--output');

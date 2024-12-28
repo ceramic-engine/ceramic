@@ -20,7 +20,7 @@ function getInstanceLockFilePath(appFilesPath) {
         fs.mkdirSync(ceramicDir, { recursive: true });
     }
 
-    return path.join(ceramicDir, `instance-${hash}.lock`);
+    return path.join(ceramicDir, `electron-${hash}.lock`);
 }
 
 function setupInstanceManager(appFilesPath) {
