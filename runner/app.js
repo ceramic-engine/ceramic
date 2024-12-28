@@ -421,3 +421,11 @@ if (watchFile != null) {
         }
     });
 }
+
+process.on('SIGINT', () => {
+    app.quit();
+});
+
+process.on('SIGTERM', () => {
+    app.quit();
+});
