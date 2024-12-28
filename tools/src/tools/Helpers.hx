@@ -404,7 +404,7 @@ class Helpers {
 
     public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
 
-        var node = Path.join([context.ceramicToolsPath, '../node/node_modules/.bin/node']);
+        var node = 'node';
         if (Sys.systemName() == 'Windows')
             node += '.cmd';
         return command(node, args, options);

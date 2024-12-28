@@ -1,14 +1,54 @@
 
 const path = require('path');
 const fs = require('fs');
-
+const crypto = require('crypto');
+const os = require('os');
 const express = require('express')
 const { detect } = require('detect-port')
-
 const spawn = require('child_process').spawn;
 
 const remoteMain = require('@electron/remote/main');
 remoteMain.initialize();
+
+function getInstanceLockFilePath(appFilesPath) {
+    // Create a hash of the app files path to use in the lock file name
+    const hash = crypto.createHash('md5').update(appFilesPath).digest('hex');
+    const ceramicDir = path.join(os.homedir(), '.ceramic');
+
+    // Ensure .ceramic directory exists
+    if (!fs.existsSync(ceramicDir)) {
+        fs.mkdirSync(ceramicDir, { recursive: true });
+    }
+
+    return path.join(ceramicDir, `instance-${hash}.lock`);
+}
+
+function setupInstanceManager(appFilesPath) {
+    const lockFile = getInstanceLockFilePath(appFilesPath);
+
+    // Touch the lock file to signal our presence
+    fs.writeFileSync(lockFile, String(process.pid), 'utf8');
+
+    // Watch for changes to the lock file
+    fs.watchFile(lockFile, { interval: 1000 }, (curr, prev) => {
+        if (curr.mtime > prev.mtime) {
+            console.log('New instance detected, shutting down...');
+            app.quit();
+        }
+    });
+
+    // Clean up on exit
+    app.on('will-quit', () => {
+        fs.unwatchFile(lockFile);
+        try {
+            if (fs.readFileSync(lockFile, 'utf8') === String(process.pid)) {
+                fs.unlinkSync(lockFile);
+            }
+        } catch (err) {
+            console.error('Error cleaning up lock file:', err);
+        }
+    });
+}
 
 // Electron
 const electron = require('electron');
@@ -67,6 +107,9 @@ if (!fs.existsSync(appFiles)) {
     console.error('Invalid app files path: ' + appFiles);
     process.exit(1);
 }
+
+// Set up instance management immediately after validating appFiles
+setupInstanceManager(appFiles);
 
 // Set cwd to appFiles
 process.chdir(appFiles);
