@@ -286,8 +286,12 @@ class Tools {
     }
 
     public static function ceramicVersion():String {
+        #if !cppia
         static final fullVersion = '${ToolsMacros.ceramicVersion()}-${ToolsMacros.gitCommitShortHash()}';
         return fullVersion;
+        #else
+        return null;
+        #end
     }
 
 }

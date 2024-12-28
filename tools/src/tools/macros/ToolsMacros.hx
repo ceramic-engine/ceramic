@@ -128,6 +128,19 @@ class ToolsMacros {
 
     }
 
+    public static function loadPluginClass(classPath:String):Void {
+
+        var pack = classPath.split('.');
+        var name = pack.pop();
+        var type:ComplexType = TPath({
+            pack: pack,
+            name: name
+        });
+
+        Context.resolveType(type, Context.currentPos());
+
+    }
+
     static function _gitCommitHash():String {
 
         static var _commitHash:String = null;

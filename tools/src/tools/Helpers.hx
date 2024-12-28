@@ -218,6 +218,116 @@ class Helpers {
         final plugins:Map<String,tools.spec.ToolsPlugin> = new Map();
         context.plugins = plugins;
 
+        final ceramicBinPath = if (Sys.systemName() == 'Windows') {
+            Path.join([context.ceramicToolsPath, 'ceramic.exe']);
+        } else {
+            Path.join([context.ceramicToolsPath, 'ceramic']);
+        }
+
+        // User-defined plugins
+        final projectPluginsPath = Path.join([context.cwd, 'plugins']);
+        final projectPluginIds:Array<String> = [];
+        final projectPluginData:Array<Dynamic> = [];
+        if (FileSystem.exists(projectPluginsPath) && FileSystem.isDirectory(projectPluginsPath)) {
+            for (dir in FileSystem.readDirectory(projectPluginsPath)) {
+                final pluginPath = Path.join([projectPluginsPath, dir]);
+                final pluginYmlPath = Path.join([pluginPath, 'ceramic.yml']);
+                final pluginBaseName = Path.withoutDirectory(pluginPath);
+                if (FileSystem.exists(pluginYmlPath) && !FileSystem.isDirectory(pluginYmlPath)) {
+                    final info:Dynamic = Yaml.parse(File.getContent(pluginYmlPath));
+                    projectPluginIds.push(pluginBaseName);
+                    info.plugin.id = pluginBaseName;
+                    projectPluginData.push(info);
+
+                    final pluginToolsSrcPath = Path.join([pluginPath, 'tools/src']);
+                    final pluginToolsSrcPathBase = Path.join([pluginBaseName, 'tools/src']);
+                    #if debug_plugins
+                    print('* ' + pluginBaseName + ' (' + info.plugin.name + ')');
+                    #end
+                    if (FileSystem.exists(pluginToolsSrcPath) && FileSystem.isDirectory(pluginToolsSrcPath)) {
+                        if (info.plugin.tools != null) {
+                            var pluginCppiaPath = Path.join([pluginPath, 'plugin.cppia']);
+                            if (!Files.haveSameLastModified(ceramicBinPath, pluginCppiaPath)) {
+                                var pluginHaxelibPath = Path.join([pluginPath, '.haxelib']);
+                                Files.deleteRecursive(pluginHaxelibPath);
+                                FileSystem.createDirectory(pluginHaxelibPath);
+
+                                FileSystem.createDirectory(Path.join([pluginHaxelibPath, 'generate']));
+                                File.saveContent(
+                                    Path.join([pluginHaxelibPath, 'generate', '.dev']),
+                                    Path.join([context.ceramicGitDepsPath, 'generate'])
+                                );
+
+                                FileSystem.createDirectory(Path.join([pluginHaxelibPath, 'yaml']));
+                                File.saveContent(
+                                    Path.join([pluginHaxelibPath, 'yaml', '.dev']),
+                                    Path.join([context.ceramicGitDepsPath, 'yaml', 'src'])
+                                );
+
+                                FileSystem.createDirectory(Path.join([pluginHaxelibPath, 'linc_stb']));
+                                File.saveContent(
+                                    Path.join([pluginHaxelibPath, 'linc_stb', '.dev']),
+                                    Path.join([context.ceramicGitDepsPath, 'linc_stb'])
+                                );
+
+                                FileSystem.createDirectory(Path.join([pluginHaxelibPath, 'linc_process']));
+                                File.saveContent(
+                                    Path.join([pluginHaxelibPath, 'linc_process', '.dev']),
+                                    Path.join([context.ceramicGitDepsPath, 'linc_process'])
+                                );
+
+                                FileSystem.createDirectory(Path.join([pluginHaxelibPath, 'linc_timestamp']));
+                                File.saveContent(
+                                    Path.join([pluginHaxelibPath, 'linc_timestamp', '.dev']),
+                                    Path.join([context.ceramicGitDepsPath, 'linc_timestamp'])
+                                );
+
+                                haxe([
+                                    '-D', 'dll_import=' + Path.join([context.ceramicToolsPath, 'ceramic.info']),
+                                    '-dce', 'no',
+                                    '--cpp', 'plugin.cppia',
+                                    '-cp', Path.join([context.ceramicToolsPath, 'src']),
+                                    '-cp', 'tools/src',
+                                    '-D', 'cppia',
+                                    '--library', 'generate',
+                                    '--library', 'yaml',
+                                    '--library', 'linc_stb',
+                                    '--library', 'linc_process',
+                                    '--library', 'linc_timestamp',
+                                    '-D', 'HXCPP_DEBUG_LINK',
+                                    '-D', 'HXCPP_STACK_LINE',
+                                    '-D', 'HXCPP_STACK_TRACE',
+                                    '-D', 'HXCPP_CHECK_POINTER',
+                                    '-D', 'HXCPP_CPP11',
+                                    '-D', 'safeMode',
+                                    '--macro', 'tools.macros.ToolsMacros.loadPluginClass(${Json.stringify(info.plugin.tools)})'
+                                ], {
+                                    cwd: pluginPath
+                                });
+                                Files.deleteRecursive(pluginHaxelibPath);
+                                Files.setToSameLastModified(ceramicBinPath, pluginCppiaPath);
+                            }
+                            final pluginModule = cpp.cppia.Module.fromData(File.getBytes(pluginCppiaPath).getData());
+                            final pluginClass = pluginModule.resolveClass(info.plugin.tools);
+                            if (pluginClass != null) {
+                                final instance = Type.createInstance(pluginClass, []);
+                                if (!plugins.exists(info.plugin.id)) {
+                                    plugins.set(info.plugin.id, {
+                                        path: Path.join([projectPluginsPath, info.plugin.id]),
+                                        id: info.plugin.id,
+                                        name: info.plugin.name,
+                                        runtime: info.plugin.runtime,
+                                        instance: instance
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Default plugins
         final defaultPlugins:Array<Dynamic> = ToolsMacros.pluginDefaults();
         final pluginConstructs:Dynamic = ToolsMacros.pluginConstructs();
         final pluginsPath = Path.join([context.ceramicRootPath, 'plugins']);
@@ -226,13 +336,15 @@ class Helpers {
 
             final instance = Reflect.field(pluginConstructs, info.plugin.id);
 
-            plugins.set(info.plugin.id, {
-                path: Path.join([pluginsPath, info.plugin.id]),
-                id: info.plugin.id,
-                name: info.plugin.name,
-                runtime: info.plugin.runtime,
-                instance: instance
-            });
+            if (!plugins.exists(info.plugin.id)) {
+                plugins.set(info.plugin.id, {
+                    path: Path.join([pluginsPath, info.plugin.id]),
+                    id: info.plugin.id,
+                    name: info.plugin.name,
+                    runtime: info.plugin.runtime,
+                    instance: instance
+                });
+            }
 
         }
 

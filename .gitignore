@@ -38,8 +38,10 @@ yarn-debug.log*
 yarn-error.log*
 
 plugin-build.hxml
+completion.hxml
+
 /runner/node_modules
 /.haxelib
-completion.hxml
-tools/build
+/tools/build
 /tools/dump
+/tools/ceramic.info

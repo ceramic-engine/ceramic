@@ -13,3 +13,6 @@
 -D HXCPP_CPP11
 -D safeMode
 --macro tools.macros.ToolsMacros.addDefaultPlugins()
+--dce no
+-D scriptable
+-D dll_export=ceramic.info
