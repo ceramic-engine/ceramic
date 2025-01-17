@@ -173,8 +173,15 @@ jobs:
           compression-level: 0
 
 
-  build-ceramic-linux-x86_64:
-    runs-on: ubuntu-22.04
+  build-ceramic-linux:
+    strategy:
+      matrix:
+        include:
+          - os: "ubuntu-22.04"
+            arch: "x86_64"
+          - os: "ubuntu-22.04-arm"
+            arch: "arm64"
+    runs-on: ${{ matrix.os }}
     steps:
 
       - uses: actions/checkout@v4
@@ -192,8 +199,8 @@ jobs:
       - name: Setup Haxe
         working-directory: .
         run: |
-          export NEKOPATH=$PWD'/git/haxe-binary/linux-x86_64/neko'
-          export HAXEPATH=$PWD'/git/haxe-binary/linux-x86_64/haxe'
+          export NEKOPATH=$PWD'/git/haxe-binary/linux-${{ matrix.arch }}/neko'
+          export HAXEPATH=$PWD'/git/haxe-binary/linux-${{ matrix.arch }}/haxe'
           echo 'neko path: '$NEKOPATH
           echo 'haxe path: '$HAXEPATH
           sudo mkdir -p /usr/local/bin
@@ -230,7 +237,11 @@ jobs:
         working-directory: .
         run: |
           rm -rf git/haxe-binary/mac
-          rm -rf git/haxe-binary/linux-arm64
+          if [ ${{ matrix.arch == "x86_64" }}]; then
+            rm -rf git/haxe-binary/linux-arm64
+          else
+            rm -rf git/haxe-binary/linux-x86_64
+          fi
           rm -rf git/haxe-binary/windows
           cd tools
           rm -f ./haxe.cmd
@@ -251,127 +262,19 @@ jobs:
           ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
-        run: zip --symlinks -9 -r 'ceramic-linux-x86_64.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-linux-${{ matrix.arch }}.zip' . -x ".git/*" ".github/*"
 
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
           retention-days: 1
-          name: ceramic-linux-x86_64.zip
-          path: ceramic-linux-x86_64.zip
-          compression-level: 0
-
-  build-ceramic-linux-arm64:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Checkout submodules
-        run: git submodule update --init --recursive
-
-      - name: Create Dockerfile
-        run: |
-          cat > Dockerfile << 'EOL'
-          FROM --platform=$TARGETPLATFORM ubuntu:22.04
-          ARG NODE_VERSION
-
-          # Install dependencies
-          RUN apt-get update && apt-get install -y \
-              curl \
-              git \
-              zip \
-              sudo \
-              build-essential \
-              && rm -rf /var/lib/apt/lists/*
-
-          # Setup Node.js
-          RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-              && apt-get install -y nodejs
-
-          # Copy repository contents
-          COPY . /ceramic
-          WORKDIR /ceramic
-
-          # Setup Haxe
-          ENV NEKOPATH=/ceramic/git/haxe-binary/linux-arm64/neko \
-              HAXEPATH=/ceramic/git/haxe-binary/linux-arm64/haxe
-
-          RUN mkdir -p /usr/local/bin /usr/local/lib /usr/local/share/haxe \
-              && ln -s $HAXEPATH/haxe /usr/local/bin/haxe \
-              && ln -s $HAXEPATH/haxelib /usr/local/bin/haxelib \
-              && ln -s $HAXEPATH/haxe-bin /usr/local/bin/haxe-bin \
-              && ln -s $HAXEPATH/haxelib-bin /usr/local/bin/haxelib-bin \
-              && ln -s $HAXEPATH/std /usr/local/share/haxe/std \
-              && ln -s $NEKOPATH/neko /usr/local/bin/neko \
-              && ln -s $NEKOPATH/nekoc /usr/local/bin/nekoc \
-              && ln -s $NEKOPATH/nekoml /usr/local/bin/nekoml \
-              && ln -s $NEKOPATH/nekotools /usr/local/bin/nekotools \
-              && ln -s $NEKOPATH /usr/local/lib/neko \
-              && ln -s $NEKOPATH/libneko.so /usr/local/lib/libneko.so \
-              && ln -s $NEKOPATH/libneko.so.2.4.0 /usr/local/lib/libneko.so.2.4.0 \
-              && ln -s $NEKOPATH/libneko.so.2 /usr/local/lib/libneko.so.2 \
-              && ldconfig \
-              && ldconfig /usr/local/lib
-
-          # Build ceramic
-          RUN cd tools \
-              && node ./install \
-              && cd ../runner \
-              && npm ci \
-              && cd ..
-
-          # Cleanup
-          RUN rm -rf git/haxe-binary/mac \
-              && rm -rf git/haxe-binary/linux-x86_64 \
-              && rm -rf git/haxe-binary/windows \
-              && cd tools \
-              && rm -f ./haxe.cmd \
-              && rm -f ./neko.cmd \
-              && rm -f ./ceramic.cmd
-
-          # Run ceramic
-          RUN cd tools && ./ceramic
-
-          # Create artifact
-          RUN zip --symlinks -9 -r 'ceramic-linux-arm64.zip' . -x ".git/*" ".github/*"
-          EOL
-
-      - name: Build in ARM64 container
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          platforms: linux/arm64
-          load: true
-          tags: ceramic-builder:latest
-          build-args: |
-            NODE_VERSION=22
-          file: ./Dockerfile
-
-      - name: Copy artifact from container
-        run: |
-          docker cp $(docker create ceramic-builder:latest):/ceramic/ceramic-linux-arm64.zip .
-
-      - name: Upload Files
-        uses: actions/upload-artifact@v4
-        with:
-          retention-days: 1
-          name: ceramic-linux-arm64.zip
-          path: ceramic-linux-arm64.zip
+          name: ceramic-linux-${{ matrix.arch }}.zip
+          path: ceramic-linux-${{ matrix.arch }}.zip
           compression-level: 0
 
   create-release:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux-x86_64, build-ceramic-linux-arm64]
+    needs: [build-ceramic-windows, build-ceramic-mac, build-ceramic-linux]
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
