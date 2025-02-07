@@ -44,7 +44,7 @@ Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as we
 
 * **[Some GLSL shader code](https://github.com/kiwipxl/GLSL-shaders) by Richman Steward**.
 
-* **[Some browser mess handling](https://github.com/goldfire/howler.js/blob/143ae442386c7b42d91a007d0b1f1695528abe64/src/howler.core.js#L245-L293) from Holwer.js** to help implement Ceramic audio backend for web.
+* **[Some browser mess handling](https://github.com/goldfire/howler.js/blob/143ae442386c7b42d91a007d0b1f1695528abe64/src/howler.core.js#L245-L293) from Howler.js** to help implement Ceramic audio backend for web.
 
 * **[Heaps Aseprite](https://github.com/AustinEast/heaps-aseprite) by Austin East**, from which several snippets were ported for make Ceramic `ase` format parsing and rendering.
 

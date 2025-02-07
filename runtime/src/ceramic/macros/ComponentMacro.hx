@@ -272,7 +272,7 @@ class ComponentMacro {
         #if (!display && !completion)
         for (entityField in entityFields) {
             var entityFieldName = entityField.name;
-            var entityType:haxe.macro.ComplexType = null;
+            var entityType:ComplexType = null;
             switch entityField.kind {
                 default:
                 case FVar(t, e):
