@@ -8,7 +8,7 @@ using haxe.macro.ExprTools;
 
 class StateMachineMacro {
 
-    @:persistent static var stateTypeByImplName:Map<String,haxe.macro.ComplexType> = null;
+    @:persistent static var stateTypeByImplName:Map<String,ComplexType> = null;
 
     static var usedNames:Map<String,Bool> = null;
 
@@ -182,7 +182,7 @@ class StateMachineMacro {
 
     }
 
-    static function sanitizeComplexType(complexType:haxe.macro.ComplexType) {
+    static function sanitizeComplexType(complexType:ComplexType) {
 
         if (complexType == null)
             return null;
@@ -895,7 +895,7 @@ class StateMachineMacro {
 
     }
 
-    public static function getStateTypeFromImplName(implName:String):haxe.macro.ComplexType {
+    public static function getStateTypeFromImplName(implName:String):ComplexType {
 
         if (stateTypeByImplName == null)
             return null;
