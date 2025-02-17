@@ -178,6 +178,12 @@ function createWindow() {
     // Open the DevTools.
     //mainWindow.webContents.openDevTools()
 
+    // Open links in the OS default browser (deprecated in electron 22, use setOpenWindowHandler())
+    mainWindow.webContents.on('new-window', function(e, url) {
+	   e.preventDefault();
+	   electron.shell.openExternal(url);
+    });
+
     // Emitted when the window is closed.
     mainWindow.on('closed', function() {
         // Dereference the window object, usually you would store windows
