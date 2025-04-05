@@ -362,7 +362,11 @@ class Im {
                 }
 
                 Im.textAlign(CENTER);
-                Im.text(dialog.message);
+
+                final message = dialog.message;
+                if (message != null) {
+                    Im.text(message);
+                }
 
                 if (dialog.promptPointer != null) {
                     if (Im.editText(dialog.promptPointer, false, dialog.promptPlaceholder, true).submitted) {
