@@ -48,7 +48,6 @@ jobs:
           Remove-Item 'git/haxe-binary/linux-x86_64' -Recurse
           Remove-Item 'git/haxe-binary/linux-arm64' -Recurse
           Remove-Item 'git/haxe-binary/mac' -Recurse
-          Remove-Item 'git/loreline/git' -Recurse
           cd tools
           Remove-Item './haxe'
           Remove-Item './haxelib'
@@ -71,7 +70,7 @@ jobs:
         working-directory: .
         run: |
           $ZIP_COMPRESS = $(Convert-Path .)
-          $ZIP_EXCLUDE = @(".git", ".github", "ceramic-windows.zip")
+          $ZIP_EXCLUDE = @(".git", ".github", "ceramic-windows.zip", "git/loreline/git")
           $ZIP_DESTINATION = 'ceramic-windows.zip'
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
