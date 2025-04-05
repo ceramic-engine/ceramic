@@ -77,7 +77,8 @@ async function install() {
         fs.mkdirSync(haxelibRepoPath);
     }
     await command(haxelib, ['dev', 'generate', '../git/generate', '--quiet'], { cwd: __dirname });
-    await command(haxelib, ['dev', 'yaml', '../git/yaml/src', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'yaml', '../git/yaml', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'loreline', '../git/loreline', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'linc_stb', '../git/linc_stb', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'linc_process', '../git/linc_process', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'linc_timestamp', '../git/linc_timestamp', '--quiet'], { cwd: __dirname });

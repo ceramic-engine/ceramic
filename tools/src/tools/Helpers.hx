@@ -733,6 +733,7 @@ class Helpers {
         ensureHaxelibDevToCeramicGit('hscript', cwd);
         ensureHaxelibDevToCeramicGit('bind', cwd);
         ensureHaxelibDevToCeramicGit('hxnodejs', cwd);
+        ensureHaxelibDevToCeramicGit('loreline', cwd);
         ensureHaxelibDevToCeramicGit('format', cwd);
         ensureHaxelibDevToCeramicGit('ase', cwd);
         ensureHaxelibDevToCeramicGit('bin-packing', cwd);

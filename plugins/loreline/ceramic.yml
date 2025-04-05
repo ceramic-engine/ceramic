@@ -1,9 +1,12 @@
 plugin:
-    name: Script
+    name: Loreline
 
     runtime:
-        if plugin_script:
+        if plugin_loreline:
+            +generated:
+                - '{plugin:cwd}/tpl/generated'
             +libs:
+                - loreline
                 - hscript
             +defines:
                 - hscriptPos

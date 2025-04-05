@@ -239,7 +239,6 @@ import ceramic.Transform;
 import ceramic.TransformPool;
 import ceramic.Triangle;
 import ceramic.Triangulate;
-import ceramic.TriangulateMethod;
 import ceramic.Tween;
 import ceramic.UInt8Array;
 import ceramic.Utils;
@@ -581,7 +580,6 @@ class AllApi {
         interp.variables.set('TransformPool', ceramic.TransformPool);
         interp.variables.set('Triangle', ceramic.Triangle);
         interp.variables.set('Triangulate', ceramic.Triangulate);
-        interp.variables.set('TriangulateMethod', ceramic.TriangulateMethod);
         interp.variables.set('Tween', ceramic.Tween);
         interp.variables.set('Utils', ceramic.Utils);
         interp.variables.set('ValueEntry', ceramic.ValueEntry);

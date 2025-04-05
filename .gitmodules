@@ -98,12 +98,15 @@
 [submodule "git/hxcpp"]
 	path = git/hxcpp
 	url = https://github.com/ceramic-engine/hxcpp.git
-[submodule "git/yaml"]
-	path = git/yaml
-	url = https://github.com/ceramic-engine/yaml.git
 [submodule "git/linc_process"]
 	path = git/linc_process
 	url = https://github.com/jeremyfa/linc_process.git
 [submodule "git/msdf-atlas-gen-binary"]
 	path = git/msdf-atlas-gen-binary
 	url = https://github.com/jeremyfa/msdf-atlas-gen-binary.git
+[submodule "git/loreline"]
+	path = git/loreline
+	url = https://github.com/jeremyfa/loreline.git
+[submodule "git/yaml"]
+	path = git/yaml
+	url = https://github.com/jeremyfa/yaml.git

@@ -48,6 +48,7 @@ jobs:
           Remove-Item 'git/haxe-binary/linux-x86_64' -Recurse
           Remove-Item 'git/haxe-binary/linux-arm64' -Recurse
           Remove-Item 'git/haxe-binary/mac' -Recurse
+          Remove-Item 'git/loreline/git' -Recurse
           cd tools
           Remove-Item './haxe'
           Remove-Item './haxelib'
@@ -143,6 +144,7 @@ jobs:
           rm -rf git/haxe-binary/linux-x86_64
           rm -rf git/haxe-binary/linux-arm64
           rm -rf git/haxe-binary/windows
+          rm -rf git/loreline/git
           cd tools
           rm -f ./haxe.cmd
           rm -f ./neko.cmd
@@ -243,6 +245,7 @@ jobs:
             rm -rf git/haxe-binary/linux-x86_64
           fi
           rm -rf git/haxe-binary/windows
+          rm -rf git/loreline/git
           cd tools
           rm -f ./haxe.cmd
           rm -f ./neko.cmd

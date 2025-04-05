@@ -39,7 +39,7 @@ class SpinePlugin {
             */
 
             // Extend assets with `spine` kind
-            Assets.addAssetKind('spine',addSpine, ['spine'], true, ['ceramic.SpineData']);
+            Assets.addAssetKind('spine', addSpine, ['spine'], true, ['ceramic.SpineData']);
 
             // Extend converters
             var convertSpineData = new ConvertSpineData();
