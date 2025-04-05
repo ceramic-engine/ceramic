@@ -151,7 +151,6 @@ class Help extends tools.Task {
 
         // Compute tools version
         var version = 'v' + context.ceramicVersion;
-        if (context.isEmbeddedInElectron) version += ' *';
 
         /* Prints:
                                                        _|

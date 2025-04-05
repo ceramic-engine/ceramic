@@ -39,9 +39,6 @@ class Context  {
     /** Tells whether current `.ceramic` path is local (current project's cwd) or shared (in user's home directory). */
     public var isLocalDotCeramic:Bool;
 
-    /** Tells whether this ceramic is the one executed from whithin and electron app (Ceramic Editor). */
-    public var isEmbeddedInElectron:Bool;
-
     /** Absolute path to `.ceramic` directory. */
     public var dotCeramicPath:String;
 

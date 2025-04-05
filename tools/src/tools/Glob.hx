@@ -1,7 +1,6 @@
 package tools;
 
 import haxe.io.Path;
-import sys.FileSystem;
 
 using StringTools;
 

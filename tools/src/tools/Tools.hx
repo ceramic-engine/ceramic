@@ -49,7 +49,6 @@ class Tools {
             tasks: [],
             plugin: null,
             rootTask: null,
-            isEmbeddedInElectron: false,
             ceramicVersion: null,
             assetsChanged: false,
             assetsTransformers: [],
@@ -61,25 +60,7 @@ class Tools {
             shouldExit: false
         };
 
-        // Check if we are embedded in electron
-        var electronPackageFile = Path.join([context.ceramicToolsPath, '../../package.json']);
-        if (FileSystem.exists(electronPackageFile)) {
-            if (Json.parse(File.getContent(electronPackageFile)).name == 'ceramic') {
-                context.isEmbeddedInElectron = true;
-                context.ceramicRuntimePath = Path.normalize(Path.join([context.ceramicToolsPath, '../../vendor/ceramic-runtime']));
-                context.defaultPluginsPath = Path.normalize(Path.join([context.ceramicToolsPath, '../../vendor/ceramic-plugins']));
-            }
-        }
-
-        // Compute ceramic version
-        //var version = require(Path.join([context.ceramicToolsPath, 'package.json'])).version;
-        // TODO embedded hash
-        // if (commandExists('git')) {
-        //     var hash:String = command('git', ['rev-parse', '--short', 'HEAD'], { cwd: context.ceramicToolsPath, mute: true }).stdout.trim();
-        //     if (hash != null && hash != '') {
-        //         version += '-$hash';
-        //     }
-        // }
+        // Set version
         context.ceramicVersion = ceramicVersion();
 
         // Compute .ceramic path (global or local)
