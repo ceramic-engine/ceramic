@@ -13,6 +13,20 @@ uniform float gridThickness; // 0.15
 uniform float gridAlpha; // 1.0
 uniform vec3 gridColor; // vec3(0.0, 0.0, 0.0)
 
+uniform float scanlineIntensity; // 0.75
+uniform float scanlineOffset; // 0
+uniform float scanlineCount; // resolution.y
+
+uniform float verticalMaskIntensity; // 0.75
+uniform float verticalMaskOffset; // 0
+uniform float verticalMaskCount; // resolution.x
+
+uniform float glowThresholdMin; // 0.6
+uniform float glowThresholdMax; // 0.85
+uniform float glowStrength; // 0.5
+
+uniform float chromaticAberration; // 0.002
+
 varying vec2 tcoord;
 varying vec4 color;
 
@@ -34,11 +48,26 @@ float grid(float lineWidth, float gap, vec2 uv) {
 
 void main() {
 
-    vec4 texColor = texture2D(tex0, vec2(
-        sharpen(tcoord.x * resolution.x) / resolution.x,
-        sharpen(tcoord.y * resolution.y) / resolution.y
-    ));
+    vec2 center = vec2(0.5, 0.5);
+    vec2 rel = tcoord - center;
 
+    vec4 texColor;
+    if (chromaticAberration > 0.0) {
+        float dist = length(rel);
+        vec2 dir = normalize(rel + 1e-6);
+        vec2 aberr = dir * chromaticAberration * dist;
+        float r = texture2D(tex0, tcoord + aberr).r;
+        float g = texture2D(tex0, tcoord).g;
+        float b = texture2D(tex0, tcoord - aberr).b;
+        texColor = vec4(r, g, b, 1.0);
+    } else {
+        texColor = texture2D(tex0, vec2(
+            sharpen(tcoord.x * resolution.x) / resolution.x,
+            sharpen(tcoord.y * resolution.y) / resolution.y
+        ));
+    }
+
+    // --- Grid ---
     if (gridThickness != 0.0) {
         vec2 uv = vec2(
             tcoord.x * resolution.x,
@@ -55,6 +84,36 @@ void main() {
 
         // mix grid and background color
         texColor.rgb = mix(texColor.rgb, gridColor, aa);
+    }
+
+    // --- Scanlines ---
+    if (scanlineCount > 0.0) {
+        float scanY = sin(((scanlineOffset / scanlineCount) + tcoord.y) * scanlineCount * 3.14159);
+        float scanFactor = mix(scanlineIntensity, 1.0, scanY * 0.5 + 0.5);
+        texColor.rgb *= scanFactor;
+    }
+
+    // --- Vertical Shadow Mask ---
+    if (verticalMaskCount > 0.0) {
+        float scanX = sin(((verticalMaskOffset / verticalMaskCount) + tcoord.x) * verticalMaskCount * 3.14159);
+        float maskFactor = mix(verticalMaskIntensity, 1.0, scanX * 0.5 + 0.5);
+        texColor.rgb *= maskFactor;
+    }
+
+    // --- Bloom / Glow ---
+    if (glowStrength > 0.0) {
+        float lum = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+        float glowFactor = smoothstep(glowThresholdMin, glowThresholdMax, lum);
+        if (glowFactor > 0.0) {
+            vec2 texel = 1.0 / resolution;
+            vec3 blur = texture2D(tex0, tcoord + vec2(texel.x,  0.0)).rgb;
+            blur += texture2D(tex0, tcoord - vec2(texel.x, 0.0)).rgb;
+            blur += texture2D(tex0, tcoord + vec2(0.0,  texel.y)).rgb;
+            blur += texture2D(tex0, tcoord - vec2(0.0, texel.y)).rgb;
+            blur += texColor.rgb;
+            blur /= 5.0;
+            texColor.rgb = mix(texColor.rgb, blur, glowFactor * glowStrength);
+        }
     }
 
     gl_FragColor = color * texColor;

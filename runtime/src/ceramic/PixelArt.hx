@@ -21,6 +21,20 @@ class PixelArt extends Filter {
     }
 
     /**
+     * Chromatic aberration: max offset for red/blue channel split.
+     *
+     * Range `0.0 – 1.0`
+     */
+    public var chromaticAberration(default,set):Float = 0;
+    function set_chromaticAberration(chromaticAberration:Float):Float {
+        if (this.chromaticAberration != chromaticAberration) {
+            this.chromaticAberration = chromaticAberration;
+            shader.setFloat('chromaticAberration', chromaticAberration * 0.01);
+        }
+        return chromaticAberration;
+    }
+
+    /**
      * If set above 0.0, a grid will be displayed.
      * Can be used to simulate GBA-style LCD displays.
      */
@@ -57,6 +71,124 @@ class PixelArt extends Filter {
         return gridAlpha;
     }
 
+    /**
+     * Number of horizontal scanlines
+     */
+    public var scanlineCount(default,set):Float = 0;
+    function set_scanlineCount(scanlineCount:Float):Float {
+        if (this.scanlineCount != scanlineCount) {
+            this.scanlineCount = scanlineCount;
+            shader.setFloat('scanlineCount', scanlineCount);
+        }
+        return scanlineCount;
+    }
+
+    /**
+     * Scanline offset: useful to offset the scanlines, in case scanline count != pixel rows
+     */
+    public var scanlineOffset(default,set):Float = 0;
+    function set_scanlineOffset(scanlineOffset:Float):Float {
+        if (this.scanlineOffset != scanlineOffset) {
+            this.scanlineOffset = scanlineOffset;
+            shader.setFloat('scanlineOffset', scanlineOffset);
+        }
+        return scanlineOffset;
+    }
+
+    /**
+     * Scanlines: darkness between scanlines (0 = no dim)
+     *
+     * Range `0.0 – 1.0`
+     */
+    public var scanlineIntensity(default,set):Float = 0.25;
+    function set_scanlineIntensity(scanlineIntensity:Float):Float {
+        if (this.scanlineIntensity != scanlineIntensity) {
+            this.scanlineIntensity = scanlineIntensity;
+            shader.setFloat('scanlineIntensity', 1.0 - scanlineIntensity);
+        }
+        return scanlineIntensity;
+    }
+
+    /**
+     * Enables vertical shadow mask (subtle bars).
+     */
+    public var verticalMaskCount(default,set):Float = 0;
+    function set_verticalMaskCount(verticalMaskCount:Float):Float {
+        if (this.verticalMaskCount != verticalMaskCount) {
+            this.verticalMaskCount = verticalMaskCount;
+            shader.setFloat('verticalMaskCount', verticalMaskCount);
+        }
+        return verticalMaskCount;
+    }
+
+    /**
+     * Vertical mask offset: useful to offset the vertical mas, in case mask count != pixel columns
+     */
+    public var verticalMaskOffset(default,set):Float = 0;
+    function set_verticalMaskOffset(verticalMaskOffset:Float):Float {
+        if (this.verticalMaskOffset != verticalMaskOffset) {
+            this.verticalMaskOffset = verticalMaskOffset;
+            shader.setFloat('verticalMaskOffset', verticalMaskOffset);
+        }
+        return verticalMaskOffset;
+    }
+
+    /**
+     * Mask: darkness of vertical RGB mask lines
+     *
+     * Range `0.0 – 1.0
+     */
+    public var verticalMaskIntensity(default,set):Float = 0;
+    function set_verticalMaskIntensity(verticalMaskIntensity:Float):Float {
+        if (this.verticalMaskIntensity != verticalMaskIntensity) {
+            this.verticalMaskIntensity = verticalMaskIntensity;
+            shader.setFloat('verticalMaskIntensity', 1.0 - verticalMaskIntensity);
+        }
+        return verticalMaskIntensity;
+    }
+
+    /**
+     * Glow: Amount of glow blend.
+     *
+     * Range `0.0 – 1.0`
+     */
+    public var glowStrength(default,set):Float = 0;
+    function set_glowStrength(glowStrength:Float):Float {
+        if (this.glowStrength != glowStrength) {
+            this.glowStrength = glowStrength;
+            shader.setFloat('glowStrength', glowStrength);
+        }
+        return glowStrength;
+    }
+
+    /**
+     * Glow: Minimum brightness before glow starts.
+     *
+     * Range `0.0 – 1.0`
+     */
+    public var glowThresholdMin(default,set):Float = 0.6;
+    function set_glowThresholdMin(glowThresholdMin:Float):Float {
+        if (this.glowThresholdMin != glowThresholdMin) {
+            this.glowThresholdMin = glowThresholdMin;
+            shader.setFloat('glowThresholdMin', glowThresholdMin);
+        }
+        return glowThresholdMin;
+    }
+
+    /**
+     * Glow: Full glow at this brightness.
+     *
+     * Range `0.0 – 1.0`
+     */
+    public var glowThresholdMax(default,set):Float = 0.85;
+    function set_glowThresholdMax(glowThresholdMax:Float):Float {
+        if (this.glowThresholdMax != glowThresholdMax) {
+            this.glowThresholdMax = glowThresholdMax;
+            shader.setFloat('glowThresholdMax', glowThresholdMax);
+        }
+        return glowThresholdMax;
+    }
+
     override function set_density(density:Float):Float {
         if (this.density == density) return density;
         super.set_density(density);
@@ -71,10 +203,26 @@ class PixelArt extends Filter {
         density = 1;
 
         shader = ceramic.App.app.assets.shader('shader:pixelArt').clone();
+
         shader.setFloat('sharpness', sharpness);
+
+        shader.setFloat('chromaticAberration', chromaticAberration * 0.01);
+
         shader.setFloat('gridThickness', 0);
         shader.setFloat('gridAlpha', 1);
         shader.setVec3('gridColor', 0, 0, 0);
+
+        shader.setFloat('scanlineCount', scanlineCount);
+        shader.setFloat('scanlineIntensity', 1.0 - scanlineIntensity);
+        shader.setFloat('scanlineOffset', scanlineOffset);
+
+        shader.setFloat('verticalMaskCount', verticalMaskCount);
+        shader.setFloat('verticalMaskIntensity', 1.0 - verticalMaskIntensity);
+        shader.setFloat('verticalMaskOffset', verticalMaskOffset);
+
+        shader.setFloat('glowStrength', glowStrength);
+        shader.setFloat('glowThresholdMin', glowThresholdMin);
+        shader.setFloat('glowThresholdMax', glowThresholdMax);
 
         onResize(this, handleResize);
 
@@ -89,10 +237,12 @@ class PixelArt extends Filter {
     function updateResolution() {
 
         if (width > 0 && height > 0) {
-            shader.setVec2('resolution',
-                width * density,
-                height * density
-            );
+            if (shader != null) {
+                shader.setVec2('resolution',
+                    width * density,
+                    height * density
+                );
+            }
         }
 
     }
