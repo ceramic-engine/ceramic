@@ -105,10 +105,14 @@ class TextInput implements spec.TextInput {
                 // Space
                 ceramic.App.app.textInput.space();
             }
-            else if (scanCode == ScanCode.ENTER || scanCode == ScanCode.KP_ENTER) {
+            else if (scanCode == ScanCode.ENTER) {
                 // Enter
                 ceramic.App.app.textInput.enter();
-            }
+            } 
+            else if (scanCode == ScanCode.KP_ENTER) {
+                // Numpad Enter
+                ceramic.App.app.textInput.kpEnter();
+            } 
             else if (scanCode == ScanCode.ESCAPE) {
                 // Escape
                 ceramic.App.app.textInput.escape();
