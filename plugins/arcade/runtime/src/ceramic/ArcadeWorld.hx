@@ -1107,25 +1107,25 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
-        return inline separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
+        return #if !debug inline #end separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
 
     }
 
     public function overlapBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
-        return inline separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
+        return #if !debug inline #end separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
 
     }
 
     public function collideBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
-        return inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
+        return #if !debug inline #end separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
 
     }
 
     public function overlapBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
-        return inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
+        return #if !debug inline #end separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
 
     }
 
@@ -1186,111 +1186,115 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             Assert.assert(tileWidth > 0 && tileHeight > 0, 'Cannot collide or overlap with tilemap layer because tile size $tileWidth x $tileHeight is invalid');
 
             var tiles = layer.checkCollisionWithComputedTiles ? layerData.computedTiles : layerData.tiles;
-            var checkCollisionValues = layer.checkCollisionValues;
+            // Need to check again as it can be null if needing computed tiles but there is only tiles and vice versa
+            if (tiles != null) {
 
-            var minColumn = Math.floor((body.left - offsetX) / tileWidth);
-            var maxColumn = Math.ceil((body.right - offsetX) / tileWidth);
-            var minRow = Math.floor((body.top - offsetY) / tileHeight);
-            var maxRow = Math.ceil((body.bottom - offsetY) / tileHeight);
+                var checkCollisionValues = layer.checkCollisionValues;
 
-            if (minColumn < 0)
-                minColumn = 0;
-            if (maxColumn >= layerData.columns)
-                maxColumn = layerData.columns - 1;
-            if (minRow < 0)
-                minRow = 0;
-            if (maxRow >= layerData.rows)
-                maxRow = layerData.rows - 1;
+                var minColumn = Math.floor((body.left - offsetX) / tileWidth);
+                var maxColumn = Math.ceil((body.right - offsetX) / tileWidth);
+                var minRow = Math.floor((body.top - offsetY) / tileHeight);
+                var maxRow = Math.ceil((body.bottom - offsetY) / tileHeight);
 
-            tileBody.checkCollisionUp = layer.checkCollisionUp;
-            tileBody.checkCollisionRight = layer.checkCollisionRight;
-            tileBody.checkCollisionDown = layer.checkCollisionDown;
-            tileBody.checkCollisionLeft = layer.checkCollisionLeft;
-            tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
+                if (minColumn < 0)
+                    minColumn = 0;
+                if (maxColumn >= layerData.columns)
+                    maxColumn = layerData.columns - 1;
+                if (minRow < 0)
+                    minRow = 0;
+                if (maxRow >= layerData.rows)
+                    maxRow = layerData.rows - 1;
 
-            var column = minColumn;
-            while (column <= maxColumn) {
-                var row = minRow;
-                while (row <= maxRow) {
-                    var index = row * layerData.columns + column;
-                    var tile = tiles.unsafeGet(index);
-                    var gid = tile.gid;
-                    if ((checkCollisionValues != null) ? checkCollisionValues.contains(gid) : gid > 0) {
+                tileBody.checkCollisionUp = layer.checkCollisionUp;
+                tileBody.checkCollisionRight = layer.checkCollisionRight;
+                tileBody.checkCollisionDown = layer.checkCollisionDown;
+                tileBody.checkCollisionLeft = layer.checkCollisionLeft;
+                tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
 
-                        // Check if there is a slope assigned to this tile
-                        var tileset = tilemapData.tilesetForGid(gid);
-                        var slope = tileset.slope(gid);
+                var column = minColumn;
+                while (column <= maxColumn) {
+                    var row = minRow;
+                    while (row <= maxRow) {
+                        var index = row * layerData.columns + column;
+                        var tile = tiles.unsafeGet(index);
+                        var gid = tile.gid;
+                        if ((checkCollisionValues != null) ? checkCollisionValues.contains(gid) : gid > 0) {
 
-                        // We reuse the same body for every tile collision
-                        tileBody.reset(
-                            offsetX + column * tileWidth,
-                            offsetY + row * tileHeight,
-                            tileWidth,
-                            tileHeight
-                        );
-                        tileBody.index = index;
+                            // Check if there is a slope assigned to this tile
+                            var tileset = tilemapData.tilesetForGid(gid);
+                            var slope = tileset.slope(gid);
 
-                        // When being blocked by a wall, prioritize X over Y separation
-                        if (body.velocityY < 0 && !body.blockedDown) {
-                            var indexBelow = index + layerData.columns;
-                            var tileBelow = 0;
-                            var foundCollidingTileBelow = false;
-                            if (layers != null) {
-                                for (n in 0...layers.length) {
-                                    var layer = layers.unsafeGet(n);
-                                    var layerData = layer.layerData;
-                                    if (layerData != null) {
-                                        tileBelow = indexBelow < tiles.length ? tiles.unsafeGet(indexBelow).gid : 0;
-                                        if (checkCollisionValues != null) {
-                                            if (checkCollisionValues.contains(tileBelow)) {
-                                                foundCollidingTileBelow = true;
-                                                break;
+                            // We reuse the same body for every tile collision
+                            tileBody.reset(
+                                offsetX + column * tileWidth,
+                                offsetY + row * tileHeight,
+                                tileWidth,
+                                tileHeight
+                            );
+                            tileBody.index = index;
+
+                            // When being blocked by a wall, prioritize X over Y separation
+                            if (body.velocityY < 0 && !body.blockedDown) {
+                                var indexBelow = index + layerData.columns;
+                                var tileBelow = 0;
+                                var foundCollidingTileBelow = false;
+                                if (layers != null) {
+                                    for (n in 0...layers.length) {
+                                        var layer = layers.unsafeGet(n);
+                                        var layerData = layer.layerData;
+                                        if (layerData != null) {
+                                            tileBelow = indexBelow < tiles.length ? tiles.unsafeGet(indexBelow).gid : 0;
+                                            if (checkCollisionValues != null) {
+                                                if (checkCollisionValues.contains(tileBelow)) {
+                                                    foundCollidingTileBelow = true;
+                                                    break;
+                                                }
                                             }
-                                        }
-                                        else {
-                                            if (tileBelow > 0) {
-                                                foundCollidingTileBelow = true;
-                                                break;
+                                            else {
+                                                if (tileBelow > 0) {
+                                                    foundCollidingTileBelow = true;
+                                                    break;
+                                                }
                                             }
                                         }
                                     }
                                 }
-                            }
 
-                            if (foundCollidingTileBelow) {
-                                tileBody.forceX = true;
-                            }
-                            else if (!body.isCircle && intersects(tileBody, body)) {
-                                var diffX = Math.max(
-                                    Math.abs(tileBody.right - body.left),
-                                    Math.abs(tileBody.left - body.right)
-                                );
-                                var diffY = Math.max(
-                                    Math.abs(tileBody.bottom - body.top),
-                                    Math.abs(tileBody.top - body.bottom)
-                                );
-                                tileBody.forceX = diffX > diffY;
+                                if (foundCollidingTileBelow) {
+                                    tileBody.forceX = true;
+                                }
+                                else if (!body.isCircle && intersects(tileBody, body)) {
+                                    var diffX = Math.max(
+                                        Math.abs(tileBody.right - body.left),
+                                        Math.abs(tileBody.left - body.right)
+                                    );
+                                    var diffY = Math.max(
+                                        Math.abs(tileBody.bottom - body.top),
+                                        Math.abs(tileBody.top - body.bottom)
+                                    );
+                                    tileBody.forceX = diffX > diffY;
+                                }
+                                else {
+                                    tileBody.forceX = false;
+                                }
                             }
                             else {
                                 tileBody.forceX = false;
                             }
-                        }
-                        else {
-                            tileBody.forceX = false;
-                        }
 
-                        if (separate(body, tileBody, processCallback, overlapOnly)) {
+                            if (separate(body, tileBody, processCallback, overlapOnly)) {
 
-                            if (collideCallback != null) {
-                                collideCallback(body, tileBody);
+                                if (collideCallback != null) {
+                                    collideCallback(body, tileBody);
+                                }
+
+                                _total++;
                             }
-
-                            _total++;
                         }
+                        row++;
                     }
-                    row++;
+                    column++;
                 }
-                column++;
             }
         }
 
