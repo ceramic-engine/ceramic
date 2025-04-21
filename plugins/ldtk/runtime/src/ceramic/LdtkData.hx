@@ -609,6 +609,21 @@ class LdtkWorld {
 
     }
 
+    public function levelByIid(iid:String):LdtkLevel {
+
+        if (this.levels != null) {
+            for (i in 0...this.levels.length) {
+                var level = this.levels[i];
+                if (level.iid == iid) {
+                    return level;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -2400,6 +2415,7 @@ class LdtkLevel {
                 new LdtkFieldInstance(ldtkData, world, fieldInstancesJson[i]);
             }] : [];
 
+            iid = json.get('iid');
             identifier = json.get('identifier');
 
             pxWid = Std.int(json.get('pxWid'));
@@ -2765,13 +2781,25 @@ enum abstract LdtkLevelLocation(Int) from Int to Int {
 
     var East = 4;
 
+    var NorthEast = 5;
+
+    var NorthWest = 6;
+
+    var SouthEast = 7;
+
+    var SouthWest = 8;
+
     public static function fromString(str:String):LdtkLevelLocation {
 
         return switch str {
-            case 'North': North;
-            case 'West': West;
-            case 'South': South;
-            case 'East': East;
+            case 'North' | 'n': North;
+            case 'ne': NorthEast;
+            case 'nw': NorthWest;
+            case 'West' | 'w': West;
+            case 'South' | 's': South;
+            case 'se': SouthEast;
+            case 'sw': SouthWest;
+            case 'East' | 'e': East;
             case _: 0;
         }
 
