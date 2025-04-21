@@ -3241,6 +3241,21 @@ class LdtkEntityInstance {
 
     }
 
+    public function fieldInstance(identifier:String):Null<LdtkFieldInstance> {
+
+        if (this.fieldInstances != null) {
+            for (i in 0...this.fieldInstances.length) {
+                var inst = this.fieldInstances[i];
+                if (inst.def.identifier == identifier) {
+                    return inst;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
