@@ -110,6 +110,20 @@ class PixelArt extends Filter {
     }
 
     /**
+     * Scanlines: controls how sharp or thick the dip is
+     *
+     * Range `0.25, 0.5, 1.0, 2.0, 4.0...`
+     */
+    public var scanlineShape(default,set):Float = 1;
+    function set_scanlineShape(scanlineShape:Float):Float {
+        if (this.scanlineShape != scanlineShape) {
+            this.scanlineShape = scanlineShape;
+            shader.setFloat('scanlineShape', scanlineShape);
+        }
+        return scanlineShape;
+    }
+
+    /**
      * Enables vertical shadow mask (subtle bars).
      */
     public var verticalMaskCount(default,set):Float = 0;
@@ -215,6 +229,7 @@ class PixelArt extends Filter {
         shader.setFloat('scanlineCount', scanlineCount);
         shader.setFloat('scanlineIntensity', 1.0 - scanlineIntensity);
         shader.setFloat('scanlineOffset', scanlineOffset);
+        shader.setFloat('scanlineShape', scanlineShape);
 
         shader.setFloat('verticalMaskCount', verticalMaskCount);
         shader.setFloat('verticalMaskIntensity', 1.0 - verticalMaskIntensity);
