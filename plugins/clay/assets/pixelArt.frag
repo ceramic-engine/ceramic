@@ -1,4 +1,3 @@
-
 #ifdef GL_ES
 precision mediump float;
 #else
@@ -16,6 +15,7 @@ uniform vec3 gridColor; // vec3(0.0, 0.0, 0.0)
 uniform float scanlineIntensity; // 0.75
 uniform float scanlineOffset; // 0
 uniform float scanlineCount; // resolution.y
+uniform float scanlineShape; // 1
 
 uniform float verticalMaskIntensity; // 0.75
 uniform float verticalMaskOffset; // 0
@@ -37,8 +37,15 @@ float sharpen(float px) {
     return floor(px) + norm * pow(norm2, sharpness) / 2.0 + 0.5;
 }
 
-float grid(float lineWidth, float gap, vec2 uv) {
+// Helper function to sample texture with sharpness applied
+vec4 sampleSharpened(sampler2D tex, vec2 coord) {
+    return texture2D(tex, vec2(
+        sharpen(coord.x * resolution.x) / resolution.x,
+        sharpen(coord.y * resolution.y) / resolution.y
+    ));
+}
 
+float grid(float lineWidth, float gap, vec2 uv) {
     // compute distance to closest horizontal and vertical line
     vec2 dist = mod(vec2(uv.x + 0.5, uv.y + 0.5), gap) - 0.5 * gap;
 
@@ -47,28 +54,23 @@ float grid(float lineWidth, float gap, vec2 uv) {
 }
 
 void main() {
-
-    vec2 center = vec2(0.5, 0.5);
-    vec2 rel = tcoord - center;
-
     vec4 texColor;
     if (chromaticAberration > 0.0) {
-        float dist = length(rel);
-        vec2 dir = normalize(rel + 1e-6);
-        vec2 aberr = dir * chromaticAberration * dist;
-        float r = texture2D(tex0, tcoord + aberr).r;
-        float g = texture2D(tex0, tcoord).g;
-        float b = texture2D(tex0, tcoord - aberr).b;
+        vec2 aberr = vec2(chromaticAberration, 0.0); // horizontal offset
+
+        // Apply sharpness to each color channel separately
+        float r = sampleSharpened(tex0, tcoord + aberr).r;
+        float g = sampleSharpened(tex0, tcoord).g;
+        float b = sampleSharpened(tex0, tcoord - aberr).b;
+
         texColor = vec4(r, g, b, 1.0);
-    } else {
-        texColor = texture2D(tex0, vec2(
-            sharpen(tcoord.x * resolution.x) / resolution.x,
-            sharpen(tcoord.y * resolution.y) / resolution.y
-        ));
+    }
+    else {
+        texColor = sampleSharpened(tex0, tcoord);
     }
 
     // --- Grid ---
-    if (gridThickness != 0.0) {
+    if (gridThickness > 0.0) {
         vec2 uv = vec2(
             tcoord.x * resolution.x,
             tcoord.y * resolution.y
@@ -87,9 +89,12 @@ void main() {
     }
 
     // --- Scanlines ---
+    float lum = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
     if (scanlineCount > 0.0) {
         float scanY = sin(((scanlineOffset / scanlineCount) + tcoord.y) * scanlineCount * 3.14159);
-        float scanFactor = mix(scanlineIntensity, 1.0, scanY * 0.5 + 0.5);
+        scanY = (scanY * 0.5 + 0.5);           // now in [0, 1]
+        scanY = pow(scanY, mix(scanlineShape, min(scanlineShape, 1.0), lum));     // shape the curve
+        float scanFactor = mix(scanlineIntensity, 1.0, scanY);
         texColor.rgb *= scanFactor;
     }
 
@@ -102,13 +107,12 @@ void main() {
 
     // --- Bloom / Glow ---
     if (glowStrength > 0.0) {
-        float lum = dot(texColor.rgb, vec3(0.2126, 0.7152, 0.0722));
         float glowFactor = smoothstep(glowThresholdMin, glowThresholdMax, lum);
         if (glowFactor > 0.0) {
             vec2 texel = 1.0 / resolution;
-            vec3 blur = texture2D(tex0, tcoord + vec2(texel.x,  0.0)).rgb;
+            vec3 blur = texture2D(tex0, tcoord + vec2(texel.x, 0.0)).rgb;
             blur += texture2D(tex0, tcoord - vec2(texel.x, 0.0)).rgb;
-            blur += texture2D(tex0, tcoord + vec2(0.0,  texel.y)).rgb;
+            blur += texture2D(tex0, tcoord + vec2(0.0, texel.y)).rgb;
             blur += texture2D(tex0, tcoord - vec2(0.0, texel.y)).rgb;
             blur += texColor.rgb;
             blur /= 5.0;
@@ -116,12 +120,7 @@ void main() {
         }
     }
 
-    gl_FragColor = color * texColor;
+    texColor.a = 1.0;
 
-    // To visualize how this makes the grid:
-    /*gl_FragColor = vec4(
-        fract(sharpen(tcoord.x * resolution.x)),
-        fract(sharpen(tcoord.y * resolution.y)),
-        0.5, 1.0
-    );*/
+    gl_FragColor = color * texColor;
 }
