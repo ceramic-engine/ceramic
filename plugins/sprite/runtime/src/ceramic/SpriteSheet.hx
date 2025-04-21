@@ -127,6 +127,19 @@ class SpriteSheet extends Model {
 
 /// Helpers
 
+    public function animation(name:String):Null<SpriteSheetAnimation> {
+
+        for (i in 0...animations.length) {
+            final anim = animations.unsafeGet(i);
+            if (anim.name == name) {
+                return anim;
+            }
+        }
+
+        return null;
+
+    }
+
     public function addAnimation(animation:SpriteSheetAnimation):Void {
 
         var animations = [].concat(this.animations.original);
