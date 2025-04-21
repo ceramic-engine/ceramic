@@ -2388,7 +2388,7 @@ class LdtkLevel {
             bgPos = json.get('__bgPos') != null ? new LdtkBackgroundPosition(json.get('__bgPos')) : null;
             bgRelPath = json.get('bgRelPath');
 
-            var neighboursJson:Array<Dynamic> = json.get('neighbours');
+            var neighboursJson:Array<Dynamic> = json.get('__neighbours');
             neighbours = neighboursJson != null ? [for (i in 0...neighboursJson.length) {
                 new LdtkLevelNeighbour(neighboursJson[i]);
             }] : [];
@@ -2726,13 +2726,13 @@ class LdtkLevelNeighbour {
     /**
      * Neighbour Instance Identifier
      */
-    public var levelId:String;
+    public var levelIid:String;
 
     public function new(?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
             dir = LdtkLevelLocation.fromString(json.get('dir'));
-            levelId = json.get('levelId');
+            levelIid = json.get('levelIid');
         }
 
     }
@@ -2742,7 +2742,7 @@ class LdtkLevelNeighbour {
         if (LdtkDataHelpers.beginObjectToString(this)) {
             var res = 'LdtkLevelNeighbour' + LdtkDataHelpers.objectToString({
                 dir: ''+dir,
-                levelId: ''+levelId
+                levelIid: ''+levelIid
             });
             LdtkDataHelpers.endObjectToString();
             return res;
