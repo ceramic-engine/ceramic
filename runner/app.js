@@ -178,10 +178,10 @@ function createWindow() {
     // Open the DevTools.
     //mainWindow.webContents.openDevTools()
 
-    // Open links in the OS default browser (deprecated in electron 22, use setOpenWindowHandler())
-    mainWindow.webContents.on('new-window', function(e, url) {
-	   e.preventDefault();
-	   electron.shell.openExternal(url);
+    // Open links in the OS default browser
+    mainWindow.webContents.setWindowOpenHandler(( { url }) => {
+	electron.shell.openExternal(url);
+	return { action : 'deny' };
     });
 
     // Emitted when the window is closed.
