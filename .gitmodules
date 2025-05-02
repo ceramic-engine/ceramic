@@ -107,3 +107,6 @@
 [submodule "git/yaml"]
 	path = git/yaml
 	url = https://github.com/jeremyfa/yaml.git
+[submodule "git/linc_sdl"]
+	path = git/linc_sdl
+	url = https://github.com/jeremyfa/linc_sdl.git
