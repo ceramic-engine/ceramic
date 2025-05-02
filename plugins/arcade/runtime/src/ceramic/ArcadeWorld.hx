@@ -1205,11 +1205,11 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                 if (maxRow >= layerData.rows)
                     maxRow = layerData.rows - 1;
 
-                tileBody.checkCollisionUp = layer.checkCollisionUp;
-                tileBody.checkCollisionRight = layer.checkCollisionRight;
-                tileBody.checkCollisionDown = layer.checkCollisionDown;
-                tileBody.checkCollisionLeft = layer.checkCollisionLeft;
-                tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
+                // tileBody.checkCollisionUp = layer.checkCollisionUp;
+                // tileBody.checkCollisionRight = layer.checkCollisionRight;
+                // tileBody.checkCollisionDown = layer.checkCollisionDown;
+                // tileBody.checkCollisionLeft = layer.checkCollisionLeft;
+                // tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
 
                 var column = minColumn;
                 while (column <= maxColumn) {
@@ -1218,6 +1218,47 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         var index = row * layerData.columns + column;
                         var tile = tiles.unsafeGet(index);
                         var gid = tile.gid;
+
+                        tileBody.checkCollisionUp = layer.checkCollisionUp;
+                        tileBody.checkCollisionRight = layer.checkCollisionRight;
+                        tileBody.checkCollisionDown = layer.checkCollisionDown;
+                        tileBody.checkCollisionLeft = layer.checkCollisionLeft;
+
+                        var tileExtraY:Float = 0;
+                        var tileExtraHeight:Float = 0;
+                        var forceX:Bool = false;
+
+                        if (row > minRow) {
+                            var indexPrevRow = (row - 1) * layerData.columns + column;
+                            var tilePrevRow = tiles.unsafeGet(indexPrevRow);
+                            var gidPrevRow = tilePrevRow.gid;
+
+                            if ((checkCollisionValues != null) ? checkCollisionValues.contains(gidPrevRow) : gidPrevRow > 0) {
+                                tileBody.checkCollisionUp = false;
+                                tileExtraY -= tileHeight;
+                                tileExtraHeight += tileHeight;
+                            }
+
+                            forceX = true;
+                        }
+
+                        if (row < maxRow) {
+                            var indexNextRow = (row + 1) * layerData.columns + column;
+                            var tileNextRow = tiles.unsafeGet(indexNextRow);
+                            var gidNextRow = tileNextRow.gid;
+
+                            if ((checkCollisionValues != null) ? checkCollisionValues.contains(gidNextRow) : gidNextRow > 0) {
+                                tileBody.checkCollisionDown = false;
+                                tileExtraHeight += tileHeight;
+                            }
+
+                            forceX = true;
+                        }
+
+                        tileBody.forceX = false;//forceX;
+
+                        tileBody.checkCollisionNone = !layer.checkCollisionUp && !layer.checkCollisionRight && !layer.checkCollisionDown && !layer.checkCollisionLeft;
+
                         if ((checkCollisionValues != null) ? checkCollisionValues.contains(gid) : gid > 0) {
 
                             // Check if there is a slope assigned to this tile
@@ -1227,60 +1268,60 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             // We reuse the same body for every tile collision
                             tileBody.reset(
                                 offsetX + column * tileWidth,
-                                offsetY + row * tileHeight,
+                                offsetY + row * tileHeight + tileExtraY,
                                 tileWidth,
-                                tileHeight
+                                tileHeight + tileExtraHeight
                             );
                             tileBody.index = index;
 
-                            // When being blocked by a wall, prioritize X over Y separation
-                            if (body.velocityY < 0 && !body.blockedDown) {
-                                var indexBelow = index + layerData.columns;
-                                var tileBelow = 0;
-                                var foundCollidingTileBelow = false;
-                                if (layers != null) {
-                                    for (n in 0...layers.length) {
-                                        var layer = layers.unsafeGet(n);
-                                        var layerData = layer.layerData;
-                                        if (layerData != null) {
-                                            tileBelow = indexBelow < tiles.length ? tiles.unsafeGet(indexBelow).gid : 0;
-                                            if (checkCollisionValues != null) {
-                                                if (checkCollisionValues.contains(tileBelow)) {
-                                                    foundCollidingTileBelow = true;
-                                                    break;
-                                                }
-                                            }
-                                            else {
-                                                if (tileBelow > 0) {
-                                                    foundCollidingTileBelow = true;
-                                                    break;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            // // When being blocked by a wall, prioritize X over Y separation
+                            // if (body.velocityY < 0 && !body.blockedDown) {
+                            //     var indexBelow = index + layerData.columns;
+                            //     var tileBelow = 0;
+                            //     var foundCollidingTileBelow = false;
+                            //     if (layers != null) {
+                            //         for (n in 0...layers.length) {
+                            //             var layer = layers.unsafeGet(n);
+                            //             var layerData = layer.layerData;
+                            //             if (layerData != null) {
+                            //                 tileBelow = indexBelow < tiles.length ? tiles.unsafeGet(indexBelow).gid : 0;
+                            //                 if (checkCollisionValues != null) {
+                            //                     if (checkCollisionValues.contains(tileBelow)) {
+                            //                         foundCollidingTileBelow = true;
+                            //                         break;
+                            //                     }
+                            //                 }
+                            //                 else {
+                            //                     if (tileBelow > 0) {
+                            //                         foundCollidingTileBelow = true;
+                            //                         break;
+                            //                     }
+                            //                 }
+                            //             }
+                            //         }
+                            //     }
 
-                                if (foundCollidingTileBelow) {
-                                    tileBody.forceX = true;
-                                }
-                                else if (!body.isCircle && intersects(tileBody, body)) {
-                                    var diffX = Math.max(
-                                        Math.abs(tileBody.right - body.left),
-                                        Math.abs(tileBody.left - body.right)
-                                    );
-                                    var diffY = Math.max(
-                                        Math.abs(tileBody.bottom - body.top),
-                                        Math.abs(tileBody.top - body.bottom)
-                                    );
-                                    tileBody.forceX = diffX > diffY;
-                                }
-                                else {
-                                    tileBody.forceX = false;
-                                }
-                            }
-                            else {
-                                tileBody.forceX = false;
-                            }
+                            //     if (foundCollidingTileBelow) {
+                            //         tileBody.forceX = true;
+                            //     }
+                            //     else if (!body.isCircle && intersects(tileBody, body)) {
+                            //         var diffX = Math.max(
+                            //             Math.abs(tileBody.right - body.left),
+                            //             Math.abs(tileBody.left - body.right)
+                            //         );
+                            //         var diffY = Math.max(
+                            //             Math.abs(tileBody.bottom - body.top),
+                            //             Math.abs(tileBody.top - body.bottom)
+                            //         );
+                            //         tileBody.forceX = diffX > diffY;
+                            //     }
+                            //     else {
+                            //         tileBody.forceX = false;
+                            //     }
+                            // }
+                            // else {
+                            //     tileBody.forceX = false;
+                            // }
 
                             if (separate(body, tileBody, processCallback, overlapOnly)) {
 
