@@ -2464,6 +2464,12 @@ class LdtkLevel {
                 done();
             }
         }
+        else if (ceramicTilemap == null) {
+            if (world.ldtkData.loadLevelCeramicTilemap != null) {
+                world.ldtkData.loadLevelCeramicTilemap(this);
+            }
+            done();
+        }
         else {
             done();
         }
@@ -2484,6 +2490,13 @@ class LdtkLevel {
 
             if (world != null && world.ldtkData != null) {
                 world.ldtkData._cleanUnusedEntityInstances();
+            }
+        }
+        else {
+            if (ceramicTilemap != null) {
+                var _ceramicTilemap = ceramicTilemap;
+                ceramicTilemap = null;
+                _ceramicTilemap.destroy();
             }
         }
 
