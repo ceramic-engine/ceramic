@@ -146,6 +146,10 @@ class Assets extends Entity {
 
 /// Add assets to load
 
+    public function hasAsset(asset:Asset):Bool {
+        return addedAssets.contains(asset);
+    }
+
     // public extern inline overload function add(id:AssetId<Dynamic>, variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
     //     _add(id, variant, options #if ceramic_debug_entity_allocs , pos #end);
     // }

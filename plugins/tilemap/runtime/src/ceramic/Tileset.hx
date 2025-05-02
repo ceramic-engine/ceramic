@@ -311,4 +311,33 @@ class Tileset extends Model {
 
     }
 
+/// Print
+
+    override function toString():String {
+
+        return '' + {
+            firstGid: firstGid,
+            name: name,
+            tileWidth: tileWidth,
+            tileHeight: tileHeight,
+            spacing: spacing,
+            margin: margin,
+            tileCount: tileCount,
+            columns: columns,
+            rows: rows,
+            image: image,
+            gridOrientation: gridOrientation,
+            gridCellWidth: gridCellWidth,
+            gridCellHeight: gridCellHeight,
+            slopesMapping: slopesMapping,
+            implicitImage: implicitImage,
+            texture: texture,
+            slopes: slopes,
+            #if plugin_ldtk
+            ldtkTileset: ldtkTileset,
+            #end
+        }
+
+    }
+
 }

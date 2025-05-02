@@ -252,7 +252,7 @@ class SpriteAsset extends Asset {
                 }
                 catch (e:Dynamic) {
                     status = BROKEN;
-                    log.error('Failed to decode ase data at path: $path');
+                    log.error('Failed to decode ase data at path: $path / $e');
                     emitComplete(false);
                 }
 
