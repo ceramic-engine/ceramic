@@ -17,8 +17,8 @@ using ceramic.Extensions;
 import hxtelemetry.HxTelemetry;
 #end
 
-#if (cpp && linc_sdl)
-import sdl.SDL;
+#if clay_sdl
+import clay.sdl.SDL;
 #end
 
 #if (!ceramic_cppia_host && !ceramic_no_bind_assets)
@@ -102,23 +102,31 @@ class App extends Entity {
 
     /**
      * Fired when the app will enter background state.
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function beginEnterBackground();
+    @event @synchronized function beginEnterBackground();
 
     /**
      * Fired when the app did finish entering background state.
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function finishEnterBackground();
+    @event @synchronized function finishEnterBackground();
 
     /**
      * Fired when the app will enter foreground state.
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function beginEnterForeground();
+    @event @synchronized function beginEnterForeground();
 
     /**
      * Fired when the app did finish entering foreground state.
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function finishEnterForeground();
+    @event @synchronized function finishEnterForeground();
 
     /**
      * Fired right before sorting all visuals.
@@ -145,13 +153,17 @@ class App extends Entity {
     /**
      * Fired if the app is running low on memory.
      * (not be implemented by all platforms/targets).
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function lowMemory();
+    @event @synchronized function lowMemory();
 
     /**
      * Fired when the app terminates.
+     *
+     * CAUTION: Can execute outside main thread!
      */
-    @event function terminate();
+    @event @synchronized function terminate();
 
 /// Immediate update system
 
@@ -735,7 +747,7 @@ class App extends Entity {
         untyped __global__.__hxcpp_set_critical_error_handler(function(message:String) throw message);
 #end
 
-#if (cpp && linc_sdl)
+#if clay_sdl
         SDL.setLCNumericCLocale();
 #end
 
@@ -813,7 +825,7 @@ class App extends Entity {
 
         backend.onUpdate(this, updatePreReady);
 
-#if (cpp && linc_sdl)
+#if clay_sdl
         SDL.setLCNumericCLocale();
 #end
 
@@ -1234,7 +1246,7 @@ class App extends Entity {
         this.delta = delta;
         this.realDelta = realDelta;
 
-#if (cpp && linc_sdl)
+#if clay_sdl
         SDL.setLCNumericCLocale();
 #end
 

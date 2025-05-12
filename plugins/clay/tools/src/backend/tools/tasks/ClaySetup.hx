@@ -14,7 +14,7 @@ class ClaySetup extends tools.Task {
 
     public static var requiredLibs(get,never):ReadOnlyArray<String>;
     static function get_requiredLibs():ReadOnlyArray<String> {
-        var _requiredLibs:Array<String> = ['clay', 'linc_ogg', 'linc_opengl', 'linc_sdl', 'linc_stb', 'linc_timestamp'];
+        var _requiredLibs:Array<String> = ['clay', 'linc_ogg', 'linc_opengl', 'linc_stb', 'linc_timestamp'];
         if (context.defines.exists('ceramic_use_openal')) {
             _requiredLibs.push('linc_openal');
         }
@@ -191,9 +191,9 @@ class ClaySetup extends tools.Task {
             else {
                 targetFlags = '-cpp cpp';
             }
+            targetFlags += '\n' + '-D tracker_synchronized';
             targetFlags += '\n' + '-lib hxcpp';
             targetFlags += '\n' + '-lib linc_opengl';
-            targetFlags += '\n' + '-lib linc_sdl';
             targetFlags += '\n' + '-lib linc_ogg';
             targetFlags += '\n' + '-lib linc_stb';
             targetFlags += '\n' + '-lib linc_timestamp';
@@ -211,18 +211,31 @@ class ClaySetup extends tools.Task {
             if (target.name == 'ios') {
                 // openal manual init
             }
-            if (target.name == 'ios' || target.name == 'android') {
+            if (target.name == 'ios' || target.name == 'android' || context.defines.exists('gles_angle')) {
                 targetFlags += '\n' + '-D linc_opengl_GLES';
             }
             if (target.name == 'android') {
                 // On android, we ran into a shader bug when using "last" texture slot available
                 targetFlags += '\n' + '-D ceramic_avoid_last_texture_slot';
+
+                // And let's add ndk version (needed for linking with proper binary versions)
+                targetFlags += '\n' + '-D clay_android_ndk_r' + tools.AndroidUtils.ndkVersionNumber();
             }
-            if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
-                targetFlags += '\n' + '-D clay_use_glew';
+            if (context.defines.exists('gles_angle')) {
+                // Add ANGLE-specific defines here if needed
+                // if (target.name == 'ios') {
+                //     targetFlags += '\n' + '-D clay_use_glad';
+                //     targetFlags += '\n' + '-D linc_opengl_glad';
+                // }
             }
-            if (target.name == 'windows' && !context.defines.exists('ceramic_no_clay_gl_finish')) {
-                targetFlags += '\n' + '-D clay_gl_finish';
+            else {
+                if (target.name == 'mac' || target.name == 'windows' || target.name == 'linux') {
+                    targetFlags += '\n' + '-D clay_use_glew';
+                    targetFlags += '\n' + '-D linc_opengl_glew';
+                }
+                if (target.name == 'windows' && !context.defines.exists('ceramic_no_clay_gl_finish')) {
+                    targetFlags += '\n' + '-D clay_gl_finish';
+                }
             }
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
         }

@@ -36,6 +36,28 @@ class AndroidStudio extends tools.Task {
         // Copy java files if needed
         AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
+        // Update SDL files if needed
+        if (!context.defines.exists('ceramic_android_no_sdl_java_update')) {
+            final tplSDLJavaFilesPath = Path.join([context.plugins.get('android').path, 'tpl/project/android-clay/app/src/main/java/org/libsdl/app']);
+            final projectSDLJavaFilesPath = Path.join([androidProjectPath, 'app/src/main/java/org/libsdl/app']);
+            Files.copyDirectory(
+                tplSDLJavaFilesPath,
+                projectSDLJavaFilesPath
+            );
+        }
+
+        #if (mac || linux)
+        // Make build-haxe.sh executable
+        if (FileSystem.exists(Path.join([androidProjectPath, 'build-haxe.sh']))) {
+            command('chmod', ['+x', Path.join([androidProjectPath, 'build-haxe.sh'])]);
+        }
+
+        // Make gradlew executable
+        if (FileSystem.exists(Path.join([androidProjectPath, 'gradlew']))) {
+            command('chmod', ['+x', Path.join([androidProjectPath, 'gradlew'])]);
+        }
+        #end
+
         var os = Sys.systemName();
 
         final openProject = extractArgFlag(args, 'open-project');
@@ -51,7 +73,8 @@ class AndroidStudio extends tools.Task {
                 print('Open Android Studio project');
 
                 command('bash', [
-                    Path.join([context.plugins.get('android').path, 'resources/open-android-studio-mac.sh'])
+                    Path.join([context.plugins.get('android').path, 'resources/open-android-studio-mac.sh']),
+                    androidProjectPath
                 ]);
 
             }

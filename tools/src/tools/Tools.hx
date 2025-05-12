@@ -100,6 +100,9 @@ class Tools {
 
         context.addTask('images export', new tools.tasks.images.ExportImages());
 
+        context.addTask('sdl', new tools.tasks.SDL());
+        context.addTask('angle', new tools.tasks.Angle());
+
         //#end
 
         // Init plugins

@@ -27,6 +27,9 @@ class Mac extends tools.Task {
         var macAppPath = Path.join([macProjectPath, project.app.name + '.app']);
         var macAppBinaryFile = Path.join([macAppPath, 'Contents', 'MacOS', project.app.name]);
 
+        var macAppSdlLib = Path.join([macAppPath, 'Contents', 'MacOS', 'libSDL3.dylib']);
+        var ceramicSdlLib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-mac-universal/lib/libSDL3.dylib']);
+
         var doRun = extractArgFlag(args, 'run');
 
         // Create mac app package if needed
@@ -40,6 +43,37 @@ class Mac extends tools.Task {
             FileSystem.createDirectory(Path.directory(macAppBinaryFile));
         }
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug' : 'Main']), macAppBinaryFile);
+
+        // Copy libSDL3
+        if (!Files.haveSameLastModified(ceramicSdlLib, macAppSdlLib)) {
+            File.copy(ceramicSdlLib, macAppSdlLib);
+        }
+
+        var macAppAngleEGL = Path.join([macAppPath, 'Contents', 'MacOS', 'libEGL.dylib']);
+        var ceramicAngleEGL = Path.join([context.ceramicRootPath, 'bin/angle/angle-mac-universal/lib/libEGL.dylib']);
+        var macAppAngleGLESv2 = Path.join([macAppPath, 'Contents', 'MacOS', 'libGLESv2.dylib']);
+        var ceramicAngleGLESv2 = Path.join([context.ceramicRootPath, 'bin/angle/angle-mac-universal/lib/libGLESv2.dylib']);
+
+        if (context.defines.exists('gles_angle')) {
+
+            if (!Files.haveSameLastModified(ceramicAngleEGL, macAppAngleEGL)) {
+                File.copy(ceramicAngleEGL, macAppAngleEGL);
+            }
+
+            if (!Files.haveSameLastModified(ceramicAngleGLESv2, macAppAngleGLESv2)) {
+                File.copy(ceramicAngleGLESv2, macAppAngleGLESv2);
+            }
+        }
+        else {
+
+            if (FileSystem.exists(macAppAngleEGL)) {
+                FileSystem.deleteFile(macAppAngleEGL);
+            }
+
+            if (FileSystem.exists(macAppAngleGLESv2)) {
+                FileSystem.deleteFile(macAppAngleGLESv2);
+            }
+        }
 
         // Ensure it's still executable
         command('chmod', ['+x', macAppBinaryFile]);

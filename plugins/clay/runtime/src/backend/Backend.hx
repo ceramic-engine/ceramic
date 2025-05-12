@@ -1,5 +1,16 @@
 package backend;
 
+#if (ios || tvos || android)
+import haxe.atomic.AtomicBool;
+#end
+
+#if clay_sdl
+import clay.sdl.SDL;
+#end
+
+#if clay_sdl
+@:headerCode('#include "linc_sdl.h"')
+#end
 @:allow(backend.Main)
 @:allow(backend.Textures)
 @:allow(backend.ClayEvents)
@@ -39,6 +50,10 @@ class Backend implements tracker.Events implements spec.Backend {
 
     public function init(app:ceramic.App) {
 
+        #if clay_sdl
+        SDL.bind();
+        #end
+
         #if mac
         NativeMac.setAppleMomentumScrollSupported(false);
         #end
@@ -71,12 +86,14 @@ class Backend implements tracker.Events implements spec.Backend {
 
     @event function render();
 
-#if (linc_sdl && cpp)
-    @event function sdlEvent(event:sdl.Event);
+#if clay_sdl
+    @event function sdlEvent(event:SDLEvent);
 #end
 
 /// Internal flags
 
-    var mobileInBackground:Bool = false;
+#if (ios || tvos || android)
+    var mobileInBackground:AtomicBool = new AtomicBool(false);
+#end
 
 }

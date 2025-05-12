@@ -3,8 +3,8 @@ package backend;
 @:keep
 @:include('linc_NativeMac.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('NativeMac', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('NativeMac', './'))
 #end
 extern class NativeMac {
 

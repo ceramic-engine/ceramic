@@ -15,6 +15,10 @@ import clay.Types.WindowEventType;
 
 using StringTools;
 
+#if clay_sdl
+import clay.sdl.SDL;
+#end
+
 @:access(backend.Backend)
 @:access(backend.Screen)
 @:access(backend.Input)
@@ -86,7 +90,7 @@ class ClayEvents extends clay.Events {
 
         #if !ceramic_no_remap_gamepad
 
-        #if (cpp && linc_sdl)
+        #if clay_sdl
 
         // Tweak a few values to make these match what we got with HTML5 gamepad API
         // This is expected to work on PS4 and Xbox gamepads for now.
@@ -141,9 +145,9 @@ class ClayEvents extends clay.Events {
 
     }
 
-    #if (linc_sdl && cpp)
+    #if clay_sdl
 
-    override function sdlEvent(event:sdl.Event) {
+    override function sdlEvent(event:SDLEvent) {
 
         backend.emitSdlEvent(event);
 
@@ -183,14 +187,14 @@ class ClayEvents extends clay.Events {
             case WILL_ENTER_BACKGROUND:
                 ceramic.App.app.emitBeginEnterBackground();
             case DID_ENTER_BACKGROUND:
-                #if (ios || android)
-                backend.mobileInBackground = true;
+                #if (ios || tvos || android)
+                backend.mobileInBackground.store(true);
                 #end
                 ceramic.App.app.emitFinishEnterBackground();
             case WILL_ENTER_FOREGROUND:
                 ceramic.App.app.emitBeginEnterForeground();
-                #if (ios || android)
-                backend.mobileInBackground = false;
+                #if (ios || tvos || android)
+                backend.mobileInBackground.store(false);
                 #end
             case DID_ENTER_FOREGROUND:
                 ceramic.App.app.emitFinishEnterForeground();

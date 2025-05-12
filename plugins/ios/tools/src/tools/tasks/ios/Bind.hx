@@ -1,12 +1,12 @@
 package tools.tasks.ios;
 
-import tools.Helpers.*;
-import tools.Project;
-import tools.IosProject;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
+import tools.IosProject;
+import tools.Project;
 
 using StringTools;
 
@@ -48,20 +48,27 @@ class Bind extends tools.Task {
 
         if ((isAppProject && project.app.bind != null) || (!isAppProject && project.plugin.bind != null)) {
             var toBind:Array<String> = isAppProject ? project.app.bind : project.plugin.bind;
-            for (header in toBind) {
+            toBind = [].concat(toBind);
+            while (toBind.length > 0) {
+                var header = toBind.shift().trim();
                 var headerFound = false;
+                var lincFiles = [];
+                while (toBind.length > 0 && toBind[0].startsWith('+')) {
+                    lincFiles.push('--linc-file');
+                    lincFiles.push(toBind.shift().trim().substring(1).trim());
+                }
                 for (aPath in searchPaths) {
                     var isAbsolute = Path.isAbsolute(header);
                     var headerPath = isAbsolute ? header : Path.join([aPath, header]);
                     if (headerPath.endsWith('.h') && FileSystem.exists(headerPath) && !FileSystem.isDirectory(headerPath)) {
-                        
+
                         // Run bind library
                         var result = haxelib([
                             'run', 'bind', 'objc', '--json', '--pretty',
                             headerPath,
                             '--namespace', 'ceramic::ios',
                             '--package', 'ios'
-                        ], {
+                        ].concat(lincFiles), {
                             cwd: cwd,
                             mute: true
                         });
@@ -84,6 +91,11 @@ class Bind extends tools.Task {
                             allInfo = [];
                         }
 
+                        allInfo.unshift({
+                            path: Path.join(['ios', 'linc', Path.withoutDirectory(headerPath)]),
+                            content: File.getContent(headerPath)
+                        });
+
                         for (fileInfo in allInfo) {
 
                             var filePath = Path.join([projectGenPath, fileInfo.path]);
@@ -102,7 +114,7 @@ class Bind extends tools.Task {
                                 if (!FileSystem.exists(dirPath)) {
                                     FileSystem.createDirectory(dirPath);
                                 }
-                                
+
                                 File.saveContent(filePath, fileInfo.content);
                             }
 

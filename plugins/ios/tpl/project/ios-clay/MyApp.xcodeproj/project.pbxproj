@@ -3,13 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1E2E17AD131E8B5D0048F3C7 /* project/assets in Resources */ = {isa = PBXBuildFile; fileRef = 1E2E17A5131E8B5D0048F3C7 /* project/assets */; };
 		1EEEBA9B121AF1C60048A9DF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBA9A121AF1C60048A9DF /* UIKit.framework */; };
-		1EEEBAA5121AF2210048A9DF /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAA4121AF2210048A9DF /* OpenGLES.framework */; };
 		1EEEBAA7121AF2210048A9DF /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAA6121AF2210048A9DF /* QuartzCore.framework */; };
 		1EEEBAB3121AF2880048A9D0 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAB2121AF2880048A9D0 /* CoreMotion.framework */; };
 		1EEEBAB3121AF2880048A9D1 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAB2121AF2880048A9D1 /* MediaPlayer.framework */; };
@@ -18,18 +17,23 @@
 		1EEEBAFC121BE2980048A9DF /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAFB121BE2980048A9DF /* AudioToolbox.framework */; };
 		1EEEBAFE121BE2980048A9DF /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAFD121BE2980048A9DF /* AVFoundation.framework */; };
 		1EEEBB00121BE2B30048A9DF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBAFF121BE2B30048A9DF /* Foundation.framework */; };
-		1EF0A83A121ADB8E003F2F59 /* Main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1EF0A839121ADB8E003F2F59 /* Main.mm */; };
 		2619B0091978784F003DB9A7 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2619B0081978784F003DB9A7 /* Images.xcassets */; };
 		4079DA641C769A2700B81DF7 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4079DA631C769A2700B81DF7 /* GameController.framework */; };
 		7E328C852014F9B700495FE2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7E328C842014F9B700495FE2 /* LaunchScreen.storyboard */; };
 		7E5157BB281D5742005BF102 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E5157BA281D5742005BF102 /* CoreBluetooth.framework */; };
+		7E57DF072DCE067500FFDF72 /* libGLESv2.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7E57DF082DCE067500FFDF72 /* SDL3.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF052DCE067500FFDF72 /* SDL3.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7E57DF092DCE067500FFDF72 /* libEGL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF062DCE067500FFDF72 /* libEGL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		7E57DF0A2DCE068D00FFDF72 /* libEGL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF062DCE067500FFDF72 /* libEGL.xcframework */; };
+		7E57DF0B2DCE068D00FFDF72 /* libGLESv2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */; };
+		7E57DF0C2DCE068D00FFDF72 /* SDL3.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF052DCE067500FFDF72 /* SDL3.xcframework */; };
+		7E57DF0E2DCE0EC100FFDF72 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */; };
 		7E7BE9262029EA0300CBF16B /* SwiftClasses.h in Headers */ = {isa = PBXBuildFile; fileRef = 7E7BE9242029EA0300CBF16B /* SwiftClasses.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7E7BE9292029EA0300CBF16B /* SwiftClasses.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */; };
 		7E7BE92A2029EA0300CBF16B /* SwiftClasses.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		7E7BE9302029EAE800CBF16B /* AppSwiftInterface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E7BE92F2029EAE800CBF16B /* AppSwiftInterface.swift */; };
 		7E921177265301CB002B8DA5 /* Metal.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E921176265301CB002B8DA5 /* Metal.framework */; };
 		7E98D3DB201505160043EFE0 /* AppNativeInterface.m in Sources */ = {isa = PBXBuildFile; fileRef = 7E98D3DA201505160043EFE0 /* AppNativeInterface.m */; };
-		D6368FAAC054F36ABE278E25 /* Pods_MyApp.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F1ACD781366BF21F2B6A922C /* Pods_MyApp.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -49,6 +53,9 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				7E57DF092DCE067500FFDF72 /* libEGL.xcframework in Embed Frameworks */,
+				7E57DF072DCE067500FFDF72 /* libGLESv2.xcframework in Embed Frameworks */,
+				7E57DF082DCE067500FFDF72 /* SDL3.xcframework in Embed Frameworks */,
 				7E7BE92A2029EA0300CBF16B /* SwiftClasses.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -70,13 +77,14 @@
 		1EEEBAFB121BE2980048A9DF /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		1EEEBAFD121BE2980048A9DF /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 		1EEEBAFF121BE2B30048A9DF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		1EF0A839121ADB8E003F2F59 /* Main.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Main.mm; path = project/Classes/Main.mm; sourceTree = SOURCE_ROOT; };
 		2619B0081978784F003DB9A7 /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = project/Images.xcassets; sourceTree = "<group>"; };
-		385C8EC51281B7E04E538898 /* Pods-MyApp.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyApp.debug.xcconfig"; path = "Pods/Target Support Files/Pods-MyApp/Pods-MyApp.debug.xcconfig"; sourceTree = "<group>"; };
 		4079DA631C769A2700B81DF7 /* GameController.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameController.framework; path = System/Library/Frameworks/GameController.framework; sourceTree = SDKROOT; };
-		526DA2E4B8FB494E92C629A8 /* Pods-MyApp.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MyApp.release.xcconfig"; path = "Pods/Target Support Files/Pods-MyApp/Pods-MyApp.release.xcconfig"; sourceTree = "<group>"; };
 		7E328C842014F9B700495FE2 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		7E5157BA281D5742005BF102 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
+		7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libGLESv2.xcframework; path = Frameworks/libGLESv2.xcframework; sourceTree = "<group>"; };
+		7E57DF052DCE067500FFDF72 /* SDL3.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SDL3.xcframework; path = Frameworks/SDL3.xcframework; sourceTree = "<group>"; };
+		7E57DF062DCE067500FFDF72 /* libEGL.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libEGL.xcframework; path = Frameworks/libEGL.xcframework; sourceTree = "<group>"; };
+		7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftClasses.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E7BE9242029EA0300CBF16B /* SwiftClasses.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftClasses.h; sourceTree = "<group>"; };
 		7E7BE9252029EA0300CBF16B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -85,7 +93,6 @@
 		7E98D3D9201505160043EFE0 /* AppNativeInterface.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppNativeInterface.h; sourceTree = "<group>"; };
 		7E98D3DA201505160043EFE0 /* AppNativeInterface.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppNativeInterface.m; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* project/project-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "project/project-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
-		F1ACD781366BF21F2B6A922C /* Pods_MyApp.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MyApp.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -93,11 +100,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7E57DF0E2DCE0EC100FFDF72 /* libc++.tbd in Frameworks */,
+				7E57DF0A2DCE068D00FFDF72 /* libEGL.xcframework in Frameworks */,
+				7E57DF0B2DCE068D00FFDF72 /* libGLESv2.xcframework in Frameworks */,
+				7E57DF0C2DCE068D00FFDF72 /* SDL3.xcframework in Frameworks */,
 				7E5157BB281D5742005BF102 /* CoreBluetooth.framework in Frameworks */,
 				7E921177265301CB002B8DA5 /* Metal.framework in Frameworks */,
 				4079DA641C769A2700B81DF7 /* GameController.framework in Frameworks */,
 				1EEEBA9B121AF1C60048A9DF /* UIKit.framework in Frameworks */,
-				1EEEBAA5121AF2210048A9DF /* OpenGLES.framework in Frameworks */,
 				1EEEBAA7121AF2210048A9DF /* QuartzCore.framework in Frameworks */,
 				1EEEBAB3121AF2880048A9DF /* CoreAudio.framework in Frameworks */,
 				1EEEBAB5121AF2880048A9DF /* CoreGraphics.framework in Frameworks */,
@@ -107,7 +117,6 @@
 				1EEEBB00121BE2B30048A9DF /* Foundation.framework in Frameworks */,
 				1EEEBAB3121AF2880048A9D0 /* CoreMotion.framework in Frameworks */,
 				1EEEBAB3121AF2880048A9D1 /* MediaPlayer.framework in Frameworks */,
-				D6368FAAC054F36ABE278E25 /* Pods_MyApp.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +134,6 @@
 			isa = PBXGroup;
 			children = (
 				7E7BE9232029EA0300CBF16B /* Swift */,
-				1EF0A839121ADB8E003F2F59 /* Main.mm */,
 				7E98D3D9201505160043EFE0 /* AppNativeInterface.h */,
 				7E98D3DA201505160043EFE0 /* AppNativeInterface.m */,
 			);
@@ -145,6 +153,10 @@
 		1EEEBA99121AF18B0048A9DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */,
+				7E57DF062DCE067500FFDF72 /* libEGL.xcframework */,
+				7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */,
+				7E57DF052DCE067500FFDF72 /* SDL3.xcframework */,
 				7E5157BA281D5742005BF102 /* CoreBluetooth.framework */,
 				7E921176265301CB002B8DA5 /* Metal.framework */,
 				4079DA631C769A2700B81DF7 /* GameController.framework */,
@@ -159,7 +171,6 @@
 				1EEEBAFD121BE2980048A9DF /* AVFoundation.framework */,
 				1EEEBAB2121AF2880048A9D0 /* CoreMotion.framework */,
 				1EEEBAB2121AF2880048A9D1 /* MediaPlayer.framework */,
-				F1ACD781366BF21F2B6A922C /* Pods_MyApp.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -172,7 +183,6 @@
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
-				BBB0FECD0B73CA9360CCDB56 /* Pods */,
 			);
 			name = CustomTemplate;
 			sourceTree = "<group>";
@@ -205,15 +215,6 @@
 			path = Swift;
 			sourceTree = "<group>";
 		};
-		BBB0FECD0B73CA9360CCDB56 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				385C8EC51281B7E04E538898 /* Pods-MyApp.debug.xcconfig */,
-				526DA2E4B8FB494E92C629A8 /* Pods-MyApp.release.xcconfig */,
-			);
-			name = Pods;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -232,13 +233,10 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "MyApp" */;
 			buildPhases = (
-				CCEAF4749D2C1E00016A407C /* [CP] Check Pods Manifest.lock */,
 				26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */,
 				1D60588D0D05DD3D006BFB54 /* Resources */,
 				1D60588E0D05DD3D006BFB54 /* Sources */,
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
-				7C85C123D9B70236B5FD18C5 /* [CP] Embed Pods Frameworks */,
-				34575724287AC3A04DE48341 /* [CP] Copy Pods Resources */,
 				7E7BE92E2029EA0300CBF16B /* Embed Frameworks */,
 			);
 			buildRules = (
@@ -343,36 +341,6 @@
 			shellPath = /bin/sh;
 			shellScript = "./build-haxe.sh\n";
 		};
-		34575724287AC3A04DE48341 /* [CP] Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MyApp/Pods-MyApp-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		7C85C123D9B70236B5FD18C5 /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-MyApp/Pods-MyApp-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
 		7E7BE9312029F1E600CBF16B /* Copy Objective-C Header */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -387,24 +355,6 @@
 			shellPath = /bin/sh;
 			shellScript = "HEADER_PATH=$BUILD_DIR\"/\"$CONFIGURATION\"\"$EFFECTIVE_PLATFORM_NAME\"/SwiftClasses.framework/Headers/SwiftClasses-Swift.h\"\ncp -f $HEADER_PATH $PROJECT_DIR\"/SwiftClasses-Swift.h\"";
 		};
-		CCEAF4749D2C1E00016A407C /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-MyApp-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -413,7 +363,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				7E98D3DB201505160043EFE0 /* AppNativeInterface.m in Sources */,
-				1EF0A83A121ADB8E003F2F59 /* Main.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,7 +387,6 @@
 /* Begin XCBuildConfiguration section */
 		1D6058940D05DD3E006BFB54 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 385C8EC51281B7E04E538898 /* Pods-MyApp.debug.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -450,11 +398,17 @@
 				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "project/project-Prefix.pch";
 				INFOPLIST_FILE = "project/project-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/../../out/clay/ios-debug/cpp",
@@ -475,7 +429,6 @@
 		};
 		1D6058950D05DD3E006BFB54 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 526DA2E4B8FB494E92C629A8 /* Pods-MyApp.release.xcconfig */;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -486,11 +439,17 @@
 				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
-				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Frameworks",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "project/project-Prefix.pch";
 				INFOPLIST_FILE = "project/project-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/../../out/clay/ios/cpp",
@@ -536,7 +495,11 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/project/Classes/Swift/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MTL_ENABLE_DEBUG_INFO = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = ceramic.SwiftClasses;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -580,12 +543,17 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/project/Classes/Swift/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = ceramic.SwiftClasses;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
@@ -630,7 +598,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
@@ -665,7 +633,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;

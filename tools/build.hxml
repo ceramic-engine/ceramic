@@ -5,6 +5,7 @@
 --library linc_stb
 --library linc_process
 --library linc_timestamp
+--library format
 --cpp build
 -D HXCPP_DEBUG_LINK
 -D HXCPP_STACK_LINE

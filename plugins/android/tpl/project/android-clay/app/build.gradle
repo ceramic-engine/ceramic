@@ -3,6 +3,8 @@ import org.apache.tools.ant.taskdefs.condition.Os
 apply plugin: 'com.android.application'
 
 android {
+    namespace "mycompany.myapp"
+
     compileSdk 34
 
     defaultConfig {

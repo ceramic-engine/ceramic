@@ -45,3 +45,8 @@ completion.hxml
 /tools/build
 /tools/dump
 /tools/ceramic.info
+
+/bin/sdl
+/bin/angle
+/bin/glslc
+/bin/spirv-cross

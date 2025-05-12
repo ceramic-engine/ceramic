@@ -1,7 +1,7 @@
 package backend;
 
-#if (cpp && linc_sdl)
-import sdl.SDL;
+#if clay_sdl
+import clay.sdl.SDL;
 #end
 
 import ceramic.Shortcuts.*;
@@ -100,7 +100,7 @@ class Clipboard implements spec.Clipboard {
             var text = electron.clipboard.readText();
             return text;
         }
-        #elseif (cpp && linc_sdl)
+        #elseif clay_sdl
         if (SDL.hasClipboardText()) {
             return SDL.getClipboardText();
         }
@@ -131,7 +131,7 @@ class Clipboard implements spec.Clipboard {
         if (didBindBrowserClipboard) {
             writeBrowserClipboard(text);
         }
-        #elseif (cpp && linc_sdl)
+        #elseif clay_sdl
         SDL.setClipboardText(text);
         #end
 

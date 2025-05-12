@@ -1,5 +1,6 @@
 package tools.tasks.android;
 
+import haxe.SysTools;
 import haxe.io.Path;
 import process.Process;
 import sys.FileSystem;
@@ -41,6 +42,28 @@ class ExportAPK extends tools.Task {
         // Copy java files if needed
         AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
+        // Update SDL files if needed
+        if (!context.defines.exists('ceramic_android_no_sdl_java_update')) {
+            final tplSDLJavaFilesPath = Path.join([context.plugins.get('android').path, 'tpl/project/android-clay/app/src/main/java/org/libsdl/app']);
+            final projectSDLJavaFilesPath = Path.join([androidProjectPath, 'app/src/main/java/org/libsdl/app']);
+            Files.copyDirectory(
+                tplSDLJavaFilesPath,
+                projectSDLJavaFilesPath
+            );
+        }
+
+        #if (mac || linux)
+        // Make build-haxe.sh executable
+        if (FileSystem.exists(Path.join([androidProjectPath, 'build-haxe.sh']))) {
+            command('chmod', ['+x', Path.join([androidProjectPath, 'build-haxe.sh'])]);
+        }
+
+        // Make gradlew executable
+        if (FileSystem.exists(Path.join([androidProjectPath, 'gradlew']))) {
+            command('chmod', ['+x', Path.join([androidProjectPath, 'gradlew'])]);
+        }
+        #end
+
         // Reset build path
         var buildPath = Path.join([androidProjectPath, 'app/build']);
         if (FileSystem.exists(buildPath)) {
@@ -63,12 +86,18 @@ class ExportAPK extends tools.Task {
         }
 
         // Export APK
-        var result = command('./gradlew', [
-            (doRun ? installVariant : assembleVariant), '--stacktrace'
-        ], { cwd: Path.join([cwd, 'project/android']) });
-        if (result.status != 0) {
-            fail('Gradle build failed with status ' + result.status);
+        // Note:
+        //   linc_process didn't work correctly for this gradlew command,
+        //   so, falling back to haxe's command API. TODO: investigate?
+        var prevCwd = Sys.getCwd();
+        Sys.setCwd(Path.join([cwd, 'project/android']));
+        var status = Sys.command('./gradlew', [
+            (doRun ? installVariant : assembleVariant) //, '--stacktrace'
+        ]);
+        if (status != 0) {
+            fail('Gradle build failed with status ' + status);
         }
+        Sys.setCwd(prevCwd);
 
         // Check that APK has been generated
         if (!FileSystem.exists(androidAPKPath)) {
@@ -87,39 +116,63 @@ class ExportAPK extends tools.Task {
                 fail('Cannot run APK because Android SDK was not found (set ANDROID_HOME environment variable in your system to solve this).');
             }
             else {
-                var packageName:String = Reflect.field(project.app, 'package');
-                packageName = packageName.replace('-', '');
 
-                final adb = Path.join([sdkPath, 'platform-tools', os == 'Windows' ? 'adb.exe' : 'adb']);
+                final runApkCmd = #if windows 'run-apk.bat' #else 'run-apk.sh' #end;
 
-                command(adb, ['shell', 'monkey', '-p', packageName, '-c', 'android.intent.category.LAUNCHER', '1']);
-
-                final pidofResult = command(adb, ['shell', 'pidof', '-s', packageName]);
-                if (pidofResult.status == 0) {
-                    final pid = pidofResult.stdout.trim();
-                    if (pid == '') {
-                        fail('The app does not seem to be running...');
+                print(Path.join([context.plugins.get('android').path, 'resources', runApkCmd]) + ' ' + androidAPKPath + ' ' + sdkPath);
+                AndroidUtils.commandWithLogcatOutput(
+                    Path.join([context.plugins.get('android').path, 'resources', runApkCmd]),
+                    [
+                        androidAPKPath,
+                        sdkPath
+                    ],
+                    {
+                        debug: context.debug
                     }
+                );
 
-                    Runner.runInBackground(() -> {
-                        while (true) {
-                            var result = new StringBuf();
-                            final proc = new Process(adb, ['shell', 'pidof', '-s', packageName]);
-                            proc.read_stdout = data -> {
-                                result.add(data);
-                            };
-                            proc.create();
-                            proc.tick_until_exit_status();
-                            if (result.toString().trim() != pid) {
-                                print('The app has been closed, exiting.');
-                                Sys.exit(0);
-                            }
-                            Sys.sleep(1.0);
-                        }
-                    });
+                // var packageName:String = Reflect.field(project.app, 'package');
+                // packageName = packageName.replace('-', '');
 
-                    AndroidUtils.commandWithLogcatOutput(adb, ['logcat', '--pid=$pid']);
-                }
+                // final adb = Path.join([sdkPath, 'platform-tools', os == 'Windows' ? 'adb.exe' : 'adb']);
+
+                // final getPidProc = new sys.io.Process(
+                //     SysTools.quoteUnixArg(adb),
+
+                // )
+                // command(adb, ['shell', 'monkey', '-p', packageName, '-c', 'android.intent.category.LAUNCHER', '1']);
+
+                // final pidofResult = command(adb, ['shell', 'pidof', '-s', packageName]);
+                // if (pidofResult.status == 0) {
+                //     final pid = pidofResult.stdout.trim();
+                //     if (pid == '') {
+                //         fail('The app does not seem to be running...');
+                //     }
+                //     else {
+                //         print('PID = ' + pid);
+                //     }
+
+                //     /*
+                //     Runner.runInBackground(() -> {
+                //         while (true) {
+                //             var result = new StringBuf();
+                //             final proc = new Process(adb, ['shell', 'pidof', '-s', packageName]);
+                //             proc.read_stdout = data -> {
+                //                 result.add(data);
+                //             };
+                //             proc.create();
+                //             proc.tick_until_exit_status();
+                //             if (result.toString().trim() != pid) {
+                //                 print('The app has been closed, exiting.');
+                //                 Sys.exit(0);
+                //             }
+                //             Sys.sleep(1.0);
+                //         }
+                //     });
+                //     */
+
+                //     AndroidUtils.commandWithLogcatOutput(adb, ['logcat', '--pid=$pid']);
+                // }
             }
         }
 

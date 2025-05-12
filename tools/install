@@ -15,6 +15,13 @@ function argumentFlag(argName) {
 }
 
 const debug = argumentFlag('debug');
+const forceRebuild = argumentFlag('force-rebuild');
+
+var localFlags = [];
+if (argumentFlag('ceramic-release')) {
+    localFlags.push('-D');
+    localFlags.push('ceramic_tools_release');
+}
 
 function isLinuxArm64() {
     try {
@@ -22,6 +29,15 @@ function isLinuxArm64() {
         return arch == 'aarch64';
     } catch (error) {
         console.error('Error detecting architecture:', error);
+        return null;
+    }
+}
+
+function getGitCommit(repoPath) {
+    try {
+        return execSync('git rev-parse HEAD', { cwd: repoPath }).toString().trim();
+    } catch (error) {
+        console.error('Error getting git commit:', error);
         return null;
     }
 }
@@ -86,6 +102,7 @@ async function install() {
     await command(haxelib, ['dev', 'hxnodejs-ws', '../git/hxnodejs-ws', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'hxcpp', '../git/hxcpp', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['dev', 'hscript', '../git/hscript', '--quiet'], { cwd: __dirname });
+    await command(haxelib, ['dev', 'format', '../git/format', '--quiet'], { cwd: __dirname });
     await command(haxelib, ['install', 'hxcs', '4.2.0', '--always', '--quiet'], { cwd: __dirname });
 
     // Patch hxcpp android clang toolchain until a newer hxcpp lib is published
@@ -155,10 +172,166 @@ async function install() {
         }
     }
 
+    // Setup paths for shader tools
+    console.log("Setting up shader tools...");
+
+    const gitRoot = path.join(__dirname, '..', 'git');
+    const shadercPath = path.join(gitRoot, 'shaderc');
+    const spirvCrossPath = path.join(gitRoot, 'SPIRV-Cross');
+
+    // Ensure output directories exist
+    const binPath = path.join(__dirname, '..', 'bin');
+    if (!fs.existsSync(binPath)) {
+        fs.mkdirSync(binPath, { recursive: true });
+    }
+
+    // Get current commits
+    const shadercCommit = getGitCommit(shadercPath);
+    const spirvCrossCommit = getGitCommit(spirvCrossPath);
+
+    // Check if we need to rebuild
+    let buildGlslc = forceRebuild || !fs.existsSync(path.join(binPath, process.platform === 'win32' ? 'glslc.exe' : 'glslc'));
+    let buildSpirvCross = forceRebuild || !fs.existsSync(path.join(binPath, process.platform === 'win32' ? 'spirv-cross.exe' : 'spirv-cross'));
+
+    // Check commits if binaries exist
+    if (!buildGlslc && shadercCommit) {
+        const commitFilePath = path.join(binPath, '.commit/glslc');
+        if (fs.existsSync(commitFilePath)) {
+            const storedCommit = fs.readFileSync(commitFilePath, 'utf8').trim();
+            if (storedCommit !== shadercCommit) {
+                console.log(`Shaderc commit changed (${storedCommit} -> ${shadercCommit})`);
+                buildGlslc = true;
+            } else {
+                console.log(`Skipping glslc build - commit ${shadercCommit} matches existing binary`);
+            }
+        } else {
+            buildGlslc = true;
+        }
+    }
+
+    if (!buildSpirvCross && spirvCrossCommit) {
+        const commitFilePath = path.join(binPath, '.commit/spirv-cross');
+        if (fs.existsSync(commitFilePath)) {
+            const storedCommit = fs.readFileSync(commitFilePath, 'utf8').trim();
+            if (storedCommit !== spirvCrossCommit) {
+                console.log(`SPIRV-Cross commit changed (${storedCommit} -> ${spirvCrossCommit})`);
+                buildSpirvCross = true;
+            } else {
+                console.log(`Skipping spirv-cross build - commit ${spirvCrossCommit} matches existing binary`);
+            }
+        } else {
+            buildSpirvCross = true;
+        }
+    }
+
+    // Get shaderc dependencies if needed
+    if (buildGlslc && !fs.existsSync(path.join(shadercPath, 'third_party', 'glslang'))) {
+        console.log("Setting up shaderc dependencies...");
+        await command('./utils/git-sync-deps', [], { cwd: shadercPath });
+    }
+
     if (process.platform == 'darwin') {
+        if (buildGlslc) {
+            console.log("Building glslc for macOS");
+
+            // Build glslc for ARM64
+            if (!fs.existsSync(path.join(shadercPath, 'build-arm64'))) {
+                fs.mkdirSync(path.join(shadercPath, 'build-arm64'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DCMAKE_OSX_ARCHITECTURES=arm64',
+                '..'
+            ], { cwd: path.join(shadercPath, 'build-arm64') });
+
+            await command('cmake', ['--build', '.', '--target', 'glslc_exe'],
+                         { cwd: path.join(shadercPath, 'build-arm64') });
+
+            // Build glslc for x86_64
+            if (!fs.existsSync(path.join(shadercPath, 'build-x86_64'))) {
+                fs.mkdirSync(path.join(shadercPath, 'build-x86_64'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DCMAKE_OSX_ARCHITECTURES=x86_64',
+                '..'
+            ], { cwd: path.join(shadercPath, 'build-x86_64') });
+
+            await command('cmake', ['--build', '.', '--target', 'glslc_exe'],
+                         { cwd: path.join(shadercPath, 'build-x86_64') });
+
+            // Create universal binary for glslc
+            await command('lipo', [
+                '-create',
+                path.join(shadercPath, 'build-arm64', 'glslc', 'glslc'),
+                path.join(shadercPath, 'build-x86_64', 'glslc', 'glslc'),
+                '-output', path.join(binPath, 'glslc')
+            ]);
+
+            // Make executable
+            await command('chmod', ['+x', path.join(binPath, 'glslc')]);
+
+            // Save commit info
+            if (shadercCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
+            }
+        }
+
+        if (buildSpirvCross) {
+            console.log("Building spirv-cross for macOS");
+
+            // Build spirv-cross for ARM64
+            if (!fs.existsSync(path.join(spirvCrossPath, 'build-arm64'))) {
+                fs.mkdirSync(path.join(spirvCrossPath, 'build-arm64'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DSPIRV_CROSS_CLI=ON',
+                '-DSPIRV_CROSS_ENABLE_TESTS=OFF',
+                '-DCMAKE_OSX_ARCHITECTURES=arm64',
+                '..'
+            ], { cwd: path.join(spirvCrossPath, 'build-arm64') });
+
+            await command('make', ['-j4', 'spirv-cross'], { cwd: path.join(spirvCrossPath, 'build-arm64') });
+
+            // Build spirv-cross for x86_64
+            if (!fs.existsSync(path.join(spirvCrossPath, 'build-x86_64'))) {
+                fs.mkdirSync(path.join(spirvCrossPath, 'build-x86_64'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DSPIRV_CROSS_CLI=ON',
+                '-DSPIRV_CROSS_ENABLE_TESTS=OFF',
+                '-DCMAKE_OSX_ARCHITECTURES=x86_64',
+                '..'
+            ], { cwd: path.join(spirvCrossPath, 'build-x86_64') });
+
+            await command('make', ['-j4', 'spirv-cross'], { cwd: path.join(spirvCrossPath, 'build-x86_64') });
+
+            // Create universal binary for spirv-cross
+            await command('lipo', [
+                '-create',
+                path.join(spirvCrossPath, 'build-arm64', 'spirv-cross'),
+                path.join(spirvCrossPath, 'build-x86_64', 'spirv-cross'),
+                '-output', path.join(binPath, 'spirv-cross')
+            ]);
+
+            // Make executable
+            await command('chmod', ['+x', path.join(binPath, 'spirv-cross')]);
+
+            // Save commit info
+            if (spirvCrossCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
+            }
+        }
+
         console.log("Build tools for mac");
 
-        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_arm64', '-D', 'no-compilation'].concat(localFlags).concat(debug ? ['--debug'] : []), { cwd: __dirname });
         await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-arm64'));
@@ -167,7 +340,7 @@ async function install() {
             fs.renameSync(path.join(__dirname, 'build/Ceramic'), path.join(__dirname, 'build/ceramic-arm64'));
         }
 
-        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'mac', '-D', 'mac_x86_64', '-D', 'no-compilation'].concat(localFlags).concat(debug ? ['--debug'] : []), { cwd: __dirname });
         await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         if (debug) {
             fs.renameSync(path.join(__dirname, 'build/Ceramic-debug'), path.join(__dirname, 'build/ceramic-x86_64'));
@@ -186,9 +359,71 @@ async function install() {
         ], { cwd: path.join(__dirname, 'build') });
     }
     else if (process.platform == 'win32') {
+        if (buildGlslc) {
+            console.log("Building glslc for Windows");
+
+            // Build glslc
+            if (!fs.existsSync(path.join(shadercPath, 'build'))) {
+                fs.mkdirSync(path.join(shadercPath, 'build'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-G', 'Visual Studio 17 2022',
+                '-A', 'x64',
+                '-DCMAKE_BUILD_TYPE=Release',
+                '..'
+            ], { cwd: path.join(shadercPath, 'build') });
+
+            await command('cmake', ['--build', '.', '--config', 'Release', '--target', 'glslc_exe'],
+                         { cwd: path.join(shadercPath, 'build') });
+
+            // Copy glslc binary
+            fs.copyFileSync(
+                path.join(shadercPath, 'build', 'glslc', 'Release', 'glslc.exe'),
+                path.join(binPath, 'glslc.exe')
+            );
+
+            // Save commit info
+            if (shadercCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
+            }
+        }
+
+        if (buildSpirvCross) {
+            console.log("Building spirv-cross for Windows");
+
+            // Build spirv-cross
+            if (!fs.existsSync(path.join(spirvCrossPath, 'build'))) {
+                fs.mkdirSync(path.join(spirvCrossPath, 'build'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-G', 'Visual Studio 17 2022',
+                '-A', 'x64',
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DSPIRV_CROSS_CLI=ON',
+                '-DSPIRV_CROSS_ENABLE_TESTS=OFF',
+                '..'
+            ], { cwd: path.join(spirvCrossPath, 'build') });
+
+            await command('cmake', ['--build', '.', '--config', 'Release', '--target', 'spirv-cross'],
+                         { cwd: path.join(spirvCrossPath, 'build') });
+
+            // Copy spirv-cross binary
+            fs.copyFileSync(
+                path.join(spirvCrossPath, 'build', 'spirv-cross.exe'),
+                path.join(binPath, 'spirv-cross.exe')
+            );
+
+            // Save commit info
+            if (spirvCrossCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
+            }
+        }
+
         console.log("Build tools for windows");
 
-        await command(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+        await command(haxe, ['build.hxml', '-D', 'windows', '-D', 'no-compilation'].concat(localFlags).concat(debug ? ['--debug'] : []), { cwd: __dirname });
 
         let haxelibCmd = fs.readFileSync(path.join(__dirname, 'haxelib.cmd'), 'utf8');
         haxelibCmd = haxelibCmd.split('/../').join('/../../');
@@ -208,14 +443,80 @@ async function install() {
         }
     }
     else {
+        if (buildGlslc) {
+            console.log("Building glslc for Linux");
+
+            // Build glslc
+            if (!fs.existsSync(path.join(shadercPath, 'build'))) {
+                fs.mkdirSync(path.join(shadercPath, 'build'), { recursive: true });
+            }
+
+            // Check if we're on ARM64 or x86_64
+            const isArm64 = isLinuxArm64();
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '..'
+            ], { cwd: path.join(shadercPath, 'build') });
+
+            await command('cmake', ['--build', '.', '--target', 'glslc_exe'],
+                         { cwd: path.join(shadercPath, 'build') });
+
+            // Copy glslc binary
+            fs.copyFileSync(
+                path.join(shadercPath, 'build', 'glslc', 'glslc'),
+                path.join(binPath, 'glslc')
+            );
+
+            // Make executable
+            await command('chmod', ['+x', path.join(binPath, 'glslc')]);
+
+            // Save commit info
+            if (shadercCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
+            }
+        }
+
+        if (buildSpirvCross) {
+            console.log("Building spirv-cross for Linux");
+
+            // Build spirv-cross
+            if (!fs.existsSync(path.join(spirvCrossPath, 'build'))) {
+                fs.mkdirSync(path.join(spirvCrossPath, 'build'), { recursive: true });
+            }
+
+            await command('cmake', [
+                '-DCMAKE_BUILD_TYPE=Release',
+                '-DSPIRV_CROSS_CLI=ON',
+                '-DSPIRV_CROSS_ENABLE_TESTS=OFF',
+                '..'
+            ], { cwd: path.join(spirvCrossPath, 'build') });
+
+            await command('make', ['-j4', 'spirv-cross'], { cwd: path.join(spirvCrossPath, 'build') });
+
+            // Copy spirv-cross binary
+            fs.copyFileSync(
+                path.join(spirvCrossPath, 'build', 'spirv-cross'),
+                path.join(binPath, 'spirv-cross')
+            );
+
+            // Make executable
+            await command('chmod', ['+x', path.join(binPath, 'spirv-cross')]);
+
+            // Save commit info
+            if (spirvCrossCommit) {
+                fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
+            }
+        }
+
         console.log("Build tools for linux");
 
         if (isLinuxArm64()) {
-            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_arm64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_arm64'].concat(localFlags).concat(debug ? ['--debug'] : []), { cwd: __dirname });
             await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_ARM64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         }
         else {
-            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_x86_64'].concat(debug ? ['--debug'] : []), { cwd: __dirname });
+            await command(haxe, ['build.hxml', '-D', 'linux', '-D', 'no-compilation', '-D', 'linux_x86_64'].concat(localFlags).concat(debug ? ['--debug'] : []), { cwd: __dirname });
             await command('../haxelib', ['run', 'hxcpp', 'Build.xml', '-DHXCPP_M64', '-DHXCPP_X86_64'].concat(debug ? ['-Ddebug'] : []), { cwd: path.join(__dirname, 'build') });
         }
 
@@ -231,6 +532,10 @@ async function install() {
         }
     }
 
+    // Also download binaries that come with that ceramic build
+    await command('ceramic', ['sdl', 'download'], { cwd: __dirname });
+    await command('ceramic', ['angle', 'download'], { cwd: __dirname });
+    await command('ceramic', ['android', 'update', 'template'], { cwd: __dirname });
 }
 
 (async () => {

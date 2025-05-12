@@ -9,6 +9,10 @@ import haxe.ValueException;
 
 using StringTools;
 
+#if clay_sdl
+import clay.sdl.SDL;
+#end
+
 class Main {
 
     static var project:Project = null;
@@ -60,7 +64,7 @@ class Main {
         config.window.backgroundSleep = 1.0 / 60;
         #end
 
-        #if (ios || android)
+        #if (ios || android || gles_angle)
         config.render.opengl.major = 3;
         config.render.opengl.minor = 0;
         #end
@@ -210,7 +214,7 @@ class Main {
 
         #if ios
         // By default, audio is muted by device mute switch
-        sdl.SDL.setHint("SDL_AUDIO_CATEGORY", "ambient");
+        clay.sdl.SDL.setHint("SDL_AUDIO_CATEGORY", "ambient");
         #end
 
         configureOrientation();
@@ -419,7 +423,7 @@ class Main {
 
     static function configureOrientation() {
 
-        #if (linc_sdl && cpp)
+        #if clay_sdl
         var app = ceramic.App.app;
 
         if (app.settings.orientation != NONE) {
@@ -441,7 +445,7 @@ class Main {
             }
 
 
-            sdl.SDL.setHint(SDL_HINT_ORIENTATIONS, hint.join(' '));
+            SDL.setHint(SDL.SDL_HINT_ORIENTATIONS, hint.join(' '));
 
         }
         #end

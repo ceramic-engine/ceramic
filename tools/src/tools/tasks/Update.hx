@@ -1,8 +1,8 @@
 package tools.tasks;
 
-import tools.Helpers.*;
-import haxe.io.Path;
 import haxe.Json;
+import haxe.io.Path;
+import tools.Helpers.*;
 
 class Update extends tools.Task {
 
@@ -18,4 +18,4 @@ class Update extends tools.Task {
 
     }
 
-} //Update
+}

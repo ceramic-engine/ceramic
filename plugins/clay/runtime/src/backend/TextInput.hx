@@ -1,8 +1,9 @@
 package backend;
 
 import ceramic.ScanCode;
-#if cpp
-import sdl.SDL;
+
+#if clay_sdl
+import clay.sdl.SDL;
 #end
 
 class TextInput implements spec.TextInput {
@@ -31,14 +32,20 @@ class TextInput implements spec.TextInput {
         inputRectW = Std.int(Math.max(1, w));
         inputRectH = Std.int(Math.max(1, h));
 
-#if cpp
-        SDL.setTextInputRect(
-            inputRectX,
-            inputRectY,
-            inputRectW,
-            inputRectH
+#if clay_sdl
+        // Get the window from SDLRuntime
+        final window = clay.Clay.app.runtime.window;
+
+        untyped __cpp__(
+            'const SDL_Rect sdlRect_ = { {0}, {1}, {2}, {3} }',
+            inputRectX, inputRectY, inputRectW, inputRectH
         );
-        SDL.startTextInput();
+
+        untyped __cpp__(
+            'SDL_SetTextInputArea({0}, &sdlRect_, 0)',
+            window
+        );
+        SDL.startTextInput(window);
 #end
         inputActive = true;
 
@@ -57,9 +64,20 @@ class TextInput implements spec.TextInput {
         inputRectW = 0;
         inputRectH = 0;
 
-#if cpp
-        SDL.stopTextInput();
-        SDL.setTextInputRect(0, 0, 0, 0);
+#if clay_sdl
+        // Get the window from SDLRuntime
+        final window = clay.Clay.app.runtime.window;
+
+        SDL.stopTextInput(window);
+
+        untyped __cpp__(
+            'const SDL_Rect sdlRect_ = { 0, 0, 0, 0 }'
+        );
+
+        untyped __cpp__(
+            'SDL_SetTextInputArea({0}, &sdlRect_, 0)',
+            window
+        );
 #end
 
         inputActive = false;
@@ -77,12 +95,18 @@ class TextInput implements spec.TextInput {
         if (text == ' ')
             return;
 
-#if cpp
-        sdl.SDL.setTextInputRect(
-            inputRectX,
-            inputRectY,
-            inputRectW,
-            inputRectH
+#if clay_sdl
+        // Get the window from SDLRuntime
+        final window = clay.Clay.app.runtime.window;
+
+        untyped __cpp__(
+            'const SDL_Rect sdlRect_ = { {0}, {1}, {2}, {3} }',
+            inputRectX, inputRectY, inputRectW, inputRectH
+        );
+
+        untyped __cpp__(
+            'SDL_SetTextInputArea({0}, &sdlRect_, 0)',
+            window
         );
 #end
 

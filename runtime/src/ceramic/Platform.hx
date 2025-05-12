@@ -4,8 +4,11 @@ import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import haxe.rtti.CType;
 import haxe.rtti.Rtti;
-#if (bind && android && (snow || clay))
-import bind.java.Support;
+#if (bind && android && clay)
+import bindhx.java.Support;
+#end
+#if (bind && ios && clay)
+import bindhx.objc.Support;
 #end
 #if cpp
 import haxe.crypto.Md5;
@@ -24,10 +27,17 @@ class Platform {
 
     public static function postAppInit():Void {
 
-        #if (bind && android && (snow || clay))
+        #if (bind && android && clay)
         // A hook to flush java runnables that need to be run from Haxe thread
         ceramic.App.app.onUpdate(null, function(_) {
-            bind.java.Support.flushHaxeQueue();
+            bindhx.java.Support.flushHaxeQueue();
+        });
+        #end
+
+        #if (bind && ios && clay)
+        // A hook to flush objc callbacks that need to be run from Haxe thread
+        ceramic.App.app.onUpdate(null, function(_) {
+            bindhx.objc.Support.flushHaxeQueue();
         });
         #end
 

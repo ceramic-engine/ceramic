@@ -7,7 +7,7 @@ class Info #if !completion implements spec.Info #end {
 /// System
 
     inline public function storageDirectory():String {
-        #if (cpp && linc_sdl && !macro)
+        #if (clay_sdl && !macro)
         return clay.Clay.app.io.appPathPrefs();
         #else
         return null;

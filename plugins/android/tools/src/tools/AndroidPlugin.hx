@@ -19,6 +19,8 @@ class AndroidPlugin {
         context.addTask('android compile', new tools.tasks.android.Compile());
         context.addTask('android studio', new tools.tasks.android.AndroidStudio());
         context.addTask('android export apk', new tools.tasks.android.ExportAPK());
+        context.addTask('android update template', new tools.tasks.android.UpdateTemplate());
+        context.addTask('android ndk stack', new tools.tasks.android.NdkStack());
 
     }
 

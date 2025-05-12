@@ -471,7 +471,7 @@ private class TweenEasingFunction {
     }
 
     public static function cubicEaseOut():Void {
-        k = --k * k * k + 1;
+        k = (k - 1) * (k - 1) * (k - 1) + 1;
     }
 
 /// Quart
@@ -486,7 +486,7 @@ private class TweenEasingFunction {
     }
 
     public static function quartEaseOut():Void {
-        k = -(--k * k * k * k - 1);
+        k = -((k - 1) * (k - 1) * (k - 1) * (k - 1) - 1);
     }
 
 /// Quint
@@ -501,7 +501,7 @@ private class TweenEasingFunction {
     }
 
     public static function quintEaseOut():Void {
-        k = --k * k * k * k * k + 1;
+        k = (k - 1) * (k - 1) * (k - 1) * (k - 1) * (k - 1) + 1;
     }
 
 /// Bounce

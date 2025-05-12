@@ -12,6 +12,10 @@ import opengl.GL;
 import clay.opengl.GL;
 #end
 
+#if clay_sdl
+import clay.sdl.SDL;
+#end
+
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     public function new() {}
@@ -174,7 +178,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
-    #elseif cpp
+    #elseif clay_sdl
 
     // Just a dummy method to force opengl headers to be imported
     // in our generated c++ file
@@ -185,7 +189,6 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     static var _point = new Point(0, 0);
 
     function _sdlScreenshot(point:Point):ceramic.UInt8Array {
-
         var width = Clay.app.runtime.windowWidth();
         var height = Clay.app.runtime.windowHeight();
         var pixels = new clay.buffers.Uint32Array(width * height);
@@ -197,7 +200,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var gmask:Int;
         var bmask:Int;
         var amask:Int;
-        if (sdl.SDL.byteOrderIsBigEndian()) {
+        if (SDL.byteOrderIsBigEndian()) {
             rmask = 0xff000000;
             gmask = 0x00ff0000;
             bmask = 0x0000ff00;
@@ -214,8 +217,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         var pitch:Int = 4 * width;
         var bytes = pixels.toBytes();
 
-        var surface = sdl.SDL.createRGBSurfaceFrom(
-            pixels.toBytes().getData(),
+        var surface = SDL.createRGBSurfaceFrom(
+            untyped pixels.toBytes().getData(),
             width, height, depth, pitch,
             rmask, gmask, bmask, amask
         );
@@ -229,13 +232,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         );
 
         _sdlSurfacePixelsToRgbaPixels(pixels, width, height);
-        sdl.SDL.freeSurface(surface);
+        SDL.freeSurface(surface);
 
         _point.x = width;
         _point.y = height;
 
         return ceramic.UInt8Array.fromBytes(bytes);
-
     }
 
     function _sdlSurfacePixelsToRgbaPixels(pixels:clay.buffers.Uint32Array, width:Int, height:Int):Void {

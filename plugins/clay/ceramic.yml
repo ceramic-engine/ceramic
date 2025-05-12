@@ -6,3 +6,7 @@ plugin:
         if clay:
             +assets:
                 - '{plugin:cwd}/assets'
+            if !no_gles_angle:
+                if mac || ios:
+                    +defines:
+                        - gles_angle

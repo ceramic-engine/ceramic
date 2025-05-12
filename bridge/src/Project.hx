@@ -23,8 +23,8 @@ class Project extends Entity {
         settings.resizable = false;
         settings.targetFps = 60;
 
-        #if (linc_sdl && cpp)
-        sdl.SDL.setHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
+        #if clay_sdl
+        clay.sdl.SDL.setHint("SDL_JOYSTICK_ALLOW_BACKGROUND_EVENTS", "1");
         #end
 
         app.onceReady(this, ready);

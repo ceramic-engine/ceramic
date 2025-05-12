@@ -95,6 +95,14 @@ class IosProject {
                 }
                 FileSystem.rename(tmpProjectAssetsPath, iosProjectAssetsPath);
             }
+
+            // Remove directories that have become empty after replace
+            Files.removeEmptyDirectories(iosProjectPath);
+
+            // Make build-haxe.sh executable
+            if (FileSystem.exists(Path.join([iosProjectPath, 'build-haxe.sh']))) {
+                command('chmod', ['+x', Path.join([iosProjectPath, 'build-haxe.sh'])]);
+            }
         }
 
     }

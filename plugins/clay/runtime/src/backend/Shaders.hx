@@ -52,7 +52,7 @@ class Shaders implements spec.Shaders {
         var shouldConvertToGLES3 = false;
         #if !(web || tvos)
         shouldRemoveExtensions = true;
-        #if (ios || android)
+        #if (ios || android || gles_angle)
         shouldConvertToGLES3 = true;
         #end
         #end

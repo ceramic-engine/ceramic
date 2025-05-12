@@ -474,7 +474,14 @@ class Helpers {
 
     }
 
-    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
+    public static function patch(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
+
+        var patch = Sys.systemName() == 'Windows' ? Path.join([context.ceramicToolsPath, 'resources', 'patch.bat']) : Path.join([context.ceramicToolsPath, 'resources', 'patch.sh']);
+        return command(patch, args, options);
+
+    }
+
+    public static function haxe(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
 
         var haxe = Sys.systemName() == 'Windows' ? 'haxe.cmd' : 'haxe';
         return command(Path.join([context.ceramicToolsPath, haxe]), args, options);
@@ -488,7 +495,7 @@ class Helpers {
 
     }
 
-    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
+    public static function haxelib(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
 
         var haxelib = Sys.systemName() == 'Windows' ? 'haxelib.cmd' : 'haxelib';
 
@@ -517,13 +524,13 @@ class Helpers {
 
     }
 
-    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
+    public static function haxelibGlobal(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
 
         return command('haxelib', args, options);
 
     }
 
-    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
+    public static function node(args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
 
         var node = 'node';
         if (Sys.systemName() == 'Windows')
@@ -886,7 +893,7 @@ class Helpers {
 
     }
 
-    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void }) {
+    public static function command(name:String, ?args:Array<String>, ?options:{ ?cwd:String, ?mute:Bool, ?detached:Bool, ?tick:()->Void, ?env:Dynamic<String> }) {
 
         if (options == null) {
             options = { cwd: null, mute: false };
@@ -910,6 +917,12 @@ class Helpers {
         }
 
         final proc = new Process(name, args, options.cwd);
+
+        if (options.env != null) {
+            for (field in Reflect.fields(options.env)) {
+                proc.env.set(field, Reflect.field(options.env, field));
+            }
+        }
 
         if (Sys.systemName() == 'Windows') {
             proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic.exe']));

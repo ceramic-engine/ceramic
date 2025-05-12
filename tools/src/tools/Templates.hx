@@ -73,14 +73,19 @@ class Templates {
                 for (filePathItem in Files.getFlatDirectory(projectPath)) {
                     var filePath = Path.join([projectPath, filePathItem]);
                     if (FileSystem.exists(filePath) && filePath.indexOf(key) != -1) {
-                        var newFilePath = projectPath + filePath.substr(projectPath.length).replace(key, value);
+                        var fileReplacement = filePath.substr(projectPath.length);
+                        var lastKeyIndex = fileReplacement.lastIndexOf(key);
+                        fileReplacement = fileReplacement.substring(0, lastKeyIndex) + value + fileReplacement.substring(lastKeyIndex + key.length);
+                        var newFilePath = projectPath + fileReplacement;
                         if (newFilePath != filePath) {
+                            var prevDir = Path.directory(filePath);
                             var newDir = Path.directory(newFilePath);
                             if (!FileSystem.exists(newDir)) {
                                 FileSystem.createDirectory(newDir);
                             }
                             FileSystem.rename(filePath, newFilePath);
                             didRenameAFile = true;
+                            break;
                         }
                     }
                 }

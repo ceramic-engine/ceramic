@@ -39,7 +39,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         #if ios
         // iOS doesn't like it when we send GPU commands when app is in background
-        if (!ceramic.App.app.backend.mobileInBackground) {
+        if (!ceramic.App.app.backend.mobileInBackground.load()) {
         #end
             renderer.render(true, visuals);
         #if ios

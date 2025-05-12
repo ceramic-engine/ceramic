@@ -267,6 +267,7 @@ class Http implements spec.Http {
             requestOptions.timeout = options.timeout;
         }
 
+        trace('IOS HTTP SEND HTTP REQUEST');
         IosHttp.sendHTTPRequest(requestOptions, function(rawResponse) {
             var useContent = rawResponse.status >= 200 && rawResponse.status < 300;
             var headers = new Map<String,String>();

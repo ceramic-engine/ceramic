@@ -16,8 +16,12 @@ class AndroidProject {
 
         var androidProjectPath = Path.join([cwd, 'project/android']);
         var androidProjectFile = Path.join([androidProjectPath, 'app/build.gradle']);
+
         var androidProjectAssetsPath = Path.join([androidProjectPath, 'app', 'src', 'main', 'assets', 'assets']);
         var tmpProjectAssetsPath = Path.join([cwd, 'project', 'android-tmp-assets']);
+
+        var androidProjectResPath = Path.join([androidProjectPath, 'app', 'src', 'main', 'res']);
+        var tmpProjectResPath = Path.join([cwd, 'project', 'android-tmp-res']);
 
         // Copy template project (only if not existing already)
         if (!FileSystem.exists(androidProjectFile)) {
@@ -30,6 +34,16 @@ class AndroidProject {
                     Files.deleteRecursive(tmpProjectAssetsPath);
                 }
                 FileSystem.rename(androidProjectAssetsPath, tmpProjectAssetsPath);
+            }
+
+            // We are also expecting icons to be in destination directory already.
+            // Move them to a temporary place, process template files,
+            // then put them back where they were.
+            if (FileSystem.exists(androidProjectResPath)) {
+                if (FileSystem.exists(tmpProjectResPath)) {
+                    Files.deleteRecursive(tmpProjectResPath);
+                }
+                FileSystem.rename(androidProjectResPath, tmpProjectResPath);
             }
 
             // Plugin path
@@ -99,6 +113,23 @@ class AndroidProject {
                 }
                 FileSystem.rename(tmpProjectAssetsPath, androidProjectAssetsPath);
             }
+
+            // Put icons back
+            if (FileSystem.exists(tmpProjectResPath)) {
+                for (relPath in Files.getFlatDirectory(tmpProjectResPath)) {
+                    final filePath = Path.join([tmpProjectResPath, relPath]);
+                    if (!FileSystem.isDirectory(filePath)) {
+                        File.copy(
+                            filePath,
+                            Path.join([androidProjectResPath, relPath])
+                        );
+                    }
+                }
+                Files.deleteRecursive(tmpProjectResPath);
+            }
+
+            // Remove directories that have become empty after replace
+            Files.removeEmptyDirectories(androidProjectPath);
         }
 
     }
@@ -318,7 +349,7 @@ class AndroidProject {
     public static function setSharedObjectEnabled(cwd:String, project:Project, lib:String, enabled:Bool):Void {
 
         var androidProjectPath = Path.join([cwd, 'project/android']);
-        var appActivityPath = Path.join([androidProjectPath, 'app/src/main/java', Reflect.field(project.app, 'package').replace('-','').toLowerCase().replace('.','/'), 'AppActivity.java']);
+        var appActivityPath = Path.join([androidProjectPath, 'app/src/main/java', Std.string(Reflect.field(project.app, 'package')).replace('-','').toLowerCase().replace('.','/'), 'AppActivity.java']);
 
         if (FileSystem.exists(appActivityPath)) {
             var java = File.getContent(appActivityPath);
@@ -435,7 +466,7 @@ class AndroidProject {
         // Classes included in project root's java dir
         javaSearchPaths.push(androidProjectPath + '/app/src/main/java');
         // Classes included in project main java package dir
-        javaSearchPaths.push(androidProjectPath + '/app/src/main/java/' + Reflect.field(project.app, 'package').replace('-','').toLowerCase().replace('.','/'));
+        javaSearchPaths.push(androidProjectPath + '/app/src/main/java/' + Std.string(Reflect.field(project.app, 'package')).replace('-','').toLowerCase().replace('.','/'));
 
         return javaSearchPaths;
 

@@ -73,6 +73,10 @@ class Images {
 
         var bytes = data.pixels.getData().bytes;
 
+        if (!FileSystem.exists(Path.directory(dstPath))) {
+            FileSystem.createDirectory(Path.directory(dstPath));
+        }
+
         StbImageWrite.write_png(
             dstPath, data.width, data.height, data.channels,
             bytes.getData(), 0, bytes.length, data.width * data.channels
@@ -164,8 +168,8 @@ class Images {
         return {
             pixels: pixels,
             channels: data.channels,
-            width: outputW,
-            height: outputH
+            width: outputW + Math.round(padLeft + padRight),
+            height: outputH + Math.round(padTop + padBottom)
         };
 
     }
@@ -200,21 +204,21 @@ class Images {
         var topPad = Math.round(padTop);
         var leftPad = Math.round(padLeft);
 
-        // Copy original pixels to new array with offset
+        // Copy row by row to ensure proper alignment
         for (y in 0...height) {
-            for (x in 0...width) {
-                var srcPos = (y * width + x) * channels;
-                var dstPos = ((y + topPad) * newWidth + (x + leftPad)) * channels;
+            // Calculate the starting positions for this row in both arrays
+            var srcRowStart = y * width * channels;
+            var dstRowStart = ((y + topPad) * newWidth + leftPad) * channels;
 
-                // Copy all channels for this pixel
+            // Copy the entire row at once using a more direct approach
+            for (x in 0...width) {
                 for (c in 0...channels) {
-                    paddedPixels[dstPos + c] = pixels[srcPos + c];
+                    paddedPixels[dstRowStart + (x * channels) + c] = pixels[srcRowStart + (x * channels) + c];
                 }
             }
         }
 
         return paddedPixels;
-
     }
 
     public static function createIco(srcPath:String, dstPath:String, targetWidth:Float = 256, targetHeight:Float = 256):Void {

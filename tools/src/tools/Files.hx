@@ -58,6 +58,23 @@ class Files {
 
     }
 
+    public static function removeEmptyDirectories(dir:String, excludeSystemFiles:Bool = true):Void {
+
+        for (name in FileSystem.readDirectory(dir)) {
+
+            if (name == '.DS_Store') continue;
+
+            var path = Path.join([dir, name]);
+            if (FileSystem.isDirectory(path)) {
+                removeEmptyDirectories(path, excludeSystemFiles);
+                if (isEmptyDirectory(path, excludeSystemFiles)) {
+                    deleteRecursive(path);
+                }
+            }
+        }
+
+    }
+
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
         var result:Array<String> = [];
@@ -88,28 +105,14 @@ class Files {
 
     }
 
-    public static function removeEmptyDirectories(dir:String, excludeSystemFiles:Bool = true):Void {
+    public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true, recursive:Bool = false):Bool {
 
         for (name in FileSystem.readDirectory(dir)) {
 
-            if (name == '.DS_Store') continue;
+            if (excludeSystemFiles && name == '.DS_Store') continue;
 
-            var path = Path.join([dir, name]);
-            if (FileSystem.isDirectory(path)) {
-                removeEmptyDirectories(path, excludeSystemFiles);
-                if (isEmptyDirectory(path, excludeSystemFiles)) {
-                    deleteRecursive(path);
-                }
-            }
-        }
-
-    }
-
-    public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true):Bool {
-
-        for (name in FileSystem.readDirectory(dir)) {
-
-            if (name == '.DS_Store') continue;
+            final fullPath = Path.join([dir, name]);
+            if (recursive && FileSystem.isDirectory(fullPath) && isEmptyDirectory(fullPath, excludeSystemFiles, true)) continue;
 
             return false;
         }

@@ -13,6 +13,9 @@ import sys.thread.Mutex;
  * meaning it is garanteed that no function in this queue will be run in parallel. An enqueued
  * function will always be started after every previous function has finished executing.
  */
+#if (android && clay_sdl)
+@:headerCode('#include "linc_sdl.h"')
+#end
 class BackgroundQueue extends Entity {
 
     /**
@@ -66,10 +69,10 @@ class BackgroundQueue extends Entity {
 
     private function internalRunInBackground():Void {
 
-        #if (android && linc_sdl)
+        #if (android && clay_sdl)
         // This lets us attach thread to JNI.
         // Required because some JNI calls could be done in background
-        sdl.SDL.androidGetJNIEnv();
+        untyped __cpp__('SDL_GetAndroidJNIEnv()');
         #end
 
         #if cs

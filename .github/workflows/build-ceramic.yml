@@ -37,7 +37,7 @@ jobs:
         working-directory: .
         run: |
           cd tools
-          node ./install
+          node ./install --ceramic-release
           cd ../runner
           npm ci
           cd ..
@@ -132,7 +132,7 @@ jobs:
         working-directory: .
         run: |
           cd tools
-          node ./install
+          node ./install --ceramic-release
           cd ../runner
           npm ci
           cd ..
@@ -229,7 +229,7 @@ jobs:
         working-directory: .
         run: |
           cd tools
-          node ./install
+          node ./install --ceramic-release
           cd ../runner
           npm ci
           cd ..
