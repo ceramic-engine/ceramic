@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+// TODO cleanup spirv and shaderc build folders
+
 const spawn = require('child_process').spawn;
 const execSync = require('child_process').execSync;
 const fs = require('fs');
@@ -39,6 +41,20 @@ function getGitCommit(repoPath) {
     } catch (error) {
         console.error('Error getting git commit:', error);
         return null;
+    }
+}
+
+function deleteDirRecursive(dirPath) {
+    if (fs.existsSync(dirPath)) {
+        fs.readdirSync(dirPath).forEach((file) => {
+            const curPath = path.join(dirPath, file);
+            if (fs.lstatSync(curPath).isDirectory()) {
+                deleteDirRecursive(curPath);
+            } else {
+                fs.unlinkSync(curPath);
+            }
+        });
+        fs.rmdirSync(dirPath);
     }
 }
 
@@ -227,7 +243,12 @@ async function install() {
     // Get shaderc dependencies if needed
     if (buildGlslc && !fs.existsSync(path.join(shadercPath, 'third_party', 'glslang'))) {
         console.log("Setting up shaderc dependencies...");
-        await command('./utils/git-sync-deps', [], { cwd: shadercPath });
+        if (process.platform == 'win32') {
+            await command('python3', ['./utils/git-sync-deps'], { cwd: shadercPath });
+        }
+        else {
+            await command('./utils/git-sync-deps', [], { cwd: shadercPath });
+        }
     }
 
     if (process.platform == 'darwin') {
@@ -277,6 +298,10 @@ async function install() {
             if (shadercCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
             }
+
+            // Delete build folders
+            deleteDirRecursive(path.join(shadercPath, 'build-arm64'));
+            deleteDirRecursive(path.join(shadercPath, 'build-x86_64'));
         }
 
         if (buildSpirvCross) {
@@ -327,6 +352,10 @@ async function install() {
             if (spirvCrossCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
             }
+
+            // Delete build folders
+            deleteDirRecursive(path.join(spirvCrossPath, 'build-arm64'));
+            deleteDirRecursive(path.join(spirvCrossPath, 'build-x86_64'));
         }
 
         console.log("Build tools for mac");
@@ -387,6 +416,9 @@ async function install() {
             if (shadercCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
             }
+
+            // Delete build folder
+            deleteDirRecursive(path.join(shadercPath, 'build'));
         }
 
         if (buildSpirvCross) {
@@ -411,7 +443,7 @@ async function install() {
 
             // Copy spirv-cross binary
             fs.copyFileSync(
-                path.join(spirvCrossPath, 'build', 'spirv-cross.exe'),
+                path.join(spirvCrossPath, 'build', 'Release', 'spirv-cross.exe'),
                 path.join(binPath, 'spirv-cross.exe')
             );
 
@@ -419,6 +451,9 @@ async function install() {
             if (spirvCrossCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
             }
+
+            // Delete build folder
+            deleteDirRecursive(path.join(spirvCrossPath, 'build'));
         }
 
         console.log("Build tools for windows");
@@ -475,6 +510,9 @@ async function install() {
             if (shadercCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/glslc'), shadercCommit);
             }
+
+            // Delete build folder
+            deleteDirRecursive(path.join(shadercPath, 'build'));
         }
 
         if (buildSpirvCross) {
@@ -507,6 +545,9 @@ async function install() {
             if (spirvCrossCommit) {
                 fs.writeFileSync(path.join(binPath, '.commit/spirv-cross'), spirvCrossCommit);
             }
+
+            // Delete build folder
+            deleteDirRecursive(path.join(spirvCrossPath, 'build'));
         }
 
         console.log("Build tools for linux");

@@ -50,3 +50,5 @@ completion.hxml
 /bin/angle
 /bin/glslc
 /bin/spirv-cross
+/bin/glslc.exe
+/bin/spirv-cross.exe

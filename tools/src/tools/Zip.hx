@@ -3,6 +3,12 @@ package tools;
 import haxe.io.Path;
 import tools.Helpers.*;
 
+#if windows
+import haxe.zip.Reader;
+import sys.FileSystem;
+import sys.io.File;
+#end
+
 class Zip {
 
     public static function unzipFile(source:String, targetPath:String, cwd:String):Void {
@@ -12,6 +18,10 @@ class Zip {
         command('unzip', ['-q', source, '-d', targetPath], { cwd: cwd });
 
         #elseif windows
+
+        if (!Path.isAbsolute(targetPath)) {
+            targetPath = Path.join([cwd, targetPath]);
+        }
 
         var file = File.read(source, true);
         var entries = Reader.readZip(file);
@@ -40,6 +50,8 @@ class Zip {
 
                 path += file;
 
+                //print("Extract " + path);
+
                 var data = Reader.unzip(entry);
                 var f = File.write(targetPath + "/" + path, true);
 
@@ -49,7 +61,7 @@ class Zip {
         }
 
         #else
-        throw "Unzip on platform " + platform + " not supported";
+        throw "Unzip on current platform not supported";
         #end
 
     }
