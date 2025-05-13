@@ -78,7 +78,7 @@ jobs:
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
-          retention-days: 1
+          retention-days: 7
           name: ceramic-windows.zip
           path: ceramic-windows.zip
           compression-level: 0
@@ -168,7 +168,7 @@ jobs:
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
-          retention-days: 1
+          retention-days: 7
           name: ceramic-mac.zip
           path: ceramic-mac.zip
           compression-level: 0
@@ -269,7 +269,7 @@ jobs:
       - name: Upload Files
         uses: actions/upload-artifact@v4
         with:
-          retention-days: 1
+          retention-days: 7
           name: ceramic-linux-${{ matrix.arch }}.zip
           path: ceramic-linux-${{ matrix.arch }}.zip
           compression-level: 0
