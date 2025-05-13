@@ -7,6 +7,6 @@ plugin:
             +assets:
                 - '{plugin:cwd}/assets'
             if !no_gles_angle:
-                if mac || ios:
+                if mac || ios || windows:
                     +defines:
                         - gles_angle

@@ -3,8 +3,8 @@ package backend;
 @:keep
 @:include('linc_NativeWindows.h')
 #if !display
-@:build(bind.Linc.touch())
-@:build(bind.Linc.xml('NativeWindows', './'))
+@:build(bindhx.Linc.touch())
+@:build(bindhx.Linc.xml('NativeWindows', './'))
 #end
 extern class NativeWindows {
 

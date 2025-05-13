@@ -26,6 +26,14 @@ class Windows extends tools.Task {
         var windowsProjectPath = Path.join([cwd, 'project/windows']);
         var windowsAppExe = Path.join([windowsProjectPath, project.app.name + '.exe']);
 
+        var winArch = 'x64';
+        if (context.defines.exists('HXCPP_ARM64')) {
+            winArch = 'arm64';
+        }
+
+        var windowsAppSdlLib = Path.join([windowsProjectPath, 'SDL3.dll']);
+        var ceramicSdlLib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-windows-$winArch/bin/SDL3.dll']);
+
         var appIconPath = Path.join([windowsProjectPath, 'app.ico']);
 
         var doRun = extractArgFlag(args, 'run');
@@ -39,6 +47,43 @@ class Windows extends tools.Task {
 
         // Copy binary file
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug.exe' : 'Main.exe']), windowsAppExe);
+
+        // Copy libSDL3
+        if (!Files.haveSameLastModified(ceramicSdlLib, windowsAppSdlLib)) {
+            File.copy(ceramicSdlLib, windowsAppSdlLib);
+        }
+
+        var windowsAppAngleEGL = Path.join([windowsProjectPath, 'libEGL.dll']);
+        var ceramicAngleEGL = Path.join([context.ceramicRootPath, 'bin/angle/angle-windows-$winArch/bin/libEGL.dll']);
+        var windowsAppAngleGLESv2 = Path.join([windowsProjectPath, 'libGLESv2.dll']);
+        var ceramicAngleGLESv2 = Path.join([context.ceramicRootPath, 'bin/angle/angle-windows-$winArch/bin/libGLESv2.dll']);
+        var windowsAppAngleD3DCompiler = Path.join([windowsProjectPath, 'd3dcompiler_47.dll']);
+        var ceramicAngleD3DCompiler = Path.join([context.ceramicRootPath, 'bin/angle/angle-windows-$winArch/bin/d3dcompiler_47.dll']);
+
+        if (context.defines.exists('gles_angle')) {
+
+            if (!Files.haveSameLastModified(ceramicAngleEGL, windowsAppAngleEGL)) {
+                File.copy(ceramicAngleEGL, windowsAppAngleEGL);
+            }
+
+            if (!Files.haveSameLastModified(ceramicAngleGLESv2, windowsAppAngleGLESv2)) {
+                File.copy(ceramicAngleGLESv2, windowsAppAngleGLESv2);
+            }
+
+            if (!Files.haveSameLastModified(ceramicAngleD3DCompiler, windowsAppAngleD3DCompiler)) {
+                File.copy(ceramicAngleD3DCompiler, windowsAppAngleD3DCompiler);
+            }
+        }
+        else {
+
+            if (FileSystem.exists(windowsAppAngleEGL)) {
+                FileSystem.deleteFile(windowsAppAngleEGL);
+            }
+
+            if (FileSystem.exists(windowsAppAngleGLESv2)) {
+                FileSystem.deleteFile(windowsAppAngleGLESv2);
+            }
+        }
 
         // Update app icon
         if (FileSystem.exists(appIconPath)) {
