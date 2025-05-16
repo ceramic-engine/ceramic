@@ -219,8 +219,39 @@ jobs:
           # Update version in installer script
           (Get-Content "installer.nsi") -replace '\${VERSION}', $Version | Set-Content "installer.nsi"
 
+          # Find NSIS path
+          $nsisPath = if (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe") {
+            "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
+          } elseif (Test-Path "${env:ProgramFiles}\NSIS\makensis.exe") {
+            "${env:ProgramFiles}\NSIS\makensis.exe"
+          } else {
+            # Try to find makensis.exe in common locations
+            $potentialPaths = @(
+              "C:\Program Files\NSIS\makensis.exe",
+              "C:\Program Files (x86)\NSIS\makensis.exe",
+              (Get-Command "makensis.exe" -ErrorAction SilentlyContinue).Source
+            )
+
+            $foundPath = $null
+            foreach ($path in $potentialPaths) {
+              if ($path -and (Test-Path $path)) {
+                $foundPath = $path
+                break
+              }
+            }
+
+            if (-not $foundPath) {
+              Write-Error "Cannot find makensis.exe. Make sure NSIS is properly installed."
+              exit 1
+            }
+
+            $foundPath
+          }
+
+          Write-Host "Using NSIS at: $nsisPath"
+
           # Build installer
-          & '$env:ProgramFiles(x86)\NSIS\makensis.exe' installer.nsi
+          & $nsisPath installer.nsi
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
