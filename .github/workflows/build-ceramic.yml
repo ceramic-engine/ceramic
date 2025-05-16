@@ -66,6 +66,7 @@ jobs:
           $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
           ./ceramic version --check-tag $GIT_TAG
 
+      # First create the zip as before - we want both
       - name: Create zip archive
         working-directory: .
         run: |
@@ -75,12 +76,159 @@ jobs:
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
 
-      - name: Upload Files
+      # Then add the installer steps
+      - name: Install NSIS
+        run: |
+          choco install nsis -y
+
+      - name: Create NSIS Installer Script
+        run: |
+          $installerScript = @"
+          !include "MUI2.nsh"
+          !include "FileFunc.nsh"
+          !include "EnvVarUpdate.nsh"
+
+          Name "Ceramic Engine"
+          OutFile "ceramic-windows-installer.exe"
+          Unicode True
+
+          # Set compression
+          SetCompressor /SOLID lzma
+
+          # Default installation directory - user's home directory
+          InstallDir "$PROFILE\ceramic"
+
+          # Request application privileges
+          RequestExecutionLevel admin
+
+          # Interface Settings
+          !define MUI_ABORTWARNING
+          !define MUI_ICON "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.ico"
+          !define MUI_UNICON "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.ico"
+          !define MUI_HEADERIMAGE
+          !define MUI_HEADERIMAGE_BITMAP "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.png"
+          !define MUI_WELCOMEFINISHPAGE_BITMAP "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.png"
+
+          # Pages
+          !insertmacro MUI_PAGE_WELCOME
+          !insertmacro MUI_PAGE_DIRECTORY
+          !insertmacro MUI_PAGE_INSTFILES
+          !insertmacro MUI_PAGE_FINISH
+
+          # Uninstaller pages
+          !insertmacro MUI_UNPAGE_CONFIRM
+          !insertmacro MUI_UNPAGE_INSTFILES
+
+          # Languages
+          !insertmacro MUI_LANGUAGE "English"
+
+          Section "Ceramic" SecCeramic
+            SetOutPath "$INSTDIR"
+
+            # Include all files except those we want to exclude
+            File /r /x ".git" /x ".github" /x "ceramic-windows-installer.exe" /x "git\loreline\git" "*.*"
+
+            # Create uninstaller
+            WriteUninstaller "$INSTDIR\Uninstall.exe"
+
+            # Create shortcuts
+            CreateDirectory "$SMPROGRAMS\Ceramic"
+            CreateShortcut "$SMPROGRAMS\Ceramic\Ceramic.lnk" "$INSTDIR\tools\ceramic.cmd"
+            CreateShortcut "$SMPROGRAMS\Ceramic\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
+
+            # Run ceramic link
+            ExecWait '"$INSTDIR\tools\ceramic.cmd" link'
+
+            # Add to PATH
+            ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\tools"
+
+            # Write registry keys
+            WriteRegStr HKLM "Software\Ceramic" "" $INSTDIR
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayName" "Ceramic Engine"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "InstallLocation" "$\"$INSTDIR$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayIcon" "$\"$INSTDIR\tools\resources\AppIcon-flat.ico$\""
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "Publisher" "Ceramic Engine"
+            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayVersion" "${VERSION}"
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "NoModify" 1
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "NoRepair" 1
+            ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
+            IntFmt $0 "0x%08X" $0
+            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "EstimatedSize" "$0"
+          SectionEnd
+
+          Section "Uninstall"
+            # Remove PATH entry
+            ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\tools"
+
+            # Remove files and directories
+            RMDir /r "$INSTDIR"
+
+            # Remove shortcuts
+            Delete "$SMPROGRAMS\Ceramic\Ceramic.lnk"
+            Delete "$SMPROGRAMS\Ceramic\Uninstall.lnk"
+            RMDir "$SMPROGRAMS\Ceramic"
+
+            # Remove registry keys
+            DeleteRegKey HKLM "Software\Ceramic"
+            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic"
+          SectionEnd
+          "@
+                    Set-Content -Path "installer.nsi" -Value $installerScript
+
+      - name: Convert PNG to ICO
+        run: |
+          $tempDir = New-Item -ItemType Directory -Force -Path "$env:TEMP\icon-conversion"
+          Copy-Item "tools\resources\AppIcon-flat.png" -Destination "$tempDir\AppIcon-flat.png"
+
+          # Use PowerShell to generate an .ico file (basic approach)
+          Add-Type -AssemblyName System.Drawing
+          $icon = [System.Drawing.Image]::FromFile("$tempDir\AppIcon-flat.png")
+          $bitmap = New-Object System.Drawing.Bitmap($icon)
+          $iconPath = "$env:GITHUB_WORKSPACE\tools\resources\AppIcon-flat.ico"
+          $bitmap.Save($iconPath, [System.Drawing.Imaging.ImageFormat]::Icon)
+
+      - name: Download NSIS plugins
+        run: |
+          # Create plugins directory if it doesn't exist
+          New-Item -ItemType Directory -Force -Path "$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode"
+
+          # Download EnvVarUpdate plugin
+          Invoke-WebRequest -Uri "https://nsis.sourceforge.io/mediawiki/images/7/7f/EnvVarUpdate.7z" -OutFile "EnvVarUpdate.7z"
+          7z e "EnvVarUpdate.7z" -o"$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode" *.dll
+
+      - name: Build Windows Installer
+        run: |
+          $GIT_TAG = ""
+          if ("$env:GITHUB_REF".StartsWith("refs/tags/")) {
+            $GIT_TAG = $($env:GITHUB_REF).replace("refs/tags/", "")
+          } else {
+            $GIT_TAG = "dev-build"
+          }
+
+          $Version = $GIT_TAG -replace "v", ""
+
+          # Update version in installer script
+          (Get-Content "installer.nsi") -replace '\${VERSION}', $Version | Set-Content "installer.nsi"
+
+          # Build installer
+          & '$env:ProgramFiles(x86)\NSIS\makensis.exe' installer.nsi
+
+      - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           retention-days: 7
           name: ceramic-windows.zip
           path: ceramic-windows.zip
+          compression-level: 0
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 7
+          name: ceramic-windows-installer.exe
+          path: ceramic-windows-installer.exe
           compression-level: 0
 
 
@@ -162,15 +310,167 @@ jobs:
           GIT_TAG=${GITHUB_REF/refs\/tags\//}
           ./ceramic version --check-tag $GIT_TAG
 
+      # First create the zip as before
       - name: Create zip archive
         run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
 
-      - name: Upload Files
+      # Then add the installer steps
+      - name: Create directory structure for package
+        run: |
+          mkdir -p package_root/tmp/ceramic_install
+          cp -R * package_root/tmp/ceramic_install/
+          rm -rf package_root/tmp/ceramic_install/.git package_root/tmp/ceramic_install/.github package_root/tmp/ceramic_install/package_root
+
+      - name: Create scripts directory
+        run: |
+          mkdir -p scripts
+
+      - name: Create postinstall script
+        run: |
+          cat > scripts/postinstall << 'EOF'
+          #!/bin/bash
+
+          # Get the current user
+          CURRENT_USER=$USER
+          if [ -z "$CURRENT_USER" ]; then
+            CURRENT_USER=$(who | awk '{print $1}' | head -n1)
+          fi
+
+          if [ -z "$CURRENT_USER" ]; then
+            echo "Could not determine current user"
+            exit 1
+          fi
+
+          # Get the home directory
+          USER_HOME=$(eval echo ~$CURRENT_USER)
+
+          # Create target directory
+          mkdir -p "$USER_HOME/ceramic"
+
+          # Copy files
+          cp -R /tmp/ceramic_install/* "$USER_HOME/ceramic/"
+
+          # Set permissions
+          chown -R $CURRENT_USER:staff "$USER_HOME/ceramic"
+          chmod +x "$USER_HOME/ceramic/tools/ceramic"
+
+          # Run ceramic link
+          sudo -u $CURRENT_USER "$USER_HOME/ceramic/tools/ceramic" link
+
+          # Clean up temp files
+          rm -rf /tmp/ceramic_install
+
+          exit 0
+          EOF
+          chmod +x scripts/postinstall
+
+      - name: Create distribution.xml
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            GIT_TAG=${GITHUB_REF/refs\/tags\//}
+            VERSION=${GIT_TAG/v/}
+          else
+            VERSION="dev-build"
+          fi
+
+          cat > distribution.xml << EOF
+          <?xml version="1.0" encoding="utf-8"?>
+          <installer-gui-script minSpecVersion="1">
+              <title>Ceramic Engine</title>
+              <organization>ceramic-engine</organization>
+              <domains enable_localSystem="true"/>
+              <options customize="never" require-scripts="true"/>
+              <background file="background.png" scaling="proportional" alignment="center"/>
+              <welcome file="welcome.html" mime-type="text/html"/>
+              <conclusion file="conclusion.html" mime-type="text/html"/>
+              <pkg-ref id="com.ceramic-engine.ceramic"/>
+              <choices-outline>
+                  <line choice="default">
+                      <line choice="com.ceramic-engine.ceramic"/>
+                  </line>
+              </choices-outline>
+              <choice id="default"/>
+              <choice id="com.ceramic-engine.ceramic" visible="false">
+                  <pkg-ref id="com.ceramic-engine.ceramic"/>
+              </choice>
+              <pkg-ref id="com.ceramic-engine.ceramic" version="${VERSION}" onConclusion="none">ceramic.pkg</pkg-ref>
+          </installer-gui-script>
+          EOF
+
+      - name: Create welcome.html
+        run: |
+          cat > welcome.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Welcome to Ceramic Engine Installer</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+              </style>
+          </head>
+          <body>
+              <h2>Welcome to Ceramic Engine!</h2>
+              <p>This will install Ceramic Engine in your home directory (~/ceramic).</p>
+          </body>
+          </html>
+          EOF
+
+      - name: Create conclusion.html
+        run: |
+          cat > conclusion.html << 'EOF'
+          <!DOCTYPE html>
+          <html>
+          <head>
+              <title>Installation Complete</title>
+              <style>
+                  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+              </style>
+          </head>
+          <body>
+              <h2>Installation Complete!</h2>
+              <p>Ceramic Engine has been installed to ~/ceramic</p>
+              <p>You can run Ceramic by opening Terminal and typing <code>~/ceramic/tools/ceramic</code></p>
+          </body>
+          </html>
+          EOF
+
+      - name: Create background image
+        run: |
+          # Create a background image using the Ceramic logo
+          cp tools/resources/AppIcon-flat.png background_orig.png
+
+          # Resize to appropriate dimensions for installer background
+          sips -z 540 540 background_orig.png --out background.png
+
+      - name: Build component package
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            GIT_TAG=${GITHUB_REF/refs\/tags\//}
+            VERSION=${GIT_TAG/v/}
+          else
+            VERSION="dev-build"
+          fi
+
+          pkgbuild --root package_root --identifier com.ceramic-engine.ceramic --version "$VERSION" --scripts scripts ceramic.pkg
+
+      - name: Build product archive
+        run: |
+          productbuild --distribution distribution.xml --resources . --package-path . ceramic-mac-installer.pkg
+
+      - name: Upload ZIP
         uses: actions/upload-artifact@v4
         with:
           retention-days: 7
           name: ceramic-mac.zip
           path: ceramic-mac.zip
+          compression-level: 0
+
+      - name: Upload Installer
+        uses: actions/upload-artifact@v4
+        with:
+          retention-days: 7
+          name: ceramic-mac-installer.pkg
+          path: ceramic-mac-installer.pkg
           compression-level: 0
 
 
@@ -281,10 +581,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Download both installers and zip files
+      - name: Download ceramic-windows-installer.exe
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-windows-installer.exe
+          path: .
+
       - name: Download ceramic-windows.zip
         uses: actions/download-artifact@v4
         with:
           name: ceramic-windows.zip
+          path: .
+
+      - name: Download ceramic-mac-installer.pkg
+        uses: actions/download-artifact@v4
+        with:
+          name: ceramic-mac-installer.pkg
           path: .
 
       - name: Download ceramic-mac.zip
@@ -317,10 +630,27 @@ jobs:
           name: Ceramic ${{ env.TAG_NAME }}
           body: |
             Ceramic ${{ env.TAG_NAME }}
+
+            ## Installation Options
+
+            ### Windows
+            - **Installer**: Download and run `ceramic-windows-installer.exe` to install Ceramic in your home directory
+            - **Manual**: Download and extract `ceramic-windows.zip` to a location of your choice
+
+            ### macOS
+            - **Installer**: Download and open `ceramic-mac-installer.pkg` to install Ceramic in your home directory
+            - **Manual**: Download and extract `ceramic-mac.zip` to a location of your choice
+
+            ### Linux
+            - Download and extract the appropriate zip file for your architecture:
+              - `ceramic-linux-x86_64.zip` for 64-bit x86 systems
+              - `ceramic-linux-arm64.zip` for ARM64 systems
           draft: false
           prerelease: false
           files: |
+            ceramic-windows-installer.exe
             ceramic-windows.zip
+            ceramic-mac-installer.pkg
             ceramic-mac.zip
             ceramic-linux-x86_64.zip
             ceramic-linux-arm64.zip
