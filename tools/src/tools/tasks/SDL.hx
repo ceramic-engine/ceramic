@@ -131,6 +131,12 @@ class SDL extends tools.Task {
                             // We don't need the static libs on windows
                             Files.deleteRecursive(Path.join([assetLocalPathDir, 'lib', 'SDL3-static.lib']));
                         }
+                        else if (os == 'linux') {
+                            // We don't need the static libs on linux
+                            if (FileSystem.exists(Path.join([assetLocalPathDir, 'lib', 'libSDL3.a']))) {
+                                FileSystem.deleteFile(Path.join([assetLocalPathDir, 'lib', 'libSDL3.a']));
+                            }
+                        }
                     }
                     else {
                         print('Already up to date: ' + assetLocalNameNoExt);
