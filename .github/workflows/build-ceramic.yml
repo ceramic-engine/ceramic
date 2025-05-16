@@ -86,7 +86,7 @@ jobs:
           $installerScript = @"
           !include "MUI2.nsh"
           !include "FileFunc.nsh"
-          !include "EnvVarUpdate.nsh"
+          !include "LogicLib.nsh"
 
           Name "Ceramic Engine"
           OutFile "ceramic-windows-installer.exe"
@@ -122,6 +122,17 @@ jobs:
           # Languages
           !insertmacro MUI_LANGUAGE "English"
 
+          Function .onInit
+            # Check if Haxe is installed by trying to run 'haxe -version'
+            nsExec::ExecToStack 'cmd.exe /C where haxe'
+            Pop $0 # Return value
+            Pop $1 # Output
+            ${If} $0 != 0
+              MessageBox MB_ICONSTOP|MB_OK "Haxe is not installed or not in your PATH.$\n$\nPlease install Haxe before installing Ceramic."
+              Abort
+            ${EndIf}
+          FunctionEnd
+
           Section "Ceramic" SecCeramic
             # Check if directory exists and remove it
             RMDir /r "$INSTDIR"
@@ -139,11 +150,8 @@ jobs:
             CreateShortcut "$SMPROGRAMS\Ceramic\Ceramic.lnk" "$INSTDIR\tools\ceramic.cmd"
             CreateShortcut "$SMPROGRAMS\Ceramic\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
 
-            # Run ceramic link
+            # Run ceramic link - this handles PATH updates
             ExecWait '"$INSTDIR\tools\ceramic.cmd" link'
-
-            # Add to PATH
-            ${EnvVarUpdate} $0 "PATH" "A" "HKLM" "$INSTDIR\tools"
 
             # Write registry keys
             WriteRegStr HKLM "Software\Ceramic" "" $INSTDIR
@@ -162,11 +170,8 @@ jobs:
           SectionEnd
 
           Section "Uninstall"
-            # Run ceramic unlink before removal
+            # Run ceramic unlink before removal - this handles PATH removal
             ExecWait '"$INSTDIR\tools\ceramic.cmd" unlink'
-
-            # Remove PATH entry
-            ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\tools"
 
             # Remove files and directories
             RMDir /r "$INSTDIR"
@@ -197,13 +202,8 @@ jobs:
 
       - name: Download NSIS plugins
         run: |
-          # Create plugins directory if it doesn't exist
-          New-Item -ItemType Directory -Force -Path "$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode"
-
-          # Download EnvVarUpdate plugin from GitHub (more reliable source)
-          Invoke-WebRequest -Uri "https://github.com/idleberg/NSIS-EnvVarUpdate/archive/refs/heads/master.zip" -OutFile "EnvVarUpdate.zip"
-          Expand-Archive "EnvVarUpdate.zip" -DestinationPath ".\EnvVarUpdate"
-          Copy-Item ".\EnvVarUpdate\NSIS-EnvVarUpdate-master\Plugins\x86-unicode\EnvVarUpdate.dll" -Destination "$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode\"
+          # No plugins needed since we're relying on ceramic link/unlink instead of EnvVarUpdate
+          echo "Using ceramic link/unlink to manage PATH, no external NSIS plugins required"
 
       - name: Build Windows Installer
         run: |
@@ -366,6 +366,13 @@ jobs:
             exit 1
           fi
 
+          # Check if Haxe is installed
+          if ! command -v haxe &> /dev/null; then
+            echo "ERROR: Haxe is not installed or not in PATH."
+            echo "Please install Haxe before installing Ceramic."
+            exit 1
+          fi
+
           # Get the home directory
           USER_HOME=$(eval echo ~$CURRENT_USER)
 
@@ -447,6 +454,7 @@ jobs:
               <h2>Welcome to Ceramic Engine!</h2>
               <p>This will install Ceramic Engine in your home directory (~/ceramic).</p>
               <p>If a previous installation exists, it will be removed first.</p>
+              <p><strong>Requirements:</strong> Haxe must be installed and available in your PATH.</p>
           </body>
           </html>
           EOF
