@@ -20,7 +20,7 @@ class Unlink extends tools.Task {
         else if (Sys.systemName() == 'Windows') {
             var haxePath = Sys.getEnv('HAXEPATH');
             if (haxePath == null || !FileSystem.exists(Path.join([haxePath, 'ceramic.cmd']))) {
-                fail('There is nothing to unlink.');
+                warning('There is nothing to unlink.');
             }
             FileSystem.deleteFile(Path.join([haxePath, 'ceramic.cmd']));
         }

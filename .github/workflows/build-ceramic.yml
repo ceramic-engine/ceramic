@@ -123,10 +123,13 @@ jobs:
           !insertmacro MUI_LANGUAGE "English"
 
           Section "Ceramic" SecCeramic
+            # Check if directory exists and remove it
+            RMDir /r "$INSTDIR"
+
             SetOutPath "$INSTDIR"
 
             # Include all files except those we want to exclude
-            File /r /x ".git" /x ".github" /x "ceramic-windows-installer.exe" /x "git\loreline\git" "*.*"
+            File /r /x ".git" /x ".github" /x "ceramic-windows-installer.exe" /x "ceramic-windows.zip" /x "git\loreline\git" "*.*"
 
             # Create uninstaller
             WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -159,6 +162,9 @@ jobs:
           SectionEnd
 
           Section "Uninstall"
+            # Run ceramic unlink before removal
+            ExecWait '"$INSTDIR\tools\ceramic.cmd" unlink'
+
             # Remove PATH entry
             ${un.EnvVarUpdate} $0 "PATH" "R" "HKLM" "$INSTDIR\tools"
 
@@ -175,7 +181,7 @@ jobs:
             DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic"
           SectionEnd
           "@
-                    Set-Content -Path "installer.nsi" -Value $installerScript
+          Set-Content -Path "installer.nsi" -Value $installerScript
 
       - name: Convert PNG to ICO
         run: |
@@ -194,9 +200,10 @@ jobs:
           # Create plugins directory if it doesn't exist
           New-Item -ItemType Directory -Force -Path "$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode"
 
-          # Download EnvVarUpdate plugin
-          Invoke-WebRequest -Uri "https://nsis.sourceforge.io/mediawiki/images/7/7f/EnvVarUpdate.7z" -OutFile "EnvVarUpdate.7z"
-          7z e "EnvVarUpdate.7z" -o"$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode" *.dll
+          # Download EnvVarUpdate plugin from GitHub (more reliable source)
+          Invoke-WebRequest -Uri "https://github.com/idleberg/NSIS-EnvVarUpdate/archive/refs/heads/master.zip" -OutFile "EnvVarUpdate.zip"
+          Expand-Archive "EnvVarUpdate.zip" -DestinationPath ".\EnvVarUpdate"
+          Copy-Item ".\EnvVarUpdate\NSIS-EnvVarUpdate-master\Plugins\x86-unicode\EnvVarUpdate.dll" -Destination "$env:ProgramFiles(x86)\NSIS\Plugins\x86-unicode\"
 
       - name: Build Windows Installer
         run: |
@@ -319,7 +326,25 @@ jobs:
         run: |
           mkdir -p package_root/tmp/ceramic_install
           cp -R * package_root/tmp/ceramic_install/
-          rm -rf package_root/tmp/ceramic_install/.git package_root/tmp/ceramic_install/.github package_root/tmp/ceramic_install/package_root
+          rm -rf package_root/tmp/ceramic_install/.git package_root/tmp/ceramic_install/.github package_root/tmp/ceramic_install/package_root package_root/tmp/ceramic_install/ceramic-mac.zip package_root/tmp/ceramic_install/ceramic-mac-installer.pkg
+
+          # Create uninstall script
+          cat > package_root/tmp/ceramic_install/uninstall.sh << 'EOF'
+          #!/bin/bash
+
+          # Run ceramic unlink
+          if [ -d "$HOME/ceramic" ] && [ -f "$HOME/ceramic/tools/ceramic" ]; then
+            echo "Running ceramic unlink..."
+            "$HOME/ceramic/tools/ceramic" unlink
+          fi
+
+          # Remove installation directory
+          echo "Removing Ceramic installation..."
+          rm -rf "$HOME/ceramic"
+
+          echo "Ceramic has been uninstalled."
+          EOF
+          chmod +x package_root/tmp/ceramic_install/uninstall.sh
 
       - name: Create scripts directory
         run: |
@@ -344,6 +369,12 @@ jobs:
           # Get the home directory
           USER_HOME=$(eval echo ~$CURRENT_USER)
 
+          # Check if target directory exists and remove it if it does
+          if [ -d "$USER_HOME/ceramic" ]; then
+            echo "Removing existing Ceramic installation..."
+            rm -rf "$USER_HOME/ceramic"
+          fi
+
           # Create target directory
           mkdir -p "$USER_HOME/ceramic"
 
@@ -356,6 +387,10 @@ jobs:
 
           # Run ceramic link
           sudo -u $CURRENT_USER "$USER_HOME/ceramic/tools/ceramic" link
+
+          # Make uninstall script executable
+          chmod +x "$USER_HOME/ceramic/uninstall.sh"
+          echo "To uninstall Ceramic, run ~/ceramic/uninstall.sh"
 
           # Clean up temp files
           rm -rf /tmp/ceramic_install
@@ -411,6 +446,7 @@ jobs:
           <body>
               <h2>Welcome to Ceramic Engine!</h2>
               <p>This will install Ceramic Engine in your home directory (~/ceramic).</p>
+              <p>If a previous installation exists, it will be removed first.</p>
           </body>
           </html>
           EOF
@@ -430,6 +466,7 @@ jobs:
               <h2>Installation Complete!</h2>
               <p>Ceramic Engine has been installed to ~/ceramic</p>
               <p>You can run Ceramic by opening Terminal and typing <code>~/ceramic/tools/ceramic</code></p>
+              <p>To uninstall Ceramic later, run <code>~/ceramic/uninstall.sh</code></p>
           </body>
           </html>
           EOF
