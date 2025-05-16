@@ -113,9 +113,3 @@
 [submodule "git/build-sdl3"]
 	path = git/build-sdl3
 	url = https://github.com/jeremyfa/build-sdl3.git
-[submodule "git/SPIRV-Cross"]
-	path = git/SPIRV-Cross
-	url = https://github.com/KhronosGroup/SPIRV-Cross.git
-[submodule "git/shaderc"]
-	path = git/shaderc
-	url = https://github.com/google/shaderc.git

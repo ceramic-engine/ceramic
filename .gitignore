@@ -48,7 +48,4 @@ completion.hxml
 
 /bin/sdl
 /bin/angle
-/bin/glslc
-/bin/spirv-cross
-/bin/glslc.exe
-/bin/spirv-cross.exe
+/bin/shader-tools

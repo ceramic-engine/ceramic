@@ -122,6 +122,15 @@ class SDL extends tools.Task {
                             TarGz.untarGzFile(assetLocalPath, assetLocalPathDir, sdlBinaryPath);
                         }
                         FileSystem.deleteFile(assetLocalPath);
+
+                        if (os == 'android') {
+                            // We don't need the dynamic libs on android
+                            Files.deleteRecursive(Path.join([assetLocalPathDir, 'jniLibs']));
+                        }
+                        else if (os == 'windows') {
+                            // We don't need the static libs on windows
+                            Files.deleteRecursive(Path.join([assetLocalPathDir, 'lib', 'SDL3-static.lib']));
+                        }
                     }
                     else {
                         print('Already up to date: ' + assetLocalNameNoExt);
