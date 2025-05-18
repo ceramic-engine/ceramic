@@ -71,141 +71,41 @@ jobs:
         working-directory: .
         run: |
           $ZIP_COMPRESS = $(Convert-Path .)
-          $ZIP_EXCLUDE = @(".git", ".github", "ceramic-windows.zip", "git/loreline/git")
+          $ZIP_EXCLUDE = @(".git", ".github", "ceramic-windows.zip", "git/loreline/git", "tools/build")
           $ZIP_DESTINATION = 'ceramic-windows.zip'
           $ZIP_FILES = Get-ChildItem -Path $ZIP_COMPRESS -Exclude $ZIP_EXCLUDE
           Compress-Archive -Path $ZIP_FILES -DestinationPath $ZIP_DESTINATION -CompressionLevel Optimal
 
-      # Then add the installer steps
-      - name: Install NSIS
+      # Then add the Inno Setup steps
+      - name: Install Inno Setup
         run: |
-          choco install nsis -y
-
-      - name: Create NSIS Installer Script
-        run: |
-          $installerScript = @"
-          !include "MUI2.nsh"
-          !include "FileFunc.nsh"
-          !include "LogicLib.nsh"
-
-          Name "Ceramic Engine"
-          OutFile "ceramic-windows-installer.exe"
-          Unicode True
-
-          # Set compression
-          SetCompressor /SOLID lzma
-
-          # Default installation directory - user's home directory
-          InstallDir "$PROFILE\ceramic"
-
-          # Request application privileges
-          RequestExecutionLevel admin
-
-          # Interface Settings
-          !define MUI_ABORTWARNING
-          !define MUI_ICON "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.ico"
-          !define MUI_UNICON "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.ico"
-          !define MUI_HEADERIMAGE
-          !define MUI_HEADERIMAGE_BITMAP "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.png"
-          !define MUI_WELCOMEFINISHPAGE_BITMAP "$%GITHUB_WORKSPACE%\tools\resources\AppIcon-flat.png"
-
-          # Pages
-          !insertmacro MUI_PAGE_WELCOME
-          !insertmacro MUI_PAGE_DIRECTORY
-          !insertmacro MUI_PAGE_INSTFILES
-          !insertmacro MUI_PAGE_FINISH
-
-          # Uninstaller pages
-          !insertmacro MUI_UNPAGE_CONFIRM
-          !insertmacro MUI_UNPAGE_INSTFILES
-
-          # Languages
-          !insertmacro MUI_LANGUAGE "English"
-
-          Function .onInit
-            # Check if Haxe is installed by trying to run 'haxe -version'
-            nsExec::ExecToStack 'cmd.exe /C where haxe'
-            Pop $0 # Return value
-            Pop $1 # Output
-            ${If} $0 != 0
-              MessageBox MB_ICONSTOP|MB_OK "Haxe is not installed or not in your PATH.$\n$\nPlease install Haxe before installing Ceramic."
-              Abort
-            ${EndIf}
-          FunctionEnd
-
-          Section "Ceramic" SecCeramic
-            # Check if directory exists and remove it
-            RMDir /r "$INSTDIR"
-
-            SetOutPath "$INSTDIR"
-
-            # Include all files except those we want to exclude
-            File /r /x ".git" /x ".github" /x "ceramic-windows-installer.exe" /x "ceramic-windows.zip" /x "git\loreline\git" "*.*"
-
-            # Create uninstaller
-            WriteUninstaller "$INSTDIR\Uninstall.exe"
-
-            # Create shortcuts
-            CreateDirectory "$SMPROGRAMS\Ceramic"
-            CreateShortcut "$SMPROGRAMS\Ceramic\Ceramic.lnk" "$INSTDIR\tools\ceramic.cmd"
-            CreateShortcut "$SMPROGRAMS\Ceramic\Uninstall.lnk" "$INSTDIR\Uninstall.exe"
-
-            # Run ceramic link - this handles PATH updates
-            ExecWait '"$INSTDIR\tools\ceramic.cmd" link'
-
-            # Write registry keys
-            WriteRegStr HKLM "Software\Ceramic" "" $INSTDIR
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayName" "Ceramic Engine"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "UninstallString" "$\"$INSTDIR\Uninstall.exe$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "QuietUninstallString" "$\"$INSTDIR\Uninstall.exe$\" /S"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "InstallLocation" "$\"$INSTDIR$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayIcon" "$\"$INSTDIR\tools\resources\AppIcon-flat.ico$\""
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "Publisher" "Ceramic Engine"
-            WriteRegStr HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "DisplayVersion" "${VERSION}"
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "NoModify" 1
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "NoRepair" 1
-            ${GetSize} "$INSTDIR" "/S=0K" $0 $1 $2
-            IntFmt $0 "0x%08X" $0
-            WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic" "EstimatedSize" "$0"
-          SectionEnd
-
-          Section "Uninstall"
-            # Run ceramic unlink before removal - this handles PATH removal
-            ExecWait '"$INSTDIR\tools\ceramic.cmd" unlink'
-
-            # Remove files and directories
-            RMDir /r "$INSTDIR"
-
-            # Remove shortcuts
-            Delete "$SMPROGRAMS\Ceramic\Ceramic.lnk"
-            Delete "$SMPROGRAMS\Ceramic\Uninstall.lnk"
-            RMDir "$SMPROGRAMS\Ceramic"
-
-            # Remove registry keys
-            DeleteRegKey HKLM "Software\Ceramic"
-            DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\Ceramic"
-          SectionEnd
-          "@
-          Set-Content -Path "installer.nsi" -Value $installerScript
+          choco install innosetup -y
 
       - name: Convert PNG to ICO
         run: |
-          $tempDir = New-Item -ItemType Directory -Force -Path "$env:TEMP\icon-conversion"
-          Copy-Item "tools\resources\AppIcon-flat.png" -Destination "$tempDir\AppIcon-flat.png"
+          # Install the ImageMagick package which includes the convert tool
+          choco install imagemagick -y
 
-          # Use PowerShell to generate an .ico file (basic approach)
-          Add-Type -AssemblyName System.Drawing
-          $icon = [System.Drawing.Image]::FromFile("$tempDir\AppIcon-flat.png")
-          $bitmap = New-Object System.Drawing.Bitmap($icon)
-          $iconPath = "$env:GITHUB_WORKSPACE\tools\resources\AppIcon-flat.ico"
-          $bitmap.Save($iconPath, [System.Drawing.Imaging.ImageFormat]::Icon)
+          # Create the icon file
+          $iconDir = "tools\resources"
+          $iconPath = "$iconDir\AppIcon-flat.ico"
 
-      - name: Download NSIS plugins
-        run: |
-          # No plugins needed since we're relying on ceramic link/unlink instead of EnvVarUpdate
-          echo "Using ceramic link/unlink to manage PATH, no external NSIS plugins required"
+          Write-Host "Checking for PNG file..."
+          if (Test-Path "$iconDir\AppIcon-flat.png") {
+            Write-Host "Converting PNG to ICO..."
+            # Use magick command (newer ImageMagick) - convert multiple sizes in one command
+            magick convert "$iconDir\AppIcon-flat.png" -define icon:auto-resize=64,48,32,16 "$iconPath"
 
-      - name: Build Windows Installer
+            if (Test-Path $iconPath) {
+              Write-Host "Successfully created icon at $iconPath"
+            } else {
+              Write-Host "Failed to create icon at $iconPath"
+            }
+          } else {
+            Write-Host "PNG file not found at $iconDir\AppIcon-flat.png"
+          }
+
+      - name: Create Inno Setup Script
         run: |
           $GIT_TAG = ""
           if ("$env:GITHUB_REF".StartsWith("refs/tags/")) {
@@ -216,20 +116,150 @@ jobs:
 
           $Version = $GIT_TAG -replace "v", ""
 
-          # Update version in installer script
-          (Get-Content "installer.nsi") -replace '\${VERSION}', $Version | Set-Content "installer.nsi"
-
-          # Find NSIS path
-          $nsisPath = if (Test-Path "${env:ProgramFiles(x86)}\NSIS\makensis.exe") {
-            "${env:ProgramFiles(x86)}\NSIS\makensis.exe"
-          } elseif (Test-Path "${env:ProgramFiles}\NSIS\makensis.exe") {
-            "${env:ProgramFiles}\NSIS\makensis.exe"
+          # Verify existing files
+          Write-Host "Checking for LICENSE file..."
+          if (Test-Path "LICENSE") {
+            Write-Host "LICENSE file found."
           } else {
-            # Try to find makensis.exe in common locations
+            Write-Host "Warning: LICENSE file not found."
+          }
+
+          # Ensure icon file exists
+          Write-Host "Checking for icon file..."
+          $iconPath = "tools\resources\AppIcon-flat.ico"
+          if (Test-Path $iconPath) {
+            Write-Host "Icon file found at: $iconPath"
+          } else {
+            Write-Host "Warning: Icon file not found at $iconPath"
+          }
+
+          # List files in current directory for debugging
+          Write-Host "Files in root directory:"
+          Get-ChildItem -Path . -Force | ForEach-Object { Write-Host $_.Name }
+
+          $innoSetupScript = @"
+          ; Script generated by Ceramic build process
+
+          #define MyAppName "Ceramic Engine"
+          #define MyAppVersion "$Version"
+          #define MyAppPublisher "Ceramic Engine"
+          #define MyAppURL "https://ceramic-engine.com"
+          #define MyAppExeName "ceramic.cmd"
+          #define SourceDir "$env:GITHUB_WORKSPACE"
+
+          [Setup]
+          ; NOTE: The value of AppId uniquely identifies this application.
+          ; Do not use the same AppId value in installers for other applications.
+          AppId={{FAD9F6C1-3A23-4FB8-A6FE-C5C2A5C730E5}}
+          AppName={#MyAppName}
+          AppVersion={#MyAppVersion}
+          AppVerName={#MyAppName} {#MyAppVersion}
+          AppPublisher={#MyAppPublisher}
+          AppPublisherURL={#MyAppURL}
+          AppSupportURL={#MyAppURL}
+          AppUpdatesURL={#MyAppURL}
+          DefaultDirName={userappdata}\ceramic
+          DefaultGroupName={#MyAppName}
+          DisableProgramGroupPage=yes
+          OutputDir={#SourceDir}
+          OutputBaseFilename=ceramic-windows-installer
+          SetupIconFile={#SourceDir}\tools\resources\AppIcon-flat.ico
+          Compression=lzma
+          SolidCompression=yes
+          PrivilegesRequired=admin
+          ChangesEnvironment=yes
+          WizardStyle=modern
+
+          [Languages]
+          Name: "english"; MessagesFile: "compiler:Default.isl"
+
+          [Tasks]
+          Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}";
+
+          [Files]
+          Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs; Excludes: ".git\*,.github\*,ceramic-windows.zip,ceramic-windows-installer.exe,git\loreline\git\*,tools\build\*"
+          Source: "{#SourceDir}\tools\resources\AppIcon-flat.ico"; DestDir: "{app}\tools\resources"; Flags: ignoreversion
+
+          [Icons]
+          Name: "{group}\{#MyAppName}"; Filename: "{app}\tools\{#MyAppExeName}"; IconFilename: "{app}\tools\resources\AppIcon-flat.ico"
+          Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"; IconFilename: "{app}\tools\resources\AppIcon-flat.ico"
+          Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\tools\{#MyAppExeName}"; Tasks: desktopicon; IconFilename: "{app}\tools\resources\AppIcon-flat.ico"
+
+          [Code]
+          // Check if Haxe is installed
+          function InitializeSetup(): Boolean;
+          var
+            ErrorCode: Integer;
+            HaxeInstalled: Boolean;
+            ResultString: String;
+          begin
+            HaxeInstalled := False;
+
+            // Try to execute 'haxe --version' to check if Haxe is installed
+            if Exec('where', 'haxe', '', SW_HIDE, ewWaitUntilTerminated, ErrorCode) then
+            begin
+              HaxeInstalled := (ErrorCode = 0);
+            end;
+
+            // If Haxe is not installed, show a message and abort
+            if not HaxeInstalled then
+            begin
+              MsgBox('Haxe is not installed or not in your PATH.' + #13#10 + #13#10 +
+                     'Please install Haxe before installing Ceramic.', mbError, MB_OK);
+              Result := False;
+            end
+            else
+            begin
+              Result := True;
+            end;
+          end;
+
+          // Run ceramic link after installation
+          procedure CurStepChanged(CurStep: TSetupStep);
+          var
+            ResultCode: Integer;
+          begin
+            if CurStep = ssPostInstall then
+            begin
+              Exec(ExpandConstant('{app}\tools\ceramic.cmd'), 'link', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+              if ResultCode <> 0 then
+              begin
+                MsgBox('Warning: Failed to run "ceramic link". You may need to run it manually.', mbInformation, MB_OK);
+              end;
+            end;
+          end;
+
+          // Run ceramic unlink before uninstallation
+          procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+          var
+            ResultCode: Integer;
+          begin
+            if CurUninstallStep = usUninstall then
+            begin
+              Exec(ExpandConstant('{app}\tools\ceramic.cmd'), 'unlink', '', SW_SHOW, ewWaitUntilTerminated, ResultCode);
+              if ResultCode <> 0 then
+              begin
+                MsgBox('Warning: Failed to run "ceramic unlink". Your PATH environment variable may need manual cleanup.', mbInformation, MB_OK);
+              end;
+            end;
+          end;
+          "@
+
+          Set-Content -Path "setup.iss" -Value $innoSetupScript
+
+      - name: Build Windows Installer
+        run: |
+          # Find Inno Setup compiler
+          $isccPath = if (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe") {
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          } elseif (Test-Path "${env:ProgramFiles}\Inno Setup 6\ISCC.exe") {
+            "${env:ProgramFiles}\Inno Setup 6\ISCC.exe"
+          } else {
+            # Try to find ISCC.exe in common locations
             $potentialPaths = @(
-              "C:\Program Files\NSIS\makensis.exe",
-              "C:\Program Files (x86)\NSIS\makensis.exe",
-              (Get-Command "makensis.exe" -ErrorAction SilentlyContinue).Source
+              "C:\Program Files\Inno Setup 6\ISCC.exe",
+              "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+              (Get-Command "ISCC.exe" -ErrorAction SilentlyContinue).Source
             )
 
             $foundPath = $null
@@ -241,17 +271,17 @@ jobs:
             }
 
             if (-not $foundPath) {
-              Write-Error "Cannot find makensis.exe. Make sure NSIS is properly installed."
+              Write-Error "Cannot find ISCC.exe. Make sure Inno Setup is properly installed."
               exit 1
             }
 
             $foundPath
           }
 
-          Write-Host "Using NSIS at: $nsisPath"
+          Write-Host "Using Inno Setup at: $isccPath"
 
           # Build installer
-          & $nsisPath installer.nsi
+          & $isccPath setup.iss
 
       - name: Upload ZIP
         uses: actions/upload-artifact@v4
@@ -267,7 +297,7 @@ jobs:
           retention-days: 7
           name: ceramic-windows-installer.exe
           path: ceramic-windows-installer.exe
-          compression-level: 0
+          if-no-files-found: warn
 
 
   build-ceramic-mac:
@@ -350,14 +380,14 @@ jobs:
 
       # First create the zip as before
       - name: Create zip archive
-        run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-mac.zip' . -x ".git/*" ".github/*" "tools/build/*"
 
       # Then add the installer steps
       - name: Create directory structure for package
         run: |
           mkdir -p package_root/tmp/ceramic_install
           cp -R * package_root/tmp/ceramic_install/
-          rm -rf package_root/tmp/ceramic_install/.git package_root/tmp/ceramic_install/.github package_root/tmp/ceramic_install/package_root package_root/tmp/ceramic_install/ceramic-mac.zip package_root/tmp/ceramic_install/ceramic-mac-installer.pkg
+          rm -rf package_root/tmp/ceramic_install/.git package_root/tmp/ceramic_install/.github package_root/tmp/ceramic_install/package_root package_root/tmp/ceramic_install/ceramic-mac.zip package_root/tmp/ceramic_install/ceramic-mac-installer.pkg package_root/tmp/ceramic_install/tools/build
 
           # Create uninstall script
           cat > package_root/tmp/ceramic_install/uninstall.sh << 'EOF'
@@ -640,7 +670,7 @@ jobs:
           ./ceramic version --check-tag $GIT_TAG
 
       - name: Create zip archive
-        run: zip --symlinks -9 -r 'ceramic-linux-${{ matrix.arch }}.zip' . -x ".git/*" ".github/*"
+        run: zip --symlinks -9 -r 'ceramic-linux-${{ matrix.arch }}.zip' . -x ".git/*" ".github/*" "tools/build/*"
 
       - name: Upload Files
         uses: actions/upload-artifact@v4
