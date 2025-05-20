@@ -107,7 +107,7 @@ class LdtkData extends Entity {
             var levelsJson:Array<Dynamic> = json.get('levels');
             if (levelsJson != null && levelsJson.length > 0) {
                 var mainWorld:DynamicAccess<Dynamic> = {};
-                mainWorld.set('iid', iid);
+                mainWorld.set('iid', json.get('dummyWorldIid'));
                 mainWorld.set('identifier', 'World');
                 mainWorld.set('levels', levelsJson);
                 mainWorld.set('worldGridWidth', json.get('worldGridWidth'));
