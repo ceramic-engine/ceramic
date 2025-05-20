@@ -118,9 +118,13 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     function internalCreate() {
 
         status = CREATE;
-        create();
-
-        fadeIn(_fadeInDone);
+        try {
+            create();
+            fadeIn(_fadeInDone);
+        }
+        catch (e:Any) {
+            @:privateAccess Errors.handleUncaughtError(e);
+        }
 
     }
 
