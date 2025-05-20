@@ -199,33 +199,33 @@ class TilemapLayerData extends Model {
 
 /// Helpers
 
-    inline public function indexFromColumnAndRow(column:Int, row:Int):Int {
+    #if !debug inline #end public function indexFromColumnAndRow(column:Int, row:Int):Int {
 
         return row * columns + column;
 
     }
 
-    inline public function tileByColumnAndRow(column:Int, row:Int):TilemapTile {
+    #if !debug inline #end public function tileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
         var index = indexFromColumnAndRow(column, row);
         return tiles.unsafeGet(index);
 
     }
 
-    inline public function computedTileByColumnAndRow(column:Int, row:Int):TilemapTile {
+    #if !debug inline #end public function computedTileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
         var index = indexFromColumnAndRow(column, row);
         return computedTiles.unsafeGet(index);
 
     }
 
-    inline public function columnAtIndex(index:Int):Int {
+    #if !debug inline #end public function columnAtIndex(index:Int):Int {
 
         return index % columns;
 
     }
 
-    inline public function rowAtIndex(index:Int):Int {
+    #if !debug inline #end public function rowAtIndex(index:Int):Int {
 
         return Math.floor(index / columns);
 

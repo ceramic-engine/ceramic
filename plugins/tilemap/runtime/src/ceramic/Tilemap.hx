@@ -398,40 +398,45 @@ class Tilemap extends Quad {
             if (computedCollidableLayers != null) {
                 for (i in 0...computedCollidableLayers.length) {
                     var layer = computedCollidableLayers.unsafeGet(i);
+
                     var layerData = layer.layerData;
                     if (layerData != null && (layerName == null || layerData.name == layerName)) {
 
-                        var tileWidth = layerData.tileWidth;
-                        var tileHeight = layerData.tileHeight;
+                        var tiles = layer.checkCollisionWithComputedTiles ? layerData.computedTiles : layerData.tiles;
+                        if (tiles != null) {
 
-                        var checkLayer:Bool = switch direction {
-                            case NONE: layer.checkCollisionUp || layer.checkCollisionRight || layer.checkCollisionDown || layer.checkCollisionLeft;
-                            case LEFT: layer.checkCollisionRight;
-                            case RIGHT: layer.checkCollisionLeft;
-                            case UP: layer.checkCollisionDown;
-                            case DOWN: layer.checkCollisionUp;
-                        }
+                            var tileWidth = layerData.tileWidth;
+                            var tileHeight = layerData.tileHeight;
 
-                        if (checkLayer) {
-                            var offsetX = layerData.offsetX + layerData.x * tileWidth;
-                            var offsetY = layerData.offsetY + layerData.y * tileHeight;
+                            var checkLayer:Bool = switch direction {
+                                case NONE: layer.checkCollisionUp || layer.checkCollisionRight || layer.checkCollisionDown || layer.checkCollisionLeft;
+                                case LEFT: layer.checkCollisionRight;
+                                case RIGHT: layer.checkCollisionLeft;
+                                case UP: layer.checkCollisionDown;
+                                case DOWN: layer.checkCollisionUp;
+                            }
 
-                            var column = Math.floor((x - offsetX) / tileWidth);
-                            var row = Math.floor((y - offsetY) / tileHeight);
+                            if (checkLayer) {
+                                var offsetX = layerData.offsetX + layerData.x * tileWidth;
+                                var offsetY = layerData.offsetY + layerData.y * tileHeight;
 
-                            if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
-                                var tile = layer.checkCollisionWithComputedTiles ? layerData.computedTileByColumnAndRow(column, row) : layerData.tileByColumnAndRow(column, row);
-                                var gid = tile.gid;
-                                if (layer.checkCollisionValues != null) {
-                                    if (layer.checkCollisionValues.contains(gid)) {
-                                        result = true;
-                                        break;
+                                var column = Math.floor((x - offsetX) / tileWidth);
+                                var row = Math.floor((y - offsetY) / tileHeight);
+
+                                if (column >= 0 && column < layerData.columns && row >= 0 && row < layerData.rows) {
+                                    var tile = layer.checkCollisionWithComputedTiles ? layerData.computedTileByColumnAndRow(column, row) : layerData.tileByColumnAndRow(column, row);
+                                    var gid = tile.gid;
+                                    if (layer.checkCollisionValues != null) {
+                                        if (layer.checkCollisionValues.contains(gid)) {
+                                            result = true;
+                                            break;
+                                        }
                                     }
-                                }
-                                else {
-                                    if (gid > 0) {
-                                        result = true;
-                                        break;
+                                    else {
+                                        if (gid > 0) {
+                                            result = true;
+                                            break;
+                                        }
                                     }
                                 }
                             }
