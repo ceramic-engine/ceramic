@@ -92,7 +92,11 @@ class LdtkData extends Entity {
             _rootJson = json;
             _entityInstances = [];
 
-            toc = [];
+            var tocJson:Array<Dynamic> = json.get('toc');
+            toc = tocJson != null ? [for (i in 0...tocJson.length) {
+                new LdtkTocEntry(this, tocJson[i]);
+            }] : [];
+
             version = json.get('jsonVersion');
             iid = json.get('iid');
             bgColor = Color.fromString(json.get('bgColor'));
@@ -170,6 +174,37 @@ class LdtkData extends Entity {
                 var world = this.worlds[i];
                 if (world.identifier == identifier) {
                     return world;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function worldByIid(iid:String):LdtkWorld {
+
+        if (this.worlds != null) {
+            for (i in 0...this.worlds.length) {
+                var world = this.worlds[i];
+                trace('world=$world');
+                if (world.iid == iid) {
+                    return world;
+                }
+            }
+        }
+
+        return null;
+
+    }
+
+    public function tocEntry(identifier:String):LdtkTocEntry {
+
+        if (toc != null) {
+            for (i in 0...toc.length) {
+                final entry = toc[i];
+                if (entry.identifier == identifier) {
+                    return entry;
                 }
             }
         }
@@ -460,22 +495,6 @@ class LdtkData extends Entity {
 
     private function _registerEntity(entityInstance:LdtkEntityInstance, json:DynamicAccess<Dynamic>) {
 
-        if (json.get('exportToToc') == true) {
-            var identifier:String = json.get('__identifier');
-            var foundTocEntry = null;
-            for (j in 0...toc.length) {
-                var tocEntry = toc[j];
-                if (tocEntry.identifier == identifier) {
-                    foundTocEntry = tocEntry;
-                    break;
-                }
-            }
-            if (foundTocEntry == null) {
-                foundTocEntry = new LdtkTocEntry(identifier);
-            }
-            foundTocEntry.instances.push(entityInstance);
-        }
-
         _entityInstances.push(entityInstance);
 
     }
@@ -503,19 +522,33 @@ class LdtkData extends Entity {
 class LdtkTocEntry {
 
     /**
+     * The `LdtkData` object this toc entry belongs to
+     */
+    public var ldtkData:LdtkData;
+
+    /**
      * Entity definition identifier
      */
     public var identifier:String;
 
     /**
-     * Array of all instances matching the entity definition identifier
+     * All instances of entities that have their `exportToToc` flag enabled
+     * are listed in this array.
      */
-    public var instances:Array<LdtkEntityInstance>;
+    public var instancesData:Array<LdtkTocInstanceData>;
 
-    public function new(identifier:String) {
+    public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
-        this.identifier = identifier;
-        this.instances = [];
+        this.ldtkData = ldtkData;
+
+        if (json != null) {
+            this.identifier = json.get('identifier');
+
+            var instancesDataJson:Array<Dynamic> = json.get('instancesData');
+            instancesData = instancesDataJson != null ? [for (i in 0...instancesDataJson.length) {
+                new LdtkTocInstanceData(this, instancesDataJson[i]);
+            }] : [];
+        }
 
     }
 
@@ -524,7 +557,79 @@ class LdtkTocEntry {
         if (LdtkDataHelpers.beginObjectToString(this)) {
             var res = 'LdtkTocEntry' + LdtkDataHelpers.objectToString({
                 identifier: ''+identifier,
-                instances: ''+instances
+                instancesData: ''+instancesData
+            });
+            LdtkDataHelpers.endObjectToString();
+            return res;
+        }
+        return LdtkDataHelpers.HIDDEN_VALUE;
+
+    }
+
+}
+
+class LdtkTocInstanceData {
+
+    /**
+     * The `LdtkTocEntry` object this instance data belongs to
+     */
+    public var tocEntry:LdtkTocEntry;
+
+    /**
+     * An object containing the values of all entity fields with the `exportToDoc` option enabled.
+     */
+    public var fields:DynamicAccess<Dynamic>;
+
+    public var widPx:Int;
+
+    public var heiPx:Int;
+
+    public var worldX:Int;
+
+    public var worldY:Int;
+
+    public var worldIid:String;
+
+    public var levelIid:String;
+
+    public var layerIid:String;
+
+    public var entityIid:String;
+
+    public function new(?tocEntry:LdtkTocEntry, ?json:DynamicAccess<Dynamic>) {
+
+        this.tocEntry = tocEntry;
+
+        if (json != null) {
+            this.fields = json.get('fields');
+            this.widPx = Std.int(json.get('widPx'));
+            this.heiPx = Std.int(json.get('heiPx'));
+            this.worldX = Std.int(json.get('worldX'));
+            this.worldY = Std.int(json.get('worldY'));
+            if (json.exists('iids')) {
+                final iids:DynamicAccess<Dynamic> = json.get('iids');
+                this.worldIid = iids.get('worldIid');
+                this.levelIid = iids.get('levelIid');
+                this.layerIid = iids.get('layerIid');
+                this.entityIid = iids.get('entityIid');
+            }
+        }
+
+    }
+
+    public function toString() {
+
+        if (LdtkDataHelpers.beginObjectToString(this)) {
+            var res = 'LdtkTocInstanceData' + LdtkDataHelpers.objectToString({
+                fields: ''+fields,
+                widPx: ''+widPx,
+                heiPx: ''+heiPx,
+                worldX: ''+worldX,
+                worldY: ''+worldY,
+                worldIid: ''+worldIid,
+                levelIid: ''+levelIid,
+                layerIid: ''+layerIid,
+                entityIid: ''+entityIid
             });
             LdtkDataHelpers.endObjectToString();
             return res;
