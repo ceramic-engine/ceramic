@@ -1,8 +1,7 @@
 package ceramic;
 
-import haxe.CallStack;
-
 import ceramic.Shortcuts.*;
+import haxe.CallStack;
 
 // Some snippets from https://github.com/larsiusprime/crashdumper/blob/24e28e8fd664de922bd480502efe596665d905b8/crashdumper/CrashDumper.hx
 
@@ -15,6 +14,8 @@ class Errors {
         inline function print(data:Dynamic) {
             #if sys
             Sys.println(''+data);
+            #elseif js
+            js.Syntax.code('console.log({0})', ''+data);
             #else
             trace(data);
             #end

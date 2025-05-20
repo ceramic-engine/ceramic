@@ -281,15 +281,60 @@ class Utils {
 
     }
 
+    static final RE_MODULE_AT = ~/^\s*(?:at\s*)?([^\s]+\.js)(?:\s*:\s*([0-9]+)(?:\s*:\s*([0-9]+))?)?\s*$/;
+
     public static function stackItemToString(item:StackItem):String {
+
+        #if js
+        final sourceMapSupport:Dynamic = js.Syntax.code('window.sourceMapSupport');
+        #end
 
         var str:String = "";
         switch (item) {
             case CFunction:
                 str = "a C function";
             case Module(m):
-                str = "module " + m;
-            case FilePos(itm,file,line):
+                var matchedModule = false;
+                #if js
+                if (RE_MODULE_AT.match(m)) {
+                    var file = RE_MODULE_AT.matched(1);
+                    var line = RE_MODULE_AT.matched(2);
+                    var column = RE_MODULE_AT.matched(3);
+                    str = file;
+                    if (line != null) {
+                        str += ':' + line;
+                    }
+                    matchedModule = true;
+                }
+                #end
+                if (!matchedModule) {
+                    str = "module " + m;
+                }
+            case FilePos(itm,file,line,column):
+                #if js
+                // Only try to resolve source map if it's not already a Haxe source file
+                if (sourceMapSupport != null && !StringTools.endsWith(file, ".hx")) {
+                    try {
+                        var position = {
+                            source: file,
+                            line: line,
+                            column: column
+                        };
+
+                        // Use mapSourcePosition to convert the compiled position to original
+                        var originalPos = js.Syntax.code('{0}.mapSourcePosition({1})', sourceMapSupport, position);
+
+                        // Update file and line with the mapped values
+                        if (originalPos != null) {
+                            file = originalPos.source;
+                            line = originalPos.line;
+                            column = originalPos.column;
+                        }
+                    } catch (e:Dynamic) {
+                        // Just use the original file and line if mapping fails
+                    }
+                }
+                #end
                 if (itm != null) {
                     str = stackItemToString(itm) + " (";
                 }
