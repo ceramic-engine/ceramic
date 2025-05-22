@@ -465,6 +465,12 @@ class TextInput implements Events {
 
     }
 
+    public function kpEnter():Void {
+        
+        enter();
+        
+    }
+
     public function escape():Void {
 
         emitEscape();
