@@ -438,21 +438,36 @@ class AsepriteParser {
                     var relY:Int = frameCelChunk.yPosition - top;
                     var celW:Int = frameCelChunk.width;
                     var celH:Int = frameCelChunk.height;
+
+                    // Trim left
                     if (relX < 0) {
                         srcX -= relX;
                         celW += relX;
                         relX = 0;
                     }
+
+                    // Trim top
                     if (relY < 0) {
                         srcY -= relY;
                         celH += relY;
                         relY = 0;
                     }
+
+                    // Trim right
+                    if (relX + celW > packedWidth) {
+                        celW = packedWidth - relX;
+                    }
+
+                    // Trim bottom
+                    if (relY + celH > packedHeight) {
+                        celH = packedHeight - relY;
+                    }
+
                     if (celW > 0 && celH > 0) {
                         blendAseFrameLayerPixels(
                             frameLayer.pixels, frameCelChunk.width,
                             frame.pixels, packedWidth,
-                            0, 0, celW, celH,
+                            srcX, srcY, celW, celH,
                             relX, relY, frameLayer.layer.blendMode, frameLayer.layer.opacity
                         );
                     }
