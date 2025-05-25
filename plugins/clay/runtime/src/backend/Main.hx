@@ -134,10 +134,10 @@ class Main {
 
         var settings = ceramic.App.init();
 
-        #if mac
-        // Because vsync doesn't seem to work
-        settings.targetFps = 60;
-        #end
+        // #if mac
+        // // Because vsync doesn't seem to work
+        // settings.targetFps = 60;
+        // #end
 
         project = @:privateAccess new Project(settings);
         app = @:privateAccess ceramic.App.app;
