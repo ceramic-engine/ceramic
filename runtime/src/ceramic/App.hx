@@ -1079,6 +1079,12 @@ class App extends Entity {
 
         emitReady();
 
+        #if ceramic_log_fps
+        Timer.interval(this, 1.0, function() {
+            log.info('FPS: ' + computedFps);
+        });
+        #end
+
         #if (ceramic_debug_num_entities || ceramic_debug_num_visuals)
         Timer.interval(this, 5.0, function() {
             var numEntitiesByClass = new Map<String,Int>();
