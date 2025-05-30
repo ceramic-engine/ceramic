@@ -15,9 +15,9 @@ class Tween extends Entity {
 
     var owner:Entity;
 
-    var easing:Easing;
+    public var easing(default, null):Easing;
 
-    var duration:Float;
+    public var duration(default, null):Float;
 
     var remaining:Float;
 
@@ -35,6 +35,10 @@ class Tween extends Entity {
 
     var didTickThisFrame:Bool = false;
 
+    public var value(default, null):Float;
+
+    public var time(default, null):Float;
+
 /// Lifecycle
 
     private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, easing:Easing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -46,6 +50,8 @@ class Tween extends Entity {
         this.duration = duration;
         this.fromValue = fromValue;
         this.toValue = toValue;
+        this.value = fromValue;
+        this.time = 0;
 
         init();
 
@@ -98,6 +104,11 @@ class Tween extends Entity {
             }
         }
 
+    }
+
+    function willEmitUpdate(value:Float, time:Float):Void {
+        this.value = value;
+        this.time = time;
     }
 
     function immediateComplete() {
