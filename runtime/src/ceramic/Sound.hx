@@ -9,6 +9,11 @@ class Sound extends Entity {
 
     public var asset:SoundAsset;
 
+    /**
+     * Default channel to play this sound on (0-based)
+     */
+    public var channel:Int = 0;
+
     public var group(default, set):Int = 0;
     function set_group(group:Int):Int {
         if (this.group == group) return group;
@@ -66,8 +71,14 @@ class Sound extends Entity {
     /**
      * Play the sound at requested position. If volume/pan/pitch are not provided,
      * sound instance properties will be used instead.
+     * @param position Start position in seconds
+     * @param loop Whether to loop the sound
+     * @param volume Volume (0-1)
+     * @param pan Pan (-1 to 1)
+     * @param pitch Pitch multiplier
+     * @param channel Channel to play on (defaults to sound's channel property)
      */
-    public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float):SoundPlayer {
+    public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float, ?channel:Int):SoundPlayer {
 
         var mixer = audio.mixers.getInline(group);
 
@@ -78,13 +89,14 @@ class Sound extends Entity {
         if (volume == null) volume = this.volume;
         if (pan == null) pan = this.pan;
         if (pitch == null) pitch = this.pitch;
+        if (channel == null) channel = this.channel;
 
         // Apply mixer settings
         volume *= mixer.volume * 2;
         pan += mixer.pan;
         pitch += mixer.pitch - 1;
 
-        return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop);
+        return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop, channel);
 
     }
 

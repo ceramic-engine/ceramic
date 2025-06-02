@@ -1,7 +1,7 @@
 package spec;
 
-import backend.AudioResource;
 import backend.AudioHandle;
+import backend.AudioResource;
 import backend.LoadAudioOptions;
 
 interface Audio {
@@ -18,7 +18,7 @@ interface Audio {
 
     function mute(audio:AudioResource):AudioHandle;
 
-    function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle;
+    function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, channel:Int = 0):AudioHandle;
 
     function pause(handle:AudioHandle):Void;
 
@@ -42,4 +42,8 @@ interface Audio {
 
     function setPosition(handle:AudioHandle, position:Float):Void;
 
-} //Audio
+    function addFilter(filter:backend.AudioFilter, channel:Int):Void;
+
+    function removeFilter(filter:backend.AudioFilter, channel:Int):Void;
+
+}

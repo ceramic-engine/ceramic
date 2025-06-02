@@ -193,7 +193,7 @@ class Audio implements spec.Audio {
 
     }
 
-    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
+    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, channel:Int = 0):AudioHandle {
 
         if (!Clay.app.audio.active) return -1;
 
@@ -209,10 +209,10 @@ class Audio implements spec.Audio {
 
         var handle:AudioHandle = null;
         if (loop) {
-            handle = Clay.app.audio.loop(audioResource, volume, false);
+            handle = Clay.app.audio.loop(audioResource, volume, false, channel);
         }
         else {
-            handle = Clay.app.audio.play(audioResource, volume, false);
+            handle = Clay.app.audio.play(audioResource, volume, false, channel);
         }
 
         if (pan != 0) {
@@ -335,6 +335,18 @@ class Audio implements spec.Audio {
 
         Clay.app.audio.position(handle, position);
 
+    }
+
+    public function addFilter(filter:backend.AudioFilter, channel:Int):Void {
+        filter.channel = channel;
+        // TODO
+        //Clay.app.audio.addFilter(filter, channel);
+    }
+
+    public function removeFilter(filter:backend.AudioFilter, channel:Int):Void {
+        filter.channel = channel;
+        // TODO
+        //Clay.app.audio.removeFilter(filter, channel);
     }
 
 /// Internal
