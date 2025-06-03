@@ -267,9 +267,10 @@ async function install() {
     }
 
     // Also download binaries that come with that ceramic build
-    await command('ceramic', ['sdl', 'download'], { cwd: __dirname });
-    await command('ceramic', ['angle', 'download'], { cwd: __dirname });
-    await command('ceramic', ['android', 'update', 'template'], { cwd: __dirname });
+    var ceramic = process.platform == 'win32' ? 'ceramic.cmd' : './ceramic';
+    await command(ceramic, ['sdl', 'download'], { cwd: __dirname });
+    await command(ceramic, ['angle', 'download'], { cwd: __dirname });
+    await command(ceramic, ['android', 'update', 'template'], { cwd: __dirname });
 }
 
 (async () => {
