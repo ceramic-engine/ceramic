@@ -38,6 +38,12 @@ class Download {
 
         h.cnxTimeout = 30;
 
+        // Add GitHub token if available and URL is for GitHub
+        var githubToken = Sys.getEnv("GITHUB_TOKEN");
+        if (githubToken != null && githubToken.length > 0 && (remotePath.indexOf("https://github.com/") == 0 || remotePath.indexOf("https://api.github.com/") == 0)) {
+            h.addHeader("Authorization", "token " + githubToken);
+        }
+
         h.onError = function(e) {
             progress.close();
             FileSystem.deleteFile(localPath);

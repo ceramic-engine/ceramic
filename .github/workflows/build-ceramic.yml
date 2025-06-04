@@ -35,11 +35,15 @@ jobs:
 
       - name: Build ceramic
         working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cd tools
           node ./install --ceramic-release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cd ../runner
           npm ci
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cd ..
 
       - name: Cleanup
@@ -349,7 +353,10 @@ jobs:
 
       - name: Build ceramic
         working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           cd tools
           node ./install --ceramic-release
           cd ../runner
@@ -744,7 +751,10 @@ jobs:
 
       - name: Build ceramic
         working-directory: .
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -e
           cd tools
           node ./install --ceramic-release
           cd ../runner
