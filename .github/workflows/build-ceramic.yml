@@ -74,14 +74,15 @@ jobs:
       - name: Create zip archive
         working-directory: .
         run: |
-          # Use 7zip with proper PowerShell escaping for exclusions
+          # Use maximum ZIP compression level
           7z a -tzip ceramic-windows.zip * `
             "-x!.git" `
             "-x!.github" `
             "-x!ceramic-windows.zip" `
             "-x!ceramic-windows-installer.exe" `
             "-x!git\loreline\git" `
-            "-x!tools\build"
+            "-x!tools\build" `
+            -mx=9
 
       # Then add the Inno Setup steps
       - name: Install Inno Setup
