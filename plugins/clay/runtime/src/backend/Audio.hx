@@ -1,5 +1,6 @@
 package backend;
 
+import backend.AudioFilterBuffer;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
 import clay.Clay;
@@ -207,6 +208,16 @@ class Audio implements spec.Audio {
             pan = 0;
         }
 
+        #if web
+        // TODO audio filters
+        var handle:AudioHandle = null;
+        if (loop) {
+            handle = Clay.app.audio.loop(audioResource, volume, false);
+        }
+        else {
+            handle = Clay.app.audio.play(audioResource, volume, false);
+        }
+        #else
         var handle:AudioHandle = null;
         if (loop) {
             handle = Clay.app.audio.loop(audioResource, volume, false, channel);
@@ -214,6 +225,7 @@ class Audio implements spec.Audio {
         else {
             handle = Clay.app.audio.play(audioResource, volume, false, channel);
         }
+        #end
 
         if (pan != 0) {
             Clay.app.audio.pan(handle, pan);
@@ -337,19 +349,207 @@ class Audio implements spec.Audio {
 
     }
 
-    public function addFilter(filter:backend.AudioFilter, channel:Int):Void {
-        filter.channel = channel;
-        // TODO
-        //Clay.app.audio.addFilter(filter, channel);
+    public function addFilter(channel:Int, filter:ceramic.AudioFilter):Void {
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+
+        var createClayChannelFilter = false;
+
+        var filters = filterIdsByChannel[channel];
+        if (filters == null) {
+            filters = [];
+            filterIdsByChannel[channel] = filters;
+            filterLocksByChannel[channel] = new ceramic.SpinLock();
+            createClayChannelFilter = true;
+        }
+        filters.push({
+            id: filter.id,
+            filter: filter,
+            workletClass: filter.workletClass()
+        });
+
+        #if sys
+        audioFiltersLock.release();
+        #end
+
+        if (createClayChannelFilter) {
+            #if cpp
+            Clay.app.audio.createChannelFilter(
+                channel,
+                cpp.Callable.fromStaticFunction(_clayFilterCreate),
+                cpp.Callable.fromStaticFunction(_clayFilterDestroy),
+                cpp.Callable.fromStaticFunction(_clayFilterProcess)
+            );
+            #else
+            // TODO
+            #end
+        }
+
     }
 
-    public function removeFilter(filter:backend.AudioFilter, channel:Int):Void {
-        filter.channel = channel;
-        // TODO
-        //Clay.app.audio.removeFilter(filter, channel);
+    public function removeFilter(channel:Int, filterId:Int):Void {
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+
+        var resolvedInfo = null;
+        var filters = filterIdsByChannel[channel];
+        if (filters != null) {
+            var index = -1;
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+                if (filterInfo.id == filterId) {
+                    index = i;
+                    resolvedInfo = filterInfo;
+                    break;
+                }
+            }
+            if (index != -1) {
+                filters.splice(index, 1);
+            }
+        }
+
+        #if sys
+        audioFiltersLock.release();
+        #end
+
+        if (resolvedInfo != null) {
+            if (resolvedInfo.worklet != null) {
+                ceramic.AudioFilters.destroyWorklet(
+                    channel,
+                    resolvedInfo.id
+                );
+            }
+            resolvedInfo = null;
+        }
     }
+
+    public function filterParamsChanged(channel:Int, filterId:Int):Void {
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+
+        // TODO web
+
+        var filters = filterIdsByChannel[channel];
+        if (filters != null) {
+            #if sys
+            final byChannelLock = filterLocksByChannel[channel];
+            byChannelLock.acquire();
+            audioFiltersLock.release();
+            #end
+
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+                if (filterInfo.id == filterId) {
+                    filterInfo.paramsDirty = true;
+                    break;
+                }
+            }
+
+            #if sys
+            byChannelLock.release();
+            #end
+        }
+        #if sys
+        else {
+            audioFiltersLock.release();
+        }
+        #end
+
+    }
+
+    #if cpp
+
+    static function _clayFilterCreate(channel:Int, instanceId:Int):Void {
+        // TODO
+    }
+
+    static function _clayFilterDestroy(channel:Int, instanceId:Int):Void {
+        // TODO
+    }
+
+    static function _clayFilterProcess(channel:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
+
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+
+        var filters = filterIdsByChannel[channel];
+        if (filters != null) {
+            #if sys
+            final byChannelLock = filterLocksByChannel[channel];
+            byChannelLock.acquire();
+            audioFiltersLock.release();
+            #end
+
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+
+                // Create filter worklet if needed
+                if (filterInfo.worklet == null) {
+                    filterInfo.worklet = ceramic.AudioFilters.createWorklet(
+                        channel,
+                        filterInfo.id,
+                        filterInfo.workletClass
+                    );
+                }
+
+                // Update worklet params from filter if needed
+                if (filterInfo.paramsDirty) {
+                    ceramic.AudioFilters.beginUpdateFilterWorkletParams(
+                        channel,
+                        filterInfo.id
+                    );
+
+                    filterInfo.filter.acquireParams();
+                    final filterParams = @:privateAccess filterInfo.filter.params;
+                    final workletParams = @:privateAccess filterInfo.worklet.params;
+                    for (p in 0...filterParams.length) {
+                        workletParams[p] = filterParams[p];
+                    }
+                    filterInfo.filter.releaseParams();
+
+                    ceramic.AudioFilters.endUpdateFilterWorkletParams(
+                        channel,
+                        filterInfo.id
+                    );
+                }
+            }
+
+            #if sys
+            byChannelLock.release();
+            #end
+        }
+        #if sys
+        else {
+            audioFiltersLock.release();
+        }
+        #end
+
+        // Make sure worklets are in sync
+        ceramic.AudioFilters.syncWorklets();
+
+        // Do the actual processing
+        final buffer = new AudioFilterBuffer(cpp.Pointer.fromRaw(aBuffer));
+        ceramic.AudioFilters.processChannelAudioWorklets(
+            channel, buffer, aSamples, aChannels, aSamplerate, time
+        );
+
+    }
+
+    #end
 
 /// Internal
+
+    #if sys
+    static final audioFiltersLock = new ceramic.SpinLock();
+    #end
+
+    static final filterIdsByChannel:Array<Array<AudioFilterInfo>> = [];
+
+    static final filterLocksByChannel:Array<ceramic.SpinLock> = [];
 
     var loadingAudioCallbacks:Map<String,Array<AudioResource->Void>> = new Map();
 
@@ -357,4 +557,4 @@ class Audio implements spec.Audio {
 
     var loadedAudioRetainCount:Map<String,Int> = new Map();
 
-} //Audio
+}

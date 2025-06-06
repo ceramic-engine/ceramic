@@ -1,10 +1,19 @@
 package ceramic;
 
+import ceramic.Shortcuts.*;
+
 /**
  * Base class for audio filters that can process audio buffers in real-time.
  * Subclass this to create custom audio filters.
  */
 abstract class AudioFilter {
+
+    static var _nextFilterId:Int = 1;
+
+    /**
+     * The unique id of this filter
+     */
+    public final id:Int;
 
     /**
      * The channel this filter is attached to (-1 if not attached)
@@ -16,28 +25,37 @@ abstract class AudioFilter {
      */
     public var active:Bool = true;
 
-    /**
-     * The actual audio filter object managed by the backend
-     */
-    public var backendItem:backend.AudioFilter;
+    #if sys
+    private final paramsLock = new ceramic.SpinLock();
+    #end
 
-    public function new() {
-        backendItem = new BackendAudioFilter(this);
+    private final params:Array<Float> = [];
+
+    private var paramsChanged:Bool = false;
+    private var paramsAcquired:Bool = false;
+
+    public function acquireParams():Void {
+        #if sys
+        paramsLock.acquire();
+        #end
+        paramsChanged = false;
+        paramsAcquired = false;
     }
 
-    /**
-     * Process audio buffer in place. Override this method to implement custom filtering.
-     * CAUTION: this may be called from a background thread
-     * @param buffer The audio buffer to process (modify in place)
-     * @param samples Number of samples to process
-     * @param bufferChannels Number of audio channels (1 = mono, 2 = stereo)
-     * @param sampleRate Sample rate in Hz
-     * @param time Current playback time in seconds
-     */
-    public function process(buffer:Float32Array, samples:Int, bufferChannels:Int, sampleRate:Float, time:Float):Void {
+    public function releaseParams():Void {
+        var notifyChanged = paramsChanged;
+        paramsChanged = false;
+        paramsAcquired = false;
+        #if sys
+        paramsLock.release();
+        #end
+        if (notifyChanged) {
+            app.backend.audio.filterParamsChanged(channel, id);
+        }
+    }
 
-        // Override in subclasses
-
+    public function new() {
+        id = _nextFilterId++;
     }
 
     /**
@@ -56,26 +74,10 @@ abstract class AudioFilter {
         this.channel = -1;
     }
 
-}
-
-/**
- * We use a subclass of the backend audio filter implementation in order
- * to connect our high level `process()` method with the actual backend,
- * and this while ensuring there is no boxing/unboxing involved in it.
- */
-@:noCompletion
-class BackendAudioFilter extends backend.AudioFilter {
-
-    final ceramicAudioFilter:ceramic.AudioFilter;
-
-    public function new(ceramicAudioFilter:ceramic.AudioFilter) {
-        super();
-        this.ceramicAudioFilter = ceramicAudioFilter;
-    }
-
-    override function process(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
-        ceramicAudioFilter.process(buffer, samples, channels, sampleRate, time);
-    }
+    /**
+     * Return the class that should be used to instanciate audio filter worklets
+     */
+    @:allow(ceramic.Audio)
+    public abstract function workletClass():Class<AudioFilterWorklet>;
 
 }
-

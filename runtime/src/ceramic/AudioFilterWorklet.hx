@@ -1,11 +1,19 @@
-package backend;
+package ceramic;
 
 #if sys
 import haxe.atomic.AtomicBool;
 import haxe.atomic.AtomicInt;
 #end
 
-abstract class AudioFilter {
+/**
+ * The actual worklet class that will do the audio processing of a given `AudioFilter`
+ */
+abstract class AudioFilterWorklet {
+
+    /**
+     * The id of the audio fitler this worklet is associated with
+     */
+    public final filterId:Int;
 
     /**
      * The channel this filter is attached to (-1 if not attached)
@@ -41,7 +49,36 @@ abstract class AudioFilter {
     public var active:Bool = true;
     #end
 
-    public function new() {}
+    private final params:Array<Float> = [];
+
+    /**
+     * Set a boolean parameter at the given position (0-based)
+     */
+    public function getBool(index:Int):Bool {
+        final val:Null<Float> = params[index];
+        return val != null ? val != 0 : false;
+    }
+
+    /**
+     * Set an int parameter at the given position (0-based)
+     */
+    public function getInt(index:Int):Int {
+        final val:Null<Float> = params[index];
+        return val != null ? Std.int(val) : 0;
+    }
+
+    /**
+     * Set a float parameter at the given position (0-based)
+     */
+    public function getFloat(index:Int):Float {
+        final val:Null<Float> = params[index];
+        return val != null ? val : 0;
+    }
+
+    public function new(filterId:Int, channel:Int) {
+        this.filterId = filterId;
+        this.channel = channel;
+    }
 
     /**
      * Process audio buffer in place. Override this method to implement custom filtering.
@@ -52,10 +89,7 @@ abstract class AudioFilter {
      * @param sampleRate Sample rate in Hz
      * @param time Current playback time in seconds
      */
-    public function process(buffer:Float32Array, samples:Int, bufferChannels:Int, sampleRate:Float, time:Float):Void {
-
-        // Override in subclasses
-
-    }
+    public abstract function process(buffer:AudioFilterBuffer, samples:Int, bufferChannels:Int, sampleRate:Float, time:Float):Void;
 
 }
+

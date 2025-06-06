@@ -42,8 +42,10 @@ interface Audio {
 
     function setPosition(handle:AudioHandle, position:Float):Void;
 
-    function addFilter(filter:backend.AudioFilter, channel:Int):Void;
+    function addFilter(channel:Int, filter:ceramic.AudioFilter):Void;
 
-    function removeFilter(filter:backend.AudioFilter, channel:Int):Void;
+    function removeFilter(channel:Int, filterId:Int):Void;
+
+    function filterParamsChanged(channel:Int, filterId:Int):Void;
 
 }

@@ -14,11 +14,10 @@ class Audio extends Entity {
     /**
      * Filters attached to each channel
      */
-    var channelFilters:Array<Array<AudioFilter>>;
+    var channelFilters:Array<Array<AudioFilter>> = [];
 
     #if sys
-    var channelFiltersMutex:Mutex = new Mutex();
-    var processingFiltersPool:Pool<Array<AudioFilter>> = new Pool();
+    var channelFiltersLock = new ceramic.SpinLock();
     #end
 
     @:allow(ceramic.App)
@@ -47,57 +46,19 @@ class Audio extends Entity {
 
     }
 
-    // #if sys
-    // @:noCompletion
-    // private function _processFilters(channel:Int, buffer:Float32Array, samples:Int, numChannels:Int, sampleRate:Float, time:Float):Void {
-
-    //     // We need to be very careful here, because this method can be called from any thread
-
-    //     if (channel < 0) return;
-    //     channelFiltersMutex.acquire();
-
-    //     if (channel < channelFilters.length) {
-    //         final processing = processingFiltersPool.get() ?? [];
-    //         final filters = channelFilters[channel];
-    //         final len = filters.length;
-    //         var numProcessing = 0;
-    //         for (i in 0...len) {
-    //             final filter = filters[i];
-    //             if (filter.active) {
-    //                 processing[numProcessing] = filter;
-    //                 numProcessing++;
-    //             }
-    //         }
-    //         channelFiltersMutex.release();
-
-    //         for (i in 0...numProcessing) {
-    //             final filter = processing[i];
-    //             filter.process(buffer, samples, numChannels, sampleRate, time);
-    //             processing[i] = null;
-    //         }
-
-    //         channelFiltersMutex.acquire();
-    //         processingFiltersPool.recycle(processing);
-    //         channelFiltersMutex.release();
-    //     }
-    //     else {
-    //         channelFiltersMutex.release();
-    //     }
-    // }
-    // #end
-
     /**
      * Add a filter to a specific channel
      * @param filter The filter to add
      * @param channel The channel to add the filter to (0-based)
      */
     public function addFilter(filter:AudioFilter, channel:Int = 0):Void {
+
         if (channel < 0) {
             throw 'Invalid channel $channel, must be 0 or higher';
         }
 
         #if sys
-        channelFiltersMutex.acquire();
+        channelFiltersLock.acquire();
         #end
 
         if (filter.channel != -1) {
@@ -112,10 +73,10 @@ class Audio extends Entity {
         filter.attach(channel);
 
         // Notify backend
-        app.backend.audio.addFilter(filter.backendItem, channel);
+        app.backend.audio.addFilter(channel, filter);
 
         #if sys
-        channelFiltersMutex.release();
+        channelFiltersLock.release();
         #end
 
     }
@@ -127,11 +88,11 @@ class Audio extends Entity {
      */
     public function removeFilter(filter:AudioFilter, ?channel:Int):Void {
         #if sys
-        channelFiltersMutex.acquire();
+        channelFiltersLock.acquire();
         #end
         _removeFilter(filter, channel);
         #if sys
-        channelFiltersMutex.release();
+        channelFiltersLock.release();
         #end
     }
 
@@ -145,7 +106,7 @@ class Audio extends Entity {
             channelFilters[channel].splice(filterIndex, 1);
 
             // Notify backend
-            app.backend.audio.removeFilter(filter.backendItem, channel);
+            app.backend.audio.removeFilter(channel, filter.id);
         }
     }
 
@@ -156,7 +117,7 @@ class Audio extends Entity {
      */
     public function filters(channel:Int):ReadOnlyArray<AudioFilter> {
         #if sys
-        channelFiltersMutex.acquire();
+        channelFiltersLock.acquire();
         #end
         var result = channelFilters[channel];
         if (result != null) {
@@ -166,7 +127,7 @@ class Audio extends Entity {
             result = [];
         }
         #if sys
-        channelFiltersMutex.release();
+        channelFiltersLock.release();
         #end
         return result;
     }
@@ -177,7 +138,7 @@ class Audio extends Entity {
      */
     public function clearFilters(channel:Int):Void {
         #if sys
-        channelFiltersMutex.acquire();
+        channelFiltersLock.acquire();
         #end
         if (channel < channelFilters.length) {
             final filters = channelFilters[channel];
@@ -186,7 +147,7 @@ class Audio extends Entity {
             }
         }
         #if sys
-        channelFiltersMutex.release();
+        channelFiltersLock.release();
         #end
     }
 
