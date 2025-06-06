@@ -80,27 +80,31 @@ class Tween extends Entity {
 
     inline function updateFromTick(delta:Float):Void {
 
-        // Let us know if we "ticked" this tween this frame
-        didTickThisFrame = true;
+        if (!destroyed) {
+            // Let us know if we "ticked" this tween this frame
+            didTickThisFrame = true;
 
-        if (owner != null && owner.destroyed) {
-            destroy();
-        }
-        else {
-            remaining -= delta;
-            if (remaining <= 0) {
-                emitUpdate(toValue, duration);
-                emitComplete();
+            if (owner != null && owner.destroyed) {
                 destroy();
             }
             else {
-                var elapsed = (duration - remaining);
-                TweenEasingFunction.k = elapsed / duration;
-                var k = TweenEasingFunction.k;
-                TweenEasingFunction.customEasing = customEasing;
-                computedEasing();
-                TweenEasingFunction.customEasing = null;
-                emitUpdate(fromValue + (toValue - fromValue) * TweenEasingFunction.k, elapsed);
+                remaining -= delta;
+                if (remaining <= 0) {
+                    emitUpdate(toValue, duration);
+                    emitComplete();
+                    destroy();
+                }
+                else {
+                    var elapsed = (duration - remaining);
+                    TweenEasingFunction.k = elapsed / duration;
+                    var k = TweenEasingFunction.k;
+                    TweenEasingFunction.customEasing = customEasing;
+                    if (computedEasing != null) {
+                        computedEasing();
+                    }
+                    TweenEasingFunction.customEasing = null;
+                    emitUpdate(fromValue + (toValue - fromValue) * TweenEasingFunction.k, elapsed);
+                }
             }
         }
 
@@ -423,7 +427,9 @@ private class TweenEasingFunction {
 /// Custom
 
     public static function custom():Void {
-        k = customEasing(k);
+        if (customEasing != null) {
+            k = customEasing(k);
+        }
     }
 
 /// None
