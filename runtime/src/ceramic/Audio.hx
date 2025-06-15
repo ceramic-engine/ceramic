@@ -12,12 +12,12 @@ class Audio extends Entity {
     var mixers:IntMap<AudioMixer>;
 
     /**
-     * Filters attached to each channel
+     * Filters attached to each bus
      */
-    var channelFilters:Array<Array<AudioFilter>> = [];
+    var busFilters:Array<Array<AudioFilter>> = [];
 
     #if sys
-    var channelFiltersLock = new ceramic.SpinLock();
+    var busFiltersLock = new ceramic.SpinLock();
     #end
 
     @:allow(ceramic.App)
@@ -47,79 +47,79 @@ class Audio extends Entity {
     }
 
     /**
-     * Add a filter to a specific channel
+     * Add a filter to a specific bus
      * @param filter The filter to add
-     * @param channel The channel to add the filter to (0-based)
+     * @param bus The bus to add the filter to (0-based)
      */
-    public function addFilter(filter:AudioFilter, channel:Int = 0):Void {
+    public function addFilter(filter:AudioFilter, bus:Int = 0):Void {
 
-        if (channel < 0) {
-            throw 'Invalid channel $channel, must be 0 or higher';
+        if (bus < 0) {
+            throw 'Invalid bus $bus, must be 0 or higher';
         }
 
         #if sys
-        channelFiltersLock.acquire();
+        busFiltersLock.acquire();
         #end
 
-        if (filter.channel != -1) {
-            _removeFilter(filter, filter.channel);
+        if (filter.bus != -1) {
+            _removeFilter(filter, filter.bus);
         }
 
-        while (channelFilters.length <= channel) {
-            channelFilters.push([]);
+        while (busFilters.length <= bus) {
+            busFilters.push([]);
         }
 
-        channelFilters[channel].push(filter);
-        filter.attach(channel);
+        busFilters[bus].push(filter);
+        filter.attach(bus);
 
         // Notify backend
-        app.backend.audio.addFilter(channel, filter);
+        app.backend.audio.addFilter(bus, filter, @:privateAccess filter.emitReady);
 
         #if sys
-        channelFiltersLock.release();
+        busFiltersLock.release();
         #end
 
     }
 
     /**
-     * Remove a filter from a specific channel
+     * Remove a filter from a specific bus
      * @param filter The filter to remove
-     * @param channel The channel to remove the filter from
+     * @param bus The bus to remove the filter from
      */
-    public function removeFilter(filter:AudioFilter, ?channel:Int):Void {
+    public function removeFilter(filter:AudioFilter, ?bus:Int):Void {
         #if sys
-        channelFiltersLock.acquire();
+        busFiltersLock.acquire();
         #end
-        _removeFilter(filter, channel);
+        _removeFilter(filter, bus);
         #if sys
-        channelFiltersLock.release();
+        busFiltersLock.release();
         #end
     }
 
-    function _removeFilter(filter:AudioFilter, ?channel:Int):Void {
-        if (channel == null) channel = filter.channel;
-        if (channel < 0 || channel >= channelFilters.length) return;
+    function _removeFilter(filter:AudioFilter, ?bus:Int):Void {
+        if (bus == null) bus = filter.bus;
+        if (bus < 0 || bus >= busFilters.length) return;
 
-        final filterIndex = channelFilters[channel].indexOf(filter);
+        final filterIndex = busFilters[bus].indexOf(filter);
         if (filterIndex != -1) {
-            filter.detach(channel);
-            channelFilters[channel].splice(filterIndex, 1);
+            filter.detach(bus);
+            busFilters[bus].splice(filterIndex, 1);
 
             // Notify backend
-            app.backend.audio.removeFilter(channel, filter.id);
+            app.backend.audio.removeFilter(bus, filter.filterId);
         }
     }
 
     /**
-     * Get all filters for a specific channel
-     * @param channel The channel to get filters for
+     * Get all filters for a specific bus
+     * @param bus The bus to get filters for
      * @return Array of filters
      */
-    public function filters(channel:Int):ReadOnlyArray<AudioFilter> {
+    public function filters(bus:Int):ReadOnlyArray<AudioFilter> {
         #if sys
-        channelFiltersLock.acquire();
+        busFiltersLock.acquire();
         #end
-        var result = channelFilters[channel];
+        var result = busFilters[bus];
         if (result != null) {
             result = [].concat(result);
         }
@@ -127,27 +127,27 @@ class Audio extends Entity {
             result = [];
         }
         #if sys
-        channelFiltersLock.release();
+        busFiltersLock.release();
         #end
         return result;
     }
 
     /**
-     * Remove all filters from a specific channel
-     * @param channel The channel to clear
+     * Remove all filters from a specific bus
+     * @param bus The bus to clear
      */
-    public function clearFilters(channel:Int):Void {
+    public function clearFilters(bus:Int):Void {
         #if sys
-        channelFiltersLock.acquire();
+        busFiltersLock.acquire();
         #end
-        if (channel < channelFilters.length) {
-            final filters = channelFilters[channel];
+        if (bus < busFilters.length) {
+            final filters = busFilters[bus];
             while (filters.length > 0) {
-                _removeFilter(filters[filters.length - 1], channel);
+                _removeFilter(filters[filters.length - 1], bus);
             }
         }
         #if sys
-        channelFiltersLock.release();
+        busFiltersLock.release();
         #end
     }
 

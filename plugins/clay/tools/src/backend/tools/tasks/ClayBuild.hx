@@ -5,6 +5,7 @@ import haxe.Json;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Equal;
 import tools.Files;
 import tools.Helpers.*;
 import tools.InstanceManager;
@@ -186,15 +187,180 @@ class ClayBuild extends tools.Task {
                 }
             }
 
+            // Audio filters on the web
+            if (target.name == 'web') {
+                cmdArgs.push('--macro');
+                cmdArgs.push('ceramic.macros.AudioFiltersMacro.init()');
+            }
+
+            // Read previous audio-filters.json
+            var prevAudioFilters:Dynamic = null;
+            final audioFiltersJsonPath = Path.join([outTargetPath, 'audio-filters', 'info.json']);
+            if (FileSystem.exists(audioFiltersJsonPath)) {
+                prevAudioFilters = Json.parse(File.getContent(audioFiltersJsonPath));
+            }
+
             status = haxeWithChecksAndLogs(cmdArgs, {cwd: outTargetPath});
 
             if (status == 0) {
+                // Read audio-filters.json
+                var audioFilters:Dynamic = null;
+                if (FileSystem.exists(audioFiltersJsonPath)) {
+                    audioFilters = Json.parse(File.getContent(audioFiltersJsonPath));
+                }
+
+                final workletsJsFilePath = Path.join([cwd, 'project', 'web', 'audio-worklets.js']);
+                final workletsJsMinifiedFilePath = Path.join([cwd, 'project', 'web', 'audio-worklets.min.js']);
+
+                if (audioFilters != null) {
+                    // Compare previous and new audio filters json hashes
+                    // (and skip if identical)
+                    var workletIncludes = [];
+                    var shouldSkipWebFilters = true;
+                    if (prevAudioFilters == null) {
+                        shouldSkipWebFilters = false;
+                    }
+                    else if (!Equal.equal(prevAudioFilters, audioFilters)) {
+                        shouldSkipWebFilters = false;
+                    }
+
+                    shouldSkipWebFilters = false; // TODO remove
+
+                    // Compile web audio filters worklets
+                    if (!shouldSkipWebFilters) {
+                        var hasWebFiltersToCompile = false;
+                        final filterReferences:Array<{
+                            pack: Array<String>,
+                            name: String,
+                            filePath: String,
+                            hash: String,
+                            min: Int,
+                            max: Int
+                        }> = audioFilters.filters;
+                        final workletReferences:Array<{
+                            pack: Array<String>,
+                            name: String,
+                            filePath: String,
+                            hash: String,
+                            min: Int,
+                            max: Int
+                        }> = audioFilters.worklets;
+
+                        final copiedFiles:Map<String,Bool> = new Map();
+                        final filtersHaxePath = Path.join([outTargetPath, 'audio-filters', 'haxe']);
+                        if (FileSystem.exists(filtersHaxePath)) {
+                            Files.deleteRecursive(filtersHaxePath);
+                        }
+                        FileSystem.createDirectory(filtersHaxePath);
+                        for (ref in workletReferences) {
+                            if (!hasWebFiltersToCompile) {
+                                hasWebFiltersToCompile = true;
+                                print('Compile web audio worklets');
+                            }
+
+                            var pack = [].concat(ref.pack ?? []);
+                            while (pack.length > 0 && pack[pack.length-1].charAt(0) != pack[pack.length-1].charAt(0).toLowerCase()) {
+                                pack.pop();
+                            }
+                            final destPath = Path.join([filtersHaxePath].concat(pack).concat([ref.name + '.hx']));
+
+                            var toInclude = ref.name;
+                            if (pack.length > 0) {
+                                toInclude = pack.join('.') + '.' + toInclude;
+                            }
+                            workletIncludes.push(toInclude);
+
+                            if (!FileSystem.exists(Path.directory(destPath))) {
+                                FileSystem.createDirectory(Path.directory(destPath));
+                            }
+
+                            var packDecl = '';
+                            if (pack.length > 0) {
+                                packDecl = 'package ' + pack.join('.') + ';' + #if windows '\r\n' #else '\n' #end;
+                            }
+
+                            File.saveContent(
+                                destPath,
+                                '$packDecl
+import ceramic.AudioFilterWorklet;
+import ceramic.AudioFilterBuffer;
+
+${File.getContent(ref.filePath).substring(ref.min, ref.max)}
+                                '
+                            );
+                        }
+                        if (hasWebFiltersToCompile) {
+                            if (!FileSystem.exists(Path.join([filtersHaxePath, 'ceramic']))) {
+                                FileSystem.createDirectory(Path.join([filtersHaxePath, 'ceramic']));
+                            }
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilters.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/AudioFilters.hx'])
+                            );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilterWorklet.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/AudioFilterWorklet.hx'])
+                            );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilterBuffer.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/AudioFilterBuffer.hx'])
+                            );
+
+                            var workletIncludesStr = '';
+                            var workletResolveClassCases = '';
+                            for (toInclude in workletIncludes) {
+                                workletIncludesStr += 'import ' + toInclude + ';' + #if windows '\r\n' #else '\n' #end;
+                                workletResolveClassCases += '        case "' + toInclude + '": ' + toInclude + ';' + #if windows '\r\n' #else '\n' #end;
+                            }
+
+                            File.saveContent(
+                                Path.join([filtersHaxePath, 'Main.hx']),
+                                '
+$workletIncludesStr
+function main() {
+    backend.Audio.init(resolveWorkletClass);
+}
+
+function resolveWorkletClass(className:String):Class<ceramic.AudioFilterWorklet> {
+    return switch className {
+$workletResolveClassCases
+        case _: null;
+    }
+}
+                                '
+                            );
+
+                            final buildWorkletsStatus = haxeWithChecksAndLogs([
+                                '--class-path', '.',
+                                '--class-path', Path.join([context.plugins.get('clay').path, 'audio/src']),
+                                '--main', 'Main',
+                                '--js', workletsJsFilePath
+                            ], {cwd: filtersHaxePath});
+
+                            if (buildWorkletsStatus != 0) {
+                                // Worklet buils failed
+                                error('Error when building web audio worklets. (status = $buildWorkletsStatus)');
+                                Sys.exit(buildWorkletsStatus);
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (FileSystem.exists(workletsJsFilePath)) {
+                        FileSystem.deleteFile(workletsJsFilePath);
+                    }
+                    if (FileSystem.exists(workletsJsMinifiedFilePath)) {
+                        FileSystem.deleteFile(workletsJsMinifiedFilePath);
+                    }
+                }
+
                 // We can now save last modified list, as build seems ok
                 if (saveLastModifiedListCallback != null) {
                     saveLastModifiedListCallback();
                     saveLastModifiedListCallback = null;
                 }
-            } else {
+            }
+            else {
                 // Build failed
                 error('Error when running clay $action with target ${target.name}. (status = $status)');
                 Sys.exit(status);
@@ -339,7 +505,7 @@ class ClayBuild extends tools.Task {
 
                 // Run with electron runner
                 var electronErrors = extractArgFlag(args, 'electron-errors');
-                var taskArgs = ['web', 'project', '--variant', context.variant];
+                var taskArgs = ['web', 'project', '--variant', context.variant, '--audio-filters'];
                 if (action == 'run')
                     taskArgs.push('--run');
                 if (debug)

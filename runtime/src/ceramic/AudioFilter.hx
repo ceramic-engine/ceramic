@@ -6,19 +6,31 @@ import ceramic.Shortcuts.*;
  * Base class for audio filters that can process audio buffers in real-time.
  * Subclass this to create custom audio filters.
  */
-abstract class AudioFilter {
+#if (web && !macro && !display && !completion)
+@:autoBuild(ceramic.macros.AudioFiltersMacro.buildFilter())
+#end
+abstract class AudioFilter extends Entity {
+
+    /**
+     * Fired when the audio filter is successfuly attached to a given bus.
+     * When this is called, the audio filter is expected to be ready in the sense
+     * that all the underlying layers have been properly plugged and the audio
+     * output bus should be affected by this audio filter's worklet.
+     * @param bus
+     */
+    @event function ready(bus:Int):Void;
 
     static var _nextFilterId:Int = 1;
 
     /**
      * The unique id of this filter
      */
-    public final id:Int;
+    public final filterId:Int;
 
     /**
-     * The channel this filter is attached to (-1 if not attached)
+     * The bus this filter is attached to (-1 if not attached)
      */
-    public var channel:Int = -1;
+    public var bus:Int = -1;
 
     /**
      * Whether this filter is currently active
@@ -50,28 +62,29 @@ abstract class AudioFilter {
         paramsLock.release();
         #end
         if (notifyChanged) {
-            app.backend.audio.filterParamsChanged(channel, id);
+            app.backend.audio.filterParamsChanged(bus, filterId);
         }
     }
 
     public function new() {
-        id = _nextFilterId++;
+        super();
+        filterId = _nextFilterId++;
     }
 
     /**
-     * Called when filter is attached to a channel
+     * Called when filter is attached to a bus
      */
     @:allow(ceramic.Audio)
-    function attach(channel:Int):Void {
-        this.channel = channel;
+    function attach(bus:Int):Void {
+        this.bus = bus;
     }
 
     /**
-     * Called when filter is detached from a channel
+     * Called when filter is detached from a bus
      */
     @:allow(ceramic.Audio)
-    function detach(channel:Int):Void {
-        this.channel = -1;
+    function detach(bus:Int):Void {
+        this.bus = -1;
     }
 
     /**
@@ -79,5 +92,12 @@ abstract class AudioFilter {
      */
     @:allow(ceramic.Audio)
     public abstract function workletClass():Class<AudioFilterWorklet>;
+
+    override function destroy() {
+        if (bus != -1) {
+            audio.removeFilter(this);
+        }
+        super.destroy();
+    }
 
 }

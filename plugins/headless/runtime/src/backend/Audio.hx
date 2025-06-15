@@ -26,7 +26,7 @@ class Audio implements spec.Audio {
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return false;
 
     }
@@ -34,13 +34,13 @@ class Audio implements spec.Audio {
     inline public function getDuration(audio:AudioResource):Float {
 
         return 0;
-        
+
     }
 
     inline public function resumeAudioContext(done:Bool->Void):Void {
 
         done(true);
-        
+
     }
 
     inline public function destroy(audio:AudioResource):Void {
@@ -55,7 +55,7 @@ class Audio implements spec.Audio {
 
     }
 
-    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
+    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, channel:Int = 0):AudioHandle {
 
         var handle = new AudioHandleImpl();
         handle.volume = volume;
@@ -68,19 +68,19 @@ class Audio implements spec.Audio {
     }
 
     public function pause(handle:AudioHandle):Void {
-                    
+
         //
 
     }
 
     public function resume(handle:AudioHandle):Void {
-                    
+
         //
 
     }
 
     public function stop(handle:AudioHandle):Void {
-                    
+
         //
 
     }
@@ -92,45 +92,51 @@ class Audio implements spec.Audio {
     }
 
     public function setVolume(handle:AudioHandle, volume:Float):Void {
-                    
+
         (handle:AudioHandleImpl).volume = volume;
 
     }
 
     public function getPan(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).pan;
 
     }
 
     public function setPan(handle:AudioHandle, pan:Float):Void {
-                    
+
         (handle:AudioHandleImpl).pan = pan;
 
     }
 
     public function getPitch(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).pitch;
 
     }
 
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
-                    
+
         (handle:AudioHandleImpl).pitch = pitch;
 
     }
 
     public function getPosition(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).position;
 
     }
 
     public function setPosition(handle:AudioHandle, position:Float):Void {
-                    
+
         (handle:AudioHandleImpl).position = position;
 
     }
 
-} //Audio
+    public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {}
+
+    public function removeFilter(channel:Int, filterId:Int):Void {}
+
+    public function filterParamsChanged(channel:Int, filterId:Int):Void {}
+
+}

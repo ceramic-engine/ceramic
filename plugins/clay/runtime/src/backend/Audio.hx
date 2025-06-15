@@ -3,6 +3,7 @@ package backend;
 import backend.AudioFilterBuffer;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
+import ceramic.WaitCallbacks;
 import clay.Clay;
 import clay.Immediate;
 
@@ -194,7 +195,7 @@ class Audio implements spec.Audio {
 
     }
 
-    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, channel:Int = 0):AudioHandle {
+    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
         if (!Clay.app.audio.active) return -1;
 
@@ -220,10 +221,10 @@ class Audio implements spec.Audio {
         #else
         var handle:AudioHandle = null;
         if (loop) {
-            handle = Clay.app.audio.loop(audioResource, volume, false, channel);
+            handle = Clay.app.audio.loop(audioResource, volume, false, bus);
         }
         else {
-            handle = Clay.app.audio.play(audioResource, volume, false, channel);
+            handle = Clay.app.audio.play(audioResource, volume, false, bus);
         }
         #end
 
@@ -349,52 +350,119 @@ class Audio implements spec.Audio {
 
     }
 
-    public function addFilter(channel:Int, filter:ceramic.AudioFilter):Void {
+    public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
         #if sys
         audioFiltersLock.acquire();
         #end
 
-        var createClayChannelFilter = false;
+        final wait = new WaitCallbacks(() -> onReady(bus));
+        final filterWorkletReady = wait.callback();
+        final busFilterReady = wait.callback();
 
-        var filters = filterIdsByChannel[channel];
+        var createClayBusFilter = false;
+
+        var filters = filterIdsByBus[bus];
         if (filters == null) {
             filters = [];
-            filterIdsByChannel[channel] = filters;
-            filterLocksByChannel[channel] = new ceramic.SpinLock();
-            createClayChannelFilter = true;
+            filterIdsByBus[bus] = filters;
+            #if sys
+            filterLocksByBus[bus] = new ceramic.SpinLock();
+            #end
+            createClayBusFilter = true;
         }
+        final filterWorkletClass = filter.workletClass();
         filters.push({
-            id: filter.id,
+            id: filter.filterId,
             filter: filter,
-            workletClass: filter.workletClass()
+            workletClass: filterWorkletClass
         });
 
         #if sys
         audioFiltersLock.release();
         #end
 
-        if (createClayChannelFilter) {
+        #if web
+        var addBusFilterWorklet:()->Void = function() {
+            Clay.app.audio.addBusFilterWorklet(
+                bus,
+                filter.filterId,
+                filterWorkletClass,
+                filterWorkletReady
+            );
+        };
+        #end
+
+        if (createClayBusFilter) {
             #if cpp
-            Clay.app.audio.createChannelFilter(
-                channel,
+            Clay.app.audio.createBusFilter(
+                bus,
                 cpp.Callable.fromStaticFunction(_clayFilterCreate),
                 cpp.Callable.fromStaticFunction(_clayFilterDestroy),
                 cpp.Callable.fromStaticFunction(_clayFilterProcess)
             );
-            #else
-            // TODO
+            #elseif web
+            Clay.app.audio.createBusFilter(
+                #if ceramic_web_minify
+                "audio-worklets.min.js",
+                #else
+                "audio-worklets.js",
+                #end
+                bus,
+                (bus, instanceId) -> {
+                    _clayFilterCreate(bus, instanceId);
+                    if (addBusFilterWorklet != null) {
+                        final cb = addBusFilterWorklet;
+                        addBusFilterWorklet = null;
+                        cb();
+                    }
+                },
+                _clayFilterDestroy
+            );
+            #end
+        }
+
+        #if sys
+        audioFiltersLock.acquire();
+        final byBusLock = filterLocksByBus[bus];
+        byBusLock.acquire();
+        audioFiltersLock.release();
+        postWorkletSyncCallbacks.push(filterWorkletReady);
+        byBusLock.release();
+        #end
+
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+
+        // Trigger ready if the bus filter is already created
+        final hasBusFilter = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+        if (hasBusFilter) {
+            #if sys
+            audioFiltersLock.release();
+            #end
+
+            busFilterReady();
+        }
+        else {
+            if (busFilterReadyCallbacks[bus] == null) {
+                busFilterReadyCallbacks[bus] = [];
+            }
+            busFilterReadyCallbacks[bus].push(busFilterReady);
+
+            #if sys
+            audioFiltersLock.release();
             #end
         }
 
     }
 
-    public function removeFilter(channel:Int, filterId:Int):Void {
+    public function removeFilter(bus:Int, filterId:Int):Void {
         #if sys
         audioFiltersLock.acquire();
         #end
 
         var resolvedInfo = null;
-        var filters = filterIdsByChannel[channel];
+        var filters = filterIdsByBus[bus];
         if (filters != null) {
             var index = -1;
             for (i in 0...filters.length) {
@@ -414,29 +482,37 @@ class Audio implements spec.Audio {
         audioFiltersLock.release();
         #end
 
+        #if web
+        Clay.app.audio.destroyBusFilterWorklet(
+            bus,
+            filterId
+        );
+        #else
         if (resolvedInfo != null) {
             if (resolvedInfo.worklet != null) {
                 ceramic.AudioFilters.destroyWorklet(
-                    channel,
+                    bus,
                     resolvedInfo.id
                 );
             }
             resolvedInfo = null;
         }
+        #end
+
     }
 
-    public function filterParamsChanged(channel:Int, filterId:Int):Void {
+    public function filterParamsChanged(bus:Int, filterId:Int):Void {
         #if sys
         audioFiltersLock.acquire();
         #end
 
         // TODO web
 
-        var filters = filterIdsByChannel[channel];
+        var filters = filterIdsByBus[bus];
         if (filters != null) {
             #if sys
-            final byChannelLock = filterLocksByChannel[channel];
-            byChannelLock.acquire();
+            final byBusLock = filterLocksByBus[bus];
+            byBusLock.acquire();
             audioFiltersLock.release();
             #end
 
@@ -449,7 +525,7 @@ class Audio implements spec.Audio {
             }
 
             #if sys
-            byChannelLock.release();
+            byBusLock.release();
             #end
         }
         #if sys
@@ -460,27 +536,62 @@ class Audio implements spec.Audio {
 
     }
 
+    static function _clayFilterCreate(bus:Int, instanceId:Int):Void {
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+        final hasBusFilter = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+        activeBusFilters[bus] = true;
+        if (!hasBusFilter) {
+            if (busFilterReadyCallbacks.length > bus) {
+                if (busFilterReadyCallbacks[bus].length > 0) {
+                    final toNotify = [];
+                    while (busFilterReadyCallbacks[bus].length > 0) {
+                        toNotify.push(busFilterReadyCallbacks[bus].shift());
+                    }
+                    _notifyCallbacksInMainThread(toNotify);
+                }
+            }
+        }
+        #if sys
+        audioFiltersLock.release();
+        #end
+    }
+
+    static function _notifyCallbacksInMainThread(toNotify:Array<()->Void>):Void {
+        ceramic.Runner.runInMain(() -> {
+            for (i in 0...toNotify.length) {
+                final cb = toNotify[i];
+                cb();
+            }
+        });
+    }
+
+    static function _clayFilterDestroy(bus:Int, instanceId:Int):Void {
+        #if sys
+        audioFiltersLock.acquire();
+        #end
+        activeBusFilters[bus] = false;
+        #if sys
+        audioFiltersLock.release();
+        #end
+    }
+
     #if cpp
 
-    static function _clayFilterCreate(channel:Int, instanceId:Int):Void {
-        // TODO
-    }
-
-    static function _clayFilterDestroy(channel:Int, instanceId:Int):Void {
-        // TODO
-    }
-
-    static function _clayFilterProcess(channel:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
+    static function _clayFilterProcess(bus:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
 
         #if sys
         audioFiltersLock.acquire();
         #end
 
-        var filters = filterIdsByChannel[channel];
+        var postSyncCbs:Array<()->Void> = null;
+
+        var filters = filterIdsByBus[bus];
         if (filters != null) {
             #if sys
-            final byChannelLock = filterLocksByChannel[channel];
-            byChannelLock.acquire();
+            final byBusLock = filterLocksByBus[bus];
+            byBusLock.acquire();
             audioFiltersLock.release();
             #end
 
@@ -490,7 +601,7 @@ class Audio implements spec.Audio {
                 // Create filter worklet if needed
                 if (filterInfo.worklet == null) {
                     filterInfo.worklet = ceramic.AudioFilters.createWorklet(
-                        channel,
+                        bus,
                         filterInfo.id,
                         filterInfo.workletClass
                     );
@@ -499,7 +610,7 @@ class Audio implements spec.Audio {
                 // Update worklet params from filter if needed
                 if (filterInfo.paramsDirty) {
                     ceramic.AudioFilters.beginUpdateFilterWorkletParams(
-                        channel,
+                        bus,
                         filterInfo.id
                     );
 
@@ -512,14 +623,21 @@ class Audio implements spec.Audio {
                     filterInfo.filter.releaseParams();
 
                     ceramic.AudioFilters.endUpdateFilterWorkletParams(
-                        channel,
+                        bus,
                         filterInfo.id
                     );
                 }
             }
 
+            if (postWorkletSyncCallbacks.length > 0) {
+                postSyncCbs = [];
+                while (postWorkletSyncCallbacks.length > 0) {
+                    postSyncCbs.push(postWorkletSyncCallbacks.shift());
+                }
+            }
+
             #if sys
-            byChannelLock.release();
+            byBusLock.release();
             #end
         }
         #if sys
@@ -531,10 +649,15 @@ class Audio implements spec.Audio {
         // Make sure worklets are in sync
         ceramic.AudioFilters.syncWorklets();
 
+        // Notify worklet post-sync callbacks
+        if (postSyncCbs != null) {
+            _notifyCallbacksInMainThread(postSyncCbs);
+        }
+
         // Do the actual processing
         final buffer = new AudioFilterBuffer(cpp.Pointer.fromRaw(aBuffer));
-        ceramic.AudioFilters.processChannelAudioWorklets(
-            channel, buffer, aSamples, aChannels, aSamplerate, time
+        ceramic.AudioFilters.processBusAudioWorklets(
+            bus, buffer, aSamples, aChannels, aSamplerate, time
         );
 
     }
@@ -545,11 +668,16 @@ class Audio implements spec.Audio {
 
     #if sys
     static final audioFiltersLock = new ceramic.SpinLock();
+    static final filterLocksByBus:Array<ceramic.SpinLock> = [];
     #end
 
-    static final filterIdsByChannel:Array<Array<AudioFilterInfo>> = [];
+    static final filterIdsByBus:Array<Array<AudioFilterInfo>> = [];
 
-    static final filterLocksByChannel:Array<ceramic.SpinLock> = [];
+    static final activeBusFilters:Array<Bool> = [];
+
+    static final busFilterReadyCallbacks:Array<Array<()->Void>> = [];
+
+    static final postWorkletSyncCallbacks:Array<()->Void> = [];
 
     var loadingAudioCallbacks:Map<String,Array<AudioResource->Void>> = new Map();
 

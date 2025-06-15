@@ -8,6 +8,9 @@ import haxe.atomic.AtomicInt;
 /**
  * The actual worklet class that will do the audio processing of a given `AudioFilter`
  */
+#if (web && !macro && !display && !completion)
+@:autoBuild(ceramic.macros.AudioFiltersMacro.buildWorklet())
+#end
 abstract class AudioFilterWorklet {
 
     /**
@@ -16,20 +19,20 @@ abstract class AudioFilterWorklet {
     public final filterId:Int;
 
     /**
-     * The channel this filter is attached to (-1 if not attached)
+     * The bus this filter is attached to (-1 if not attached)
      */
     #if sys
-    private var _channel:AtomicInt = new AtomicInt(-1);
-    public var channel(get,set):Int;
-    inline function get_channel():Int {
-        return _channel.load();
+    private var _bus:AtomicInt = new AtomicInt(-1);
+    public var bus(get,set):Int;
+    inline function get_bus():Int {
+        return _bus.load();
     }
-    inline function set_channel(channel:Int):Int {
-        _channel.exchange(channel);
-        return channel;
+    inline function set_bus(bus:Int):Int {
+        _bus.exchange(bus);
+        return bus;
     }
     #else
-    public var channel:Int = -1;
+    public var bus:Int = -1;
     #end
 
     /**
@@ -75,9 +78,9 @@ abstract class AudioFilterWorklet {
         return val != null ? val : 0;
     }
 
-    public function new(filterId:Int, channel:Int) {
+    public function new(filterId:Int, bus:Int) {
         this.filterId = filterId;
-        this.channel = channel;
+        this.bus = bus;
     }
 
     /**
@@ -85,11 +88,11 @@ abstract class AudioFilterWorklet {
      * CAUTION: this may be called from a background thread
      * @param buffer The audio buffer to process (modify in place)
      * @param samples Number of samples to process
-     * @param bufferChannels Number of audio channels (1 = mono, 2 = stereo)
+     * @param channels Number of audio channels (1 = mono, 2 = stereo)
      * @param sampleRate Sample rate in Hz
      * @param time Current playback time in seconds
      */
-    public abstract function process(buffer:AudioFilterBuffer, samples:Int, bufferChannels:Int, sampleRate:Float, time:Float):Void;
+    public abstract function process(buffer:AudioFilterBuffer, samples:Int, channels:Int, sampleRate:Float, time:Float):Void;
 
 }
 

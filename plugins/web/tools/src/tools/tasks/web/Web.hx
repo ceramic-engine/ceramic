@@ -41,6 +41,7 @@ class Web extends tools.Task {
         var screenshotPath = extractArgValue(args, 'screenshot');
         var screenshotDelay = extractArgValue(args, 'screenshot-delay');
         var screenshotThenQuit = extractArgFlag(args, 'screenshot-then-quit');
+        var audioFilters = extractArgFlag(args, 'audio-filters');
 
         // Check that project didn't change name
         var htmlContent = null;
@@ -104,6 +105,7 @@ class Web extends tools.Task {
         var backendName = context.backend != null ? context.backend.name : 'clay';
         var outTargetPath = BuildTargetExtensions.outPathWithName(backendName, 'web', cwd, context.debug, context.variant);
         var jsBasePath = Path.join([webProjectPath, jsName]);
+        var audioWorkletsBasePath = Path.join([webProjectPath, 'audio-worklets']);
 
         // Patch index.html if needed
         if (htmlContent == null)
@@ -167,6 +169,12 @@ class Web extends tools.Task {
             if (FileSystem.exists('$jsBasePath.js.map')) {
                 FileSystem.deleteFile('$jsBasePath.js.map');
             }
+            if (FileSystem.exists('$audioWorkletsBasePath.js')) {
+                FileSystem.deleteFile('$audioWorkletsBasePath.js');
+            }
+            if (FileSystem.exists('$audioWorkletsBasePath.js.map')) {
+                FileSystem.deleteFile('$audioWorkletsBasePath.js.map');
+            }
         }
         else {
             if (htmlContent.indexOf('<script type="text/javascript" src="./$jsName.min.js"></script>') != -1) {
@@ -182,6 +190,12 @@ class Web extends tools.Task {
             }
             if (FileSystem.exists('$jsBasePath.min.js.map')) {
                 FileSystem.deleteFile('$jsBasePath.min.js.map');
+            }
+            if (FileSystem.exists('$audioWorkletsBasePath.min.js')) {
+                FileSystem.deleteFile('$audioWorkletsBasePath.min.js');
+            }
+            if (FileSystem.exists('$audioWorkletsBasePath.min.js.map')) {
+                FileSystem.deleteFile('$audioWorkletsBasePath.min.js.map');
             }
         }
 

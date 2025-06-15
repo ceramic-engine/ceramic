@@ -23,4 +23,27 @@ abstract AudioFilterBuffer(cpp.Pointer<cpp.Float32>) {
     }
 
 }
+#else
+abstract AudioFilterBuffer(clay.buffers.Float32Array) {
+
+    inline public function new(buffer:clay.buffers.Float32Array) {
+        this = buffer;
+    }
+
+    inline public function setBuffer(buffer:clay.buffers.Float32Array):Void {
+        this = buffer;
+    }
+
+    @:arrayAccess
+    public inline function get(index:Int):Float {
+        return this[index];
+    }
+
+    @:arrayAccess
+    public inline function set(index:Int, value:Float):Float {
+        this[index] = value;
+        return value;
+    }
+
+}
 #end

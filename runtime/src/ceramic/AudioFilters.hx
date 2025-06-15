@@ -18,8 +18,8 @@ class AudioFilters {
         return workletsDirty;
     }
     private static final allWorkletsLock = new sys.thread.Mutex();
-    private static final accessChannelLocks = new ceramic.SpinLock();
-    private static final lockByChannel:Array<ceramic.SpinLock> = [];
+    private static final accessBusLocks = new ceramic.SpinLock();
+    private static final lockByBus:Array<ceramic.SpinLock> = [];
     #else
     private static var workletsDirty:Bool = true;
     #end
@@ -27,7 +27,7 @@ class AudioFilters {
     private static final pendingWorklets:Array<AudioFilterWorklet> = [];
     private static final toRemoveWorklets:Array<AudioFilterWorklet> = [];
 
-    private static final workletsByChannel:Array<Array<AudioFilterWorklet>> = [];
+    private static final workletsByBus:Array<Array<AudioFilterWorklet>> = [];
 
     @:allow(backend.Audio)
     private static function syncWorklets():Void {
@@ -37,50 +37,50 @@ class AudioFilters {
             #end
             while (pendingWorklets.length > 0) {
                 final worklet = pendingWorklets.shift();
-                final channel = worklet.channel;
+                final bus = worklet.bus;
                 #if sys
-                accessChannelLocks.acquire();
-                var channelLock = lockByChannel[channel];
-                if (channelLock == null) {
-                    channelLock = new ceramic.SpinLock();
-                    lockByChannel[channel] = channelLock;
+                accessBusLocks.acquire();
+                var busLock = lockByBus[bus];
+                if (busLock == null) {
+                    busLock = new ceramic.SpinLock();
+                    lockByBus[bus] = busLock;
                 }
-                channelLock.acquire();
-                accessChannelLocks.release();
+                busLock.acquire();
+                accessBusLocks.release();
                 #end
 
-                var worklets = workletsByChannel[channel];
+                var worklets = workletsByBus[bus];
                 if (worklets == null) {
                     worklets = [];
-                    workletsByChannel[channel] = worklets;
+                    workletsByBus[bus] = worklets;
                 }
                 worklets.push(worklet);
 
                 #if sys
-                channelLock.release();
+                busLock.release();
                 #end
             }
             while (toRemoveWorklets.length > 0) {
                 final worklet = toRemoveWorklets.shift();
-                final channel = worklet.channel;
+                final bus = worklet.bus;
                 #if sys
-                accessChannelLocks.acquire();
-                var channelLock = lockByChannel[channel];
-                if (channelLock == null) {
-                    channelLock = new ceramic.SpinLock();
-                    lockByChannel[channel] = channelLock;
+                accessBusLocks.acquire();
+                var busLock = lockByBus[bus];
+                if (busLock == null) {
+                    busLock = new ceramic.SpinLock();
+                    lockByBus[bus] = busLock;
                 }
-                channelLock.acquire();
-                accessChannelLocks.release();
+                busLock.acquire();
+                accessBusLocks.release();
                 #end
 
-                var worklets = workletsByChannel[channel];
+                var worklets = workletsByBus[bus];
                 if (worklets != null) {
                     worklets.remove(worklet);
                 }
 
                 #if sys
-                channelLock.release();
+                busLock.release();
                 #end
             }
             workletsDirty = false;
@@ -91,8 +91,8 @@ class AudioFilters {
     }
 
     @:allow(backend.Audio)
-    private static function createWorklet(channel:Int, filterId:Int, workletClass:Class<AudioFilterWorklet>):AudioFilterWorklet {
-        final worklet = Type.createInstance(workletClass, [filterId, channel]);
+    private static function createWorklet(bus:Int, filterId:Int, workletClass:Class<AudioFilterWorklet>):AudioFilterWorklet {
+        final worklet = Type.createInstance(workletClass, [filterId, bus]);
         #if sys
         allWorkletsLock.acquire();
         #end
@@ -105,7 +105,7 @@ class AudioFilters {
     }
 
     @:allow(backend.Audio)
-    private static function destroyWorklet(channel:Int, filterId:Int):Void {
+    private static function destroyWorklet(bus:Int, filterId:Int):Void {
         #if sys
         allWorkletsLock.acquire();
         #end
@@ -118,8 +118,8 @@ class AudioFilters {
                 break;
             }
         }
-        for (i in 0...workletsByChannel.length) {
-            final worklets = workletsByChannel[i];
+        for (i in 0...workletsByBus.length) {
+            final worklets = workletsByBus[i];
             if (worklets != null) {
                 for (j in 0...worklets.length) {
                     final worklet = worklets[j];
@@ -137,53 +137,53 @@ class AudioFilters {
     }
 
     @:allow(backend.Audio)
-    private static function beginUpdateFilterWorkletParams(channel:Int, filterId:Int):Void {
+    private static function beginUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
         #if sys
-        accessChannelLocks.acquire();
-        final channelLock = lockByChannel[channel];
-        if (channelLock != null) {
-            channelLock.release();
+        accessBusLocks.acquire();
+        final busLock = lockByBus[bus];
+        if (busLock != null) {
+            busLock.release();
         }
-        accessChannelLocks.release();
+        accessBusLocks.release();
         #end
     }
 
     @:allow(backend.Audio)
-    private static function endUpdateFilterWorkletParams(channel:Int, filterId:Int):Void {
+    private static function endUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
         #if sys
-        accessChannelLocks.acquire();
-        final channelLock = lockByChannel[channel];
-        if (channelLock != null) {
-            channelLock.release();
+        accessBusLocks.acquire();
+        final busLock = lockByBus[bus];
+        if (busLock != null) {
+            busLock.release();
         }
-        accessChannelLocks.release();
+        accessBusLocks.release();
         #end
     }
 
     @:allow(backend.Audio)
-    private static function processChannelAudioWorklets(channel:Int, buffer:AudioFilterBuffer, samples:Int, bufferChannels:Int, sampleRate:Float, time:Float):Void {
+    private static function processBusAudioWorklets(bus:Int, buffer:AudioFilterBuffer, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
 
         #if sys
-        accessChannelLocks.acquire();
-        final channelLock = lockByChannel[channel];
-        if (channelLock != null) {
-            channelLock.acquire();
-            accessChannelLocks.release();
+        accessBusLocks.acquire();
+        final busLock = lockByBus[bus];
+        if (busLock != null) {
+            busLock.acquire();
+            accessBusLocks.release();
         #end
 
-            final worklets = workletsByChannel[channel];
+            final worklets = workletsByBus[bus];
             if (worklets != null) {
                 for (i in 0...worklets.length) {
                     final worklet = worklets[i];
-                    worklet.process(buffer, samples, bufferChannels, sampleRate, time);
+                    worklet.process(buffer, samples, channels, sampleRate, time);
                 }
             }
 
         #if sys
-            channelLock.release();
+            busLock.release();
         }
         else {
-            accessChannelLocks.release();
+            accessBusLocks.release();
         }
         #end
 
