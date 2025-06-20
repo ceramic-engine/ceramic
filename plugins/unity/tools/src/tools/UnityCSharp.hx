@@ -132,6 +132,9 @@ class UnityCSharp {
 
         // Somehow, there are cases where System is not marked with global:: and that conflicts with ceramic's System class
         content = content.replace('\tSystem.Type', '\tglobal::System.Type');
+        content = content.replace('(System.Type', '(global::System.Type');
+        content = content.replace('(System.Threading', '(global::System.Threading');
+        content = content.replace('\tSystem.Threading', '\tglobal::System.Threading');
 
         // Disable Timer.getTime() warning
         // TODO: fix the actual code!
