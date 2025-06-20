@@ -254,6 +254,9 @@ class Assets extends tools.Task {
 
             // Save file if different
             if (assetsJsonString != prevAssetsJsonString) {
+                if (!FileSystem.exists(dstAssetsPath)) {
+                    FileSystem.createDirectory(dstAssetsPath);
+                }
                 File.saveContent(
                     assetsJsonPath,
                     assetsJsonString
