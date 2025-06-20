@@ -144,8 +144,9 @@ class UnityBackendTools implements tools.spec.BackendTools {
 
     public function getDstAssetsPath(cwd:String, target:tools.BuildTarget, variant:String):String {
 
-        var hxmlProjectPath = target.outPath('unity', cwd, context.debug, variant);
-        return Path.join([hxmlProjectPath, 'assets']);
+        var outTargetPath = target.outPath('unity', cwd, context.debug, variant);
+
+        return Path.join([cwd, 'project', 'unity', context.project.app.name, 'Assets', 'Ceramic', 'Resources', 'assets']);
 
     }
 
