@@ -67,7 +67,12 @@ class UnityProject {
             print('Copy from Unity project template');
             var projectTemplateName = 'standard';
             if (!context.defines.exists('unity_birp')) { // birp = built-in render pipeline != universal render pipeline
-                projectTemplateName = 'urp';
+                if (!context.defines.exists('unity_2021')) {
+                    projectTemplateName = 'urp-6000';
+                }
+                else {
+                    projectTemplateName = 'urp-2021';
+                }
             }
             Files.copyDirectory(
                 Path.join([pluginPath, 'tpl/project/$projectTemplateName']),

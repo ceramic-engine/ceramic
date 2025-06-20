@@ -145,10 +145,16 @@ class UnitySetup extends tools.Task {
         }
 
         // Use universal render pipeline unless unity_birp (built-in render pileline) is defined
+        // Use Unity 6 unless unity_2021
         var hasUnityBirp = (project.app.defines.unity_birp != null);
         var hasUnityUrp = (project.app.defines.unity_urp != null);
+        var hasUnity2021 = (project.app.defines.unity_2021 != null);
+        var hasUnity6000 = (project.app.defines.unity_6000 != null);
         if (!hasUnityBirp && !hasUnityUrp) {
             haxeflags.push('-D unity_urp');
+        }
+        if (!hasUnityBirp && !hasUnity2021 && !hasUnity6000) {
+            haxeflags.push('-D unity_6000');
         }
 
         var classPaths = [];

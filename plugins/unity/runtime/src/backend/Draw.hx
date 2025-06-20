@@ -902,12 +902,21 @@ class Draw #if !completion implements spec.Draw #end {
                 CommandBufferPool.Release(prevCmd);
             }
             renderPass.SetCommandBuffer(cmd);
+            #if unity_6000
+            if (renderTarget != null) {
+                untyped __cs__('{0}.SetRenderTarget((UnityEngine.Rendering.RTHandle){1})', renderPass, renderTarget.backendItem.unityRtHandle);
+            }
+            else {
+                untyped __cs__('{0}.SetRenderTarget(null)', renderPass);
+            }
+            #else
             if (renderTarget != null) {
                 untyped __cs__('{0}.SetRenderTarget((UnityEngine.RenderTexture){1})', renderPass, renderTarget.backendItem.unityRenderTexture);
             }
             else {
                 untyped __cs__('{0}.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)', renderPass);
             }
+            #end
 
             // Add render pass
             renderer.EnqueuePass(renderPass);

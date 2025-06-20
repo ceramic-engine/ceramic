@@ -87,7 +87,7 @@ class Textures implements spec.Textures {
                 if (unityTexture != null) {
 
                     inline function doCreate() {
-                        var texture = new TextureImpl(path, unityTexture, null);
+                        var texture = new TextureImpl(path, unityTexture, null #if unity_6000 , null #end);
 
                         loadedTextures.set(path, texture);
                         var callbacks = loadingTextureCallbacks.get(path);
@@ -158,7 +158,7 @@ class Textures implements spec.Textures {
         var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D(2, 2, UnityEngine.TextureFormat.RGBA32, false)');
         ImageConversion.LoadImage(unityTexture, bytes.getData(), false);
 
-        var texture = new TextureImpl('bytes:' + (nextBytesIndex++), unityTexture, null);
+        var texture = new TextureImpl('bytes:' + (nextBytesIndex++), unityTexture, null #if unity_6000 , null #end);
 
         loadedTexturesRetainCount.set(texture.path, 1);
 
@@ -175,7 +175,7 @@ class Textures implements spec.Textures {
         unityTexture.Apply(false, false);
         Pixels.flipY(pixels, width);
 
-        var texture = new TextureImpl('pixels:' + (nextPixelsIndex++), unityTexture, null);
+        var texture = new TextureImpl('pixels:' + (nextPixelsIndex++), unityTexture, null #if unity_6000 , null #end);
 
         loadedTexturesRetainCount.set(texture.path, 1);
 
@@ -199,7 +199,7 @@ class Textures implements spec.Textures {
 
         untyped __cs__('renderTexture.Create()');
 
-        var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'));
+        var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture') #if unity_6000 , untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTexture)') #end);
 
         loadedTexturesRetainCount.set(texture.path, 1);
 
@@ -220,6 +220,10 @@ class Textures implements spec.Textures {
                 untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityTexture);
             }
             else if (id.startsWith('render:')) {
+                #if unity_6000
+                untyped __cs__('UnityEngine.Rendering.RTHandles.Release({0})', (texture:TextureImpl).unityRtHandle);
+                #end
+
                 untyped __cs__('((UnityEngine.RenderTexture){0}).Release()', (texture:TextureImpl).unityRenderTexture);
                 untyped __cs__('UnityEngine.Object.Destroy({0})', (texture:TextureImpl).unityRenderTexture);
             }

@@ -366,7 +366,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
         if (unityTexture != null) {
-            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end);
             done(texture);
         }
         else {
@@ -400,7 +400,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
         if (unityTexture != null) {
-            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null);
+            var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end);
             var pixels = ceramic.App.app.backend.textures.fetchTexturePixels(texture);
             var width = texture.width;
             var height = texture.height;
