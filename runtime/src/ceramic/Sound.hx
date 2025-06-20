@@ -10,9 +10,9 @@ class Sound extends Entity {
     public var asset:SoundAsset;
 
     /**
-     * Default channel to play this sound on (0-based)
+     * Default bus to play this sound on (0-based)
      */
-    public var channel:Int = 0;
+    public var bus:Int = 0;
 
     public var group(default, set):Int = 0;
     function set_group(group:Int):Int {
@@ -76,9 +76,9 @@ class Sound extends Entity {
      * @param volume Volume (0-1)
      * @param pan Pan (-1 to 1)
      * @param pitch Pitch multiplier
-     * @param channel Channel to play on (defaults to sound's channel property)
+     * @param bus Bus to play on (defaults to sound's bus property)
      */
-    public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float, ?channel:Int):SoundPlayer {
+    public function play(position:Float = 0, loop:Bool = false, ?volume:Float, ?pan:Float, ?pitch:Float, ?bus:Int):SoundPlayer {
 
         var mixer = audio.mixers.getInline(group);
 
@@ -89,14 +89,14 @@ class Sound extends Entity {
         if (volume == null) volume = this.volume;
         if (pan == null) pan = this.pan;
         if (pitch == null) pitch = this.pitch;
-        if (channel == null) channel = this.channel;
+        if (bus == null) bus = this.bus;
 
         // Apply mixer settings
         volume *= mixer.volume * 2;
         pan += mixer.pan;
         pitch += mixer.pitch - 1;
 
-        return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop, channel);
+        return cast app.backend.audio.play(backendItem, volume, pan, pitch, position, loop, bus);
 
     }
 
