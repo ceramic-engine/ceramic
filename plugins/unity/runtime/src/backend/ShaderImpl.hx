@@ -33,6 +33,8 @@ class ShaderImpl {
 
     var textureParams:Map<String,backend.Texture> = null;
 
+    var textureSlots:Array<backend.Texture> = null;
+
     var mat4Params:Map<String,unityengine.Matrix4x4> = null;
 
     public function new(unityShader:Dynamic, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>) {
@@ -172,15 +174,18 @@ class ShaderImpl {
 
     }
 
-    public function setTexture(name:String, texture:backend.Texture):Void {
+    public function setTexture(name:String, slot:Int, texture:backend.Texture):Void {
 
         if (textureParams == null)
             textureParams = new Map();
+        if (textureSlots == null)
+            textureSlots = [];
 
         name = sanitizeUniformName(name);
 
         if (!textureParams.exists(name) || textureParams.get(name) != texture) {
             textureParams.set(name, texture);
+            textureSlots[slot] = texture;
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
@@ -218,9 +223,9 @@ class ShaderImpl {
     function sanitizeUniformName(name:String):String {
 
         // That keyword is reserved
-        // TODO: more exhaustive list of keywords?
-        if (name == 'offset')
-            return 'offset_';
+        // TODO: more exhaustive list of keywords? (and without allocations)
+        if (name == 'offset' || name == 'lighten' || name == 'overlay')
+            return name + '_';
 
         return name;
 

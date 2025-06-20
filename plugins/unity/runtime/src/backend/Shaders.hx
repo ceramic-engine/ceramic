@@ -120,7 +120,7 @@ class Shaders implements spec.Shaders {
 
     inline public function setTexture(shader:Shader, name:String, slot:Int, texture:backend.Texture):Void {
 
-        (shader:ShaderImpl).setTexture(name, texture);
+        (shader:ShaderImpl).setTexture(name, slot, texture);
 
     }
 

@@ -773,6 +773,19 @@ class Draw #if !completion implements spec.Draw #end {
             stencil = TEST;
         }
 
+        // final shaderImpl:backend.ShaderImpl = shader;
+        // @:privateAccess if (!shaderImpl.isBatchingMultiTexture && shaderImpl.textureSlots != null) {
+        //     var i = 0;
+        //     while (i < shaderImpl.textureSlots.length && i < _materialCurrentTextures.length) {
+        //         final textureInSlot = shaderImpl.textureSlots[i];
+        //         if (textureInSlot != null) {
+        //             trace("ASSIGN SLOT #" + i + " -> " + textureInSlot;)
+        //             _materialCurrentTextures[i] = textureInSlot;
+        //         }
+        //         i++;
+        //     }
+        // }
+
         var materialData = _materials.get(
             _materialCurrentTextures,
             shader,

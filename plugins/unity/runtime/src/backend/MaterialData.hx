@@ -1,10 +1,10 @@
 package backend;
 
-import unityengine.rendering.VertexAttributeDescriptor;
 import cs.NativeArray;
+import unityengine.rendering.VertexAttributeDescriptor;
 
 class MaterialData {
-    
+
     public var material:Dynamic = null;
 
     public var textures(default, set):NativeArray<backend.Texture> = null;
@@ -49,7 +49,7 @@ class MaterialData {
         dstAlpha:backend.BlendMode,
         stencil:backend.StencilState
         ):Bool {
-        
+
         return this.texturesEqualTextures(textures)
             && this.shader == shader
             && this.srcRgb == srcRgb
@@ -132,8 +132,14 @@ class MaterialData {
             }
 
             if (shaderImpl.textureParams != null) {
-                for (name => val in shaderImpl.textureParams) {
-                    untyped __cs__('m.SetTexture({0}, {1})', name, (val:TextureImpl).unityTexture);
+                for (textureName => val in shaderImpl.textureParams) {
+                    final texture:TextureImpl = val;
+                    if (texture.unityTexture != null) {
+                        untyped __cs__('m.SetTexture({0}, (UnityEngine.Texture2D){1})', textureName, texture.unityTexture);
+                    }
+                    else if (texture.unityRenderTexture != null) {
+                        untyped __cs__('m.SetTexture({0}, (UnityEngine.RenderTexture){1})', textureName, texture.unityRenderTexture);
+                    }
                 }
             }
 

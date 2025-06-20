@@ -1,7 +1,7 @@
 package backend;
 
-import unityengine.AudioClip;
 import ceramic.Path;
+import unityengine.AudioClip;
 
 using StringTools;
 
@@ -32,7 +32,7 @@ class Audio implements spec.Audio {
             done(null);
             return;
         }
-        
+
         // Is resource already loaded?
         if (loadedAudioResources.exists(path)) {
             loadedAudioRetainCount.set(path, loadedAudioRetainCount.get(path) + 1);
@@ -112,7 +112,7 @@ class Audio implements spec.Audio {
     inline public function getDuration(audio:AudioResource):Float {
 
         return (audio:AudioResourceImpl).unityResource.length;
-        
+
     }
 
     inline public function resumeAudioContext(done:Bool->Void):Void {
@@ -141,7 +141,7 @@ class Audio implements spec.Audio {
 
     }
 
-    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false):AudioHandle {
+    public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
         var handle = new AudioHandleImpl(audio);
 
@@ -158,19 +158,19 @@ class Audio implements spec.Audio {
     }
 
     public function pause(handle:AudioHandle):Void {
-                    
+
         (handle:AudioHandleImpl).pause();
 
     }
 
     public function resume(handle:AudioHandle):Void {
-                    
+
         (handle:AudioHandleImpl).resume();
 
     }
 
     public function stop(handle:AudioHandle):Void {
-                    
+
         (handle:AudioHandleImpl).stop();
 
     }
@@ -182,50 +182,68 @@ class Audio implements spec.Audio {
     }
 
     public function setVolume(handle:AudioHandle, volume:Float):Void {
-                    
+
         (handle:AudioHandleImpl).volume = volume;
 
     }
 
     public function getPan(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).pan;
 
     }
 
     public function setPan(handle:AudioHandle, pan:Float):Void {
-                    
+
         (handle:AudioHandleImpl).pan = pan;
 
     }
 
     public function getPitch(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).pitch;
 
     }
 
     public function setPitch(handle:AudioHandle, pitch:Float):Void {
-                    
+
         (handle:AudioHandleImpl).pitch = pitch;
 
     }
 
     public function getPosition(handle:AudioHandle):Float {
-                    
+
         return (handle:AudioHandleImpl).position;
 
     }
 
     public function setPosition(handle:AudioHandle, position:Float):Void {
-                    
+
         (handle:AudioHandleImpl).position = position;
 
     }
 
     inline public function supportsHotReloadPath():Bool {
-        
+
         return false;
+
+    }
+
+    public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
+
+        // TODO
+
+    }
+
+    public function removeFilter(channel:Int, filterId:Int):Void {
+
+        // TODO
+
+    }
+
+    public function filterParamsChanged(channel:Int, filterId:Int):Void {
+
+        // TODO
 
     }
 
