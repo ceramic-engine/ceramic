@@ -51,8 +51,9 @@ class UnityEditor {
             }
 
             var availableVersions = [];
+            var versionPrefixRegex = ~/^([1-9][0-9]?[0-9][0-9][0-9])\./;
             for (file in FileSystem.readDirectory(unityEditorsPath)) {
-                if (file.startsWith('20')) {
+                if (versionPrefixRegex.match(file)) {
                     var fullPath:String = null;
                     if (isMac) {
                         fullPath = Path.join([unityEditorsPath, file, 'Unity.app']);
@@ -73,7 +74,7 @@ class UnityEditor {
 
             var bestAutomaticVersion = null;
             for (version in availableVersions) {
-                if (version.startsWith('2021')) {
+                if (version.startsWith('6000')) {
                     bestAutomaticVersion = version;
                 }
             }

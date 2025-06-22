@@ -905,9 +905,15 @@ class Draw #if !completion implements spec.Draw #end {
             #if unity_6000
             if (renderTarget != null) {
                 untyped __cs__('{0}.SetRenderTarget((UnityEngine.Rendering.RTHandle){1})', renderPass, renderTarget.backendItem.unityRtHandle);
+                #if unity_rendergraph
+                untyped __cs__('{0}.SetRenderTargetDepth((UnityEngine.Rendering.RTHandle){1})', renderPass, renderTarget.backendItem.unityRtHandleDepth);
+                #end
             }
             else {
                 untyped __cs__('{0}.SetRenderTarget(null)', renderPass);
+                #if unity_rendergraph
+                untyped __cs__('{0}.SetRenderTargetDepth(null)', renderPass);
+                #end
             }
             #else
             if (renderTarget != null) {

@@ -25,6 +25,11 @@ class TextureImpl {
     public var unityRtHandle:RTHandle;
     #end
 
+    #if unity_rendergraph
+    public var unityRenderTextureDepth:RenderTexture;
+    public var unityRtHandleDepth:RTHandle;
+    #end
+
     public var path:String;
 
     public var textureId:TextureId;
@@ -33,7 +38,7 @@ class TextureImpl {
 
     public var height(default,null):Int;
 
-    public function new(path:String, unityTexture:Texture2D, unityRenderTexture:RenderTexture #if unity_6000 , unityRtHandle:RTHandle #end) {
+    public function new(path:String, unityTexture:Texture2D, unityRenderTexture:RenderTexture #if unity_6000 , unityRtHandle:RTHandle #end #if unity_rendergraph , ?unityRenderTextureDepth:RenderTexture, ?unityRtHandleDepth:RTHandle #end) {
 
         this.path = path;
         this.unityTexture = unityTexture;
@@ -41,6 +46,11 @@ class TextureImpl {
 
         #if unity_6000
         this.unityRtHandle = unityRtHandle;
+        #end
+
+        #if unity_rendergraph
+        this.unityRenderTextureDepth = unityRenderTextureDepth;
+        this.unityRtHandleDepth = unityRtHandleDepth;
         #end
 
         if (unityTexture != null) {
@@ -53,12 +63,6 @@ class TextureImpl {
             this.height = unityRenderTexture.height;
             this.textureId = unityRenderTexture.GetInstanceID();
         }
-
-    }
-
-    public function destroy() {
-
-        // TODO
 
     }
 

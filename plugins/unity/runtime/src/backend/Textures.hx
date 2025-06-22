@@ -188,6 +188,37 @@ class Textures implements spec.Textures {
         if (antialiasing < 1)
             antialiasing = 1;
 
+        var texture:TextureImpl = null;
+
+        #if unity_rendergraph
+
+        untyped __cs__('var renderTexture = new UnityEngine.RenderTexture({0}, {1}, 0, UnityEngine.RenderTextureFormat.Default)', width, height);
+        untyped __cs__('renderTexture.antiAliasing = {0}', antialiasing);
+        untyped __cs__('renderTexture.Create()');
+
+        if (depth || stencil) {
+            var depthBits = depth ? 24 : 0;
+
+            untyped __cs__('var renderTextureDepth = new UnityEngine.RenderTexture({0}, {1}, {2}, UnityEngine.Experimental.Rendering.GraphicsFormat.None)', width, height, depthBits);
+
+            if (stencil) {
+                untyped __cs__('renderTextureDepth.depthStencilFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.D24_UNorm_S8_UInt');
+            }
+            else {
+                untyped __cs__('renderTextureDepth.depthStencilFormat = UnityEngine.Experimental.Rendering.GraphicsFormat.D16_UNorm');
+            }
+
+            untyped __cs__('renderTextureDepth.antiAliasing = {0}', antialiasing);
+            untyped __cs__('renderTextureDepth.Create()');
+
+            texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'), untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTexture)'), untyped __cs__('renderTextureDepth'), untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTextureDepth)'));
+        }
+        else {
+            texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture'), untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTexture)'));
+        }
+
+        #else
+
         untyped __cs__('var renderTexture = new UnityEngine.RenderTexture({0}, {1}, 24, UnityEngine.RenderTextureFormat.Default)', width, height);
         untyped __cs__('renderTexture.antiAliasing = {0}', antialiasing);
 
@@ -199,7 +230,9 @@ class Textures implements spec.Textures {
 
         untyped __cs__('renderTexture.Create()');
 
-        var texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture') #if unity_6000 , untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTexture)') #end);
+        texture = new TextureImpl('render:' + (nextRenderIndex++), null, untyped __cs__('renderTexture') #if unity_6000 , untyped __cs__('UnityEngine.Rendering.RTHandles.Alloc(renderTexture)') #end);
+
+        #end
 
         loadedTexturesRetainCount.set(texture.path, 1);
 
