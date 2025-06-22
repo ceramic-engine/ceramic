@@ -150,11 +150,16 @@ class UnitySetup extends tools.Task {
         var hasUnityUrp = (project.app.defines.unity_urp != null);
         var hasUnity2021 = (project.app.defines.unity_2021 != null);
         var hasUnity6000 = (project.app.defines.unity_6000 != null);
+        var hasUnityRenderGraph = (project.app.defines.unity_rendergraph != null);
+        var hasUnityNoRenderGraph = (project.app.defines.unity_no_rendergraph != null);
         if (!hasUnityBirp && !hasUnityUrp) {
             haxeflags.push('-D unity_urp');
         }
         if (!hasUnityBirp && !hasUnity2021 && !hasUnity6000) {
             haxeflags.push('-D unity_6000');
+        }
+        if (!hasUnityBirp && !hasUnity2021 && !hasUnityNoRenderGraph && !hasUnityRenderGraph) {
+            haxeflags.push('-D unity_rendergraph');
         }
 
         var classPaths = [];

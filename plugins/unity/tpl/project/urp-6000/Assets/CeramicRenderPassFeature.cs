@@ -9,6 +9,7 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
     public class CeramicRenderPass : ScriptableRenderPass
     {
         CommandBuffer m_CommandBuffer;
+        CeramicCommandBuffer m_CeramicCommandBuffer;
 
         public CommandBuffer GetCommandBuffer()
         {
@@ -18,6 +19,16 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         public void SetCommandBuffer(CommandBuffer cmd)
         {
             m_CommandBuffer = cmd;
+        }
+
+        public CeramicCommandBuffer GetCeramicCommandBuffer()
+        {
+            return m_CeramicCommandBuffer;
+        }
+
+        public void SetCeramicCommandBuffer(CeramicCommandBuffer cmd)
+        {
+            m_CeramicCommandBuffer = cmd;
         }
 
         RTHandle m_RenderTarget;
@@ -83,17 +94,16 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                 }
 
                 // Store command buffer in pass data
-                passData.commandBuffer = GetCommandBuffer();
+                passData.commandBuffer = GetCeramicCommandBuffer();
 
                 // Set execution function
                 builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
                 {
                     if (data.commandBuffer != null)
                     {
-                        // Execute the command buffer using Graphics.ExecuteCommandBuffer
-                        // This works because it executes on the main graphics queue
-                        Graphics.ExecuteCommandBuffer(data.commandBuffer);
-                        CommandBufferPool.Release(data.commandBuffer);
+                        var cmd = context.cmd;
+                        data.commandBuffer.ApplyToRasterCommandBuffer(cmd);
+                        CeramicCommandBufferPool.Release(data.commandBuffer);
                     }
                 });
             }
@@ -129,7 +139,7 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         {
             public TextureHandle colorTarget;
             public TextureHandle depthTarget;
-            public CommandBuffer commandBuffer;
+            public CeramicCommandBuffer commandBuffer;
         }
 
         /// Cleanup any allocated resources that were created during the execution of this render pass.

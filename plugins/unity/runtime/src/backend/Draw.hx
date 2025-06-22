@@ -9,8 +9,6 @@ import unityengine.Mesh;
 import unityengine.MeshTopology;
 import unityengine.Vector2;
 import unityengine.Vector3;
-import unityengine.rendering.CommandBuffer;
-import unityengine.rendering.CommandBufferPool;
 import unityengine.rendering.IndexFormat;
 import unityengine.rendering.MeshUpdateFlags;
 import unityengine.rendering.SubMeshDescriptor;
@@ -19,6 +17,14 @@ import unityengine.rendering.VertexAttributeDescriptor;
 import unityengine.rendering.VertexAttributeFormat;
 
 using ceramic.Extensions;
+
+#if unity_rendergraph
+import backend.CeramicCommandBuffer as CommandBuffer;
+import backend.CeramicCommandBufferPool as CommandBufferPool;
+#else
+import unityengine.rendering.CommandBuffer;
+import unityengine.rendering.CommandBufferPool;
+#end
 
 #if unity_urp
 import unityengine.rendering.universal.RenderingData;
@@ -333,7 +339,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function clearAndApplyBackground():Void {
 
         var bg = ceramic.App.app.settings.background;
+        #if unity_rendergraph
+        untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        #end
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color((float){0}, (float){1}, (float){2}, 1f), 1f)', bg.redFloat, bg.greenFloat, bg.blueFloat);
 
     }
@@ -349,7 +359,11 @@ class Draw #if !completion implements spec.Draw #end {
 
                 #if unity_urp
                 configureNextCommandBuffer(renderTarget);
+                #if unity_rendergraph
+                untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+                #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                #end
                 #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
                 untyped __cs__('cmd.SetRenderTarget((UnityEngine.RenderTexture){0})', unityRenderTexture);
@@ -408,7 +422,11 @@ class Draw #if !completion implements spec.Draw #end {
 
                 #if unity_urp
                 configureNextCommandBuffer(null);
+                #if unity_rendergraph
+                untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+                #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+                #end
                 #else
                 untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
                 untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
@@ -526,7 +544,11 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
+        #if unity_rendergraph
+        untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        #end
         untyped __cs__('cmd.ClearRenderTarget(true, true, new UnityEngine.Color(1f, 1f, 1f, 0f), 1f)');
 
     }
@@ -663,14 +685,22 @@ class Draw #if !completion implements spec.Draw #end {
         var singleW:Single = right - left;
         var singleH:Single = bottom - top;
 
+        #if unity_rendergraph
+        untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        #end
         untyped __cs__('cmd.EnableScissorRect(new UnityEngine.Rect({0}, {1}, {2}, {3}))', singleX, singleY, singleW, singleH);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
 
+        #if unity_rendergraph
+        untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        #end
         untyped __cs__('cmd.DisableScissorRect()');
 
     }
@@ -817,7 +847,11 @@ class Draw #if !completion implements spec.Draw #end {
         );
         mesh.SetSubMesh(0, submesh, updateFlags);
 
+        #if unity_rendergraph
+        untyped __cs__('CeramicCommandBuffer cmd = (CeramicCommandBuffer){0}', commandBuffer);
+        #else
         untyped __cs__('UnityEngine.Rendering.CommandBuffer cmd = (UnityEngine.Rendering.CommandBuffer){0}', commandBuffer);
+        #end
         untyped __cs__('cmd.DrawMesh({0}, (UnityEngine.Matrix4x4){1}, (UnityEngine.Material){2})', mesh, _currentMatrix, materialData.material);
 
         resetIndexes();
@@ -897,11 +931,18 @@ class Draw #if !completion implements spec.Draw #end {
             }
 
             // Update render pass command buffer
+            #if !unity_rendergraph
+            // When using render graph, the command buffer will be released from the render pass directly
             var prevCmd = renderPass.GetCommandBuffer();
             if (prevCmd != null) {
                 CommandBufferPool.Release(prevCmd);
             }
+            #end
+            #if unity_rendergraph
+            renderPass.SetCeramicCommandBuffer(cmd);
+            #else
             renderPass.SetCommandBuffer(cmd);
+            #end
             #if unity_6000
             if (renderTarget != null) {
                 untyped __cs__('{0}.SetRenderTarget((UnityEngine.Rendering.RTHandle){1})', renderPass, renderTarget.backendItem.unityRtHandle);
