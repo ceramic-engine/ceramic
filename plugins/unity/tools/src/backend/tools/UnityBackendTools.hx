@@ -187,6 +187,19 @@ class UnityBackendTools implements tools.spec.BackendTools {
         print('Unity Editor project path: ' + unityProjectPath);
         dstAssetsPath = Path.join([unityProjectPath, 'Assets', 'Ceramic', 'Resources', 'assets']);
 
+        var sounds:Map<String,tools.Asset> = new Map();
+        for (asset in assets) {
+            var srcPath = asset.absolutePath;
+            var dotIndex = srcPath.lastIndexOf('.');
+            var ext = '';
+            if (dotIndex != -1) {
+                ext = srcPath.substr(dotIndex + 1).toLowerCase();
+            }
+            if (ext == 'mp3' || ext == 'wav' || ext == 'ogg') {
+                sounds.set(srcPath, asset);
+            }
+        }
+
         // Add/update missing assets
         //
         for (asset in assets) {
@@ -198,6 +211,15 @@ class UnityBackendTools implements tools.spec.BackendTools {
             var ext = '';
             if (dotIndex != -1) {
                 ext = srcPath.substr(dotIndex + 1).toLowerCase();
+            }
+
+            // Avoid copying MP3 if we have wav or ogg because MP3
+            // is not allowing clean loops in unity
+            if (ext == 'mp3') {
+                var asOgg = srcPath.substr(0, dotIndex) + '.ogg';
+                if (sounds.exists(asOgg)) continue;
+                var asWav = srcPath.substr(0, dotIndex) + '.wav';
+                if (sounds.exists(asWav)) continue;
             }
 
             if (!nonTxtExtensions.exists(ext)) {
