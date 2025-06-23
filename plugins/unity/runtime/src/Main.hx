@@ -1,6 +1,7 @@
 package;
 
 import ceramic.Path;
+import unityengine.AudioMixer;
 import unityengine.MonoBehaviour;
 
 class Main {
@@ -17,9 +18,12 @@ class Main {
 
     public static var monoBehaviour:MonoBehaviour = null;
 
-    @:keep public static function sync(monoBehaviour:MonoBehaviour):Void {
+    public static var audioMixer:AudioMixer = null;
+
+    @:keep public static function sync(monoBehaviour:MonoBehaviour, audioMixer:AudioMixer):Void {
 
         Main.monoBehaviour = monoBehaviour;
+        Main.audioMixer = audioMixer;
 
         if (ceramic.App.app == null || ceramic.App.app.backend == null) {
             main();

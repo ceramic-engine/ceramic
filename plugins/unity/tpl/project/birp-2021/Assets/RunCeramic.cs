@@ -1,20 +1,18 @@
 ﻿
 using UnityEngine;
 
-public class BootCeramic : MonoBehaviour {
-
+public class RunCeramicBehaviour : MonoBehaviour
+{
 	// Use this for initialization
-	void Start () {
-
+	void Start()
+	{
 		haxe.root.Main.sync(this);
-
 	}
 
 	// Update is called once per frame
-	void Update () {
-
+	void Update()
+	{
 		haxe.root.Main.sync(this);
-		haxe.root.Main.regularUpdate();
-
+		haxe.root.Main.update();
 	}
 }
