@@ -87,7 +87,7 @@ abstract class AudioFilterWorklet {
      * Process audio buffer in place. Override this method to implement custom filtering.
      * CAUTION: this may be called from a background thread
      * @param buffer The audio buffer to process (modify in place)
-     * @param samples Number of samples to process
+     * @param samples Number of samples per channel
      * @param channels Number of audio channels (1 = mono, 2 = stereo)
      * @param sampleRate Sample rate in Hz
      * @param time Current playback time in seconds

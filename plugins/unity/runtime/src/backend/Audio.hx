@@ -1,6 +1,7 @@
 package backend;
 
 import ceramic.Path;
+import ceramic.WaitCallbacks;
 import unityengine.AudioClip;
 
 using StringTools;
@@ -143,7 +144,7 @@ class Audio implements spec.Audio {
 
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
-        var handle = new AudioHandleImpl(audio);
+        var handle = new AudioHandleImpl(audio, bus);
 
         handle.volume = volume;
         handle.pan = pan;
@@ -231,23 +232,249 @@ class Audio implements spec.Audio {
 
     public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
 
-        // TODO
+        audioFiltersLock.acquire();
+
+        final wait = new WaitCallbacks(() -> onReady(bus));
+        final filterWorkletReady = wait.callback();
+        final busFilterReady = wait.callback();
+
+        var createUnityBusFilter = false;
+
+        var filters = filterIdsByBus[bus];
+        if (filters == null) {
+            filters = [];
+            filterIdsByBus[bus] = filters;
+            filterLocksByBus[bus] = new ceramic.SpinLock();
+            createUnityBusFilter = true;
+        }
+        final filterWorkletClass = filter.workletClass();
+        filters.push({
+            id: filter.filterId,
+            filter: filter,
+            workletClass: filterWorkletClass
+        });
+
+        audioFiltersLock.release();
+
+        if (createUnityBusFilter) {
+            AudioSources.shared.createBusFilter(
+                bus
+            );
+        }
+
+        audioFiltersLock.acquire();
+        final byBusLock = filterLocksByBus[bus];
+        byBusLock.acquire();
+        audioFiltersLock.release();
+        postWorkletSyncCallbacks.push(filterWorkletReady);
+        byBusLock.release();
+
+        audioFiltersLock.acquire();
+
+        // Trigger ready if the bus filter is already created
+        final hasBusFilter = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+        if (hasBusFilter) {
+            audioFiltersLock.release();
+            busFilterReady();
+        }
+        else {
+            if (busFilterReadyCallbacks[bus] == null) {
+                busFilterReadyCallbacks[bus] = [];
+            }
+            busFilterReadyCallbacks[bus].push(busFilterReady);
+            audioFiltersLock.release();
+        }
 
     }
 
-    public function removeFilter(channel:Int, filterId:Int):Void {
+    public function removeFilter(bus:Int, filterId:Int):Void {
 
-        // TODO
+        audioFiltersLock.acquire();
+
+        var resolvedInfo = null;
+        var filters = filterIdsByBus[bus];
+        if (filters != null) {
+            var index = -1;
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+                if (filterInfo.id == filterId) {
+                    index = i;
+                    resolvedInfo = filterInfo;
+                    break;
+                }
+            }
+            if (index != -1) {
+                filters.splice(index, 1);
+            }
+        }
+
+        audioFiltersLock.release();
+
+        if (resolvedInfo != null) {
+            if (resolvedInfo.worklet != null) {
+                ceramic.AudioFilters.destroyWorklet(
+                    bus,
+                    resolvedInfo.id
+                );
+            }
+            resolvedInfo = null;
+        }
 
     }
 
-    public function filterParamsChanged(channel:Int, filterId:Int):Void {
+    public function filterParamsChanged(bus:Int, filterId:Int):Void {
 
-        // TODO
+        audioFiltersLock.acquire();
+
+        var filters = filterIdsByBus[bus];
+        if (filters != null) {
+            final byBusLock = filterLocksByBus[bus];
+            byBusLock.acquire();
+            audioFiltersLock.release();
+
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+                if (filterInfo.id == filterId) {
+                    filterInfo.paramsDirty = true;
+                    break;
+                }
+            }
+
+            byBusLock.release();
+        }
+        else {
+            audioFiltersLock.release();
+        }
+
+    }
+
+    static function _unityFilterCreate(bus:Int, instanceId:Int):Void {
+        // Already acquired
+        //audioFiltersLock.acquire();
+
+        final hasBusFilter = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+        activeBusFilters[bus] = true;
+        if (!hasBusFilter) {
+            if (busFilterReadyCallbacks.length > bus) {
+                if (busFilterReadyCallbacks[bus].length > 0) {
+                    final toNotify = [];
+                    while (busFilterReadyCallbacks[bus].length > 0) {
+                        toNotify.push(busFilterReadyCallbacks[bus].shift());
+                    }
+                    _notifyCallbacksInMainThread(toNotify);
+                }
+            }
+        }
+
+        //audioFiltersLock.release();
+    }
+
+    static function _notifyCallbacksInMainThread(toNotify:Array<()->Void>):Void {
+        ceramic.Runner.runInMain(() -> {
+            for (i in 0...toNotify.length) {
+                final cb = toNotify[i];
+                cb();
+            }
+        });
+    }
+
+    static function _unityFilterDestroy(bus:Int, instanceId:Int):Void {
+        audioFiltersLock.acquire();
+        activeBusFilters[bus] = false;
+        audioFiltersLock.release();
+    }
+
+    static function _unityFilterProcess(bus:Int, instanceId:Int, aBuffer:Float32Array, aSamples:Int, aChannels:Int, aSamplerate:Single, time:Float):Void {
+
+        audioFiltersLock.acquire();
+
+        if (activeBusFilters[bus] != true) {
+            _unityFilterCreate(bus, instanceId);
+        }
+
+        var postSyncCbs:Array<()->Void> = null;
+
+        var filters = filterIdsByBus[bus];
+        if (filters != null) {
+
+            final byBusLock = filterLocksByBus[bus];
+            byBusLock.acquire();
+            audioFiltersLock.release();
+
+            for (i in 0...filters.length) {
+                final filterInfo = filters[i];
+
+                // Create filter worklet if needed
+                if (filterInfo.worklet == null) {
+                    filterInfo.worklet = ceramic.AudioFilters.createWorklet(
+                        bus,
+                        filterInfo.id,
+                        filterInfo.workletClass
+                    );
+                }
+
+                // Update worklet params from filter if needed
+                if (filterInfo.paramsDirty) {
+                    ceramic.AudioFilters.beginUpdateFilterWorkletParams(
+                        bus,
+                        filterInfo.id
+                    );
+
+                    filterInfo.filter.acquireParams();
+                    final filterParams = @:privateAccess filterInfo.filter.params;
+                    final workletParams = @:privateAccess filterInfo.worklet.params;
+                    for (p in 0...filterParams.length) {
+                        workletParams[p] = filterParams[p];
+                    }
+                    filterInfo.filter.releaseParams();
+
+                    ceramic.AudioFilters.endUpdateFilterWorkletParams(
+                        bus,
+                        filterInfo.id
+                    );
+                }
+            }
+
+            if (postWorkletSyncCallbacks.length > 0) {
+                postSyncCbs = [];
+                while (postWorkletSyncCallbacks.length > 0) {
+                    postSyncCbs.push(postWorkletSyncCallbacks.shift());
+                }
+            }
+
+            byBusLock.release();
+        }
+        else {
+            audioFiltersLock.release();
+        }
+
+        // Make sure worklets are in sync
+        ceramic.AudioFilters.syncWorklets();
+
+        // Notify worklet post-sync callbacks
+        if (postSyncCbs != null) {
+            _notifyCallbacksInMainThread(postSyncCbs);
+        }
+
+        // Do the actual processing
+        ceramic.AudioFilters.processBusAudioWorklets(
+            bus, aBuffer, aSamples, aChannels, aSamplerate, time
+        );
 
     }
 
 /// Internal
+
+    static final audioFiltersLock = new ceramic.SpinLock();
+    static final filterLocksByBus:Array<ceramic.SpinLock> = [];
+
+    static final filterIdsByBus:Array<Array<AudioFilterInfo>> = [];
+
+    static final activeBusFilters:Array<Bool> = [];
+
+    static final busFilterReadyCallbacks:Array<Array<()->Void>> = [];
+
+    static final postWorkletSyncCallbacks:Array<()->Void> = [];
 
     var soundExtensions:Array<String> = null;
 

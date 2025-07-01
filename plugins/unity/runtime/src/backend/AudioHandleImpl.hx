@@ -60,16 +60,26 @@ class AudioHandleImpl {
 
     var audioSource:AudioSource = null;
 
+    var useMiniLoud:Bool = false;
+
+    var miniLoudHandle:MiniLoudAudio.MiniLoudAudioHandle = null;
+
     var length:Float = 0;
 
-    public function new(resource:AudioResourceImpl) {
-        
+    var busIndex:Int = 0;
+
+    var paused:Bool = false;
+
+    public function new(resource:AudioResourceImpl, busIndex:Int) {
+
         this.resource = resource;
+        this.busIndex = busIndex;
         length = resource.unityResource.length;
 
+        useMiniLoud = true; // Could be per-bus later, or not if miniloud works perfectly fine
+
         if (_audioSources == null) {
-            _audioSources = new AudioSources(Main.monoBehaviour.gameObject);
-            ceramic.App.app.onPostUpdate(null, _checkHandleAudioSources);
+            _audioSources = AudioSources.shared;
         }
 
     }
@@ -82,12 +92,20 @@ class AudioHandleImpl {
         for (i in 0..._handlesWithAudioSource.length) {
             var handle = _handlesWithAudioSource.unsafeGet(i);
             if (handle != null) {
-                handle.updateAudioSourceOnSetPosition = false;
-                handle.position = handle.audioSource.time;
-                handle.updateAudioSourceOnSetPosition = true;
-                if (!handle.audioSource.isPlaying) {
-                    _handlesWithAudioSource.unsafeSet(i, null);
-                    handle.recycleAudioSource();
+                if (!handle.useMiniLoud) {
+                    if (handle.audioSource == null) {
+                        // Can happen if destroyed after switching from play mode to edit mode
+                        _handlesWithAudioSource.unsafeSet(i, null);
+                    }
+                    else {
+                        handle.updateAudioSourceOnSetPosition = false;
+                        handle.position = handle.audioSource.time;
+                        handle.updateAudioSourceOnSetPosition = true;
+                        if (!handle.paused && !handle.audioSource.isPlaying) {
+                            _handlesWithAudioSource.unsafeSet(i, null);
+                            handle.recycleAudioSource();
+                        }
+                    }
                 }
             }
         }
@@ -96,17 +114,24 @@ class AudioHandleImpl {
 
     inline function syncAudioSource():Void {
 
-        if (audioSource == null) {
-            audioSource = _audioSources.get();
+        if (!useMiniLoud) {
+            if (audioSource == null) {
+                audioSource = _audioSources.get();
 
-            addHandleInCheckedList();
+                addHandleInCheckedList();
 
-            audioSource.clip = resource.unityResource;
-            audioSource.time = position;
-            audioSource.panStereo = pan;
-            audioSource.pitch = pitch;
-            audioSource.volume = volume;
-            audioSource.loop = loop;
+                audioSource.clip = resource.unityResource;
+                audioSource.time = position;
+                audioSource.panStereo = pan;
+                audioSource.pitch = pitch;
+                audioSource.volume = volume;
+                audioSource.loop = loop;
+
+                final bus = _audioSources.bus(busIndex);
+                if (bus != null) {
+                    audioSource.outputAudioMixerGroup = bus.mixerGroup;
+                }
+            }
         }
 
     }
@@ -139,31 +164,70 @@ class AudioHandleImpl {
 
     public function play():Void {
 
-        syncAudioSource();
-        audioSource.Play();
+        trace("play!");
+
+        paused = false;
+        if (!useMiniLoud) {
+            syncAudioSource();
+            audioSource.Play();
+        }
+        else {
+            miniLoudHandle = _audioSources.miniLoudObject(busIndex).miniLoudAudio.Play(
+                resource.miniLoudAudioResource,
+                volume,
+                pan,
+                pitch,
+                position,
+                loop
+            );
+        }
 
     }
 
     public function pause():Void {
 
-        if (audioSource != null) {
-            audioSource.Pause();
+        paused = true;
+        if (!useMiniLoud) {
+            if (audioSource != null) {
+                audioSource.Pause();
+            }
+        }
+        else {
+            if (miniLoudHandle != null) {
+                _audioSources.miniLoudObject(busIndex).miniLoudAudio.Pause(miniLoudHandle);
+            }
         }
 
     }
 
     public function resume():Void {
 
-        syncAudioSource();
-        audioSource.UnPause();
+        paused = false;
+        if (!useMiniLoud) {
+            syncAudioSource();
+            audioSource.UnPause();
+        }
+        else {
+            if (miniLoudHandle != null) {
+                _audioSources.miniLoudObject(busIndex).miniLoudAudio.Resume(miniLoudHandle);
+            }
+        }
 
     }
 
     public function stop():Void {
 
+        paused = false;
         position = 0;
-        if (audioSource != null) {
-            audioSource.Stop();
+        if (!useMiniLoud) {
+            if (audioSource != null) {
+                audioSource.Stop();
+            }
+        }
+        else {
+            if (miniLoudHandle != null) {
+                _audioSources.miniLoudObject(busIndex).miniLoudAudio.Stop(miniLoudHandle);
+            }
         }
 
     }

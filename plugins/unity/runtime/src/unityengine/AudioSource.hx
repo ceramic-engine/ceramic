@@ -49,6 +49,8 @@ extern class AudioSource extends Behaviour {
 
     var volume:Single;
 
+    var outputAudioMixerGroup:AudioMixerGroup;
+
     function Pause():Void;
 
     function Play():Void;
