@@ -1,3 +1,5 @@
+#define MINILOUD_RESAMPLER_CATMULLROM
+
 using System;
 using System.Collections.Generic;
 
@@ -888,9 +890,9 @@ namespace MiniLoud
             float aDstSamplerate,
             int aStepFixed)
         {
-#if RESAMPLER_CATMULLROM
+#if MINILOUD_RESAMPLER_CATMULLROM
             ResampleCatmullrom(aSrc, aSrcOffset, aSrc1, aSrc1Offset, aDst, aDstOffset, aSrcPos, aDstSampleCount, aStepFixed);
-#elif RESAMPLER_LINEAR
+#elif MINILOUD_RESAMPLER_LINEAR
             ResampleLinear(aSrc, aSrcOffset, aSrc1, aSrc1Offset, aDst, aDstOffset, aSrcPos, aDstSampleCount, aStepFixed);
 #else
             ResamplePoint(aSrc, aSrcOffset, aSrc1, aSrc1Offset, aDst, aDstOffset, aSrcPos, aDstSampleCount, aStepFixed);
