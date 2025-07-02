@@ -32,7 +32,10 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         }
 
         RTHandle m_RenderTarget;
+        RenderTargetInfo m_RenderTarget_Info;
+
         RTHandle m_RenderTargetDepth;
+        RenderTargetInfo m_RenderTargetDepth_Info;
 
         public RTHandle GetRenderTarget()
         {
@@ -42,6 +45,10 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         public void SetRenderTarget(RTHandle target)
         {
             m_RenderTarget = target;
+            if (target != null)
+            {
+                m_RenderTarget_Info = CreateRenderTargetInfo(target);
+            }
         }
 
         public RTHandle GetRenderTargetDepth()
@@ -52,11 +59,31 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         public void SetRenderTargetDepth(RTHandle targetDepth)
         {
             m_RenderTargetDepth = targetDepth;
+            if (targetDepth != null)
+            {
+                m_RenderTargetDepth_Info = CreateRenderTargetInfo(targetDepth);
+            }
+        }
+
+        private RenderTargetInfo CreateRenderTargetInfo(RTHandle rtHandle)
+        {
+            var desc = rtHandle.rt.descriptor;
+            return new RenderTargetInfo
+            {
+                width = desc.width,
+                height = desc.height,
+                volumeDepth = desc.volumeDepth,
+                msaaSamples = desc.msaaSamples,
+                format = desc.graphicsFormat
+            };
         }
 
         // Render Graph version - executes command buffer via Graphics.ExecuteCommandBuffer
         public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
         {
+            if (!Application.isPlaying)
+                return;
+
             using (var builder = renderGraph.AddRasterRenderPass<PassData>("Ceramic Render Pass", out var passData))
             {
                 // Get camera data from frame data
@@ -67,7 +94,7 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                 if (GetRenderTarget() != null)
                 {
                     // Use custom render target
-                    var colorTargetHandle = renderGraph.ImportTexture(GetRenderTarget());
+                    var colorTargetHandle = renderGraph.ImportTexture(GetRenderTarget(), m_RenderTarget_Info);
                     builder.SetRenderAttachment(colorTargetHandle, 0, AccessFlags.Write);
                     passData.colorTarget = colorTargetHandle;
                 }
@@ -82,7 +109,7 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                 if (GetRenderTargetDepth() != null)
                 {
                     // Use custom depth target
-                    var depthTargetHandle = renderGraph.ImportTexture(GetRenderTargetDepth());
+                    var depthTargetHandle = renderGraph.ImportTexture(GetRenderTargetDepth(), m_RenderTargetDepth_Info);
                     builder.SetRenderAttachmentDepth(depthTargetHandle, AccessFlags.Write);
                     passData.depthTarget = depthTargetHandle;
                 }

@@ -179,7 +179,10 @@ public class CeramicCommandBuffer
 
                 case CommandType.DrawMesh:
                     var drawCmd = drawMeshCommands[command.dataIndex];
-                    cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                    if (drawCmd.mesh != null && drawCmd.material != null)
+                    {
+                        cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                    }
                     break;
             }
         }
@@ -212,7 +215,10 @@ public class CeramicCommandBuffer
 
                 case CommandType.DrawMesh:
                     var drawCmd = drawMeshCommands[command.dataIndex];
-                    cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                    if (drawCmd.mesh != null && drawCmd.material != null)
+                    {
+                        cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                    }
                     break;
             }
         }
