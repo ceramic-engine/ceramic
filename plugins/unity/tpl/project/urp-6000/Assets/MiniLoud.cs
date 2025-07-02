@@ -1,4 +1,4 @@
-#define MINILOUD_RESAMPLER_CATMULLROM
+#define MINILOUD_RESAMPLER_LINEAR
 
 using System;
 using System.Collections.Generic;
