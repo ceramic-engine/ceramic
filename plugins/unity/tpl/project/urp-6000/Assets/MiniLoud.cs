@@ -194,11 +194,13 @@ namespace MiniLoud
                 else
                 {
                     mPlayPosition = samplesPerChannel;
+                    mStreamPosition = seconds;
                     return Result.NO_ERROR;
                 }
             }
 
             mPlayPosition = Math.Max(0, targetSample);
+            mStreamPosition = seconds;
             return Result.NO_ERROR;
         }
     }
@@ -518,7 +520,8 @@ namespace MiniLoud
             {
                 if (voiceHandle < 0 || voiceHandle >= VOICE_COUNT || mVoice[voiceHandle] == null)
                     return 0.0;
-                return mVoice[voiceHandle].mPlayPosition / mVoice[voiceHandle].mSamplerate;
+                // Use mStreamPosition which accounts for pitch, not mPlayPosition
+                return mVoice[voiceHandle].mStreamPosition;
             }
         }
 
@@ -528,6 +531,11 @@ namespace MiniLoud
             {
                 if (voiceHandle < 0 || voiceHandle >= VOICE_COUNT || mVoice[voiceHandle] == null)
                     return;
+
+                // Set stream position directly
+                mVoice[voiceHandle].mStreamPosition = (float)position;
+
+                // Seek to the actual sample position
                 mVoice[voiceHandle].Seek((float)position, mScratch.mData, mScratchSize);
             }
         }
@@ -637,7 +645,7 @@ namespace MiniLoud
                     (voice.mFlags & AudioSourceInstance.FLAGS.PAUSED) == 0 &&
                     (voice.mFlags & AudioSourceInstance.FLAGS.INAUDIBLE) == 0)
                 {
-                    float step = voice.mSamplerate / aSamplerate;
+                    float step = (voice.mSamplerate / aSamplerate) * voice.mOverallRelativePlaySpeed;
                     // avoid step overflow
                     if (step > (1 << (32 - FIXPOINT_FRAC_BITS)))
                         step = 0;
@@ -773,7 +781,7 @@ namespace MiniLoud
                     (voice.mFlags & AudioSourceInstance.FLAGS.INAUDIBLE_TICK) != 0)
                 {
                     // Inaudible but needs ticking. Do minimal work (keep counters up to date and ask audiosource for data)
-                    float step = voice.mSamplerate / aSamplerate;
+                    float step = (voice.mSamplerate / aSamplerate) * voice.mOverallRelativePlaySpeed;
                     int step_fixed = (int)Math.Floor(step * FIXPOINT_FRAC_MUL);
                     int outofs = 0;
 
@@ -2363,12 +2371,12 @@ namespace MiniLoud
                     if (state.audioSource == null)
                         continue;
 
-                    // Get current position from mixer
+                    // Get current position from mixer (now returns stream position)
                     double position = mixer.GetPosition(state.voiceHandle);
                     state.position = position;
 
                     // Check if voice has ended
-                    if (state.audioSource.HasEnded() &&
+                    if (position >= state.audioSource.mAudioDataLength / (state.audioSource.mChannels * state.audioSource.mSamplerate) &&
                         (state.audioSource.mFlags & AudioSourceInstance.FLAGS.LOOPING) == 0)
                     {
                         if (toRemove == null)

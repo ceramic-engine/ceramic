@@ -76,7 +76,7 @@ class AudioHandleImpl {
         this.busIndex = busIndex;
         length = resource.unityResource.length;
 
-        useMiniLoud = true; // Could be per-bus later, or not if miniloud works perfectly fine
+        useMiniLoud = #if ceramic_unity_no_miniloud false #else true #end; // Could be per-bus later, or not if miniloud works perfectly fine
 
         if (_audioSources == null) {
             _audioSources = AudioSources.shared;
@@ -163,8 +163,6 @@ class AudioHandleImpl {
 /// Public API
 
     public function play():Void {
-
-        trace("play!");
 
         paused = false;
         if (!useMiniLoud) {
