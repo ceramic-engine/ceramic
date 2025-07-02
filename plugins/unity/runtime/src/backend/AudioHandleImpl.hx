@@ -70,13 +70,13 @@ class AudioHandleImpl {
 
     var paused:Bool = false;
 
-    public function new(resource:AudioResourceImpl, busIndex:Int) {
+    public function new(resource:AudioResourceImpl, busIndex:Int, useMiniLoud:Bool) {
 
         this.resource = resource;
         this.busIndex = busIndex;
-        length = resource.unityResource.length;
+        this.length = resource.unityResource.length;
 
-        useMiniLoud = #if ceramic_unity_no_miniloud false #else true #end; // Could be per-bus later, or not if miniloud works perfectly fine
+        this.useMiniLoud = useMiniLoud;
 
         if (_audioSources == null) {
             _audioSources = AudioSources.shared;

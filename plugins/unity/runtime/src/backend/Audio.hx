@@ -144,7 +144,7 @@ class Audio implements spec.Audio {
 
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
-        var handle = new AudioHandleImpl(audio, bus);
+        var handle = new AudioHandleImpl(audio, bus, busHasFilter[bus] == true);
 
         handle.volume = volume;
         handle.pan = pan;
@@ -231,6 +231,8 @@ class Audio implements spec.Audio {
     }
 
     public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
+
+        busHasFilter[bus] = true;
 
         audioFiltersLock.acquire();
 
@@ -471,6 +473,9 @@ class Audio implements spec.Audio {
     static final filterIdsByBus:Array<Array<AudioFilterInfo>> = [];
 
     static final activeBusFilters:Array<Bool> = [];
+
+    // Only used in main thread so no lock needed for this one
+    static final busHasFilter:Array<Bool> = [];
 
     static final busFilterReadyCallbacks:Array<Array<()->Void>> = [];
 

@@ -151,6 +151,11 @@ class AudioSources {
 
             comp = untyped __cs__('{0}.AddComponent<MiniLoudUnity>()', obj);
             miniLoudComponentByBus[busIndex] = comp;
+
+            final bus = this.bus(busIndex);
+            if (bus != null) {
+                comp.audioSource.outputAudioMixerGroup = bus.mixerGroup;
+            }
         }
 
         return comp;
