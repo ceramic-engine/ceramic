@@ -239,7 +239,7 @@ class CollectionView extends ScrollView {
                 }
 
                 var view = frame.view;
-                if (view != null) {
+                if (view != null && !view.destroyed) {
                     if (childrenDepth == INCREMENT) {
                         view.depth = itemIndex;
                     }
