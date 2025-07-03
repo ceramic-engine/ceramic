@@ -277,6 +277,13 @@ namespace MiniLoud
         public float[] mWaveData;
         public float[] mFFTData;
 
+        // Pre-allocated buffers
+        private int[] mQuicksortStack = new int[24];
+        private byte[] mLiveChannelBuffer = new byte[256];
+        private float[] mPanBuffer = new float[MAX_CHANNELS];
+        private float[] mPanDestBuffer = new float[MAX_CHANNELS];
+        private float[] mPanIncrementBuffer = new float[MAX_CHANNELS];
+
         private readonly object mAudioMutex = new object();
 
         public Miniloud()
@@ -584,12 +591,11 @@ namespace MiniLoud
         private void Mix_internal(int aSamples)
         {
             float buffertime = aSamples / (float)mSamplerate;
-            float[] globalVolume = new float[2];
             mStreamTime += buffertime;
             mLastClockedTime = 0;
 
-            globalVolume[0] = mGlobalVolume;
-            globalVolume[1] = mGlobalVolume;
+            float globalVolume0 = mGlobalVolume;
+            float globalVolume1 = mGlobalVolume;
 
             lock (mAudioMutex)
             {
@@ -619,7 +625,7 @@ namespace MiniLoud
                 MixBus_internal(mOutputScratch.mData, aSamples, aSamples, mScratch.mData, mSamplerate, mChannels);
             }
 
-            Clip_internal(mOutputScratch, mScratch, aSamples, globalVolume[0], globalVolume[1]);
+            Clip_internal(mOutputScratch, mScratch, aSamples, globalVolume0, globalVolume1);
 
             if ((mFlags & MiniloudFlags.ENABLE_VISUALIZATION) != 0)
             {
@@ -1048,9 +1054,9 @@ namespace MiniLoud
 
         private void PanAndExpand(AudioSourceInstance aVoice, float[] aBuffer, int aSamplesToRead, int aBufferSize, float[] aScratch, int aChannels)
         {
-            float[] pan = new float[MAX_CHANNELS]; // current speaker volume
-            float[] pand = new float[MAX_CHANNELS]; // destination speaker volume
-            float[] pani = new float[MAX_CHANNELS]; // speaker volume increment per sample
+            float[] pan = mPanBuffer; // current speaker volume
+            float[] pand = mPanDestBuffer; // destination speaker volume
+            float[] pani = mPanIncrementBuffer; // speaker volume increment per sample
 
             for (int k = 0; k < aChannels; k++)
             {
@@ -1527,7 +1533,7 @@ namespace MiniLoud
             // If we get this far, there's nothing to it: we'll have to sort the voices to find the most audible.
             // Implement the exact MiniLoud iterative partial quicksort
             int left = 0;
-            int[] stack = new int[24];
+            int[] stack = mQuicksortStack;
             int pos = 0;
             int right;
             int len = candidates - mustlive;
@@ -1571,7 +1577,7 @@ namespace MiniLoud
         private void MapResampleBuffers_internal()
         {
             // Match MiniLoud's exact logic
-            byte[] live = new byte[256]; // Using bytes to match C++ char array
+            byte[] live = mLiveChannelBuffer; // Using bytes to match C++ char array
             Array.Clear(live, 0, mMaxActiveVoices);
 
             for (int i = 0; i < mMaxActiveVoices; i++)
@@ -2390,13 +2396,13 @@ namespace MiniLoud
             }
         }
 
+        private List<int> voiceStatesToRemove = new List<int>();
+
         private void UpdateShadowPositions()
         {
             lock (stateLock)
             {
-                // Create a list to track handles to remove
-                List<int> toRemove = null;
-
+                bool hasVoiceStatesToRemove = false;
                 foreach (var kvp in voiceStates)
                 {
                     int handle = kvp.Key;
@@ -2414,19 +2420,19 @@ namespace MiniLoud
                     if (position >= state.audioSource.mAudioDataLength / (state.audioSource.mChannels * state.audioSource.mSamplerate) &&
                         (state.audioSource.mFlags & AudioSourceInstance.FLAGS.LOOPING) == 0)
                     {
-                        if (toRemove == null)
-                            toRemove = new List<int>();
-                        toRemove.Add(handle);
+                        hasVoiceStatesToRemove = true;
+                        voiceStatesToRemove.Add(handle);
                     }
                 }
 
                 // Remove ended voices
-                if (toRemove != null)
+                if (hasVoiceStatesToRemove)
                 {
-                    foreach (int handle in toRemove)
+                    foreach (int handle in voiceStatesToRemove)
                     {
                         voiceStates.Remove(handle);
                     }
+                    voiceStatesToRemove.Clear();
                 }
             }
         }
