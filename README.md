@@ -74,6 +74,10 @@ Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as we
 
 * **[Fuzzaldrin](https://github.com/atom/fuzzaldrin) from Atom** to provide some auto-completion features at runtime debug UI.
 
+* **[SoLoud](https://github.com/jarikomppa/soloud) by Jari Komppa** to implement audio on both C++/Native targets and C#/Unity audio mixing (via MiniLoud port)
+
+* **[LDtk](https://github.com/deepnight/ldtk) by Sébastien Bénard**, a modern 2D level editor, compatible with Ceramic
+
 ## License
 
 Ceramic is [MIT licensed](LICENSE).
