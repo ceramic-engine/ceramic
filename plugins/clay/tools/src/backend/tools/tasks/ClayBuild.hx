@@ -293,6 +293,9 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                             if (!FileSystem.exists(Path.join([filtersHaxePath, 'ceramic']))) {
                                 FileSystem.createDirectory(Path.join([filtersHaxePath, 'ceramic']));
                             }
+                            if (!FileSystem.exists(Path.join([filtersHaxePath, 'ceramic', 'macros']))) {
+                                FileSystem.createDirectory(Path.join([filtersHaxePath, 'ceramic', 'macros']));
+                            }
                             File.copy(
                                 Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilters.hx']),
                                 Path.join([filtersHaxePath, 'ceramic/AudioFilters.hx'])
@@ -304,6 +307,10 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                             File.copy(
                                 Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilterBuffer.hx']),
                                 Path.join([filtersHaxePath, 'ceramic/AudioFilterBuffer.hx'])
+                            );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/macros/AudioFiltersMacro.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/macros/AudioFiltersMacro.hx'])
                             );
 
                             var workletIncludesStr = '';

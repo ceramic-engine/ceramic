@@ -8,7 +8,7 @@ import haxe.atomic.AtomicInt;
 /**
  * The actual worklet class that will do the audio processing of a given `AudioFilter`
  */
-#if (web && !macro && !display && !completion)
+#if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.AudioFiltersMacro.buildWorklet())
 #end
 abstract class AudioFilterWorklet {
@@ -55,25 +55,25 @@ abstract class AudioFilterWorklet {
     private final params:Array<Float> = [];
 
     /**
-     * Set a boolean parameter at the given position (0-based)
+     * Get a boolean parameter at the given position (0-based)
      */
-    public function getBool(index:Int):Bool {
+    private function getBool(index:Int):Bool {
         final val:Null<Float> = params[index];
         return val != null ? val != 0 : false;
     }
 
     /**
-     * Set an int parameter at the given position (0-based)
+     * Get an int parameter at the given position (0-based)
      */
-    public function getInt(index:Int):Int {
+    private function getInt(index:Int):Int {
         final val:Null<Float> = params[index];
         return val != null ? Std.int(val) : 0;
     }
 
     /**
-     * Set a float parameter at the given position (0-based)
+     * Get a float parameter at the given position (0-based)
      */
-    public function getFloat(index:Int):Float {
+    private function getFloat(index:Int):Float {
         final val:Null<Float> = params[index];
         return val != null ? val : 0;
     }

@@ -6,7 +6,7 @@ import ceramic.Shortcuts.*;
  * Base class for audio filters that can process audio buffers in real-time.
  * Subclass this to create custom audio filters.
  */
-#if (web && !macro && !display && !completion)
+#if !macro
 @:autoBuild(ceramic.macros.AudioFiltersMacro.buildFilter())
 #end
 abstract class AudioFilter extends Entity {
@@ -39,26 +39,126 @@ abstract class AudioFilter extends Entity {
 
     #if sys
     private final paramsLock = new ceramic.SpinLock();
+    private final paramsAcquireLock = new ceramic.SpinLock();
     #end
 
     private final params:Array<Float> = [];
 
     private var paramsChanged:Bool = false;
+
     private var paramsAcquired:Bool = false;
+
+    /**
+     * Get a boolean parameter at the given position (0-based)
+     */
+    private function getBool(index:Int):Bool {
+        final val:Null<Float> = params[index];
+        return val != null ? val != 0 : false;
+    }
+
+    /**
+     * Get an int parameter at the given position (0-based)
+     */
+    private function getInt(index:Int):Int {
+        final val:Null<Float> = params[index];
+        return val != null ? Std.int(val) : 0;
+    }
+
+    /**
+     * Get a float parameter at the given position (0-based)
+     */
+    private function getFloat(index:Int):Float {
+        final val:Null<Float> = params[index];
+        return val != null ? val : 0;
+    }
+
+    private function setBool(index:Int, value:Bool):Void {
+        #if sys
+        paramsAcquireLock.acquire();
+        #end
+        var selfAcquireParams = !paramsAcquired;
+        #if sys
+        paramsAcquireLock.release();
+        #end
+        if (selfAcquireParams) {
+            acquireParams();
+        }
+        final prevValue = params[index];
+        final newValue = value ? 1.0 : 0.0;
+        params[index] = newValue;
+        if (newValue != prevValue) {
+            paramsChanged = true;
+        }
+        if (selfAcquireParams) {
+            releaseParams();
+        }
+    }
+
+    private function setInt(index:Int, value:Int):Void {
+        #if sys
+        paramsAcquireLock.acquire();
+        #end
+        var selfAcquireParams = !paramsAcquired;
+        #if sys
+        paramsAcquireLock.release();
+        #end
+        if (selfAcquireParams) {
+            acquireParams();
+        }
+        final prevValue = params[index];
+        final newValue = value;
+        params[index] = newValue;
+        if (newValue != prevValue) {
+            paramsChanged = true;
+        }
+        if (selfAcquireParams) {
+            releaseParams();
+        }
+    }
+
+    private function setFloat(index:Int, value:Float):Void {
+        #if sys
+        paramsAcquireLock.acquire();
+        #end
+        var selfAcquireParams = !paramsAcquired;
+        #if sys
+        paramsAcquireLock.release();
+        #end
+        if (selfAcquireParams) {
+            acquireParams();
+        }
+        final prevValue = params[index];
+        final newValue = value;
+        params[index] = newValue;
+        if (newValue != prevValue) {
+            paramsChanged = true;
+        }
+        if (selfAcquireParams) {
+            releaseParams();
+        }
+    }
 
     public function acquireParams():Void {
         #if sys
         paramsLock.acquire();
+        paramsAcquireLock.acquire();
         #end
         paramsChanged = false;
-        paramsAcquired = false;
+        paramsAcquired = true;
+        #if sys
+        paramsAcquireLock.release();
+        #end
     }
 
     public function releaseParams():Void {
         var notifyChanged = paramsChanged;
+        #if sys
+        paramsAcquireLock.acquire();
+        #end
         paramsChanged = false;
         paramsAcquired = false;
         #if sys
+        paramsAcquireLock.acquire();
         paramsLock.release();
         #end
         if (notifyChanged) {
@@ -69,6 +169,11 @@ abstract class AudioFilter extends Entity {
     public function new() {
         super();
         filterId = _nextFilterId++;
+        _initDefaultParamValues();
+    }
+
+    @:noCompletion private function _initDefaultParamValues():Void {
+        // Internal, handled by macro
     }
 
     /**
@@ -92,6 +197,15 @@ abstract class AudioFilter extends Entity {
      */
     @:allow(ceramic.Audio)
     public abstract function workletClass():Class<AudioFilterWorklet>;
+
+    /**
+     * Return the number of parameters this filter has.
+     * (automatically generated from fields marked with `@param`, no need to override id)
+     */
+    @:allow(ceramic.Audio)
+    public function numParams():Int {
+        return 0;
+    }
 
     override function destroy() {
         if (bus != -1) {
