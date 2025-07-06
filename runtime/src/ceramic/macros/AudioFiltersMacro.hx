@@ -122,6 +122,17 @@ class AudioFiltersMacro {
                 });
             }
             else if (fieldHasParamMeta(field)) {
+                #if !(display || completion)
+                switch field.kind {
+                    case FVar(varType, e):
+                        for (meta in field.meta) {
+                            if (meta.name == 'param') {
+                                meta.params = [e];
+                            }
+                        }
+                    case _:
+                }
+                #end
                 fields.push(field);
             }
         }
@@ -195,7 +206,15 @@ class AudioFiltersMacro {
                 switch field.kind {
                     case FVar(read, write):
                         final varType = TypeTools.toComplexType(field.type);
-                        final defaultValExpr = field.expr()?.expr;
+                        var defaultValExpr = null;
+                        if (defaultValExpr == null) {
+                            final fieldMeta = field.meta.get();
+                            for (meta in fieldMeta) {
+                                if (meta.name == 'param' && meta.params != null && meta.params.length > 0) {
+                                    defaultValExpr = meta.params[0];
+                                }
+                            }
+                        }
                         #if (display || completion)
                         fields.push({
                             name: field.name,
@@ -210,16 +229,10 @@ class AudioFiltersMacro {
                             case TPath(p) if ((p.name == 'StdTypes' && (p.sub == 'Bool' || p.sub == 'Int' || p.sub == 'Float')) || p.name == 'Bool' || p.name == 'Int' || p.name == 'Float'):
                                 final paramType:String = p.name == 'StdTypes' ? p.sub : p.name;
                                 if (defaultValExpr != null) {
-                                    switch defaultValExpr {
-                                        case TConst(TBool(val)):
-                                            defaults.push('${field.name} = ${val ? 'true' : 'false'};');
-                                        case TConst(TInt(val)):
-                                            defaults.push('${field.name} = $val;');
-                                        case TConst(TFloat(val)):
-                                            defaults.push('${field.name} = $val;');
-                                        case _:
-                                            throw 'Unsupported param default value: ' + defaultValExpr;
-                                    }
+                                    defaults.push('${field.name} = ${new Printer().printExpr(defaultValExpr)};');
+                                }
+                                else {
+                                    defaults.push('setFloat($paramIndex, 0);');
                                 }
                                 fields.push({
                                     name: field.name,
@@ -315,6 +328,11 @@ class AudioFiltersMacro {
                         switch varType {
                             case TPath(p) if ((p.name == 'StdTypes' && (p.sub == 'Bool' || p.sub == 'Int' || p.sub == 'Float')) || p.name == 'Bool' || p.name == 'Int' || p.name == 'Float'):
                                 final paramType:String = p.name == 'StdTypes' ? p.sub : p.name;
+                                for (meta in field.meta) {
+                                    if (meta.name == 'param') {
+                                        meta.params = [e];
+                                    }
+                                }
                                 field.kind = FProp('get', 'never', varType, null);
                                 fields.push({
                                     name: 'get_' + field.name,
@@ -339,6 +357,19 @@ class AudioFiltersMacro {
                         throw new Error("Invalid audio filter param", field.pos);
                 }
             }
+        }
+
+        if (paramIndex > 0) {
+            fields.push({
+                name: 'numParams',
+                pos: Context.currentPos(),
+                kind: FFun({
+                    args: [],
+                    expr: macro return $v{paramIndex},
+                    ret: macro :Int
+                }),
+                access: [AOverride]
+            });
         }
 
         return fields;

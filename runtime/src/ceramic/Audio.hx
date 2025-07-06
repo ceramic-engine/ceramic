@@ -75,6 +75,11 @@ class Audio extends Entity {
         // Notify backend
         app.backend.audio.addFilter(bus, filter, @:privateAccess filter.emitReady);
 
+        // Invalidate params because filters layout has changed
+        for (i in 0...busFilters[bus].length) {
+            app.backend.audio.filterParamsChanged(bus, busFilters[bus][i].filterId);
+        }
+
         #if sys
         busFiltersLock.release();
         #end
@@ -107,6 +112,11 @@ class Audio extends Entity {
 
             // Notify backend
             app.backend.audio.removeFilter(bus, filter.filterId);
+
+            // Invalidate params because filters layout has changed
+            for (i in 0...busFilters[bus].length) {
+                app.backend.audio.filterParamsChanged(bus, busFilters[bus][i].filterId);
+            }
         }
     }
 

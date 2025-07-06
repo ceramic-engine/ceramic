@@ -209,16 +209,6 @@ class Audio implements spec.Audio {
             pan = 0;
         }
 
-        #if web
-        // TODO audio filters
-        var handle:AudioHandle = null;
-        if (loop) {
-            handle = Clay.app.audio.loop(audioResource, volume, false);
-        }
-        else {
-            handle = Clay.app.audio.play(audioResource, volume, false);
-        }
-        #else
         var handle:AudioHandle = null;
         if (loop) {
             handle = Clay.app.audio.loop(audioResource, volume, false, bus);
@@ -226,7 +216,6 @@ class Audio implements spec.Audio {
         else {
             handle = Clay.app.audio.play(audioResource, volume, false, bus);
         }
-        #end
 
         if (pan != 0) {
             Clay.app.audio.pan(handle, pan);
@@ -387,7 +376,9 @@ class Audio implements spec.Audio {
                 bus,
                 filter.filterId,
                 filterWorkletClass,
-                filterWorkletReady
+                () -> {
+                    filterWorkletReady();
+                }
             );
         };
         #end
@@ -441,13 +432,19 @@ class Audio implements spec.Audio {
             audioFiltersLock.release();
             #end
 
+            trace('-> CALL BUS FILTER READY 1');
             busFilterReady();
         }
         else {
+            // #if web
+            // trace('-> CALL BUS FILTER READY 2');
+            // busFilterReady();
+            // #else
             if (busFilterReadyCallbacks[bus] == null) {
                 busFilterReadyCallbacks[bus] = [];
             }
             busFilterReadyCallbacks[bus].push(busFilterReady);
+            // #end
 
             #if sys
             audioFiltersLock.release();
@@ -506,8 +503,6 @@ class Audio implements spec.Audio {
         audioFiltersLock.acquire();
         #end
 
-        // TODO web
-
         var filters = filterIdsByBus[bus];
         if (filters != null) {
             #if sys
@@ -516,11 +511,23 @@ class Audio implements spec.Audio {
             audioFiltersLock.release();
             #end
 
+            var paramIndex:Int = 0;
             for (i in 0...filters.length) {
                 final filterInfo = filters[i];
+                final filter = filterInfo.filter;
                 if (filterInfo.id == filterId) {
+                    #if web
+                    for (p in 0...filter.numParams()) {
+                        Clay.app.audio.setWorkletParameterByIndexWhenReady(bus, paramIndex, @:privateAccess filter.params[p]);
+                        paramIndex++;
+                    }
+                    #else
                     filterInfo.paramsDirty = true;
+                    #end
                     break;
+                }
+                else {
+                    paramIndex += filter.numParams();
                 }
             }
 

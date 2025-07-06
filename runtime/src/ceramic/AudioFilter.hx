@@ -161,7 +161,7 @@ abstract class AudioFilter extends Entity {
         paramsAcquireLock.acquire();
         paramsLock.release();
         #end
-        if (notifyChanged) {
+        if (notifyChanged && bus >= 0) {
             app.backend.audio.filterParamsChanged(bus, filterId);
         }
     }
@@ -200,9 +200,8 @@ abstract class AudioFilter extends Entity {
 
     /**
      * Return the number of parameters this filter has.
-     * (automatically generated from fields marked with `@param`, no need to override id)
+     * (automatically generated from fields marked with `@param`, no need to override it)
      */
-    @:allow(ceramic.Audio)
     public function numParams():Int {
         return 0;
     }

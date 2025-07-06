@@ -84,9 +84,17 @@ abstract class AudioFilterWorklet {
     }
 
     /**
+     * Return the number of parameters this filter has.
+     * (automatically generated from fields marked with `@param`, no need to override it)
+     */
+    public function numParams():Int {
+        return 0;
+    }
+
+    /**
      * Process audio buffer in place. Override this method to implement custom filtering.
      * CAUTION: this may be called from a background thread
-     * @param buffer The audio buffer to process (modify in place)
+     * @param buffer The audio buffer to process (modify in place, planar layout: one channel after another, not interleaved)
      * @param samples Number of samples per channel
      * @param channels Number of audio channels (1 = mono, 2 = stereo)
      * @param sampleRate Sample rate in Hz
