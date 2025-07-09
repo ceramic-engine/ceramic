@@ -2,11 +2,14 @@ package spec;
 
 import backend.AudioHandle;
 import backend.AudioResource;
+import backend.Float32Array;
 import backend.LoadAudioOptions;
 
 interface Audio {
 
     function load(path:String, ?options:LoadAudioOptions, done:AudioResource->Void):Void;
+
+    function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource;
 
     function supportsHotReloadPath():Bool;
 

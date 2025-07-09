@@ -43,51 +43,8 @@ class Compile extends tools.Task {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
 
-            if (context.defines.exists('ceramic_use_openal')) {
-
-                // Android OpenAL built separately (because of LGPL license, we want to build
-                // it separately and link it dynamically at runtime)
-                var openALAndroidPath = Path.join([context.ceramicGitDepsPath, 'linc_openal/lib/openal-android']);
-                var buildOpenALArgs = [];
-                if (!context.colors) {
-                    buildOpenALArgs.push('-DHXCPP_NO_COLOR');
-                }
-                switch (arch) {
-                    case 'armv7':
-                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARMV7'].concat(buildOpenALArgs),
-                            {cwd: openALAndroidPath});
-                        Files.copyIfNeeded(
-                            Path.join([openALAndroidPath, 'lib/Android/libopenal-v7.so']),
-                            Path.join([openALAndroidPath, 'lib/Android/armeabi-v7a/libopenal.so'])
-                        );
-                    case 'arm64':
-                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_ARM64'].concat(buildOpenALArgs),
-                            {cwd: openALAndroidPath});
-                        Files.copyIfNeeded(
-                            Path.join([openALAndroidPath, 'lib/Android/libopenal-64.so']),
-                            Path.join([openALAndroidPath, 'lib/Android/arm64-v8a/libopenal.so'])
-                        );
-                    case 'x86' | 'i386':
-                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86'].concat(buildOpenALArgs),
-                            {cwd: openALAndroidPath});
-                        Files.copyIfNeeded(
-                            Path.join([openALAndroidPath, 'lib/Android/libopenal-x86.so']),
-                            Path.join([openALAndroidPath, 'lib/Android/x86/libopenal.so'])
-                        );
-                    case 'x86_64':
-                        haxelib(['run', 'hxcpp', 'library.xml', '-Dandroid', '-DHXCPP_X86_64'].concat(buildOpenALArgs),
-                            {cwd: openALAndroidPath});
-                        Files.copyIfNeeded(
-                            Path.join([openALAndroidPath, 'lib/Android/libopenal-x86_64.so']),
-                            Path.join([openALAndroidPath, 'lib/Android/x86_64/libopenal.so'])
-                        );
-                    default:
-                }
-            }
-            else {
-                // When not using OpenAL, we can statically link with libc++
-                hxcppArgs.push('-DHXCPP_LIBCPP_STATIC');
-            }
+            // We can statically link with libc++
+            hxcppArgs.push('-DHXCPP_LIBCPP_STATIC');
 
             switch (arch) {
                 case 'armv7':
@@ -113,30 +70,9 @@ class Compile extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
-        // If using separate binary for openal, we copy libc++_shared.so,
-        // which is recommended practice to make both ceramic app and
-        // openal binaries share the same c++ library
-        if (context.defines.exists('ceramic_use_openal')) {
-            // Copy Shared libc++ binaries if needed
-            AndroidProject.copySharedLibCppBinariesIfNeeded(cwd, project, archs);
-            AndroidProject.setSharedObjectEnabled(cwd, project, 'c++_shared', true);
-        }
-        else {
-            // Remove Shared libc++ binaries if needed
-            AndroidProject.removeSharedLibCppBinariesIfNeeded(cwd, project, archs);
-            AndroidProject.setSharedObjectEnabled(cwd, project, 'c++_shared', false);
-        }
-
-        if (context.defines.exists('ceramic_use_openal')) {
-            // Copy OpenAL binaries if needed
-            AndroidProject.copyOpenALBinariesIfNeeded(cwd, project, archs);
-            AndroidProject.setSharedObjectEnabled(cwd, project, 'openal', true);
-        }
-        else {
-            // Remove OpenAL binaries if needed
-            AndroidProject.removeOpenALBinariesIfNeeded(cwd, project, archs);
-            AndroidProject.setSharedObjectEnabled(cwd, project, 'openal', false);
-        }
+        // Remove Shared libc++ binaries if needed
+        AndroidProject.removeSharedLibCppBinariesIfNeeded(cwd, project, archs);
+        AndroidProject.setSharedObjectEnabled(cwd, project, 'c++_shared', false);
 
         // Copy main binaries if needed
         AndroidProject.copyMainBinariesIfNeeded(cwd, project, archs);

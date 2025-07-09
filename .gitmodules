@@ -1,6 +1,3 @@
-[submodule "git/linc_openal"]
-	path = git/linc_openal
-	url = https://github.com/ceramic-engine/linc_openal.git
 [submodule "git/linc_timestamp"]
 	path = git/linc_timestamp
 	url = https://github.com/ceramic-engine/linc_timestamp.git

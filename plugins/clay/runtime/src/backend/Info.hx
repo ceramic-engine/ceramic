@@ -81,8 +81,6 @@ class Info #if !completion implements spec.Info #end {
 
         return [].concat(_soundExtensions);
 
-        #elseif clay_use_openal
-        return ['ogg', 'wav'];
         #else
         return ['ogg', 'mp3', 'flac', 'wav'];
         #end

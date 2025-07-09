@@ -17,4 +17,8 @@ extern class AudioClip extends Object {
 
     var loadType(default, null):AudioClipLoadType;
 
+    static function Create(name:String, lengthSamples:Int, channels:Int, frequency:Int, stream:Bool):AudioClip;
+
+    function SetData(data:cs.NativeArray<Single>, offsetSamples:Int):Bool;
+
 }

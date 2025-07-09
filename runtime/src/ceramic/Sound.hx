@@ -24,6 +24,21 @@ class Sound extends Entity {
 
 /// Lifecycle
 
+    /**
+     * Create a new sound from the given samples buffer
+     * @param buffer Float32Array containing the raw PCM samples
+     * @param samples Number of sample frames (samples per channel)
+     * @param channels Number of audio channels (1 = mono, 2 = stereo, etc.)
+     * @param sampleRate Sample rate in Hz (e.g., 44100)
+     * @param interleaved Whether the PCM data is interleaved (LRLRLR...) or planar (LLL...RRR...)
+     */
+    public static function fromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):Sound {
+
+        var backendItem = app.backend.audio.createFromSamplesBuffer(buffer, samples, channels, sampleRate, interleaved);
+        return new Sound(backendItem);
+
+    }
+
     public function new(backendItem:backend.AudioResource) {
 
         super();

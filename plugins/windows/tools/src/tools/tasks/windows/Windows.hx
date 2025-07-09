@@ -95,28 +95,6 @@ class Windows extends tools.Task {
             FileSystem.deleteFile(appIconPath);
         }
 
-        if (context.defines.exists('ceramic_use_openal')) {
-            // Copy openal32.dll for correct architecture
-            if (context.defines.exists('HXCPP_M32')) {
-                Files.copyIfNeeded(
-                    Path.join([pluginPath, 'resources', 'libs', 'x86', 'openal32.dll']),
-                    Path.join([windowsProjectPath, 'openal32.dll'])
-                );
-            }
-            else {
-                Files.copyIfNeeded(
-                    Path.join([pluginPath, 'resources', 'libs', 'x86_64', 'openal32.dll']),
-                    Path.join([windowsProjectPath, 'openal32.dll'])
-                );
-            }
-        }
-        else {
-            // Remove openal32.dll if it was there before
-            if (FileSystem.exists(Path.join([windowsProjectPath, 'openal32.dll']))) {
-                FileSystem.deleteFile(Path.join([windowsProjectPath, 'openal32.dll']));
-            }
-        }
-
         // Stop if not running
         if (!doRun) return;
 

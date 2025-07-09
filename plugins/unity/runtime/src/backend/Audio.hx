@@ -110,6 +110,43 @@ class Audio implements spec.Audio {
 
     }
 
+    var nextSamplesBufferIndex:Int = 0;
+
+    public function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource {
+
+        var id = 'samples:' + (nextSamplesBufferIndex++);
+
+        var unityResource = AudioClip.Create(
+            id, samples, channels, Std.int(sampleRate), false
+        );
+
+        if (unityResource != null) {
+
+            if (interleaved) {
+                unityResource.SetData(buffer, 0);
+            }
+            else {
+                // Convert planar to interleaved
+                var interleavedBuffer = new Float32Array(samples * channels);
+                for (i in 0...samples) {
+                    for (j in 0...channels) {
+                        var planarIndex = j * samples + i;
+                        var interleavedIndex = i * channels + j;
+                        interleavedBuffer[interleavedIndex] = buffer[planarIndex];
+                    }
+                }
+                unityResource.SetData(interleavedBuffer, 0);
+            }
+
+            var resource = new AudioResourceImpl(id, unityResource);
+            loadedAudioResources.set(id, resource);
+            loadedAudioRetainCount.set(id, 1);
+            return resource;
+        }
+
+        return null;
+    }
+
     inline public function getDuration(audio:AudioResource):Float {
 
         return (audio:AudioResourceImpl).unityResource.length;

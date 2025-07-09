@@ -128,6 +128,27 @@ class Audio implements spec.Audio {
 
     }
 
+    var nextSamplesBufferIndex:Int = 0;
+
+    public function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource {
+
+        var id = 'samples:' + (nextSamplesBufferIndex++);
+
+        var audioData = Clay.app.audio.dataFromPCM(
+            id, buffer, samples, channels, sampleRate, interleaved
+        );
+
+        if (audioData != null) {
+            var resource = new clay.audio.AudioSource(Clay.app, audioData);
+            loadedAudioResources.set(id, resource);
+            loadedAudioRetainCount.set(id, 1);
+            return resource;
+        }
+
+        return null;
+
+    }
+
     inline public function getDuration(resource:AudioResource):Float {
 
         return (resource:clay.audio.AudioSource).getDuration();
@@ -432,19 +453,13 @@ class Audio implements spec.Audio {
             audioFiltersLock.release();
             #end
 
-            trace('-> CALL BUS FILTER READY 1');
             busFilterReady();
         }
         else {
-            // #if web
-            // trace('-> CALL BUS FILTER READY 2');
-            // busFilterReady();
-            // #else
             if (busFilterReadyCallbacks[bus] == null) {
                 busFilterReadyCallbacks[bus] = [];
             }
             busFilterReadyCallbacks[bus].push(busFilterReady);
-            // #end
 
             #if sys
             audioFiltersLock.release();
