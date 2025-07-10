@@ -26,6 +26,15 @@ class Linux extends tools.Task {
         var linuxProjectPath = Path.join([cwd, 'project/linux']);
         var linuxAppBinaryFile = Path.join([linuxProjectPath, project.app.name]);
 
+        var linuxAppSdlLib = Path.join([linuxProjectPath, 'libSDL3.so']);
+        var linuxAppSdl0Lib = Path.join([linuxProjectPath, 'libSDL3.so.0']);
+        var linuxAppSdl030Lib = Path.join([linuxProjectPath, 'libSDL3.so.0.3.0']);
+
+        var sdlArch = #if linux_arm64 'arm64' #else 'x64' #end;
+        var ceramicSdlLib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-linux-$sdlArch/lib/libSDL3.so']);
+        var ceramicSdl0Lib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-linux-$sdlArch/lib/libSDL3.so.0']);
+        var ceramicSdl030Lib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-linux-$sdlArch/lib/libSDL3.so.0.3.0']);
+
         var doRun = extractArgFlag(args, 'run');
 
         // Create linux app package if needed
@@ -40,6 +49,13 @@ class Linux extends tools.Task {
         }
         File.copy(Path.join([outTargetPath, 'cpp', context.debug ? 'Main-debug' : 'Main']), linuxAppBinaryFile);
         command('chmod', ['+x', linuxAppBinaryFile]);
+
+        // Copy SDL3 if needed
+        if (!Files.haveSameLastModified(ceramicSdlLib, linuxAppSdlLib)) {
+            command('cp', ['-Pf', ceramicSdlLib, linuxAppSdlLib]);
+            command('cp', ['-Pf', ceramicSdl0Lib, linuxAppSdl0Lib]);
+            command('cp', ['-Pf', ceramicSdl030Lib, linuxAppSdl030Lib]);
+        }
 
         // Stop if not running
         if (!doRun) return;

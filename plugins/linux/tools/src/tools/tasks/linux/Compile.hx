@@ -52,6 +52,7 @@ class Compile extends tools.Task {
 
             hxcppArgs.push('-DHXCPP_CPP11');
             hxcppArgs.push('-DHXCPP_CLANG');
+            hxcppArgs.push('-DHXCPP_RPATH_ORIGIN');
 
             switch (arch) {
                 case 'arm64':
