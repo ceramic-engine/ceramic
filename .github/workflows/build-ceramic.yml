@@ -166,7 +166,7 @@ jobs:
           AppPublisherURL={#MyAppURL}
           AppSupportURL={#MyAppURL}
           AppUpdatesURL={#MyAppURL}
-          DefaultDirName={userappdata}\ceramic
+          DefaultDirName={sd}\Ceramic
           DefaultGroupName={#MyAppName}
           DisableProgramGroupPage=yes
           OutputDir={#SourceDir}
