@@ -603,6 +603,8 @@ class Audio implements spec.Audio {
 
     static function _clayFilterProcess(bus:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
 
+        #if !documentation
+
         #if sys
         audioFiltersLock.acquire();
         #end
@@ -681,6 +683,8 @@ class Audio implements spec.Audio {
         ceramic.AudioFilters.processBusAudioWorklets(
             bus, buffer, aSamples, aChannels, aSamplerate, time
         );
+
+        #end
 
     }
 

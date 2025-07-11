@@ -1,5 +1,11 @@
 package backend;
 
+#if documentation
+
+typedef AudioFilterBuffer = ceramic.Float32Array;
+
+#else
+
 abstract AudioFilterBuffer(ceramic.Float32Array) {
 
     inline public function new(buffer:ceramic.Float32Array) {
@@ -22,3 +28,5 @@ abstract AudioFilterBuffer(ceramic.Float32Array) {
     }
 
 }
+
+#end

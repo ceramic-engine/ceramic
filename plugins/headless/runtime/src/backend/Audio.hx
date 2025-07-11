@@ -25,6 +25,12 @@ class Audio implements spec.Audio {
 
     }
 
+    public function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource {
+
+        return new AudioResourceImpl();
+
+    }
+
     inline public function supportsHotReloadPath():Bool {
 
         return false;

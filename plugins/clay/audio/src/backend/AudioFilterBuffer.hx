@@ -1,5 +1,11 @@
 package backend;
 
+#if documentation
+
+typedef AudioFilterBuffer = js.lib.Float32Array;
+
+#else
+
 @:forward
 @:arrayAccess
 abstract AudioFilterBuffer(js.lib.Float32Array)
@@ -14,3 +20,5 @@ abstract AudioFilterBuffer(js.lib.Float32Array)
     }
 
 }
+
+#end

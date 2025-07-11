@@ -1,5 +1,11 @@
 package backend;
 
+#if documentation
+
+typedef AudioFilterBuffer = cs.NativeArray<Single>;
+
+#else
+
 @:forward
 @:arrayAccess
 abstract AudioFilterBuffer(cs.NativeArray<Single>)
@@ -14,3 +20,5 @@ abstract AudioFilterBuffer(cs.NativeArray<Single>)
     }
 
 }
+
+#end

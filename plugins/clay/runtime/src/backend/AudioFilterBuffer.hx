@@ -1,6 +1,10 @@
 package backend;
 
-#if cpp
+#if documentation
+
+typedef AudioFilterBuffer = clay.buffers.Float32Array;
+
+#elseif cpp
 abstract AudioFilterBuffer(cpp.Pointer<cpp.Float32>) {
 
     inline public function new(buffer:cpp.Pointer<cpp.Float32>) {
