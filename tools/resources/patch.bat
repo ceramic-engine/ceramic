@@ -13,7 +13,6 @@ set "BACKUP_FILE=%FILE_TO_PATCH%.bak"
 
 echo File to patch: %FILE_TO_PATCH%
 echo Patch file: %PATCH_FILE%
-echo Backup file: %BACKUP_FILE%
 
 :: Check if the files exist
 if not exist "%FILE_TO_PATCH%" (
@@ -24,13 +23,6 @@ if not exist "%FILE_TO_PATCH%" (
 if not exist "%PATCH_FILE%" (
     echo Error: Patch file '%PATCH_FILE%' not found!
     exit /b 1
-)
-
-:: Create a backup of the original file
-echo Creating backup...
-copy /Y "%FILE_TO_PATCH%" "%BACKUP_FILE%" > nul
-if not exist "%BACKUP_FILE%" (
-    echo Warning: Failed to create backup file. Continuing anyway...
 )
 
 :: Find Git's patch executable
