@@ -434,12 +434,14 @@ class Helpers {
     public static function stdoutWrite(input:String) {
 
         Sys.stdout().writeString(input);
+        Sys.stdout().flush();
 
     }
 
     public static function stderrWrite(input:String) {
 
         Sys.stderr().writeString(input);
+        Sys.stderr().flush();
 
     }
 
