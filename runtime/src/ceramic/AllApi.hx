@@ -51,6 +51,12 @@ import ceramic.AssetsScheduleMethod;
 import ceramic.AssetStatus;
 import ceramic.Audio;
 import ceramic.AudioMixer;
+import ceramic.AudioFilters;
+import ceramic.AudioFilter;
+import ceramic.AudioFilterWorklet;
+import ceramic.AudioFilterBuffer;
+import ceramic.LowPassFilter;
+import ceramic.HighPassFilter;
 import ceramic.AutoCollections;
 import ceramic.BackgroundQueue;
 import ceramic.BezierEasing;
@@ -249,6 +255,7 @@ import ceramic.VisibleBounds;
 import ceramic.Visual;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
+import ceramic.WaitCallbacks;
 
 #if plugin_script
 import ceramic.Script;
