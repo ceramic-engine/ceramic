@@ -1169,7 +1169,7 @@ class Helpers {
 
         if (context.vscode) {
             var absolutePath = Path.isAbsolute(path) ? Path.normalize(path) : Path.normalize(Path.join([cwd, path]));
-            var vscodePath = (context.vscodeUriScheme ?? 'vscode') + '://file${absolutePath}:${line}';
+            var vscodePath = (context.vscodeUriScheme ?? 'vscode') + '://file${absolutePath.startsWith('/') ? absolutePath : '/' + absolutePath}:${line}';
             var normalizedPath = Path.normalize(path);
             var name = Path.withoutDirectory(normalizedPath);
             var basePath = Path.directory(normalizedPath);
