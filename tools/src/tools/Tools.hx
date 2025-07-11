@@ -79,6 +79,10 @@ class Tools {
         context.addTask('version', new tools.tasks.Version());
         context.addTask('help', new tools.tasks.Help());
 
+        context.addTask('haxe', new tools.tasks.Haxe());
+        context.addTask('haxelib', new tools.tasks.Haxelib());
+        context.addTask('neko', new tools.tasks.Neko());
+
         context.addTask('init', new tools.tasks.Init());
         context.addTask('vscode', new tools.tasks.Vscode());
         context.addTask('link', new tools.tasks.Link());
