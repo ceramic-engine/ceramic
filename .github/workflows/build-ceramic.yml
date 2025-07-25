@@ -858,21 +858,6 @@ jobs:
           name: Ceramic ${{ env.TAG_NAME }}
           body: |
             Ceramic ${{ env.TAG_NAME }}
-
-            ## Installation Options
-
-            ### Windows
-            - **Installer**: Download and run `ceramic-windows-installer.exe` to install Ceramic in your home directory
-            - **Manual**: Download and extract `ceramic-windows.zip` to a location of your choice
-
-            ### macOS
-            - **Installer**: Download and open `ceramic-mac-installer.pkg` to install Ceramic system-wide
-            - **Manual**: Download and extract `ceramic-mac.zip` to a location of your choice
-
-            ### Linux
-            - Download and extract the appropriate zip file for your architecture:
-              - `ceramic-linux-x86_64.zip` for 64-bit x86 systems
-              - `ceramic-linux-arm64.zip` for ARM64 systems
           draft: false
           prerelease: false
           files: |
