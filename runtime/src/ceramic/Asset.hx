@@ -6,79 +6,127 @@ import tracker.Observable;
 
 using StringTools;
 
+/**
+ * Base class for all asset types in Ceramic.
+ * 
+ * Assets represent loadable resources like images, fonts, sounds, etc.
+ * This class provides common functionality including:
+ * - Path resolution based on density and variants
+ * - Reference counting for memory management
+ * - Hot reload support
+ * - Asset lifecycle management
+ * 
+ * Asset subclasses should override the `load()` method to implement
+ * specific loading logic for their asset type.
+ * 
+ * @see Assets
+ */
 @:allow(ceramic.Assets)
 class Asset extends Entity implements Observable {
 
 /// Events
 
+    /**
+     * Emitted when the asset finishes loading.
+     * @param success True if the asset loaded successfully, false if it failed
+     */
     @event function complete(success:Bool);
 
 /// Properties
 
     /**
-     * Asset kind
+     * Asset kind identifier (e.g., 'image', 'font', 'sound').
+     * Used to categorize assets and determine loading behavior.
      */
     public var kind(default,null):String;
 
     /**
-     * Asset name
+     * Asset name without extension or variant.
+     * Setting this triggers path recomputation.
      */
     public var name(default,set):String;
 
     /**
-     * Asset variant
+     * Optional variant suffix for the asset.
+     * Useful for loading different versions of the same asset (e.g., 'large', 'small').
      */
     public var variant(default,set):String;
 
     /**
-     * Asset full name (including variant, if provided)
+     * Full asset identifier including variant if provided.
+     * Format: 'name' or 'name:variant'
      */
     public var fullName(default,null):String;
 
     /**
-     * Asset path
+     * Resolved file path for this asset.
+     * Automatically computed based on name, variant, density, and available files.
      */
     public var path(default,set):String;
 
     /**
-     * All paths related to this asset
+     * All available file paths for this asset across different densities.
+     * Useful for preloading multiple resolutions.
      */
     public var allPaths(default,null):Array<String>;
 
     /**
-     * Asset target density. Some assets depend on current screen density,
-     * like bitmap fonts, textures. Default is 1.0
+     * Asset target density matching the best available file.
+     * Automatically set based on screen density and available asset files.
+     * Default is 1.0.
      */
     public var density(default,null):Float = 1.0;
 
     /**
-     * Asset owner. The owner is a group of assets (Assets instance). When the owner gets
-     * destroyed, every asset it owns get destroyed as well.
+     * The Assets instance that owns this asset.
+     * When the owner is destroyed, all its assets are destroyed too.
      */
     public var owner(default,null):Assets;
 
     /**
-     * Optional runtime assets, used to compute path.
+     * Optional runtime assets configuration for dynamic asset loading.
+     * Used to compute paths when loading assets from custom directories.
      */
     public var runtimeAssets(default,set):RuntimeAssets;
 
     /**
-     * Asset options. Depends on asset kind and even backend in some cases.
+     * Asset-specific loading options.
+     * Content depends on asset type and backend implementation.
+     * Common options include premultiplyAlpha for images, streaming for sounds, etc.
      */
     public var options(default,null):AssetOptions;
 
     /**
-     * Sub assets-list. Defaults to null but some kind of assets (like bitmap fonts) instanciate it to load sub-assets it depends on.
+     * Sub-assets owned by this asset.
+     * Some assets (like bitmap fonts) create this to manage their dependencies.
+     * Automatically destroyed when the parent asset is destroyed.
      */
     public var assets(default,null):Assets = null;
 
     /**
-     * Manage asset retain count. Increase it by calling `retain()` and decrease it by calling `release()`.
-     * This can be used when mutliple objects are using the same assets
-     * without knowing in advance when they will be needed.
+     * Reference count for memory management.
+     * - Call `retain()` to increase (claim ownership)
+     * - Call `release()` to decrease (release ownership)
+     * - Asset can be safely destroyed when refCount reaches 0
+     * 
+     * @example
+     * ```haxe
+     * var texture = assets.texture('hero');
+     * texture.retain(); // refCount = 1
+     * // ... use texture ...
+     * texture.release(); // refCount = 0, can be cleaned up
+     * ```
      */
     public var refCount(default,null):Int = 0;
 
+    /**
+     * Current loading status of the asset.
+     * Observable property that triggers updates when status changes.
+     * - NONE: Not loaded
+     * - LOADING: Currently loading  
+     * - READY: Successfully loaded
+     * - BROKEN: Failed to load
+     */
     @observe public var status:AssetStatus = NONE;
 
     var handleTexturesDensityChange(default,set):Bool = false;
@@ -89,6 +137,13 @@ class Asset extends Entity implements Observable {
 
 /// Lifecycle
 
+    /**
+     * Create a new asset.
+     * @param kind The asset type identifier
+     * @param name The asset name (without extension)
+     * @param variant Optional variant suffix
+     * @param options Loading options specific to the asset type
+     */
     public function new(kind:String, name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -102,6 +157,12 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Load the asset.
+     * Subclasses must override this method to implement actual loading logic.
+     * Should set status to LOADING during load, then READY or BROKEN when complete.
+     * Must call emitComplete() when finished.
+     */
     public function load():Void {
 
         status = BROKEN;
@@ -110,6 +171,12 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Destroy this asset and clean up resources.
+     * - Removes from owner Assets instance
+     * - Destroys any sub-assets
+     * - Should not be called directly if refCount > 0
+     */
     override function destroy():Void {
 
         super.destroy();
@@ -126,6 +193,14 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Compute the best file path for this asset based on available files and screen density.
+     * Automatically called during initialization and when properties change.
+     * 
+     * @param extensions File extensions to look for (auto-detected if not provided)
+     * @param dir Whether to look for directories instead of files
+     * @param runtimeAssets Runtime assets configuration to use
+     */
     public function computePath(?extensions:Array<String>, ?dir:Bool, ?runtimeAssets:RuntimeAssets):Void {
 
         // Runtime assets
@@ -326,6 +401,12 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Called when screen texture density changes.
+     * Subclasses can override to handle density changes (e.g., reload at new resolution).
+     * @param newDensity The new texture density
+     * @param prevDensity The previous texture density
+     */
     function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         // Override
@@ -348,6 +429,12 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Called when watched asset files change on disk.
+     * Subclasses can override to implement hot reload behavior.
+     * @param newFiles Map of file paths to modification times after change
+     * @param previousFiles Map of file paths to modification times before change
+     */
     function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         // Override
@@ -356,6 +443,10 @@ class Asset extends Entity implements Observable {
 
 /// Print
 
+    /**
+     * String representation of the asset for debugging.
+     * @return String in format "AssetType(name:variant path)" or "AssetType(name:variant)"
+     */
     override function toString():String {
 
         var className = className();
@@ -380,6 +471,13 @@ class Asset extends Entity implements Observable {
 
 /// Reference counting
 
+    /**
+     * Increase the reference count by 1.
+     * Call this when you start using an asset to prevent it from being destroyed.
+     * Must be balanced with a corresponding `release()` call.
+     * 
+     * @see release
+     */
     public function retain():Void {
 
         #if ceramic_debug_refcount
@@ -390,6 +488,15 @@ class Asset extends Entity implements Observable {
 
     }
 
+    /**
+     * Decrease the reference count by 1.
+     * Call this when you're done using an asset.
+     * When refCount reaches 0, the asset can be safely destroyed.
+     * 
+     * Warning: Calling release() when refCount is already 0 will log a warning.
+     * 
+     * @see retain
+     */
     public function release():Void {
 
         #if ceramic_debug_refcount

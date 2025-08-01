@@ -6,6 +6,26 @@ import haxe.ds.ArraySort;
 
 using ceramic.Extensions;
 
+/**
+ * Manager for all System instances in the application.
+ * 
+ * Systems manages the lifecycle and update order of all systems in Ceramic.
+ * It ensures systems are updated in the correct order during both early and
+ * late update phases, handling automatic sorting and safe iteration.
+ * 
+ * Features:
+ * - Automatic sorting by update order
+ * - Safe iteration (handles systems added/removed during updates)
+ * - Two-phase update system (early and late updates)
+ * - System lookup by name
+ * - Automatic immediate callback flushing between systems
+ * 
+ * This class is created and managed by the App instance and typically
+ * doesn't need to be interacted with directly. Access it via `app.systems`.
+ * 
+ * @see System
+ * @see App
+ */
 @:allow(ceramic.App)
 class Systems extends Entity {
 
@@ -128,6 +148,11 @@ class Systems extends Entity {
 
 /// Helpers
 
+    /**
+     * Gets a system by its name.
+     * @param name The name of the system to retrieve
+     * @return The system instance, or null if not found
+     */
     public function get(name:String):System {
 
         for (i in 0...earlyUpdateOrdered.length) {

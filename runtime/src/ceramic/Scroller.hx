@@ -5,6 +5,12 @@ import ceramic.ScrollerStatus;
 import ceramic.Shortcuts.*;
 import tracker.Observable;
 
+/**
+ * A scrollable container that allows smooth scrolling and dragging of content.
+ * 
+ * Supports touch/mouse dragging, momentum scrolling, bounce effects,
+ * and optional paging. Can scroll vertically or horizontally.
+ */
 @:keep
 class Scroller extends Visual implements Observable {
 
@@ -12,28 +18,68 @@ class Scroller extends Visual implements Observable {
 
 /// Events
 
+    /**
+     * Event fired when scroll animation starts.
+     */
     @event function animateStart();
 
+    /**
+     * Event fired when scroll animation ends.
+     */
     @event function animateEnd();
 
+    /**
+     * Event fired when the user starts dragging.
+     */
     @event function dragStart();
 
+    /**
+     * Event fired when the user stops dragging.
+     */
     @event function dragEnd();
 
+    /**
+     * Event fired when mouse wheel scrolling starts.
+     */
     @event function wheelStart();
 
+    /**
+     * Event fired when mouse wheel scrolling ends.
+     */
     @event function wheelEnd();
 
+    /**
+     * Event fired when the scroller is clicked (tap without scrolling).
+     * 
+     * @param info Touch information for the click
+     */
     @event function click(info:TouchInfo);
 
+    /**
+     * Event fired when pointer is pressed down on the scroller.
+     * 
+     * @param info Touch information
+     */
     @event function scrollerPointerDown(info:TouchInfo);
 
+    /**
+     * Event fired when pointer is released from the scroller.
+     * 
+     * @param info Touch information
+     */
     @event function scrollerPointerUp(info:TouchInfo);
 
 /// Public properties
 
+    /**
+     * The content visual that will be scrolled.
+     */
     public var content(default,null):Visual = null;
 
+    /**
+     * Optional scrollbar visual that indicates scroll position.
+     * The scrollbar will be automatically positioned and sized.
+     */
     public var scrollbar(default, set):Visual = null;
     function set_scrollbar(scrollbar:Visual):Visual {
         if (this.scrollbar == scrollbar) return scrollbar;
@@ -49,14 +95,30 @@ class Scroller extends Visual implements Observable {
         return this.scrollbar;
     }
 
+    /**
+     * Scroll direction: VERTICAL or HORIZONTAL.
+     */
     public var direction = VERTICAL;
 
+    /**
+     * Whether to allow pointer events outside the scroller bounds.
+     * When false, pointer events outside will be blocked.
+     */
     public var allowPointerOutside:Bool = true;
 
+    /**
+     * Transform used to position the content for scrolling.
+     */
     public var scrollTransform(default,null):Transform = new Transform();
 
+    /**
+     * Whether scrolling is enabled.
+     */
     public var scrollEnabled(default,set):Bool = true;
 
+    /**
+     * Whether dragging to scroll is enabled.
+     */
     public var dragEnabled:Bool = true;
 
     /**
@@ -95,6 +157,10 @@ class Scroller extends Visual implements Observable {
         return roundScrollWhenIdle;
     }
 
+    /**
+     * Current status of the scroller.
+     * Can be IDLE, TOUCHING, DRAGGING, or SCROLLING.
+     */
     @observe public var status(default,set):ScrollerStatus = IDLE;
 
     function set_status(status:ScrollerStatus):ScrollerStatus {
@@ -123,35 +189,77 @@ class Scroller extends Visual implements Observable {
 /// Fine tuning
 
     /**
-     * When set to `true`, vertical mouse wheel event
-     * will also work on horizontal scroller.
+     * When set to true, vertical mouse wheel events
+     * will also work on horizontal scrollers.
      */
     public var verticalToHorizontalWheel = false;
 
+    /**
+     * Deceleration rate for momentum scrolling (pixels per second squared).
+     */
     public var deceleration = 300.0;
 
+    /**
+     * Deceleration rate for mouse wheel scrolling (pixels per second squared).
+     */
     public var wheelDeceleration = 1600.0;
 
+    /**
+     * Multiplier for mouse wheel scroll speed.
+     */
     public var wheelFactor = 1.0;
 
+    /**
+     * Whether to apply momentum to mouse wheel scrolling.
+     */
     public var wheelMomentum = false;
 
+    /**
+     * Delay in seconds before wheel scrolling is considered ended.
+     */
     public var wheelEndDelay = 0.25;
 
+    /**
+     * Resistance factor when scrolling beyond bounds.
+     * Higher values make it harder to scroll past edges.
+     */
     public var overScrollResistance = 5.0;
 
+    /**
+     * Maximum momentum that still allows a click to register.
+     * Higher momentum will cancel the click.
+     */
     public var maxClickMomentum = 100.0;
 
+    /**
+     * Factor for converting momentum to bounce distance.
+     */
     public var bounceMomentumFactor = 0.00075;
 
+    /**
+     * Minimum duration for bounce animation in seconds.
+     */
     public var bounceMinDuration = 0.08;
 
+    /**
+     * Factor for calculating bounce duration based on momentum.
+     */
     public var bounceDurationFactor = 0.00004;
 
+    /**
+     * Duration for bounce animation when there's no momentum.
+     */
     public var bounceNoMomentumDuration = 0.1;
 
+    /**
+     * Multiplier for drag speed.
+     * Values less than 1.0 make dragging slower.
+     */
     public var dragFactor = 1.0;
 
+    /**
+     * Whether to use strict hierarchy checking for touch events.
+     */
     public var touchableStrictHierarchy = true;
 
 /// Internal
@@ -164,6 +272,11 @@ class Scroller extends Visual implements Observable {
 
 /// Lifecycle
 
+    /**
+     * Create a new Scroller.
+     * 
+     * @param content Optional content visual to scroll. If null, a new Visual is created.
+     */
     public function new(?content:Visual) {
 
         super();
@@ -270,6 +383,11 @@ class Scroller extends Visual implements Observable {
 
 /// Public API
 
+    /**
+     * Scroll to ensure content is within bounds.
+     * If content is smaller than the scroller, it will be positioned at 0.
+     * If scrolled beyond bounds, it will snap back to the nearest edge.
+     */
     public function scrollToBounds():Void {
 
         if (direction == VERTICAL) {
@@ -297,6 +415,13 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * Check if a content position is visible within the scroller bounds.
+     * 
+     * @param x X position in content coordinates
+     * @param y Y position in content coordinates
+     * @return True if the position is visible
+     */
     public function isContentPositionInBounds(x:Float, y:Float):Bool {
 
         if (x < scrollX)
@@ -313,6 +438,12 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * Scroll to ensure a specific content position is visible.
+     * 
+     * @param x X position in content coordinates to make visible
+     * @param y Y position in content coordinates to make visible
+     */
     public function ensureContentPositionIsInBounds(x:Float, y:Float):Void {
 
         var targetScrollX = scrollX;
@@ -358,6 +489,9 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * Current horizontal scroll position.
+     */
     public var scrollX(get,set):Float;
     inline function get_scrollX():Float {
         return -scrollTransform.tx;
@@ -369,6 +503,9 @@ class Scroller extends Visual implements Observable {
         return scrollX;
     }
 
+    /**
+     * Current vertical scroll position.
+     */
     public var scrollY(get,set):Float;
     inline function get_scrollY():Float {
         return -scrollTransform.ty;
@@ -394,8 +531,16 @@ class Scroller extends Visual implements Observable {
 
     var touchIndex:Int = -1;
 
+    /**
+     * Current scroll velocity tracker.
+     * Used to calculate momentum when dragging ends.
+     */
     public var scrollVelocity(default,null):Velocity = null;
 
+    /**
+     * Current momentum value.
+     * Positive values scroll down/right, negative up/left.
+     */
     public var momentum(default,null):Float = 0;
 
     var releaseSnap:Bool = false;
@@ -410,6 +555,9 @@ class Scroller extends Visual implements Observable {
 
     var tweenY:Tween = null;
 
+    /**
+     * Whether the scroller is currently animating.
+     */
     public var animating(default,set):Bool = false;
     function set_animating(animating:Bool):Bool {
         if (this.animating != animating) {
@@ -691,24 +839,44 @@ class Scroller extends Visual implements Observable {
 
 /// Helpers
 
+    /**
+     * Check if content is scrolled beyond the top edge.
+     * 
+     * @return True if over-scrolled at top
+     */
     inline public function isOverScrollingTop() {
 
         return scrollTransform.ty > 0;
 
     }
 
+    /**
+     * Check if content is scrolled beyond the bottom edge.
+     * 
+     * @return True if over-scrolled at bottom
+     */
     inline public function isOverScrollingBottom() {
 
         return scrollTransform.ty < height - content.height;
 
     }
 
+    /**
+     * Check if content is scrolled beyond the left edge.
+     * 
+     * @return True if over-scrolled at left
+     */
     inline public function isOverScrollingLeft() {
 
         return scrollTransform.tx > 0;
 
     }
 
+    /**
+     * Check if content is scrolled beyond the right edge.
+     * 
+     * @return True if over-scrolled at right
+     */
     inline public function isOverScrollingRight() {
 
         return scrollTransform.tx < width - content.width;
@@ -1087,6 +1255,9 @@ class Scroller extends Visual implements Observable {
 
 /// Helpers
 
+    /**
+     * Stop all scrolling and animations immediately.
+     */
     override public function stop():Void {
 
         super.stop();
@@ -1098,6 +1269,9 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * Stop any active scroll animations.
+     */
     inline public function stopTweens():Void {
 
         if (tweenX != null) tweenX.destroy();
@@ -1107,6 +1281,12 @@ class Scroller extends Visual implements Observable {
 
 /// Smooth scroll
 
+    /**
+     * Immediately scroll to a specific position.
+     * 
+     * @param scrollX Target horizontal scroll position
+     * @param scrollY Target vertical scroll position
+     */
     public function scrollTo(scrollX:Float, scrollY:Float):Void {
 
         stop();
@@ -1116,6 +1296,14 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * Smoothly animate scroll to a specific position.
+     * 
+     * @param scrollX Target horizontal scroll position
+     * @param scrollY Target vertical scroll position
+     * @param duration Animation duration in seconds (default: 0.15)
+     * @param easing Easing function to use (default: QUAD_EASE_IN_OUT)
+     */
     public function smoothScrollTo(scrollX:Float, scrollY:Float, duration:Float = 0.15, ?easing:Easing):Void {
 
         stopTweens();

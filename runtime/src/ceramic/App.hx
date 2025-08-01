@@ -28,6 +28,26 @@ import assets.AllAssets;
 
 /**
  * `App` class is the root instance of any ceramic app.
+ *
+ * App serves as the main entry point and lifecycle manager for Ceramic applications.
+ * It handles initialization, update loops, rendering, and provides global access to
+ * core systems and settings.
+ *
+ * Key responsibilities:
+ * - Application lifecycle management (ready, update, draw)
+ * - Default asset loading and management
+ * - Screen and audio system initialization
+ * - Settings and persistent data management
+ * - Error handling and crash reporting
+ * - Background/foreground state transitions
+ *
+ * The App instance is a singleton accessible via `app` static property or
+ * through the `ceramic.Shortcuts.app` convenience reference.
+ *
+ * @see Screen
+ * @see Audio
+ * @see Settings
+ * @see Scene
  */
 #if !macro
 @:build(ceramic.macros.AppMacro.build())

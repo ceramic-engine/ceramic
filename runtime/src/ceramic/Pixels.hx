@@ -6,26 +6,83 @@ import haxe.io.Bytes;
 using ceramic.Extensions;
 
 /**
- * Utilities to manipulate RGBA pixels.
+ * Utility class for manipulating raw RGBA pixel data.
+ * 
+ * Pixels provides low-level operations for working with pixel buffers in RGBA format.
+ * Each pixel consists of 4 bytes: Red, Green, Blue, and Alpha channels (0-255 each).
+ * This class is useful for:
+ * - Image processing and filtering
+ * - Procedural texture generation
+ * - Pixel-perfect collision detection
+ * - Screenshot capture and export
+ * - Dynamic texture creation
+ * 
+ * Buffer format:
+ * - Pixels are stored in row-major order (left to right, top to bottom)
+ * - Each pixel uses 4 consecutive bytes: [R, G, B, A]
+ * - Buffer index calculation: (y * width + x) * 4
+ * 
+ * @example
+ * ```haxe
+ * // Create a 100x100 red image
+ * var pixels = Pixels.create(100, 100, AlphaColor.RED);
+ * 
+ * // Set a single pixel
+ * Pixels.set(pixels, 100, 50, 50, AlphaColor.BLUE);
+ * 
+ * // Copy a region
+ * Pixels.copy(srcPixels, srcWidth, dstPixels, dstWidth,
+ *             0, 0, 50, 50,  // Source region
+ *             25, 25);       // Destination position
+ * 
+ * // Export to PNG
+ * Pixels.pixelsToPng(100, 100, pixels, "output.png", () -> {
+ *     trace("PNG saved!");
+ * });
+ * ```
+ * 
+ * @see UInt8Array The underlying buffer type
+ * @see AlphaColor For pixel color representation
  */
 class Pixels {
 
     /**
-     * Copy pixels from `srcBuffer` to `dstBuffer`
-     * @param srcBuffer Source buffer to copy pixels from
-     * @param srcBufferWidth Source buffer image width (needed to know index from x,y coordinates)
-     * @param dstBuffer Destination buffer to past pixels into
-     * @param dstBufferWidth Destination buffer image width (needed to know index from x,y coordinates)
-     * @param srcX Source x position to copy from
-     * @param srcY Source y position to copy from
-     * @param srcWidth Source width to copy from
-     * @param srcHeight Source height to copy from
-     * @param dstX Destination x to paste into
-     * @param dstY Destination y to paste into
-     * @param copyRed Set to `true` default to copy red channel
-     * @param copyGreen Set to `true` default to copy green channel
-     * @param copyBlue Set to `true` default to copy blue channel
-     * @param copyAlpha Set to `true` default to copy alpha channel
+     * Copies a rectangular region of pixels from one buffer to another.
+     * 
+     * This method performs a pixel-by-pixel copy with optional channel filtering.
+     * It's useful for:
+     * - Compositing multiple images
+     * - Creating texture atlases
+     * - Implementing copy/paste functionality
+     * - Selective channel manipulation
+     * 
+     * The copy operation respects buffer boundaries and will not read/write
+     * outside the valid pixel ranges.
+     * 
+     * @param srcBuffer Source pixel buffer in RGBA format
+     * @param srcBufferWidth Width of the source image in pixels
+     * @param dstBuffer Destination pixel buffer in RGBA format
+     * @param dstBufferWidth Width of the destination image in pixels
+     * @param srcX Starting X coordinate in source buffer
+     * @param srcY Starting Y coordinate in source buffer
+     * @param srcWidth Width of the region to copy
+     * @param srcHeight Height of the region to copy
+     * @param dstX Target X coordinate in destination buffer
+     * @param dstY Target Y coordinate in destination buffer
+     * @param copyRed Whether to copy the red channel (default: true)
+     * @param copyGreen Whether to copy the green channel (default: true)
+     * @param copyBlue Whether to copy the blue channel (default: true)
+     * @param copyAlpha Whether to copy the alpha channel (default: true)
+     * 
+     * @example
+     * ```haxe
+     * // Copy entire image
+     * Pixels.copy(src, 100, dst, 200, 0, 0, 100, 100, 50, 50);
+     * 
+     * // Copy only RGB channels (preserve destination alpha)
+     * Pixels.copy(src, 100, dst, 200, 0, 0, 50, 50, 0, 0,
+     *             true, true, true, false);
+     * ```
      */
     public static function copy(
         srcBuffer:UInt8Array, srcBufferWidth:Int,
@@ -90,11 +147,24 @@ class Pixels {
     }
 
     /**
-     * Create a pixels buffer
-     * @param width Image width
-     * @param height Image height
-     * @param fillColor Default color
-     * @return UInt8Array
+     * Creates a new pixel buffer filled with the specified color.
+     * 
+     * Allocates a UInt8Array of size width × height × 4 bytes.
+     * All pixels are initialized to the same color value.
+     * 
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
+     * @param fillColor Initial color for all pixels (including alpha)
+     * @return New pixel buffer in RGBA format
+     * 
+     * @example
+     * ```haxe
+     * // Create transparent image
+     * var pixels = Pixels.create(256, 256, AlphaColor.TRANSPARENT);
+     * 
+     * // Create opaque white background
+     * var bg = Pixels.create(800, 600, AlphaColor.WHITE);
+     * ```
      */
     public static function create(width:Int, height:Int, fillColor:AlphaColor):UInt8Array {
 
@@ -114,7 +184,19 @@ class Pixels {
     }
 
     /**
-     * Create a pixels buffer from bytes with RGBA representation
+     * Creates a pixel buffer from raw bytes in RGBA format.
+     * 
+     * Converts Haxe Bytes to a platform-specific UInt8Array.
+     * The bytes must already be in RGBA format with 4 bytes per pixel.
+     * 
+     * @param bytes Raw bytes containing RGBA pixel data
+     * @return Pixel buffer suitable for use with other Pixels methods
+     * 
+     * @example
+     * ```haxe
+     * var bytes = File.getBytes("raw_image.data");
+     * var pixels = Pixels.fromBytes(bytes);
+     * ```
      */
     public static function fromBytes(bytes:Bytes):UInt8Array {
 
@@ -127,12 +209,22 @@ class Pixels {
     }
 
     /**
-     * Get a pixel as `AlphaColor` at `x`,`y` coordinates on the given buffer
-     * @param buffer The pixel buffer to read from
-     * @param bufferWidth Image width
-     * @param x Pixel x position
-     * @param y Pixel y position
-     * @return AlphaColor
+     * Gets a single pixel color at the specified coordinates.
+     * 
+     * Reads 4 bytes from the buffer and returns them as an AlphaColor.
+     * No bounds checking is performed for performance reasons.
+     * 
+     * @param buffer Pixel buffer to read from
+     * @param bufferWidth Width of the image in pixels
+     * @param x X coordinate (0 to width-1)
+     * @param y Y coordinate (0 to height-1)
+     * @return Color value at the specified position
+     * 
+     * @example
+     * ```haxe
+     * var color = Pixels.get(buffer, 100, 50, 25);
+     * trace('Pixel alpha: ' + color.alpha);
+     * ```
      */
     public static inline function get(
         buffer:UInt8Array, bufferWidth:Int,
@@ -147,12 +239,26 @@ class Pixels {
     }
 
     /**
-     * Set a pixel as `AlphaColor` at `x`,`y` coordinates on the given buffer
-     * @param buffer The pixel buffer to write into
-     * @param bufferWidth Image width
-     * @param x Pixel x position
-     * @param y Pixel y position
-     * @param color AlphaColor of the pixel
+     * Sets a single pixel color at the specified coordinates.
+     * 
+     * Writes 4 bytes to the buffer from the AlphaColor components.
+     * No bounds checking is performed for performance reasons.
+     * 
+     * @param buffer Pixel buffer to write to
+     * @param bufferWidth Width of the image in pixels
+     * @param x X coordinate (0 to width-1)
+     * @param y Y coordinate (0 to height-1)
+     * @param color Color value to set (including alpha)
+     * 
+     * @example
+     * ```haxe
+     * // Draw a red pixel
+     * Pixels.set(buffer, 100, 50, 25, AlphaColor.RED);
+     * 
+     * // Set semi-transparent green
+     * var color = AlphaColor.fromRGBA(0, 255, 0, 128);
+     * Pixels.set(buffer, 100, 10, 10, color);
+     * ```
      */
     public static inline function set(
         buffer:UInt8Array, bufferWidth:Int,
@@ -168,14 +274,28 @@ class Pixels {
     }
 
     /**
-     * Set a rectangle of pixels as `AlphaColor` at `x`,`y` coordinates and with the specified `width` and `height` on the given buffer
-     * @param buffer The pixel buffer to write into
-     * @param bufferWidth Image width
-     * @param x Rectangle x position
-     * @param y Rectangle y position
-     * @param width Rectangle width
-     * @param height Rectangle height
-     * @param color AlphaColor of the rectangle's pixels
+     * Fills a rectangular area with a solid color.
+     * 
+     * Sets all pixels within the specified rectangle to the same color.
+     * This is more efficient than setting pixels individually in a loop.
+     * No bounds checking is performed.
+     * 
+     * @param buffer Pixel buffer to write to
+     * @param bufferWidth Width of the image in pixels
+     * @param x Left edge of rectangle (0 to width-1)
+     * @param y Top edge of rectangle (0 to height-1)
+     * @param width Width of rectangle in pixels
+     * @param height Height of rectangle in pixels
+     * @param color Color to fill the rectangle with (including alpha)
+     * 
+     * @example
+     * ```haxe
+     * // Draw a blue square
+     * Pixels.setRectangle(buffer, 200, 50, 50, 100, 100, AlphaColor.BLUE);
+     * 
+     * // Clear a region to transparent
+     * Pixels.setRectangle(buffer, 200, 0, 0, 200, 50, AlphaColor.TRANSPARENT);
+     * ```
      */
      public static inline function setRectangle(
         buffer:UInt8Array, bufferWidth:Int,
@@ -189,12 +309,25 @@ class Pixels {
     }
 
     /**
-     * Export the given pixels pixels as PNG data and save it to the given file path
-     * @param width Image width
-     * @param height Image height
-     * @param pixels The pixels buffer
-     * @param path The png file path where to save the image (`'/path/to/image.png'`)
-     * @param done Called when the png has been exported
+     * Exports pixel data as a PNG file to the specified path.
+     * 
+     * Encodes the raw RGBA pixel buffer as PNG format and saves it to disk.
+     * The operation is asynchronous and calls the callback when complete.
+     * 
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
+     * @param pixels RGBA pixel buffer to encode
+     * @param path File path where to save the PNG (e.g., "/path/to/image.png")
+     * @param done Callback invoked when the export is complete
+     * 
+     * @example
+     * ```haxe
+     * var screenshot = Pixels.create(800, 600, AlphaColor.BLACK);
+     * // ... draw to screenshot ...
+     * Pixels.pixelsToPng(800, 600, screenshot, "screenshot.png", () -> {
+     *     trace("Screenshot saved!");
+     * });
+     * ```
      */
     static inline extern overload public function pixelsToPng(width:Int, height:Int, pixels:UInt8Array, path:String, done:()->Void):Void {
         _pixelsToPng(width, height, pixels, path, (?data) -> {
@@ -203,12 +336,25 @@ class Pixels {
     }
 
     /**
-     * Export the given pixels to PNG data/bytes
-     * @param width Image width
-     * @param height Image height
-     * @param pixels The pixels buffer
-     * @param done Called when the png has been exported, with `data` containing PNG bytes
-     * @return ->Void):Void
+     * Exports pixel data as PNG bytes in memory.
+     * 
+     * Encodes the raw RGBA pixel buffer as PNG format and returns the bytes.
+     * Useful for network transmission or further processing without disk I/O.
+     * 
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
+     * @param pixels RGBA pixel buffer to encode
+     * @param done Callback invoked with the PNG data as Bytes
+     * 
+     * @example
+     * ```haxe
+     * Pixels.pixelsToPng(256, 256, pixels, (pngBytes) -> {
+     *     // Send PNG over network
+     *     socket.write(pngBytes);
+     *     // Or encode as base64
+     *     var base64 = haxe.crypto.Base64.encode(pngBytes);
+     * });
+     * ```
      */
     static inline extern overload public function pixelsToPng(width:Int, height:Int, pixels:UInt8Array, done:(data:Bytes)->Void):Void {
         _pixelsToPng(width, height, pixels, null, (?data) -> {
@@ -223,12 +369,24 @@ class Pixels {
     }
 
     /**
-     * Converts a RGBA pixels buffer into RGB pixels buffer
-     * @param width Image width
-     * @param height Image height
-     * @param inPixels The source RGBA pixels buffer
-     * @param outPixels (optional) The destination RGB pixels buffer
-     * @return The final RGB pixels buffer
+     * Converts RGBA pixel data to RGB format by stripping alpha channel.
+     * 
+     * Creates a new buffer with 3 bytes per pixel instead of 4.
+     * Useful for formats that don't support transparency or to reduce memory usage.
+     * 
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
+     * @param inPixels Source RGBA pixel buffer (4 bytes per pixel)
+     * @param outPixels Optional destination buffer to reuse.
+     *                  Must be exactly width × height × 3 bytes.
+     *                  If null or wrong size, a new buffer is created.
+     * @return RGB pixel buffer (3 bytes per pixel)
+     * 
+     * @example
+     * ```haxe
+     * // Convert for JPEG encoding (no alpha support)
+     * var rgbPixels = Pixels.rgbaPixelsToRgbPixels(100, 100, rgbaPixels);
+     * ```
      */
     public static function rgbaPixelsToRgbPixels(width:Int, height:Int, inPixels:UInt8Array, ?outPixels:UInt8Array):UInt8Array {
 
@@ -257,13 +415,28 @@ class Pixels {
     }
 
     /**
-     * Converts a RGB pixels buffer into RGBA pixels buffer
-     * @param width Image width
-     * @param height Image height
-     * @param alpha Alpha value (0-255) to use (default to 255)
-     * @param inPixels The source RGBA pixels buffer
-     * @param outPixels (optional) The destination RGB pixels buffer
-     * @return The final RGBA pixels buffer
+     * Converts RGB pixel data to RGBA format by adding an alpha channel.
+     * 
+     * Expands the buffer from 3 bytes per pixel to 4 bytes per pixel.
+     * All pixels receive the same alpha value.
+     * 
+     * @param width Width of the image in pixels
+     * @param height Height of the image in pixels
+     * @param alpha Alpha value to add to all pixels (0-255, default: 255 for opaque)
+     * @param inPixels Source RGB pixel buffer (3 bytes per pixel)
+     * @param outPixels Optional destination buffer to reuse.
+     *                  Must be exactly width × height × 4 bytes.
+     *                  If null or wrong size, a new buffer is created.
+     * @return RGBA pixel buffer (4 bytes per pixel)
+     * 
+     * @example
+     * ```haxe
+     * // Convert RGB to opaque RGBA
+     * var rgbaPixels = Pixels.rgbPixelsToRgbaPixels(100, 100, 255, rgbPixels);
+     * 
+     * // Convert with 50% transparency
+     * var semiTransparent = Pixels.rgbPixelsToRgbaPixels(100, 100, 128, rgbPixels);
+     * ```
      */
     public static function rgbPixelsToRgbaPixels(width:Int, height:Int, alpha:Int = 255, inPixels:UInt8Array, ?outPixels:UInt8Array):UInt8Array {
 
@@ -294,11 +467,37 @@ class Pixels {
     }
 
     /**
-     * Mix the given list of pixels buffers into a single one.
-     * @param inPixelsList An array of pixels buffers
-     * @param middleFactor A multiplicator that makes the middle buffers more important than the rest if above 1
-     * @param outPixels (optional) The destination pixels buffer
-     * @return The final mixed pixels buffer
+     * Blends multiple pixel buffers into a single weighted average.
+     * 
+     * Combines multiple images using weighted averaging, with optional emphasis
+     * on middle buffers. This is useful for:
+     * - Creating smooth transitions between frames
+     * - Temporal anti-aliasing
+     * - Motion blur effects
+     * - Image stacking for noise reduction
+     * 
+     * The weight distribution forms a pyramid shape when middleFactor > 1:
+     * - First and last buffers have weight 1
+     * - Middle buffers have weight multiplied by middleFactor
+     * 
+     * @param inPixelsList Array of pixel buffers to mix. All must have same dimensions.
+     * @param middleFactor Weight multiplier for middle buffers.
+     *                     - 1.0: Equal weighting for all buffers
+     *                     - >1.0: Emphasize middle buffers
+     *                     - <1.0: Emphasize edge buffers
+     * @param outPixels Optional destination buffer to reuse.
+     *                  Must match size of input buffers.
+     * @return Mixed pixel buffer with weighted average of inputs
+     * 
+     * @throws String If inPixelsList is empty
+     * 
+     * @example
+     * ```haxe
+     * // Blend 5 frames for motion blur
+     * var frames = [frame1, frame2, frame3, frame4, frame5];
+     * var blurred = Pixels.mixPixelsBuffers(frames, 2.0);
+     * // Result weights: [1, 2, 4, 2, 1] normalized
+     * ```
      */
     public static function mixPixelsBuffers(inPixelsList:Array<UInt8Array>, middleFactor:Float = 1, ?outPixels:UInt8Array):UInt8Array {
 
@@ -344,9 +543,23 @@ class Pixels {
     }
 
     /**
-     * Flip the given pixels buffer on the Y axis
-     * @param buffer The pixel buffer to read from and write to
-     * @param bufferWidth Image width
+     * Flips an image vertically (upside down) in-place.
+     * 
+     * Swaps pixel rows from top to bottom. The top row becomes the bottom row,
+     * the second row becomes the second-to-last row, etc.
+     * 
+     * This operation modifies the buffer directly without allocating new memory.
+     * 
+     * @param buffer Pixel buffer to flip. Modified in-place.
+     * @param bufferWidth Width of the image in pixels.
+     *                    Height is calculated from buffer.length / (width × 4).
+     * 
+     * @example
+     * ```haxe
+     * // Flip image loaded from file (often needed for OpenGL)
+     * var pixels = loadImagePixels("texture.png");
+     * Pixels.flipY(pixels, 256);
+     * ```
      */
     public static function flipY(buffer:UInt8Array, bufferWidth:Int):Void {
 
@@ -381,9 +594,24 @@ class Pixels {
     }
 
     /**
-     * Flip the given pixels buffer on the X axis
-     * @param buffer The pixel buffer to read from and write to
-     * @param bufferWidth Image width
+     * Flips an image horizontally (mirror) in-place.
+     * 
+     * Swaps pixel columns from left to right. The leftmost column becomes
+     * the rightmost column, etc.
+     * 
+     * This operation modifies the buffer directly without allocating new memory.
+     * 
+     * @param buffer Pixel buffer to flip. Modified in-place.
+     * @param bufferWidth Width of the image in pixels.
+     *                    Height is calculated from buffer.length / (width × 4).
+     * 
+     * @example
+     * ```haxe
+     * // Create mirror image
+     * var pixels = loadImagePixels("character.png");
+     * Pixels.flipX(pixels, 64);
+     * // Character now faces opposite direction
+     * ```
      */
     public static function flipX(buffer:UInt8Array, bufferWidth:Int):Void {
 

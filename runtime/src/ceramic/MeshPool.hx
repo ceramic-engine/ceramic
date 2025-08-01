@@ -3,27 +3,87 @@ package ceramic;
 using ceramic.Extensions;
 
 /**
- * An utility to reuse meshes at application level.
+ * A global object pool for efficiently reusing Mesh instances and their arrays.
+ * 
+ * MeshPool provides a memory-efficient way to manage Mesh objects by recycling
+ * them instead of creating new instances. This reduces garbage collection pressure
+ * and improves performance in scenarios with frequent mesh creation/destruction.
+ * 
+ * The pool also manages arrays used by meshes (vertices, indices, colors, uvs)
+ * to further optimize memory usage.
+ * 
+ * Key features:
+ * - Mesh instance recycling with automatic cleanup
+ * - Array buffer recycling for vertices, indices, colors, and UVs
+ * - Thread-safe array clearing on native platforms
+ * - Debug tracking for allocation and recycling
+ * 
+ * @example
+ * ```haxe
+ * // Get a mesh from pool (creates new if pool is empty)
+ * var mesh = MeshPool.get();
+ * mesh.createQuad(100, 100);
+ * mesh.texture = myTexture;
+ * parent.add(mesh);
+ * 
+ * // When done, recycle the mesh back to pool
+ * MeshPool.recycle(mesh);
+ * // The mesh is automatically cleaned up and ready for reuse
+ * ```
+ * 
+ * @see Mesh The mesh class being pooled
  */
 class MeshPool {
 
+    /**
+     * Pool of available mesh instances ready for reuse.
+     */
     static var availableMeshes:Array<Mesh> = [];
 
+    /**
+     * Pool of available float arrays for vertices and UVs.
+     */
     static var availableFloatArrays:Array<Array<Float>> = [];
+    
+    /**
+     * Pool of available integer arrays for indices and colors.
+     */
     static var availableIntArrays:Array<Array<Int>> = [];
 
+    /**
+     * Gets an integer array from the pool or creates a new one if pool is empty.
+     * Used internally for indices and color arrays.
+     * 
+     * @return An empty integer array
+     */
     @:noCompletion inline static public function getIntArray():Array<Int> {
 
         return availableIntArrays.length > 0 ? availableIntArrays.pop() : [];
 
     }
 
+    /**
+     * Gets a float array from the pool or creates a new one if pool is empty.
+     * Used internally for vertices and UV arrays.
+     * 
+     * @return An empty float array
+     */
     @:noCompletion inline static public function getFloatArray():Array<Float> {
 
         return availableFloatArrays.length > 0 ? availableFloatArrays.pop() : [];
 
     }
 
+    /**
+     * Returns an integer array to the pool for reuse.
+     * The array is cleared before being added to the pool.
+     * 
+     * Uses platform-specific optimizations:
+     * - Native (cpp): Direct size manipulation for performance
+     * - Other platforms: Standard splice operation
+     * 
+     * @param array The integer array to recycle. Can be null.
+     */
     @:noCompletion inline static public function recycleIntArray(array:Array<Int>):Void {
 
         if (array != null) {
@@ -39,6 +99,16 @@ class MeshPool {
 
     }
 
+    /**
+     * Returns a float array to the pool for reuse.
+     * The array is cleared before being added to the pool.
+     * 
+     * Uses platform-specific optimizations:
+     * - Native (cpp): Direct size manipulation for performance
+     * - Other platforms: Standard splice operation
+     * 
+     * @param array The float array to recycle. Can be null.
+     */
     @:noCompletion inline static public function recycleFloatArray(array:Array<Float>):Void {
 
         if (array != null) {
@@ -55,7 +125,24 @@ class MeshPool {
     }
 
     /**
-     * Get or create a mesh. The mesh is active an ready to be displayed.
+     * Gets a mesh from the pool or creates a new one if the pool is empty.
+     * 
+     * The returned mesh is:
+     * - Active and ready to be displayed
+     * - Reset to default values (visible, touchable)
+     * - Provided with empty arrays for indices, vertices, colors, and UVs
+     * 
+     * Debug mode tracks allocation positions for memory leak detection.
+     * 
+     * @param pos (Debug only) Source position for allocation tracking
+     * @return A ready-to-use Mesh instance
+     * 
+     * @example
+     * ```haxe
+     * var mesh = MeshPool.get();
+     * mesh.createQuad(100, 100);
+     * parent.add(mesh);
+     * ```
      */
     public static function get(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end):Mesh {
 
@@ -85,7 +172,28 @@ class MeshPool {
     }
 
     /**
-     * Recycle an existing mesh. The mesh will be cleaned up and marked as inactive (e.g. not displayed)
+     * Returns a mesh to the pool for reuse.
+     * 
+     * The mesh is automatically:
+     * - Cleared of all visual data
+     * - Removed from its parent (if any)
+     * - Reset to default property values
+     * - Made inactive (not displayed)
+     * - Arrays recycled to their respective pools
+     * 
+     * Debug mode checks for double-recycling and tracks recycling positions.
+     * 
+     * @param mesh The mesh to recycle
+     * @param pos (Debug only) Source position for recycling tracking
+     * 
+     * @throws String If the mesh is already in the pool (debug mode only)
+     * 
+     * @example
+     * ```haxe
+     * // When done with a mesh
+     * MeshPool.recycle(myMesh);
+     * // myMesh is now cleaned and in the pool
+     * ```
      */
     public static function recycle(mesh:Mesh #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
@@ -164,6 +272,24 @@ class MeshPool {
 
     }
 
+    /**
+     * Clears the entire mesh pool and destroys all pooled meshes.
+     * 
+     * This permanently destroys all meshes in the pool, freeing their resources.
+     * Use this when:
+     * - Switching between major application states
+     * - Freeing memory before loading new content
+     * - Shutting down the application
+     * 
+     * Note: Array pools are not cleared by this method.
+     * 
+     * @example
+     * ```haxe
+     * // Before loading a new level
+     * MeshPool.clear();
+     * // All pooled meshes are now destroyed
+     * ```
+     */
     public static function clear():Void {
 
         if (availableMeshes.length > 0) {

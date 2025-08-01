@@ -11,77 +11,178 @@ using StringTools;
  * 0x123456 to a function expecting a Color, and it will automatically become a Color "object".
  * Similarly, Colors may be treated as Ints.
  *
- * Note that when using properties of a Color other than RGB, the values are ultimately stored as
- * RGB values, so repeatedly manipulating HSB/HSL/CMYK values may result in a gradual loss of precision.
+ * Key features:
+ * - Multiple color space support (RGB, HSB/HSV, HSL, CMYK)
+ * - HSLuv support for perceptually uniform colors (if enabled)
+ * - Extensive predefined color constants
+ * - Color interpolation and gradients
+ * - String parsing and formatting
+ * - Arithmetic operations (add, subtract, multiply)
+ * - Color manipulation (darken, lighten, invert)
+ *
+ * Color values are stored internally as RGB (0xRRGGBB format without alpha).
+ * When using HSB/HSL/CMYK properties, values are converted to/from RGB,
+ * which may result in gradual precision loss with repeated conversions.
+ *
+ * @example
+ * ```haxe
+ * // Create colors in various ways
+ * var red = Color.RED;
+ * var blue = 0x0000FF;
+ * var green = Color.fromRGB(0, 255, 0);
+ * var yellow = Color.fromHSB(60, 1, 1);
+ * var parsed = Color.fromString("#FF00FF");
+ * 
+ * // Manipulate colors
+ * var darker = red.getDarkened(0.3);
+ * var lighter = blue.getLightened(0.5);
+ * var inverted = green.getInverted();
+ * 
+ * // Interpolate between colors
+ * var purple = Color.interpolate(red, blue, 0.5);
+ * var gradient = Color.gradient(red, blue, 10);
+ * 
+ * // Access color components
+ * trace(red.red);        // 255
+ * trace(red.redFloat);   // 1.0
+ * trace(red.hue);        // 0
+ * trace(red.saturation); // 1.0
+ * ```
  *
  * @author Joe Williamson (JoeCreates)
  * @author Edited by Jeremy Faivre for Ceramic engine (jeremyfa)
  */
 abstract Color(Int) from Int from UInt to Int to UInt
 {
+    /**
+     * Special value representing no color/transparent.
+     * Used to indicate absence of color rather than a specific color value.
+     */
     public static inline var NONE:Color =        -1;
 
+    /** Pure white color (0xFFFFFF) */
     public static inline var WHITE:Color =       0xFFFFFF;
+    /** Medium gray color (0x808080) */
     public static inline var GRAY:Color =        0x808080;
+    /** Pure black color (0x000000) */
     public static inline var BLACK:Color =       0x000000;
 
+    /** Dark green color (0x008000) */
     public static inline var GREEN:Color =       0x008000;
+    /** Bright lime green color (0x00FF00) */
     public static inline var LIME:Color =        0x00FF00;
+    /** Bright yellow color (0xFFFF00) */
     public static inline var YELLOW:Color =      0xFFFF00;
+    /** Orange color (0xFFA500) */
     public static inline var ORANGE:Color =      0xFFA500;
+    /** Pure red color (0xFF0000) */
     public static inline var RED:Color =         0xFF0000;
+    /** Purple color (0x800080) */
     public static inline var PURPLE:Color =      0x800080;
+    /** Pure blue color (0x0000FF) */
     public static inline var BLUE:Color =        0x0000FF;
+    /** Brown color (0x8B4513) */
     public static inline var BROWN:Color =       0x8B4513;
+    /** Pink color (0xFFC0CB) */
     public static inline var PINK:Color =        0xFFC0CB;
+    /** Magenta color (0xFF00FF) */
     public static inline var MAGENTA:Color =     0xFF00FF;
+    /** Cyan color (0x00FFFF) */
     public static inline var CYAN:Color =        0x00FFFF;
 
+    /** Cornflower blue color (0x6495ED) */
     public static inline var CORNFLOWERBLUE:Color =  0x6495ED;
+    /** Medium violet red color (0xC71585) */
     public static inline var MEDIUMVIOLETRED:Color = 0xC71585;
+    /** Deep pink color (0xFF1493) */
     public static inline var DEEPPINK:Color =        0xFF1493;
+    /** Pale violet red color (0xDB7093) */
     public static inline var PALEVIOLETRED:Color =   0xDB7093;
+    /** Hot pink color (0xFF69B4) */
     public static inline var HOTPINK:Color =         0xFF69B4;
+    /** Light pink color (0xFFB6C1) */
     public static inline var LIGHTPINK:Color =       0xFFB6C1;
+    /** Dark red color (0x8B0000) */
     public static inline var DARKRED:Color =         0x8B0000;
+    /** Firebrick red color (0xB22222) */
     public static inline var FIREBRICK:Color =       0xB22222;
+    /** Crimson color (0xDC143C) */
     public static inline var CRIMSON:Color =         0xDC143C;
+    /** Indian red color (0xCD5C5C) */
     public static inline var INDIANRED:Color =       0xCD5C5C;
+    /** Light coral color (0xF08080) */
     public static inline var LIGHTCORAL:Color =      0xF08080;
+    /** Salmon color (0xFA8072) */
     public static inline var SALMON:Color =          0xFA8072;
+    /** Dark salmon color (0xE9967A) */
     public static inline var DARKSALMON:Color =      0xE9967A;
+    /** Light salmon color (0xFFA07A) */
     public static inline var LIGHTSALMON:Color =     0xFFA07A;
+    /** Orange red color (0xFF4500) */
     public static inline var ORANGERED:Color =       0xFF4500;
+    /** Tomato color (0xFF6347) */
     public static inline var TOMATO:Color =          0xFF6347;
+    /** Dark orange color (0xFF8C00) */
     public static inline var DARKORANGE:Color =      0xFF8C00;
+    /** Coral color (0xFF7F50) */
     public static inline var CORAL:Color =           0xFF7F50;
+    /** Dark khaki color (0xBDB76B) */
     public static inline var DARKKHAKI:Color =       0xBDB76B;
+    /** Gold color (0xFFD700) */
     public static inline var GOLD:Color =            0xFFD700;
+    /** Khaki color (0xF0E68C) */
     public static inline var KHAKI:Color =           0xF0E68C;
+    /** Peach puff color (0xFFDAB9) */
     public static inline var PEACHPUFF:Color =       0xFFDAB9;
+    /** Pale goldenrod color (0xEEE8AA) */
     public static inline var PALEGOLDENROD:Color =   0xEEE8AA;
+    /** Moccasin color (0xFFE4B5) */
     public static inline var MOCCASIN:Color =        0xFFE4B5;
+    /** Papaya whip color (0xFFEFD5) */
     public static inline var PAPAYAWHIP:Color =      0xFFEFD5;
+    /** Lemon chiffon color (0xFFFACD) */
     public static inline var LEMONCHIFFON:Color =    0xFFFACD;
+    /** Light yellow color (0xFFFFE0) */
     public static inline var LIGHTYELLOW:Color =     0xFFFFE0;
+    /** Sienna color (0xA0522D) */
     public static inline var SIENNA:Color =          0xA0522D;
+    /** Chocolate color (0xD2691E) */
     public static inline var CHOCOLATE:Color =       0xD2691E;
+    /** Peru color (0xCD853F) */
     public static inline var PERU:Color =            0xCD853F;
+    /** Tan color (0xD2B48C) */
     public static inline var TAN:Color =             0xD2B48C;
+    /** Dark olive green color (0x556B2F) */
     public static inline var DARKOLIVEGREEN:Color =  0x556B2F;
+    /** Olive color (0x808000) */
     public static inline var OLIVE:Color =           0x808000;
+    /** Teal color (0x008080) */
     public static inline var TEAL:Color =            0x008080;
+    /** Turquoise color (0x40E0D0) */
     public static inline var TURQUOISE:Color =       0x40E0D0;
+    /** Navy blue color (0x000080) */
     public static inline var NAVY:Color =            0x000080;
+    /** Indigo color (0x4B0082) */
     public static inline var INDIGO:Color =          0x4B0082;
+    /** Orchid color (0xDA70D6) */
     public static inline var ORCHID:Color =          0xDA70D6;
+    /** Lavender color (0xE6E6FA) */
     public static inline var LAVENDER:Color =        0xE6E6FA;
+    /** Azure color (0xF0FFFF) */
     public static inline var AZURE:Color =           0xF0FFFF;
+    /** Ivory color (0xFFFFF0) */
     public static inline var IVORY:Color =           0xFFFFF0;
+    /** Dim grey color (0x696969) */
     public static inline var DIMGREY:Color =         0x696969;
+    /** Slate grey color (0x708090) */
     public static inline var SLATEGREY:Color =       0x708090;
+    /** Snow color (0xFFFAFA) */
     public static inline var SNOW:Color =            0xFFFAFA;
 
+    /**
+     * Lookup table for parsing color names from strings.
+     * Maps uppercase color names to their RGB values.
+     */
     public static var colorLookup(default, null):Map<String, Int> = [
         "NONE" =>       -1,
 
@@ -148,63 +249,109 @@ abstract Color(Int) from Int from UInt to Int to UInt
     ];
 
     /**
-     * Red color component as `Int` between `0` and `255`
+     * Red color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var red(get, set):Int;
     /**
-     * Green color component as `Int` between `0` and `255`
+     * Green color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var green(get, set):Int;
     /**
-     * Blue color component as `Int` between `0` and `255`
+     * Blue color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var blue(get, set):Int;
 
     /**
-     * Red color component as `Float` between `0.0` and `1.0`
+     * Red color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var redFloat(get, set):Float;
     /**
-     * Green color component as `Float` between `0.0` and `1.0`
+     * Green color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var greenFloat(get, set):Float;
     /**
-     * Blue color component as `Float` between `0.0` and `1.0`
+     * Blue color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var blueFloat(get, set):Float;
 
+    /**
+     * Cyan component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var cyan(get, set):Float;
+    /**
+     * Magenta component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var magenta(get, set):Float;
+    /**
+     * Yellow component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var yellow(get, set):Float;
+    /**
+     * Black/Key component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var black(get, set):Float;
 
     /**
-     * The hue of the color in degrees (from 0 to 359)
+     * The hue of the color in degrees (from 0 to 359).
+     * Represents position on the color wheel: 0/360 = red, 120 = green, 240 = blue.
+     * Setting this value preserves saturation and brightness.
      */
     public var hue(get, set):Float;
     /**
-     * The saturation of the color (from 0 to 1)
+     * The saturation of the color (from 0 to 1).
+     * Controls color intensity: 0 = grayscale, 1 = fully saturated.
+     * Part of the HSB/HSV color model.
      */
     public var saturation(get, set):Float;
     /**
-     * The brightness (aka value) of the color (from 0 to 1)
+     * The brightness (aka value) of the color (from 0 to 1).
+     * Controls how light or dark the color is: 0 = black, 1 = full brightness.
+     * Part of the HSB/HSV color model.
      */
     public var brightness(get, set):Float;
     /**
-     * The lightness of the color (from 0 to 1)
+     * The lightness of the color (from 0 to 1).
+     * Controls the lightness: 0 = black, 0.5 = pure color, 1 = white.
+     * Part of the HSL color model (different from brightness).
      */
     public var lightness(get, set):Float;
 
     /**
-     * Get the color as AlphaColor
+     * Convert this Color to an AlphaColor with full opacity.
+     * The resulting AlphaColor will have alpha = 255 (fully opaque).
+     * 
+     * @return An AlphaColor with the same RGB values and full opacity
      */
     @:to public inline function toAlphaColor():AlphaColor {
         return new AlphaColor(this);
     }
 
     /**
-     * Generate a random color (away from white or black)
-     * @return The color as a Color
+     * Generate a random color (away from white or black).
+     * 
+     * Creates vibrant colors by ensuring minimum saturation and brightness.
+     * This avoids generating colors that are too close to white or black.
+     * 
+     * @param minSatutation Minimum saturation (0-1), default 0.5
+     * @param minBrightness Minimum brightness (0-1), default 0.5
+     * @return A randomly generated color
      */
     public static inline function random(minSatutation:Float = 0.5, minBrightness:Float = 0.5):Color
     {
@@ -403,7 +550,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
     }
 
     /**
-     * Multiply the RGB channels of two Colors
+     * Multiply the RGB channels of two Colors.
+     * Each color component is multiplied together (0-1 range).
+     * Useful for color blending and filter effects.
+     * 
+     * @param lhs Left-hand side color
+     * @param rhs Right-hand side color
+     * @return The multiplied color
      */
     @:op(A * B)
     public static inline function multiply(lhs:Color, rhs:Color):Color
@@ -412,7 +565,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
     }
 
     /**
-     * Add the RGB channels of two Colors
+     * Add the RGB channels of two Colors.
+     * Values are clamped to the 0-255 range.
+     * Useful for additive color blending.
+     * 
+     * @param lhs Left-hand side color
+     * @param rhs Right-hand side color
+     * @return The added color
      */
     @:op(A + B)
     public static inline function add(lhs:Color, rhs:Color):Color
@@ -421,7 +580,13 @@ abstract Color(Int) from Int from UInt to Int to UInt
     }
 
     /**
-     * Subtract the RGB channels of one Color from another
+     * Subtract the RGB channels of one Color from another.
+     * Values are clamped to the 0-255 range.
+     * Useful for subtractive color blending.
+     * 
+     * @param lhs Left-hand side color (minuend)
+     * @param rhs Right-hand side color (subtrahend)
+     * @return The subtracted color
      */
     @:op(A - B)
     public static inline function subtract(lhs:Color, rhs:Color):Color
@@ -588,7 +753,14 @@ abstract Color(Int) from Int from UInt to Int to UInt
     }
 
     /**
-     * Private utility function to perform common operations between setHSB and setHSL
+     * Private utility function to perform common operations between setHSB and setHSL.
+     * Converts HSB/HSL values to RGB using the chroma and match values.
+     * 
+     * @param hue The hue angle in degrees
+     * @param saturation The saturation value (not used directly in calculation)
+     * @param chroma The chroma value (color intensity)
+     * @param match The match value (baseline lightness)
+     * @return This color after modification
      */
     private inline function setHSChromaMatch(hue:Float, saturation:Float, chroma:Float, match:Float):Color
     {
@@ -610,6 +782,10 @@ abstract Color(Int) from Int from UInt to Int to UInt
         return this;
     }
 
+    /**
+     * Creates a new color from an RGB integer value.
+     * @param value RGB color in 0xRRGGBB format (default: black)
+     */
     public inline function new(value:Int = 0)
     {
         this = value;
@@ -814,6 +990,12 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
 /// To string
 
+    /**
+     * Get this color as a string.
+     * Returns "NONE" for Color.NONE, otherwise returns hex format (0xRRGGBB).
+     * 
+     * @return String representation of the color
+     */
     inline public function toString() {
 
         return this == Color.NONE ? 'NONE' : toHexString();
@@ -833,15 +1015,24 @@ abstract Color(Int) from Int from UInt to Int to UInt
     static var _hsluvCacheValues:Array<Float> = [];
 
     /**
-     * The HSLuv hue of the color in degrees (from 0 to 359)
+     * The HSLuv hue of the color in degrees (from 0 to 359).
+     * HSLuv is a perceptually uniform color space that provides more consistent lightness.
+     * Setting this value preserves HSLuv saturation and lightness.
+     * Only available when the `hsluv` library is included.
      */
     public var hueHSLuv(get, set):Float;
     /**
-     * The HSLuv saturation of the color (from 0 to 1)
+     * The HSLuv saturation of the color (from 0 to 1).
+     * In HSLuv, saturation is perceptually uniform across different hues.
+     * Setting this value preserves HSLuv hue and lightness.
+     * Only available when the `hsluv` library is included.
      */
     public var saturationHSLuv(get, set):Float;
     /**
-     * The HSLuv lightness of the color (from 0 to 1)
+     * The HSLuv lightness of the color (from 0 to 1).
+     * In HSLuv, lightness is perceptually uniform - 50% lightness appears equally bright across all hues.
+     * Setting this value preserves HSLuv hue and saturation.
+     * Only available when the `hsluv` library is included.
      */
     public var lightnessHSLuv(get, set):Float;
 
@@ -895,6 +1086,9 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
     /**
      * Generate a color from HSLuv components.
+     * HSLuv is a perceptually uniform color space that provides more consistent results than HSL.
+     * Colors with the same lightness value appear equally bright regardless of hue.
+     * Only available when the `hsluv` library is included.
      *
      * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
      * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
@@ -909,11 +1103,14 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
     /**
      * Set HSLuv components.
+     * Converts HSLuv values to RGB.
+     * For very low lightness values, falls back to regular HSL conversion.
+     * Only available when the `hsluv` library is included.
      *
      * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
      * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
      * @param    lightness    A number between 0 and 1, indicating the lightness of the color
-     * @return    This color
+     * @return    This color after modification
      */
     public inline function setHSLuv(hue:Float, saturation:Float, lightness:Float):Color
     {
@@ -943,9 +1140,11 @@ abstract Color(Int) from Int from UInt to Int to UInt
 
     /**
      * Get HSLuv components from the color instance.
+     * Extracts the hue, saturation and lightness values in HSLuv color space.
+     * Only available when the `hsluv` library is included.
      *
-     * @param result A pre-allocated array to store the result into.
-     * @return    The HSLuv components as a float array
+     * @param result A pre-allocated array to store the result into. If null, a new array is created.
+     * @return    The HSLuv components as a float array [hue (0-360), saturation (0-1), lightness (0-1)]
      */
     public inline function getHSLuv(?result:Array<Float>):Array<Float>
     {

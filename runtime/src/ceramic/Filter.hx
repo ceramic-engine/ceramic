@@ -7,8 +7,46 @@ import ceramic.Visual;
 import tracker.Observable;
 
 /**
- * A visuals that displays its children through a filter. A filter draws its children into a `RenderTexture`
- * allowing to process the result through a shader, apply blending or alpha on the final result...
+ * A visual container that renders its children to a texture for post-processing effects.
+ * 
+ * Filter renders its children to a RenderTexture, allowing you to:
+ * - Apply shader effects to groups of visuals
+ * - Add blur, glow, or other post-processing effects
+ * - Blend or transform rendered results as a single texture
+ * - Create complex visual effects like reflections or distortions
+ * - Improve performance by caching complex visuals
+ * 
+ * The filter process:
+ * 1. Children are rendered to an internal RenderTexture
+ * 2. The texture can be processed with shaders or effects
+ * 3. The result is displayed as a single quad/mesh
+ * 
+ * Features:
+ * - Automatic render texture management
+ * - Optional custom mesh for advanced effects
+ * - Toggle effects without changing hierarchy
+ * - Explicit render control for performance
+ * - Support for texture atlases via TextureTilePacker
+ * 
+ * @example
+ * ```haxe
+ * // Create a blur filter
+ * var blurFilter = new Filter();
+ * blurFilter.size(400, 300);
+ * blurFilter.shader = assets.shader('blur');
+ * 
+ * // Add content to be blurred
+ * var text = new Text();
+ * text.content = 'Blurred Text';
+ * blurFilter.content.add(text);
+ * 
+ * // Toggle effect
+ * blurFilter.enabled = false; // Disable blur
+ * ```
+ * 
+ * @see RenderTexture
+ * @see Shader
+ * @see Layer
  */
 class Filter extends Layer implements Observable {
 
@@ -19,7 +57,8 @@ class Filter extends Layer implements Observable {
 /// Public properties
 
     /**
-     * If provided, this id will be assigned to `renderTexture.id`.
+     * Optional ID assigned to the internal render texture.
+     * Useful for debugging or identifying textures in tools.
      */
     public var textureId(default, set):String = null;
     function set_textureId(textureId:String):String {
@@ -31,12 +70,15 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * By default, the render texture managed by this filter is
-     * rendered via itself, assigned to the `texture` field.
-     * If you provide a `Mesh` instance, that mesh will be added as
-     * a child of the filter and the texture will be rendered via
-     * that mesh instead of itself. This opens the door to more advanced
-     * post-processing in shaders.
+     * Optional mesh for advanced rendering effects.
+     * 
+     * By default, the filter renders as a simple quad. Providing a custom mesh
+     * allows for advanced effects like:
+     * - Distortion effects with deformed vertices
+     * - Multi-pass rendering with custom UVs
+     * - Complex shader effects requiring custom attributes
+     * 
+     * The mesh will be added as a child and the render texture assigned to it.
      */
     public var mesh(default,set):Mesh = null;
     function set_mesh(mesh:Mesh):Mesh {
@@ -73,8 +115,10 @@ class Filter extends Layer implements Observable {
     public var destroyMeshOnRemove:Bool = true;
 
     /**
-     * The content in which you are expected to add visuals
-     * so that they are rendered through the filter
+     * The container for visuals to be rendered through this filter.
+     * Add your visuals as children of this content quad.
+     * Everything added here will be rendered to the filter's texture
+     * and processed according to the filter's settings.
      */
     public var content(default,null):Quad;
 
@@ -97,9 +141,15 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * If `enabled` is set to `false`, no render texture will be used.
-     * The children will be displayed on screen directly.
-     * Useful to toggle a filter without touching visuals hierarchy.
+     * Toggle the filter effect on/off.
+     * 
+     * When false:
+     * - No render texture is used
+     * - Children render directly to screen
+     * - No performance overhead from filtering
+     * - Useful for toggling effects without changing hierarchy
+     * 
+     * Default is true (filter enabled).
      */
     public var enabled(default,set):Bool = true;
     function set_enabled(enabled:Bool):Bool {
@@ -111,7 +161,9 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * Texture filter
+     * The filtering mode for the render texture.
+     * - LINEAR: Smooth filtering (default, good for most effects)
+     * - NEAREST: No filtering (good for pixel art)
      */
     public var textureFilter(default,set):TextureFilter = LINEAR;
     function set_textureFilter(textureFilter:TextureFilter):TextureFilter {
@@ -124,6 +176,11 @@ class Filter extends Layer implements Observable {
     /**
      * Texture depth
      */
+    /**
+     * Whether to use a depth buffer for the render texture.
+     * Enable when rendering 3D content or when precise depth testing is needed.
+     * Default is true.
+     */
     public var depthBuffer(default,set):Bool = true;
     function set_depthBuffer(depthBuffer:Bool):Bool {
         if (this.depthBuffer == depthBuffer) return depthBuffer;
@@ -134,6 +191,11 @@ class Filter extends Layer implements Observable {
 
     /**
      * Texture stencil
+     */
+    /**
+     * Whether to use a stencil buffer for the render texture.
+     * Enable for masking effects or when using stencil-based rendering techniques.
+     * Default is true.
      */
     public var stencil(default,set):Bool = true;
     function set_stencil(stencil:Bool):Bool {
@@ -146,6 +208,12 @@ class Filter extends Layer implements Observable {
     /**
      * Texture antialiasing
      */
+    /**
+     * Antialiasing level for the render texture.
+     * 0 = no antialiasing (default)
+     * 2, 4, 8, etc. = multisampling levels
+     * Higher values provide smoother edges but use more GPU resources.
+     */
     public var antialiasing(default,set):Int = 0;
     function set_antialiasing(antialiasing:Int):Int {
         if (this.antialiasing == antialiasing) return antialiasing;
@@ -157,6 +225,12 @@ class Filter extends Layer implements Observable {
     /**
      * Auto render?
      */
+    /**
+     * Whether the render texture updates automatically.
+     * Set to false for manual control over when rendering happens.
+     * Useful for static content that doesn't need continuous updates.
+     * Default is true.
+     */
     public var autoRender(default,set):Bool = true;
     function set_autoRender(autoRender:Bool):Bool {
         if (this.autoRender == autoRender) return autoRender;
@@ -166,10 +240,15 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * If set to true, this filter will not render automatically its children.
-     * It will instead set their `active` state to `false` unless explicitly rendered.
-     * Note that when using explicit render, `active` property on children is managed
-     * by this filter.
+     * Enable manual control over when the filter renders.
+     * 
+     * When true:
+     * - Children don't render automatically
+     * - Use render() method to trigger rendering
+     * - Filter manages children's active state
+     * - Useful for performance optimization
+     * 
+     * Default is false (automatic rendering).
      */
     public var explicitRender(default,set):Bool = false;
     function set_explicitRender(explicitRender:Bool):Bool {
@@ -179,6 +258,12 @@ class Filter extends Layer implements Observable {
         return explicitRender;
     }
 
+    /**
+     * Optional texture tile packer for efficient texture atlas usage.
+     * When set, the filter will allocate tiles from the packer's texture atlas
+     * instead of creating dedicated render textures.
+     * Useful for optimizing many small filters.
+     */
     public var textureTilePacker(default,set):TextureTilePacker = null;
     function set_textureTilePacker(textureTilePacker:TextureTilePacker):TextureTilePacker {
         if (this.textureTilePacker == textureTilePacker) return textureTilePacker;
@@ -196,10 +281,26 @@ class Filter extends Layer implements Observable {
         return textureTilePacker;
     }
 
+    /**
+     * The allocated texture tile when using a TextureTilePacker.
+     * Read-only. Automatically managed when textureTilePacker is set.
+     */
     public var textureTile(default,null):TextureTile = null;
 
+    /**
+     * The render texture used for this filter.
+     * Read-only. Automatically created based on filter size and settings.
+     * Can be observed for changes using the @observe attribute.
+     */
     @observe public var renderTexture(default,null):RenderTexture = null;
 
+    /**
+     * Texture density/resolution multiplier.
+     * -1 = use screen density (default)
+     * 1.0 = normal density
+     * 2.0 = double density (retina)
+     * Affects the internal resolution of the render texture.
+     */
     public var density(default,set):Float = -1;
     function set_density(density:Float):Float {
         if (this.density == density) return density;
@@ -209,12 +310,14 @@ class Filter extends Layer implements Observable {
     }
 
     /**
-     * By default, a render texture doesn't get rendered at all if there is no
-     * visual that has it as render target. That means if this `Filter`s content
-     * is empty, it will stop rendering. In some situations that's ok, but sometimes
-     * you'll still want to trigger the rendering no matter what. The `neverEmpty`
-     * property will ensure there is an off-screen 1x1 quad always there in the content
-     * that will force the render texture to be updated.
+     * Force the filter to render even when content is empty.
+     * 
+     * By default, empty filters don't render (optimization).
+     * Set to true when you need the filter to process even without content,
+     * such as for time-based shader effects or render passes that don't
+     * depend on input visuals.
+     * 
+     * Adds a hidden 1x1 quad to ensure rendering occurs.
      */
     public var neverEmpty(default,set):Bool = false;
     function set_neverEmpty(neverEmpty:Bool):Bool {
@@ -357,6 +460,20 @@ class Filter extends Layer implements Observable {
 
 /// Public API
 
+    /**
+     * Manually trigger rendering when explicitRender is true.
+     * 
+     * This method:
+     * 1. Activates content for rendering
+     * 2. Waits for the render pass
+     * 3. Updates the render texture
+     * 4. Deactivates content
+     * 5. Calls the done callback
+     * 
+     * Handles concurrent render calls gracefully by queuing callbacks.
+     * 
+     * @param done Optional callback invoked when rendering completes
+     */
     public function render(?done:Void->Void):Void {
 
         if (!explicitRender) {
@@ -481,6 +598,18 @@ class Filter extends Layer implements Observable {
 
 /// Hitting visuals in content
 
+    /**
+     * Test if a visual inside the filter's content is hit at the given coordinates.
+     * 
+     * This method handles the coordinate transformation from screen space
+     * through the filter's render texture to the visual's local space.
+     * Used internally for touch/mouse hit testing on filtered content.
+     * 
+     * @param visual The visual to test
+     * @param x Screen x coordinate
+     * @param y Screen y coordinate
+     * @return True if the visual is hit at the given coordinates
+     */
     public function visualInContentHits(visual:Visual, x:Float, y:Float):Bool {
 
         var matchedHitVisual = Screen.matchedHitVisual;

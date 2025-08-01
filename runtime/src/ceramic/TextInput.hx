@@ -5,6 +5,13 @@ import tracker.Events;
 
 using StringTools;
 
+/**
+ * Handles keyboard text input and cursor navigation.
+ * 
+ * This class manages text editing operations including text insertion,
+ * deletion, selection, and cursor movement. It works in conjunction
+ * with the backend's text input system.
+ */
 @:allow(ceramic.App)
 class TextInput implements Events {
 
@@ -42,16 +49,35 @@ class TextInput implements Events {
 
     var invertedSelection:Bool = false;
 
+    /**
+     * Whether cursor movement with arrow keys is allowed.
+     */
     public var allowMovingCursor(default,null):Bool = false;
 
+    /**
+     * Whether multiline text input is enabled.
+     * When true, Enter key creates new lines instead of submitting.
+     */
     public var multiline(default,null):Bool = false;
 
+    /**
+     * The current text content.
+     */
     public var text(default,set):String = '';
 
+    /**
+     * The start position of the text selection (cursor position when no selection).
+     */
     public var selectionStart(default,null):Int = -1;
 
+    /**
+     * The end position of the text selection (same as selectionStart when no selection).
+     */
     public var selectionEnd(default,null):Int = -1;
 
+    /**
+     * Optional delegate for custom text navigation behavior.
+     */
     public var delegate(default,null):TextInputDelegate = null;
 
 /// Lifecycle
@@ -64,6 +90,20 @@ class TextInput implements Events {
 
 /// Public API
 
+    /**
+     * Start text input.
+     * 
+     * @param text Initial text content
+     * @param x X position of the input area in screen coordinates
+     * @param y Y position of the input area in screen coordinates
+     * @param w Width of the input area
+     * @param h Height of the input area
+     * @param multiline Whether to allow multiline input
+     * @param selectionStart Initial selection start position (-1 for end of text)
+     * @param selectionEnd Initial selection end position (-1 for no selection)
+     * @param allowMovingCursor Whether to allow cursor movement with arrow keys
+     * @param delegate Optional delegate for custom navigation behavior
+     */
     public function start(
         text:String,
         x:Float, y:Float, w:Float, h:Float,
@@ -102,6 +142,9 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Stop text input and release resources.
+     */
     public function stop():Void {
 
         if (!inputActive) return;
@@ -117,6 +160,13 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Update the current text selection.
+     * 
+     * @param selectionStart New selection start position
+     * @param selectionEnd New selection end position
+     * @param inverted Whether the selection is inverted (cursor at start)
+     */
     public function updateSelection(selectionStart:Int, selectionEnd:Int, ?inverted:Bool):Void {
 
         if (this.selectionStart != selectionStart || this.selectionEnd != selectionEnd) {
@@ -128,6 +178,12 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Append text at the current cursor position.
+     * Replaces any selected text.
+     * 
+     * @param text Text to append
+     */
     public function appendText(text:String):Void {
 
         // Ignore text input if CTRL is pressed
@@ -160,12 +216,18 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Insert a space character at the cursor position.
+     */
     public function space():Void {
 
         appendText(' ');
 
     }
 
+    /**
+     * Delete the character before the cursor or the selected text.
+     */
     public function backspace():Void {
 
         // Clear selection and erase text in place
@@ -190,6 +252,10 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Move the cursor one character to the left.
+     * If Shift is pressed, extends the selection.
+     */
     public function moveLeft():Void {
 
         if (!allowMovingCursor) return;
@@ -244,6 +310,10 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Move the cursor one character to the right.
+     * If Shift is pressed, extends the selection.
+     */
     public function moveRight():Void {
 
         if (!allowMovingCursor) return;
@@ -301,6 +371,10 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Move the cursor one line up.
+     * If Shift is pressed, extends the selection.
+     */
     public function moveUp():Void {
 
         if (!allowMovingCursor) return;
@@ -361,6 +435,10 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Move the cursor one line down.
+     * If Shift is pressed, extends the selection.
+     */
     public function moveDown():Void {
 
         if (!allowMovingCursor) return;
@@ -452,6 +530,11 @@ class TextInput implements Events {
 
     }
 
+    /**
+     * Handle Enter key press.
+     * In multiline mode, inserts a newline.
+     * In single-line mode, triggers the enter event.
+     */
     public function enter():Void {
 
         emitEnter();
@@ -471,6 +554,10 @@ class TextInput implements Events {
         
     }
 
+    /**
+     * Handle Escape key press.
+     * Triggers the escape event and stops input.
+     */
     public function escape():Void {
 
         emitEscape();

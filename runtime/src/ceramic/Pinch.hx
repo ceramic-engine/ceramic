@@ -2,20 +2,53 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+/**
+ * Represents the current state of a pinch gesture.
+ */
 enum abstract PinchStatus(Int) {
 
+    /** No touch interaction */
     var NONE = 0;
 
+    /** Two touches detected but not yet pinching */
     var TOUCHING = 1;
 
+    /** Active pinch gesture in progress */
     var PINCHING = 2;
 
 }
 
 /**
- * A pinch gesture detector that can be used as is or
- * plugged as a component to any `Visual` instance.
- * Supports scale, translation and rotation.
+ * A pinch gesture detector that recognizes two-finger pinch gestures.
+ *
+ * **Warning: this is just a draft, don't use it!**
+ *
+ * Pinch can be used standalone or as a component attached to any Visual.
+ * It detects and reports:
+ * - Scale changes (zoom in/out)
+ * - Translation (panning)
+ * - Rotation (two-finger twist)
+ *
+ * The component also supports simulated pinch gestures using Alt+mouse
+ * for development and testing on non-touch devices.
+ *
+ * Example usage:
+ * ```haxe
+ * // Standalone
+ * var pinch = new Pinch();
+ * pinch.onPinch(this, (originX, originY, scale, translateX, translateY, rotation) -> {
+ *     visual.scale = scale;
+ *     visual.x = originX + translateX;
+ *     visual.y = originY + translateY;
+ *     visual.rotation = rotation * 180 / Math.PI;
+ * });
+ *
+ * // As component
+ * visual.component(new Pinch());
+ * ```
+ *
+ * @see Touch
+ * @see Screen
  */
 class Pinch extends Entity implements Component {
 
@@ -25,10 +58,30 @@ class Pinch extends Entity implements Component {
 
 /// Events
 
+    /**
+     * Triggered when a pinch gesture begins.
+     * @param originX The X coordinate of the gesture's center point
+     * @param originY The Y coordinate of the gesture's center point
+     * @event beginPinch
+     */
     @event function beginPinch(originX:Float, originY:Float);
 
+    /**
+     * Triggered continuously during a pinch gesture.
+     * @param originX The X coordinate of the gesture's center point
+     * @param originY The Y coordinate of the gesture's center point
+     * @param scale The scale factor relative to the start (1.0 = no change)
+     * @param translateX The horizontal translation from the origin
+     * @param translateY The vertical translation from the origin
+     * @param rotation The rotation angle in radians
+     * @event pinch
+     */
     @event function pinch(originX:Float, originY:Float, scale:Float, translateX:Float, translateY:Float, rotation:Float);
 
+    /**
+     * Triggered when a pinch gesture ends.
+     * @event endPinch
+     */
     @event function endPinch();
 
 /// Lifecycle
@@ -79,6 +132,10 @@ class Pinch extends Entity implements Component {
 
     }
 
+    /**
+     * Component interface implementation.
+     * Called when attached to a Visual as a component.
+     */
     function bindAsComponent():Void {
 
         // Nothing to do but that needs to be there

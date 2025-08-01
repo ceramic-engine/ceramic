@@ -6,7 +6,44 @@ import haxe.atomic.AtomicInt;
 #end
 
 /**
- * The actual worklet class that will do the audio processing of a given `AudioFilter`
+ * The actual worklet class that will do the audio processing of a given `AudioFilter`.
+ * 
+ * AudioFilterWorklet is the base class for implementing custom audio effects and
+ * processors. Each worklet runs in the audio processing pipeline and can modify
+ * audio data in real-time.
+ * 
+ * Features:
+ * - Thread-safe parameter access (atomic operations on native platforms)
+ * - Automatic parameter management via @param metadata
+ * - Support for boolean, int, and float parameters
+ * - Per-bus audio processing
+ * 
+ * To create a custom filter:
+ * 1. Extend this class
+ * 2. Mark parameters with @param metadata
+ * 3. Override the process() method
+ * 4. Create an AudioFilter wrapper for public API
+ * 
+ * @example
+ * ```haxe
+ * class MyEchoWorklet extends AudioFilterWorklet {
+ *     @param public var delay:Float = 0.5;
+ *     @param public var feedback:Float = 0.3;
+ *     @param public var mix:Float = 0.5;
+ *     
+ *     var delayBuffer:Array<Float> = [];
+ *     var writePos:Int = 0;
+ *     
+ *     override function process(buffer:AudioFilterBuffer, samples:Int, 
+ *                              channels:Int, sampleRate:Float, time:Float):Void {
+ *         // Implement echo effect here
+ *     }
+ * }
+ * ```
+ * 
+ * @see AudioFilter
+ * @see AudioFilters
+ * @see AudioFilterBuffer
  */
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.AudioFiltersMacro.buildWorklet())
@@ -14,7 +51,7 @@ import haxe.atomic.AtomicInt;
 abstract class AudioFilterWorklet {
 
     /**
-     * The id of the audio fitler this worklet is associated with
+     * The id of the audio filter this worklet is associated with
      */
     public final filterId:Int;
 
@@ -52,10 +89,17 @@ abstract class AudioFilterWorklet {
     public var active:Bool = true;
     #end
 
+    /**
+     * Internal storage for filter parameters.
+     * Populated automatically from fields marked with @param metadata.
+     */
     private final params:Array<Float> = [];
 
     /**
-     * Get a boolean parameter at the given position (0-based)
+     * Get a boolean parameter at the given position (0-based).
+     * Parameters are stored as floats where 0 = false, non-zero = true.
+     * @param index Parameter index (order matches @param field declaration order)
+     * @return Boolean value of the parameter
      */
     private function getBool(index:Int):Bool {
         final val:Null<Float> = params[index];
@@ -63,7 +107,10 @@ abstract class AudioFilterWorklet {
     }
 
     /**
-     * Get an int parameter at the given position (0-based)
+     * Get an int parameter at the given position (0-based).
+     * The float value is truncated to an integer.
+     * @param index Parameter index (order matches @param field declaration order)
+     * @return Integer value of the parameter
      */
     private function getInt(index:Int):Int {
         final val:Null<Float> = params[index];
@@ -71,13 +118,20 @@ abstract class AudioFilterWorklet {
     }
 
     /**
-     * Get a float parameter at the given position (0-based)
+     * Get a float parameter at the given position (0-based).
+     * @param index Parameter index (order matches @param field declaration order)
+     * @return Float value of the parameter
      */
     private function getFloat(index:Int):Float {
         final val:Null<Float> = params[index];
         return val != null ? val : 0;
     }
 
+    /**
+     * Creates a new audio filter worklet.
+     * @param filterId Unique identifier for this filter instance
+     * @param bus Audio bus ID where this filter will process audio
+     */
     public function new(filterId:Int, bus:Int) {
         this.filterId = filterId;
         this.bus = bus;

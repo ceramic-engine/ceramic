@@ -5,39 +5,104 @@ import ceramic.Assert.*;
 using ceramic.Extensions;
 
 /**
- * Bezier curve easing, ported from https://github.com/gre/bezier-easing
- * then extended to work with both cubic and quadratic settings
+ * High-performance Bezier curve easing for smooth animations.
+ * 
+ * This class implements cubic and quadratic Bezier easing functions with optimized
+ * performance through pre-computed sample tables and intelligent caching. Based on
+ * the implementation from https://github.com/gre/bezier-easing, extended to support
+ * both cubic and quadratic curves.
+ * 
+ * ## Features
+ * 
+ * - **Cubic Bezier**: Standard CSS-style cubic-bezier(x1, y1, x2, y2)
+ * - **Quadratic Bezier**: Simplified two-point control
+ * - **Performance Optimized**: Pre-computed samples and Newton-Raphson iteration
+ * - **Instance Caching**: Automatic reuse of common easing functions
+ * - **Linear Detection**: Automatically optimizes linear easings
+ * 
+ * ## Usage Examples
+ * 
+ * ```haxe
+ * // Create cubic bezier (CSS-style)
+ * var easeInOut = new BezierEasing(0.42, 0, 0.58, 1);
+ * var progress = easeInOut.ease(0.5); // Returns ~0.5
+ * 
+ * // Create quadratic bezier (single control point)
+ * var easeQuad = new BezierEasing(0.5, 0.8);
+ * 
+ * // Use cached instances for better performance
+ * var cached = BezierEasing.get(0.25, 0.1, 0.25, 1); // ease-out
+ * 
+ * // Common easing curves
+ * var easeIn = BezierEasing.get(0.42, 0, 1, 1);
+ * var easeOut = BezierEasing.get(0, 0, 0.58, 1);
+ * var easeInOut = BezierEasing.get(0.42, 0, 0.58, 1);
+ * ```
+ * 
+ * ## Performance Notes
+ * 
+ * - First call pre-computes 11 sample points
+ * - Subsequent calls use Newton-Raphson method (4 iterations max)
+ * - Linear easings bypass all calculations
+ * - Cache stores up to 10,000 instances
+ * 
+ * @see ceramic.Easing For pre-defined easing functions
+ * @see ceramic.Tween For animation implementation
  */
 class BezierEasing {
 
+    /** Number of pre-computed samples for faster lookup */
     static var SPLINE_TABLE_SIZE = 11;
+    
+    /** Distance between each sample point */
     static var SAMPLE_STEP_SIZE = 1.0 / (SPLINE_TABLE_SIZE - 1.0);
+    
+    /** Maximum iterations for Newton-Raphson method */
     static var NEWTON_ITERATIONS = 4;
+    
+    /** Minimum slope to use Newton-Raphson (below this, use subdivision) */
     static var NEWTON_MIN_SLOPE = 0.001;
+    
+    /** Precision threshold for binary subdivision */
     static var SUBDIVISION_PRECISION = 0.0000001;
+    
+    /** Maximum iterations for binary subdivision */
     static var SUBDIVISION_MAX_ITERATIONS = 10;
+    
+    /** Constant for quadratic to cubic conversion */
     static var TWO_THIRD = 2.0 / 3.0;
 
+    /** Maximum number of cached instances before clearing cache */
     static var CACHE_SIZE:Int = 10000;
 
+    /** Whether this easing is linear (optimization flag) */
     var linearEasing = false;
 
+    /** Pre-computed sample values for performance */
     var sampleValues:Array<Float>;
 
+    /** Whether this instance is stored in the cache */
     var cached:Bool = false;
 
+    /** Whether this is a quadratic (vs cubic) curve */
     var quadratic:Bool = false;
 
+    /** Original quadratic X1 value (before conversion) */
     var mQuadraticX1:Float;
 
+    /** Original quadratic X2 value (before conversion) */
     var mQuadraticX2:Float;
 
+    /** First control point X coordinate (0-1) */
     var mX1:Float;
 
+    /** First control point Y coordinate */
     var mY1:Float;
 
+    /** Second control point X coordinate (0-1) */
     var mX2:Float;
 
+    /** Second control point Y coordinate */
     var mY2:Float;
 
     /**
@@ -99,6 +164,18 @@ class BezierEasing {
 
     }
 
+    /**
+     * Calculates the eased value for the given progress.
+     * 
+     * @param x Progress value from 0 to 1
+     * @return Eased value (typically 0 to 1, but can overshoot)
+     * 
+     * @example
+     * ```haxe
+     * var easing = new BezierEasing(0.42, 0, 0.58, 1);
+     * tween.progress = easing.ease(elapsed / duration);
+     * ```
+     */
     public function ease(x:Float):Float {
 
         if (linearEasing) return x;
@@ -108,6 +185,11 @@ class BezierEasing {
 
     }
 
+    /**
+     * Finds the t parameter for a given x value using the pre-computed samples.
+     * Uses Newton-Raphson iteration when slope is sufficient, otherwise falls
+     * back to binary subdivision.
+     */
     inline function getTForX(aX:Float):Float {
 
         var intervalStart = 0.0;
@@ -136,7 +218,12 @@ class BezierEasing {
     }
 
     /**
-     * Returns x(t) given t, x1, and x2, or y(t) given t, y1, and y2
+     * Calculates the bezier curve value at parameter t.
+     * 
+     * @param aT The t parameter (0-1)
+     * @param aA1 First control point coordinate
+     * @param aA2 Second control point coordinate
+     * @return The curve value at t
      */
     inline function calcBezier(aT:Float, aA1:Float, aA2:Float) {
 
@@ -145,7 +232,12 @@ class BezierEasing {
     }
 
     /**
-     * Returns dx/dt given t, x1, and x2, or dy/dt given t, y1, and y2
+     * Calculates the derivative (slope) of the bezier curve at parameter t.
+     * 
+     * @param aT The t parameter (0-1)
+     * @param aA1 First control point coordinate
+     * @param aA2 Second control point coordinate
+     * @return The slope at t
      */
     inline function getSlope(aT:Float, aA1:Float, aA2:Float) {
 
@@ -153,6 +245,10 @@ class BezierEasing {
 
     }
 
+    /**
+     * Uses binary subdivision to find t for a given x when Newton-Raphson
+     * is not suitable (low slope).
+     */
     inline function binarySubdivide(aX:Float, aA:Float, aB:Float, mX1:Float, mX2:Float) {
 
         var currentX:Float;
@@ -173,6 +269,10 @@ class BezierEasing {
 
     }
 
+    /**
+     * Uses Newton-Raphson iteration to quickly converge on the t value
+     * for a given x coordinate.
+     */
     function newtonRaphsonIterate(aX:Float, aGuessT:Float, mX1:Float, mX2:Float) {
 
         for (i in 0...NEWTON_ITERATIONS) {
@@ -188,16 +288,27 @@ class BezierEasing {
 
     }
 
+    /** Bezier coefficient A for cubic formula */
     inline function A(aA1:Float, aA2:Float) { return 1.0 - 3.0 * aA2 + 3.0 * aA1; }
+    
+    /** Bezier coefficient B for cubic formula */
     inline function B(aA1:Float, aA2:Float) { return 3.0 * aA2 - 6.0 * aA1; }
+    
+    /** Bezier coefficient C for cubic formula */
     inline function C(aA1:Float)            { return 3.0 * aA1; }
 
+    /**
+     * Converts a quadratic control point to the first cubic control point.
+     */
     inline static function quadraticToCubicCP1(p:Float):Float {
 
         return TWO_THIRD * p;
 
     }
 
+    /**
+     * Converts a quadratic control point to the second cubic control point.
+     */
     inline static function quadraticToCubicCP2(p:Float):Float {
 
         return 1.0 + TWO_THIRD * (p - 1.0);
@@ -206,10 +317,15 @@ class BezierEasing {
 
     /// Cache
 
+    /** Map of cached instances by parameter hash */
     static var cachedInstances:IntMap<Array<BezierEasing>> = null;
 
+    /** Current number of cached instances */
     static var numCachedInstances:Int = 0;
 
+    /**
+     * Removes this instance from the cache when its parameters change.
+     */
     function removeFromCache(x1:Float, y1:Float, x2:Float, y2:Float):Void {
 
         cached = false;
@@ -229,6 +345,10 @@ class BezierEasing {
 
     }
 
+    /**
+     * Generates a hash key for caching based on control points.
+     * Note: This is a simple hash that may have collisions.
+     */
     inline static function cacheKey(x1:Float, y1:Float, x2:Float, y2:Float):Int {
 
         var floatKey = x1 * 10000 + y1 * 100000 + x2 * 1000000 + y2 * 10000000;
@@ -236,6 +356,12 @@ class BezierEasing {
 
     }
 
+    /**
+     * Clears all cached BezierEasing instances.
+     * 
+     * Call this if you need to free memory or have created
+     * many temporary easing functions.
+     */
     public static function clearCache():Void {
 
         cachedInstances = null;

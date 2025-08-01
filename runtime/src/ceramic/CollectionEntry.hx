@@ -6,6 +6,42 @@ import haxe.rtti.Meta;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * Base class for entries that can be stored in a Collection.
+ * 
+ * CollectionEntry provides:
+ * - Automatic unique ID generation
+ * - Runtime index for fast integer-based identification
+ * - Flexible data deserialization from raw data (CSV, JSON, etc.)
+ * - Type conversion for common data types
+ * 
+ * When creating custom collection entries, extend this class and add
+ * your specific fields. The FieldInfoMacro will automatically generate
+ * type information for proper deserialization.
+ * 
+ * Example usage:
+ * ```haxe
+ * class Enemy extends CollectionEntry {
+ *     public var health:Int = 100;
+ *     public var damage:Float = 10.5;
+ *     public var isFlying:Bool = false;
+ *     public var enemyType:EnemyType; // Enum support
+ * }
+ * 
+ * // Create from raw data (e.g., from CSV)
+ * var enemy = new Enemy();
+ * enemy.setRawData({
+ *     id: "goblin1",
+ *     health: "50",
+ *     damage: "5.5",
+ *     isFlying: "true",
+ *     enemyType: "GOBLIN"
+ * });
+ * ```
+ * 
+ * @see Collection
+ * @see FieldInfo
+ */
 @:structInit
 @:keep
 @:keepSub
@@ -15,26 +51,36 @@ using ceramic.Extensions;
 #end
 class CollectionEntry {
 
+    /** Counter for auto-generated IDs */
     static var _nextId:Int = 1;
 
+    /** Counter for unique runtime indices */
     static var _nextIndex:Int = 1;
 
+    /**
+     * Unique identifier for this entry.
+     * Auto-generated if not provided in constructor.
+     */
     public var id:String;
 
+    /**
+     * Optional human-readable name for this entry.
+     */
     public var name:String;
 
     /**
-     * A unique index for this collection entry instance.
-     * Warning:
-     *     this index is in no way predictable and may vary
-     *     for each entry between each run of the app!
-     *     This is intended to be used as a fast integer-typed runtime identifier,
-     *     but do not use this to identify entries when persisting data to disk etc...
+     * A unique runtime index for this collection entry instance.
+     * 
+     * Warning: This index is not persistent and will vary between app runs!
+     * Use it only for fast runtime lookups, never for saving/loading data.
+     * For persistent identification, use the 'id' field instead.
      */
     public var index(default,null):Int;
 
     /**
-     * Constructor
+     * Creates a new CollectionEntry.
+     * @param id Optional unique identifier (auto-generated if not provided)
+     * @param name Optional human-readable name
      */
     public function new(?id:String, ?name:String) {
 
@@ -45,10 +91,19 @@ class CollectionEntry {
     }
 
     /**
-     * Set entry fields from given raw data.
-     * Takes care of converting types when needed, and possible.
-     * It's ok if raw field are strings, like when stored in CSV files.
-     * Raw types can be converted to: `Bool`, `Int`, `Float`, `Color` (`Int`), `String` and `enum` types
+     * Sets entry fields from raw data, with automatic type conversion.
+     * 
+     * Supports conversion from strings (e.g., CSV data) to:
+     * - Bool: "true"/"false", "yes"/"no", "1"/"0"
+     * - Int: Numeric strings
+     * - Float: Numeric strings (accepts comma as decimal separator)
+     * - Color: Integer color values
+     * - String: Any value (null becomes null)
+     * - Enum: Case-insensitive enum constructor names
+     * 
+     * Fields marked with @skipEmpty meta will be skipped if the raw value is null or empty.
+     * 
+     * @param data Object containing field names and raw values
      */
     public function setRawData(data:Dynamic) {
 
@@ -133,8 +188,14 @@ class CollectionEntry {
     }
 
     /**
-     * Override this method to perform custom deserialisation on a specific field. If the overrided method
-     * returns `true`, default behavior will be skipped for the related field.
+     * Override this method to handle custom field deserialization.
+     * 
+     * Return true to skip default type conversion for the field.
+     * Useful for complex types or custom parsing logic.
+     * 
+     * @param name The field name
+     * @param rawValue The raw value to process
+     * @return True if field was handled, false to use default conversion
      */
     public function setRawField(name:String, rawValue:Dynamic):Bool {
 

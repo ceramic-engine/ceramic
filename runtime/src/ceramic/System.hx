@@ -4,6 +4,47 @@ package ceramic;
  * A `System` is an object assigned to app lifecycle and used to
  * do some work such as dispatching events or manipulating entities.
  * Systems can be ordered with `order` properties
+ *
+ * Systems are the backbone of Ceramic's architecture, providing a way to
+ * organize game logic into modular, reusable components that integrate
+ * with the application lifecycle.
+ *
+ * Key features:
+ * - Two-phase update cycle (earlyUpdate and lateUpdate)
+ * - Automatic ordering via earlyUpdateOrder and lateUpdateOrder
+ * - Named systems for easy retrieval
+ * - Automatic registration with app.systems
+ * - Events for update lifecycle hooks
+ *
+ * To create a system:
+ * 1. Extend the System class
+ * 2. Override earlyUpdate() and/or lateUpdate() methods
+ * 3. Set appropriate update orders
+ * 4. The system auto-registers on creation
+ *
+ * Example usage:
+ * ```haxe
+ * class PhysicsSystem extends System {
+ *     public function new() {
+ *         super();
+ *         name = "physics";
+ *         earlyUpdateOrder = 100;
+ *     }
+ *
+ *     override function earlyUpdate(delta:Float) {
+ *         // Update physics simulation
+ *     }
+ * }
+ *
+ * // Create the system (auto-registers)
+ * var physics = new PhysicsSystem();
+ *
+ * // Later, retrieve it by name
+ * var physics = app.systems.get("physics");
+ * ```
+ *
+ * @see Systems
+ * @see App
  */
 @:access(ceramic.Systems)
 @:allow(ceramic.Systems)
@@ -76,16 +117,20 @@ class System extends Entity {
     }
 
     /**
-     * Method automatically called right before app's `update` event
-     * @param delta 
+     * Method automatically called right before app's `update` event.
+     * Override this method to implement system logic that needs to run
+     * before regular entity updates.
+     * @param delta Time elapsed since last frame in seconds
      */
     function earlyUpdate(delta:Float):Void {
 
     }
 
     /**
-     * Method automatically called right before app's right after `update` event
-     * @param delta 
+     * Method automatically called right after app's `update` event.
+     * Override this method to implement system logic that needs to run
+     * after regular entity updates.
+     * @param delta Time elapsed since last frame in seconds
      */
     function lateUpdate(delta:Float):Void {
 

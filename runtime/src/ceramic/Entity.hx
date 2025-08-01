@@ -9,6 +9,21 @@ import tracker.DynamicEvents;
 #end
 
 
+/**
+ * Base class for all entities in the Ceramic framework.
+ * 
+ * An Entity is the fundamental building block of Ceramic, providing lifecycle management,
+ * event handling, component system support, and automatic memory management.
+ * All game objects, visuals, and systems extend from this class.
+ * 
+ * Key features:
+ * - Automatic lifecycle management with destroy() and dispose()
+ * - Component-based architecture support
+ * - Event system integration
+ * - Autorun support for reactive programming
+ * - Tween integration for animations
+ * - Memory leak protection with proper cleanup
+ */
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.EntityMacro.build())
 #end
@@ -60,6 +75,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     #end
 
+    /**
+     * Optional identifier for this entity.
+     * Can be used to retrieve specific entities by their ID.
+     */
     public var id:String = null;
 
     /**
@@ -126,11 +145,19 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     }
 #end
 
+    /**
+     * Whether this entity has been destroyed.
+     * Once destroyed, an entity should not be used anymore.
+     */
     public var destroyed(get,never):Bool;
     #if !haxe_server inline #end function get_destroyed():Bool {
         return _lifecycleState < 0;
     }
 
+    /**
+     * Whether this entity has been marked for disposal.
+     * Disposed entities will be destroyed at the end of the current frame.
+     */
     public var disposed(get,never):Bool;
     #if !haxe_server inline #end function get_disposed():Bool {
         return _lifecycleState == 1;
@@ -158,7 +185,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 /// Lifecycle
 
     /**
-     * Create a new entity
+     * Create a new entity.
      */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
@@ -367,7 +394,9 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     }
 
     /**
-     * Schedules destroy, at the end of the current frame.
+     * Schedules destroy at the end of the current frame.
+     * This is useful to avoid destroying entities during iteration or event handling.
+     * The entity will be marked as disposed immediately but actual destruction happens later.
      */
     public function dispose():Void {
 
@@ -381,7 +410,9 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     }
 
     /**
-     * Remove all events handlers from this entity.
+     * Remove all event handlers from this entity.
+     * This method is automatically called during destruction to prevent memory leaks.
+     * Subclasses will have this method automatically filled by the Events macro.
      */
     public function unbindEvents():Void {
 
@@ -392,6 +423,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
 /// Autorun
 
+    /**
+     * Array of Autorun instances associated with this entity.
+     * Autoruns are automatically destroyed when the entity is destroyed.
+     */
     public var autoruns(default, null):Array<Autorun> = null;
 
     /**
@@ -494,13 +529,14 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 /// Tween
 
     /**
-     * Start a **tween** associated with this entity.
-     * @param easing The easing to use
-     * @param duration The duration of the tween
-     * @param fromValue The start value of the tween
-     * @param toValue The end value of the tween
-     * @param update An update function called at each iteration of the tween
-     * @return The instance of the created `Tween` object
+     * Start a tween animation associated with this entity.
+     * The tween will automatically be destroyed when this entity is destroyed.
+     * @param easing The easing function to use for the animation
+     * @param duration The duration of the tween in seconds
+     * @param fromValue The starting value of the tween
+     * @param toValue The ending value of the tween
+     * @param update Callback function called on each frame with current value and progress (0-1)
+     * @return The created Tween instance for chaining or manual control
      */
     public function tween(?easing:Easing, duration:Float, fromValue:Float, toValue:Float, update:Float->Float->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
@@ -527,6 +563,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
 /// Print
 
+    /**
+     * Get the class name of this entity without the package path.
+     * @return The simple class name (e.g., "Entity" instead of "ceramic.Entity")
+     */
     public function className():String {
 
         var className = Type.getClassName(Type.getClass(this));
@@ -536,6 +576,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     }
 
+    /**
+     * String representation of this entity.
+     * @return String in format "ClassName" or "ClassName(id)" if id is set
+     */
     function toString():String {
 
         var className = className();
@@ -550,6 +594,10 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
 /// Components
 
+    /**
+     * Remove and destroy all components attached to this entity.
+     * This is automatically called during entity destruction.
+     */
     #if !haxe_server inline #end public function clearComponents() {
 
         // Destroy each linked component
@@ -569,8 +617,9 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     }
 
     /**
-     * Public components mapping. Contain components
-     * created separately with `component()` or macro-based components as well.
+     * Public components mapping containing all components attached to this entity.
+     * Components can be created using the component() method or via macro-based component fields.
+     * Setting this property will replace all existing components.
      */
     public var components(get,set):ReadOnlyMap<String,Component>;
     #if !haxe_server inline #end function get_components():ReadOnlyMap<String,Component> {
@@ -619,6 +668,17 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
      */
     @:noCompletion var _components:Map<String,Component> = null;
 
+    /**
+     * Get or set a component on this entity.
+     * 
+     * When called with just a name, retrieves the component with that name.
+     * When called with a component instance, attaches it to this entity.
+     * 
+     * @param name The name to identify the component. If null, uses the component's class name
+     * @param component The component instance to attach. If null, retrieves existing component
+     * @param hasField Internal flag indicating if this component has a corresponding field
+     * @return The component instance (either retrieved or newly attached)
+     */
     public function component<C:Component>(?name:String, ?component:C, hasField:Bool = false):C {
 
         if (name == null && component == null) {
@@ -683,12 +743,21 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     }
 
+    /**
+     * Check if this entity has a component with the given name.
+     * @param name The name of the component to check
+     * @return True if the component exists, false otherwise
+     */
     public function hasComponent(name:String):Bool {
 
         return component(name) != null;
 
     }
 
+    /**
+     * Remove and destroy a component from this entity.
+     * @param name The name of the component to remove
+     */
     public function removeComponent(name:String):Void {
 
         var existing = _components.get(name);

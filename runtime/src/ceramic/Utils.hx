@@ -12,11 +12,31 @@ using ceramic.Extensions;
 
 /**
  * Various utilities. Some of them are used by ceramic itself or its backends.
+ * 
+ * This class provides a collection of utility functions for common tasks including:
+ * - Path manipulation and resolution
+ * - ID generation (unique, random, persistent)
+ * - String conversions (camelCase, UPPER_CASE)
+ * - Mathematical operations (interpolation, trigonometry)
+ * - Platform detection (iOS, Android)
+ * - Stack trace handling
+ * - Command execution
+ * - And many more general-purpose utilities
+ * 
+ * Most methods are static and can be called directly without instantiation.
  */
 class Utils {
 
     static var RE_ASCII_CHAR = ~/^[a-zA-Z0-9]$/;
 
+    /**
+     * Convert a relative asset path to an absolute path.
+     * If the path is already absolute or is an HTTP(S) URL, it is returned unchanged.
+     * Otherwise, it is resolved relative to the app's assets path.
+     * 
+     * @param path The path to resolve
+     * @return The absolute path
+     */
     public static function realPath(path:String):String {
 
         path = ceramic.Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
@@ -28,6 +48,13 @@ class Utils {
 
     }
 
+    /**
+     * Get runtime type information (RTTI) for a class.
+     * This provides metadata about the class structure, fields, and methods.
+     * 
+     * @param c The class to get RTTI for
+     * @return The class definition metadata
+     */
     inline public static function getRtti<T>(c:Class<T>):Classdef {
 
         return Platform.getRtti(c);
@@ -45,8 +72,14 @@ class Utils {
     #end
 
     /**
-     * Provides an identifier which is garanteed to be unique on this local device.
-     * It however doesn't garantee that this identifier is not predictable.
+     * Provides an identifier which is guaranteed to be unique on this local device.
+     * It however doesn't guarantee that this identifier is not predictable.
+     * 
+     * The ID format is: `base62-base62-base62-base62-base62-base62-base62`
+     * 
+     * Thread-safe on platforms that support threading.
+     * 
+     * @return A unique identifier string
      */
     public static function uniqueId():String {
 
@@ -79,6 +112,9 @@ class Utils {
     /**
      * Provides a random identifier which should be fairly unpredictable and
      * should have an extremely low chance to provide the same identifier twice.
+     * 
+     * @param size The length of the ID to generate (default: 32)
+     * @return A random identifier string of the specified length
      */
     public static function randomId(size:Int = 32):String {
 
@@ -102,6 +138,12 @@ class Utils {
      * Multiple identifiers can be generated/retrieved by using different slots (default 0).
      * Size of the persistent identifier can be provided, but will only have effect when
      * generating a new identifier.
+     * 
+     * The ID is stored on disk and retrieved on subsequent calls.
+     * 
+     * @param slot The slot number for storing multiple IDs (default: 0)
+     * @param size The length of the ID when generating a new one (default: 32)
+     * @return The persistent identifier for this device and slot
      */
     public static function persistentId(?slot:Int = 0, ?size:Int = 32):String {
 
@@ -132,6 +174,12 @@ class Utils {
 
     }
 
+    /**
+     * Reset (delete) a persistent identifier for the given slot.
+     * The next call to persistentId() for this slot will generate a new ID.
+     * 
+     * @param slot The slot number to reset (default: 0)
+     */
     public static function resetPersistentId(?slot:Int = 0) {
 
         if (_persistentIds != null) _persistentIds.remove(slot);
@@ -139,6 +187,13 @@ class Utils {
 
     }
 
+    /**
+     * Generate a base62 encoded string from an integer value.
+     * Base62 uses 0-9, A-Z, and a-z characters.
+     * 
+     * @param val The integer to encode, or null to use a random value
+     * @return A base62 encoded string
+     */
     inline public static function base62Id(?val:Null<Int>):String {
 
         // http://www.anotherchris.net/csharp/friendly-unique-id-generation-part-2/#base62
@@ -163,6 +218,12 @@ class Utils {
 
     }
 
+    /**
+     * Print a line to the console/output.
+     * Handles different platforms appropriately (console.log on web, Sys.println on native).
+     * 
+     * @param data The string to print
+     */
     public static function println(data:String):Void {
 
 #if web
@@ -193,6 +254,13 @@ class Utils {
 
     }
 
+    /**
+     * Print or return the current stack trace.
+     * Useful for debugging to see the call hierarchy.
+     * 
+     * @param returnOnly If true, only returns the stack trace string without printing
+     * @return The stack trace as a string
+     */
     public static function printStackTrace(returnOnly:Bool = false):String {
 
         var result = new StringBuf();
@@ -283,6 +351,13 @@ class Utils {
 
     static final RE_MODULE_AT = ~/^\s*(?:at\s*)?([^\s]+\.js)(?:\s*:\s*([0-9]+)(?:\s*:\s*([0-9]+))?)?\s*$/;
 
+    /**
+     * Convert a stack trace item to a human-readable string.
+     * Handles source map resolution on JavaScript platforms.
+     * 
+     * @param item The stack item to convert
+     * @return A formatted string representation of the stack item
+     */
     public static function stackItemToString(item:StackItem):String {
 
         #if js
@@ -361,14 +436,33 @@ class Utils {
 
     }
 
+    /**
+     * Convert radians to degrees.
+     * 
+     * @param rad Angle in radians
+     * @return Angle in degrees
+     */
     inline public static function radToDeg(rad:Float):Float {
         return rad * 57.29577951308232;
     }
 
+    /**
+     * Convert degrees to radians.
+     * 
+     * @param deg Angle in degrees
+     * @return Angle in radians
+     */
     inline public static function degToRad(deg:Float):Float {
         return deg * 0.017453292519943295;
     }
 
+    /**
+     * Round a float value to a specified number of decimal places.
+     * 
+     * @param value The value to round
+     * @param decimals Number of decimal places (default: 0)
+     * @return The rounded value
+     */
     inline public static function round(value:Float, decimals:Int = 0):Float {
         return if (decimals > 0) {
             var factor = 1.0;
@@ -384,7 +478,12 @@ class Utils {
 
     /**
      * Java's String.hashCode() method implemented in Haxe.
+     * Generates a 32-bit integer hash from a string.
+     * 
      * source: https://github.com/rjanicek/janicek-core-haxe/blob/master/src/co/janicek/core/math/HashCore.hx
+     * 
+     * @param s The string to hash
+     * @return A 32-bit integer hash code
      */
     inline public static function hashCode(s:String):Int {
         var hash = 0;
@@ -397,11 +496,16 @@ class Utils {
     }
 
     /**
-     * Generate an uniform list of the requested size,
-     * containing values uniformly repartited from frequencies.
-     * @param values the values to put in list
-     * @param probabilities the corresponding probability for each value
-     * @param size the size of the final list
+     * Generate a uniform list of the requested size,
+     * containing values uniformly distributed based on frequencies.
+     * 
+     * This creates a list where values appear proportionally to their frequencies,
+     * but distributed as evenly as possible throughout the list.
+     * 
+     * @param values The values to put in the list
+     * @param frequencies The corresponding frequency for each value
+     * @param size The size of the final list
+     * @return An array with values distributed according to their frequencies
      */
     public static function uniformFrequencyList(values:Array<Int>, frequencies:Array<Float>, size:Int):Array<Int> {
 
@@ -444,7 +548,11 @@ class Utils {
     }
 
     /**
-     * Transforms `SOME_IDENTIFIER` to `SomeIdentifier`
+     * Transforms `SOME_IDENTIFIER` to `SomeIdentifier` (PascalCase) or `someIdentifier` (camelCase).
+     * 
+     * @param input The UPPER_CASE string to convert
+     * @param firstLetterUppercase If true, produces PascalCase; if false, produces camelCase
+     * @return The converted string
      */
     public static function upperCaseToCamelCase(input:String, firstLetterUppercase:Bool = true):String {
 
@@ -475,7 +583,11 @@ class Utils {
     }
 
     /**
-     * Transforms `SomeIdentifier`/`someIdentifier`/`some identifier` to `SOME_IDENTIFIER`
+     * Transforms `SomeIdentifier`/`someIdentifier`/`some identifier` to `SOME_IDENTIFIER`.
+     * 
+     * @param input The camelCase/PascalCase string to convert
+     * @param firstLetterUppercase Not used in this function (kept for API compatibility)
+     * @return The UPPER_CASE string
      */
     public static function camelCaseToUpperCase(input:String, firstLetterUppercase:Bool = true):String {
 
@@ -519,6 +631,14 @@ class Utils {
 
     }
 
+    /**
+     * Check if two function references are equal.
+     * Platform-specific implementation for optimal performance.
+     * 
+     * @param functionA First function reference
+     * @param functionB Second function reference
+     * @return true if the functions are the same reference
+     */
     inline public static function functionEquals(functionA:Dynamic, functionB:Dynamic):Bool {
 
         #if (js || cpp)
@@ -529,6 +649,14 @@ class Utils {
 
     }
 
+    /**
+     * Decode URL-encoded parameters into a key-value map.
+     * 
+     * Example: `"foo=bar&hello=world"` becomes `{"foo" => "bar", "hello" => "world"}`
+     * 
+     * @param raw The raw URL parameter string
+     * @return A map of decoded parameter names to values
+     */
     public static function decodeUriParams(raw:String):Map<String,String> {
 
         var result = new Map<String,String>();
@@ -549,9 +677,11 @@ class Utils {
     }
 
     /**
-     * Transforms a value between 0 and 1 to another value between 0 and 1 following a sinusoidal curve
-     * @param value a value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
-     * @return Float
+     * Transforms a value between 0 and 1 to another value between 0 and 1 following a sinusoidal curve.
+     * Useful for creating smooth, wave-like animations.
+     * 
+     * @param value A value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
+     * @return A value between 0 and 1 following a sine wave pattern
      */
     public static function sinRatio(value:Float):Float {
 
@@ -562,9 +692,11 @@ class Utils {
     }
 
     /**
-     * Transforms a value between 0 and 1 to another value between 0 and 1 following a cosinusoidal curve
-     * @param value a value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
-     * @return Float
+     * Transforms a value between 0 and 1 to another value between 0 and 1 following a cosinusoidal curve.
+     * Useful for creating smooth, wave-like animations.
+     * 
+     * @param value A value between 0 and 1. If giving a value > 1, its modulo 1 will be used.
+     * @return A value between 0 and 1 following a cosine wave pattern
      */
     public static function cosRatio(value:Float):Float {
 
@@ -575,11 +707,15 @@ class Utils {
     }
 
     /**
-     * Given an array of keys and an array of matching values, interpolate a new value from interpolatedKey
-     * @param keys A list of keys
-     * @param values A list of values
-     * @param interpolatedKey The interpolated key, used to find a matching interpolated value
-     * @return Interpolated value
+     * Given an array of keys and an array of matching values, interpolate a new value from interpolatedKey.
+     * Performs linear interpolation between adjacent key-value pairs.
+     * 
+     * Example: keys=[0, 10, 20], values=[100, 200, 150], interpolatedKey=5 returns 150
+     * 
+     * @param keys A sorted list of keys
+     * @param values A list of values corresponding to each key
+     * @param interpolatedKey The key to interpolate a value for
+     * @return The interpolated value
      */
     public static function valueFromInterpolatedKey(keys:Array<Float>, values:Array<Float>, interpolatedKey:Float):Float {
 
@@ -613,10 +749,12 @@ class Utils {
     }
 
     /**
-     * Given an array of X and Y values, interpolate a new Y value from interpolated X
-     * @param points A list of X and Y values
-     * @param interpolatedX The interpolated X key, used to find a matching interpolated Y
-     * @return Interpolated Y value
+     * Given an array of X and Y values, interpolate a new Y value from interpolated X.
+     * The points array should contain alternating X and Y values: [x0, y0, x1, y1, x2, y2, ...]
+     * 
+     * @param points A list of X and Y values (must have even length)
+     * @param interpolatedX The X value to interpolate a Y value for
+     * @return The interpolated Y value
      */
     public static function yFromInterpolatedX(points:Array<Float>, interpolatedX:Float):Float {
 
@@ -651,6 +789,17 @@ class Utils {
 
     }
 
+    /**
+     * Execute a system command asynchronously.
+     * Platform-specific implementation using Process on native platforms or child_process on Node.js.
+     * 
+     * @param cmd The command to execute
+     * @param args Optional array of command arguments
+     * @param options Optional execution options:
+     *                - cwd: Working directory for the command
+     *                - detached: Whether to detach the process
+     * @param result Callback with (exitCode, stdout, stderr)
+     */
     public static function command(cmd:String, ?args:Array<String>, ?options:{ ?cwd: String, ?detached: Bool }, result:(code:Int, out:String, err:String)->Void):Void {
 
         if (args == null)
@@ -718,6 +867,17 @@ class Utils {
 
     }
 
+    /**
+     * Replace whole-word occurrences of an identifier in a string.
+     * Only replaces the word when it's not part of a larger identifier.
+     * 
+     * Example: replaceIdentifier("foo + fooBar", "foo", "bar") returns "bar + fooBar"
+     * 
+     * @param str The string to search in
+     * @param word The identifier to replace
+     * @param replacement The replacement string
+     * @return The string with identifiers replaced
+     */
     public static function replaceIdentifier(str:String, word:String, replacement:String):String {
 
         str = str.replace('\n', ' \n ');
@@ -735,6 +895,13 @@ class Utils {
 
     }
 
+    /**
+     * Detect the image type from the first few bytes of image data.
+     * Checks for PNG and JPEG magic bytes.
+     * 
+     * @param bytes The image file bytes
+     * @return The detected ImageType (PNG, JPEG) or null if unknown
+     */
     public static function imageTypeFromBytes(bytes:Bytes):ImageType {
 
         if (
@@ -761,6 +928,14 @@ class Utils {
 
     }
 
+    /**
+     * Linear interpolation between two values.
+     * 
+     * @param a Start value (returned when t=0)
+     * @param b End value (returned when t=1)
+     * @param t Interpolation factor (0 to 1)
+     * @return The interpolated value
+     */
     public inline static function lerp(a:Float, b:Float, t:Float):Float {
         return a + (b - a) * t;
     }
@@ -769,6 +944,10 @@ class Utils {
      * Returns `true` if the current platform is iOS, which is the case
      * when we are running a native iOS app or when we are running
      * on web from an iOS mobile browser.
+     * 
+     * The result is cached for performance on web platforms.
+     * 
+     * @return true if running on iOS
      */
     #if ceramic_fake_ios
     public static function isIos():Bool {
@@ -805,6 +984,10 @@ class Utils {
      * Returns `true` if the current platform is Android, which is the case
      * when we are running a native Android app or when we are running
      * on web from an Android mobile browser.
+     * 
+     * The result is cached for performance on web platforms.
+     * 
+     * @return true if running on Android
      */
     #if ceramic_fake_android
     public static function isAndroid():Bool {
@@ -837,7 +1020,10 @@ class Utils {
     #end
 
     /**
-     * Returns `1` if the value is above or equal to zero, `-1` otherwise
+     * Returns the sign of a number.
+     * 
+     * @param value The number to check
+     * @return 1 if the value is above or equal to zero, -1 otherwise
      */
     inline public static function sign(value:Float):Float {
         return value >= 0 ? 1 : -1;

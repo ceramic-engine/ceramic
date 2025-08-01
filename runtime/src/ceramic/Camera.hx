@@ -3,15 +3,52 @@ package ceramic;
 // Some ideas and snippets directly extracted from:
 // https://github.com/deepnight/ld48-NuclearBlaze/blob/master/src/game/gm/Camera.hx
 
+/**
+ * A flexible camera system for 2D games.
+ *
+ * Camera provides smooth scrolling, target following, boundary constraints,
+ * and various effects for controlling the viewport in your game world.
+ *
+ * Features:
+ * - Smooth target following with configurable speed and curves
+ * - Dead zones to reduce camera movement for small target changes
+ * - Content boundary clamping to keep camera within level bounds
+ * - Zoom support
+ * - Friction and braking near boundaries
+ * - Anchor points for different camera behaviors
+ *
+ * The camera doesn't render anything itself - instead, you apply its
+ * transform to your game visuals to create the scrolling effect.
+ *
+ * @example
+ * ```haxe
+ * // Create a camera following the player
+ * var camera = new Camera(screen.width, screen.height);
+ * camera.followTarget = true;
+ * camera.trackSpeedX = 15;
+ * camera.trackSpeedY = 10;
+ *
+ * // In update loop
+ * camera.target(player.x, player.y);
+ * camera.update(delta);
+ *
+ * // Apply transform to layer
+ * gameLayer.transform = camera.contentTransform;
+ * ```
+ *
+ * @see Visual
+ */
 class Camera extends Entity {
 
     /**
-     * Camera x position
+     * Camera x position in world coordinates.
+     * This is the left edge of what the camera sees.
      */
     public var x:Float = 0;
 
     /**
-     * Camera y position
+     * Camera y position in world coordinates.
+     * This is the top edge of what the camera sees.
      */
     public var y:Float = 0;
 
@@ -26,12 +63,15 @@ class Camera extends Entity {
     }
 
     /**
-     * `true` if the camera should follow its target
+     * When true, the camera smoothly follows the target position.
+     * Use target() or targetX/targetY to set what to follow.
      */
     public var followTarget:Bool = false;
 
     /**
-     * If `true`, camera will try to stay inside content bounds. If not possible, it will be centered.
+     * If true, camera will try to stay inside content bounds.
+     * When the viewport is larger than content, camera will be centered.
+     * Useful for keeping the camera within level boundaries.
      */
     public var clampToContentBounds:Bool = true;
 
@@ -86,22 +126,32 @@ class Camera extends Entity {
     public var trackSpeedY:Float = 15.0;
 
     /**
-     * Affects tracking curve. Should be above 0 and below or equal to 1.
+     * Affects the smoothness of camera tracking.
+     * Lower values (0.1-0.5) create more easing/lag.
+     * Higher values (0.8-1.0) create more direct following.
+     * Must be between 0 (exclusive) and 1 (inclusive).
      */
     public var trackCurve:Float = 0.8;
 
     /**
-     * Zoom scaling factor
+     * Camera zoom level.
+     * 1.0 = normal size
+     * 2.0 = zoomed in 2x (objects appear larger)
+     * 0.5 = zoomed out (objects appear smaller)
      */
     public var zoom:Float = 1.0;
 
     /**
-     * Horizontal dead zone (percentage between 0 and 1 relative to viewport width)
+     * Horizontal dead zone as percentage of viewport width (0-1).
+     * Camera won't move until target moves outside this zone.
+     * Reduces camera jitter from small movements.
      */
     public var deadZoneX:Float = 0.04;
 
     /**
-     * Horizontal dead zone (percentage between 0 and 1 relative to viewport height)
+     * Vertical dead zone as percentage of viewport height (0-1).
+     * Camera won't move until target moves outside this zone.
+     * Reduces camera jitter from small movements.
      */
     public var deadZoneY:Float = 0.1;
 
@@ -138,12 +188,14 @@ class Camera extends Entity {
     public var contentHeight:Float = 0;
 
     /**
-     * Viewport width: the actual visible with on this camera
+     * Viewport width: the visible area width for this camera.
+     * Usually set to screen width or render area width.
      */
     public var viewportWidth:Float = 0;
 
     /**
-     * Viewport height: the actual visible height on this camera
+     * Viewport height: the visible area height for this camera.
+     * Usually set to screen height or render area height.
      */
     public var viewportHeight:Float = 0;
 

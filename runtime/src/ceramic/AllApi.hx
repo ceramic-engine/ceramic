@@ -1,5 +1,35 @@
 package ceramic;
 
+/**
+ * Central import file that includes all Ceramic API classes.
+ * 
+ * AllApi serves as a comprehensive import manifest for the Ceramic framework,
+ * ensuring all classes are included in the compiled output. This is particularly
+ * important for dynamic environments like scripting where classes need to be
+ * available at runtime.
+ * 
+ * Features:
+ * - Imports all core Ceramic classes and systems
+ * - Imports all plugin classes when plugins are enabled
+ * - Provides HScript configuration for scripting environments
+ * - Ensures DCE (Dead Code Elimination) doesn't remove needed classes
+ * 
+ * The file is organized into sections:
+ * - Standard Haxe imports
+ * - Tracker framework imports
+ * - Core Ceramic classes
+ * - Plugin-specific imports (conditional compilation)
+ * - HScript configuration method
+ * 
+ * Usage:
+ * This file is typically imported by the build system or main application
+ * to ensure all necessary classes are available. The @:keep metadata
+ * prevents the class from being eliminated during compilation.
+ * 
+ * @see App
+ * @see ceramic.scriptable
+ */
+
 import Std;
 import StringTools;
 import Math;
@@ -404,9 +434,16 @@ import elements.Theme;
 import elements.Window;
 #end
 
+/**
+ * Utility class to prevent dead code elimination of API classes.
+ */
 @:keep
 class AllApi {
 
+    /**
+     * Forces inclusion of commonly used reflection methods.
+     * This ensures Type.allEnums and Bytes.ofHex are available at runtime.
+     */
     @:keep
     public static function apiCallCache() {
 
@@ -417,6 +454,22 @@ class AllApi {
 
     #if plugin_script
 
+    /**
+     * Configures an HScript interpreter with Ceramic API bindings.
+     * 
+     * This method sets up all necessary variable bindings to make Ceramic
+     * classes and utilities available within HScript environments. It's used
+     * by the scripting plugin to provide full framework access to scripts.
+     * 
+     * The configuration includes:
+     * - Global shortcuts (app, screen, audio, etc.)
+     * - Standard Haxe libraries (Std, Math, StringTools)
+     * - Tracker framework classes
+     * - All Ceramic core classes
+     * - Plugin-specific classes when available
+     * 
+     * @param interp The HScript interpreter to configure
+     */
     public static function configureHscript(interp:hscript.Interp):Void {
 
         interp.variables.set('app', ceramic.Shortcuts.app);

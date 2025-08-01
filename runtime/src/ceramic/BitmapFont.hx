@@ -48,30 +48,59 @@ class BitmapFont extends Entity {
 
     }
 
+    /**
+     * The font face name (e.g. "Arial", "Roboto").
+     * This is metadata from the font file.
+     */
     public var face(get,set):String;
     inline function get_face():String { return fontData.face; }
     inline function set_face(face:String):String { return fontData.face = face; }
 
+    /**
+     * The point size the font was generated at.
+     * This is the reference size for all metrics in the font data.
+     */
     public var pointSize(get,set):Float;
     inline function get_pointSize():Float { return fontData.pointSize; }
     inline function set_pointSize(pointSize:Float):Float { return fontData.pointSize = pointSize; }
 
+    /**
+     * The base size used during font generation.
+     * Often the same as pointSize but can differ based on the font tool used.
+     */
     public var baseSize(get,set):Float;
     inline function get_baseSize():Float { return fontData.baseSize; }
     inline function set_baseSize(baseSize:Float):Float { return fontData.baseSize = baseSize; }
 
+    /**
+     * Map of character codes to their corresponding glyph data.
+     * Each character contains texture coordinates, size, and offset information.
+     */
     public var chars(get,set):IntMap<BitmapFontCharacter>;
     inline function get_chars():IntMap<BitmapFontCharacter> { return fontData.chars; }
     inline function set_chars(chars:IntMap<BitmapFontCharacter>):IntMap<BitmapFontCharacter> { return fontData.chars = chars; }
 
+    /**
+     * Total number of characters defined in this font.
+     * Useful for statistics and validation.
+     */
     public var charCount(get,set):Int;
     inline function get_charCount():Int { return fontData.charCount; }
     inline function set_charCount(charCount:Int):Int { return fontData.charCount = charCount; }
 
+    /**
+     * The recommended line height for this font in pixels.
+     * Used for vertical spacing between lines of text.
+     */
     public var lineHeight(get,set):Float;
     inline function get_lineHeight():Float { return fontData.lineHeight; }
     inline function set_lineHeight(lineHeight:Float):Float { return fontData.lineHeight = lineHeight; }
 
+    /**
+     * Kerning data for character pairs.
+     * First level maps from first character to second character to kerning amount.
+     * Kerning adjusts spacing between specific character pairs for better appearance.
+     */
     public var kernings(get,set):IntMap<IntFloatMap>;
     inline function get_kernings():IntMap<IntFloatMap> { return fontData.kernings; }
     inline function set_kernings(kernings:IntMap<IntFloatMap>):IntMap<IntFloatMap> { return fontData.kernings = kernings; }

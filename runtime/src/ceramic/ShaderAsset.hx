@@ -6,16 +6,69 @@ import ceramic.Shortcuts.*;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * Asset type for loading GPU shader programs.
+ * 
+ * Supports loading:
+ * - Combined shader files containing both vertex and fragment shaders
+ * - Separate vertex (.vert) and fragment (.frag) shader files
+ * - Backend-specific shader formats
+ * 
+ * Features:
+ * - Custom shader attributes support
+ * - Hot reload for shader development
+ * - Automatic pairing of vertex and fragment shaders
+ * - Default vertex shader fallback
+ * 
+ * @example
+ * ```haxe
+ * var assets = new Assets();
+ * // Load combined shader
+ * assets.addShader('blur');
+ * 
+ * // Load with custom attributes
+ * assets.addShader('particle', null, {
+ *     customAttributes: [
+ *         {name: 'aVelocity', size: 2},
+ *         {name: 'aLifetime', size: 1}
+ *     ]
+ * });
+ * 
+ * assets.load();
+ * var shader = assets.shader('blur');
+ * quad.shader = shader;
+ * ```
+ */
 class ShaderAsset extends Asset {
 
+    /**
+     * The loaded Shader instance.
+     * Observable property that updates when the shader is loaded or reloaded.
+     * Null until the asset is successfully loaded.
+     */
     @observe public var shader:Shader = null;
 
+    /**
+     * Create a new shader asset.
+     * @param name Shader file name (with or without extension)
+     * @param variant Optional variant suffix
+     * @param options Loading options including:
+     *                - customAttributes: Array of custom vertex attributes
+     *                - vertId: Specific vertex shader path (for separate files)
+     *                - fragId: Specific fragment shader path (for separate files)
+     */
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super('shader', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
 
     }
 
+    /**
+     * Load the shader program.
+     * Handles both combined and separate vertex/fragment shader files.
+     * Uses default textured vertex shader if none specified.
+     * Emits complete event when finished.
+     */
     override public function load() {
 
         status = LOADING;

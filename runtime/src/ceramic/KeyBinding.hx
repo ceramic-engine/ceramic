@@ -2,17 +2,44 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+/**
+ * Represents a keyboard shortcut binding that triggers when a specific key combination is pressed.
+ * 
+ * KeyBinding monitors keyboard input and triggers an event when its assigned
+ * key combination is activated. It supports modifier keys (Shift, Cmd/Ctrl)
+ * combined with regular keys, and handles platform-specific differences
+ * (e.g., Cmd on macOS vs Ctrl on Windows/Linux).
+ * 
+ * Note: KeyBinding instances are typically created and managed by KeyBindings,
+ * not instantiated directly.
+ * 
+ * @see KeyBindings
+ * @see KeyAcceleratorItem
+ */
 @:allow(ceramic.KeyBindings)
 class KeyBinding extends Entity {
 
 /// Events
 
+    /**
+     * Triggered when the key combination is pressed.
+     * The event fires once when all keys in the combination are pressed together.
+     * @event trigger
+     */
     @event function trigger();
 
 /// Internal properties
 
+    /**
+     * The key combination that triggers this binding.
+     * Read-only array of KeyAcceleratorItem elements that must all be pressed together.
+     */
     public var accelerator(default, null):ReadOnlyArray<KeyAcceleratorItem>;
 
+    /**
+     * The parent KeyBindings instance that manages this binding.
+     * Null if this binding is not part of a KeyBindings collection.
+     */
     public var bindings(default, null):KeyBindings = null;
 
     var pressedItems:Array<Int> = [];
@@ -45,6 +72,11 @@ class KeyBinding extends Entity {
 
 /// Helpers
 
+    /**
+     * Forces all keys to be considered released.
+     * Useful for resetting the binding state when the window loses focus
+     * or when switching between different input contexts.
+     */
     @:noCompletion public function forceKeysUp():Void {
 
         leftShiftPressed = false;

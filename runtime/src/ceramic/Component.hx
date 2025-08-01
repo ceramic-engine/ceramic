@@ -1,9 +1,26 @@
 package ceramic;
 
 /**
- * A Component is and Entity that can be bound to another Entity.
- * Any Entity can be used as a Component, given that it implement Component interface.
- * A Component must be an Entity subclass.
+ * Interface for components that can be attached to entities.
+ * 
+ * A Component is an Entity that can be bound to another Entity, enabling
+ * composition-based architecture. Components are automatically managed by
+ * their parent entity and destroyed when the parent is destroyed.
+ * 
+ * Any Entity subclass can be used as a Component by implementing this interface.
+ * The ComponentMacro will automatically add required fields and methods.
+ * 
+ * Example usage:
+ * ```haxe
+ * class MyComponent extends Entity implements Component {
+ *     function bindAsComponent() {
+ *         // Initialize component when attached to entity
+ *     }
+ * }
+ * 
+ * // Attach to entity
+ * entity.component('myComp', new MyComponent());
+ * ```
  */
 #if !macro
 @:autoBuild(ceramic.macros.ComponentMacro.build())

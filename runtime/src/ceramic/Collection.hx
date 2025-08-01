@@ -4,6 +4,42 @@ import ceramic.Assert.*;
 import ceramic.ReadOnlyArray;
 import tracker.Events;
 
+/**
+ * A type-safe collection for managing CollectionEntry items.
+ * 
+ * Collection provides an efficient way to store and access items by ID,
+ * with support for:
+ * - Fast lookup by string ID
+ * - Array-like indexing
+ * - Iteration support
+ * - Random element selection
+ * - Collection combining and filtering
+ * 
+ * Collections are particularly useful for managing game entities that need
+ * to be accessed both by ID and by index.
+ * 
+ * Example usage:
+ * ```haxe
+ * var enemies = new Collection<Enemy>();
+ * enemies.push(new Enemy("goblin1"));
+ * enemies.push(new Enemy("goblin2"));
+ * 
+ * // Access by ID
+ * var goblin = enemies.get("goblin1");
+ * 
+ * // Access by index
+ * var firstEnemy = enemies[0];
+ * 
+ * // Iterate
+ * for (enemy in enemies) {
+ *     enemy.update();
+ * }
+ * ```
+ * 
+ * @param T The type of entries, must implement CollectionEntry
+ * @see CollectionEntry
+ * @see CollectionUtils
+ */
 @:forward
 @:keep
 @:keepSub
@@ -22,7 +58,8 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
     }
 
     /**
-     * Return a random element contained in the collection
+     * Returns a random element from the collection.
+     * @return A random element, or null if the collection is empty
      */
     public function randomElement():T {
 
@@ -34,10 +71,10 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
     }
 
     /**
-     * Return a random element contained in the given array that is not equal to the `except` arg.
-     * @param except The element we don't want
-     * @param unsafe If set to `true`, will prevent allocating a new array (and may be faster) but will loop forever if there is no element except the one we don't want
-     * @return The random element or `null` if nothing was found
+     * Returns a random element from the collection, excluding a specific element.
+     * @param except The element to exclude from selection
+     * @param unsafe If true, avoids array allocation but may loop forever if only 'except' exists
+     * @return A random element different from 'except', or null if none found
      */
     public function randomElementExcept(except:T, unsafe:Bool = false):T {
 
@@ -49,11 +86,9 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
     }
 
     /**
-     * Return a random element contained in the given array that is validated by the provided validator.
-     * If no item is valid, returns null.
-     * @param array  The array in which we extract the element from
-     * @param validator A function that returns true if the item is valid, false if not
-     * @return The random element or `null` if nothing was found
+     * Returns a random element that passes the validator function.
+     * @param validator A function that returns true for valid elements
+     * @return A random valid element, or null if none found
      */
     public function randomElementMatchingValidator(validator:T->Bool):T {
 
@@ -66,6 +101,10 @@ abstract Collection<T:CollectionEntry>(CollectionImpl<T>) {
 
 }
 
+/**
+ * Internal implementation of the Collection abstract.
+ * Handles the actual storage, indexing, and management of collection entries.
+ */
 @:allow(ceramic.Collection)
 @:allow(ceramic.CollectionUtils)
 class CollectionImpl<T:CollectionEntry> implements Events {
@@ -78,19 +117,32 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     var lastChange:Int = 0;
 
+    /**
+     * The array of entries in the collection.
+     * Read-only access from outside the class.
+     */
     public var entries(default, null):ReadOnlyArray<T> = [];
 
+    /** Whether the ID index needs to be rebuilt */
     var indexDirty:Bool = true;
 
+    /** Whether combined entries need to be recomputed */
     var entriesDirty:Bool = false;
 
+    /** Map for fast lookup by ID */
     var byId:Map<String,T> = null;
 
+    /** Optional filter function for combined collections */
     var filter:Array<T>->Array<T> = null;
 
+    /** Collections being combined into this one */
     var combinedCollections:Array<CollectionImpl<T>> = null;
+    /** Track changes in combined collections */
     var combinedCollectionLastChanges:Array<Int> = null;
 
+    /**
+     * The number of entries in the collection.
+     */
     public var length(get,never):Int;
     function get_length():Int {
         this.checkCombined();
@@ -100,6 +152,10 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     public function new() {}
 
+    /**
+     * Adds multiple entries to the collection at once.
+     * @param entries Array of entries to add
+     */
     public function pushAll(entries:Array<T>) {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
@@ -114,6 +170,9 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Removes all entries from the collection.
+     */
     public function clear() {
 
         assert(combinedCollections == null, 'Cannot clear combined collections');
@@ -129,6 +188,10 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Adds a single entry to the collection.
+     * @param entry The entry to add
+     */
     public function push(entry:T) {
 
         assert(combinedCollections == null, 'Cannot add entries to combined collections');
@@ -140,6 +203,10 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Removes an entry from the collection.
+     * @param entry The entry to remove
+     */
     public function remove(entry:T) {
 
         assert(combinedCollections == null, 'Cannot remove entries from combined collections');
@@ -151,6 +218,10 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Forces immediate synchronization of the collection's internal state.
+     * Normally done automatically when accessing entries.
+     */
     public function synchronize():Void {
 
         if (entriesDirty) computeEntries();
@@ -158,6 +229,12 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Gets an entry by its ID.
+     * @param id The ID of the entry to retrieve
+     * @return The entry with the given ID, or null if not found
+     * @throws String If id is null (unless ceramic_no_strict_collection_get is defined)
+     */
     public function get(id:String):T {
 
         #if !ceramic_no_strict_collection_get
@@ -180,6 +257,11 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Gets an entry by its index in the collection.
+     * @param index The index of the entry
+     * @return The entry at the given index
+     */
     public function getByIndex(index:Int):T {
 
         checkCombined();
@@ -190,6 +272,11 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Gets the index of an entry by its ID.
+     * @param id The ID to search for
+     * @return The index of the entry, or -1 if not found
+     */
     public function indexOfId(id:String):Int {
 
         var entry = get(id);
@@ -200,6 +287,11 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Gets the index of an entry in the collection.
+     * @param entry The entry to find
+     * @return The index of the entry, or -1 if not found
+     */
     public function indexOf(entry:T):Int {
 
         checkCombined();
@@ -210,6 +302,11 @@ class CollectionImpl<T:CollectionEntry> implements Events {
 
     }
 
+    /**
+     * Returns an iterator for the collection.
+     * Enables for-in loop iteration.
+     * @return An iterator over the collection entries
+     */
     inline public function iterator():Iterator<T> {
 
         checkCombined();

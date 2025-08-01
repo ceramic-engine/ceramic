@@ -1,5 +1,28 @@
 package ceramic;
 
+/**
+ * Implementation class for StateMachine functionality.
+ * 
+ * StateMachineImpl provides the core implementation for type-safe state machines.
+ * It handles state transitions, lifecycle management, and state instance mapping.
+ * This class is typically not used directly - use StateMachine<T> instead.
+ * 
+ * Features:
+ * - Type-safe state management with generic type T
+ * - Automatic enter/exit/update lifecycle calls
+ * - State instance mapping and lifecycle management
+ * - Observable state changes
+ * - Support for scheduling callbacks on state transitions
+ * 
+ * The generic parameter T can be:
+ * - String for string-based states
+ * - Enum for type-safe enum states
+ * - Any other type with proper toString() implementation
+ * 
+ * @see StateMachine
+ * @see StateMachineBase
+ * @see State
+ */
 #if (!completion && !display && !documentation && !ceramic_no_statemachine_generic && (cpp || cs)) @:generic #end
 class StateMachineImpl<T> extends StateMachineBase {
 
@@ -64,6 +87,11 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
+    /**
+     * Associates a state instance with a state key.
+     * @param key The state identifier (string, enum value, etc.)
+     * @param stateInstance The State instance to use for this state
+     */
     public function set(key:T, stateInstance:State):Void {
 
         if (stateInstances == null) {
@@ -99,6 +127,11 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
+    /**
+     * Gets the state instance associated with a state key.
+     * @param key The state identifier
+     * @return The State instance, or null if not found
+     */
     public function get(key:T):State {
 
         if (stateInstances == null) {
@@ -117,6 +150,12 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
+    /**
+     * Schedules a callback to be called once when entering a specific state.
+     * @param owner The entity that owns this callback (for cleanup)
+     * @param state The state to watch for
+     * @param callback The function to call when entering the state
+     */
     public function scheduleOnceEnterState(owner:Entity, state:T, callback:()->Void):Void {
 
         var handler:(state:T, prevState:T)->Void = null;
@@ -131,6 +170,12 @@ class StateMachineImpl<T> extends StateMachineBase {
 
     }
 
+    /**
+     * Schedules a callback to be called once when exiting a specific state.
+     * @param owner The entity that owns this callback (for cleanup)
+     * @param state The state to watch for
+     * @param callback The function to call when exiting the state
+     */
     public function scheduleOnceExitState(owner:Entity, state:T, callback:()->Void):Void {
 
         var handler:(state:T, prevState:T)->Void = null;

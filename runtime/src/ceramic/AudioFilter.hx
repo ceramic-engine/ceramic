@@ -4,7 +4,39 @@ import ceramic.Shortcuts.*;
 
 /**
  * Base class for audio filters that can process audio buffers in real-time.
- * Subclass this to create custom audio filters.
+ * 
+ * AudioFilter is an abstract class for creating custom audio effects that can be
+ * attached to audio buses for real-time processing. Filters process audio data
+ * as it flows through the bus, allowing effects like reverb, distortion, EQ, etc.
+ * 
+ * To create a custom filter:
+ * 1. Extend this class
+ * 2. Mark parameters with `@param` metadata
+ * 3. Implement the `workletClass()` method
+ * 4. Create a corresponding AudioFilterWorklet class
+ * 
+ * The macro system automatically generates getters/setters for `@param` fields
+ * and handles thread-safe parameter updates.
+ * 
+ * @example
+ * ```haxe
+ * class MyFilter extends AudioFilter {
+ *     @param public var frequency:Float = 1000;
+ *     @param public var resonance:Float = 1;
+ *     
+ *     override function workletClass():Class<AudioFilterWorklet> {
+ *         return MyFilterWorklet;
+ *     }
+ * }
+ * 
+ * // Use the filter
+ * var filter = new MyFilter();
+ * app.audio.addFilter(filter, 0); // Add to master bus
+ * ```
+ * 
+ * @see AudioFilterWorklet
+ * @see LowPassFilter
+ * @see HighPassFilter
  */
 #if !macro
 @:autoBuild(ceramic.macros.AudioFiltersMacro.buildFilter())
@@ -12,28 +44,31 @@ import ceramic.Shortcuts.*;
 abstract class AudioFilter extends Entity {
 
     /**
-     * Fired when the audio filter is successfuly attached to a given bus.
-     * When this is called, the audio filter is expected to be ready in the sense
-     * that all the underlying layers have been properly plugged and the audio
-     * output bus should be affected by this audio filter's worklet.
-     * @param bus
+     * Fired when the audio filter is successfully attached to a given bus.
+     * When this event is emitted, the filter is fully initialized and processing audio.
+     * The underlying audio worklet has been created and connected to the audio graph.
+     * @param bus The bus index this filter is now attached to
      */
     @event function ready(bus:Int):Void;
 
     static var _nextFilterId:Int = 1;
 
     /**
-     * The unique id of this filter
+     * The unique identifier for this filter instance.
+     * Automatically assigned on creation.
      */
     public final filterId:Int;
 
     /**
-     * The bus this filter is attached to (-1 if not attached)
+     * The bus index this filter is currently attached to.
+     * -1 means the filter is not attached to any bus.
+     * Read-only - use Audio.addFilter/removeFilter to change.
      */
     public var bus:Int = -1;
 
     /**
-     * Whether this filter is currently active
+     * Whether this filter is currently processing audio.
+     * Set to false to bypass the filter while keeping it attached.
      */
     public var active:Bool = true;
 
@@ -49,7 +84,10 @@ abstract class AudioFilter extends Entity {
     private var paramsAcquired:Bool = false;
 
     /**
-     * Get a boolean parameter at the given position (0-based)
+     * Get a boolean parameter at the given position.
+     * Used internally by generated property getters.
+     * @param index Parameter index (0-based)
+     * @return Boolean value (false if null)
      */
     private function getBool(index:Int):Bool {
         final val:Null<Float> = params[index];
@@ -57,7 +95,10 @@ abstract class AudioFilter extends Entity {
     }
 
     /**
-     * Get an int parameter at the given position (0-based)
+     * Get an integer parameter at the given position.
+     * Used internally by generated property getters.
+     * @param index Parameter index (0-based)
+     * @return Integer value (0 if null)
      */
     private function getInt(index:Int):Int {
         final val:Null<Float> = params[index];
@@ -65,7 +106,10 @@ abstract class AudioFilter extends Entity {
     }
 
     /**
-     * Get a float parameter at the given position (0-based)
+     * Get a float parameter at the given position.
+     * Used internally by generated property getters.
+     * @param index Parameter index (0-based)
+     * @return Float value (0.0 if null)
      */
     private function getFloat(index:Int):Float {
         final val:Null<Float> = params[index];
@@ -193,14 +237,19 @@ abstract class AudioFilter extends Entity {
     }
 
     /**
-     * Return the class that should be used to instanciate audio filter worklets
+     * Return the AudioFilterWorklet class that implements the actual audio processing.
+     * This method must be overridden by subclasses to specify their worklet implementation.
+     * The worklet class handles the real-time audio processing on the audio thread.
+     * @return The worklet class to instantiate for this filter
      */
     @:allow(ceramic.Audio)
     public abstract function workletClass():Class<AudioFilterWorklet>;
 
     /**
      * Return the number of parameters this filter has.
-     * (automatically generated from fields marked with `@param`, no need to override it)
+     * This is automatically generated by the macro system based on `@param` fields.
+     * Subclasses should not override this method.
+     * @return Number of parameters
      */
     public function numParams():Int {
         return 0;

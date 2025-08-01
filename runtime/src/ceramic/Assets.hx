@@ -8,27 +8,93 @@ import haxe.io.Bytes;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * The main asset management class for Ceramic framework.
+ * 
+ * Handles loading, managing, and hot-reloading of various asset types including:
+ * - Images/Textures
+ * - Fonts (bitmap and TTF/OTF)
+ * - Atlases (texture atlases) 
+ * - Text files
+ * - Binary data
+ * - Sounds/Audio
+ * - Databases (CSV)
+ * - Fragments (JSON-based UI/game fragments)
+ * - Shaders
+ * 
+ * Features:
+ * - Reference counting for memory management
+ * - Asset variants and density handling for multi-resolution support
+ * - Hot reloading when watching directories
+ * - Parent-child asset relationships
+ * - Custom asset type registration
+ * - Parallel/serial loading strategies
+ * 
+ * @example
+ * ```haxe
+ * var assets = new Assets();
+ * assets.addImage('hero.png');
+ * assets.addFont('main.fnt');
+ * assets.load();
+ * ```
+ */
 @:allow(ceramic.Asset)
 class Assets extends Entity {
 
+    /**
+     * All active Assets instances in the application.
+     * Read-only array to prevent external modification.
+     */
     public static var instances:ReadOnlyArray<Assets> = [];
 
+    /**
+     * All available asset paths in the project.
+     */
     public static var all:Array<String> = [];
 
+    /**
+     * All available directory paths in the project.
+     */
     public static var allDirs:Array<String> = [];
 
+    /**
+     * Map of asset names to their available file paths.
+     * Useful for finding all variants of an asset.
+     */
     public static var allByName:Map<String,Array<String>> = new Map();
 
+    /**
+     * Map of directory names to their paths.
+     */
     public static var allDirsByName:Map<String,Array<String>> = new Map();
 
 /// Events
 
+    /**
+     * Emitted when all assets have finished loading.
+     * @param success True if all assets loaded successfully, false if any failed
+     */
     @event function complete(success:Bool);
 
+    /**
+     * Emitted when an individual asset is updated (loaded, reloaded, etc).
+     * @param asset The asset that was updated
+     */
     @event function update(asset:Asset);
 
+    /**
+     * Emitted during loading to report progress.
+     * @param loaded Number of assets loaded so far
+     * @param total Total number of assets to load
+     * @param success True if all loaded assets succeeded so far
+     */
     @event function progress(loaded:Int, total:Int, success:Bool);
 
+    /**
+     * Emitted when watched asset files change on disk.
+     * @param newFiles Map of file paths to their modification times after change
+     * @param previousFiles Map of file paths to their modification times before change
+     */
     @event function assetFilesChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>);
 
 /// Properties
@@ -41,17 +107,38 @@ class Assets extends Entity {
 
     /**
      * If set, will be provided to each added asset in this `Assets` instance.
+     * Used for runtime asset loading from file system.
      */
     public var runtimeAssets:RuntimeAssets = null;
 
+    /**
+     * Default options applied to all image assets added to this instance.
+     * Can be overridden per asset.
+     */
     public var defaultImageOptions:AssetOptions = null;
 
+    /**
+     * The loading method to use (SYNC or ASYNC).
+     * SYNC blocks until loading completes, ASYNC loads in background.
+     */
     public var loadMethod:AssetsLoadMethod = SYNC;
 
+    /**
+     * The scheduling method for loading multiple assets.
+     * PARALLEL loads all at once, SERIAL loads one at a time.
+     */
     public var scheduleMethod:AssetsScheduleMethod = PARALLEL;
 
+    /**
+     * If > 0, adds a delay every X assets when loading in parallel.
+     * Useful to avoid overwhelming the system with too many concurrent loads.
+     */
     public var delayBetweenXAssets:Int = -1;
 
+    /**
+     * Whether to automatically reload assets when texture density changes.
+     * Useful for supporting multiple screen resolutions.
+     */
     public var reloadOnTextureDensityChange = true;
 
     /**
@@ -135,6 +222,8 @@ class Assets extends Entity {
 
     /**
      * Destroy assets that have their refCount at `0`.
+     * This is useful for cleaning up unused assets to free memory.
+     * Assets with refCount > 0 are still in use and won't be destroyed.
      */
     public function flush() {
 
@@ -191,8 +280,16 @@ class Assets extends Entity {
     }
 
     /**
-     * Add all assets matching given path pattern (if provided)
-     * @param pathPattern
+     * Add all assets matching given path pattern (if provided).
+     * Automatically detects asset types based on file extensions.
+     * @param pathPattern Optional regex pattern to filter asset paths
+     * @example
+     * ```haxe
+     * // Add all assets
+     * assets.addAll();
+     * // Add only assets in 'sprites' folder
+     * assets.addAll(~/sprites\/.*/);  
+     * ```
      */
     public function addAll(?pathPattern:EReg):Void {
 
@@ -400,7 +497,10 @@ class Assets extends Entity {
     }
 
     /**
-     * Add the given asset. If a previous asset was replaced, return it.
+     * Add the given asset to this Assets instance.
+     * If an asset with the same kind and name already exists, it will be replaced.
+     * @param asset The asset to add
+     * @return The previous asset if one was replaced, null otherwise
      */
     public function addAsset(asset:Asset):Asset {
 
@@ -536,7 +636,8 @@ class Assets extends Entity {
     /**
      * Move all assets owned by this `Assets` instance
      * to the given `toAssets` object.
-     * @param toAssets
+     * Useful for transferring assets between scenes or asset groups.
+     * @param toAssets The target Assets instance to move assets to
      */
     public function moveAll(toAssets:Assets):Void {
 
@@ -552,8 +653,9 @@ class Assets extends Entity {
 /// Load
 
     /**
-     * Returns `true` if there are assets that should be loaded
-     * @return Bool
+     * Returns `true` if there are assets that should be loaded.
+     * Checks for assets with status NONE (not yet loaded).
+     * @return True if there are unloaded assets, false otherwise
      */
     public function hasAnythingToLoad():Bool {
 
@@ -581,6 +683,12 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Load all assets that have been added to this instance.
+     * Emits progress events during loading and complete event when finished.
+     * @param warnIfNothingToLoad If true, logs a warning when there are no assets to load
+     * @param pos Source position for debugging (automatically provided)
+     */
     public function load(warnIfNothingToLoad:Bool = true, ?pos:haxe.PosInfos):Void {
 
         var total = 0;
@@ -880,6 +988,12 @@ class Assets extends Entity {
 
 /// Get
 
+    /**
+     * Get a loaded texture by name.
+     * @param name The texture name or asset ID
+     * @param variant Optional variant suffix
+     * @return The texture, or null if not found
+     */
     public function texture(name:Either<String,AssetId<String>>, ?variant:String):Texture {
 
         var realName:String = cast name;
@@ -894,6 +1008,12 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Get a loaded font by name.
+     * @param name The font name or asset ID  
+     * @param variant Optional variant suffix
+     * @return The font, or null if not found
+     */
     public function font(name:Either<String,AssetId<String>>, ?variant:String):BitmapFont {
 
         var realName:String = cast name;
@@ -922,6 +1042,12 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Get a loaded sound by name.
+     * @param name The sound name or asset ID
+     * @param variant Optional variant suffix
+     * @return The sound, or null if not found
+     */
     public function sound(name:Either<String,AssetId<String>>, ?variant:String):Sound {
 
         var realName:String = cast name;
@@ -936,6 +1062,12 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Get loaded text content by name.
+     * @param name The text asset name or asset ID
+     * @param variant Optional variant suffix
+     * @return The text content, or null if not found
+     */
     public function text(name:Either<String,AssetId<String>>, ?variant:String):String {
 
         var realName:String = cast name;
@@ -964,6 +1096,12 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Get a loaded shader by name.
+     * @param name The shader name or asset ID
+     * @param variant Optional variant suffix
+     * @return The shader, or null if not found
+     */
     public function shader(name:Either<String,AssetId<String>>, ?variant:String):Shader {
 
         var realName:String = cast name;
@@ -1026,6 +1164,8 @@ class Assets extends Entity {
 
     /**
      * Set to `true` to enable hot reload.
+     * When enabled and used with `watchDirectory()`, assets will automatically
+     * reload when their files change on disk.
      * Note: this won't do anything unless used in pair with `watchDirectory(path)`
      */
     public var hotReload(default, set):Bool = false;
@@ -1040,17 +1180,27 @@ class Assets extends Entity {
     }
 
     /**
-     * Watch the given asset directory. Any change will fire `assetFilesChange` event.
-     * If `hotReload` is set to `true` (its default), related assets will be hot reloaded
-     * when their file changes on disk.
-     * Behavior may differ depending on the platfom.
-     * When using web target via electron, be sure to add `ceramic_use_electron` define.
-     * @param path
-     *     The assets path to watch. You could use `ceramic.macros.DefinesMacro.getJsonDefine('assets_path')`
-     *     to watch default asset path in project. It's the path that will be used if none is provided
-     * @param hotReload
-     *     `true` by default. Will enable hot reload of assets when related file changes on disk
+     * Watch the given asset directory for changes.
+     * Any file change will fire `assetFilesChange` event and optionally trigger hot reload.
+     * 
+     * This is particularly useful during development to see asset changes without restarting.
+     * Behavior may differ depending on the platform.
+     * 
+     * @param path The assets path to watch. If null, uses the default assets path from project configuration.
+     *             You can use `ceramic.macros.DefinesMacro.getJsonDefine('assets_path')` to get the default.
+     * @param hotReload If true (default), assets will automatically reload when their files change
      * @return WatchDirectory instance used internally
+     * 
+     * @example
+     * ```haxe
+     * // Watch default assets directory with hot reload
+     * assets.watchDirectory();
+     * 
+     * // Watch custom path without hot reload  
+     * assets.watchDirectory('/path/to/assets', false);
+     * ```
+     * 
+     * Note: When using web target via electron, add `ceramic_use_electron` define.
      */
     public function watchDirectory(?path:String, hotReload:Bool = true):WatchDirectory {
 
@@ -1126,8 +1276,9 @@ class Assets extends Entity {
 
     /**
      * Inherit runtime asset settings from parent assets instance.
-     * Used internally to make sure sub-instances of `Assets` take owner live reload settings and related
-     * @param assets
+     * Used internally to ensure sub-instances of `Assets` inherit live reload settings
+     * and runtime assets configuration from their parent.
+     * @param assets The parent Assets instance to inherit settings from
      */
     @:noCompletion public function inheritRuntimeAssetsFromAssets(assets:Assets):Void {
 
@@ -1138,12 +1289,25 @@ class Assets extends Entity {
 
 /// Static helpers
 
+    /**
+     * Decode an asset path to extract information about density, variant, etc.
+     * @param path The asset path to decode
+     * @return AssetPathInfo object containing parsed path information
+     */
     public static function decodePath(path:String):AssetPathInfo {
 
         return new AssetPathInfo(path);
 
     }
 
+    /**
+     * Register a custom asset kind that can be loaded by the asset system.
+     * @param kind The unique identifier for this asset type (e.g., 'sprite', 'level')
+     * @param add Function that handles adding this asset type to an Assets instance
+     * @param extensions File extensions associated with this asset type
+     * @param dir Whether this asset type is directory-based
+     * @param types Additional type information for the asset kind
+     */
     public static function addAssetKind(kind:String, add:(assets:Assets, name:String, variant:String, options:AssetOptions)->Void, extensions:Array<String>, dir:Bool, types:Array<String>):Void {
 
         customAssetKinds.set(kind, {
@@ -1156,12 +1320,21 @@ class Assets extends Entity {
 
     }
 
+    /**
+     * Get the base assets path for the current platform.
+     * @return The platform-specific assets path
+     */
     inline public static function getAssetsPath():String {
 
         return Platform.getAssetsPath();
 
     }
 
+    /**
+     * Get the asset name associated with a given file path.
+     * @param path The file path to look up
+     * @return The asset name, or null if no asset uses this path
+     */
     public static function assetNameFromPath(path:String):String {
 
         for (name in Assets.allByName.keys()) {

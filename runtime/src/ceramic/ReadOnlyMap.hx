@@ -1,5 +1,32 @@
 package ceramic;
 
+/**
+ * A read-only view of a Map that prevents modification.
+ * 
+ * ReadOnlyMap is an abstract over a regular Map that only exposes
+ * non-modifying operations. This provides compile-time safety when
+ * passing maps to code that should not modify them.
+ * 
+ * Note: The underlying Map can still be modified through other references.
+ * Use the `original` property to access the mutable Map at your own risk.
+ * 
+ * Example usage:
+ * ```haxe
+ * var scores = new Map<String, Int>();
+ * scores["player1"] = 100;
+ * 
+ * // Pass as read-only
+ * function displayScores(scores:ReadOnlyMap<String, Int>) {
+ *     trace(scores["player1"]); // OK
+ *     // scores["player1"] = 200; // Compile error!
+ * }
+ * 
+ * displayScores(scores);
+ * ```
+ * 
+ * @param K The key type
+ * @param V The value type
+ */
 @:forward(get, exists, keys, toString)
 abstract ReadOnlyMap<K,V>(Map<K,V>) from Map<K,V> to Map<K,V> {
 

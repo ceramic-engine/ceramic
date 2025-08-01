@@ -3,12 +3,64 @@ package ceramic;
 import ceramic.Assert.assert;
 import ceramic.Path;
 
+/**
+ * A directory watcher that monitors file changes in specified directories.
+ * 
+ * This class provides cross-platform file system monitoring, detecting when files
+ * are added, modified, or removed within watched directories. On Node.js platforms,
+ * it can use the 'chokidar' library for efficient file watching if available,
+ * otherwise it falls back to periodic polling.
+ * 
+ * Features:
+ * - Monitor multiple directories simultaneously
+ * - Detect file additions, modifications, and deletions
+ * - Configurable update interval for polling mode
+ * - Automatic cleanup when directories are unwatched
+ * 
+ * Example usage:
+ * ```haxe
+ * var watcher = new WatchDirectory(1.0); // Check every second
+ * 
+ * watcher.onDirectoryChange(this, (path, newFiles, previousFiles) -> {
+ *     trace("Directory changed: " + path);
+ *     
+ *     // Check for new files
+ *     for (file => mtime in newFiles) {
+ *         if (!previousFiles.exists(file)) {
+ *             trace("New file: " + file);
+ *         }
+ *     }
+ * });
+ * 
+ * watcher.watchDirectory("/path/to/assets");
+ * ```
+ * 
+ * Note: File watching may have platform-specific limitations and performance
+ * characteristics. The chokidar integration provides better performance on
+ * Node.js platforms when available.
+ */
 class WatchDirectory extends Entity {
 
+    /**
+     * Emitted when files in a watched directory have changed.
+     * 
+     * @param path The directory path that changed
+     * @param newFiles Map of current files to their modification times (Unix timestamp)
+     * @param previousFiles Map of files to modification times before the change
+     */
     @event function directoryChange(path:String, newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>);
 
+    /**
+     * The interval in seconds between directory checks when using polling mode.
+     * This is ignored when using chokidar on Node.js platforms.
+     */
     public var updateInterval(default, null):Float;
 
+    /**
+     * Map of watched directory paths to their current file modification times.
+     * The outer map key is the directory path, the inner map contains filenames
+     * mapped to their last modification timestamps.
+     */
     public var watchedDirectories(default, null):ReadOnlyMap<String, ReadOnlyMap<String, Float>> = null;
 
     var startingToWatchDirectories:Map<String, Bool> = null;
@@ -27,6 +79,12 @@ class WatchDirectory extends Entity {
     var chokidarWatchers:Map<String, Dynamic> = null;
     #end
 
+    /**
+     * Create a new directory watcher.
+     * 
+     * @param updateInterval The interval in seconds between directory checks (default: 1.0).
+     *                       Only used in polling mode; chokidar provides real-time updates.
+     */
     public function new(updateInterval:Float = 1.0) {
 
         super();
@@ -46,6 +104,15 @@ class WatchDirectory extends Entity {
 
     }
 
+    /**
+     * Start watching a directory for file changes.
+     * 
+     * The initial file list is computed asynchronously. Once ready, any subsequent
+     * changes will trigger the directoryChange event.
+     * 
+     * @param path The absolute path to the directory to watch
+     * @throws String if the directory is already being watched
+     */
     public function watchDirectory(path:String):Void {
 
         if (watchedDirectories == null)
@@ -132,6 +199,12 @@ class WatchDirectory extends Entity {
     }
     #end
 
+    /**
+     * Stop watching a directory.
+     * 
+     * @param path The directory path to stop watching
+     * @return true if the directory was being watched and is now stopped, false otherwise
+     */
     public function stopWatchingDirectory(path:String):Bool {
 
         #if js
@@ -160,6 +233,10 @@ class WatchDirectory extends Entity {
 
     }
 
+    /**
+     * Internal method called periodically to check for file changes.
+     * Only used in polling mode when chokidar is not available.
+     */
     function tick() {
 
         if (watchedDirectories != null) {
@@ -174,6 +251,13 @@ class WatchDirectory extends Entity {
 
     }
 
+    /**
+     * Check a specific watched directory for changes.
+     * In chokidar mode, processes queued change events.
+     * In polling mode, compares current files with cached state.
+     * 
+     * @param path The directory path to check
+     */
     function checkWatchedDirectory(path:String):Void {
 
         #if js
@@ -255,6 +339,12 @@ class WatchDirectory extends Entity {
 
     }
 
+    /**
+     * Compute a map of all files in a directory with their modification times.
+     * 
+     * @param path The directory path to scan
+     * @return Map of relative file paths to modification timestamps
+     */
     function computeFilesModificationTime(path:String):ReadOnlyMap<String, Float> {
 
         var result = new Map<String, Float>();
@@ -270,9 +360,23 @@ class WatchDirectory extends Entity {
 }
 
 #if js
+/**
+ * File change status types used by the chokidar file watcher.
+ */
 enum abstract ChokidarWatchedFileStatus(Int) from Int to Int {
+    /**
+     * A new file was added to the directory.
+     */
     var ADD;
+    
+    /**
+     * An existing file was modified.
+     */
     var CHANGE;
+    
+    /**
+     * A file was removed from the directory.
+     */
     var UNLINK;
 }
 #end

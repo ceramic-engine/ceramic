@@ -5,61 +5,96 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 /**
- * A track meant to be updated by a timeline.
- * Base implementation doesn't do much by itself.
- * Create subclasses to implement details
+ * Base class for animation tracks in a timeline system.
+ * 
+ * A TimelineTrack manages a sequence of keyframes that define how a value
+ * changes over time. The track handles:
+ * - Keyframe storage and ordering
+ * - Position tracking and seeking
+ * - Interpolation between keyframes
+ * - Automatic size adjustment
+ * 
+ * This is an abstract base class. Concrete implementations include:
+ * - TimelineFloatTrack: Animates numeric values
+ * - TimelineColorTrack: Animates color values
+ * - TimelineBoolTrack: Animates boolean values
+ * - TimelineFloatArrayTrack: Animates arrays of numbers
+ * 
+ * Tracks are typically added to a Timeline which coordinates their playback.
+ * 
+ * @param K The keyframe type this track uses (must extend TimelineKeyframe)
+ * 
+ * @see Timeline
+ * @see TimelineKeyframe
  */
 class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     /**
-     * Track size. Default `0`, meaning this track won't do anything.
-     * By default, because `autoFitSize` is `true`, adding new keyframes to this
-     * track will update `size` accordingly so it may not be needed to update `size` explicitly.
-     * Setting `size` to `-1` means the track will never finish.
+     * The total length of this track in frames.
+     * 
+     * - Default is 0 (track won't animate)
+     * - When autoFitSize is true (default), automatically adjusts to the last keyframe's index
+     * - Set to -1 for an infinite track that never finishes
+     * 
+     * The actual duration = size / timeline.fps
      */
     public var size:Int = 0;
 
     /**
-     * If set to `true` (default), adding keyframes to this track will update
-     * its size accordingly to match last keyframe time.
+     * Whether the track should automatically adjust its size to match the last keyframe.
+     * When true (default), you don't need to manually set the track size.
      */
     public var autoFitSize:Bool = true;
 
     /**
-     * Whether this track should loop. Ignored if track's `size` is `-1` (not defined).
+     * Whether this track should loop back to the beginning when it reaches the end.
+     * Ignored if size is -1 (infinite track).
+     * Default is false (tracks don't loop independently, controlled by timeline).
      */
     public var loop:Bool = false;
 
     /**
-     * Whether this track is locked or not.
-     * A locked track doesn't get updated by the timeline it is attached to, if any.
+     * Whether this track is locked from timeline updates.
+     * When true, the track won't be updated when its timeline advances.
+     * Useful for temporarily disabling specific animations.
      */
     public var locked:Bool = false;
 
     /**
-     * Timeline on which this track is added to
+     * The timeline that owns this track.
+     * Set automatically when the track is added to a timeline.
+     * Null if the track is not attached to any timeline.
      */
     @:allow(ceramic.Timeline)
     public var timeline(default, null):Timeline = null;
 
     /**
-     * Position on this track.
-     * Gets back to zero when `loop=true` and position reaches a defined `size`.
+     * Current playback position in frames.
+     * 
+     * - Can be fractional for smooth interpolation
+     * - Wraps back to 0 when looping is enabled and size is reached
+     * - Updated automatically by the timeline or manually with seek()
      */
     public var position(default, null):Float = 0;
 
     /**
-     * The key frames on this track.
+     * Array of keyframes defining the animation.
+     * Keyframes are automatically kept sorted by their index (time position).
+     * Use add() and remove() to modify the keyframe list.
      */
     public var keyframes(default, null):ReadOnlyArray<K> = [];
 
     /**
-     * The keyframe right before or equal to current time, if any.
+     * The keyframe at or immediately before the current position.
+     * Used as the start point for interpolation.
+     * Null if position is before the first keyframe.
      */
     public var before(default, null):K = null;
 
     /**
-     * The keyframe right after current time, if any.
+     * The keyframe immediately after the current position.
+     * Used as the end point for interpolation.
+     * Null if position is after the last keyframe.
      */
     public var after(default, null):K = null;
 
@@ -73,6 +108,10 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
      */
     private var keyframeAfterIndex:Int = -1;
 
+    /**
+     * Create a new timeline track.
+     * The track starts empty with no keyframes.
+     */
     public function new() {
 
         super();
@@ -90,8 +129,11 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Seek the given position (in frames) in the track.
-     * Will take care of clamping `position` or looping it depending on `size` and `loop` properties.
+     * Jump to a specific position in the track.
+     * Handles looping and clamping based on track settings.
+     * Updates the before/after keyframes and applies the change.
+     * 
+     * @param targetPosition The frame index to seek to
      */
     final public function seek(targetPosition:Float):Void {
 
@@ -139,7 +181,14 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Add a keyframe to this track
+     * Add a keyframe to this track.
+     * 
+     * - Keyframes are automatically sorted by index
+     * - If a keyframe already exists at the same index, it's replaced
+     * - Updates track size if autoFitSize is true
+     * - Immediately applies the change
+     * 
+     * @param keyframe The keyframe to add
      */
     public function add(keyframe:K):Void {
 
@@ -187,7 +236,12 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Remove a keyframe from this track
+     * Remove a keyframe from this track.
+     * 
+     * - Updates track size if autoFitSize is true
+     * - Immediately applies the change
+     * 
+     * @param keyframe The keyframe to remove
      */
     public function remove(keyframe:K):Void {
 
@@ -219,8 +273,8 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Update `size` property to make it fit
-     * the index of the last keyframe on this track.
+     * Adjust the track size to match the last keyframe's index.
+     * Called automatically when autoFitSize is true and keyframes are added/removed.
      */
     public function fitSize():Void {
 
@@ -234,7 +288,13 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Apply changes that this track is responsible of. Usually called after `update(delta)` or `seek(time)`.
+     * Apply the current animation state to the target property.
+     * This method should be overridden in subclasses to implement
+     * the actual property updates and interpolation.
+     * 
+     * Called automatically when the track position changes.
+     * 
+     * @param forceChange If true, forces the update even if the value hasn't changed
      */
     public function apply(forceChange:Bool = false):Void {
 
@@ -242,6 +302,12 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
 
     }
 
+    /**
+     * Find a keyframe at exactly the specified index.
+     * 
+     * @param index The frame index to search for
+     * @return The keyframe at that index, or null if none exists
+     */
     public function findKeyframeAtIndex(index:Int):Null<K> {
 
         var keyframe = findKeyframeBefore(index);
@@ -253,7 +319,11 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Find the keyframe right before or equal to given `position`
+     * Find the keyframe at or before a given position.
+     * Used to determine the start point for interpolation.
+     * 
+     * @param position The position to search from
+     * @return The keyframe at or before the position, or null if none exists
      */
     public function findKeyframeBefore(position:Float):Null<K> {
 
@@ -278,7 +348,11 @@ class TimelineTrack<K:TimelineKeyframe> extends Entity {
     }
 
     /**
-     * Find the keyframe right after given `position`
+     * Find the first keyframe after a given position.
+     * Used to determine the end point for interpolation.
+     * 
+     * @param position The position to search from
+     * @return The keyframe after the position, or null if none exists
      */
     public function findKeyframeAfter(position:Float):Null<K> {
 

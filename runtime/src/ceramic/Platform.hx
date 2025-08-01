@@ -22,6 +22,21 @@ import sys.io.File;
  * We usually want platform-specific code to be located in a backend,
  * but it may happen that sometimes creating a backend interface is overkill.
  * That's where this comes handy.
+ * 
+ * Platform provides utilities for:
+ * - Reading assets synchronously from disk
+ * - Getting platform-specific paths and environment variables
+ * - Running external commands (including the Ceramic CLI)
+ * - Electron-specific functionality on web builds
+ * - Platform detection (e.g., isWindows())
+ * - Application lifecycle (quit)
+ * - RTTI access utilities
+ * 
+ * Most platform-specific code should be in backends, but this class
+ * is useful for simple platform-specific operations that don't warrant
+ * a full backend interface.
+ * 
+ * @see Backend
  */
 class Platform {
 

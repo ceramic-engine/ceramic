@@ -25,15 +25,50 @@ package ceramic;
 using ceramic.Extensions;
 
 /**
-    SortVisuals provides a stable implementation of merge sort through its `sort`
-    method. It should be used instead of `Array.sort` in cases where the order
-    of equal elements has to be retained on all targets.
-
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
-    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
-**/
+ * High-performance stable merge sort implementation specifically optimized for Visual arrays.
+ * 
+ * SortVisuals provides a specialized sorting algorithm for rendering order in Ceramic.
+ * It implements a stable merge sort that preserves the relative order of visuals with
+ * equal sorting criteria, which is crucial for consistent rendering behavior across
+ * all platforms.
+ * 
+ * The sorting criteria hierarchy:
+ * 1. Invisible/untouchable visuals are sorted first (behind everything)
+ * 2. Render target priority (higher priority renders on top)
+ * 3. Depth value (higher depth renders on top)
+ * 4. For Quads/Meshes with same depth:
+ *    - Texture index (lower index renders on top for batching efficiency)
+ *    - Blending mode (for draw call batching)
+ * 
+ * This implementation is heavily optimized:
+ * - All methods are inlined for maximum performance
+ * - Uses unsafe array access to avoid bounds checking
+ * - Switches to insertion sort for small arrays (< 12 elements)
+ * - Custom comparison function optimized for Visual properties
+ * 
+ * Example usage:
+ * ```haxe
+ * var visuals:Array<Visual> = [...];
+ * SortVisuals.sort(visuals); // Sorts in place
+ * ```
+ * 
+ * Note: This class is used internally by the rendering system and typically
+ * doesn't need to be called directly unless implementing custom rendering logic.
+ * 
+ * Based on Haxe's stable sort implementation with Visual-specific optimizations.
+ * 
+ * @see ceramic.Visual For the visual hierarchy
+ * @see ceramic.SortVisualsByDepth For depth-only sorting
+ */
 class SortVisuals {
 
+    /**
+     * Compares two visuals for rendering order.
+     * 
+     * @param a First visual to compare
+     * @param b Second visual to compare
+     * @return -1 if a should render before b, 1 if b should render before a, 0 if equal
+     */
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
@@ -87,16 +122,19 @@ class SortVisuals {
     }
 
     /**
-        Sorts Array `a` according to the comparison function `cmp`, where
-        `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-        negative Int if `x < y`.
-
-        This operation modifies Array `a` in place.
-
-        This operation is stable: The order of equal elements is preserved.
-
-        If `a` or `cmp` are null, the result is unspecified.
-    **/
+     * Sorts an array of Visual objects in place for optimal rendering order.
+     * 
+     * This operation modifies the input array directly. The sort is stable,
+     * meaning visuals with equal sorting criteria maintain their relative order.
+     * This is important for predictable rendering when multiple visuals have
+     * the same depth and properties.
+     * 
+     * The algorithm automatically chooses between merge sort for larger arrays
+     * and insertion sort for small arrays (< 12 elements) for optimal performance.
+     * 
+     * @param a The array of visuals to sort. Modified in place.
+     *          If null, behavior is undefined.
+     */
     static inline public function sort(a:Array<Visual>) {
         rec(a, 0, a.length);
     }

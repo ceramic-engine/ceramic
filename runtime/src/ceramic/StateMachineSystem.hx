@@ -2,6 +2,26 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * System that manages and updates all active state machines.
+ * 
+ * StateMachineSystem is responsible for automatically updating all state machines
+ * that have autoUpdate enabled. It runs during the late update phase to ensure
+ * state machines are updated after regular entity updates.
+ * 
+ * Features:
+ * - Automatic registration of state machines
+ * - Safe iteration during updates (handles additions/removals)
+ * - Configurable update order via lateUpdateOrder
+ * - Singleton pattern with shared instance
+ * 
+ * This system is automatically used by all StateMachine instances and typically
+ * doesn't need to be interacted with directly.
+ * 
+ * @see StateMachine
+ * @see StateMachineBase
+ * @see System
+ */
 @:allow(ceramic.StateMachineBase)
 class StateMachineSystem extends System {
 

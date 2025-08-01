@@ -3,22 +3,82 @@ package ceramic;
 import ceramic.Assert.assert;
 import ceramic.Shortcuts.*;
 
+/**
+ * A scene that displays loading progress for preloadable resources.
+ * 
+ * The Preloader scene provides a visual loading screen with:
+ * - An animated Ceramic logo
+ * - A progress bar showing loading progress
+ * - Automatic transition to the loaded scene on completion
+ * 
+ * This is typically used as the initial scene when loading game assets
+ * or other resources that implement the Preloadable interface.
+ * 
+ * Example usage:
+ * ```haxe
+ * // Create a preloader for your main scene
+ * var preloader = new Preloader(() -> {
+ *     return new MainScene();
+ * });
+ * 
+ * // The preloader will:
+ * // 1. Display the Ceramic logo with animation
+ * // 2. Initialize the preloadable (MainScene)
+ * // 3. Show a progress bar
+ * // 4. Automatically transition to MainScene when loaded
+ * 
+ * app.scenes.main = preloader;
+ * ```
+ * 
+ * @see Preloadable
+ * @see PreloadStatus
+ */
 class Preloader extends Scene {
 
+    /**
+     * Event emitted when the preloadable has successfully finished loading.
+     * The preloader will automatically transition to the loaded scene after this event.
+     */
     @event function success();
 
+    /**
+     * The preloadable object being loaded.
+     * This is set automatically when the preloader initializes.
+     */
     public var preloadable(default, null):Preloadable = null;
 
+    /**
+     * Current loading progress value (0 to total).
+     */
     public var progress(default, null):Int = 0;
 
+    /**
+     * Total expected progress value.
+     * Progress percentage can be calculated as: progress / total * 100
+     */
     public var total(default, null):Int = 0;
 
+    /**
+     * Current loading status.
+     * @see PreloadStatus
+     */
     public var preloadStatus(default, null):PreloadStatus = NONE;
 
+    /**
+     * The Ceramic logo visual displayed during loading.
+     * This is created automatically but can be accessed for customization.
+     */
     public var ceramicLogo(default, null):CeramicLogo = null;
 
+    /**
+     * The foreground (filled) portion of the progress bar.
+     * Its width is updated to reflect loading progress.
+     */
     public var progressForeground(default, null):Quad = null;
 
+    /**
+     * The background (empty) portion of the progress bar.
+     */
     public var progressBackground(default, null):Quad = null;
 
     var getPreloadable:()->Preloadable = null;
@@ -35,6 +95,13 @@ class Preloader extends Scene {
 
     static var _nextIndex:Int = 1;
 
+    /**
+     * Create a new preloader.
+     * 
+     * @param getPreloadable A function that returns the preloadable object to load.
+     *                       This function is called after the logo animation completes.
+     *                       The returned object must implement the Preloadable interface.
+     */
     public function new(getPreloadable:()->Preloadable) {
 
         super();
@@ -51,18 +118,31 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Called when the scene is created.
+     * Initializes the loading screen graphics.
+     */
     override function create():Void {
 
         createGraphics();
 
     }
 
+    /**
+     * Create the loading screen graphics.
+     * Override this method to customize the loading screen appearance.
+     */
     function createGraphics():Void {
 
         createCeramicLogo();
 
     }
 
+    /**
+     * Create and animate the Ceramic logo.
+     * The logo is centered horizontally and positioned at 42% of screen height.
+     * After the animation completes, the preloadable is initialized and the progress bar is created.
+     */
     function createCeramicLogo():Void {
 
         if (ceramicLogo != null)
@@ -81,6 +161,13 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Animate a visual's scale and alpha with an elastic ease effect.
+     * 
+     * @param visual The visual to animate
+     * @param targetScale The final scale value
+     * @param complete Optional callback when animation completes
+     */
     function animateScale(visual:Visual, targetScale:Float, ?complete:()->Void) {
 
         visual.alpha = 0;
@@ -161,6 +248,10 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Update the progress bar visual to reflect current loading progress.
+     * The foreground width is scaled proportionally to the progress/total ratio.
+     */
     function updateProgressBar():Void {
 
         if (progressForeground == null)
@@ -174,6 +265,10 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Initialize the preloadable object.
+     * If the preloadable is a Scene, it's registered with the scene manager.
+     */
     function initPreloadable():Void {
 
         if (getPreloadable == null)
@@ -189,6 +284,12 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Update method called every frame.
+     * Requests progress updates from the preloadable object.
+     * 
+     * @param delta Time elapsed since last frame in seconds
+     */
     override function update(delta:Float):Void {
 
         if (preloadable != null) {
@@ -199,6 +300,14 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Update the preloader with current loading progress.
+     * This method is called by the preloadable object to report its progress.
+     * 
+     * @param progress Current progress value (0 to total)
+     * @param total Total expected progress value
+     * @param status Current loading status
+     */
     public function updatePreload(progress:Int, total:Int, status:PreloadStatus):Void {
 
         this.progress = progress;
@@ -214,6 +323,11 @@ class Preloader extends Scene {
 
     }
 
+    /**
+     * Called before the success event is emitted.
+     * If the preloadable is a Scene, this triggers a scene transition to replace
+     * the preloader with the loaded scene.
+     */
     function willEmitSuccess() {
 
         if (preloadable != null && preloadable is Scene) {

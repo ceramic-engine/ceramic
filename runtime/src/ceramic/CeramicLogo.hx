@@ -4,20 +4,86 @@ import ceramic.Triangulate;
 
 using ceramic.Extensions;
 
+/**
+ * A visual component that renders the Ceramic engine logo as a mesh.
+ * 
+ * The logo consists of:
+ * - An elliptical top section representing a ceramic disc
+ * - A curved bottom section with shadow and highlight layers
+ * 
+ * The logo is procedurally generated and can be customized with:
+ * - Resolution: Controls the smoothness of curves
+ * - Tilt: Adjusts the perspective of the ellipse
+ * - Shadow size: Controls the shadow layer thickness
+ * 
+ * @example
+ * ```haxe
+ * var logo = new CeramicLogo();
+ * logo.size(224, 324); // Double the default size
+ * logo.resolution = 2; // Higher quality curves
+ * logo.tilt = 0.8; // Less tilted perspective
+ * logo.shadowSize = 0.15; // Larger shadow
+ * logo.pos(screen.width * 0.5, screen.height * 0.5);
+ * logo.anchor(0.5, 0.5);
+ * ```
+ */
 class CeramicLogo extends Mesh {
 
+    /**
+     * Number of vertices used for the ellipse section.
+     * Used internally to track where the ellipse ends and bottom sections begin.
+     */
     var numEllipseVertices:Int = 0;
 
+    /**
+     * Number of indices used for the ellipse section.
+     * Used internally to track the ellipse mesh data.
+     */
     var numEllipseIndices:Int = 0;
 
+    /**
+     * Tracks how much of the bottom section has been filled.
+     * Used internally when building the shadow and highlight layers.
+     */
     var filledBottom:Float = 0.0;
 
+    /**
+     * Bezier easing curve used for the bottom section curvature.
+     * Creates the distinctive curved shape of the logo's bottom.
+     */
     var curveEasing:BezierEasing = BezierEasing.get(0.71, 0.0, 1.0, 0.38);
 
+    /**
+     * Controls the quality/smoothness of the logo curves.
+     * Higher values create more vertices for smoother curves.
+     * 
+     * Common values:
+     * - 0.5: Low quality (faster rendering)
+     * - 1.0: Normal quality (default)
+     * - 2.0: High quality (smoother curves)
+     */
     @content public var resolution:Float = 1.0;
 
+    /**
+     * Controls the perspective tilt of the top ellipse.
+     * Lower values make the ellipse appear more flat/viewed from above.
+     * 
+     * Common values:
+     * - 0.5: Very flat perspective
+     * - 1.0: Normal perspective (default)
+     * - 1.5: More tilted perspective
+     */
     @content public var tilt:Float = 1.0;
 
+    /**
+     * The size of the shadow layer as a fraction of the logo width.
+     * Controls how thick the gray shadow section appears.
+     * 
+     * Common values:
+     * - 0.05: Thin shadow
+     * - 0.1075: Normal shadow (default)
+     * - 0.15: Thick shadow
+     */
     @content public var shadowSize:Float = 0.1075;
 
     override function set_width(width:Float):Float {
@@ -36,6 +102,11 @@ class CeramicLogo extends Mesh {
         return height;
     }
 
+    /**
+     * Creates a new Ceramic logo mesh.
+     * The logo is initialized with default size of 112x162 pixels.
+     * Color mapping is set to INDICES for per-triangle coloring.
+     */
     public function new() {
 
         super();
@@ -47,6 +118,14 @@ class CeramicLogo extends Mesh {
 
     }
 
+    /**
+     * Generates the logo mesh geometry.
+     * Called automatically when content is marked dirty (size, resolution, tilt, or shadowSize changes).
+     * Builds the logo in three layers:
+     * 1. Top ellipse (gray)
+     * 2. Bottom section with shadow (lighter gray)
+     * 3. Bottom section highlight (white)
+     */
     override function computeContent() {
 
         if (width <= 0 || height <= 0) {
@@ -64,6 +143,12 @@ class CeramicLogo extends Mesh {
 
     }
 
+    /**
+     * Generates the elliptical top section of the logo.
+     * Creates a filled ellipse using triangle fan technique.
+     * 
+     * @param color The color to apply to the ellipse triangles
+     */
     function computeEllipse(color:Color) {
 
         final w:Float = width;
@@ -102,6 +187,15 @@ class CeramicLogo extends Mesh {
 
     }
 
+    /**
+     * Generates a layer of the bottom section of the logo.
+     * Creates a curved shape that connects to the ellipse and curves down to a point.
+     * Called twice: once for the shadow layer and once for the highlight layer.
+     * 
+     * @param color The color to apply to this section
+     * @param cut The horizontal cutoff point as a fraction of width (0-1).
+     *            Used to create the layered shadow/highlight effect.
+     */
     function computeBottomSection(color:Color, cut:Float) {
 
         final w:Float = width;

@@ -3,8 +3,70 @@ package ceramic;
 import ceramic.Shortcuts.*;
 import haxe.DynamicAccess;
 
+/**
+ * Asset for loading CSV database files.
+ * 
+ * DatabaseAsset loads CSV (Comma-Separated Values) files and parses them
+ * into an array of dynamic objects, where each row becomes an object with
+ * properties based on the CSV headers.
+ * 
+ * Features:
+ * - Automatic CSV parsing with header detection
+ * - Support for both comma and semicolon separators
+ * - Quoted string handling with escape sequences
+ * - Hot-reload support for database files
+ * - Each row accessible as a dynamic object
+ * 
+ * CSV Format:
+ * - First row must contain column headers (field names)
+ * - Supports comma (,) or semicolon (;) as separators
+ * - String values can be quoted with double quotes
+ * - Use "" to escape quotes within quoted strings
+ * 
+ * @example
+ * ```haxe
+ * // Load a CSV database
+ * var dbAsset = new DatabaseAsset('enemies');
+ * dbAsset.path = 'data/enemies.csv';
+ * dbAsset.onComplete(this, success -> {
+ *     if (success) {
+ *         // Access the parsed data
+ *         for (row in dbAsset.database) {
+ *             trace('Enemy: ${row.get("name")} HP: ${row.get("hp")}');
+ *         }
+ *         
+ *         // Find specific entries
+ *         var boss = dbAsset.database.find(row -> row.get("type") == "boss");
+ *     }
+ * });
+ * assets.addAsset(dbAsset);
+ * assets.load();
+ * ```
+ * 
+ * Example CSV content:
+ * ```csv
+ * name,hp,damage,type
+ * Goblin,10,5,normal
+ * Orc,20,10,normal
+ * "Dragon King",100,50,boss
+ * ```
+ * 
+ * @see Asset
+ * @see Csv
+ */
 class DatabaseAsset extends Asset {
 
+    /**
+     * The parsed database as an array of dynamic objects.
+     * Each object represents a row, with properties matching the CSV headers.
+     * Will be null until the asset is successfully loaded.
+     * 
+     * Access values using the get() method:
+     * ```haxe
+     * var name = row.get("name");
+     * var hp = Std.parseInt(row.get("hp"));
+     * ```
+     */
     @observe public var database:Array<DynamicAccess<String>> = null;
 
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -13,6 +75,16 @@ class DatabaseAsset extends Asset {
 
     }
 
+    /**
+     * Loads the CSV database file from the specified path.
+     * 
+     * The file is loaded as text and then parsed using the CSV parser.
+     * The parsing automatically detects whether comma or semicolon is used
+     * as the separator based on the first line.
+     * 
+     * On success, the database property will contain the parsed data.
+     * On failure (file not found or parse error), the asset status becomes BROKEN.
+     */
     override public function load() {
 
         status = LOADING;
@@ -64,6 +136,12 @@ class DatabaseAsset extends Asset {
 
     }
 
+    /**
+     * Called when asset files change on disk (hot-reload support).
+     * Automatically reloads the database if its CSV file has been modified.
+     * @param newFiles Map of current files and their modification times
+     * @param previousFiles Map of previous files and their modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())
@@ -85,6 +163,9 @@ class DatabaseAsset extends Asset {
 
     }
 
+    /**
+     * Destroys the database asset and clears the loaded data from memory.
+     */
     override function destroy():Void {
 
         super.destroy();

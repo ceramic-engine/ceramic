@@ -5,24 +5,78 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+/**
+ * Asset type for loading bitmap fonts.
+ * 
+ * Supports loading:
+ * - AngelCode BMFont format (.fnt files)
+ * - TrueType/OpenType fonts (.ttf/.otf) that have been pre-converted to bitmap fonts
+ * 
+ * A bitmap font consists of:
+ * - Font data file (.fnt) describing character metrics
+ * - One or more texture pages containing the rendered glyphs
+ * 
+ * Features:
+ * - Multi-page font support
+ * - Automatic density selection for font textures
+ * - Hot reload support
+ * - Automatic Text visual updates when font is replaced
+ * 
+ * @example
+ * ```haxe
+ * var assets = new Assets();
+ * assets.addFont('arial.fnt');
+ * assets.addFont('roboto.ttf'); // Assumes roboto.fnt exists
+ * assets.load();
+ * 
+ * // Use loaded font
+ * var text = new Text();
+ * text.font = assets.font('arial');
+ * ```
+ */
 class FontAsset extends Asset {
 
 /// Events
 
+    /**
+     * Emitted when the font is replaced (e.g., during hot reload).
+     * All Text visuals using the previous font are automatically updated.
+     * @param newFont The newly loaded font
+     * @param prevFont The previous font being replaced
+     */
     @event function replaceFont(newFont:BitmapFont, prevFont:BitmapFont);
 
 /// Properties
 
+    /**
+     * The parsed font data containing character metrics and layout information.
+     * Available after successful loading.
+     */
     public var fontData:BitmapFontData = null;
 
+    /**
+     * Map of texture page paths to loaded textures.
+     * Bitmap fonts can use multiple texture pages for large character sets.
+     */
     public var pages:Map<String,Texture> = null;
 
+    /**
+     * The loaded BitmapFont instance.
+     * Observable property that updates when the font is loaded or replaced.
+     * Null until the asset is successfully loaded.
+     */
     @observe public var font:BitmapFont = null;
 
     var transformedPath:String = null;
 
 /// Lifecycle
 
+    /**
+     * Create a new font asset.
+     * @param name Font file name (.fnt, .ttf, or .otf)
+     * @param variant Optional variant suffix
+     * @param options Loading options (font-specific options depend on backend)
+     */
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super('font', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
@@ -32,6 +86,12 @@ class FontAsset extends Asset {
 
     }
 
+    /**
+     * Load the font data and associated texture pages.
+     * For TTF/OTF fonts, looks for pre-converted .fnt files.
+     * Handles multi-page fonts by loading all required textures.
+     * Emits complete event when finished.
+     */
     override public function load() {
 
         if (owner != null) {
@@ -209,6 +269,10 @@ class FontAsset extends Asset {
 
     }
 
+    /**
+     * Handle screen density changes by reloading the font at appropriate resolution.
+     * This ensures text remains crisp when display density changes.
+     */
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         if (status == READY) {
@@ -235,6 +299,10 @@ class FontAsset extends Asset {
 
     }
 
+    /**
+     * Handle file system changes for hot reload.
+     * Monitors both the font data file and texture pages for changes.
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())

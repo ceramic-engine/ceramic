@@ -3,9 +3,46 @@ package ceramic;
 using StringTools;
 
 /**
- * Color (alpha included) stored as integer.
- * Can be decomposed to Color/Int (RGB) + Float (A) and
- * constructed from Color/Int (RGB) + Float (A).
+ * Color with alpha channel stored as a 32-bit integer.
+ * 
+ * AlphaColor represents a color with transparency in ARGB format (0xAARRGGBB).
+ * It extends the functionality of Color by adding an alpha channel for opacity.
+ * 
+ * Key features:
+ * - Full RGBA color support with alpha transparency
+ * - Compatible with Color class (can convert to/from)
+ * - Same color manipulation features as Color
+ * - Predefined constants for common colors with full opacity
+ * - String parsing and formatting
+ * - HSB/HSL/CMYK color space conversions
+ * 
+ * The alpha channel controls transparency:
+ * - 0x00 (0) = Fully transparent
+ * - 0xFF (255) = Fully opaque
+ * - Values in between create partial transparency
+ * 
+ * @example
+ * ```haxe
+ * // Create colors with alpha
+ * var semiRed = AlphaColor.fromRGBA(255, 0, 0, 128); // 50% transparent red
+ * var transparent = AlphaColor.TRANSPARENT;
+ * var opaque = AlphaColor.WHITE;
+ * 
+ * // Convert between Color and AlphaColor
+ * var color = Color.BLUE;
+ * var alphaColor = color.toAlphaColor(); // Full opacity
+ * var backToColor:Color = alphaColor; // Auto-conversion
+ * 
+ * // Manipulate alpha
+ * var faded = alphaColor;
+ * faded.alpha = 128; // 50% opacity
+ * faded.alphaFloat = 0.25; // 25% opacity
+ * 
+ * // Parse from string
+ * var parsed = AlphaColor.fromString("#80FF0000"); // Semi-transparent red
+ * ```
+ * 
+ * @see Color
  */
 #if (cpp && windows)
 @:headerCode('
@@ -16,144 +53,265 @@ using StringTools;
 #end
 abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
+    /**
+     * Special value representing no color.
+     * Same as Color.NONE but as AlphaColor type.
+     */
     public static inline var NONE:AlphaColor =        -1;
 
+    /**
+     * Fully transparent (invisible) color.
+     * Alpha = 0, RGB values don't matter visually.
+     */
     public static inline var TRANSPARENT:AlphaColor = 0x00000000;
 
+    /** Pure white color with full opacity (0xFFFFFFFF) */
     public static inline var WHITE:AlphaColor =       0xFFFFFFFF;
+    /** Medium gray color with full opacity (0xFF808080) */
     public static inline var GRAY:AlphaColor =        0xFF808080;
+    /** Pure black color with full opacity (0xFF000000) */
     public static inline var BLACK:AlphaColor =       0xFF000000;
 
+    /** Dark green color with full opacity (0xFF008000) */
     public static inline var GREEN:AlphaColor =       0xFF008000;
+    /** Bright lime green color with full opacity (0xFF00FF00) */
     public static inline var LIME:AlphaColor =        0xFF00FF00;
+    /** Bright yellow color with full opacity (0xFFFFFF00) */
     public static inline var YELLOW:AlphaColor =      0xFFFFFF00;
+    /** Orange color with full opacity (0xFFFFA500) */
     public static inline var ORANGE:AlphaColor =      0xFFFFA500;
+    /** Pure red color with full opacity (0xFFFF0000) */
     public static inline var RED:AlphaColor =         0xFFFF0000;
+    /** Purple color with full opacity (0xFF800080) */
     public static inline var PURPLE:AlphaColor =      0xFF800080;
+    /** Pure blue color with full opacity (0xFF0000FF) */
     public static inline var BLUE:AlphaColor =        0xFF0000FF;
+    /** Brown color with full opacity (0xFF8B4513) */
     public static inline var BROWN:AlphaColor =       0xFF8B4513;
+    /** Pink color with full opacity (0xFFFFC0CB) */
     public static inline var PINK:AlphaColor =        0xFFFFC0CB;
+    /** Magenta color with full opacity (0xFFFF00FF) */
     public static inline var MAGENTA:AlphaColor =     0xFFFF00FF;
+    /** Cyan color with full opacity (0xFF00FFFF) */
     public static inline var CYAN:AlphaColor =        0xFF00FFFF;
 
+    /** Cornflower blue color with full opacity (0xFF6495ED) */
     public static inline var CORNFLOWERBLUE:AlphaColor =  0xFF6495ED;
+    /** Medium violet red color with full opacity (0xFFC71585) */
     public static inline var MEDIUMVIOLETRED:AlphaColor = 0xFFC71585;
+    /** Deep pink color with full opacity (0xFFFF1493) */
     public static inline var DEEPPINK:AlphaColor =        0xFFFF1493;
+    /** Pale violet red color with full opacity (0xFFDB7093) */
     public static inline var PALEVIOLETRED:AlphaColor =   0xFFDB7093;
+    /** Hot pink color with full opacity (0xFFFF69B4) */
     public static inline var HOTPINK:AlphaColor =         0xFFFF69B4;
+    /** Light pink color with full opacity (0xFFFFB6C1) */
     public static inline var LIGHTPINK:AlphaColor =       0xFFFFB6C1;
+    /** Dark red color with full opacity (0xFF8B0000) */
     public static inline var DARKRED:AlphaColor =         0xFF8B0000;
+    /** Firebrick red color with full opacity (0xFFB22222) */
     public static inline var FIREBRICK:AlphaColor =       0xFFB22222;
+    /** Crimson color with full opacity (0xFFDC143C) */
     public static inline var CRIMSON:AlphaColor =         0xFFDC143C;
+    /** Indian red color with full opacity (0xFFCD5C5C) */
     public static inline var INDIANRED:AlphaColor =       0xFFCD5C5C;
+    /** Light coral color with full opacity (0xFFF08080) */
     public static inline var LIGHTCORAL:AlphaColor =      0xFFF08080;
+    /** Salmon color with full opacity (0xFFFA8072) */
     public static inline var SALMON:AlphaColor =          0xFFFA8072;
+    /** Dark salmon color with full opacity (0xFFE9967A) */
     public static inline var DARKSALMON:AlphaColor =      0xFFE9967A;
+    /** Light salmon color with full opacity (0xFFFFA07A) */
     public static inline var LIGHTSALMON:AlphaColor =     0xFFFFA07A;
+    /** Orange red color with full opacity (0xFFFF4500) */
     public static inline var ORANGERED:AlphaColor =       0xFFFF4500;
+    /** Tomato color with full opacity (0xFFFF6347) */
     public static inline var TOMATO:AlphaColor =          0xFFFF6347;
+    /** Dark orange color with full opacity (0xFFFF8C00) */
     public static inline var DARKORANGE:AlphaColor =      0xFFFF8C00;
+    /** Coral color with full opacity (0xFFFF7F50) */
     public static inline var CORAL:AlphaColor =           0xFFFF7F50;
+    /** Dark khaki color with full opacity (0xFFBDB76B) */
     public static inline var DARKKHAKI:AlphaColor =       0xFFBDB76B;
+    /** Gold color with full opacity (0xFFFFD700) */
     public static inline var GOLD:AlphaColor =            0xFFFFD700;
+    /** Khaki color with full opacity (0xFFF0E68C) */
     public static inline var KHAKI:AlphaColor =           0xFFF0E68C;
+    /** Peach puff color with full opacity (0xFFFFDAB9) */
     public static inline var PEACHPUFF:AlphaColor =       0xFFFFDAB9;
+    /** Pale goldenrod color with full opacity (0xFFEEE8AA) */
     public static inline var PALEGOLDENROD:AlphaColor =   0xFFEEE8AA;
+    /** Moccasin color with full opacity (0xFFFFE4B5) */
     public static inline var MOCCASIN:AlphaColor =        0xFFFFE4B5;
+    /** Papaya whip color with full opacity (0xFFFFEFD5) */
     public static inline var PAPAYAWHIP:AlphaColor =      0xFFFFEFD5;
+    /** Lemon chiffon color with full opacity (0xFFFFFACD) */
     public static inline var LEMONCHIFFON:AlphaColor =    0xFFFFFACD;
+    /** Light yellow color with full opacity (0xFFFFFFE0) */
     public static inline var LIGHTYELLOW:AlphaColor =     0xFFFFFFE0;
+    /** Sienna color with full opacity (0xFFA0522D) */
     public static inline var SIENNA:AlphaColor =          0xFFA0522D;
+    /** Chocolate color with full opacity (0xFFD2691E) */
     public static inline var CHOCOLATE:AlphaColor =       0xFFD2691E;
+    /** Peru color with full opacity (0xFFCD853F) */
     public static inline var PERU:AlphaColor =            0xFFCD853F;
+    /** Tan color with full opacity (0xFFD2B48C) */
     public static inline var TAN:AlphaColor =             0xFFD2B48C;
+    /** Dark olive green color with full opacity (0xFF556B2F) */
     public static inline var DARKOLIVEGREEN:AlphaColor =  0xFF556B2F;
+    /** Olive color with full opacity (0xFF808000) */
     public static inline var OLIVE:AlphaColor =           0xFF808000;
+    /** Teal color with full opacity (0xFF008080) */
     public static inline var TEAL:AlphaColor =            0xFF008080;
+    /** Turquoise color with full opacity (0xFF40E0D0) */
     public static inline var TURQUOISE:AlphaColor =       0xFF40E0D0;
+    /** Navy blue color with full opacity (0xFF000080) */
     public static inline var NAVY:AlphaColor =            0xFF000080;
+    /** Indigo color with full opacity (0xFF4B0082) */
     public static inline var INDIGO:AlphaColor =          0xFF4B0082;
+    /** Orchid color with full opacity (0xFFDA70D6) */
     public static inline var ORCHID:AlphaColor =          0xFFDA70D6;
+    /** Lavender color with full opacity (0xFFE6E6FA) */
     public static inline var LAVENDER:AlphaColor =        0xFFE6E6FA;
+    /** Azure color with full opacity (0xFFF0FFFF) */
     public static inline var AZURE:AlphaColor =           0xFFF0FFFF;
+    /** Ivory color with full opacity (0xFFFFFFF0) */
     public static inline var IVORY:AlphaColor =           0xFFFFFFF0;
+    /** Dim grey color with full opacity (0xFF696969) */
     public static inline var DIMGREY:AlphaColor =         0xFF696969;
+    /** Slate grey color with full opacity (0xFF708090) */
     public static inline var SLATEGREY:AlphaColor =       0xFF708090;
+    /** Snow color with full opacity (0xFFFFFAFA) */
     public static inline var SNOW:AlphaColor =            0xFFFFFAFA;
 
     /**
-     * Red color component as `Int` between `0` and `255`
+     * Red color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var red(get, set):Int;
     /**
-     * Green color component as `Int` between `0` and `255`
+     * Green color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var green(get, set):Int;
     /**
-     * Blue color component as `Int` between `0` and `255`
+     * Blue color component as `Int` between `0` and `255`.
+     * Modifying this value updates the color immediately.
      */
     public var blue(get, set):Int;
     /**
-     * Alpha component as `Int` between `0` and `255`
+     * Alpha component as `Int` between `0` and `255`.
+     * Controls transparency: 0 = fully transparent, 255 = fully opaque.
+     * Modifying this value updates the color immediately.
      */
     public var alpha(get, set):Int;
 
     /**
-     * Red color component as `Float` between `0.0` and `1.0`
+     * Red color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var redFloat(get, set):Float;
     /**
-     * Green color component as `Float` between `0.0` and `1.0`
+     * Green color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var greenFloat(get, set):Float;
     /**
-     * Blue color component as `Float` between `0.0` and `1.0`
+     * Blue color component as `Float` between `0.0` and `1.0`.
+     * Modifying this value updates the color immediately.
+     * Useful for smooth gradients and precise color calculations.
      */
     public var blueFloat(get, set):Float;
     /**
-     * Alpha component as `Float` between `0.0` and `1.0`
+     * Alpha component as `Float` between `0.0` and `1.0`.
+     * Controls transparency: 0.0 = fully transparent, 1.0 = fully opaque.
+     * Modifying this value updates the color immediately.
      */
     public var alphaFloat(get, set):Float;
 
+    /**
+     * Cyan component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var cyan(get, set):Float;
+    /**
+     * Magenta component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var magenta(get, set):Float;
+    /**
+     * Yellow component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var yellow(get, set):Float;
+    /**
+     * Black/Key component in CMYK color space (0.0 to 1.0).
+     * CMYK is commonly used for print design.
+     * Setting this value recalculates RGB components automatically.
+     */
     public var black(get, set):Float;
 
     /**
-     * The hue of the color in degrees (from 0 to 359)
+     * The hue of the color in degrees (from 0 to 359).
+     * Represents position on the color wheel: 0/360 = red, 120 = green, 240 = blue.
+     * Setting this value preserves saturation and brightness.
      */
     public var hue(get, set):Float;
     /**
-     * The saturation of the color (from 0 to 1)
+     * The saturation of the color (from 0 to 1).
+     * Controls color intensity: 0 = grayscale, 1 = fully saturated.
+     * Part of the HSB/HSV color model.
      */
     public var saturation(get, set):Float;
     /**
-     * The brightness (aka value) of the color (from 0 to 1)
+     * The brightness (aka value) of the color (from 0 to 1).
+     * Controls how light or dark the color is: 0 = black, 1 = full brightness.
+     * Part of the HSB/HSV color model.
      */
     public var brightness(get, set):Float;
     /**
-     * The lightness of the color (from 0 to 1)
+     * The lightness of the color (from 0 to 1).
+     * Controls the lightness: 0 = black, 0.5 = pure color, 1 = white.
+     * Part of the HSL color model (different from brightness).
      */
     public var lightness(get, set):Float;
 
     /**
-     * RGB color component typed as `ceramic.Color`
+     * RGB color component typed as `ceramic.Color`.
+     * Gets or sets the RGB values without affecting the alpha channel.
+     * Useful for applying a Color to an AlphaColor while preserving transparency.
      */
     public var color(get, set):Color;
 
     /**
-     * RGB color component typed as `ceramic.Color` (alias of `color`)
+     * RGB color component typed as `ceramic.Color` (alias of `color`).
+     * Gets or sets the RGB values without affecting the alpha channel.
+     * Useful for applying a Color to an AlphaColor while preserving transparency.
      */
     public var rgb(get, set):Color;
 
+    /**
+     * Implicit conversion to Color (strips alpha channel).
+     * @return RGB color without alpha
+     */
     @:to public inline function toColor():Color {
         return rgb;
     }
 
     /**
-     * Generate a random color (away from white or black)
-     * @return The color as an AlphaColor
+     * Generate a random color with full opacity (away from white or black).
+     * 
+     * Creates vibrant colors by ensuring minimum saturation and brightness.
+     * The resulting color will have full opacity (alpha = 255).
+     * 
+     * @param minSatutation Minimum saturation (0-1), default 0.5
+     * @param minBrightness Minimum brightness (0-1), default 0.5
+     * @return A randomly generated opaque color
      */
     public static inline function random(minSatutation:Float = 0.5, minBrightness:Float = 0.5):AlphaColor
     {
@@ -378,7 +536,13 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     }
 
     /**
-     * Multiply the RGB channels of two AlphaColors
+     * Multiply the RGB channels of two AlphaColors.
+     * The result uses full opacity (alpha = 255).
+     * Useful for color blending and filter effects.
+     * 
+     * @param lhs Left-hand side color
+     * @param rhs Right-hand side color
+     * @return The multiplied color with full opacity
      */
     @:op(A * B)
     public static inline function multiply(lhs:AlphaColor, rhs:AlphaColor):AlphaColor
@@ -387,7 +551,13 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     }
 
     /**
-     * Add the RGB channels of two AlphaColors
+     * Add the RGB channels of two AlphaColors.
+     * The result uses full opacity (alpha = 255).
+     * Values are clamped to the 0-255 range.
+     * 
+     * @param lhs Left-hand side color
+     * @param rhs Right-hand side color
+     * @return The added color with full opacity
      */
     @:op(A + B)
     public static inline function add(lhs:AlphaColor, rhs:AlphaColor):AlphaColor
@@ -396,7 +566,13 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     }
 
     /**
-     * Subtract the RGB channels of one Color from another
+     * Subtract the RGB channels of one AlphaColor from another.
+     * The result uses full opacity (alpha = 255).
+     * Values are clamped to the 0-255 range.
+     * 
+     * @param lhs Left-hand side color (minuend)
+     * @param rhs Right-hand side color (subtrahend)
+     * @return The subtracted color with full opacity
      */
     @:op(A - B)
     public static inline function subtract(lhs:AlphaColor, rhs:AlphaColor):AlphaColor
@@ -601,7 +777,14 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     }
 
     /**
-     * Private utility function to perform common operations between setHSB and setHSL
+     * Private utility function to perform common operations between setHSB and setHSL.
+     * Converts HSB/HSL values to RGB using the chroma and match values.
+     * 
+     * @param hue The hue angle in degrees
+     * @param saturation The saturation value (not used directly in calculation)
+     * @param chroma The chroma value (color intensity)
+     * @param match The match value (baseline lightness)
+     * @return This color after modification
      */
     private inline function setHSChromaMatch(hue:Float, saturation:Float, chroma:Float, match:Float):AlphaColor
     {
@@ -879,15 +1062,24 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
     static var _hsluvResult:Array<Float> = [0, 0, 0];
 
     /**
-     * The HSLuv hue of the color in degrees (from 0 to 359)
+     * The HSLuv hue of the color in degrees (from 0 to 359).
+     * HSLuv is a perceptually uniform color space that provides more consistent lightness.
+     * Setting this value preserves HSLuv saturation and lightness.
+     * Only available when the `hsluv` library is included.
      */
     public var hueHSLuv(get, set):Float;
     /**
-     * The HSLuv saturation of the color (from 0 to 1)
+     * The HSLuv saturation of the color (from 0 to 1).
+     * In HSLuv, saturation is perceptually uniform across different hues.
+     * Setting this value preserves HSLuv hue and lightness.
+     * Only available when the `hsluv` library is included.
      */
     public var saturationHSLuv(get, set):Float;
     /**
-     * The HSLuv lightness of the color (from 0 to 1)
+     * The HSLuv lightness of the color (from 0 to 1).
+     * In HSLuv, lightness is perceptually uniform - 50% lightness appears equally bright across all hues.
+     * Setting this value preserves HSLuv hue and saturation.
+     * Only available when the `hsluv` library is included.
      */
     public var lightnessHSLuv(get, set):Float;
 
@@ -941,11 +1133,14 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
     /**
      * Generate a color from HSLuv components.
+     * HSLuv is a perceptually uniform color space that provides more consistent results than HSL.
+     * Colors with the same lightness value appear equally bright regardless of hue.
+     * Only available when the `hsluv` library is included.
      *
      * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
      * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
      * @param    lightness    A number between 0 and 1, indicating the lightness of the color
-     * @return    The color as a AlphaColor
+     * @return    The color as a AlphaColor with full opacity
      */
     public static inline function fromHSLuv(hue:Float, saturation:Float, lightness:Float):AlphaColor
     {
@@ -955,11 +1150,14 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
     /**
      * Set HSLuv components.
+     * Converts HSLuv values to RGB while maintaining the alpha channel.
+     * For very low lightness values, falls back to regular HSL conversion.
+     * Only available when the `hsluv` library is included.
      *
      * @param    hue            A number between 0 and 360, indicating position on a color strip or wheel.
      * @param    saturation    A number between 0 and 1, indicating how colorful or gray the color should be.  0 is gray, 1 is vibrant.
      * @param    lightness    A number between 0 and 1, indicating the lightness of the color
-     * @return    This color
+     * @return    This color after modification
      */
     public inline function setHSLuv(hue:Float, saturation:Float, lightness:Float):AlphaColor
     {
@@ -989,9 +1187,11 @@ abstract AlphaColor(Int) from Int from UInt to Int to UInt {
 
     /**
      * Get HSLuv components from the color instance.
+     * Extracts the hue, saturation and lightness values in HSLuv color space.
+     * Only available when the `hsluv` library is included.
      *
-     * @param result A pre-allocated array to store the result into.
-     * @return    The HSLuv components as a float array
+     * @param result A pre-allocated array to store the result into. If null, a new array is created.
+     * @return    The HSLuv components as a float array [hue (0-360), saturation (0-1), lightness (0-1)]
      */
     public inline function getHSLuv(?result:Array<Float>):Array<Float>
     {

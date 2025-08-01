@@ -4,6 +4,49 @@ import ceramic.Assert.assert;
 
 using ceramic.Extensions;
 
+/**
+ * A visual component that repeats a texture pattern to fill a specified area.
+ * 
+ * The Repeat class efficiently tiles a texture (or texture region) across a
+ * rectangular area, creating patterns like tiled backgrounds, repeating borders,
+ * or texture fills. It automatically manages Quad instances from an object pool
+ * to minimize memory allocation and improve performance.
+ * 
+ * Key features:
+ * - Automatic texture tiling in X and/or Y directions
+ * - Optional mirroring for seamless patterns
+ * - Spacing between tiles
+ * - Efficient object pooling of Quad instances
+ * - Support for TextureTile regions
+ * 
+ * Example usage:
+ * ```haxe
+ * // Create a repeating background pattern
+ * var background = new Repeat();
+ * background.texture = assets.texture("pattern");
+ * background.size(screen.width, screen.height);
+ * background.spacing(2, 2); // 2px gap between tiles
+ * 
+ * // Create a horizontally repeating border
+ * var border = new Repeat();
+ * border.tile = atlas.get("border_segment");
+ * border.size(400, 32);
+ * border.repeatY = false; // Only repeat horizontally
+ * 
+ * // Create a mirrored pattern for seamless tiling
+ * var seamless = new Repeat();
+ * seamless.texture = assets.texture("tile");
+ * seamless.mirror(true, true); // Mirror in both directions
+ * seamless.size(800, 600);
+ * ```
+ * 
+ * Performance note: The class reuses Quad instances from a pool, so creating
+ * and destroying Repeat objects frequently has minimal performance impact.
+ * 
+ * @see ceramic.Quad For the underlying visual elements
+ * @see ceramic.TextureTile For texture region support
+ * @see ceramic.NineSlice For non-repeating scalable graphics
+ */
 class Repeat extends Visual {
 
     static var _pool(default, null):Pool<Quad> = null;
@@ -40,8 +83,16 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * Array of Quad instances used to render the repeated pattern.
+     * Managed automatically by the class - do not modify directly.
+     */
     public var quads(default,null):Array<Quad> = [];
 
+    /**
+     * Horizontal spacing between repeated tiles in pixels.
+     * Positive values create gaps between tiles.
+     */
     public var spacingX(default, set):Float = 0;
     function set_spacingX(spacingX:Float):Float {
         if (this.spacingX != spacingX) {
@@ -51,6 +102,10 @@ class Repeat extends Visual {
         return spacingX;
     }
 
+    /**
+     * Vertical spacing between repeated tiles in pixels.
+     * Positive values create gaps between tiles.
+     */
     public var spacingY(default, set):Float = 0;
     function set_spacingY(spacingY:Float):Float {
         if (this.spacingY != spacingY) {
@@ -60,6 +115,11 @@ class Repeat extends Visual {
         return spacingY;
     }
 
+    /**
+     * Sets spacing between tiles.
+     * @overload function(value:Float):Void Sets both X and Y spacing to the same value
+     * @overload function(spacingX:Float, spacingY:Float):Void Sets X and Y spacing independently
+     */
     public extern inline overload function spacing(value:Float)
         _spacing(value, value);
 
@@ -73,6 +133,10 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * Whether to repeat the texture horizontally.
+     * When false, the texture is stretched to fill the width instead of tiling.
+     */
     public var repeatX(default, set):Bool = true;
     function set_repeatX(repeatX:Bool):Bool {
         if (this.repeatX != repeatX) {
@@ -82,6 +146,10 @@ class Repeat extends Visual {
         return repeatX;
     }
 
+    /**
+     * Whether to repeat the texture vertically.
+     * When false, the texture is stretched to fill the height instead of tiling.
+     */
     public var repeatY(default, set):Bool = true;
     function set_repeatY(repeatY:Bool):Bool {
         if (this.repeatY != repeatY) {
@@ -91,6 +159,11 @@ class Repeat extends Visual {
         return repeatY;
     }
 
+    /**
+     * Controls texture repetition.
+     * @overload function(value:Bool):Void Enable/disable repetition in both directions
+     * @overload function(repeatX:Bool, repeatY:Bool):Void Control X and Y repetition independently
+     */
     public extern inline overload function repeat(value:Bool)
         _repeat(value, value);
 
@@ -104,6 +177,10 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * Whether to mirror alternate tiles horizontally.
+     * Creates a seamless pattern by flipping every other column.
+     */
     public var mirrorX(default,set):Bool = false;
     inline function set_mirrorX(mirrorX:Bool):Bool {
         if (this.mirrorX != mirrorX) {
@@ -113,6 +190,10 @@ class Repeat extends Visual {
         return mirrorX;
     }
 
+    /**
+     * Whether to mirror alternate tiles vertically.
+     * Creates a seamless pattern by flipping every other row.
+     */
     public var mirrorY(default,set):Bool = false;
     inline function set_mirrorY(mirrorY:Bool):Bool {
         if (this.mirrorY != mirrorY) {
@@ -122,6 +203,11 @@ class Repeat extends Visual {
         return mirrorY;
     }
 
+    /**
+     * Controls texture mirroring for seamless patterns.
+     * @overload function(value:Bool):Void Enable/disable mirroring in both directions
+     * @overload function(mirrorX:Bool, mirrorY:Bool):Void Control X and Y mirroring independently
+     */
     public extern inline overload function mirror(value:Bool)
         _mirror(value, value);
 
@@ -136,7 +222,8 @@ class Repeat extends Visual {
     }
 
     /**
-     * The texture to use for this NineSlice object
+     * The texture to repeat across the area.
+     * Setting this will clear any previously set tile.
      */
     public var texture(get,set):Texture;
     inline function get_texture():Texture {
@@ -160,6 +247,10 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * Whether the texture frame is rotated 90 degrees.
+     * Used internally for texture atlas optimization.
+     */
     public var rotateFrame(get,set):Bool;
     inline function get_rotateFrame():Bool {
         return quads.unsafeGet(0).rotateFrame;
@@ -182,6 +273,10 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * A texture tile (region) to repeat instead of a full texture.
+     * Setting this will automatically update the texture and frame properties.
+     */
     public var tile(default,set):TextureTile = null;
     inline function set_tile(tile:TextureTile):TextureTile {
 
@@ -235,6 +330,10 @@ class Repeat extends Visual {
         return height;
     }
 
+    /**
+     * The color tint applied to all repeated tiles.
+     * White (0xFFFFFF) means no tinting.
+     */
     public var color(get,set):Color;
     inline function get_color():Color {
         return quads.unsafeGet(0).color;
@@ -270,6 +369,10 @@ class Repeat extends Visual {
         return shader;
     }
 
+    /**
+     * Creates a new Repeat instance.
+     * Initializes with a single Quad that will be replicated as needed.
+     */
     public function new() {
 
         super();
@@ -280,6 +383,10 @@ class Repeat extends Visual {
 
     }
 
+    /**
+     * Recomputes the tiled pattern based on current properties.
+     * Called automatically when properties change.
+     */
     override function computeContent() {
 
         var w = _width;

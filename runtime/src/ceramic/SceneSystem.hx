@@ -5,61 +5,169 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 /**
- * System managing scenes display and lifecycle.
- * Use it to structure your app in different scenes.
+ * Core system responsible for managing scene lifecycle, transitions, and display hierarchy.
+ * 
+ * SceneSystem provides centralized management of scenes in a Ceramic application,
+ * handling their loading, transitions, and display. It supports multiple simultaneous
+ * scenes through named slots, with special handling for the main scene.
+ * 
+ * Key features:
+ * - **Main scene management**: Primary scene with automatic screen binding
+ * - **Named scene slots**: Support for multiple concurrent scenes (overlays, HUD, etc.)
+ * - **Automatic lifecycle**: Handles preload → load → create → fade transitions
+ * - **Asset preservation**: Option to keep assets when switching scenes
+ * - **Filter support**: Post-processing effects for all root scenes
+ * - **Transition control**: Configurable fade in/out behaviors
+ * 
+ * The system automatically updates active scenes and manages their transitions,
+ * ensuring smooth scene changes and proper resource management.
+ * 
+ * Example usage:
+ * ```haxe
+ * // Set main scene
+ * app.scenes.main = new GameScene();
+ * 
+ * // Add overlay scene
+ * app.scenes.set('hud', new HudScene());
+ * 
+ * // Configure transitions
+ * app.scenes.keepAssetsForNextMain = true;
+ * app.scenes.fadeOutWhenNextMainCanFadeIn = true;
+ * ```
+ * 
+ * @see Scene
+ * @see App#scenes
+ * @see SceneStatus
  */
 @:allow(ceramic.Scene)
 class SceneSystem extends System {
 
     /**
-     * Shared scene system
+     * Singleton instance of the scene system.
+     * Automatically created on first access.
      */
     @lazy public static var shared = new SceneSystem();
 
+    /**
+     * Read-only array containing all active scenes in the system.
+     * Includes both root scenes and child scenes.
+     */
     public var all(default, null):ReadOnlyArray<Scene> = [];
 
+    /**
+     * Internal array used during update cycles to safely iterate scenes.
+     * Prevents issues when scenes are added/removed during iteration.
+     */
     var _updatingScenes:Array<Scene> = [];
 
     /**
-     * If `true`, when assigning a new main scene, assets of the previous
-     * main scene will be kept instead of being destroyed and can be
-     * reused by the new main scene without having to reload these
+     * Controls asset preservation when switching main scenes.
+     * 
+     * When `true`, assets from the previous main scene are transferred to the new
+     * main scene instead of being destroyed. This allows seamless transitions
+     * without reloading shared assets like textures, sounds, or fonts.
+     * 
+     * Useful for:
+     * - Level transitions that share common assets
+     * - Menu → gameplay transitions
+     * - Reducing loading times between related scenes
+     * 
+     * Default: `false`
      */
     public var keepAssetsForNextMain:Bool = false;
 
     /**
-     * If `true`, main scene will be bound to screen size automatically
+     * Controls automatic screen size binding for the main scene.
+     * 
+     * When `true`, the main scene's size will automatically match the screen
+     * dimensions and update when the screen is resized. This ensures the main
+     * scene always fills the entire display area.
+     * 
+     * Set to `false` if you need custom scene sizing or positioning.
+     * 
+     * Default: `true`
      */
     public var bindMainToScreenSize:Bool = true;
 
     /**
-     * If `true`, when assigning a new main scene, previous main
-     * scene will wait until the next scene is properly loaded and can fade-in
-     * before starting its own fade-out transition.
+     * Controls the timing of scene transitions.
+     * 
+     * When `true`, the previous scene's fade-out animation is delayed until
+     * the new scene is fully loaded and ready to fade in. This creates smoother
+     * transitions by ensuring the new content is ready before removing the old.
+     * 
+     * When `false`, the previous scene fades out immediately, potentially
+     * showing a loading state or blank screen.
+     * 
+     * Default: `true`
      */
     public var fadeOutWhenNextMainCanFadeIn:Bool = true;
 
     /**
-     * The main scene to display on screen.
+     * The primary scene of the application.
+     * 
+     * Setting this property automatically handles scene transitions, including:
+     * - Fading out the previous main scene
+     * - Loading and initializing the new scene
+     * - Managing asset preservation (if enabled)
+     * - Binding to screen size (if enabled)
+     * 
+     * The main scene typically represents the core content of your application
+     * (game level, menu screen, etc.).
      */
     public var main(default,set):Scene = null;
 
     /**
-     * If set to `true` (default), any filter assigned to the system will be destroyed
-     * if replaced by another filter, set to null, or if the system is destroyed.
+     * Controls automatic cleanup of replaced filters.
+     * 
+     * When `true`, filters are automatically destroyed when:
+     * - Replaced by a new filter
+     * - Set to null
+     * - The scene system is destroyed
+     * 
+     * Set to `false` if you want to manage filter lifecycle manually or
+     * reuse filters across different contexts.
+     * 
+     * Default: `true`
      */
     public var autoDestroyFilter:Bool = true;
 
     /**
-     * If set to `true` (default), a filter assigned to the system will
-     * be auto-scaled to fit screen size.
+     * Controls automatic scaling of scene filters.
+     * 
+     * When `true`, filters are automatically scaled to match screen dimensions,
+     * ensuring post-processing effects cover the entire display area. The filter
+     * and its content are scaled inversely to maintain proper rendering.
+     * 
+     * Set to `false` for custom filter sizing or when using filters that
+     * shouldn't match screen size.
+     * 
+     * Default: `true`
      */
     public var autoScaleFilter:Bool = true;
 
     /**
-     * Assign a filter to the scene system, that will be used to render root scenes
+     * Post-processing filter applied to all root scenes.
+     * 
+     * When set, all root scenes are rendered through this filter, enabling
+     * global visual effects like:
+     * - Color grading
+     * - Blur or pixelation
+     * - Shader-based effects
+     * 
+     * The filter automatically includes all root scenes and handles their
+     * proper rendering order.
      */
     public var filter(default, set):Filter = null;
+    /**
+     * Internal setter for the filter property.
+     * 
+     * Handles the complex logic of transitioning between filters, including:
+     * - Removing scenes from the previous filter
+     * - Cleaning up or destroying the old filter
+     * - Adding all root scenes to the new filter
+     * - Setting up proper scaling
+     */
     function set_filter(filter:Filter):Filter {
         if (this.filter != filter) {
             var prevFilter = this.filter;
@@ -114,6 +222,12 @@ class SceneSystem extends System {
         return filter;
     }
 
+    /**
+     * Updates filter scaling to match current screen dimensions.
+     * 
+     * Scales the filter to cover the screen while inversely scaling its content
+     * to maintain proper aspect ratio and sizing of contained scenes.
+     */
     function scaleFilter() {
 
         filter.scale(screen.width / filter.width, screen.height / filter.height);
@@ -121,8 +235,21 @@ class SceneSystem extends System {
 
     }
 
+    /**
+     * Map of all root scenes indexed by their slot names.
+     * 
+     * Root scenes are directly managed by the scene system and rendered
+     * to screen. The 'main' slot contains the primary scene, while other
+     * slots can hold overlays, HUD elements, or secondary scenes.
+     */
     public var rootScenes(default,null):ReadOnlyMap<String,Scene> = new Map();
 
+    /**
+     * Internal setter for the main scene property.
+     * 
+     * Delegates to the general `set()` method with the 'main' slot name,
+     * using the configured settings for screen binding and asset preservation.
+     */
     function set_main(main:Scene):Scene {
 
         if (this.main != main) {
@@ -135,13 +262,29 @@ class SceneSystem extends System {
     }
 
     /**
-     * Assign secondary scenes to display them directly on screen.
-     * @param name The slot name of the scene
-     * @param scene The scene to assign
-     * @param bindToScreenSize (optional) Set to `false` if you don't want the scene to follow screen size
-     * @param keepAssets
-     *          (optional) Set to `true` if you want this scene to keep the same **assets**
-     *          instance as the previous scene on the same slot.
+     * Assigns a scene to a named slot in the scene system.
+     * 
+     * This method handles the complete lifecycle of scene assignment, including:
+     * - Removing and cleaning up previous scenes in the slot
+     * - Initializing and displaying the new scene
+     * - Managing scene transitions and asset preservation
+     * - Setting up proper parent-child relationships
+     * 
+     * Special handling for 'main' slot updates the main property.
+     * 
+     * Example:
+     * ```haxe
+     * // Add a HUD overlay
+     * app.scenes.set('hud', new HudScene());
+     * 
+     * // Add a pause menu with asset sharing
+     * app.scenes.set('pause', new PauseMenu(), true, true);
+     * ```
+     * 
+     * @param name The slot name for the scene (e.g., 'main', 'hud', 'overlay')
+     * @param scene The scene to assign, or null to remove the current scene
+     * @param bindToScreenSize Whether the scene should automatically match screen size (default: true)
+     * @param keepAssets Whether to preserve assets from the previous scene in this slot (default: false)
      */
     public function set(name:String, scene:Scene, bindToScreenSize:Bool = true, keepAssets:Bool = false):Void {
 
@@ -310,9 +453,21 @@ class SceneSystem extends System {
     }
 
     /**
-     * Retrieve a secondary scene from the given slot name
+     * Retrieves a scene from the specified slot.
+     * 
+     * Useful for accessing secondary scenes like HUD, overlays, or other
+     * named scenes managed by the system.
+     * 
+     * Example:
+     * ```haxe
+     * var hudScene = app.scenes.get('hud');
+     * if (hudScene != null) {
+     *     hudScene.updateScore(100);
+     * }
+     * ```
+     * 
      * @param name The slot name of the scene to retrieve
-     * @return A `Scene` instance or `null` if nothing was found
+     * @return The scene in the specified slot, or null if empty
      */
     public function get(name:String):Scene {
 
@@ -328,6 +483,12 @@ class SceneSystem extends System {
 
     }
 
+    /**
+     * Creates a new SceneSystem instance.
+     * 
+     * Typically not called directly - use the shared singleton instance
+     * via `SceneSystem.shared` or through `app.scenes`.
+     */
     override function new() {
 
         super();
@@ -336,6 +497,16 @@ class SceneSystem extends System {
 
     }
 
+    /**
+     * Updates all active scenes and handles auto-booting.
+     * 
+     * Called automatically each frame after regular updates. This method:
+     * - Auto-boots scenes that have been added to the display hierarchy
+     * - Updates active, non-paused scenes that have autoUpdate enabled
+     * - Maintains filter scaling if autoScaleFilter is enabled
+     * 
+     * @param delta Time elapsed since last frame in seconds
+     */
     override function lateUpdate(delta:Float):Void {
 
         // Work on a copy of list, to ensure nothing bad happens

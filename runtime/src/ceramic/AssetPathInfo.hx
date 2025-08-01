@@ -3,7 +3,22 @@ package ceramic;
 using StringTools;
 
 /**
- * Information extracted from a raw asset path
+ * Information extracted from a raw asset path.
+ * 
+ * This class parses asset file paths to extract metadata including:
+ * - Density information (e.g., @2x, @3x)
+ * - File extension
+ * - Normalized asset name
+ * - Flags for conditional loading
+ * 
+ * Path parsing examples:
+ * - `hero.png` -> name: "hero", extension: "png", density: 1.0
+ * - `hero@2x.png` -> name: "hero", extension: "png", density: 2.0
+ * - `hero@2x+retina.png` -> name: "hero", extension: "png", density: 2.0, flags: {retina: true}
+ * - `ui/button+hover+pressed.png` -> name: "ui/button", flags: {hover: true, pressed: true}
+ * - `icon+size=large.png` -> name: "icon", flags: {size: "large"}
+ * 
+ * @see Assets.decodePath
  */
 class AssetPathInfo {
 
@@ -40,6 +55,10 @@ class AssetPathInfo {
 
 /// Constructor
 
+    /**
+     * Parse an asset path to extract metadata.
+     * @param path The asset file path to parse
+     */
     public function new(path:String) {
 
         this.path = path;
@@ -83,6 +102,10 @@ class AssetPathInfo {
 
     }
 
+    /**
+     * String representation for debugging.
+     * @return Object-like string with all parsed properties
+     */
     function toString():String {
 
         return '' + {extension: extension, name: name, path: path, density: density};

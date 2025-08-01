@@ -25,57 +25,108 @@ package ceramic;
 // Same as haxe.io.Path except that it doesn't depend on EReg
 
 /**
-    This class provides a convenient way of working with paths. It supports the
-    common path formats:
-
-    - directory1/directory2/filename.extension
-    - directory1\directory2\filename.extension
-**/
+ * Cross-platform path manipulation utilities optimized for Ceramic.
+ * 
+ * This class provides a convenient way of working with file and directory paths
+ * across different platforms. It is a modified version of haxe.io.Path that doesn't
+ * depend on regular expressions (EReg), making it more efficient for frequent path
+ * operations in game development.
+ * 
+ * Supports common path formats:
+ * - Unix/Mac/Linux: `directory1/directory2/filename.extension`
+ * - Windows: `directory1\directory2\filename.extension`
+ * - Windows absolute: `C:\directory\file.ext`
+ * - Network paths: `\\server\share\file.ext`
+ * 
+ * Example usage:
+ * ```haxe
+ * // Parse a path
+ * var path = new Path("assets/images/player.png");
+ * trace(path.dir);  // "assets/images"
+ * trace(path.file); // "player"
+ * trace(path.ext);  // "png"
+ * 
+ * // Manipulate paths
+ * var newPath = Path.withExtension("image.jpg", "png"); // "image.png"
+ * var joined = Path.join(["assets", "sounds", "music.ogg"]); // "assets/sounds/music.ogg"
+ * var normalized = Path.normalize("/usr/local/../lib"); // "/usr/lib"
+ * 
+ * // Check path properties
+ * if (Path.isAbsolute("/home/user")) {
+ *     trace("Absolute path");
+ * }
+ * ```
+ * 
+ * @see ceramic.Files For file system operations
+ * @see ceramic.Assets For asset path management
+ */
 class Path {
 
     /**
-        The directory.
-
-        This is the leading part of the path that is not part of the file name
-        and the extension.
-
-        Does not end with a `/` or `\` separator.
-
-        If the path has no directory, the value is null.
-    **/
+     * The directory portion of the path.
+     * 
+     * This is the leading part of the path that is not part of the file name
+     * and the extension. Does not include a trailing `/` or `\` separator.
+     * 
+     * Examples:
+     * - Path "dir/file.txt" -> dir = "dir"
+     * - Path "file.txt" -> dir = null
+     * - Path "/home/user/file.txt" -> dir = "/home/user"
+     * - Path "C:\\Windows\\file.txt" -> dir = "C:\\Windows"
+     */
     public var dir : String;
 
     /**
-        The file name.
-
-        This is the part of the part between the directory and the extension.
-
-        If there is no file name, e.g. for ".htaccess" or "/dir/", the value
-        is the empty String "".
-    **/
+     * The file name without extension.
+     * 
+     * This is the part of the path between the directory and the extension.
+     * For files that start with a dot (like .htaccess) or paths ending with
+     * a separator, the value is an empty string "".
+     * 
+     * Examples:
+     * - Path "dir/file.txt" -> file = "file"
+     * - Path ".htaccess" -> file = ""
+     * - Path "/dir/" -> file = ""
+     * - Path "document.tar.gz" -> file = "document.tar"
+     */
     public var file : String;
 
     /**
-        The file extension.
-
-        It is separated from the file name by a dot. This dot is not part of
-        the extension.
-
-        If the path has no extension, the value is null.
-    **/
+     * The file extension without the leading dot.
+     * 
+     * The extension is the part after the last dot in the filename.
+     * The separating dot is not included in the extension value.
+     * 
+     * Examples:
+     * - Path "file.txt" -> ext = "txt"
+     * - Path "archive.tar.gz" -> ext = "gz"
+     * - Path "file" -> ext = null
+     * - Path ".htaccess" -> ext = "htaccess"
+     */
     public var ext : String;
 
     /**
-        True if the last directory separator is a backslash, false otherwise.
-    **/
+     * Indicates the type of directory separator used in the original path.
+     * 
+     * True if the last directory separator found was a backslash (`\\`),
+     * false if it was a forward slash (`/`) or if no separator was found.
+     * This helps preserve the original path style when converting back to string.
+     */
     public var backslash : Bool;
 
     /**
-        Creates a new Path instance by parsing `path`.
-
-        Path information can be retrieved by accessing the dir, file and ext
-        properties.
-    **/
+     * Creates a new Path instance by parsing the given path string.
+     * 
+     * The path is split into its components (directory, filename, extension)
+     * which can be accessed through the corresponding properties.
+     * Handles both forward slash and backslash separators.
+     * 
+     * Special cases:
+     * - "." and ".." are treated as directories with empty filenames
+     * - Paths ending with separators have empty filenames
+     * 
+     * @param path The path string to parse
+     */
     public function new( path : String ) {
         switch (path) {
             case "." | "..":
@@ -105,24 +156,32 @@ class Path {
     }
 
     /**
-        Returns a String representation of `this` path.
-
-        If `this.backslash` is true, backslash is used as directory separator,
-        otherwise slash is used. This only affects the separator between
-        `this.dir` and `this.file`.
-
-        If `this.directory` or `this.extension` is null, their representation
-        is the empty String "".
-    **/
+     * Reconstructs the path string from its components.
+     * 
+     * The directory separator used depends on the `backslash` property:
+     * - If true, uses backslash (`\\`) as separator
+     * - If false, uses forward slash (`/`) as separator
+     * 
+     * Null components are treated as empty strings.
+     * 
+     * @return The reconstructed path string
+     */
     public function toString() : String {
         return (if( dir == null ) "" else dir + if( backslash ) "\\" else "/") + file + (if( ext == null ) "" else "." + ext);
     }
 
     /**
-        Returns the String representation of `path` without the file extension.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Removes the file extension from a path string.
+     * 
+     * Example:
+     * ```haxe
+     * Path.withoutExtension("image.png"); // "image"
+     * Path.withoutExtension("path/to/file.txt"); // "path/to/file"
+     * ```
+     * 
+     * @param path The path to process
+     * @return The path without its extension
+     */
     public static function withoutExtension( path : String ) : String {
         var s = new Path(path);
         s.ext = null;
@@ -130,10 +189,17 @@ class Path {
     }
 
     /**
-        Returns the String representation of `path` without the directory.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Extracts only the filename and extension from a path.
+     * 
+     * Example:
+     * ```haxe
+     * Path.withoutDirectory("/home/user/file.txt"); // "file.txt"
+     * Path.withoutDirectory("assets/image.png"); // "image.png"
+     * ```
+     * 
+     * @param path The path to process
+     * @return The filename with extension, without directory
+     */
     public static function withoutDirectory( path ) : String {
         var s = new Path(path);
         s.dir = null;
@@ -141,12 +207,17 @@ class Path {
     }
 
     /**
-        Returns the directory of `path`.
-
-        If the directory is null, the empty String `""` is returned.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Extracts the directory portion of a path.
+     * 
+     * Example:
+     * ```haxe
+     * Path.directory("/home/user/file.txt"); // "/home/user"
+     * Path.directory("file.txt"); // ""
+     * ```
+     * 
+     * @param path The path to process
+     * @return The directory portion, or empty string if none
+     */
     public static function directory( path ) : String {
         var s = new Path(path);
         if( s.dir == null )
@@ -155,12 +226,18 @@ class Path {
     }
 
     /**
-        Returns the extension of `path`.
-
-        If the extension is null, the empty String `""` is returned.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Extracts the file extension from a path.
+     * 
+     * Example:
+     * ```haxe
+     * Path.extension("image.png"); // "png"
+     * Path.extension("archive.tar.gz"); // "gz"
+     * Path.extension("README"); // ""
+     * ```
+     * 
+     * @param path The path to process
+     * @return The extension without dot, or empty string if none
+     */
     public static function extension( path ) : String {
         var s = new Path(path);
         if( s.ext == null )
@@ -169,12 +246,18 @@ class Path {
     }
 
     /**
-        Returns a String representation of `path` where the extension is `ext`.
-
-        If `path` has no extension, `ext` is added as extension.
-
-        If `path` or `ext` are null, the result is unspecified.
-    **/
+     * Changes or adds a file extension to a path.
+     * 
+     * Example:
+     * ```haxe
+     * Path.withExtension("image.jpg", "png"); // "image.png"
+     * Path.withExtension("document", "pdf"); // "document.pdf"
+     * ```
+     * 
+     * @param path The path to modify
+     * @param ext The new extension (without dot)
+     * @return The path with the new extension
+     */
     public static function withExtension( path, ext ) : String {
         var s = new Path(path);
         s.ext = ext;
@@ -182,13 +265,20 @@ class Path {
     }
 
     /**
-        Joins all paths in `paths` together.
-
-        If `paths` is empty, the empty String `""` is returned. Otherwise the
-        paths are joined with a slash between them.
-
-        If `paths` is null, the result is unspecified.
-    **/
+     * Joins multiple path segments into a single path.
+     * 
+     * Automatically adds separators between segments and normalizes
+     * the result. Empty segments are filtered out.
+     * 
+     * Example:
+     * ```haxe
+     * Path.join(["assets", "images", "player.png"]); // "assets/images/player.png"
+     * Path.join(["/home", "user", "docs"]); // "/home/user/docs"
+     * ```
+     * 
+     * @param paths Array of path segments to join
+     * @return The joined and normalized path
+     */
     public static function join(paths:Array<String>) : String {
         var paths = paths.filter(function(s) return s != null && s != "");
         if (paths.length == 0) {
@@ -203,13 +293,24 @@ class Path {
     }
 
     /**
-        Normalize a given `path` (e.g. make '/usr/local/../lib' to '/usr/lib').
-
-        Also replaces backslashes \ with slashes / and afterwards turns
-        multiple slashes into a single one.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Normalizes a path by resolving relative segments and cleaning separators.
+     * 
+     * Operations performed:
+     * - Converts all backslashes to forward slashes
+     * - Resolves `.` (current directory) and `..` (parent directory) segments
+     * - Removes duplicate slashes (except after colons for Windows drives)
+     * - Preserves absolute path indicators
+     * 
+     * Example:
+     * ```haxe
+     * Path.normalize("/usr/local/../lib"); // "/usr/lib"
+     * Path.normalize("./assets//images/."); // "assets/images"
+     * Path.normalize("C:\\Users\\..\\Windows"); // "C:/Windows"
+     * ```
+     * 
+     * @param path The path to normalize
+     * @return The normalized path
+     */
     public static function normalize(path : String) : String {
         var slash = "/";
         path = path.split("\\").join(slash);
@@ -256,17 +357,23 @@ class Path {
     }
 
     /**
-        Adds a trailing slash to `path`, if it does not have one already.
-
-        If the last slash in `path` is a backslash, a backslash is appended to
-        `path`.
-
-        If the last slash in `path` is a slash, or if no slash is found, a slash
-        is appended to `path`. In particular, this applies to the empty String
-        `""`.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Ensures a path ends with a directory separator.
+     * 
+     * The type of separator added matches the existing separators in the path:
+     * - If the last separator is a backslash, adds a backslash
+     * - Otherwise, adds a forward slash
+     * - Empty string becomes "/"
+     * 
+     * Example:
+     * ```haxe
+     * Path.addTrailingSlash("dir"); // "dir/"
+     * Path.addTrailingSlash("C:\\Windows"); // "C:\\Windows\\"
+     * Path.addTrailingSlash("dir/"); // "dir/" (unchanged)
+     * ```
+     * 
+     * @param path The path to process
+     * @return The path with a trailing separator
+     */
     public static function addTrailingSlash( path : String ) : String {
         if (path.length == 0)
             return "/";
@@ -282,15 +389,20 @@ class Path {
     }
 
     /**
-        Removes trailing slashes from `path`.
-
-        If `path` does not end with a `/` or `\`, `path` is returned unchanged.
-
-        Otherwise the substring of `path` excluding the trailing slashes or
-        backslashes is returned.
-
-        If `path` is null, the result is unspecified.
-    **/
+     * Removes all trailing directory separators from a path.
+     * 
+     * Strips any combination of trailing forward slashes and backslashes.
+     * 
+     * Example:
+     * ```haxe
+     * Path.removeTrailingSlashes("dir/"); // "dir"
+     * Path.removeTrailingSlashes("C:\\Windows\\\\"); // "C:\\Windows"
+     * Path.removeTrailingSlashes("file.txt"); // "file.txt" (unchanged)
+     * ```
+     * 
+     * @param path The path to process
+     * @return The path without trailing separators
+     */
     @:require(haxe_ver >= 3.1)
     public static function removeTrailingSlashes ( path : String ) : String {
         while (true) {
@@ -303,8 +415,25 @@ class Path {
     }
 
     /**
-        Returns true if the path is an absolute path, and false otherwise.
-    **/
+     * Determines if a path is absolute or relative.
+     * 
+     * A path is considered absolute if it:
+     * - Starts with `/` (Unix/Mac/Linux)
+     * - Has a drive letter like `C:` (Windows)
+     * - Starts with `\\\\` (Windows network path)
+     * 
+     * Example:
+     * ```haxe
+     * Path.isAbsolute("/home/user"); // true
+     * Path.isAbsolute("C:\\Windows"); // true 
+     * Path.isAbsolute("\\\\server\\share"); // true
+     * Path.isAbsolute("relative/path"); // false
+     * Path.isAbsolute("./file.txt"); // false
+     * ```
+     * 
+     * @param path The path to check
+     * @return True if the path is absolute, false if relative
+     */
     public static function isAbsolute ( path : String ) : Bool {
         if (StringTools.startsWith(path, '/')) return true;
         if (path.charAt(1) == ':') return true;

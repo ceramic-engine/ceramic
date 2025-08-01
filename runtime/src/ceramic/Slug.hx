@@ -5,12 +5,66 @@ package ceramic;
 
 using StringTools;
 
+/**
+ * URL-safe string generator that converts text into slugs suitable for URLs and filenames.
+ * 
+ * The Slug class transforms strings by replacing special characters, accented letters,
+ * and spaces with URL-safe equivalents. It handles a comprehensive set of Unicode
+ * characters, converting them to their ASCII equivalents where possible.
+ * 
+ * Features:
+ * - Converts accented characters to ASCII equivalents (é→e, ñ→n, etc.)
+ * - Replaces spaces with hyphens or custom separators
+ * - Removes or replaces special characters
+ * - Handles currency symbols, mathematical symbols, and various scripts
+ * - Optionally converts to lowercase
+ * - Customizable character removal and replacement rules
+ * 
+ * Example usage:
+ * ```haxe
+ * // Basic usage
+ * var slug = Slug.encode("Hello World!"); // "hello-world"
+ * var slug2 = Slug.encode("Café Résumé"); // "cafe-resume"
+ * 
+ * // Custom options
+ * var options:SlugOptions = {
+ *     lower: false,        // Keep original case
+ *     replacement: "_",    // Use underscore instead of hyphen
+ *     remove: ~/[.]/g     // Remove only dots
+ * };
+ * var slug3 = Slug.encode("Hello.World", options); // "Hello_World"
+ * 
+ * // Handling special characters
+ * Slug.encode("Price: $100"); // "price-dollar100"
+ * Slug.encode("Love ♥ Haxe"); // "love-love-haxe"
+ * ```
+ * 
+ * This is particularly useful for:
+ * - Creating SEO-friendly URLs from page titles
+ * - Generating safe filenames from user input
+ * - Creating identifiers from human-readable text
+ * 
+ * Based on the popular JavaScript slugify library by simov.
+ */
 class Slug {
 
+    /**
+     * Default regex pattern for characters to remove from slugs.
+     * Removes: $ * + ~ . ( ) ' " ! \ : @ ? §
+     */
     public static final RE_SLUG_REMOVE_CHARS = ~/[$*+~.()'"!\\:@\?§]/g;
 
+    /**
+     * Default options for slug generation.
+     * Uses lowercase conversion, standard character removal, and hyphen replacement.
+     */
 	public static final DEFAULT_OPTIONS:SlugOptions = {};
 
+	/**
+	 * Comprehensive character mapping table for converting Unicode characters to ASCII equivalents.
+	 * Maps Unicode code points to their slug-safe string representations.
+	 * Includes accented letters, currency symbols, Greek letters, Cyrillic, and more.
+	 */
 	public static var charMap:Map<Int, String> = [
 		36 => "dollar", 37 => "percent", 38 => "and", 60 => "less", 62 => "greater", 124 => "or", 162 => "cent", 163 => "pound", 164 => "currency",
 		165 => "yen", 169 => "(c)", 170 => "a", 174 => "(r)", 186 => "o", 192 => "A", 193 => "A", 194 => "A", 195 => "A", 196 => "A", 197 => "A", 198 => "AE",
@@ -59,8 +113,27 @@ class Slug {
 		9829 => "love", 20803 => "yuan", 20870 => "yen", 65020 => "rial",
 	];
 
+	/**
+	 * Regex pattern for characters considered safe in slugs.
+	 * Matches anything that is NOT a word character, space, or special safe character.
+	 */
 	public static final safe:EReg = ~/[^\w\s$*_+~.()'"!\-:@]/g;
 
+	/**
+	 * Converts a string into a URL-safe slug.
+	 * 
+	 * The encoding process:
+	 * 1. Replaces Unicode characters with ASCII equivalents using charMap
+	 * 2. Trims whitespace from beginning and end
+	 * 3. Removes unwanted characters based on options.remove pattern
+	 * 4. Replaces spaces with the specified replacement character
+	 * 5. Optionally converts to lowercase
+	 * 
+	 * @param str The string to convert into a slug
+	 * @param options Optional configuration for slug generation.
+	 *                If null, uses DEFAULT_OPTIONS.
+	 * @return The URL-safe slug version of the input string
+	 */
 	public static function encode(str:String, ?options:SlugOptions):String {
 		if (options == null)
 			options = DEFAULT_OPTIONS;
@@ -76,8 +149,34 @@ class Slug {
 	}
 }
 
+/**
+ * Configuration options for slug generation.
+ * 
+ * All fields are optional and have sensible defaults.
+ * Use @:structInit syntax for easy initialization:
+ * ```haxe
+ * var options:SlugOptions = {
+ *     lower: false,
+ *     replacement: "_"
+ * };
+ * ```
+ */
 @:structInit class SlugOptions {
+	/**
+	 * Whether to convert the slug to lowercase.
+	 * Default: true
+	 */
 	public final lower:Bool = true;
+	
+	/**
+	 * Regular expression pattern for characters to remove.
+	 * Default: Removes $ * + ~ . ( ) ' " ! \ : @ ? §
+	 */
 	public final remove:EReg = Slug.RE_SLUG_REMOVE_CHARS;
+	
+	/**
+	 * String to replace spaces with.
+	 * Default: "-" (hyphen)
+	 */
 	public final replacement:String = "-";
 }

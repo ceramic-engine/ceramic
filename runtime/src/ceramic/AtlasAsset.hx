@@ -3,22 +3,83 @@ package ceramic;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
 
+/**
+ * Asset for loading texture atlases (sprite sheets with metadata).
+ *
+ * AtlasAsset handles loading of texture atlas files which contain multiple
+ * packed textures/sprites along with their position metadata. It supports
+ * both Spine/LibGDX atlas format (.atlas) and XML atlas formats.
+ *
+ * Features:
+ * - Automatic texture loading for all atlas pages
+ * - Hot-reload support for atlas files
+ * - Density-aware loading (e.g., @2x variants)
+ * - Automatic visual updates when atlas is reloaded
+ * - Custom atlas parser support
+ *
+ * The loaded atlas can be used with Quad visuals to display specific regions:
+ *
+ * @example
+ * ```haxe
+ * // Load an atlas
+ * var atlasAsset = new AtlasAsset('myAtlas');
+ * atlasAsset.path = 'atlases/sprites.atlas';
+ * atlasAsset.onComplete(this, success -> {
+ *     if (success) {
+ *         // Get a specific region from the atlas
+ *         var region = atlasAsset.atlas.region('player_idle');
+ *
+ *         // Use it with a Quad
+ *         var quad = new Quad();
+ *         quad.tile = region;
+ *
+ *         // Use it with a Sprite
+ *         // (requires sprite plugin) Sprite has better atlas region support than Quad:
+ *         // region offsets are properly handled, allowing trimmed/packed sprites
+ *         // to display correctly with their original bounds and pivot points.
+ *         var sprite = new Sprite();
+ *         sprite.region = region;
+ *     }
+ * });
+ * assets.addAsset(atlasAsset);
+ * assets.load();
+ * ```
+ *
+ * @see TextureAtlas
+ * @see TextureAtlasRegion
+ * @see ImageAsset
+ */
 class AtlasAsset extends Asset {
 
 /// Events
 
+    /**
+     * Emitted when the atlas is replaced (typically during hot-reload).
+     * @param newAtlas The newly loaded atlas
+     * @param prevAtlas The previous atlas that was replaced
+     */
     @event function replaceAtlas(newAtlas:TextureAtlas, prevAtlas:TextureAtlas);
 
 /// Properties
 
+    /**
+     * The loaded texture atlas containing all regions and pages.
+     * Will be null until the asset is successfully loaded.
+     */
     @observe public var atlas:TextureAtlas = null;
 
+    /**
+     * The raw text content of the atlas file.
+     * Can be used to inspect the atlas metadata.
+     */
     @observe public var text:String = null;
 
 /// Internal
 
     /**
-     * A custom atlas parsing method. Will be used over the default parsing if not null
+     * A custom atlas parsing method. Will be used over the default parsing if not null.
+     * This allows you to provide your own atlas format parser.
+     * The parser should take the raw atlas text and return a TextureAtlas instance.
      */
     var parseAtlas:(text:String)->TextureAtlas = null;
 
@@ -33,6 +94,18 @@ class AtlasAsset extends Asset {
 
     }
 
+    /**
+     * Loads the atlas asset.
+     *
+     * This method:
+     * 1. Loads the atlas metadata file
+     * 2. Parses the atlas format (auto-detects XML or text format)
+     * 3. Loads all texture pages referenced in the atlas
+     * 4. Updates existing visuals if this is a reload
+     *
+     * The loading process is asynchronous and will emit a complete event
+     * when finished (either success or failure).
+     */
     override public function load() {
 
         if (owner != null) {
@@ -211,6 +284,12 @@ class AtlasAsset extends Asset {
 
     }
 
+    /**
+     * Called when the global texture density changes.
+     * Triggers a reload if a different density variant exists.
+     * @param newDensity The new texture density multiplier
+     * @param prevDensity The previous texture density multiplier
+     */
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         if (status == READY) {
@@ -222,6 +301,10 @@ class AtlasAsset extends Asset {
 
     }
 
+    /**
+     * Checks if the atlas needs to be reloaded due to texture density change.
+     * If a different density variant exists (e.g., @2x version), it will reload the atlas.
+     */
     function checkTexturesDensity():Void {
 
         if (owner == null || !owner.reloadOnTextureDensityChange)
@@ -237,6 +320,12 @@ class AtlasAsset extends Asset {
 
     }
 
+    /**
+     * Called when asset files change on disk (hot-reload support).
+     * Automatically reloads the atlas if its file has been modified.
+     * @param newFiles Map of current files and their modification times
+     * @param previousFiles Map of previous files and their modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())
@@ -258,6 +347,10 @@ class AtlasAsset extends Asset {
 
     }
 
+    /**
+     * Destroys the atlas asset and its loaded atlas.
+     * This will also destroy all texture pages associated with the atlas.
+     */
     override function destroy():Void {
 
         super.destroy();

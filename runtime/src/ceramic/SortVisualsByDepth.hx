@@ -25,15 +25,42 @@
  using ceramic.Extensions;
  
  /**
-     SortVisuals provides a stable implementation of merge sort through its `sort`
-     method. It should be used instead of `Array.sort` in cases where the order
-     of equal elements has to be retained on all targets.
-     
-     This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances and sort them by depth.
-     The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
- **/
+  * Simplified high-performance stable merge sort for Visual arrays based on depth only.
+  * 
+  * SortVisualsByDepth provides a streamlined sorting algorithm that orders visuals
+  * purely by their depth property, ignoring other rendering criteria like texture
+  * or blending mode. This makes it faster than SortVisuals when you only need
+  * depth-based ordering.
+  * 
+  * Key characteristics:
+  * - Sorts by depth only (higher depth values render on top)
+  * - Stable sort: preserves relative order of visuals with equal depth
+  * - Same optimizations as SortVisuals (inlining, unsafe access, insertion sort for small arrays)
+  * - Faster than full SortVisuals when texture batching is not a concern
+  * 
+  * Use cases:
+  * - UI elements where depth is the primary ordering criterion
+  * - Debug visualizations
+  * - Scenarios where draw call batching is less important than simplicity
+  * 
+  * Example usage:
+  * ```haxe
+  * var visuals:Array<Visual> = [...];
+  * SortVisualsByDepth.sort(visuals); // Sorts in place by depth only
+  * ```
+  * 
+  * @see ceramic.SortVisuals For complete rendering order sorting
+  * @see ceramic.Visual.depth For the depth property
+  */
  class SortVisualsByDepth {
  
+     /**
+      * Compares two visuals by depth only.
+      * 
+      * @param a First visual to compare
+      * @param b Second visual to compare
+      * @return -1 if a has lower depth, 1 if a has higher depth, 0 if equal
+      */
      static inline function cmp(a:Visual, b:Visual):Int {
  
          var result = 0;
@@ -50,16 +77,18 @@
      }
  
      /**
-         Sorts Array `a` according to the comparison function `cmp`, where
-         `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-         negative Int if `x < y`.
- 
-         This operation modifies Array `a` in place.
- 
-         This operation is stable: The order of equal elements is preserved.
- 
-         If `a` or `cmp` are null, the result is unspecified.
-     **/
+      * Sorts an array of Visual objects in place by depth value only.
+      * 
+      * This is a simplified version of SortVisuals.sort() that only considers
+      * the depth property. Visuals with higher depth values will be sorted
+      * after (rendered on top of) visuals with lower depth values.
+      * 
+      * The sort is stable, preserving the relative order of visuals with
+      * equal depth values. This operation modifies the array in place.
+      * 
+      * @param a The array of visuals to sort by depth. Modified in place.
+      *          If null, behavior is undefined.
+      */
      static inline public function sort(a:Array<Visual>) {
          rec(a, 0, a.length);
      }

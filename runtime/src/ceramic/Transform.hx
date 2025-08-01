@@ -7,10 +7,36 @@ import tracker.Events;
 /**
  * Transform holds matrix data to make 2d rotate, translate, scale and skew transformations.
  * Angles are in degrees.
- * Representation:
+ * 
+ * This class represents a 2D affine transformation matrix used for positioning,
+ * rotating, scaling, and skewing visual objects. The matrix is stored in the
+ * following format:
+ * 
+ * ```
  * | a | c | tx |
  * | b | d | ty |
  * | 0 | 0 | 1  |
+ * ```
+ * 
+ * Where:
+ * - `a` and `d` control scaling and rotation
+ * - `b` and `c` control skewing and rotation  
+ * - `tx` and `ty` control translation (position)
+ * 
+ * Example usage:
+ * ```haxe
+ * var transform = new Transform();
+ * transform.translate(100, 50);    // Move to (100, 50)
+ * transform.rotate(Math.PI / 4);   // Rotate 45 degrees
+ * transform.scale(2, 2);           // Double the size
+ * 
+ * // Apply to a point
+ * var newX = transform.transformX(10, 20);
+ * var newY = transform.transformY(10, 20);
+ * ```
+ * 
+ * The Transform class includes change tracking to optimize rendering pipelines
+ * and supports decomposition into individual components (position, scale, rotation, skew).
  */
 @:allow(ceramic.TransformPool)
 class Transform implements Events {
@@ -21,6 +47,10 @@ class Transform implements Events {
 
 /// Events
 
+    /**
+     * Emitted when any transform property changes.
+     * Useful for invalidating caches or triggering re-renders.
+     */
     @event public function change();
 
 /// Properties
@@ -39,18 +69,40 @@ class Transform implements Events {
 
     public var changedDirty:Bool;
 
+    /**
+     * The (0,0) element of the matrix, affects horizontal scaling and rotation.
+     */
     public var a:Float;
 
+    /**
+     * The (1,0) element of the matrix, affects vertical skewing and rotation.
+     */
     public var b:Float;
 
+    /**
+     * The (0,1) element of the matrix, affects horizontal skewing and rotation.
+     */
     public var c:Float;
 
+    /**
+     * The (1,1) element of the matrix, affects vertical scaling and rotation.
+     */
     public var d:Float;
 
+    /**
+     * The horizontal translation (x position) in pixels.
+     */
     public var tx:Float;
 
+    /**
+     * The vertical translation (y position) in pixels.
+     */
     public var ty:Float;
 
+    /**
+     * Whether the transform has changed since the last change event.
+     * Call computeChanged() to update this value.
+     */
     public var changed(default,null):Bool;
 
 /// Internal
@@ -59,6 +111,15 @@ class Transform implements Events {
 
 /// Code
 
+    /**
+     * Create a new Transform matrix.
+     * @param a Horizontal scaling/rotation component (default: 1)
+     * @param b Vertical skewing/rotation component (default: 0)
+     * @param c Horizontal skewing/rotation component (default: 0)
+     * @param d Vertical scaling/rotation component (default: 1)
+     * @param tx Horizontal translation (default: 0)
+     * @param ty Vertical translation (default: 0)
+     */
     public function new(a:Float = 1, b:Float = 0, c:Float = 0, d:Float = 1, tx:Float = 0, ty:Float = 0) {
 
         this.a = a;
@@ -79,6 +140,11 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Check if the transform has changed by comparing current values to previous values.
+     * Updates the `changed` property. Call this before checking `changed` to ensure
+     * the value is up to date.
+     */
     #if !debug inline #end public function computeChanged() {
 
         if (changedDirty) {
@@ -102,6 +168,10 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Reset the change tracking state.
+     * After calling this, `changed` will be false until the transform is modified again.
+     */
     inline public function cleanChangedState():Void {
 
         _aPrev = a;
@@ -115,12 +185,23 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Create a copy of this transform.
+     * @return A new Transform with the same matrix values
+     */
     inline public function clone():Transform {
 
         return new Transform(a, b, c, d, tx, ty);
 
     }
 
+    /**
+     * Concatenate (multiply) this transform with another transform.
+     * The result is stored in this transform. This is equivalent to:
+     * `this = this * m`
+     * 
+     * @param m The transform to concatenate with this one
+     */
     inline public function concat(m:Transform):Void {
 
         var a1 = a * m.a + b * m.c;
@@ -140,6 +221,13 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Decompose the transform matrix into its component parts.
+     * Extracts position, scale, rotation, and skew from the matrix.
+     * 
+     * @param output Optional DecomposedTransform to store the result (creates new if null)
+     * @return The decomposed transform containing x, y, scaleX, scaleY, rotation, skewX, skewY
+     */
     inline public function decompose(?output:DecomposedTransform):DecomposedTransform {
 
         if (output == null) output = new DecomposedTransform();
@@ -175,12 +263,32 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Set this transform from decomposed values.
+     * Rebuilds the matrix from position, scale, rotation, and skew components.
+     * 
+     * @param decomposed The decomposed transform values to apply
+     */
     inline public function setFromDecomposed(decomposed:DecomposedTransform):Void {
 
         setFromValues(decomposed.x, decomposed.y, decomposed.scaleX, decomposed.scaleY, decomposed.rotation, decomposed.skewX, decomposed.skewY, decomposed.pivotX, decomposed.pivotY);
 
     }
 
+    /**
+     * Set this transform from individual component values.
+     * Rebuilds the matrix from position, scale, rotation, skew, and pivot.
+     * 
+     * @param x X position
+     * @param y Y position
+     * @param scaleX Horizontal scale factor
+     * @param scaleY Vertical scale factor
+     * @param rotation Rotation angle in radians
+     * @param skewX Horizontal skew angle in radians
+     * @param skewY Vertical skew angle in radians
+     * @param pivotX X coordinate of the pivot point
+     * @param pivotY Y coordinate of the pivot point
+     */
     inline public function setFromValues(x:Float = 0, y:Float = 0, scaleX:Float = 1, scaleY:Float = 1, rotation:Float = 0, skewX:Float = 0, skewY:Float = 0, pivotX:Float = 0, pivotY:Float = 0):Void {
 
         identity();
@@ -197,6 +305,14 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Set this transform by interpolating between two other transforms.
+     * Useful for animations and transitions.
+     * 
+     * @param transform1 The starting transform (used when ratio = 0)
+     * @param transform2 The ending transform (used when ratio = 1)
+     * @param ratio The interpolation factor (0 to 1)
+     */
     inline public function setFromInterpolated(transform1:Transform, transform2:Transform, ratio:Float):Void {
 
         if (ratio == 0) {
@@ -222,24 +338,52 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Transform a vector's X component without translation.
+     * Useful for transforming directions or deltas.
+     * 
+     * @param x The X component of the vector
+     * @param y The Y component of the vector
+     * @return The transformed X component
+     */
     inline public function deltaTransformX(x:Float, y:Float):Float {
 
         return x * a + y * c;
 
     }
 
+    /**
+     * Transform a vector's Y component without translation.
+     * Useful for transforming directions or deltas.
+     * 
+     * @param x The X component of the vector
+     * @param y The Y component of the vector
+     * @return The transformed Y component
+     */
     inline public function deltaTransformY(x:Float, y:Float):Float {
 
         return x * b + y * d;
 
     }
 
+    /**
+     * Check if this transform equals another transform.
+     * Compares all matrix elements for exact equality.
+     * 
+     * @param transform The transform to compare with
+     * @return true if all matrix elements are equal
+     */
     inline public function equals(transform:Transform):Bool {
 
         return (transform != null && tx == transform.tx && ty == transform.ty && a == transform.a && b == transform.b && c == transform.c && d == transform.d);
 
     }
 
+    /**
+     * Reset this transform to the identity matrix.
+     * The identity matrix has no translation, rotation, scale, or skew.
+     * Equivalent to: a=1, b=0, c=0, d=1, tx=0, ty=0
+     */
     inline public function identity():Void {
 
         a = 1;
@@ -253,6 +397,11 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Invert this transform matrix.
+     * The inverted matrix can be used to reverse transformations.
+     * If the matrix is not invertible (determinant = 0), sets to a degenerate state.
+     */
     inline public function invert():Void {
 
         var norm = a * d - b * c;
@@ -283,7 +432,10 @@ class Transform implements Events {
     }
 
     /**
-     * Rotate by angle (in radians)
+     * Rotate the transform by the specified angle.
+     * The rotation is applied relative to the current transform.
+     * 
+     * @param angle The rotation angle in radians (use degrees * Math.PI / 180 to convert)
      */
     inline public function rotate(angle:Float):Void {
 
@@ -306,6 +458,13 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Scale the transform by the specified factors.
+     * The scaling is applied relative to the current transform.
+     * 
+     * @param x Horizontal scale factor
+     * @param y Vertical scale factor
+     */
     inline public function scale(x:Float, y:Float):Void {
 
         a *= x;
@@ -321,6 +480,13 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Translate (move) the transform by the specified offset.
+     * The translation is applied relative to the current transform.
+     * 
+     * @param x Horizontal offset in pixels
+     * @param y Vertical offset in pixels
+     */
     inline public function translate(x:Float, y:Float):Void {
 
         tx += x;
@@ -330,6 +496,13 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Apply skew transformation.
+     * Skewing shears the coordinate space along the X and Y axes.
+     * 
+     * @param skewX Horizontal skew angle in radians
+     * @param skewY Vertical skew angle in radians
+     */
     inline public function skew(skewX:Float, skewY:Float):Void {
 
         _tmp.identity();
@@ -355,6 +528,13 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Set the rotation and uniform scale directly.
+     * This replaces the current rotation and scale, discarding any skew.
+     * 
+     * @param angle The rotation angle in radians
+     * @param scale Uniform scale factor (default: 1)
+     */
     inline public function setRotation(angle:Float, scale:Float = 1):Void {
 
         a = Math.cos(angle) * scale;
@@ -366,6 +546,16 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Set all matrix values directly.
+     * 
+     * @param a Horizontal scaling/rotation component
+     * @param b Vertical skewing/rotation component
+     * @param c Horizontal skewing/rotation component
+     * @param d Vertical scaling/rotation component
+     * @param tx Horizontal translation
+     * @param ty Vertical translation
+     */
     inline public function setTo(a:Float, b:Float, c:Float, d:Float, tx:Float, ty:Float):Void {
 
         this.a = a;
@@ -379,6 +569,11 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Copy all values from another transform.
+     * 
+     * @param transform The transform to copy from
+     */
     inline public function setToTransform(transform:Transform):Void {
 
         this.a = transform.a;
@@ -392,6 +587,12 @@ class Transform implements Events {
 
     }
 
+    /**
+     * Get a string representation of the transform.
+     * Includes both matrix values and decomposed components.
+     * 
+     * @return String representation for debugging
+     */
     public function toString():String {
 
         decompose(_decomposed1);
@@ -400,6 +601,14 @@ class Transform implements Events {
     }
 
 
+    /**
+     * Transform a point's X coordinate.
+     * Applies the full transformation including translation.
+     * 
+     * @param x The X coordinate of the point
+     * @param y The Y coordinate of the point
+     * @return The transformed X coordinate
+     */
     inline public function transformX(x:Float, y:Float):Float {
 
         return x * a + y * c + tx;
@@ -407,6 +616,14 @@ class Transform implements Events {
     }
 
 
+    /**
+     * Transform a point's Y coordinate.
+     * Applies the full transformation including translation.
+     * 
+     * @param x The X coordinate of the point
+     * @param y The Y coordinate of the point
+     * @return The transformed Y coordinate
+     */
     inline public function transformY(x:Float, y:Float):Float {
 
         return x * b + y * d + ty;

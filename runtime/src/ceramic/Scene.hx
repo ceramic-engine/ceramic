@@ -3,6 +3,45 @@ package ceramic;
 import ceramic.Shortcuts.*;
 import tracker.Observable;
 
+/**
+ * Base class for creating scenes in Ceramic.
+ * 
+ * Scenes are self-contained units of gameplay or application screens that manage
+ * their own assets, lifecycle, and update loop. They provide a structured way to
+ * organize different parts of your application (menus, levels, settings, etc.).
+ * 
+ * Key features:
+ * - Automatic asset loading and management
+ * - Lifecycle management (boot, preload, create, update, destroy)
+ * - Scene transition support
+ * - Pause/resume functionality
+ * - Observable status for tracking scene state
+ * 
+ * Typical scene lifecycle:
+ * 1. `new()` - Constructor
+ * 2. `preload()` - Load assets (optional)
+ * 3. `create()` - Initialize scene content
+ * 4. `update()` - Called every frame while active
+ * 5. `destroy()` - Cleanup
+ * 
+ * Example usage:
+ * ```haxe
+ * class GameScene extends Scene {
+ *     override function preload() {
+ *         assets.add(Images.PLAYER);
+ *         assets.add(Sounds.MUSIC);
+ *     }
+ *     
+ *     override function create() {
+ *         // Initialize game objects
+ *     }
+ *     
+ *     override function update(delta:Float) {
+ *         // Update game logic
+ *     }
+ * }
+ * ```
+ */
 #if (!macro && !completion)
 @:autoBuild(ceramic.macros.SceneMacro.build())
 #end
@@ -26,8 +65,17 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
      */
     @event function replace(newScene:Scene);
 
+    /**
+     * Observable status of this scene.
+     * Possible values: NONE, PRELOAD, PRELOAD_COMPLETE, CREATE, READY
+     */
     @observe var status:SceneStatus = NONE;
 
+    /**
+     * Asset manager for this scene.
+     * Automatically created when accessed for the first time.
+     * Use this to load images, sounds, fonts, etc. during the preload phase.
+     */
     public var assets(get, set):Assets;
     function get_assets():Assets {
         if (_assets == null && !destroyed) {
@@ -58,7 +106,8 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     }
 
     /**
-     * Whether this scene is a root scene
+     * Whether this scene is a root scene.
+     * Root scenes are managed by the SceneSystem and receive automatic updates.
      */
     public var isRootScene(default, null):Bool = false;
 
@@ -78,10 +127,14 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
     public var autoUpdateWhenInactive:Bool = false;
 
     /**
-     * Is this scene paused?
+     * Whether this scene is paused.
+     * When paused, the update() method will not be called.
      */
     public var paused:Bool = false;
 
+    /**
+     * Create a new scene instance.
+     */
     public function new() {
 
         super();
@@ -278,6 +331,10 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     }
 
+    /**
+     * Check if the scene is ready (has completed initialization).
+     * @return True if the scene status is READY, false otherwise
+     */
     public function isReady():Bool {
 
         return switch status {
@@ -293,6 +350,13 @@ class Scene #if (plugin_ui && ceramic_scene_ui) extends View #else extends Layer
 
     }
 
+    /**
+     * Schedule a callback to be executed once the scene is ready.
+     * If the scene is already ready, the callback is executed immediately.
+     * @param owner The entity that owns the callback (for proper cleanup)
+     * @param callback The function to call when the scene is ready
+     * @return True if the callback was scheduled/executed, false if scene is destroyed or in invalid state
+     */
     public function scheduleOnceReady(owner:Entity, callback:()->Void):Bool {
 
         if (destroyed) {

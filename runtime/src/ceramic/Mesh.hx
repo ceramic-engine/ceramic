@@ -6,7 +6,68 @@ import ceramic.GeometryUtils;
 using ceramic.Extensions;
 
 /**
- * Draw anything composed of triangles/vertices.
+ * A flexible visual for drawing custom shapes composed of triangles.
+ *
+ * Mesh allows you to create complex 2D geometry by defining vertices (points),
+ * indices (triangles), and optional attributes like colors and texture coordinates.
+ * This is the foundation for advanced visuals like deformable sprites, particle
+ * systems, and custom shape rendering.
+ *
+ * Features:
+ * - Custom vertex positions for any shape
+ * - Per-vertex coloring with color interpolation
+ * - Texture mapping with UV coordinates
+ * - Custom shader attributes support
+ * - Complex hit testing at triangle level
+ * - Optimized rendering through batching
+ *
+ * The mesh is defined by:
+ * - `vertices`: Array of x,y coordinates for each vertex
+ * - `indices`: Array defining triangles (every 3 indices form a triangle)
+ * - `colors`: Optional per-vertex colors
+ * - `uvs`: Texture coordinates when using a texture
+ *
+ * @example
+ * ```haxe
+ * // Create a colored triangle
+ * var mesh = new Mesh();
+ * mesh.vertices = [
+ *     100, 100,  // Vertex 0
+ *     200, 100,  // Vertex 1
+ *     150, 200   // Vertex 2
+ * ];
+ * mesh.indices = [0, 1, 2];
+ * mesh.colors = [
+ *     Color.RED,
+ *     Color.GREEN,
+ *     Color.BLUE
+ * ];
+ *
+ * // Create a textured quad
+ * var mesh = new Mesh();
+ * mesh.color = Color.WHITE; // Use fill color instead of explicit colors array
+ * mesh.texture = assets.texture('image');
+ * mesh.vertices = [
+ *     0, 0,      // Top-left
+ *     100, 0,    // Top-right
+ *     100, 100,  // Bottom-right
+ *     0, 100     // Bottom-left
+ * ];
+ * mesh.indices = [
+ *     0, 1, 2,   // First triangle
+ *     0, 2, 3    // Second triangle
+ * ];
+ * mesh.uvs = [
+ *     0, 0,      // Top-left UV
+ *     1, 0,      // Top-right UV
+ *     1, 1,      // Bottom-right UV
+ *     0, 1       // Bottom-left UV
+ * ];
+ * ```
+ *
+ * @see Visual
+ * @see Quad
+ * @see MeshPool
  */
 @:allow(ceramic.MeshPool)
 class Mesh extends Visual {
@@ -17,23 +78,37 @@ class Mesh extends Visual {
 
 /// Settings
 
+    /**
+     * Defines how colors are applied to the mesh.
+     * - MESH: Use the mesh's color array
+     * - TEXTURE: Use texture colors only
+     * - VERTICES: Multiply vertex colors with texture
+     */
     public var colorMapping:MeshColorMapping = MeshColorMapping.MESH;
 
     /**
-     * The number of floats to add to fill float attributes in vertices array.
-     * Default is zero: no custom attributes. Update this value when using shaders with custom attributes.
+     * The number of additional float values per vertex for custom shader attributes.
+     * Default is 0 (only x,y coordinates). Set this when using shaders that require
+     * extra per-vertex data like secondary UVs, vertex weights, etc.
+     * The total floats per vertex becomes: 2 + customFloatAttributesSize
      */
     public var customFloatAttributesSize:Int = 0;
 
     /**
-     * When set to `true` hit test on this mesh will be performed at vertices level instead
-     * of simply using bounds. This make the test substancially more expensive however.
-     * Use only when needed.
+     * When set to `true`, hit testing checks individual triangles instead of just bounds.
+     * This provides accurate hit detection for complex shapes but is more expensive.
+     * Use only when you need precise interaction with non-rectangular meshes.
+     * Default is false (uses bounding box).
      */
     public var complexHit:Bool = false;
 
 /// Lifecycle
 
+    /**
+     * Create a new Mesh.
+     * The mesh starts empty - you must set vertices, indices, and other
+     * properties before it will render anything.
+     */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -54,7 +129,10 @@ class Mesh extends Visual {
 /// Color
 
     /**
-     * On `Mesh` instances, can be used instead of colors array when the mesh is only composed of a single color.
+     * Convenience property for setting a single color for the entire mesh.
+     * When set, updates the colors array with this color for all vertices.
+     * When getting, returns the first vertex color or WHITE if no colors are set.
+     * For multi-colored meshes, use the colors array directly.
      */
     public var color(get,set):Color;
     function get_color():Color {
@@ -86,34 +164,47 @@ class Mesh extends Visual {
 /// Vertices
 
     /**
-     * An array of floats where each pair of numbers is treated as a coordinate location (x,y)
+     * An array of vertex positions as alternating x,y coordinates.
+     * Each vertex requires 2 floats (or 2 + customFloatAttributesSize if using custom attributes).
+     * Example: [x0, y0, x1, y1, x2, y2, ...]
+     * These define the shape of your mesh.
      */
     public var vertices:Array<Float> = [];
 
     /**
-     * An array of integers or indexes, where every three indexes define a triangle.
+     * An array of vertex indices defining triangles.
+     * Every 3 consecutive indices form one triangle.
+     * Indices refer to positions in the vertices array (0-based).
+     * Example: [0, 1, 2, 0, 2, 3] defines two triangles sharing vertices 0 and 2.
      */
     public var indices:Array<Int> = [];
 
     /**
      * An array of colors for each vertex.
-     * Each color is stored in a single `AlphaColor`(`Int`) value.
+     * Colors are interpolated across triangles for smooth gradients.
+     * Each color includes alpha channel for transparency.
+     * Array length should match the number of vertices.
      */
     public var colors:Array<AlphaColor> = [];
 
     /**
-     * An array of colors for each vertex stored are four float32 values for each color.
-     * Generally not needed unless you need extra precision for each color value.
-     * If provided (not `null`), it will be used instead of `colors`.
-     * When using `floatColors` instead of `colors`, no additional operation
-     * related to premultiplied alpha will be done on the CPU.
+     * High-precision color array using 4 floats per color (RGBA).
+     * Use this instead of `colors` when you need:
+     * - Extra color precision beyond 8-bit per channel
+     * - To avoid CPU premultiplication of alpha
+     * - HDR color values
+     * Format: [r0, g0, b0, a0, r1, g1, b1, a1, ...]
+     * If set, this is used instead of the `colors` array.
      */
     public var floatColors:Float32Array = null;
 
 /// Texture
 
     /**
-     * The texture used on the mesh (optional)
+     * The texture to apply to this mesh.
+     * When set, you must also provide UV coordinates in the `uvs` array.
+     * The texture's asset reference count is automatically managed.
+     * Set to null for untextured meshes.
      */
     public var texture(default,set):Texture = null;
     #if !debug inline #end function set_texture(texture:Texture):Texture {
@@ -160,8 +251,11 @@ class Mesh extends Visual {
     }
 
     /**
-     * An array of normalized coordinates used to apply texture mapping.
-     * Required if the texture is set.
+     * Texture coordinates for each vertex, ranging from 0.0 to 1.0.
+     * Required when using a texture. Array format: [u0, v0, u1, v1, ...]
+     * - (0,0) = top-left of texture
+     * - (1,1) = bottom-right of texture
+     * Values outside 0-1 range will wrap or clamp based on texture settings.
      */
     public var uvs:Array<Float> = [];
 
@@ -186,6 +280,15 @@ class Mesh extends Visual {
 
 /// Overrides
 
+    /**
+     * Test if a point hits this mesh.
+     * If complexHit is true, tests against individual triangles for accuracy.
+     * Otherwise uses the bounding box for performance.
+     * @param x X coordinate to test
+     * @param y Y coordinate to test
+     * @param matrix Transform matrix for coordinate conversion
+     * @return True if the point hits the mesh
+     */
     override function hitTest(x:Float, y:Float, matrix:Transform):Bool {
 
         if (complexHit) {
@@ -262,7 +365,9 @@ class Mesh extends Visual {
 /// Helpers
 
     /**
-     * Compute width and height from vertices
+     * Compute and set the mesh's width and height based on vertex positions.
+     * Scans all vertices to find the maximum x and y coordinates.
+     * Useful after modifying vertices to update the mesh bounds.
      */
     public function computeSize() {
 

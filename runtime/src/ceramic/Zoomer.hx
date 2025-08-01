@@ -2,22 +2,45 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-// Warning: this is just a draft, don't use it!
-
 /**
- * A container used to display a visual that
- * can be zoomed and dragged.
+ * A container that enables zooming and panning of its content.
+ *
+ * **Warning: this is just a draft, don't use it!**
+ *
+ * Zoomer provides touch-friendly zoom and pan controls for its content visual.
+ * It supports:
+ * - Pinch-to-zoom gestures
+ * - Double-tap to zoom
+ * - Drag to pan
+ * - Configurable zoom limits
+ *
+ * Note: This class is experimental and may have incomplete functionality.
+ *
+ * @see Pinch
+ * @see Transform
  */
 class Zoomer extends Visual {
 
 /// Public properties
 
+    /**
+     * The visual content that can be zoomed and panned.
+     */
     public var content(default,null):Visual = null;
 
+    /**
+     * The transform applied to the content for zoom and pan operations.
+     */
     public var zoomTransform(default,null):Transform = new Transform();
 
+    /**
+     * Minimum allowed scale factor (default: 1.0).
+     */
     public var minScale:Float = 1.0;
 
+    /**
+     * Maximum allowed scale factor (default: 4.0).
+     */
     public var maxScale:Float = 4.0;
 
 /// Internal

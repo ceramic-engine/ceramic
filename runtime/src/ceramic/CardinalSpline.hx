@@ -7,8 +7,56 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * Cardinal spline interpolation for smooth curves through control points.
+ * 
+ * This class provides utilities for creating smooth curves that pass through
+ * a series of control points using Cardinal spline interpolation. Cardinal
+ * splines are a type of cubic Hermite spline where tangents are calculated
+ * automatically from neighboring points.
+ * 
+ * ## Features
+ * 
+ * - **Smooth Interpolation**: Creates C1 continuous curves through all points
+ * - **Adjustable Tension**: Control curve tightness (0 = sharp, 1 = loose)
+ * - **Variable Resolution**: Specify segments between points for quality
+ * - **Closed Curves**: Option to create continuous loops
+ * - **Performance Optimized**: Pre-cached calculations for efficiency
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * // Define control points [x1,y1, x2,y2, ...]
+ * var points = [100,100, 200,150, 300,100, 400,200];
+ * 
+ * // Generate smooth curve points
+ * var smooth = CardinalSpline.getCurvePoints(
+ *     points,
+ *     0.5,    // tension
+ *     20,     // segments per curve
+ *     false   // not closed
+ * );
+ * 
+ * // Draw the smooth curve
+ * var line = new Line();
+ * line.points = smooth;
+ * ```
+ * 
+ * ## Algorithm
+ * 
+ * Cardinal splines use the positions of four consecutive points (P0, P1, P2, P3)
+ * to calculate the curve between P1 and P2. The tangent at each point is
+ * determined by the vector between its neighbors, scaled by the tension parameter.
+ * 
+ * @see ceramic.Line For rendering spline curves
+ * @see ceramic.Shape For filled shapes with spline boundaries
+ */
 class CardinalSpline {
 
+    /**
+     * Cached hermite basis function values for performance.
+     * Reused across multiple spline calculations.
+     */
     static var cache:Array<Float> = [];
 
     /**
@@ -17,12 +65,38 @@ class CardinalSpline {
      *
      * The points for the cardinal spline are returned as a new array.
      *
-     * @param points Point array
-     * @param tension [0.5] Typically between [0.0, 1.0] but can be exceeded
-     * @param numSegments [25] Number of segments between two points (line resolution)
-     * @param close [false] Close the ends making the line continuous
-     * @param result (optional) The resulting array
-     * @returns New array with the calculated points that were added to the path
+     * @param points Point array containing at least 2 points (4 values).
+     *               Format: [x1, y1, x2, y2, ..., xn, yn]
+     * @param tension Curve tension parameter. Default: 0.5
+     *                - 0.0 = sharp corners (Catmull-Rom spline)
+     *                - 0.5 = balanced curve
+     *                - 1.0 = loose curve
+     *                - Can exceed [0,1] for special effects
+     * @param numSegments Number of interpolated points between each pair of control points.
+     *                    Higher values create smoother curves. Default: 25
+     * @param close Whether to connect the last point back to the first, creating a closed loop.
+     *              Default: false
+     * @param result Optional array to store results in (avoids allocation).
+     *               Will be resized as needed.
+     * @return Array containing interpolated points [x1,y1, x2,y2, ...]
+     *         Length = (numPoints-1) * numSegments * 2 + 2 (+ extra for closed)
+     * 
+     * @example
+     * ```haxe
+     * // Create a smooth curve through 4 points
+     * var controlPoints = [
+     *     100, 100,  // Point 1
+     *     200, 50,   // Point 2  
+     *     300, 150,  // Point 3
+     *     400, 100   // Point 4
+     * ];
+     * 
+     * var smoothCurve = CardinalSpline.getCurvePoints(
+     *     controlPoints,
+     *     0.5,   // Medium tension
+     *     30     // 30 segments between points
+     * );
+     * ```
      */
     public static function getCurvePoints(
         points:Array<Float>,
@@ -125,6 +199,19 @@ class CardinalSpline {
 
     }
 
+    /**
+     * Internal function that performs the actual spline interpolation.
+     * Uses cached hermite basis functions for performance.
+     * 
+     * @param pts Extended point array with duplicated endpoints
+     * @param cache Pre-calculated hermite basis function values
+     * @param l Original point array length
+     * @param tension Spline tension parameter
+     * @param numSegments Segments between control points
+     * @param result Output array for interpolated points
+     * @param rPos Current position in result array
+     * @return Updated position in result array
+     */
     inline private static function parse(pts:Array<Float>, cache:Array<Float>, l:Int, tension:Float, numSegments:Int, result:Array<Float>, rPos:Int):Int {
 
         var i:Int = 2;

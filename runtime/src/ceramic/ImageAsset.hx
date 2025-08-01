@@ -8,14 +8,47 @@ using StringTools;
 import ase.Ase;
 #end
 
+/**
+ * Asset type for loading image files as textures.
+ * 
+ * Supports various image formats including PNG, JPG, WebP (backend-dependent),
+ * and Aseprite files (.ase/.aseprite) when the ase plugin is enabled.
+ * 
+ * Features:
+ * - Automatic density selection based on screen resolution
+ * - Hot reload support for development
+ * - Texture replacement with automatic visual updates
+ * - Integration with texture atlas packing
+ * 
+ * @example
+ * ```haxe
+ * var assets = new Assets();
+ * assets.addImage('hero.png');
+ * assets.load();
+ * 
+ * // Access loaded texture
+ * var texture = assets.texture('hero');
+ * ```
+ */
 class ImageAsset extends Asset {
 
 /// Events
 
+    /**
+     * Emitted when the texture is replaced (e.g., during hot reload).
+     * All visuals using the previous texture are automatically updated.
+     * @param newTexture The newly loaded texture
+     * @param prevTexture The previous texture being replaced
+     */
     @event function replaceTexture(newTexture:Texture, prevTexture:Texture);
 
 /// Properties
 
+    /**
+     * The loaded texture instance.
+     * Observable property that updates when the texture is loaded or replaced.
+     * Null until the asset is successfully loaded.
+     */
     @observe public var texture:Texture = null;
 
 /// Internal
@@ -39,6 +72,15 @@ class ImageAsset extends Asset {
 
 /// Lifecycle
 
+    /**
+     * Create a new image asset.
+     * @param name Image file name (with or without extension)
+     * @param variant Optional variant suffix
+     * @param options Loading options including:
+     *                - premultiplyAlpha: Whether to premultiply alpha channel
+     *                - width/height: For Aseprite grid texture loading
+     *                - layers: Specific layers to load from Aseprite files
+     */
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super('image', name, variant, options #if ceramic_debug_entity_allocs , pos #end);
@@ -46,6 +88,11 @@ class ImageAsset extends Asset {
 
     }
 
+    /**
+     * Load the image file and create a texture.
+     * Handles density selection, hot reload, and visual updates.
+     * Emits complete event when finished.
+     */
     override public function load() {
 
         status = LOADING;
@@ -250,6 +297,10 @@ class ImageAsset extends Asset {
 
     }
 
+    /**
+     * Handle screen density changes by reloading the texture at appropriate resolution.
+     * Only triggers if the asset is already loaded and a better resolution is available.
+     */
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         if (status == READY) {
@@ -277,6 +328,10 @@ class ImageAsset extends Asset {
 
     }
 
+    /**
+     * Handle file system changes for hot reload.
+     * Automatically reloads the texture when the source file is modified.
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.textures.supportsHotReloadPath())

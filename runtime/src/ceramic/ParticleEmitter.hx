@@ -9,20 +9,82 @@ using ceramic.Extensions;
 // https://github.com/HaxeFlixel/flixel/blob/02e2d18158761d0d508a06126daef2487aa7373c/flixel/effects/particles/FlxEmitter.hx
 
 /**
- * A particle emitter.
+ * A powerful and flexible particle emitter system for creating visual effects.
+ * 
+ * ParticleEmitter manages the creation, animation, and recycling of particles
+ * to create effects like fire, smoke, explosions, rain, snow, and more.
+ * The emitter can be attached as a component to any Visual entity.
+ * 
+ * Features:
+ * - Continuous or burst emission modes
+ * - Full control over particle properties and their evolution over time
+ * - Efficient particle pooling and recycling
+ * - Support for custom particle visuals
+ * - Deterministic random generation with seeding
+ * - Launch modes: circular (angle-based) or square (velocity-based)
+ * 
+ * Particle properties that can be animated over lifetime:
+ * - Position, velocity, acceleration, and drag
+ * - Scale, rotation, and angular velocity
+ * - Color and alpha transparency
+ * - Custom ranges for randomization
+ * 
+ * @example
+ * ```haxe
+ * // Create a fire effect
+ * var fire = new ParticleEmitter();
+ * fire.launchMode = CIRCLE;
+ * fire.launchAngle(-90, -90);
+ * fire.speedStart(100, 150);
+ * fire.lifespan(0.5, 1.0);
+ * fire.scaleStart(0.5, 1.0);
+ * fire.scaleEnd(0.1, 0.2);
+ * fire.colorStart(Color.YELLOW, Color.ORANGE);
+ * fire.colorEnd(Color.RED);
+ * fire.alphaEnd(0);
+ * fire.emitContinuously(0.05);
+ * myVisual.component('particles', fire);
+ * 
+ * // Create an explosion
+ * var explosion = new ParticleEmitter();
+ * explosion.speedStart(200, 400);
+ * explosion.lifespan(0.3, 0.6);
+ * explosion.scaleEnd(2.0);
+ * explosion.alphaEnd(0);
+ * explosion.explode(50); // Emit 50 particles at once
+ * ```
+ * 
+ * @see ParticleItem The individual particle data structure
+ * @see Particles For managing multiple emitters
+ * @see ParticlesLaunchMode For launch mode options
  */
 class ParticleEmitter extends Entity implements Component implements Observable {
 
 /// Entity/Visual
 
+    /**
+     * The visual entity this emitter is attached to when used as a component.
+     * Particles will be added as children of this visual.
+     */
     var entity:Visual;
 
+    /**
+     * The visual that particles are added to as children.
+     * Can be set directly or automatically assigned when used as a component.
+     * If null, particles won't be displayed.
+     */
     public var visual(get, set):Visual;
     inline function get_visual():Visual return entity;
     inline function set_visual(visual:Visual):Visual return entity = visual;
 
 /// Events
 
+    /**
+     * Emitted when a new particle is launched.
+     * Useful for applying custom initialization or effects to particles.
+     * 
+     * @param particle The particle that was just emitted
+     */
     @event function _emitParticle(particle:ParticleItem);
 
 /// Configuration shorthands
@@ -756,50 +818,79 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Custom particle visual creation. Use this to emit custom visuals as particle. Another option
-     * is to create a subclass of `ParticleEmitter` and override `getParticleVisual()` method.
+     * Custom particle visual creation callback.
+     * 
+     * Use this to emit custom visuals as particles. The callback receives
+     * an existing visual (if being recycled) and should return a visual
+     * to use for the particle.
+     * 
+     * Alternative approach: Create a subclass and override `getParticleVisual()`.
+     * 
+     * @param existingVisual A recycled visual if available, null otherwise
+     * @return The visual to use for the particle
+     * 
+     * @example
+     * ```haxe
+     * emitter.getCustomParticleVisual = (existing) -> {
+     *     if (existing != null) return existing;
+     *     var sprite = new Quad();
+     *     sprite.texture = sparkTexture;
+     *     sprite.anchor(0.5, 0.5);
+     *     return sprite;
+     * };
+     * ```
      */
     public var getCustomParticleVisual:(existingVisual:Visual)->Visual;
 
     /**
-     * The internal quantity we want to emit (when emitting continuously)
+     * The internal quantity we want to emit (when emitting continuously).
+     * -1 means infinite, 0 means stop, positive values count down.
      */
     var _quantityToEmit:Int = 0;
 
     /**
-     * Timer used when emitting continuously
+     * Timer used when emitting continuously.
+     * Accumulates time to determine when to emit next particle.
      */
     var _continuousTimer:Float = 0;
 
     /**
-     * Internal list of active particle items
+     * Internal list of active particle items currently being simulated.
      */
     var _activeParticles:Array<ParticleItem> = [];
 
     /**
-     * Internal list of recycled particle items
+     * Internal list of recycled particle items for object pooling.
+     * Reduces garbage collection pressure.
      */
     var _recycledParticles:Array<ParticleItem> = [];
 
     /**
-     * Internal list of particle items when they are being iterated on to be updated
+     * Internal list of particle items when they are being iterated on to be updated.
+     * Prevents modification conflicts during iteration.
      */
     var _updatingParticles:Array<ParticleItem> = [];
 
     /**
-     * The seeded random used internally
+     * The seeded random number generator used internally.
+     * Provides deterministic randomness when seed is set.
      */
     var _seedRandom:SeedRandom = new SeedRandom(Math.random() * 999999999);
 
     /**
-     * Internal point object, handy for reusing for memory management purposes.
+     * Internal point object, reused for memory management purposes.
+     * Prevents allocation during velocity calculations.
      */
     static var _point:Point = new Point(0, 0);
 
 /// Lifecycle
 
     /**
-     * Creates a new `ParticleEmitter` object.
+     * Creates a new ParticleEmitter instance.
+     * 
+     * The emitter starts in IDLE status and must be activated using
+     * either `emitContinuously()` for streams or `explode()` for bursts.
+     * Default settings create white 5x5 pixel particles.
      */
     public function new()
     {
@@ -808,6 +899,13 @@ class ParticleEmitter extends Entity implements Component implements Observable 
         app.onUpdate(this, update);
     }
 
+    /**
+     * Destroys the emitter and cleans up resources.
+     * 
+     * If the emitter has no associated visual (not attached as component),
+     * all active particle visuals without parents are also destroyed.
+     * This prevents memory leaks from orphaned particles.
+     */
     override function destroy() {
 
         // When particle visuals are not associated to another visual,
@@ -827,12 +925,24 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
+    /**
+     * Called when this emitter is bound as a component to a visual.
+     * Currently empty but can be overridden for custom initialization.
+     */
     function bindAsComponent() {
 
     }
 
     /**
-     * Called automatically by the game loop
+     * Updates the emitter and all active particles.
+     * 
+     * Called automatically by the game loop. Handles:
+     * - Continuous particle emission timing
+     * - Particle position, velocity, and property updates  
+     * - Particle lifecycle and recycling
+     * - Status updates (IDLE, EMITTING, SPREADING)
+     * 
+     * @param delta Time elapsed since last update in seconds
      */
     function update(delta:Float):Void
     {
@@ -874,7 +984,12 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Emit one or more particles if continuous emission is active and enough time has passed
+     * Emits particles based on continuous emission settings.
+     * 
+     * Accumulates time and emits particles when the interval threshold
+     * is reached. Handles quantity countdown and automatic stopping.
+     * 
+     * @param delta Time elapsed since last update in seconds
      */
     inline function emitContinuousParticlesIfNeeded(delta:Float):Void {
 
@@ -909,7 +1024,19 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Update a particle (and its visual) from its parameter and elapsed time
+     * Updates a single particle's properties and visual.
+     * 
+     * Handles:
+     * - Age progression and lifespan checking
+     * - Property interpolation (velocity, scale, color, etc.)
+     * - Physics simulation (acceleration, drag, max velocity)
+     * - Visual synchronization if enabled
+     * 
+     * Properties are interpolated linearly over the particle's lifetime
+     * when start and end values differ.
+     * 
+     * @param particle The particle to update
+     * @param delta Time elapsed since last update in seconds
      */
     function updateParticle(particle:ParticleItem, delta:Float):Void {
 
@@ -995,9 +1122,19 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 /// Managing particles and visuals
 
     /**
-     * Instanciate and return a new ParticleItem object.
-     * Override this method if you want to instanciate a custom ParticleItem subclass
-     * @return ParticleItem
+     * Creates a new ParticleItem instance.
+     * 
+     * Override this method in a subclass to use custom ParticleItem
+     * implementations with additional properties or behavior.
+     * 
+     * @return A new ParticleItem instance
+     * 
+     * @example
+     * ```haxe
+     * override function createParticleItem():ParticleItem {
+     *     return new CustomParticleItem();
+     * }
+     * ```
      */
     function createParticleItem():ParticleItem {
 
@@ -1005,6 +1142,17 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
+    /**
+     * Gets a particle from the pool or creates a new one.
+     * 
+     * Implements object pooling for performance:
+     * 1. Tries to reuse a recycled particle
+     * 2. Creates new particle if pool is empty
+     * 3. Assigns or recycles visual
+     * 4. Adds to active particles list
+     * 
+     * @return An active particle ready for initialization
+     */
     function getParticle():ParticleItem {
 
         var particle:ParticleItem;
@@ -1030,8 +1178,28 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Get a visual for a particle that will be emitted right after.
-     * If a visual is being recycled, provide it as argument.
+     * Gets or creates a visual for a particle.
+     * 
+     * Default implementation creates a 5x5 white quad centered at anchor point.
+     * Override this method or use `getCustomParticleVisual` callback to
+     * provide custom visuals like sprites, shapes, or complex graphics.
+     * 
+     * @param existingVisual A recycled visual if available, null for new particles
+     * @return Visual to use for the particle
+     * 
+     * @example
+     * ```haxe
+     * override function getParticleVisual(existingVisual:Visual):Visual {
+     *     if (existingVisual != null) {
+     *         existingVisual.active = true;
+     *         return existingVisual;
+     *     }
+     *     var sprite = new Quad();
+     *     sprite.texture = particleTexture;
+     *     sprite.anchor(0.5, 0.5);
+     *     return sprite;
+     * }
+     * ```
      */
     function getParticleVisual(existingVisual:Visual):Visual {
 
@@ -1058,6 +1226,15 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
     }
 
+    /**
+     * Recycles a particle back to the pool.
+     * 
+     * Removes particle from active list, recycles its visual,
+     * and adds to recycled pool for later reuse. If the visual
+     * was destroyed, nullifies the reference.
+     * 
+     * @param particle The particle to recycle
+     */
     function recycleParticle(particle:ParticleItem):Void {
 
         _activeParticles.remove(particle);
@@ -1074,7 +1251,13 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Recycle a particle's visual to reuse it later.
+     * Recycles a particle's visual for later reuse.
+     * 
+     * Default implementation simply deactivates the visual.
+     * Override to perform custom cleanup like resetting animations,
+     * clearing filters, or releasing resources.
+     * 
+     * @param visualToRecycle The visual to recycle
      */
     function recycleParticleVisual(visualToRecycle:Visual):Void {
 
@@ -1087,11 +1270,29 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 /// Public API
 
     /**
-     * Start emitting particles continuously.
-     *
-     * @param   interval   How often to emit a particle.
-     *                      `0` = never emit, `0.1` = 1 particle every 0.1 seconds, `5` = 1 particle every 5 seconds.
-     * @param   quantity    How many particles to launch before stopping. `-1` (default) = never stop
+     * Starts emitting particles continuously at regular intervals.
+     * 
+     * Creates a stream of particles over time. Useful for effects like:
+     * - Fire, smoke, steam
+     * - Rain, snow, falling leaves  
+     * - Fountains, waterfalls
+     * - Magic sparkles, energy beams
+     * 
+     * @param interval Time between particle emissions in seconds.
+     *                 Examples: 0.1 = 10 particles/second, 0.01 = 100 particles/second.
+     *                 Set to 0 or less to stop emission.
+     * @param quantity Total particles to emit before stopping.
+     *                 -1 = infinite (default), 0 = stop immediately,
+     *                 positive = emit that many then stop.
+     * 
+     * @example
+     * ```haxe
+     * // Continuous smoke
+     * emitter.emitContinuously(0.05); // 20 particles per second, forever
+     * 
+     * // Limited burst
+     * emitter.emitContinuously(0.1, 50); // 10/second, stop after 50
+     * ```
      */
     public function emitContinuously(interval:Float = 0.1, quantity:Int = -1):Void
     {
@@ -1109,9 +1310,28 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Burst a given quantity number of particles at once
-     *
-     * @param   quantity    How many particles to launch. Does nothing if lower than `1`
+     * Emits a burst of particles all at once.
+     * 
+     * Creates an instant explosion of particles. Useful for effects like:
+     * - Explosions, impacts, hits
+     * - Confetti, fireworks
+     * - Debris, shrapnel
+     * - Death/spawn effects
+     * 
+     * All particles are created at the same moment but with randomized
+     * properties according to the configured ranges.
+     * 
+     * @param quantity Number of particles to emit instantly.
+     *                 Must be 1 or greater, does nothing if less.
+     * 
+     * @example
+     * ```haxe
+     * // Explosion effect
+     * emitter.explode(100);
+     * 
+     * // Small puff of smoke
+     * emitter.explode(10);
+     * ```
      */
     public function explode(quantity:Int):Void {
 
@@ -1127,7 +1347,13 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * Stop emitting (if it was emitting)
+     * Stops particle emission immediately.
+     * 
+     * Existing particles continue to animate until their lifespan ends.
+     * The emitter status changes from EMITTING to SPREADING (if particles
+     * remain) or IDLE (if no particles are active).
+     * 
+     * Safe to call even if not currently emitting.
      */
     public function stop():Void {
 
@@ -1138,7 +1364,25 @@ class ParticleEmitter extends Entity implements Component implements Observable 
     }
 
     /**
-     * This function can be used both internally and externally to emit the next particle.
+     * Emits a single particle with randomized properties.
+     * 
+     * This method:
+     * 1. Gets a particle from the pool
+     * 2. Randomizes properties within configured ranges
+     * 3. Initializes position, velocity, and other attributes
+     * 4. Triggers the emitParticle event
+     * 
+     * Can be called directly for custom emission patterns beyond
+     * the built-in continuous and burst modes.
+     * 
+     * @example
+     * ```haxe
+     * // Emit particles in a custom pattern
+     * for (i in 0...5) {
+     *     emitter.x = i * 50;
+     *     emitter.emitParticle();
+     * }
+     * ```
      */
     public function emitParticle():Void
     {

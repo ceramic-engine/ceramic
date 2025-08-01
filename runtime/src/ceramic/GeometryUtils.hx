@@ -1,12 +1,61 @@
 package ceramic;
 
 /**
- * Geometry-related utilities.
+ * A collection of static utility functions for 2D geometric calculations.
+ * 
+ * GeometryUtils provides essential geometric operations commonly needed in 2D games
+ * and applications, including point-in-shape tests, distance calculations, angle
+ * computations, and polygon analysis.
+ * 
+ * All methods are static and optimized for performance, making them suitable for
+ * real-time applications like collision detection, input handling, and visual effects.
+ * 
+ * Common use cases:
+ * - Hit testing: Determine if a mouse/touch point is inside a shape
+ * - Collision detection: Check if circles or other shapes intersect
+ * - Movement: Calculate distances and angles for object positioning
+ * - Rendering: Determine winding order for proper triangle rendering
+ * 
+ * Example usage:
+ * ```haxe
+ * // Check if mouse is inside a triangle
+ * if (GeometryUtils.pointInTriangle(mouseX, mouseY, v1.x, v1.y, v2.x, v2.y, v3.x, v3.y)) {
+ *     trace("Mouse is inside triangle!");
+ * }
+ * 
+ * // Calculate distance between two points
+ * var dist = GeometryUtils.distance(player.x, player.y, enemy.x, enemy.y);
+ * if (dist < 50) {
+ *     trace("Enemy is nearby!");
+ * }
+ * 
+ * // Get angle between player and target
+ * var angle = GeometryUtils.angleTo(player.x, player.y, target.x, target.y);
+ * player.rotation = angle;
+ * ```
+ * 
+ * @see ceramic.Visual For shape rendering
+ * @see ceramic.Transform For coordinate transformations
+ * @see ceramic.Triangulate For polygon triangulation
  */
 class GeometryUtils {
 
     /**
-     * Returns `true` if the point `(x,y)` is inside the given (a,b,c) triangle
+     * Tests whether a point lies inside a triangle using the sign method.
+     * 
+     * This method uses the sign of the cross product to determine if a point is on the
+     * same side of all three edges of the triangle. It handles edge cases where the
+     * point lies exactly on an edge.
+     * 
+     * @param x The x-coordinate of the point to test
+     * @param y The y-coordinate of the point to test
+     * @param ax The x-coordinate of the first triangle vertex
+     * @param ay The y-coordinate of the first triangle vertex
+     * @param bx The x-coordinate of the second triangle vertex
+     * @param by The y-coordinate of the second triangle vertex
+     * @param cx The x-coordinate of the third triangle vertex
+     * @param cy The y-coordinate of the third triangle vertex
+     * @return `true` if the point is inside or on the edge of the triangle, `false` otherwise
      */
     public static function pointInTriangle(x:Float, y:Float, ax:Float, ay:Float, bx:Float, by:Float, cx:Float, cy:Float):Bool {
 
@@ -26,7 +75,19 @@ class GeometryUtils {
     }
 
     /**
-     * Returns `true` if the point `(x,y)` is inside the given (rectX, rectY, rectWidth, rectHeight) rectangle
+     * Tests whether a point lies inside an axis-aligned rectangle.
+     * 
+     * The rectangle is defined by its top-left corner position and dimensions.
+     * Points exactly on the left or top edges are considered inside, while points
+     * on the right or bottom edges are considered outside.
+     * 
+     * @param x The x-coordinate of the point to test
+     * @param y The y-coordinate of the point to test
+     * @param rectX The x-coordinate of the rectangle's top-left corner
+     * @param rectY The y-coordinate of the rectangle's top-left corner
+     * @param rectWidth The width of the rectangle
+     * @param rectHeight The height of the rectangle
+     * @return `true` if the point is inside the rectangle, `false` otherwise
      */
     public static function pointInRectangle(x:Float, y:Float, rectX:Float, rectY:Float, rectWidth:Float, rectHeight:Float):Bool {
 
@@ -44,7 +105,17 @@ class GeometryUtils {
     }
 
     /**
-     * Returns `true` if the point `(x,y)` is inside the given (cx, cy, radius) circle
+     * Tests whether a point lies inside or on a circle.
+     * 
+     * Uses the squared distance formula to avoid the expensive square root operation,
+     * making this method very efficient for collision detection.
+     * 
+     * @param x The x-coordinate of the point to test
+     * @param y The y-coordinate of the point to test
+     * @param cx The x-coordinate of the circle's center
+     * @param cy The y-coordinate of the circle's center
+     * @param radius The radius of the circle
+     * @return `true` if the point is inside or on the circle, `false` otherwise
      */
     public static inline function pointInCircle(x:Float, y:Float, cx:Float, cy:Float, radius:Float):Bool {
 
@@ -53,8 +124,19 @@ class GeometryUtils {
     }
 
     /**
-     * Returns `true` if the circle at point `(x0,y0)` with a radius `r0` interects
-     * with the other circle at point `(x1,y1)` with a radius `r1`
+     * Tests whether two circles intersect or touch.
+     * 
+     * Two circles intersect if the distance between their centers is less than or
+     * equal to the sum of their radii. This method uses squared distances to avoid
+     * the expensive square root operation.
+     * 
+     * @param x0 The x-coordinate of the first circle's center
+     * @param y0 The y-coordinate of the first circle's center
+     * @param r0 The radius of the first circle
+     * @param x1 The x-coordinate of the second circle's center
+     * @param y1 The y-coordinate of the second circle's center
+     * @param r1 The radius of the second circle
+     * @return `true` if the circles intersect or touch, `false` otherwise
      */
     public static function intersectCircles(x0:Float, y0:Float, r0:Float, x1:Float, y1:Float, r1:Float):Bool {
 
@@ -73,7 +155,17 @@ class GeometryUtils {
     }
 
     /**
-     * Returns the distance between point (x1, y1) and point (x2, y2)
+     * Calculates the Euclidean distance between two points.
+     * 
+     * This method computes the actual distance value using the square root of the
+     * sum of squared differences. For performance-critical code where you only need
+     * to compare distances, consider using `squareDistance()` instead.
+     * 
+     * @param x1 The x-coordinate of the first point
+     * @param y1 The y-coordinate of the first point
+     * @param x2 The x-coordinate of the second point
+     * @param y2 The y-coordinate of the second point
+     * @return The distance between the two points
      */
     public static inline function distance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
 
@@ -85,9 +177,26 @@ class GeometryUtils {
     }
 
     /**
-     * Returns the square of the distance between point (x1, y1) and point (x2, y2)
-     * It is expected to be used to simply compare two different distances when you
-     * don't need the actual distance value (that needs sqrt call).
+     * Calculates the squared Euclidean distance between two points.
+     * 
+     * This method returns the square of the distance, avoiding the expensive square
+     * root operation. It's ideal for comparing distances or checking if a distance
+     * is within a threshold, as the relative ordering is preserved.
+     * 
+     * Example:
+     * ```haxe
+     * // Instead of:
+     * if (distance(x1, y1, x2, y2) < 100) { ... }
+     * 
+     * // Use:
+     * if (squareDistance(x1, y1, x2, y2) < 100 * 100) { ... }
+     * ```
+     * 
+     * @param x1 The x-coordinate of the first point
+     * @param y1 The y-coordinate of the first point
+     * @param x2 The x-coordinate of the second point
+     * @param y2 The y-coordinate of the second point
+     * @return The squared distance between the two points
      */
     public static inline function squareDistance(x1:Float, y1:Float, x2:Float, y2:Float):Float {
 
@@ -99,7 +208,17 @@ class GeometryUtils {
     }
 
     /**
-     * Returns the angle between (x0, y0) and (x1, y1) in degrees.
+     * Calculates the angle from one point to another in degrees.
+     * 
+     * The angle is measured clockwise from the positive Y-axis (up), making 0° point
+     * upward, 90° point right, 180° point down, and 270° point left. This convention
+     * matches Ceramic's visual rotation system.
+     * 
+     * @param x0 The x-coordinate of the starting point
+     * @param y0 The y-coordinate of the starting point
+     * @param x1 The x-coordinate of the target point
+     * @param y1 The y-coordinate of the target point
+     * @return The angle in degrees (0-360), measured clockwise from up
      */
     public static function angleTo(x0:Float, y0:Float, x1:Float, y1:Float):Float {
 
@@ -113,7 +232,21 @@ class GeometryUtils {
     }
 
     /**
-     * Returns the delta between `angle0` and `angle1`, all values being angles in degrees.
+     * Calculates the shortest angular difference between two angles in degrees.
+     * 
+     * This method always returns the shortest path between two angles, which will
+     * be between -180 and 180 degrees. Positive values indicate clockwise rotation,
+     * negative values indicate counter-clockwise rotation.
+     * 
+     * Example:
+     * ```haxe
+     * angleDelta(350, 10) // Returns 20 (not 340)
+     * angleDelta(10, 350) // Returns -20 (not -340)
+     * ```
+     * 
+     * @param angle0 The starting angle in degrees
+     * @param angle1 The target angle in degrees
+     * @return The angular difference in degrees (-180 to 180)
      */
     public static function angleDelta(angle0:Float, angle1:Float):Float {
 
@@ -134,7 +267,21 @@ class GeometryUtils {
     }
 
     /**
-     * Clamp an degrees (angle) value between 0 (included) and 360 (excluded)
+     * Normalizes an angle to be within the range [0, 360).
+     * 
+     * This method wraps angles to ensure they fall within the standard 0-360 degree
+     * range. Negative angles are wrapped to their positive equivalents, and angles
+     * greater than or equal to 360 are reduced by multiples of 360.
+     * 
+     * Examples:
+     * ```haxe
+     * clampDegrees(-90)  // Returns 270
+     * clampDegrees(450)  // Returns 90
+     * clampDegrees(360)  // Returns 0
+     * ```
+     * 
+     * @param deg The angle in degrees to normalize
+     * @return The normalized angle in the range [0, 360)
      */
     public static function clampDegrees(deg:Float):Float {
 
@@ -151,10 +298,23 @@ class GeometryUtils {
     }
 
     /**
-     * Set the given result's `x` and `y` values so that it's a vector representing
-     * a direction matching the angle (in degrees)
-     * @param angle The angle to compute the direction from
-     * @param result The vector (a `Point` object) receiving the result
+     * Converts an angle in degrees to a unit direction vector.
+     * 
+     * The resulting vector has a magnitude of 1 and points in the direction of the
+     * given angle. The angle is measured clockwise from the positive Y-axis (up),
+     * matching Ceramic's visual rotation system.
+     * 
+     * Example:
+     * ```haxe
+     * var direction = new Point();
+     * GeometryUtils.angleDirection(0, direction);   // direction = (0, -1) - pointing up
+     * GeometryUtils.angleDirection(90, direction);  // direction = (1, 0)  - pointing right
+     * GeometryUtils.angleDirection(180, direction); // direction = (0, 1)  - pointing down
+     * ```
+     * 
+     * @param angle The angle in degrees (0° = up, 90° = right, etc.)
+     * @param result The Point object to store the resulting direction vector
+     * @return The result object for method chaining
      */
     public static function angleDirection(angle:Float, result:Point):Point {
 
@@ -166,11 +326,21 @@ class GeometryUtils {
     }
 
     /**
-     * Returns whether the polygon vertices are ordered clockwise or counterclockwise.
-     * @param vertices Array of polygon vertices as [x,y,x,y,...]
-     * @param offset Starting index in the array
-     * @param count Number of array indices to use
-     * @return true if clockwise, false if counterclockwise
+     * Determines the winding order of a polygon's vertices.
+     * 
+     * This method uses the shoelace formula to calculate the signed area of the polygon.
+     * The sign of the area indicates the winding order: negative for clockwise,
+     * positive for counter-clockwise.
+     * 
+     * Winding order is important for:
+     * - Determining front/back faces in rendering
+     * - Proper triangulation of polygons
+     * - Collision detection algorithms
+     * 
+     * @param vertices Array of polygon vertices in the format [x0,y0,x1,y1,x2,y2,...]
+     * @param offset Starting index in the vertices array (must be even)
+     * @param count Number of array elements to process (must be even, minimum 6 for a triangle)
+     * @return `true` if vertices are ordered clockwise, `false` if counter-clockwise
      */
     public static function isClockwise(vertices:Array<Float>, offset:Int, count:Int):Bool {
         if (count <= 2) return false;

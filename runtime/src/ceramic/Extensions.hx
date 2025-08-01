@@ -5,12 +5,67 @@ import haxe.io.Bytes;
 #end
 
 /**
- * A bunch of static extensions to make life easier.
+ * A collection of static extension methods for common data types.
+ * 
+ * Extensions provides utility methods that enhance standard Haxe types
+ * with performance optimizations, convenience methods, and cross-platform
+ * compatibility helpers. These methods are designed to be used with
+ * Haxe's "using" syntax for cleaner code.
+ * 
+ * ## Categories
+ * 
+ * - **Array Extensions**: Performance-optimized array operations
+ * - **String Extensions**: String manipulation utilities
+ * - **Map Extensions**: Enhanced map operations
+ * - **Type Extensions**: Type checking and conversion
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * using ceramic.Extensions;
+ * 
+ * // Array extensions
+ * var arr = [1, 2, 3, 4, 5];
+ * arr.shuffle();
+ * var random = arr.randomElement();
+ * var value = arr.unsafeGet(0); // Fast access
+ * 
+ * // String extensions
+ * var str = "  hello world  ";
+ * var trimmed = str.trim();
+ * var title = str.toTitleCase();
+ * ```
+ * 
+ * ## Performance Notes
+ * 
+ * - unsafeGet/Set methods bypass bounds checking for speed
+ * - Native array operations are used on C++ when available
+ * - Debug builds can enable bounds checking with ceramic_debug_unsafe
+ * 
+ * @see Type-specific extension methods throughout the class
  */
 class Extensions<T> {
 
 /// Array extensions
 
+    /**
+     * Gets an array element without bounds checking for maximum performance.
+     * 
+     * This method provides the fastest possible array access by bypassing
+     * runtime bounds checking. Use only when you're certain the index is valid.
+     * 
+     * @param array The array to access
+     * @param index The index to retrieve (must be 0 <= index < array.length)
+     * @return The element at the specified index
+     * @throws Exception in debug mode if ceramic_debug_unsafe is defined and index is invalid
+     * 
+     * @example
+     * ```haxe
+     * var arr = [10, 20, 30];
+     * var value = arr.unsafeGet(1); // 20 (fast access)
+     * // arr.unsafeGet(5); // Undefined behavior in release!
+     * ```
+     */
     #if !ceramic_debug_unsafe inline #end public static function unsafeGet<T>(array:Array<T>, index:Int):T {
 #if ceramic_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeGet: index=$index length=${array.length}';
@@ -28,6 +83,23 @@ class Extensions<T> {
 #end
     }
 
+    /**
+     * Sets an array element without bounds checking for maximum performance.
+     * 
+     * This method provides the fastest possible array mutation by bypassing
+     * runtime bounds checking. Use only when you're certain the index is valid.
+     * 
+     * @param array The array to modify
+     * @param index The index to set (must be 0 <= index < array.length)
+     * @param value The value to set at the index
+     * @throws Exception in debug mode if ceramic_debug_unsafe is defined and index is invalid
+     * 
+     * @example
+     * ```haxe
+     * var arr = [10, 20, 30];
+     * arr.unsafeSet(1, 25); // arr is now [10, 25, 30]
+     * ```
+     */
     #if !ceramic_debug_unsafe inline #end public static function unsafeSet<T>(array:Array<T>, index:Int, value:T):Void {
 #if ceramic_debug_unsafe
         if (index < 0 || index >= array.length) throw 'Invalid unsafeSet: index=$index length=${array.length}';
@@ -45,6 +117,22 @@ class Extensions<T> {
 #end
     }
 
+    /**
+     * Efficiently resizes an array to the specified length.
+     * 
+     * Platform-optimized array resizing that either truncates or extends
+     * the array. When extending, new positions contain null/undefined values.
+     * 
+     * @param array The array to resize
+     * @param length The new length (can be larger or smaller)
+     * 
+     * @example
+     * ```haxe
+     * var arr = [1, 2, 3, 4, 5];
+     * arr.setArrayLength(3); // [1, 2, 3]
+     * arr.setArrayLength(5); // [1, 2, 3, null, null]
+     * ```
+     */
     #if !debug inline #end public static function setArrayLength<T>(array:Array<T>, length:Int):Void {
         if (array.length != length) {
 #if cpp
@@ -63,7 +151,19 @@ class Extensions<T> {
     }
 
     /**
-     * Return a random element contained in the given array
+     * Returns a random element from the array.
+     * 
+     * Uses Math.random() to select an element with uniform distribution.
+     * For empty arrays, this will return undefined/null.
+     * 
+     * @param array The array to select from
+     * @return A random element from the array
+     * 
+     * @example
+     * ```haxe
+     * var colors = ["red", "green", "blue"];
+     * var randomColor = colors.randomElement(); // e.g., "green"
+     * ```
      */
     inline public static function randomElement<T>(array:Array<T>):T {
 
@@ -140,8 +240,22 @@ class Extensions<T> {
     }
 
     /**
-     * Shuffle an Array. This operation affects the array in place.
-     * The shuffle algorithm used is a variation of the [Fisher Yates Shuffle](http://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle)
+     * Shuffles an array in place using the Fisher-Yates algorithm.
+     * 
+     * This operation modifies the original array, randomizing the order
+     * of all elements with uniform distribution. Each permutation has
+     * equal probability.
+     * 
+     * @param arr The array to shuffle (modified in place)
+     * 
+     * @example
+     * ```haxe
+     * var deck = [1, 2, 3, 4, 5];
+     * deck.shuffle();
+     * trace(deck); // e.g., [3, 1, 5, 2, 4]
+     * ```
+     * 
+     * @see https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
      */
     public static function shuffle<T>(arr:Array<T>):Void
     {

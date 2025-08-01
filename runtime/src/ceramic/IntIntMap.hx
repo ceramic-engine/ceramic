@@ -9,7 +9,30 @@ using ceramic.Extensions;
 import haxe.ds.Vector;
 
 /**
- * Port of https://github.com/mikvor/hashmapTest/blob/55669a0c3ee1f9c2525580e4ace06e910d5972ec/src/main/java/map/intint/IntIntMap4a.java to haxe
+ * A high-performance map using integer keys and integer values.
+ * 
+ * IntIntMap is optimized for C++ and C# targets using a custom open-addressing
+ * hash table implementation. It provides O(1) average case performance for
+ * basic operations.
+ * 
+ * Features:
+ * - Very fast get/set operations
+ * - Minimal memory overhead
+ * - Optional iteration support
+ * - Automatic resizing based on fill factor
+ * 
+ * Based on mikvor's IntIntMap4a implementation from hashmapTest.
+ * 
+ * Example usage:
+ * ```haxe
+ * var map = new IntIntMap();
+ * map.set(42, 100);
+ * var value = map.get(42); // 100
+ * var missing = map.get(99); // 0 (default)
+ * ```
+ * 
+ * @see IntFloatMap
+ * @see IntBoolMap
  */
 class IntIntMap {
 

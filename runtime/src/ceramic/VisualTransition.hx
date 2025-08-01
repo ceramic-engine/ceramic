@@ -6,6 +6,58 @@ import ceramic.View;
 
 using ceramic.Extensions;
 
+/**
+ * A component that enables smooth property transitions for Visual objects.
+ * 
+ * VisualTransition provides a declarative API for animating multiple visual
+ * properties simultaneously with automatic interpolation and easing. It handles
+ * the complexity of managing multiple concurrent tweens while providing a clean,
+ * chainable interface.
+ * 
+ * Key features:
+ * - Animate multiple properties in a single transition
+ * - Automatic handling of transform interpolation
+ * - Smart rotation with shortest-path calculation
+ * - Property change detection to avoid unnecessary tweens
+ * - Support for custom easing per transition
+ * - "Eager" mode for immediate first-frame updates
+ * 
+ * Example usage:
+ * ```haxe
+ * // Using the static extension method
+ * myVisual.transition(EASE_IN_OUT, 0.5, props -> {
+ *     props.x = 200;
+ *     props.y = 100;
+ *     props.scale(2.0);
+ *     props.alpha = 0.5;
+ *     props.rotation = 180;
+ * });
+ * 
+ * // Or as a component
+ * var transition = new VisualTransition(ELASTIC_EASE_OUT, 0.3);
+ * myVisual.component('transition', transition);
+ * 
+ * transition.run(null, 0.5, props -> {
+ *     props.pos(100, 200);
+ *     props.size(300, 200);
+ * });
+ * ```
+ * 
+ * Supported properties:
+ * - Position: x, y, pos()
+ * - Size: width, height, size()
+ * - Scale: scaleX, scaleY, scale()
+ * - Rotation: rotation (with shortest path)
+ * - Transform: transform, translateX/Y, skewX/Y
+ * - Appearance: alpha, color
+ * - Anchor: anchorX, anchorY, anchor()
+ * - Depth: depth
+ * - View properties (when UI plugin is enabled)
+ * 
+ * @see Visual
+ * @see Tween
+ * @see Transform
+ */
 @:allow(ceramic.VisualTransitionProperties)
 class VisualTransition extends Entity implements Component {
 
@@ -15,10 +67,22 @@ class VisualTransition extends Entity implements Component {
 
     static var _identityTransform:Transform = new Transform();
 
+    /**
+     * The Visual entity this transition component is attached to.
+     * Set automatically when used as a component.
+     */
     var entity:Visual;
 
+    /**
+     * Default easing function for transitions.
+     * Can be overridden per transition in run() or eagerRun().
+     */
     public var easing:Easing;
 
+    /**
+     * Default duration for transitions in seconds.
+     * Can be overridden per transition in run() or eagerRun().
+     */
     public var duration:Float;
 
     var anyPropertyChanged:Bool = false;
@@ -157,6 +221,12 @@ class VisualTransition extends Entity implements Component {
     var isView:Bool = false;
     #end
 
+    /**
+     * Create a new visual transition component.
+     * 
+     * @param easing Default easing function for transitions
+     * @param duration Default duration in seconds (default: 0.3)
+     */
     public function new(?easing:Easing, duration:Float = 0.3) {
 
         super();
@@ -176,10 +246,34 @@ class VisualTransition extends Entity implements Component {
 
 /// Public API
 
+    /**
+     * Run a transition with the specified properties.
+     * 
+     * The callback receives a properties object where you can set
+     * the target values for the transition. Only properties that
+     * change from their current values will be animated.
+     * 
+     * @param easing Optional easing function (uses default if null)
+     * @param duration Duration in seconds (uses default if -1)
+     * @param cb Callback to set target property values
+     * @return The tween instance, or null if no properties changed
+     */
     inline public function run(?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
         return _run(easing, duration, false, cb);
     }
 
+    /**
+     * Run an "eager" transition that updates on the first frame.
+     * 
+     * Same as run() but ensures the visual updates immediately
+     * instead of waiting for the next frame. Useful for preventing
+     * visual "pops" when starting transitions.
+     * 
+     * @param easing Optional easing function (uses default if null)
+     * @param duration Duration in seconds (uses default if -1)
+     * @param cb Callback to set target property values
+     * @return The tween instance, or null if no properties changed
+     */
     inline public function eagerRun(?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
         return _run(easing, duration, true, cb);
     }
@@ -610,6 +704,25 @@ class VisualTransition extends Entity implements Component {
 
 /// Static extension
 
+    /**
+     * Static extension method to run a transition on any Visual.
+     * 
+     * Creates a transition component if needed and runs the transition.
+     * This is the most convenient way to use transitions:
+     * 
+     * ```haxe
+     * myVisual.transition(EASE_OUT, 0.5, props -> {
+     *     props.x = 100;
+     *     props.alpha = 0;
+     * });
+     * ```
+     * 
+     * @param visual The visual to transition
+     * @param easing Optional easing function
+     * @param duration Duration in seconds
+     * @param cb Callback to set target property values
+     * @return The tween instance, or null if no properties changed
+     */
     public static function transition(visual:Visual, ?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
 
         var transitionComponent:VisualTransition = cast visual.component('transition');
@@ -622,6 +735,17 @@ class VisualTransition extends Entity implements Component {
 
     }
 
+    /**
+     * Static extension method to run an eager transition on any Visual.
+     * 
+     * Same as transition() but updates on the first frame.
+     * 
+     * @param visual The visual to transition
+     * @param easing Optional easing function
+     * @param duration Duration in seconds
+     * @param cb Callback to set target property values
+     * @return The tween instance, or null if no properties changed
+     */
     public static function eagerTransition(visual:Visual, ?easing:Easing, duration:Float, cb:VisualTransitionProperties->Void):Null<Tween> {
 
         var transitionComponent:VisualTransition = cast visual.component('transition');
@@ -636,8 +760,30 @@ class VisualTransition extends Entity implements Component {
 
 }
 
+/**
+ * Property setter interface for visual transitions.
+ * 
+ * This abstract type provides a fluent API for setting target values
+ * during a transition. Each property setter automatically marks the
+ * property as changed and stores the target value.
+ * 
+ * The interface includes convenience methods for setting related
+ * properties together:
+ * - pos(x, y) - Set position
+ * - size(width, height) - Set dimensions
+ * - scale(x, y) - Set scale (y optional)
+ * - anchor(x, y) - Set anchor point
+ * - etc.
+ * 
+ * All numeric properties support interpolation with easing.
+ * Color properties use RGB interpolation.
+ * Transform properties use matrix interpolation.
+ */
 abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
 
+    /**
+     * Target X position for the transition.
+     */
     public var x(get, set):Float;
     function get_x():Float return this.xTarget;
     function set_x(x:Float):Float {
@@ -649,6 +795,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return x;
     }
 
+    /**
+     * Target Y position for the transition.
+     */
     public var y(get, set):Float;
     function get_y():Float return this.yTarget;
     function set_y(y:Float):Float {
@@ -660,6 +809,12 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return y;
     }
 
+    /**
+     * Set both X and Y position at once.
+     * 
+     * @param x Target X position
+     * @param y Target Y position
+     */
     public function pos(x:Float, y:Float):Void {
         inline set_x(x);
         inline set_y(y);
@@ -784,6 +939,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         inline set_anchorY(anchorY);
     }
 
+    /**
+     * Target rotation in degrees.
+     * Automatically uses shortest path interpolation.
+     */
     public var rotation(get, set):Float;
     function get_rotation():Float return this.rotationTarget;
     function set_rotation(rotation:Float):Float {
@@ -833,6 +992,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return color;
     }
 
+    /**
+     * Target alpha (opacity) value.
+     * Range: 0.0 (transparent) to 1.0 (opaque).
+     */
     public var alpha(get, set):Float;
     function get_alpha():Float return this.alphaTarget;
     function set_alpha(alpha:Float):Float {

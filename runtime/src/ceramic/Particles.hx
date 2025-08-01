@@ -2,10 +2,65 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+/**
+ * A visual container that manages a particle emitter with convenient automatic emission modes.
+ * 
+ * Particles extends Visual to provide a high-level wrapper around ParticleEmitter,
+ * adding features like automatic continuous emission and timed burst intervals.
+ * This makes it easier to create self-contained particle effects that can be
+ * added to the scene and configured with minimal code.
+ * 
+ * The class is generic, allowing use of custom ParticleEmitter subclasses for
+ * specialized particle behaviors.
+ * 
+ * Key features:
+ * - Automatic continuous emission with `autoEmit`
+ * - Automatic burst intervals with `autoExplodeInterval`
+ * - Forwards all emitter properties with `emitter*` prefix
+ * - Lifecycle management - destroying particles destroys the emitter
+ * 
+ * @example
+ * ```haxe
+ * // Create auto-emitting smoke
+ * var smoke = new Particles();
+ * smoke.autoEmit = true;
+ * smoke.emitterInterval = 0.05;
+ * smoke.emitterLifespan(0.5, 1.0);
+ * smoke.emitterSpeedStart(50, 100);
+ * smoke.emitterAlphaEnd(0);
+ * scene.add(smoke);
+ * 
+ * // Create periodic explosions
+ * var explosions = new Particles();
+ * explosions.autoExplodeInterval = 2.0; // Every 2 seconds
+ * explosions.autoExplodeQuantity = 50;
+ * explosions.emitterSpeedStart(100, 300);
+ * scene.add(explosions);
+ * 
+ * // Use custom emitter
+ * var custom = new Particles(new MyCustomEmitter());
+ * ```
+ * 
+ * @see ParticleEmitter The underlying emitter being managed
+ * @see ParticleItem Individual particle data
+ */
 class Particles<T:ParticleEmitter> extends Visual {
 
+    /**
+     * The particle emitter managed by this visual.
+     * 
+     * Can be accessed directly for advanced configuration or
+     * to call methods like `explode()` and `emitParticle()`.
+     * Most common properties are also exposed with `emitter*` prefix.
+     */
     @component public var emitter:T;
 
+    /**
+     * Creates a new Particles visual with an optional custom emitter.
+     * 
+     * @param emitter Optional custom ParticleEmitter instance or subclass.
+     *                If not provided, creates a standard ParticleEmitter.
+     */
     public function new(?emitter:T) {
 
         super();
@@ -21,6 +76,12 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     }
 
+    /**
+     * Initializes the particles system.
+     * 
+     * Sets up lifecycle binding so that destroying the emitter
+     * also destroys this visual container.
+     */
     function init() {
 
         // When the emitter is destroyed, visual gets destroyed as well
@@ -30,6 +91,20 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     }
 
+    /**
+     * Whether to automatically emit particles continuously.
+     * 
+     * When set to true, starts continuous emission using `emitterInterval`.
+     * When set to false, stops emission (existing particles continue).
+     * 
+     * Default: false
+     * 
+     * @example
+     * ```haxe
+     * particles.emitterInterval = 0.1; // Configure interval first
+     * particles.autoEmit = true; // Start emitting
+     * ```
+     */
     public var autoEmit(default,set):Bool = false;
     function set_autoEmit(autoEmit:Bool):Bool {
         if (this.autoEmit != autoEmit) {
@@ -44,8 +119,27 @@ class Particles<T:ParticleEmitter> extends Visual {
         return autoEmit;
     }
 
+    /**
+     * Timer cleanup function for auto-explode intervals.
+     */
     var clearExplodeInterval:Void->Void = null;
 
+    /**
+     * Interval in seconds between automatic burst emissions.
+     * 
+     * When set to a positive value, triggers burst emissions of
+     * `autoExplodeQuantity` particles at regular intervals.
+     * Set to -1 to disable automatic bursts.
+     * 
+     * Default: -1 (disabled)
+     * 
+     * @example
+     * ```haxe
+     * // Burst 30 particles every 1.5 seconds
+     * particles.autoExplodeQuantity = 30;
+     * particles.autoExplodeInterval = 1.5;
+     * ```
+     */
     public var autoExplodeInterval(default,set):Float = -1;
     function set_autoExplodeInterval(autoExplodeInterval:Float):Float {
         if (this.autoExplodeInterval != autoExplodeInterval) {
@@ -55,6 +149,16 @@ class Particles<T:ParticleEmitter> extends Visual {
         return autoExplodeInterval;
     }
 
+    /**
+     * Number of particles to emit in each automatic burst.
+     * 
+     * Used with `autoExplodeInterval` to create periodic bursts.
+     * Only takes effect when `autoExplodeInterval` is positive.
+     * 
+     * Default: 64
+     * 
+     * @see autoExplodeInterval
+     */
     public var autoExplodeQuantity(default,set):Int = 64;
     function set_autoExplodeQuantity(autoExplodeQuantity:Int):Int {
         if (this.autoExplodeQuantity != autoExplodeQuantity) {
@@ -64,6 +168,12 @@ class Particles<T:ParticleEmitter> extends Visual {
         return autoExplodeQuantity;
     }
 
+    /**
+     * Updates the automatic explosion timer based on current settings.
+     * 
+     * Clears any existing timer and creates a new one if both
+     * interval and quantity are positive.
+     */
     function computeAutoExplode() {
 
         if (clearExplodeInterval != null) {
@@ -77,6 +187,12 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     }
 
+    /**
+     * Executes an automatic burst emission.
+     * 
+     * Called by the interval timer to emit the configured
+     * quantity of particles.
+     */
     function doAutoExplode() {
 
         #if cs (cast emitter:ParticleEmitter) #else emitter #end.explode(autoExplodeQuantity);
@@ -84,6 +200,10 @@ class Particles<T:ParticleEmitter> extends Visual {
     }
 
 /// Helpers forwarding to emitter
+
+    // The following properties forward to the underlying emitter for convenience.
+    // This allows configuring the emitter through the Particles instance without
+    // directly accessing the emitter property.
 
     /**
      * Determines whether the emitter is currently paused. It is totally safe to directly toggle this.
@@ -866,5 +986,11 @@ class Particles<T:ParticleEmitter> extends Visual {
     inline public function emitterAlphaEnd(endMin:Float, ?endMax:Float):Void {
         #if cs (cast emitter:ParticleEmitter) #else emitter #end.alphaEnd(endMin, endMax);
     }
+
+    // Note: The emitter* properties and methods above provide convenient access to
+    // the underlying ParticleEmitter configuration. They forward directly to the
+    // emitter instance, allowing you to configure particles without accessing
+    // the emitter property directly. For properties not exposed here, access
+    // the emitter directly: particles.emitter.someProperty
 
 }

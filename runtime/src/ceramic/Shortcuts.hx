@@ -13,8 +13,43 @@ import haxe.PosInfos;
 #end
 
 /**
- * Shortcuts adds convenience identifiers to access ceramic app, screen, ...
- * Use it by adding `import ceramic.Shortcuts.*;` in your files.
+ * Convenience static accessors and utility methods for common Ceramic functionality.
+ *
+ * Shortcuts provides quick access to frequently used Ceramic singletons and utilities,
+ * eliminating the need for repetitive code. By importing this class with `import ceramic.Shortcuts.*;`,
+ * you gain direct access to app, screen, audio, input, and other core systems.
+ * This import is done by default via `import.hx` in Ceramic projects.
+ *
+ * Key features:
+ * - **Static accessors**: Direct access to app, screen, audio, input, settings, log, systems
+ * - **Observation utilities**: Methods for managing autorun scopes (unobserve, reobserve, cease)
+ * - **Conditional execution**: `until()` macro for reactive condition checking
+ * - **Debug assertions**: `assert()` macro for development-time validation
+ *
+ * Usage examples:
+ * ```haxe
+ * import ceramic.Shortcuts.*;
+ * ```
+ *
+ * ```haxe
+ * // Direct access to singletons
+ * app.onUpdate(this, update);
+ * screen.onResize(this, handleResize);
+ * audio.playSound(mySound);
+ *
+ * // Wait for condition on observable player health field
+ * until(player.health <= 0, () -> {
+ *     showGameOver();
+ * });
+ *
+ * // Debug assertion
+ * assert(player != null, "Player must exist");
+ * ```
+ *
+ * @see App
+ * @see Screen
+ * @see Audio
+ * @see Input
  */
 class Shortcuts {
 
@@ -63,37 +98,89 @@ class Shortcuts {
     #if !haxe_server inline #end static function get_systems():Systems { return App.app.systems; }
 
     /**
-     * Ensures current `autorun` won't be affected by the code after this call.
-     * `reobserve()` should be called to restore previous state.
+     * Temporarily stops observing property changes in the current autorun scope.
+     *
+     * Use this when you need to read observable properties without creating
+     * dependencies in the current autorun. Must be paired with `reobserve()`
+     * to restore observation.
+     *
+     * Example:
+     * ```haxe
+     * autorun(() -> {
+     *     // This creates a dependency
+     *     var x = observable.value;
+     *
+     *     unobserve();
+     *     // This read doesn't create a dependency
+     *     var y = observable.otherValue;
+     *     reobserve();
+     * });
+     * ```
+     *
+     * @see reobserve
+     * @see tracker.Autorun
      */
     inline public static function unobserve():Void { tracker.Autorun.unobserve(); }
 
     /**
-     * Resume observing values and resume affecting current `autorun` scope.
-     * This should be called after an `unobserve()` call.
+     * Resumes observing property changes after a call to `unobserve()`.
+     *
+     * Restores the autorun's ability to track dependencies on observable
+     * properties. Always pair this with a preceding `unobserve()` call.
+     *
+     * @see unobserve
+     * @see tracker.Autorun
      */
     inline public static function reobserve():Void { tracker.Autorun.reobserve(); }
 
     /**
-     * Unbinds and destroys current `autorun`. The name `cease()` has been chosed there
-     * so that it is unlikely to collide with other more common names suchs as `stop`, `unbind` etc...
-     * and should make it more recognizable, along with `observe()` and `unobserve()`.
+     * Stops and destroys the current autorun from within its own callback.
+     *
+     * Use this to create one-shot autoruns or to stop an autorun based on
+     * internal conditions. The distinctive name 'cease' avoids conflicts
+     * with common method names.
+     *
+     * Example:
+     * ```haxe
+     * autorun(() -> {
+     *     if (condition.met) {
+     *         doSomething();
+     *         cease(); // This autorun won't run again
+     *     }
+     * });
+     * ```
+     *
+     * @see tracker.Autorun
      */
     inline public static function cease():Void { tracker.Autorun.cease(); }
 
     #end
 
     /**
-     * Wait until the observable condition becomes true to execute the callback once (and only once). Creates an `Autorun` instance and returns it.
-     * Usage:
+     * Creates an autorun that waits for a condition to become true, then executes a callback once.
+     *
+     * This macro provides a reactive way to wait for conditions without polling.
+     * The condition is checked whenever any observed properties within it change.
+     * Once true, the callback executes and the autorun is automatically destroyed.
+     *
+     * Syntax variations:
      * ```haxe
-     * // Resulting autorun attached to "this" if available and a valid entity
-     * until(something == true, callback);
-     * // Add "null" if you don't want it to be attached to anything
-     * until(null, something == true, callback);
-     * // Attach to another entity
-     * until(entity, something == true, callback);
+     * // Auto-attach to 'this' if available (common in Entity subclasses)
+     * until(player.isReady, () -> startGame());
+     *
+     * // Explicitly attach to null (no owner)
+     * until(null, player.isReady, () -> startGame());
+     *
+     * // Attach to specific entity (cleaned up when entity is destroyed)
+     * until(myEntity, player.isReady, () -> startGame());
      * ```
+     *
+     * The autorun is automatically cleaned up:
+     * - When the condition becomes true (after callback execution)
+     * - When the owner entity is destroyed (if attached)
+     *
+     * @param exprs Variable arguments: [owner], condition, callback
+     * @return The created Autorun instance (can be manually destroyed if needed)
      */
     macro public static function until(exprs:Array<Expr>):ExprOf<tracker.Autorun> {
 
@@ -130,8 +217,27 @@ class Shortcuts {
     }
 
     /**
-     * Assert the expression evaluates to `true`.
-     * This check is only done in `debug` builds and doesn't affect `release` builds.
+     * Debug-time assertion that validates expressions evaluate to true.
+     *
+     * Assertions help catch logic errors during development. They are:
+     * - Active in debug builds (or when -D ceramic_assert is set)
+     * - Completely removed from release builds (zero runtime cost)
+     * - Logged as errors with optional custom messages
+     *
+     * Examples:
+     * ```haxe
+     * assert(player != null);
+     * assert(health > 0, "Player health must be positive");
+     * assert(items.length < maxItems, 'Too many items: ${items.length}');
+     * ```
+     *
+     * Failed assertions:
+     * - Log an error with the expression and optional reason
+     * - Throw an exception to halt execution
+     * - Can print stack traces with -D ceramic_assert_print_stack
+     *
+     * @param expr The expression to validate (must evaluate to true)
+     * @param reason Optional explanation shown when assertion fails
      */
     macro public static function assert(expr:Expr, ?reason:ExprOf<String>) {
 

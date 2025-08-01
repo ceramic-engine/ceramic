@@ -6,6 +6,13 @@ import tracker.Component;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * Component that enables text editing functionality for Text visuals.
+ * 
+ * This component provides text input, selection, and editing capabilities
+ * when attached to a Text entity. It handles user input, cursor positioning,
+ * text selection, and clipboard operations.
+ */
 class EditText extends Entity implements Component implements TextInputDelegate {
 
 /// Internal statics
@@ -16,25 +23,53 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
 /// Events
 
+    /**
+     * Event fired when the text content is updated during editing.
+     * 
+     * @param content The updated text content
+     */
     @event function update(content:String);
 
+    /**
+     * Event fired when text editing starts.
+     */
     @event function start();
 
+    /**
+     * Event fired when the user submits the text (e.g., pressing Enter in single-line mode).
+     */
     @event function submit();
 
+    /**
+     * Event fired when text editing stops.
+     */
     @event function stop();
 
 /// Public properties
 
+    /**
+     * The Text entity this component is attached to.
+     */
     public var entity:Text;
 
+    /**
+     * Whether multiline editing is enabled.
+     * When false, pressing Enter will submit the text.
+     * When true, pressing Enter will create a new line.
+     */
     public var multiline:Bool = false;
 
+    /**
+     * Whether this EditText is currently active and editing.
+     */
     public var editing(get, never):Bool;
     function get_editing():Bool {
         return (_activeEditTextInput == this);
     }
 
+    /**
+     * The color used for text selection highlighting.
+     */
     public var selectionColor(default, set):Color;
     function set_selectionColor(selectionColor:Color):Color {
         this.selectionColor = selectionColor;
@@ -43,6 +78,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return selectionColor;
     }
 
+    /**
+     * The color of the text cursor.
+     */
     public var textCursorColor(default, set):Color;
     function set_textCursorColor(textCursorColor:Color):Color {
         this.textCursorColor = textCursorColor;
@@ -51,6 +89,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorColor;
     }
 
+    /**
+     * Horizontal offset for the text cursor position.
+     */
     public var textCursorOffsetX(default, set):Float;
     function set_textCursorOffsetX(textCursorOffsetX:Float):Float {
         this.textCursorOffsetX = textCursorOffsetX;
@@ -59,6 +100,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorOffsetX;
     }
 
+    /**
+     * Vertical offset for the text cursor position.
+     */
     public var textCursorOffsetY(default, set):Float;
     function set_textCursorOffsetY(textCursorOffsetY:Float):Float {
         this.textCursorOffsetY = textCursorOffsetY;
@@ -67,6 +111,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorOffsetY;
     }
 
+    /**
+     * Height factor for the text cursor (1.0 = full line height).
+     */
     public var textCursorHeightFactor(default, set):Float;
     function set_textCursorHeightFactor(textCursorHeightFactor:Float):Float {
         this.textCursorHeightFactor = textCursorHeightFactor;
@@ -75,6 +122,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorHeightFactor;
     }
 
+    /**
+     * Width of the text cursor in pixels.
+     */
     public var textCursorWidth(default, set):Float;
     function set_textCursorWidth(textCursorWidth:Float):Float {
         this.textCursorWidth = textCursorWidth;
@@ -83,6 +133,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
         return textCursorWidth;
     }
 
+    /**
+     * Whether text editing is disabled.
+     * When disabled, the user cannot edit the text.
+     */
     public var disabled(default, set):Bool = false;
     function set_disabled(disabled:Bool):Bool {
         if (disabled == this.disabled) return disabled;
@@ -137,6 +191,16 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
 /// Lifecycle
 
+    /**
+     * Create a new EditText component.
+     * 
+     * @param selectionColor Color for text selection highlighting
+     * @param textCursorColor Color of the text cursor
+     * @param textCursorOffsetX Horizontal offset for cursor position
+     * @param textCursorOffsetY Vertical offset for cursor position
+     * @param textCursorHeightFactor Height factor for cursor (1.0 = full line height)
+     * @param textCursorWidth Width of the cursor in pixels
+     */
     public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1, textCursorWidth:Float = 1) {
 
         super();
@@ -178,6 +242,12 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
 /// Public API
 
+    /**
+     * Start text input and editing.
+     * 
+     * @param selectionStart Initial cursor position or selection start (-1 for end of text)
+     * @param selectionEnd Selection end position (-1 for no selection)
+     */
     public function startInput(selectionStart:Int = -1, selectionEnd:Int = -1):Void {
 
         if (_activeEditTextInput != null) {
@@ -236,6 +306,9 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+    /**
+     * Stop text input and editing.
+     */
     public function stopInput():Void {
 
         inputActive = false;
@@ -260,6 +333,11 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+    /**
+     * Update the text content programmatically while editing.
+     * 
+     * @param text The new text content
+     */
     public function updateText(text:String):Void {
 
         if (!inputActive) return;
@@ -277,6 +355,10 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+    /**
+     * Give focus to this text field and start editing.
+     * Selects all text by default.
+     */
     public function focus() {
 
         if (disabled)
@@ -375,6 +457,15 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
 /// TextInput delegate
 
+    /**
+     * Find the closest position in a target line from a position in another line.
+     * Used for vertical cursor navigation.
+     * 
+     * @param fromPosition Position in the source line
+     * @param fromLine Source line number
+     * @param toLine Target line number
+     * @return Closest position in the target line
+     */
     public function textInputClosestPositionInLine(fromPosition:Int, fromLine:Int, toLine:Int):Int {
 
         var indexFromLine = entity.indexForPosInLine(fromLine, fromPosition);
@@ -384,6 +475,11 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+    /**
+     * Get the total number of lines in the text.
+     * 
+     * @return Number of lines
+     */
     public function textInputNumberOfLines():Int {
 
         var glyphQuads = entity.glyphQuads;
@@ -393,18 +489,37 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
     }
 
+    /**
+     * Get the global character index from a line number and position within that line.
+     * 
+     * @param lineNumber The line number (0-based)
+     * @param lineOffset Position within the line
+     * @return Global character index
+     */
     public function textInputIndexForPosInLine(lineNumber:Int, lineOffset:Int):Int {
 
         return entity.indexForPosInLine(lineNumber, lineOffset);
 
     }
 
+    /**
+     * Get the line number for a given character index.
+     * 
+     * @param index Global character index
+     * @return Line number (0-based)
+     */
     public function textInputLineForIndex(index:Int):Int {
 
         return entity.lineForIndex(index);
 
     }
 
+    /**
+     * Get the position within a line for a given character index.
+     * 
+     * @param index Global character index
+     * @return Position within the line
+     */
     public function textInputPosInLineForIndex(index:Int):Int {
 
         return entity.posInLineForIndex(index);

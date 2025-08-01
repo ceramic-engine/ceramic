@@ -1,7 +1,53 @@
 package ceramic;
 
 /**
- * A visual divided into 9 areas to create "nine-slice" textured scalable objects
+ * A visual divided into 9 areas to create "nine-slice" textured scalable objects.
+ * 
+ * NineSlice is a technique used to create scalable UI elements and graphics
+ * while preserving their visual integrity. The texture is divided into 9 sections:
+ * - 4 corners (remain at original size)
+ * - 4 edges (scale in one direction only)
+ * - 1 center (scales in both directions)
+ * 
+ * This allows creating buttons, panels, and frames that can scale to any size
+ * while keeping corners crisp and edges properly stretched or tiled.
+ * 
+ * Key features:
+ * - Configurable slice distances from each edge
+ * - Support for stretching, repeating, or mirroring the edges and center
+ * - Automatic handling of texture frames and rotation
+ * - Efficient rendering using only necessary quads
+ * 
+ * Common uses:
+ * - UI panels and windows
+ * - Scalable buttons
+ * - Dialog boxes and tooltips
+ * - Decorative frames
+ * - Progress bars
+ * 
+ * @example
+ * ```haxe
+ * // Create a scalable button
+ * var button = new NineSlice();
+ * button.texture = assets.texture('button');
+ * button.slice(16); // 16 pixels from each edge
+ * button.size(200, 60); // Scale to any size
+ * 
+ * // Different slicing for each edge
+ * var panel = new NineSlice();
+ * panel.texture = assets.texture('panel');
+ * panel.slice(20, 30, 40, 30); // top, right, bottom, left
+ * 
+ * // Tiled edges instead of stretched
+ * var frame = new NineSlice();
+ * frame.texture = assets.texture('ornate-frame');
+ * frame.slice(32);
+ * frame.edgeRendering = REPEAT;
+ * frame.innerRendering = NONE; // Transparent center
+ * ```
+ * 
+ * @see NineSliceRendering
+ * @see Visual
  */
 class NineSlice extends Visual {
 
@@ -56,6 +102,7 @@ class NineSlice extends Visual {
     /**
      * Set distance from borders to cut slices.
      * This is equivalent to `slice(value, value, value, value)`
+     * @param value Distance in pixels from all edges
      */
     public extern inline overload function slice(value:Float)
         _slice(value, value, value, value);
@@ -63,6 +110,8 @@ class NineSlice extends Visual {
     /**
      * Set distance from borders to cut slices.
      * This is equivalent to `slice(topBottom, leftRight, topBottom, leftRight)`
+     * @param topBottom Distance from top and bottom edges
+     * @param leftRight Distance from left and right edges
      */
     public extern inline overload function slice(topBottom:Float, leftRight:Float)
         _slice(topBottom, leftRight, topBottom, leftRight);
@@ -71,6 +120,10 @@ class NineSlice extends Visual {
      * Set distance from borders to cut slices.
      * This is equivalent to setting `sliceTop`, `sliceRight`,
      * `sliceBottom` and `sliceLeft` properties.
+     * @param top Distance from top edge
+     * @param right Distance from right edge
+     * @param bottom Distance from bottom edge
+     * @param left Distance from left edge
      */
     public extern inline overload function slice(top:Float, right:Float, bottom:Float, left:Float)
         _slice(top, right, bottom, left);
@@ -86,6 +139,13 @@ class NineSlice extends Visual {
 
     private var renderingDirty:Bool = true;
 
+    /**
+     * How to render the center section.
+     * - STRETCH: Scales the center to fill the area (default)
+     * - REPEAT: Tiles the center texture
+     * - MIRROR: Tiles with mirroring for seamless patterns
+     * - NONE: No center rendering (transparent middle)
+     */
     public var innerRendering(default, set):NineSliceRendering = STRETCH;
     function set_innerRendering(innerRendering:NineSliceRendering):NineSliceRendering {
         if (this.innerRendering != innerRendering) {
@@ -96,6 +156,13 @@ class NineSlice extends Visual {
         return this.innerRendering;
     }
 
+    /**
+     * How to render the edge sections (top, right, bottom, left).
+     * - STRETCH: Scales edges to fill the area (default)
+     * - REPEAT: Tiles the edge textures
+     * - MIRROR: Tiles with mirroring for seamless patterns
+     * - NONE: No edge rendering
+     */
     public var edgeRendering(default, set):NineSliceRendering = STRETCH;
     function set_edgeRendering(edgeRendering:NineSliceRendering):NineSliceRendering {
         if (this.edgeRendering != edgeRendering) {
@@ -106,9 +173,18 @@ class NineSlice extends Visual {
         return this.edgeRendering;
     }
 
+    /**
+     * Set rendering mode for both inner and edge sections.
+     * @param value Rendering mode to apply to all sections
+     */
     public extern inline overload function rendering(value:NineSliceRendering)
         _rendering(value, value);
 
+    /**
+     * Set rendering modes separately for inner and edge sections.
+     * @param innerRendering Mode for center section
+     * @param edgeRendering Mode for edge sections
+     */
     public extern inline overload function rendering(innerRendering:NineSliceRendering, edgeRendering:NineSliceRendering)
         _rendering(innerRendering, edgeRendering);
 
@@ -159,6 +235,11 @@ class NineSlice extends Visual {
 
     }
 
+    /**
+     * Whether the texture frame is rotated 90 degrees.
+     * Used internally when working with texture atlases that pack
+     * rotated frames for optimal space usage.
+     */
     public var rotateFrame(get,set):Bool;
     inline function get_rotateFrame():Bool {
         return quadTopLeft.rotateFrame;
@@ -193,6 +274,11 @@ class NineSlice extends Visual {
 
     }
 
+    /**
+     * Optional texture tile to use instead of a full texture.
+     * Useful when working with texture atlases where the nine-slice
+     * image is packed with other graphics.
+     */
     public var tile(default,set):TextureTile = null;
     inline function set_tile(tile:TextureTile):TextureTile {
 
@@ -246,6 +332,10 @@ class NineSlice extends Visual {
         return height;
     }
 
+    /**
+     * The tint color applied to all sections of the nine-slice.
+     * Use Color.WHITE for no tinting.
+     */
     public var color(get,set):Color;
     inline function get_color():Color {
         return quadTopLeft.color;
@@ -639,6 +729,10 @@ class NineSlice extends Visual {
 
     }
 
+    /**
+     * Updates the nine-slice geometry based on current size and slice settings.
+     * Called automatically when size, slices, or rendering modes change.
+     */
     override function computeContent() {
 
         if (renderingDirty) {

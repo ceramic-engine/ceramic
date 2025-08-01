@@ -3,8 +3,58 @@ package ceramic;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 
+/**
+ * Asset for loading binary files as raw bytes.
+ * 
+ * BinaryAsset loads any file as raw binary data, making it useful for:
+ * - Custom file formats
+ * - Binary protocols
+ * - Compressed data
+ * - Non-text resources
+ * 
+ * The loaded data is provided as haxe.io.Bytes, which can be processed
+ * as needed by your application.
+ * 
+ * Features:
+ * - Hot-reload support for binary files
+ * - Asynchronous loading
+ * - Memory-efficient byte handling
+ * 
+ * @example
+ * ```haxe
+ * // Load a binary file
+ * var binaryAsset = new BinaryAsset('data');
+ * binaryAsset.path = 'data/level.dat';
+ * binaryAsset.onComplete(this, success -> {
+ *     if (success) {
+ *         // Access the raw bytes
+ *         var bytes = binaryAsset.bytes;
+ *         trace('Loaded ${bytes.length} bytes');
+ *         
+ *         // Process the binary data
+ *         var input = new haxe.io.BytesInput(bytes);
+ *         var version = input.readInt32();
+ *         // ... read more data
+ *     }
+ * });
+ * assets.addAsset(binaryAsset);
+ * assets.load();
+ * ```
+ * 
+ * @see Asset
+ * @see haxe.io.Bytes
+ */
 class BinaryAsset extends Asset {
 
+    /**
+     * The loaded binary data as raw bytes.
+     * Will be null until the asset is successfully loaded.
+     * 
+     * Use haxe.io APIs to read and process the binary data:
+     * - BytesInput for reading
+     * - BytesOutput for writing
+     * - BytesBuffer for building
+     */
     @observe public var bytes:Bytes = null;
 
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -13,6 +63,15 @@ class BinaryAsset extends Asset {
 
     }
 
+    /**
+     * Loads the binary file from the specified path.
+     * 
+     * The loading is asynchronous and will emit a complete event when finished.
+     * On success, the bytes property will contain the loaded data.
+     * 
+     * Supports hot-reload on platforms that allow it - the file will be
+     * automatically reloaded when it changes on disk.
+     */
     override public function load() {
 
         status = LOADING;
@@ -62,6 +121,12 @@ class BinaryAsset extends Asset {
 
     }
 
+    /**
+     * Called when asset files change on disk (hot-reload support).
+     * Automatically reloads the binary file if it has been modified.
+     * @param newFiles Map of current files and their modification times
+     * @param previousFiles Map of previous files and their modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.binaries.supportsHotReloadPath())
@@ -83,6 +148,9 @@ class BinaryAsset extends Asset {
 
     }
 
+    /**
+     * Destroys the binary asset and releases the loaded bytes from memory.
+     */
     override function destroy():Void {
 
         super.destroy();

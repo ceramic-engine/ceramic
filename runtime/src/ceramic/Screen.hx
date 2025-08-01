@@ -7,6 +7,45 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
+/**
+ * Core screen management class that handles display properties, coordinate transformations, and input events.
+ * 
+ * Screen provides a unified interface for managing screen properties across different platforms,
+ * handling logical vs native coordinates, and dispatching input events. It serves as the bridge
+ * between the backend's native screen handling and Ceramic's logical coordinate system.
+ * 
+ * Key responsibilities:
+ * - **Coordinate transformation**: Converts between native and logical coordinates
+ * - **Screen scaling**: Manages different scaling modes (FIT, FILL, RESIZE, FIT_RESIZE)
+ * - **Input handling**: Processes and dispatches mouse, touch, and pointer events
+ * - **Visual hit testing**: Determines which visuals receive input events
+ * - **Focus management**: Tracks and manages focused visuals
+ * - **Screenshot capture**: Provides methods to capture screen content
+ * 
+ * The screen uses a matrix transformation system to handle scaling and positioning,
+ * ensuring consistent behavior across different screen sizes and densities.
+ * 
+ * Example usage:
+ * ```haxe
+ * // Access screen properties
+ * trace('Screen size: ${screen.width} x ${screen.height}');
+ * trace('Native size: ${screen.nativeWidth} x ${screen.nativeHeight}');
+ * 
+ * // Listen for screen events
+ * screen.onResize(this, () -> {
+ *     trace('Screen resized');
+ * });
+ * 
+ * // Check input states
+ * if (screen.mousePressed(MouseButton.LEFT)) {
+ *     trace('Left mouse button pressed at ${screen.mouseX}, ${screen.mouseY}');
+ * }
+ * ```
+ * 
+ * @see App#screen
+ * @see ScreenScaling
+ * @see Visual
+ */
 @:allow(ceramic.App)
 #if lua
 @dynamicEvents
@@ -252,12 +291,24 @@ class Screen extends Entity implements Observable {
 
 /// Lifecycle
 
+    /**
+     * Creates a new Screen instance.
+     * 
+     * Typically not called directly - use the singleton instance via `app.screen`.
+     */
     function new() {
 
         super();
 
     }
 
+    /**
+     * Initializes the screen after the backend is ready.
+     * 
+     * Sets up event listeners for native screen events, initializes coordinate
+     * transformations, and configures settings observers. This method is called
+     * automatically by the App during initialization.
+     */
     function backendReady():Void {
 
         // Track native screen resize
@@ -471,6 +522,14 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Updates pointer over/out states for visuals.
+     * 
+     * Called each frame to track which visuals have pointers hovering over them,
+     * triggering pointerOver and pointerOut events as needed.
+     * 
+     * @param delta Time elapsed since last frame (unused)
+     */
     function updatePointerOverState(delta:Float):Void {
 
  #if (!ios && !android)
@@ -485,6 +544,19 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Handles screen resize events.
+     * 
+     * Recalculates screen dimensions, scaling, and transformations based on
+     * current settings and native screen properties. This method is called
+     * automatically when the native screen size changes.
+     * 
+     * The resize process:
+     * 1. Updates scaling based on settings
+     * 2. Emits resize event (allowing custom handling)
+     * 3. Recomputes transformations
+     * 4. Updates texture density
+     */
     function resize():Void {
 
         // Already resizing?
@@ -520,6 +592,13 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Updates the ideal texture density based on screen density and settings.
+     * 
+     * The texture density determines which resolution of assets should be loaded.
+     * If targetDensity is set in settings, it overrides the calculated value.
+     * Otherwise, density is rounded to the nearest integer (minimum 1).
+     */
     function updateTexturesDensity():Void {
 
         if (settings.targetDensity > 0) {
@@ -541,7 +620,15 @@ class Screen extends Entity implements Observable {
     }
 
     /**
-     * Recompute screen width, height and density from settings and native state.
+     * Recomputes screen dimensions and density based on scaling mode and native properties.
+     * 
+     * This method implements the different scaling modes:
+     * - **FIT**: Scales to fit within target size, may show borders
+     * - **FILL**: Scales to fill target size, may crop content
+     * - **RESIZE**: Matches native size exactly
+     * - **FIT_RESIZE**: Adjusts target size to match native aspect ratio
+     * 
+     * Updates width, height, actualWidth, actualHeight, density, offsetX, and offsetY.
      */
     function updateScaling():Void {
 
@@ -612,7 +699,11 @@ class Screen extends Entity implements Observable {
     }
 
     /**
-     * Recompute transform from screen width, height and density.
+     * Recomputes the root transformation matrix from current screen properties.
+     * 
+     * The matrix is used to transform all visual coordinates from logical
+     * to native screen space. It applies scaling and translation to properly
+     * position content on screen based on the current scaling mode.
      */
     function updateTransform():Void {
 
@@ -648,6 +739,20 @@ class Screen extends Entity implements Observable {
 
 /// Match visuals to x,y
 
+    /**
+     * Finds the topmost visual that should receive a pointer down event at the given coordinates.
+     * 
+     * This method performs hit testing through the visual hierarchy, respecting:
+     * - Visual touchability and visibility
+     * - Event interception by parents
+     * - Special handling for hit visuals (visuals that block events behind them)
+     * 
+     * @param x X coordinate in logical screen space
+     * @param y Y coordinate in logical screen space
+     * @param touchIndex Touch index for touch events, -1 for mouse events
+     * @param buttonId Mouse button ID, -1 for touch events
+     * @return The visual that should receive the event, or null if none found
+     */
     function matchFirstDownListener(x:Float, y:Float, touchIndex:Int = -1, buttonId:Int = -1):Visual {
 
         app.computeHierarchy();
@@ -733,6 +838,16 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Finds the topmost visual that should receive pointer over events at the given coordinates.
+     * 
+     * Similar to matchFirstDownListener but for hover/over events. Only active
+     * when at least one visual is listening for pointer over events.
+     * 
+     * @param x X coordinate in logical screen space
+     * @param y Y coordinate in logical screen space
+     * @return The visual that should receive over events, or null if none found
+     */
     function matchFirstOverListener(x:Float, y:Float):Visual {
 
         if (visualsListenPointerOver) {
@@ -1174,14 +1289,28 @@ class Screen extends Entity implements Observable {
 /// Hit visual logic
 
     /**
-     * Internal reference to a matched hit visual. This is used to let Visual.hit() return `false`
-     * on every visual not related to the matched hit visual, if any is defined.
+     * Internal reference to a matched hit visual during hit testing.
+     * 
+     * This static variable is used during the hit testing process to ensure
+     * that when a hit visual is encountered, only that visual and its children
+     * can receive events, blocking all visuals behind it.
+     * 
+     * @see Visual#hits
      */
     @:noCompletion
     public static var matchedHitVisual:Visual = null;
 
     var hitVisuals:Array<Visual> = [];
 
+    /**
+     * Registers a visual as a hit visual.
+     * 
+     * Hit visuals are special visuals that block input events from reaching
+     * visuals behind them, even if they don't handle the events themselves.
+     * This is useful for modal dialogs, overlays, or invisible blocking areas.
+     * 
+     * @param visual The visual to register as a hit visual
+     */
     public function addHitVisual(visual:Visual):Void {
 
         var wasHitVisual = visual.isHitVisual;
@@ -1193,6 +1322,14 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Unregisters a visual as a hit visual.
+     * 
+     * The visual will no longer block input events from reaching visuals
+     * behind it unless it explicitly handles those events.
+     * 
+     * @param visual The visual to unregister
+     */
     public function removeHitVisual(visual:Visual):Void {
 
         var index = hitVisuals.indexOf(visual);
@@ -1208,6 +1345,12 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Checks if a visual is registered as a hit visual.
+     * 
+     * @param visual The visual to check
+     * @return `true` if the visual is a hit visual
+     */
     public function isHitVisual(visual:Visual):Bool {
 
         return visual.isHitVisual;
@@ -1216,6 +1359,13 @@ class Screen extends Entity implements Observable {
 
 /// Screen deltas
 
+    /**
+     * Resets all input deltas to zero.
+     * 
+     * Called at the beginning of each frame to clear movement deltas
+     * for pointer, mouse, and touch inputs. This ensures deltas only
+     * reflect movement within the current frame.
+     */
     function resetDeltas():Void {
 
         pointerDeltaX = 0;
@@ -1319,8 +1469,14 @@ class Screen extends Entity implements Observable {
     #end
 
     /**
-     * Return `true` if mouse events are currently allowed for the given owner.
-     * This is only useful on very specific cases.
+     * Checks if mouse events are currently allowed for the given entity.
+     * 
+     * This is primarily used with the elements plugin to ensure UI windows
+     * can block events from reaching entities behind them. For most use cases,
+     * this will always return true.
+     * 
+     * @param owner The entity to check
+     * @return `true` if the entity can receive mouse events
      */
     inline public function mouseAllowed(owner:Entity):Bool {
 
@@ -1518,6 +1674,12 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Gets the X-axis movement delta for a specific touch since the last frame.
+     * 
+     * @param touchIndex The index of the touch to check
+     * @return The X delta in logical coordinates, or 0 if touch not found
+     */
     public function touchDeltaX(touchIndex:Int):Float {
 
         var touch:Touch = touches.get(touchIndex);
@@ -1525,6 +1687,12 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Gets the Y-axis movement delta for a specific touch since the last frame.
+     * 
+     * @param touchIndex The index of the touch to check
+     * @return The Y delta in logical coordinates, or 0 if touch not found
+     */
     public function touchDeltaY(touchIndex:Int):Float {
 
         var touch:Touch = touches.get(touchIndex);
@@ -1534,6 +1702,14 @@ class Screen extends Entity implements Observable {
 
 /// Screenshot
 
+    /**
+     * Captures the current screen content as a texture.
+     * 
+     * This is an asynchronous operation that renders the current frame to a texture.
+     * The resulting texture can be used for effects, transitions, or saving screenshots.
+     * 
+     * @param done Callback that receives the captured texture, or null if capture failed
+     */
     public function toTexture(done:(texture:Texture)->Void):Void {
 
         app.backend.screen.screenshotToTexture(function(backendItem:backend.Texture) {
@@ -1550,12 +1726,28 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Captures the current screen content as raw pixel data.
+     * 
+     * Returns the screen content as an array of RGBA pixels in row-major order.
+     * This is useful for image processing or custom screenshot implementations.
+     * 
+     * @param done Callback that receives pixel data, width, and height
+     */
     public function toPixels(done:(pixels:UInt8Array, width:Int, height:Int)->Void):Void {
 
         app.backend.screen.screenshotToPixels(done);
 
     }
 
+    /**
+     * Captures the current screen content as PNG data.
+     * 
+     * This overload returns the PNG data as bytes, which can be used
+     * for further processing or transmission.
+     * 
+     * @param done Callback that receives the PNG data as bytes
+     */
     public extern inline overload function toPng(done:(data:Bytes)->Void):Void {
 
         _toPng(null, function(?data) {
@@ -1564,6 +1756,14 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Captures the current screen content and saves it as a PNG file.
+     * 
+     * This overload saves the screenshot directly to the specified file path.
+     * 
+     * @param path The file path where the PNG should be saved
+     * @param done Callback called when the save operation completes
+     */
     public extern inline overload function toPng(path:String, done:()->Void):Void {
 
         _toPng(path, function(?data) {
@@ -1572,6 +1772,11 @@ class Screen extends Entity implements Observable {
 
     }
 
+    /**
+     * Internal implementation for PNG screenshot capture.
+     * 
+     * Waits for the current frame to finish drawing before capturing.
+     */
     function _toPng(?path:String, done:(?data:Bytes)->Void):Void {
 
         app.onceFinishDraw(this, function() {

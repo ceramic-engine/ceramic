@@ -6,44 +6,95 @@ import haxe.DynamicAccess;
 using ceramic.Extensions;
 
 /**
- * App-level timeline related events.
- * You'll only need to track these events if you want to add new types of timeline tracks & keyframes
- * that can be created from raw data in `Fragment` instances.
+ * Central system for creating and binding timeline tracks and keyframes.
+ * 
+ * The Timelines class serves as a factory and binding system for the timeline
+ * animation framework. It handles:
+ * - Creating appropriate track types based on field types
+ * - Creating keyframes with proper typing
+ * - Binding tracks to entity properties for automatic updates
+ * - Extensibility through events for custom track/keyframe types
+ * 
+ * This system is primarily used by the Fragment system when loading
+ * timeline data from .fragment files, but can also be extended to support
+ * custom animation types.
+ * 
+ * Built-in support includes:
+ * - Float tracks (numeric properties)
+ * - Color tracks (Color properties)
+ * - Boolean tracks (Bool properties)
+ * - Float array tracks (Array<Float> properties)
+ * - Degrees tracks (rotation with shortest-path interpolation)
+ * 
+ * To add custom track types:
+ * 1. Listen to the `createTrack` event
+ * 2. Check the type parameter
+ * 3. Create and assign your custom track to result.value
+ * 
+ * Example extension:
+ * ```haxe
+ * app.timelines.onCreateTrack(this, (type, options, result) -> {
+ *     if (type == "MyCustomType") {
+ *         result.value = new MyCustomTrack();
+ *     }
+ * });
+ * ```
+ * 
+ * @see Timeline
+ * @see TimelineTrack
+ * @see Fragment
  */
 class Timelines extends Entity {
 
     /**
-     * Used to expand how timeline tracks are created from raw data (from `Fragment` instances).
-     * Respond to this event by assigning a value to the `result` argument.
-     * @param type Type of the field being modified by the track
-     * @param options Can be used to configure timeline track creation
-     * @param result The object that will hold the resulting track.
+     * Event for creating timeline tracks from field type information.
+     * 
+     * Listen to this event to add support for custom track types.
+     * The system will check all listeners until one sets result.value.
+     * 
+     * @param type The field type as a string (e.g., "Float", "Bool", "MyCustomType")
+     * @param options Optional configuration from track data (e.g., {degrees: true})
+     * @param result Assign the created track to result.value
      */
     @event public function createTrack(type:String, options:Dynamic<Dynamic>, result:Value<TimelineTrack<TimelineKeyframe>>);
 
     /**
-     * Used to expand how timeline tracks are bound to objects.
-     * @param type Type of the field being modified by the track
-     * @param options Can be used to configure timeline track binding
-     * @param track The track on which we bind the entity
-     * @param entity The entity to bind to this track
-     * @param field The entity field that should be updated by this track
+     * Event for binding timeline tracks to entity properties.
+     * 
+     * Listen to this event to customize how track values are applied
+     * to entity properties. Default implementation uses reflection
+     * via entity.setProperty().
+     * 
+     * @param type The field type as a string
+     * @param options Optional configuration (e.g., {copyArray: true})
+     * @param track The track to bind
+     * @param entity The entity whose property will be animated
+     * @param field The property name to animate
      */
     @event public function bindTrack(type:String, options:Dynamic<Dynamic>, track:TimelineTrack<TimelineKeyframe>, entity:Entity, field:String);
 
     /**
-     * Used to expand how timeline keyframes are created from raw data (from `Fragment` instances).
-     * Respond to this event by assigning a value to the `result` argument.
-     * @param type Type of the field being modified by the keyframe
-     * @param options Can be used to configure timeline keyframe creation
-     * @param value Value of the keyframe
-     * @param time Time (in seconds) of the keyframe
-     * @param easing Easing of the keyframe
-     * @param existing Existing keyframe instance at the same position/time. Can be reused to prevent new allocation of keyframe instance
-     * @param result The object that will hold the resulting keyframe.
+     * Event for creating timeline keyframes from data.
+     * 
+     * Listen to this event to add support for custom keyframe types.
+     * The system will check all listeners until one sets result.value.
+     * 
+     * Tip: Reuse the `existing` keyframe when possible to reduce allocations.
+     * 
+     * @param type The field type as a string
+     * @param options Optional configuration
+     * @param value The keyframe value (type depends on field type)
+     * @param index The frame index (time position)
+     * @param easing The easing function for interpolation
+     * @param existing Existing keyframe at this index (can be reused)
+     * @param result Assign the created/updated keyframe to result.value
      */
     @event public function createKeyframe(type:String, options:Dynamic<Dynamic>, value:Dynamic, index:Int, easing:Easing, existing:Null<TimelineKeyframe>, result:Value<TimelineKeyframe>);
 
+    /**
+     * Create a new Timelines system instance.
+     * Automatically registers default handlers for built-in track types.
+     */
     public function new() {
 
         super();

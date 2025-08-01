@@ -9,7 +9,44 @@ using StringTools;
 using ceramic.Extensions;
 
 /**
- * A texture is an image ready to be drawn.
+ * A texture represents an image loaded in GPU memory ready for rendering.
+ * 
+ * Textures are the foundation for displaying images in Ceramic. They can be:
+ * - Loaded from image files (PNG, JPG, etc.)
+ * - Created from pixel data
+ * - Generated as render targets
+ * - Extracted from texture atlases
+ * 
+ * Features:
+ * - Automatic density handling for different screen resolutions
+ * - Filtering modes (NEAREST for pixel art, LINEAR for smooth scaling)
+ * - Wrap modes for texture coordinates outside 0-1 range
+ * - Reference counting through asset management
+ * - Automatic cleanup when destroyed
+ * 
+ * Textures are typically obtained through asset loading rather than
+ * created directly:
+ * 
+ * @example
+ * ```haxe
+ * // Load texture through assets
+ * var texture = assets.texture('hero');
+ * 
+ * // Apply to a quad
+ * var quad = new Quad();
+ * quad.texture = texture;
+ * 
+ * // Configure for pixel art
+ * texture.filter = NEAREST;
+ * 
+ * // Create texture from pixels
+ * var pixels = Pixels.create(100, 100, Color.RED);
+ * var texture = Texture.fromPixels(pixels);
+ * ```
+ * 
+ * @see ImageAsset
+ * @see Quad
+ * @see TextureAtlas
  */
 class Texture extends Entity {
 
@@ -20,14 +57,23 @@ class Texture extends Entity {
     @:noCompletion
     public var index:Int = _nextIndex++;
 
+    /**
+     * Whether this texture is a render target.
+     * Render textures can be drawn to using RenderTexture class.
+     */
     public var isRenderTexture(default,null):Bool = false;
 
+    /**
+     * If this is a render texture, returns the RenderTexture instance.
+     * Otherwise null.
+     */
     public var asRenderTexture(default,null):RenderTexture = null;
 
 /// Properties
 
     /**
-     * The texture ID used by the underlying backend (OpenGL etc...)
+     * The texture ID used by the underlying graphics API (OpenGL, etc.).
+     * This is backend-specific and mainly used for debugging or advanced usage.
      */
     public var textureId(get,never):backend.TextureId;
     inline function get_textureId():backend.TextureId {
@@ -35,7 +81,8 @@ class Texture extends Entity {
     }
 
     /**
-     * The native width of the texture, not depending on texture density
+     * The native pixel width of the texture in GPU memory.
+     * This is the actual texture size, not affected by density scaling.
      */
     public var nativeWidth(get,never):Int;
     inline function get_nativeWidth():Int {
@@ -43,7 +90,8 @@ class Texture extends Entity {
     }
 
     /**
-     * The native height of the texture, not depending on texture density
+     * The native pixel height of the texture in GPU memory.
+     * This is the actual texture size, not affected by density scaling.
      */
     public var nativeHeight(get,never):Int;
     inline function get_nativeHeight():Int {
@@ -51,8 +99,9 @@ class Texture extends Entity {
     }
 
     /**
-     * The native actual width of the texture.
-     * Same as native width unless underlying backend needs pot (power of two) sizes.
+     * The actual allocated width of the texture in GPU memory.
+     * May be larger than nativeWidth if the backend requires power-of-two dimensions.
+     * Use this for advanced texture coordinate calculations.
      */
     public var nativeWidthActual(get,never):Int;
     inline function get_nativeWidthActual():Int {
@@ -60,18 +109,37 @@ class Texture extends Entity {
     }
 
     /**
-     * The native actual height of the texture.
-     * Same as native height unless underlying backend needs pot (power of two) sizes.
+     * The actual allocated height of the texture in GPU memory.
+     * May be larger than nativeHeight if the backend requires power-of-two dimensions.
+     * Use this for advanced texture coordinate calculations.
      */
     public var nativeHeightActual(get,never):Int;
     inline function get_nativeHeightActual():Int {
         return app.backend.textures.getTextureHeightActual(backendItem);
     }
 
+    /**
+     * The logical width of the texture after density scaling.
+     * This is what you use for positioning and sizing visuals.
+     * Calculated as: nativeWidth / density
+     */
     public var width(default,null):Float;
 
+    /**
+     * The logical height of the texture after density scaling.
+     * This is what you use for positioning and sizing visuals.
+     * Calculated as: nativeHeight / density
+     */
     public var height(default,null):Float;
 
+    /**
+     * The texture density (scale factor).
+     * Used for supporting different screen resolutions:
+     * - 1.0 = standard resolution
+     * - 2.0 = retina/high-dpi (@2x assets)
+     * - 3.0 = extra high density (@3x assets)
+     * Changing this updates width/height accordingly.
+     */
     public var density(default,set):Float;
     function set_density(density:Float):Float {
         if (this.density == density) return density;
@@ -81,6 +149,12 @@ class Texture extends Entity {
         return density;
     }
 
+    /**
+     * The texture filtering mode.
+     * - LINEAR: Smooth interpolation (default, good for photos)
+     * - NEAREST: No interpolation (good for pixel art)
+     * Change this based on your art style and scaling needs.
+     */
     public var filter(default,set):TextureFilter = LINEAR;
     function set_filter(filter:TextureFilter):TextureFilter {
         if (this.filter == filter) return filter;
@@ -90,7 +164,10 @@ class Texture extends Entity {
     }
 
     /**
-     * Horizontal texture wrap mode
+     * Horizontal texture wrap mode for UV coordinates outside 0-1 range.
+     * - CLAMP: Clamp to edge pixels (default)
+     * - REPEAT: Tile the texture
+     * - MIRROR: Tile with alternating mirrors
      */
     public var wrapS(default,set):TextureWrap = CLAMP;
     function set_wrapS(wrapS:TextureWrap):TextureWrap {
@@ -101,7 +178,10 @@ class Texture extends Entity {
     }
 
     /**
-     * Vertical texture wrapping mode
+     * Vertical texture wrap mode for UV coordinates outside 0-1 range.
+     * - CLAMP: Clamp to edge pixels (default)
+     * - REPEAT: Tile the texture
+     * - MIRROR: Tile with alternating mirrors
      */
     public var wrapT(default,set):TextureWrap = CLAMP;
     function set_wrapT(wrapT:TextureWrap):TextureWrap {
@@ -123,19 +203,40 @@ class Texture extends Entity {
             set_wrapT(wrapT);
     }
 
+    /**
+     * The backend-specific texture resource.
+     * This is managed internally by Ceramic.
+     */
     public var backendItem:backend.Texture;
 
+    /**
+     * The image asset this texture was loaded from, if any.
+     * Automatically destroyed when the texture is destroyed.
+     */
     public var asset:ImageAsset = null;
 
 /// Lifecycle
 
     /**
-     * Create a new texture from the given pixels buffer
-     * @param width Width of the texture
-     * @param height Height of the texture
-     * @param pixels A pixel buffer in integer RGBA format
-     * @param density (optional) density of the texture
-     * @return Texture
+     * Create a new texture from raw pixel data.
+     * Useful for procedural texture generation or image manipulation.
+     * @param width Width of the texture in logical units
+     * @param height Height of the texture in logical units
+     * @param pixels Pixel buffer in RGBA format (4 bytes per pixel)
+     * @param density Texture density/scale (default: 1.0)
+     * @return A new Texture instance
+     * @example
+     * ```haxe
+     * var pixels = new UInt8Array(100 * 100 * 4);
+     * // Fill with red color
+     * for (i in 0...100*100) {
+     *     pixels[i*4] = 255;     // R
+     *     pixels[i*4+1] = 0;     // G
+     *     pixels[i*4+2] = 0;     // B
+     *     pixels[i*4+3] = 255;   // A
+     * }
+     * var texture = Texture.fromPixels(100, 100, pixels);
+     * ```
      */
     public static function fromPixels(width:Float, height:Float, pixels:ceramic.UInt8Array, density:Float = 1):Texture {
 
@@ -145,12 +246,21 @@ class Texture extends Entity {
     }
 
     /**
-     * Create a new texture from the given bytes.
-     * The bytes must be PNG or JPEG data
+     * Create a new texture from PNG or JPEG data.
+     * Asynchronously decodes the image data and creates a texture.
      * @param bytes The PNG or JPEG data as bytes
-     * @param density (optional) Density of the texture
-     * @param options (optional) Additional options when loading texture (could depend on backend)
-     * @param done A callback receiving the loaded texture, or `null` if it failed
+     * @param density Texture density/scale (default: 1.0)
+     * @param options Additional loading options (backend-specific)
+     * @param done Callback receiving the loaded texture, or null if it failed
+     * @example
+     * ```haxe
+     * var imageBytes = Files.getBytes('custom.png');
+     * Texture.fromBytes(imageBytes, 1.0, null, texture -> {
+     *     if (texture != null) {
+     *         quad.texture = texture;
+     *     }
+     * });
+     * ```
      */
     public static function fromBytes(bytes:Bytes, density:Float = 1, ?options:LoadTextureOptions, done:(texture:Texture)->Void):Void {
 
@@ -160,6 +270,12 @@ class Texture extends Entity {
 
     }
 
+    /**
+     * Create a new Texture from a backend texture resource.
+     * Usually you don't call this directly - use asset loading or fromPixels/fromBytes.
+     * @param backendItem The backend texture resource
+     * @param density Texture density (-1 uses screen density)
+     */
     public function new(backendItem:backend.Texture, density:Float = -1 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -184,12 +300,24 @@ class Texture extends Entity {
 
 /// Pixels
 
+    /**
+     * Fetch the current pixel data from this texture.
+     * Reads pixels from GPU memory (can be slow).
+     * @param result Optional array to store results (will be allocated if null)
+     * @return Array containing RGBA pixel data
+     */
     public function fetchPixels(?result:ceramic.UInt8Array):ceramic.UInt8Array {
 
         return app.backend.textures.fetchTexturePixels(backendItem, result);
 
     }
 
+    /**
+     * Update this texture with new pixel data.
+     * Uploads pixels to GPU memory.
+     * The pixel array must match the texture's dimensions.
+     * @param pixels RGBA pixel data to upload
+     */
     public function submitPixels(pixels:ceramic.UInt8Array):Void {
 
         app.backend.textures.submitTexturePixels(backendItem, pixels);
@@ -199,7 +327,8 @@ class Texture extends Entity {
 /// PNG
 
     /**
-     * Export texture as PNG data and save it to the given file path
+     * Export texture as PNG data and save it to the given file path.
+     * Useful for screenshots or texture debugging.
      * @param path The png file path where to save the image (`'/path/to/image.png'`)
      * @param done Called when the png has been exported
      */

@@ -4,44 +4,97 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+/**
+ * An animation timeline system that manages keyframe-based animations.
+ *
+ * Timeline provides:
+ * - Frame-based positioning and playback
+ * - Multiple animation tracks for different properties
+ * - Label system for marking important positions
+ * - Looping and one-shot playback modes
+ * - Auto-update integration with the game loop
+ * - Complete callbacks for animation sequences
+ *
+ * Timelines are commonly used in:
+ * - Fragment animations
+ * - Complex UI transitions
+ * - Cutscenes and scripted sequences
+ * - Any multi-property animations that need synchronization
+ *
+ * Example usage:
+ * ```haxe
+ * var timeline = new Timeline();
+ * timeline.fps = 30;
+ * timeline.size = 120; // 4 seconds at 30 fps
+ *
+ * // Add animation tracks
+ * var track = new TimelineFloatTrack();
+ * track.add(new TimelineFloatKeyframe(0, 100));
+ * track.add(new TimelineFloatKeyframe(60, 200));
+ * timeline.add(track);
+ *
+ * // Add labels for important positions
+ * timeline.setLabel(0, "start");
+ * timeline.setLabel(60, "middle");
+ * timeline.setLabel(120, "end");
+ *
+ * // Play animation from a label
+ * timeline.animate("start", () -> trace("Animation complete!"));
+ * ```
+ *
+ * @see TimelineTrack
+ * @see TimelineKeyframe
+ * @see Fragment
+ */
 class Timeline extends Entity implements Component {
 
     /**
-     * Triggered when position reaches an existing label
-     * @param index label index (position)
-     * @param name label name
+     * Event triggered when the timeline position reaches a label.
+     * Useful for triggering actions at specific points in the animation.
+     *
+     * @param index The frame index (position) of the label
+     * @param name The name of the label that was reached
      */
     @event function startLabel(index:Int, name:String);
 
     /**
-     * Triggered when position reaches the end of an area following the given label.
-     * Either when a new label was reached or when end of timeline was reached
-     * @param index label index (position)
-     * @param name label name
+     * Event triggered when the timeline leaves a labeled section.
+     * This happens when reaching the next label or the end of the timeline.
+     * Useful for cleaning up effects or transitioning to new states.
+     *
+     * @param index The frame index (position) of the label being left
+     * @param name The name of the label being left
      */
     @event function endLabel(index:Int, name:String);
 
     /**
-     * Timeline size. Default `0`, meaning this timeline won't do anything.
-     * By default, because `autoFitSize` is `true`, adding or updating tracks on this
-     * timeline will update timeline `size` accordingly so it may not be needed to update `size` explicitly.
-     * Setting `size` to `-1` means the timeline will never finish.
+     * The total length of the timeline in frames.
+     *
+     * - Default is 0 (timeline won't play)
+     * - When `autoFitSize` is true (default), automatically adjusts to match the longest track
+     * - Set to -1 for an infinite timeline that never finishes
+     *
+     * The actual duration in seconds = size / fps
      */
     public var size:Int = 0;
 
     /**
-     * If set to `true` (default), adding or updating tracks on this timeline will update
-     * timeline size accordingly to match longest track size.
+     * Whether the timeline should automatically adjust its size to match the longest track.
+     * When true (default), you don't need to manually set the timeline size.
      */
     public var autoFitSize:Bool = true;
 
     /**
-     * Whether this timeline should loop. Ignored if timeline's `size` is `-1` (not defined).
+     * Whether the timeline should loop back to the beginning when it reaches the end.
+     * Ignored if size is -1 (infinite timeline).
+     * Default is true.
      */
     public var loop:Bool = true;
 
     /**
-     * Whether this timeline should bind itself to update cycle automatically or not (default `true`).
+     * Whether the timeline automatically updates each frame.
+     * When true (default), the timeline advances based on frame delta time.
+     * Set to false to manually control timeline playback with seek() or update().
      */
     public var autoUpdate(default, set):Bool = true;
     function set_autoUpdate(autoUpdate:Bool):Bool {
@@ -53,25 +106,36 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Frames per second on this timeline.
-     * Note: a lower fps doesn't mean animations won't be interpolated between frames.
-     * Thus using 30 fps is still fine even if screen refreshes at 60 fps.
-     **/
+     * Timeline playback speed in frames per second.
+     * This defines how many timeline frames pass per second of real time.
+     *
+     * Note: Timeline values are interpolated between frames, so using 30 fps
+     * still provides smooth animation even on 60+ fps displays.
+     *
+     * Default is 30 fps.
+     */
     public var fps:Int = 30;
 
     /**
-     * Position on this timeline.
-     * Gets back to zero when `loop=true` and position reaches a defined `size`.
+     * Current playback position in frames.
+     *
+     * - Starts at 0
+     * - Can be fractional for smooth interpolation between frames
+     * - Wraps back to 0 when looping is enabled and size is reached
+     * - Use seek() to jump to specific positions
      */
     public var position(default, null):Float = 0;
 
     /**
-     * The tracks updated by this timeline
+     * Array of animation tracks managed by this timeline.
+     * Each track animates a specific property of an entity.
+     * Tracks are updated automatically as the timeline plays.
      */
     public var tracks(default, null):ReadOnlyArray<TimelineTrack<TimelineKeyframe>> = [];
 
     /**
-     * Whether this timeline is paused or not.
+     * Whether the timeline playback is paused.
+     * Setting to true stops all animation while preserving the current position.
      */
     public var paused(default, set):Bool = false;
     function set_paused(paused:Bool):Bool {
@@ -82,7 +146,9 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Used in pair with `labelIndexes` to manage timeline labels
+     * Array of label names in the timeline.
+     * Labels mark important positions for seeking and animation control.
+     * Sorted by position (frame index).
      */
     public var labels(default, null):ReadOnlyArray<String> = null;
 
@@ -92,8 +158,11 @@ class Timeline extends Entity implements Component {
     var labelIndexes:Array<Int> = null;
 
     /**
-     * If >= 0, timeline will start from this index.
-     * When timeline is looping, it will reset to this index as well at each iteration.
+     * Optional starting position for timeline playback.
+     *
+     * - If >= 0, timeline starts from this frame index
+     * - When looping, timeline resets to this position instead of 0
+     * - Default is -1 (use position 0)
      */
     public var startPosition(default, set):Int = -1;
     function set_startPosition(startPosition:Int):Int {
@@ -105,8 +174,11 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * If provided, timeline will stop at this index.
-     * When timeline is looping, it will reset to startIndex (if >= 0).
+     * Optional ending position for timeline playback.
+     *
+     * - If >= 0, timeline stops at this frame index
+     * - When looping, timeline resets to startPosition (or 0)
+     * - Default is -1 (use timeline size)
      */
     public var endPosition(default, set):Int = -1;
     function set_endPosition(endPosition:Int):Int {
@@ -128,6 +200,10 @@ class Timeline extends Entity implements Component {
      */
     var completeHandlerIndexes:Array<Int> = null;
 
+    /**
+     * Create a new timeline instance.
+     * The timeline starts paused at position 0 with no tracks.
+     */
     public function new() {
 
         super();
@@ -156,6 +232,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Update the timeline position based on elapsed time.
+     * Called automatically each frame when autoUpdate is true.
+     *
+     * @param delta Time elapsed since last frame in seconds
+     */
     public function update(delta:Float):Void {
 
         inlineSeek(position + delta * fps);
@@ -163,8 +245,11 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Seek the given position (in frames) in the timeline.
-     * Will take care of clamping `position` or looping it depending on `size` and `loop` properties.
+     * Jump to a specific position in the timeline.
+     * Handles looping and clamping based on timeline settings.
+     * Updates all tracks to reflect the new position.
+     *
+     * @param targetPosition The frame index to seek to
      */
     final public function seek(targetPosition:Float):Void {
 
@@ -173,12 +258,14 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Animate starting from the given label name and calls complete when
-     * reaching the end of label area (= when animation finishes).
-     * If animation is interrupted (by playing another animation, seeking another position...),
-     * complete won't be called.
-     * @param name Label name
-     * @param complete callback fired when animation finishes.
+     * Play an animation sequence from a labeled position.
+     * The animation plays until reaching the next label or timeline end.
+     *
+     * If the animation is interrupted (by seeking or playing another animation),
+     * the complete callback won't be called.
+     *
+     * @param name The label name to start from
+     * @param complete Callback fired when the animation completes
      */
     public function animate(name:String, complete:Void->Void):Void {
 
@@ -203,9 +290,10 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Seek position to match the given label
-     * @param name Label name
-     * @return The index (position) of the looping label, or -1 if no label was found
+     * Jump to the position of a named label.
+     *
+     * @param name The label name to seek to
+     * @return The frame index of the label, or -1 if not found
      */
     public function seekLabel(name:String):Int {
 
@@ -223,7 +311,8 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Reset `startPosition` and `endPosition`
+     * Reset the timeline's start and end positions to their defaults.
+     * After calling this, the timeline will play from 0 to its full size.
      */
     public function resetStartAndEndPositions():Void {
 
@@ -233,11 +322,16 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Seek position to match the given label and set startPosition and endPosition
-     * so that it will loop through the whole area following this label, up to the
-     * position of the next label or the end of the timeline.
-     * @param name Label name
-     * @return The index (position) of the looping label, or -1 if no label was found
+     * Set up the timeline to loop within a labeled section.
+     *
+     * The timeline will:
+     * - Jump to the label position
+     * - Set startPosition to the label's frame
+     * - Set endPosition to the next label (or timeline end)
+     * - Loop within this range
+     *
+     * @param name The label name marking the start of the loop section
+     * @return The frame index of the label, or -1 if not found
      */
     public function loopLabel(name:String):Int {
 
@@ -263,7 +357,10 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Apply (or re-apply) every track of this timeline at the current position
+     * Apply all timeline tracks at the current position.
+     * Useful for ensuring all animated properties are up to date.
+     *
+     * @param forceChange If true, forces track updates even if values haven't changed
      */
     final public function apply(forceChange:Bool = false):Void {
 
@@ -393,7 +490,11 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Add a track to this timeline
+     * Add an animation track to this timeline.
+     * If the track was previously added to another timeline, it's removed first.
+     * If autoFitSize is true, the timeline size adjusts to accommodate the track.
+     *
+     * @param track The animation track to add
      */
     public function add(track:TimelineTrack<TimelineKeyframe>):Void {
 
@@ -411,6 +512,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Get a track by its ID.
+     *
+     * @param trackId The track identifier
+     * @return The track with the given ID, or null if not found
+     */
     public function get(trackId:String):TimelineTrack<TimelineKeyframe> {
 
         for (i in 0...tracks.length) {
@@ -425,7 +532,10 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Remove a track from this timeline
+     * Remove an animation track from this timeline.
+     * If autoFitSize is true, the timeline size adjusts after removal.
+     *
+     * @param track The animation track to remove
      */
     public function remove(track:TimelineTrack<TimelineKeyframe>):Void {
 
@@ -441,8 +551,8 @@ class Timeline extends Entity implements Component {
     }
 
     /**
-     * Update `size` property to make it fit
-     * the size of the longuest track.
+     * Adjust the timeline size to match the longest track.
+     * Called automatically when autoFitSize is true and tracks are added/removed.
      */
     public function fitSize():Void {
 
@@ -459,6 +569,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Find the last label before a given position.
+     *
+     * @param index The frame index to search before
+     * @return The frame index of the previous label, or -1 if none exists
+     */
     public function indexOfLabelBeforeIndex(index:Int):Int {
 
         if (labelIndexes == null)
@@ -484,6 +600,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Get the label name at a specific frame index.
+     *
+     * @param index The frame index to check
+     * @return The label name at that position, or null if no label exists
+     */
     public function labelAtIndex(index:Int):String {
 
         if (labelIndexes == null)
@@ -505,6 +627,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Get the frame index of a named label.
+     *
+     * @param name The label name to find
+     * @return The frame index of the label, or -1 if not found
+     */
     public function indexOfLabel(name:String):Int {
 
         if (labelIndexes == null)
@@ -517,9 +645,17 @@ class Timeline extends Entity implements Component {
         }
 
         return -1;
-        
+
     }
 
+    /**
+     * Create or update a label at a specific position.
+     * If a label with the same name exists, it's moved to the new position.
+     * Labels are automatically sorted by position.
+     *
+     * @param index The frame index for the label
+     * @param name The label name
+     */
     public function setLabel(index:Int, name:String):Void {
 
         removeLabel(name);
@@ -528,7 +664,7 @@ class Timeline extends Entity implements Component {
             labelIndexes = [];
             labels = [];
         }
-        
+
         labelIndexes.push(index);
         labels.original.push(name);
 
@@ -536,6 +672,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Remove any label at the specified frame index.
+     *
+     * @param index The frame index where the label should be removed
+     * @return True if a label was removed, false if no label existed
+     */
     public function removeLabelAtIndex(index:Int):Bool {
 
         var didRemove = false;
@@ -553,6 +695,12 @@ class Timeline extends Entity implements Component {
 
     }
 
+    /**
+     * Remove a label by name.
+     *
+     * @param name The label name to remove
+     * @return True if the label was removed, false if it didn't exist
+     */
     public function removeLabel(name:String):Bool {
 
         var didRemove = false;

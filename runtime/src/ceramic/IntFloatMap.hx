@@ -7,7 +7,28 @@ using ceramic.Extensions;
 #if (!documentation && (cpp || cs))
 
 /**
- * An float map that uses integers as key.
+ * A high-performance map using integer keys and float values.
+ * 
+ * IntFloatMap provides fast access and storage for float values indexed by integers.
+ * It uses a custom implementation on C++ and C# targets for better performance,
+ * falling back to a standard Map on other platforms.
+ * 
+ * Features:
+ * - O(1) average case for get/set operations
+ * - Optional iteration support (must be enabled at construction)
+ * - Efficient memory usage with value pooling
+ * - Zero default value for missing keys
+ * 
+ * Example usage:
+ * ```haxe
+ * var scores = new IntFloatMap();
+ * scores.set(playerId, 100.5);
+ * var score = scores.get(playerId); // 100.5
+ * var missing = scores.get(999); // 0.0 (default)
+ * ```
+ * 
+ * @see IntIntMap
+ * @see IntBoolMap
  */
 class IntFloatMap {
 
@@ -27,16 +48,23 @@ class IntFloatMap {
 
     /**
      * When this map is marked as iterable, this array will contain every key.
+     * Only populated if iterable was set to true in constructor.
      */
     public var iterableKeys(default,null):Array<Int> = null;
 
     /**
-     * Values as they are stored.
+     * Direct access to the values vector.
      * Can be used to iterate on values directly,
-     * but can contain null values.
+     * but may contain FREE_VALUE markers for removed entries.
      */
     public var values(default,null):Vector<Float>;
 
+    /**
+     * Creates a new IntFloatMap.
+     * @param size Initial capacity (will grow as needed)
+     * @param fillFactor Load factor before resizing (0.5 = resize at 50% full)
+     * @param iterable If true, enables iteration over keys/values
+     */
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 
         initialSize = size;
@@ -188,19 +216,29 @@ class IntFloatMap {
 
 #else
 
+/**
+ * Fallback implementation of IntFloatMap for non-C++/C# targets.
+ * Uses standard Map internally with additional tracking for iteration.
+ */
 class IntFloatMap {
 
     /**
-     * Backing map
+     * Backing map for storing key-value pairs.
      */
     var intMap:Map<Int,Float>;
 
     /**
      * When this map is marked as iterable, this array will contain every key.
+     * Only populated if iterable was set to true in constructor.
      */
     public var iterableKeys(default,null):Array<Int> = null;
+    
+    /** Tracks which keys are in iterableKeys to avoid duplicates */
     var iterableKeysUsed:IntBoolMap = null;
 
+    /**
+     * The number of entries in the map.
+     */
     public var size(default,null):Int = 0;
 
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {

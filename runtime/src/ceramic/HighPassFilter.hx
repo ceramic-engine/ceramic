@@ -4,26 +4,75 @@ import ceramic.AudioFilter;
 import ceramic.AudioFilterBuffer;
 import ceramic.AudioFilterWorklet;
 
+/**
+ * A high-pass audio filter that attenuates frequencies below a cutoff point.
+ * 
+ * High-pass filters allow high frequencies to pass through while reducing
+ * or eliminating low frequencies. Common uses include:
+ * - Removing rumble or low-frequency noise
+ * - Creating "tinny" or "telephone" effects
+ * - Frequency band isolation for audio analysis
+ * - Cleaning up muddy audio mixes
+ * 
+ * The filter uses a biquad implementation for stable, efficient processing
+ * with adjustable resonance (Q factor) for frequency emphasis at the cutoff.
+ * 
+ * @example
+ * ```haxe
+ * // Remove low frequencies below 200Hz
+ * var highPass = new HighPassFilter();
+ * highPass.cutoffFrequency = 200;
+ * highPass.gain = 1.0;
+ * 
+ * // Create a resonant high-pass effect
+ * var resonantHP = new HighPassFilter();
+ * resonantHP.cutoffFrequency = 1000;
+ * resonantHP.resonance = 5.0;  // Emphasize the cutoff frequency
+ * 
+ * // Apply to an audio mixer
+ * audioMixer.addFilter(highPass);
+ * ```
+ * 
+ * @see LowPassFilter
+ * @see AudioFilter
+ * @see AudioMixer
+ */
 class HighPassFilter extends AudioFilter {
 
     public function workletClass() return HighPassFilterWorklet;
 
 }
 
+/**
+ * The audio processing worklet for the high-pass filter.
+ * Implements a second-order biquad high-pass filter with per-channel processing.
+ */
 class HighPassFilterWorklet extends AudioFilterWorklet {
 
     /**
-     * Cutoff frequency in Hz
+     * Cutoff frequency in Hz.
+     * Frequencies below this value will be attenuated.
+     * Range: 1 Hz to half the sample rate (Nyquist frequency).
+     * Default: 1000 Hz
      */
     @param var cutoffFrequency:Float = 1000.0;
 
     /**
-     * Filter gain/amplitude multiplier
+     * Filter gain/amplitude multiplier.
+     * Adjusts the overall output level after filtering.
+     * Range: 0.0 to any positive value (1.0 = unity gain).
+     * Default: 1.0
      */
     @param var gain:Float = 1.0;
 
     /**
-     * Filter resonance/Q factor (0.1 to 10.0, 0.707 = no resonance)
+     * Filter resonance/Q factor.
+     * Controls the sharpness of the filter and frequency emphasis at the cutoff.
+     * - 0.707: No resonance (Butterworth response)
+     * - < 0.707: Gentler rolloff
+     * - > 0.707: Sharper rolloff with peak at cutoff
+     * Range: 0.1 to 30.0 (higher values = more resonance)
+     * Default: 0.707
      */
     @param var resonance:Float = 0.707;
 
@@ -111,6 +160,14 @@ class HighPassFilterWorklet extends AudioFilterWorklet {
         }
     }
 
+    /**
+     * Calculates biquad filter coefficients for the high-pass response.
+     * Uses the standard audio EQ cookbook formulas for a second-order high-pass filter.
+     * 
+     * @param cutoff Cutoff frequency in Hz
+     * @param q Quality factor (resonance)
+     * @param sampleRate Sample rate in Hz
+     */
     function calculateCoefficients(cutoff:Float, q:Float, sampleRate:Float) {
         // Calculate biquad coefficients for high-pass filter
         var omega = 2.0 * Math.PI * cutoff / sampleRate;

@@ -11,13 +11,59 @@ import sys.FileSystem;
 
 /**
  * Runtime utilities to compute asset lists/names from raw (relative) file list.
- * Code is very similar to AssetsMacro, but for runtime execution, with any list of asset.
+ * 
+ * RuntimeAssets provides runtime access to asset information that is normally
+ * generated at compile-time by AssetsMacro. This allows dynamic asset discovery
+ * and loading, particularly useful for:
+ * - Hot-reloading during development
+ * - Dynamic content loading
+ * - User-generated content
+ * - Asset browsing tools
+ * 
+ * The class processes a flat list of asset paths and organizes them by:
+ * - Base name (filename without extension and density suffix)
+ * - Asset kind (image, sound, text, etc.)
+ * - Directory structure
+ * 
+ * It also handles density variants (e.g., @2x, @3x) and provides
+ * constant-style names for programmatic access.
+ * 
+ * @example
+ * ```haxe
+ * // Create from a directory path
+ * var runtimeAssets = RuntimeAssets.fromPath('assets/');
+ * 
+ * // Get all image asset names
+ * var imageNames = runtimeAssets.getNames('image');
+ * for (entry in imageNames) {
+ *     trace('Image: ${entry.name} at ${entry.paths}');
+ * }
+ * 
+ * // Get organized asset lists
+ * var lists = runtimeAssets.getLists();
+ * trace('All assets: ${lists.all}');
+ * trace('Assets for "player": ${lists.allByName.get("player")}');
+ * ```
+ * 
+ * @see Assets
+ * @see AssetsMacro
  */
 class RuntimeAssets {
 
     var transformedDir:String = null;
     var didQueryTransformedDir:Int = 0;
     var pendingTransformedDirCallbacks:Array<(transformedDir:String)->Void> = null;
+    
+    /**
+     * Requests the transformed assets directory path asynchronously.
+     * This is the temporary directory where processed assets are stored.
+     * 
+     * The method caches the result after the first query to avoid repeated
+     * platform calls. Multiple simultaneous requests are queued and resolved
+     * together.
+     * 
+     * @param callback Function called with the transformed directory path (may be null if unavailable)
+     */
     public function requestTransformedDir(callback:(transformedDir:String)->Void):Void {
         if (didQueryTransformedDir == 2) {
             app.onceImmediate(() -> callback(transformedDir));
@@ -53,20 +99,26 @@ class RuntimeAssets {
         }
     }
 
+    /** All asset file paths in the collection */
     var allAssets:Array<String> = null;
 
+    /** All unique directory paths containing assets */
     var allAssetDirs:Array<String> = null;
 
+    /** Map of base names to their file variants (including density variants) */
     var assetsByBaseName:Map<String,Array<String>> = null;
 
+    /** Map of base directory names to their path variants */
     var assetDirsByBaseName:Map<String,Array<String>> = null;
 
+    /** Cache of computed asset names by kind and options */
     var cachedNames:Map<String,Array<{
         name: String,
         paths: Array<String>,
         constName: String
     }>> = new Map();
 
+    /** Cache of computed asset lists */
     var cachedLists:{
         all: Array<String>,
         allDirs: Array<String>,
@@ -74,8 +126,18 @@ class RuntimeAssets {
         allDirsByName: Map<String,Array<String>>
     } = null;
 
+    /**
+     * The root path of the assets directory, if created from a path.
+     * Will be null if created with a pre-computed asset list.
+     */
     public var path(default, null):String = null;
 
+    /**
+     * Creates a new RuntimeAssets instance with a pre-computed list of asset paths.
+     * 
+     * @param allAssets Array of relative asset paths (e.g., ["images/player.png", "sounds/jump.ogg"])
+     * @param path Optional root path where these assets are located
+     */
     public function new(allAssets:Array<String>, ?path:String) {
 
         this.allAssets = allAssets;
@@ -85,6 +147,13 @@ class RuntimeAssets {
 
     }
 
+    /**
+     * Resets the runtime assets with a new list of files.
+     * Clears all caches and recomputes the asset organization.
+     * 
+     * @param allAssets New array of asset paths
+     * @param path Optional new root path
+     */
     public function reset(allAssets:Array<String>, ?path:String) {
 
         this.allAssets = allAssets;
@@ -100,6 +169,13 @@ class RuntimeAssets {
 
     }
 
+    /**
+     * Creates a RuntimeAssets instance by scanning a directory path.
+     * Only available on platforms with file system access.
+     * 
+     * @param path The directory path to scan for assets
+     * @return RuntimeAssets instance, or null if file system access is not available
+     */
     public static function fromPath(path:String):RuntimeAssets {
 
         #if (sys || node || nodejs || (web && ceramic_use_electron))
@@ -112,6 +188,20 @@ class RuntimeAssets {
 
 /// Public API
 
+    /**
+     * Gets all asset names of a specific kind with their paths and constant names.
+     * 
+     * This method finds all assets matching the specified kind and optional extensions,
+     * returning structured information about each unique asset (by base name).
+     * 
+     * @param kind Asset type: 'image', 'text', 'sound', 'shader', 'font', 'atlas', 'database', 'fragments'
+     * @param extensions Optional additional file extensions to include (beyond the defaults for the kind)
+     * @param dir Whether to search for directories instead of files
+     * @return Array of asset entries with:
+     *         - name: Base name without extension or density suffix
+     *         - paths: All file paths for this asset (including variants)
+     *         - constName: Constant-style name for code generation (e.g., "PLAYER_SPRITE")
+     */
     public function getNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<{
         name: String,
         paths: Array<String>,
@@ -207,6 +297,23 @@ class RuntimeAssets {
 
     }
 
+    /**
+     * Gets organized lists of all assets in various formats.
+     * 
+     * Returns a comprehensive view of all assets organized by:
+     * - Complete file lists
+     * - Directory lists
+     * - Files grouped by base name
+     * - Directories grouped by base name
+     * 
+     * The results are cached for performance.
+     * 
+     * @return Object containing:
+     *         - all: Array of all asset file paths
+     *         - allDirs: Array of all directory paths containing assets
+     *         - allByName: Map of base names to their file variants
+     *         - allDirsByName: Map of base directory names to their variants
+     */
     public function getLists():{
         all: Array<String>,
         allDirs: Array<String>,
@@ -256,7 +363,12 @@ class RuntimeAssets {
     }
 
     /**
-     * Same as getLists(), but will transform Maps into JSON-encodable raw objects.
+     * Same as getLists(), but transforms Maps into JSON-encodable objects.
+     * 
+     * This is useful when you need to serialize the asset lists to JSON
+     * or send them over a network, as Maps cannot be directly JSON-encoded.
+     * 
+     * @return Same structure as getLists() but with Maps converted to Dynamic objects
      */
     public function getEncodableLists():{
         all: Array<String>,
@@ -288,6 +400,19 @@ class RuntimeAssets {
 
 /// Internal
 
+    /**
+     * Converts an asset path to a constant-style name suitable for code generation.
+     * 
+     * Transformation rules:
+     * - Slashes (/) become double underscores (__)
+     * - Dots (.) become single underscores (_)
+     * - camelCase becomes CAMEL_CASE
+     * - Special characters are replaced with underscores
+     * - Result is all uppercase
+     * 
+     * @param input Asset path (e.g., "sprites/player.png")
+     * @return Constant name (e.g., "SPRITES__PLAYER")
+     */
     static function toAssetConstName(input:String):String {
 
         var res = new StringBuf();
@@ -334,6 +459,15 @@ class RuntimeAssets {
 
     }
 
+    /**
+     * Initializes internal data structures from the asset list.
+     * 
+     * This method:
+     * - Extracts all unique directories from file paths
+     * - Groups files by their base names (without extensions/variants)
+     * - Groups directories by their base names
+     * - Prepares the data for efficient querying
+     */
     function initData() {
 
         // Compute data
@@ -400,6 +534,13 @@ class RuntimeAssets {
 
     }
 
+    /**
+     * Checks if a character is a valid ASCII alphanumeric character.
+     * Used for generating valid constant names.
+     * 
+     * @param c Single character string
+     * @return True if the character is 0-9, A-Z, or a-z
+     */
     static function isAsciiChar(c:String):Bool {
 
         var code = c.charCodeAt(0);

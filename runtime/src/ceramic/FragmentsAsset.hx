@@ -4,8 +4,60 @@ import ceramic.Shortcuts.*;
 import haxe.DynamicAccess;
 import haxe.Json;
 
+/**
+ * An asset that loads and manages fragment data from `.fragment` files.
+ * 
+ * Fragments in Ceramic are reusable groups of visuals and entities that can be
+ * instantiated from data files. They support:
+ * - Multiple visual elements and entities with properties
+ * - Timeline-based animations with keyframes
+ * - Components that can be attached to fragment items
+ * - Hot-reloading for development
+ * 
+ * Fragment files can be in two formats:
+ * 1. Legacy format: Direct JSON representation of FragmentData objects
+ * 2. Version 1 format: Structured format with schema support that gets converted at load time
+ * 
+ * Example usage:
+ * ```haxe
+ * // Load a fragments asset
+ * var fragmentsAsset = new FragmentsAsset('myFragments.fragment');
+ * fragmentsAsset.onComplete(this, success -> {
+ *     if (success) {
+ *         // Access fragment data
+ *         var menuFragment = fragmentsAsset.fragments.get('mainMenu');
+ *         
+ *         // Create a Fragment instance from the data
+ *         var fragment = new Fragment();
+ *         fragment.fragmentData = menuFragment;
+ *     }
+ * });
+ * fragmentsAsset.load();
+ * ```
+ * 
+ * @see Fragment The runtime representation of fragment data
+ * @see FragmentData The data structure for fragments
+ * @see FragmentItem Individual items within a fragment
+ */
 class FragmentsAsset extends Asset {
 
+    /**
+     * A map of fragment IDs to their corresponding FragmentData objects.
+     * This property is populated after successfully loading the fragments file.
+     * Each fragment can be accessed by its ID and used to create Fragment instances.
+     * 
+     * The property is observable, so you can react to changes when fragments are loaded:
+     * ```haxe
+     * fragmentsAsset.onFragmentsChange(this, (fragments, prevFragments) -> {
+     *     if (fragments != null) {
+     *         // Fragments loaded successfully
+     *         for (id in fragments.keys()) {
+     *             trace('Loaded fragment: ' + id);
+     *         }
+     *     }
+     * });
+     * ```
+     */
     @observe public var fragments:DynamicAccess<FragmentData> = null;
 
     override public function new(name:String, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
@@ -14,6 +66,18 @@ class FragmentsAsset extends Asset {
 
     }
 
+    /**
+     * Loads the fragments file from the specified path.
+     * 
+     * The loading process:
+     * 1. Loads the JSON file as text
+     * 2. Parses the JSON data
+     * 3. Detects the format version (legacy or version 1)
+     * 4. Converts version 1 format to runtime format if needed
+     * 
+     * Supports hot-reload on platforms that allow it - the file will be
+     * automatically reloaded when it changes on disk.
+     */
     override public function load() {
 
         status = LOADING;
@@ -71,6 +135,32 @@ class FragmentsAsset extends Asset {
 
     }
 
+    /**
+     * Converts raw fragment data from the version 1 format into the runtime FragmentData format.
+     * 
+     * The version 1 format separates visuals and entities into different arrays and includes
+     * schema information for type checking. This method:
+     * - Processes the visuals and entities arrays into a unified items array
+     * - Attaches schema information to each item for runtime type validation
+     * - Converts color strings to Color objects
+     * - Ensures all required fields have default values
+     * 
+     * @param rawFragments The raw fragment data loaded from a version 1 format file
+     * @return A map of fragment IDs to their processed FragmentData objects
+     */
+    /**
+     * Converts version 1 fragment format to the runtime format.
+     * 
+     * This method handles the transformation of the newer fragment file format
+     * that includes additional metadata and schema information. It processes:
+     * - Fragment metadata (id, dimensions, color, transparency)
+     * - Visual and entity items with their properties
+     * - Component configurations
+     * - Schema references for entity types
+     * 
+     * @param rawFragments The raw parsed JSON data with version field
+     * @return Map of fragment IDs to FragmentData objects
+     */
     static function fromRawFragments(rawFragments:Dynamic):DynamicAccess<FragmentData> {
 
         var fragments:DynamicAccess<FragmentData> = {};
@@ -181,6 +271,12 @@ class FragmentsAsset extends Asset {
 
     }
 
+    /**
+     * Called when asset files change on disk (hot-reload support).
+     * Automatically reloads the fragments file if it has been modified.
+     * @param newFiles Map of current files and their modification times
+     * @param previousFiles Map of previous files and their modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())
@@ -202,6 +298,9 @@ class FragmentsAsset extends Asset {
 
     }
 
+    /**
+     * Destroys the fragments asset and clears the loaded fragment data from memory.
+     */
     override function destroy():Void {
 
         super.destroy();

@@ -5,36 +5,143 @@ import ceramic.UInt8Array;
 
 using StringTools;
 
+/**
+ * Dynamic texture atlas builder that packs multiple images into optimized texture pages at runtime.
+ * 
+ * TextureAtlasPacker uses bin packing algorithms to efficiently arrange images into
+ * larger textures, minimizing wasted space and texture switches. This is useful for:
+ * - Dynamically generated content (procedural graphics, text rendering)
+ * - User-generated content that needs atlasing
+ * - Optimizing texture usage for varying screen resolutions
+ * - Creating atlases from individual loaded images
+ * 
+ * The packer features:
+ * - Automatic page size growth (32x32 to 2048x2048)
+ * - Multi-page support when content exceeds maximum size
+ * - Configurable spacing between packed images
+ * - Support for trimmed sprites with offset data
+ * - Variant regions that share texture data
+ * 
+ * @example
+ * ```haxe
+ * // Create a packer
+ * var packer = new TextureAtlasPacker();
+ * packer.spacing = 2; // 2 pixel margin
+ * packer.filter = LINEAR;
+ * 
+ * // Add regions from pixel data
+ * packer.add("player_idle", idlePixels, 64, 64, 60, 60, 2, 2);
+ * packer.add("player_walk", walkPixels, 64, 64, 62, 62, 1, 1);
+ * 
+ * // Pack and get resulting atlas
+ * packer.pack((atlas) -> {
+ *     var playerRegion = atlas.region("player_idle");
+ *     playerSprite.region = playerRegion;
+ * });
+ * ```
+ * 
+ * @see TextureAtlas The resulting atlas after packing
+ * @see TextureAtlasRegion Individual regions in the atlas
+ * @see binpacking.MaxRectsPacker The underlying bin packing algorithm
+ */
 class TextureAtlasPacker extends Entity {
 
+    /**
+     * Event emitted when packing is complete.
+     * 
+     * Fired after all regions have been successfully packed
+     * and textures have been created. The atlas is ready for use.
+     */
     @event function finishPack();
 
+    /**
+     * Minimum texture page size in pixels.
+     * Pages start at this size and grow as needed.
+     */
     static final MIN_TEXTURE_SIZE:Int = 32;
 
+    /**
+     * Maximum texture page size in pixels.
+     * When exceeded, additional pages are created.
+     * This limit ensures compatibility with most GPUs.
+     */
     static final MAX_TEXTURE_SIZE:Int = 2048;
 
+    /**
+     * The resulting texture atlas after packing.
+     * 
+     * Created on first pack() call and reused for subsequent packing.
+     * Contains all pages and regions that have been packed.
+     */
     public var atlas(default, null):TextureAtlas = null;
 
+    /**
+     * Spacing between packed regions in pixels.
+     * 
+     * Adds a margin around each packed image to prevent texture bleeding
+     * during filtering. Recommended values: 1-2 pixels for linear filtering,
+     * 0 for nearest neighbor filtering.
+     * 
+     * Default: 1
+     */
     public var spacing:Int = 1;
 
+    /**
+     * Texture filtering mode for atlas pages.
+     * 
+     * Applied to all texture pages created by this packer.
+     * - LINEAR: Smooth filtering (best for scaled graphics)
+     * - NEAREST: Pixel-perfect filtering (best for pixel art)
+     * 
+     * Default: LINEAR
+     */
     public var filter:TextureFilter = LINEAR;
 
+    /**
+     * Regions waiting to be packed.
+     * Populated by add() calls, cleared after pack().
+     */
     private var pendingRegions:Array<TextureAtlasPackerRegion> = [];
 
+    /**
+     * Internal page data for bin packing.
+     * Each page tracks its packer, regions, and texture state.
+     */
     private var pages:Array<TextureAtlasPackerPage> = [];
 
+    /**
+     * Creates a new texture atlas packer.
+     * 
+     * The packer starts empty - use add() to queue regions
+     * and pack() to build the atlas.
+     */
     public function new() {
 
         super();
 
     }
 
+    /**
+     * Checks if there are regions waiting to be packed.
+     * 
+     * @return True if add() has been called but pack() hasn't processed the regions yet
+     */
     public function hasPendingRegions():Bool {
 
         return pendingRegions != null && pendingRegions.length > 0;
 
     }
 
+    /**
+     * Finds a region by name in pending or packed regions.
+     * 
+     * Searches both regions waiting to be packed and regions
+     * already packed into pages. Useful for creating variant regions
+     * or checking if a region exists.
+     * 
+     * @param name The region name to search for
+     * @return The packer region data, or null if not found
+     */
     public function region(name:String):TextureAtlasPackerRegion {
 
         if (pendingRegions != null) {
@@ -62,6 +169,25 @@ class TextureAtlasPacker extends Entity {
 
     }
 
+    /**
+     * Removes regions from the packer using a custom matching function.
+     * 
+     * This method allows selective removal of regions based on any criteria.
+     * It handles cleanup of both pending regions and already-packed regions,
+     * reorganizing the atlas as needed.
+     * 
+     * @param removeAtlasRegions If true, also removes matching regions from the final atlas
+     * @param matcher Function that returns true for regions to remove
+     * 
+     * @example
+     * ```haxe
+     * // Remove all enemy sprites
+     * packer.removeRegionsWithMatcher(true, name -> name.indexOf("enemy_") == 0);
+     * 
+     * // Remove temporary regions
+     * packer.removeRegionsWithMatcher(true, name -> tempRegions.exists(name));
+     * ```
+     */
     public function removeRegionsWithMatcher(removeAtlasRegions:Bool = true, matcher:(regionName:String)->Bool):Void {
 
         if (pendingRegions != null) {
@@ -140,12 +266,38 @@ class TextureAtlasPacker extends Entity {
 
     }
 
+    /**
+     * Removes all regions whose names start with the specified prefix.
+     * 
+     * Convenience method for removing groups of related regions.
+     * Commonly used for cleaning up temporary or category-specific regions.
+     * 
+     * @param removeAtlasRegions If true, also removes matching regions from the final atlas
+     * @param prefix The string prefix to match region names against
+     * 
+     * @example
+     * ```haxe
+     * // Remove all UI elements
+     * packer.removeRegionsWithPrefix(true, "ui_");
+     * 
+     * // Remove temporary regions
+     * packer.removeRegionsWithPrefix(true, "temp_");
+     * ```
+     */
     public function removeRegionsWithPrefix(removeAtlasRegions:Bool = true, prefix:String):Void {
 
         removeRegionsWithMatcher(removeAtlasRegions, regionName -> regionName.startsWith(prefix));
 
     }
 
+    /**
+     * Destroys the packer and all associated resources.
+     * 
+     * Cleans up:
+     * - The generated atlas and all its textures
+     * - Pending region data
+     * - Internal packing structures
+     */
     override function destroy() {
 
         if (atlas != null) {
@@ -262,8 +414,39 @@ class TextureAtlasPacker extends Entity {
     }
 
     /**
-     * Pack new regions added with `add()` to the texture atlas.
-     * If no texture atlas exists yet, it will be created.
+     * Packs all pending regions into texture atlas pages.
+     * 
+     * This method executes the bin packing algorithm to arrange all regions
+     * added via add() into optimal texture layouts. It handles:
+     * - Automatic page size growth when regions don't fit
+     * - Creation of new pages when maximum size is exceeded
+     * - Texture generation from pixel data
+     * - Variant region resolution
+     * 
+     * The packing process:
+     * 1. Attempts to fit regions into existing pages
+     * 2. Grows page size (up to MAX_TEXTURE_SIZE) if needed
+     * 3. Creates new pages when current pages are full
+     * 4. Generates GPU textures from packed pixel data
+     * 5. Creates TextureAtlasRegion instances for use
+     * 
+     * @param done Callback invoked when packing is complete, receives the atlas
+     * 
+     * @example
+     * ```haxe
+     * // Add multiple regions
+     * packer.add("sprite1", pixels1, 32, 32, 32, 32);
+     * packer.add("sprite2", pixels2, 64, 64, 64, 64);
+     * 
+     * // Pack and use atlas
+     * packer.pack((atlas) -> {
+     *     var region1 = atlas.region("sprite1");
+     *     quad.region = region1;
+     * });
+     * ```
+     * 
+     * @throws String if region dimensions exceed MAX_TEXTURE_SIZE
+     * @throws String if variant regions reference invalid sources
      */
     public function pack(done:(atlas:TextureAtlas)->Void) {
 
@@ -518,11 +701,20 @@ class TextureAtlasPacker extends Entity {
 }
 
 /**
- * A region for a texture atlas packer. Not to be confused
- * with `TextureAtlasRegion` which is to be used with `TextureAtlas`,
- * while `TextureAtlasPackerRegion` is holding information to
- * pack a region with `TextureAtlasPacker` and is not a region
- * usable with an atlas yet.
+ * Internal data structure for regions during the packing process.
+ * 
+ * TextureAtlasPackerRegion holds temporary information about images
+ * to be packed, including pixel data, dimensions, and packing results.
+ * This is distinct from TextureAtlasRegion which represents the final
+ * packed regions in the atlas.
+ * 
+ * Features:
+ * - Support for trimmed sprites (packed vs original dimensions)
+ * - Offset data for proper sprite alignment
+ * - Variant regions that share texture data with a source
+ * - Bin packing rectangle assignment
+ * 
+ * @see TextureAtlasRegion The final region type after packing
  */
 @:structInit
 @:allow(ceramic.TextureAtlasPacker)
@@ -530,80 +722,126 @@ class TextureAtlasPacker extends Entity {
 private class TextureAtlasPackerRegion {
 
     /**
-     * Region name
+     * Unique identifier for this region.
+     * Used to reference the region in the final atlas.
      */
     public var name:String;
 
     /**
-     * Original region width (including margins / transparent pixels)
+     * Original sprite width including transparent margins.
+     * This is the full size before any trimming optimization.
      */
     public var originalWidth:Int = 0;
 
     /**
-     * Original region height (including margins / transparent pixels)
+     * Original sprite height including transparent margins.
+     * This is the full size before any trimming optimization.
      */
     public var originalHeight:Int = 0;
 
     /**
-     * Packed region width (without margins / transparent pixels)
+     * Actual width of non-transparent pixels to be packed.
+     * Usually smaller than originalWidth due to trimming.
      */
     public var packedWidth:Int;
 
     /**
-     * Packed region height (without margins / transparent pixels)
+     * Actual height of non-transparent pixels to be packed.
+     * Usually smaller than originalHeight due to trimming.
      */
     public var packedHeight:Int;
 
     /**
-     * X offset to position the region to its original size
+     * Horizontal offset from original sprite origin to packed pixels.
+     * Used to maintain proper sprite alignment after trimming.
      */
     public var offsetX:Int = 0;
 
     /**
-     * Y offset to position the region to its original size
+     * Vertical offset from original sprite origin to packed pixels.
+     * Used to maintain proper sprite alignment after trimming.
      */
     public var offsetY:Int = 0;
 
     /**
-     * If the region comes from a pixels buffer, this is the buffer
+     * Raw pixel data for this region in RGBA format.
+     * Null for variant regions that reference another region.
      */
     public var pixels:UInt8Array = null;
 
     /**
-     * If the region is a variant of another region,
-     * this is the other region used as source
+     * Reference to source region for variants.
+     * Variant regions share the same texture coordinates as their source
+     * but can have different original dimensions and offsets.
      */
     public var sourceRegion:TextureAtlasPackerRegion = null;
 
     /**
-     * The rect describing how this region should be packed
+     * Assigned position in the texture page after bin packing.
+     * Null until the region has been successfully packed.
      */
     public var rect:binpacking.Rect = null;
 
     /**
-     * Whether this region has been rendered to a page texture or not
+     * Tracks whether pixels have been copied to the page texture.
+     * Prevents duplicate rendering during repacking operations.
      */
     public var rendered:Bool = false;
 
 }
 
+/**
+ * Internal representation of a texture page during packing.
+ * 
+ * Each page manages its own bin packer instance and tracks
+ * which regions have been assigned to it. Pages grow dynamically
+ * and can be reset when repacking is needed.
+ */
 @:structInit
 @:allow(ceramic.TextureAtlasPacker)
 @:allow(ceramic.TextureAtlasPackerRegion)
 private class TextureAtlasPackerPage {
 
+    /**
+     * Pixel spacing between regions on this page.
+     * Matches the packer's spacing setting.
+     */
     public var spacing:Int;
 
+    /**
+     * Identifier for this page (e.g., "page0", "page1").
+     * Used for debugging and texture naming.
+     */
     public var name:String;
 
+    /**
+     * Current width of this page in pixels.
+     * Grows from MIN_TEXTURE_SIZE to MAX_TEXTURE_SIZE as needed.
+     */
     public var width:Int;
 
+    /**
+     * Current height of this page in pixels.
+     * Grows from MIN_TEXTURE_SIZE to MAX_TEXTURE_SIZE as needed.
+     */
     public var height:Int;
 
+    /**
+     * All regions assigned to this page.
+     * Includes both regular regions and variants.
+     */
     public var regions:Array<TextureAtlasPackerRegion>;
 
+    /**
+     * Bin packing algorithm instance for this page.
+     * Handles optimal placement of regions within the page bounds.
+     */
     public var binPacker:MaxRectsPacker;
 
+    /**
+     * Flag indicating the page texture needs regeneration.
+     * Set when page size changes or regions are modified.
+     */
     public var shouldResetTexture:Bool;
 
 }

@@ -39,6 +39,10 @@ class Border extends Mesh {
         return height;
     }
 
+    /**
+     * Position of the border relative to the rectangle bounds.
+     * Can be INSIDE, OUTSIDE, or CENTERED.
+     */
     public var borderPosition(default,set):BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
@@ -47,6 +51,10 @@ class Border extends Mesh {
         return borderPosition;
     }
 
+    /**
+     * Default size of all borders in pixels.
+     * Individual border sizes override this value.
+     */
     public var borderSize(default,set):Float = 1;
     inline function set_borderSize(borderSize:Float):Float {
         if (this.borderSize == borderSize) return borderSize;
@@ -55,6 +63,10 @@ class Border extends Mesh {
         return borderSize;
     }
 
+    /**
+     * Size of the top border in pixels.
+     * Set to -1 to use the default borderSize.
+     */
     public var borderTopSize(default,set):Float = -1;
     inline function set_borderTopSize(borderTopSize:Float):Float {
         if (this.borderTopSize == borderTopSize) return borderTopSize;
@@ -63,6 +75,10 @@ class Border extends Mesh {
         return borderTopSize;
     }
 
+    /**
+     * Size of the bottom border in pixels.
+     * Set to -1 to use the default borderSize.
+     */
     public var borderBottomSize(default,set):Float = -1;
     inline function set_borderBottomSize(borderBottomSize:Float):Float {
         if (this.borderBottomSize == borderBottomSize) return borderBottomSize;
@@ -71,6 +87,10 @@ class Border extends Mesh {
         return borderBottomSize;
     }
 
+    /**
+     * Size of the left border in pixels.
+     * Set to -1 to use the default borderSize.
+     */
     public var borderLeftSize(default,set):Float = -1;
     inline function set_borderLeftSize(borderLeftSize:Float):Float {
         if (this.borderLeftSize == borderLeftSize) return borderLeftSize;
@@ -79,6 +99,10 @@ class Border extends Mesh {
         return borderLeftSize;
     }
 
+    /**
+     * Size of the right border in pixels.
+     * Set to -1 to use the default borderSize.
+     */
     public var borderRightSize(default,set):Float = -1;
     inline function set_borderRightSize(borderRightSize:Float):Float {
         if (this.borderRightSize == borderRightSize) return borderRightSize;
@@ -87,6 +111,10 @@ class Border extends Mesh {
         return borderRightSize;
     }
 
+    /**
+     * Default color for all borders.
+     * Individual border colors override this value.
+     */
     public var borderColor(default,set):Color = Color.GRAY;
     inline function set_borderColor(borderColor:Color):Color {
         if (this.borderColor == borderColor) return borderColor;
@@ -95,6 +123,10 @@ class Border extends Mesh {
         return borderColor;
     }
 
+    /**
+     * Color of the top border.
+     * Set to Color.NONE to use the default borderColor.
+     */
     public var borderTopColor(default,set):Color = Color.NONE;
     inline function set_borderTopColor(borderTopColor:Color):Color {
         if (this.borderTopColor == borderTopColor) return borderTopColor;
@@ -103,6 +135,10 @@ class Border extends Mesh {
         return borderTopColor;
     }
 
+    /**
+     * Color of the bottom border.
+     * Set to Color.NONE to use the default borderColor.
+     */
     public var borderBottomColor(default,set):Color = Color.NONE;
     inline function set_borderBottomColor(borderBottomColor:Color):Color {
         if (this.borderBottomColor == borderBottomColor) return borderBottomColor;
@@ -111,6 +147,10 @@ class Border extends Mesh {
         return borderBottomColor;
     }
 
+    /**
+     * Color of the left border.
+     * Set to Color.NONE to use the default borderColor.
+     */
     public var borderLeftColor(default,set):Color = Color.NONE;
     inline function set_borderLeftColor(borderLeftColor:Color):Color {
         if (this.borderLeftColor == borderLeftColor) return borderLeftColor;
@@ -119,6 +159,10 @@ class Border extends Mesh {
         return borderLeftColor;
     }
 
+    /**
+     * Color of the right border.
+     * Set to Color.NONE to use the default borderColor.
+     */
     public var borderRightColor(default,set):Color = Color.NONE;
     inline function set_borderRightColor(borderRightColor:Color):Color {
         if (this.borderRightColor == borderRightColor) return borderRightColor;
@@ -127,6 +171,9 @@ class Border extends Mesh {
         return borderRightColor;
     }
 
+    /**
+     * Create a new Border visual.
+     */
     public function new() {
 
         super();
@@ -178,6 +225,10 @@ class Border extends Mesh {
 
     }
 
+    /**
+     * Compute and update the colors for each border segment.
+     * Uses individual border colors if set, otherwise falls back to borderColor.
+     */
     function computeColors() {
 
         var topColor = new AlphaColor(borderTopColor != Color.NONE ? borderTopColor : borderColor);
@@ -215,6 +266,10 @@ class Border extends Mesh {
 
     }
 
+    /**
+     * Compute and update the vertices for the border mesh.
+     * Takes into account border sizes and position (inside, outside, centered).
+     */
     function computeVertices() {
 
         var outer = 0.5;

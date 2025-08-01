@@ -4,6 +4,31 @@ using ceramic.Extensions;
 
 /**
  * An utility to reuse transform matrix object at application level.
+ * 
+ * TransformPool provides object pooling for Transform instances to reduce
+ * garbage collection pressure and improve performance when working with
+ * many temporary transform matrices.
+ * 
+ * Features:
+ * - Get pooled Transform instances instead of creating new ones
+ * - Recycle transforms when done to return them to the pool
+ * - Automatic cleanup of recycled transforms
+ * - Static pool shared across the application
+ * 
+ * Example usage:
+ * ```haxe
+ * // Get a transform from the pool
+ * var transform = TransformPool.get();
+ * 
+ * // Use the transform
+ * transform.translate(100, 200);
+ * visual.transform = transform;
+ * 
+ * // When done, recycle it back to the pool
+ * TransformPool.recycle(transform);
+ * ```
+ * 
+ * @see Transform
  */
 class TransformPool {
 
@@ -45,6 +70,10 @@ class TransformPool {
 
     }
 
+    /**
+     * Clears the pool, removing all available transforms.
+     * Use this to free memory if the pool has grown too large.
+     */
     public static function clear():Void {
         
         if (availableTransforms.length > 0) {

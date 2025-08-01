@@ -1,23 +1,64 @@
 package ceramic;
 
+/**
+ * A pool system for efficiently reusing arrays of fixed sizes.
+ * 
+ * ArrayPool reduces garbage collection pressure by reusing arrays instead of
+ * creating new ones. It maintains pools of arrays organized by size ranges,
+ * automatically returning arrays to the pool when they're no longer needed.
+ * 
+ * The pool uses predefined size buckets (10, 100, 1000, 10000, 100000) and
+ * automatically selects the appropriate pool based on the requested size.
+ * 
+ * Example usage:
+ * ```haxe
+ * // Get an array from the pool
+ * var pool = ArrayPool.pool(50);
+ * var array = pool.get();
+ * 
+ * // Use the array
+ * for (i in 0...50) {
+ *     array[i] = i * 2;
+ * }
+ * 
+ * // Return to pool when done
+ * pool.release(array);
+ * ```
+ * 
+ * @see ReusableArray
+ */
 class ArrayPool {
 
     static var ALLOC_STEP = 10;
 
 /// Factory
 
+    /** Pool for arrays up to 10 elements */
     static var dynPool10:ArrayPool = new ArrayPool(10);
 
+    /** Pool for arrays up to 100 elements */
     static var dynPool100:ArrayPool = new ArrayPool(100);
 
+    /** Pool for arrays up to 1,000 elements */
     static var dynPool1000:ArrayPool = new ArrayPool(1000);
 
+    /** Pool for arrays up to 10,000 elements */
     static var dynPool10000:ArrayPool = new ArrayPool(10000);
 
+    /** Pool for arrays up to 100,000 elements */
     static var dynPool100000:ArrayPool = new ArrayPool(100000);
 
+    /** Flag to prevent spamming warnings about large pools */
     static var didNotifyLargePool:Bool = false;
 
+    /**
+     * Gets an appropriate array pool for the requested size.
+     * Automatically selects from predefined pools based on size ranges.
+     * For sizes over 100,000, creates a temporary pool (not recommended).
+     * 
+     * @param size The maximum size of arrays needed
+     * @return An ArrayPool instance suitable for the requested size
+     */
     public static function pool(size:Int):ArrayPool {
 
         if (size <= 10) {
@@ -51,14 +92,21 @@ class ArrayPool {
 
 /// Properties
 
+    /** Storage for pooled arrays */
     var arrays:ReusableArray<Any> = null;
 
+    /** Index of the next available slot in the pool */
     var nextFree:Int = 0;
 
+    /** The size of arrays managed by this pool */
     var arrayLengths:Int;
 
 /// Lifecycle
 
+    /**
+     * Creates a new ArrayPool for arrays of the specified size.
+     * @param arrayLengths The size of arrays this pool will manage
+     */
     public function new(arrayLengths:Int) {
 
         this.arrayLengths = arrayLengths;
@@ -67,6 +115,11 @@ class ArrayPool {
 
 /// Public API
 
+    /**
+     * Gets a reusable array from the pool.
+     * The array may contain old data and should be cleared if needed.
+     * @return A ReusableArray instance of the pool's configured size
+     */
     public function get(#if ceramic_debug_array_pool ?pos:haxe.PosInfos #end):ReusableArray<Any> {
 
         #if ceramic_debug_array_pool
@@ -96,6 +149,11 @@ class ArrayPool {
 
     }
 
+    /**
+     * Returns an array to the pool for reuse.
+     * The array is automatically cleared (all elements set to null).
+     * @param array The array to return to the pool
+     */
     public function release(array:ReusableArray<Any>):Void {
         
         #if ceramic_debug_array_pool

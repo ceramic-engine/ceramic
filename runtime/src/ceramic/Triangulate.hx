@@ -5,7 +5,39 @@ import ceramic.Shortcuts.*;
 using ceramic.Extensions;
 
 /**
- * An utility to triangulate indices from a set of vertices
+ * Utility class for triangulating polygons into triangles.
+ * 
+ * Triangulate converts complex polygons (defined by vertices) into a set of triangles
+ * by generating appropriate indices. This is essential for rendering filled shapes
+ * on the GPU, which typically only supports triangle primitives.
+ * 
+ * The triangulation uses the ear-clipping algorithm, which:
+ * - Works with both convex and concave polygons
+ * - Handles clockwise and counter-clockwise winding
+ * - Produces a valid triangulation for simple polygons (no self-intersections)
+ * 
+ * Common uses:
+ * - Converting Shape paths to renderable triangles
+ * - Filling complex polygons
+ * - Creating meshes from outline data
+ * - Processing vector graphics
+ * 
+ * @example
+ * ```haxe
+ * // Triangulate a square
+ * var vertices = [
+ *     0, 0,    // Top-left
+ *     100, 0,  // Top-right
+ *     100, 100, // Bottom-right
+ *     0, 100   // Bottom-left
+ * ];
+ * var indices = [];
+ * Triangulate.triangulate(vertices, indices);
+ * // indices now contains [0, 1, 2, 0, 2, 3]
+ * ```
+ * 
+ * @see Shape For automatic triangulation of visual shapes
+ * @see EarClippingTriangulator The underlying triangulation implementation
  */
 class Triangulate {
 
@@ -14,16 +46,59 @@ class Triangulate {
     static var triangulator:EarClippingTriangulator = null;
 
     /**
-     * Triangulate the given vertices and fills the indices array accordingly
+     * Triangulates a polygon defined by vertices and fills the indices array.
+     * 
+     * Takes a list of 2D vertices (as x,y pairs) and generates triangle indices
+     * that define how to connect those vertices into triangles. The polygon
+     * should be simple (no self-intersections) for best results.
+     * 
+     * @param vertices Array of vertex coordinates as [x0,y0, x1,y1, x2,y2, ...]
+     *                 Must contain at least 6 values (3 vertices).
+     * @param indices Output array to fill with triangle indices.
+     *                Will be cleared before adding new indices.
+     *                Result length will be 3 × (numVertices - 2).
+     * 
+     * @example
+     * ```haxe
+     * var vertices = [0,0, 100,0, 50,100]; // Triangle
+     * var indices = [];
+     * Triangulate.triangulate(vertices, indices);
+     * // indices = [0, 1, 2]
+     * ```
      */
     public extern inline static overload function triangulate(vertices:Array<Float>, indices:Array<Int>):Void {
         _triangulate(vertices, indices);
     }
 
     /**
-     * Triangulate the given vertices and fills the indices array accordingly.
-     * Variant method that takes a range to operate only on a subset of vertices.
-     * Indices will be added to the given array.
+     * Triangulates a subset of vertices within the given array.
+     * 
+     * This variant allows triangulating only a portion of a larger vertex array,
+     * useful when working with multiple polygons in a single buffer. The indices
+     * generated will be offset to match the original vertex positions.
+     * 
+     * @param vertices Array containing vertex coordinates as [x,y] pairs
+     * @param index Starting vertex index (not array index).
+     *              Array index = index × 2.
+     * @param length Number of vertices to process (not array length).
+     *               Array elements used = length × 2.
+     * @param indices Output array to append triangle indices.
+     *                Indices are offset by 'index' parameter.
+     *                Does NOT clear existing content.
+     * 
+     * @example
+     * ```haxe
+     * // Triangulate second polygon in a multi-polygon buffer
+     * var vertices = [
+     *     // First polygon (4 vertices)
+     *     0,0, 50,0, 50,50, 0,50,
+     *     // Second polygon (3 vertices) 
+     *     100,0, 150,0, 125,50
+     * ];
+     * var indices = [];
+     * Triangulate.triangulate(vertices, 4, 3, indices);
+     * // indices = [4, 5, 6] (referencing second polygon)
+     * ```
      */
     public extern inline static overload function triangulate(vertices:Array<Float>, index:Int, length:Int, indices:Array<Int>):Void {
         _triangulateWithRange(vertices, index, length, indices);
@@ -78,24 +153,38 @@ class Triangulate {
 // Look at the original code and license for reference:
 // https://github.com/libgdx/libgdx/blob/5ca5b71b89c84ffe0c7b7b347a4697436694e34e/gdx/src/com/badlogic/gdx/math/EarClippingTriangulator.java
 /**
-    A simple implementation of the ear cutting algorithm to triangulate simple polygons without holes. For more information:
-    * http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/97/Ian/algorithm2.html
-    * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-
-    If the input polygon is not simple (self-intersects), there will be output but it is of unspecified quality (garbage in,
-    garbage out).
-
-    If the polygon vertices are very large or very close together then GeometryUtils.isClockwise() may not
-    be able to properly assess the winding (because it uses floats). In that case the vertices should be adjusted, eg by finding
-    the smallest X and Y values and subtracting that from each vertex.
-
-    @author badlogicgames@gmail.com
-    @author Nicolas Gramlich (optimizations, collinear edge support)
-    @author Eric Spitz
-    @author Thomas ten Cate (bugfixes, optimizations)
-    @author Nathan Sweet (rewrite, return indices, no allocation, optimizations)
-    @author Jérémy Faivre (ported to Haxe)
-**/
+ * Implementation of the ear-clipping algorithm for polygon triangulation.
+ * 
+ * A simple implementation of the ear cutting algorithm to triangulate simple polygons without holes. 
+ * The algorithm works by:
+ * 1. Finding "ear" vertices (vertices that form triangles with no other vertices inside)
+ * 2. Clipping these ears one by one
+ * 3. Repeating until only one triangle remains
+ * 
+ * For more information:
+ * - http://cgm.cs.mcgill.ca/~godfried/teaching/cg-projects/97/Ian/algorithm2.html
+ * - http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+ * 
+ * Performance characteristics:
+ * - Time complexity: O(n²) for n vertices
+ * - Works with both convex and concave polygons
+ * - Handles degenerate cases (nearly collinear vertices)
+ * 
+ * Limitations:
+ * - If the input polygon is not simple (self-intersects), there will be output 
+ *   but it is of unspecified quality (garbage in, garbage out).
+ * - If the polygon vertices are very large or very close together then 
+ *   GeometryUtils.isClockwise() may not be able to properly assess the winding 
+ *   (because it uses floats). In that case the vertices should be adjusted, 
+ *   eg by finding the smallest X and Y values and subtracting that from each vertex.
+ * 
+ * @author badlogicgames@gmail.com
+ * @author Nicolas Gramlich (optimizations, collinear edge support)
+ * @author Eric Spitz
+ * @author Thomas ten Cate (bugfixes, optimizations)
+ * @author Nathan Sweet (rewrite, return indices, no allocation, optimizations)
+ * @author Jérémy Faivre (ported to Haxe)
+ */
 @:allow(ceramic.Triangulate)
 private class EarClippingTriangulator {
     private static inline var CONCAVE:Int = -1;
@@ -114,13 +203,31 @@ private class EarClippingTriangulator {
     }
 
     /**
-        Triangulates the given (convex or concave) simple polygon to a list of triangle vertices.
-        @param vertices pairs describing vertices of the polygon, in either clockwise or counterclockwise order.
-        @param offset The offset into the vertices array
-        @param count The number of vertices to use
-        @param outputTriangles (optional) The array of triangles to fill. Will create a new one if not provided
-        @return Array of triangle indices in clockwise order.
-    **/
+     * Triangulates the given (convex or concave) simple polygon to a list of triangle vertices.
+     * 
+     * The algorithm automatically detects and handles the winding order of the input,
+     * always producing triangles in clockwise order. The triangulation is performed
+     * in-place with minimal allocations.
+     * 
+     * @param vertices Pairs describing vertices of the polygon [x0,y0, x1,y1, ...], 
+     *                 in either clockwise or counterclockwise order.
+     * @param offset The offset into the vertices array (in array elements, not vertices).
+     *               Default: 0
+     * @param count The number of array elements to use (not vertex count).
+     *              Use -1 to process all remaining elements. Default: -1
+     * @param outputTriangles Optional array to fill with triangle indices.
+     *                        Will be cleared before use. If not provided, a new array is created.
+     * @return Array of triangle indices in clockwise order.
+     *         Each group of 3 indices forms one triangle.
+     * 
+     * @example
+     * ```haxe
+     * var triangulator = new EarClippingTriangulator();
+     * var vertices = [0,0, 100,0, 100,100, 0,100]; // Square
+     * var indices = triangulator.computeTriangles(vertices);
+     * // indices = [0,1,2, 0,2,3] (two triangles)
+     * ```
+     */
     public function computeTriangles(vertices:Array<Float>, offset:Int = 0, count:Int = -1, ?outputTriangles:Array<Int>):Array<Int> {
         if (count == -1) count = vertices.length;
 
@@ -180,7 +287,15 @@ private class EarClippingTriangulator {
         }
     }
 
-    /** @return CONCAVE or CONVEX **/
+    /**
+     * Determines if a vertex is convex or concave based on the sign of the area
+     * spanned by it and its adjacent vertices.
+     * 
+     * @param index The vertex index to classify
+     * @return CONVEX (1) if the vertex forms a convex angle,
+     *         CONCAVE (-1) if it forms a concave angle,
+     *         or 0 if the vertices are collinear
+     */
     private function classifyVertex(index:Int):Int {
         var previous:Int = indices[getPreviousIndex(index)] * 2;
         var current:Int = indices[index] * 2;
@@ -193,6 +308,19 @@ private class EarClippingTriangulator {
         );
     }
 
+    /**
+     * Finds a vertex that can be safely removed as an ear tip.
+     * 
+     * An ear tip is a vertex that:
+     * 1. Is convex (or tangential)
+     * 2. Forms a triangle with its neighbors that contains no other vertices
+     * 
+     * If no valid ear is found (degenerate polygon), falls back to:
+     * 1. Any convex vertex
+     * 2. The first vertex (if all are concave - shouldn't happen in valid polygons)
+     * 
+     * @return Index of the ear tip vertex to remove
+     */
     private function findEarTip():Int {
         for (i in 0...vertexCount) {
             if (isEarTip(i)) return i;
@@ -209,6 +337,19 @@ private class EarClippingTriangulator {
         return 0; // If all vertices are concave, just return the first one
     }
 
+    /**
+     * Tests whether a vertex is a valid ear tip that can be clipped.
+     * 
+     * A vertex is an ear tip if:
+     * 1. It's convex (not concave)
+     * 2. The triangle formed with its neighbors contains no other polygon vertices
+     * 
+     * The test uses the sign of computed areas to determine if points are inside
+     * the triangle. Points exactly on edges are considered inside.
+     * 
+     * @param earTipIndex The vertex index to test
+     * @return true if the vertex is a valid ear tip
+     */
     private function isEarTip(earTipIndex:Int):Bool {
         if (vertexTypes[earTipIndex] == CONCAVE) return false;
 
@@ -247,6 +388,14 @@ private class EarClippingTriangulator {
         return true;
     }
 
+    /**
+     * Removes an ear tip vertex and adds the resulting triangle to the output.
+     * 
+     * Creates a triangle from the ear tip and its two neighbors, then removes
+     * the ear tip vertex from further consideration.
+     * 
+     * @param earTipIndex The index of the ear tip vertex to remove
+     */
     private function cutEarTip(earTipIndex:Int):Void {
         triangles.push(indices[getPreviousIndex(earTipIndex)]);
         triangles.push(indices[earTipIndex]);
@@ -266,6 +415,22 @@ private class EarClippingTriangulator {
         return (index + 1) % vertexCount;
     }
 
+    /**
+     * Computes the sign of the area of the triangle formed by three points.
+     * 
+     * Uses the cross product to determine orientation:
+     * - Positive: Counter-clockwise winding (convex in a clockwise polygon)
+     * - Negative: Clockwise winding (concave in a clockwise polygon)
+     * - Zero: Collinear points
+     * 
+     * @param p1x X coordinate of first point
+     * @param p1y Y coordinate of first point
+     * @param p2x X coordinate of second point
+     * @param p2y Y coordinate of second point
+     * @param p3x X coordinate of third point
+     * @param p3y Y coordinate of third point
+     * @return 1 for positive area, -1 for negative area, 0 for collinear
+     */
     private static function computeSpannedAreaSign(p1x:Float, p1y:Float, p2x:Float, p2y:Float, p3x:Float, p3y:Float):Int {
         var area:Float = p1x * (p3y - p2y);
         area += p2x * (p1y - p3y);

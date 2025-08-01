@@ -5,28 +5,69 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+/**
+ * Implementation class for the InputMap system.
+ * 
+ * This class provides the actual functionality for mapping physical inputs
+ * (keyboard, mouse, gamepad) to logical game actions. It supports complex
+ * input scenarios including:
+ * 
+ * - Multiple inputs bound to a single action
+ * - Digital-to-analog conversion (e.g., WASD to movement axis)
+ * - Analog-to-digital conversion (e.g., trigger press threshold)
+ * - Input state tracking (pressed, just pressed, just released)
+ * - Gamepad-specific targeting
+ * - UI focus integration
+ * 
+ * The implementation uses an efficient index-based system to track bindings
+ * and input states, minimizing overhead during runtime input processing.
+ * 
+ * @param T The type representing game actions (typically an enum)
+ * @see InputMap
+ */
 class InputMapImpl<T> extends InputMapBase {
 
+    /**
+     * Triggered when a mapped action is pressed (key down, button pressed, etc.).
+     * @param key The action that was pressed
+     * @event keyDown
+     */
     @event function keyDown(key:T);
 
+    /**
+     * Triggered when a mapped action is released (key up, button released, etc.).
+     * @param key The action that was released
+     * @event keyUp
+     */
     @event function keyUp(key:T);
 
+    /**
+     * Triggered when an analog axis value changes for a mapped action.
+     * @param key The action associated with the axis
+     * @param value The new axis value (typically -1.0 to 1.0)
+     * @event axis
+     */
     @event function axis(key:T, value:Float);
 
     /**
      * Target events of a specific gamepad by setting its gamepad id.
-     * If kept to default (`-1`), events from any gamepad will be handled
+     * If kept to default (`-1`), events from any gamepad will be handled.
+     * Useful for multiplayer games where each player has their own controller.
      */
     public var gamepadId:Int = -1;
 
     /**
-     * If set to `true`, when binding a new key, will check if the related
-     * key was just pressed this frame.
+     * If set to `true`, when binding a new input, the system will check if
+     * the input was just pressed this frame and set the initial state accordingly.
+     * This prevents immediate triggering of "just pressed" events when binding
+     * an input that's already being held down.
      */
     public var checkJustPressedAtBind:Bool = false;
 
     /**
-     * Set to `false` if you want to disable this input map entirely.
+     * Set to `false` to disable this input map entirely.
+     * When disabled, all input queries will return false/0.0 and no events will be triggered.
+     * Useful for pausing input handling or switching between different input schemes.
      */
     public var enabled:Bool = true;
 
@@ -886,6 +927,12 @@ class InputMapImpl<T> extends InputMapBase {
 
 /// Public API
 
+    /**
+     * Binds a keyboard key code to an action.
+     * Multiple key codes can be bound to the same action.
+     * @param key The action to bind to
+     * @param keyCode The keyboard key code to bind
+     */
     public function bindKeyCode(key:T, keyCode:KeyCode):Void {
 
         var index = indexOfKey(key);
@@ -912,6 +959,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all key codes currently bound to an action.
+     * @param key The action to query
+     * @return Array of bound key codes (empty if none)
+     */
     public function boundKeyCodes(key:T):ReadOnlyArray<KeyCode> {
 
         var index = indexOfKey(key);
@@ -921,6 +973,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a key code binding from an action.
+     * @param key The action to unbind from
+     * @param keyCode The key code to unbind
+     */
     public function unbindKeyCode(key:T, keyCode:KeyCode):Void {
 
         var index = indexOfKey(key);
@@ -934,6 +991,14 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a keyboard key to an analog axis action.
+     * When the key is pressed, it will set the axis to the specified value.
+     * Useful for digital-to-analog conversion (e.g., WASD to movement).
+     * @param key The axis action to bind to
+     * @param keyCode The keyboard key code to bind
+     * @param axisValue The axis value when pressed (typically -1.0 or 1.0)
+     */
     public function bindKeyCodeToAxis(key:T, keyCode:KeyCode, axisValue:Float):Void {
 
         var axisIndex = indexOfKey(key);
@@ -962,6 +1027,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all key codes bound to an axis action.
+     * @param key The axis action to query
+     * @return Array of bound key codes (empty if none)
+     */
     public function boundKeyCodesToAxis(key:T):ReadOnlyArray<KeyCode> {
 
         var axisIndex = indexOfKey(key);
@@ -971,6 +1041,12 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets the axis value associated with a key code binding.
+     * @param key The axis action
+     * @param keyCode The key code to check
+     * @return The axis value for this binding, or 0 if not bound
+     */
     public function boundKeyCodeToAxisValue(key:T, keyCode:KeyCode): Float {
 
         var index = indexOfKey(key);
@@ -982,6 +1058,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a key code to axis binding.
+     * @param key The axis action to unbind from
+     * @param keyCode The key code to unbind
+     */
     public function unbindKeyCodeToAxis(key:T, keyCode:KeyCode):Void {
 
         var axisIndex = indexOfKey(key);
@@ -1001,6 +1082,12 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a keyboard scan code to an action.
+     * Scan codes represent physical key positions and are layout-independent.
+     * @param key The action to bind to
+     * @param scanCode The scan code to bind
+     */
     public function bindScanCode(key:T, scanCode:ScanCode):Void {
 
         var index = indexOfKey(key);
@@ -1027,6 +1114,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all scan codes currently bound to an action.
+     * @param key The action to query
+     * @return Array of bound scan codes (empty if none)
+     */
     public function boundScanCodes(key:T):ReadOnlyArray<ScanCode> {
 
         var index = indexOfKey(key);
@@ -1036,6 +1128,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a scan code binding from an action.
+     * @param key The action to unbind from
+     * @param scanCode The scan code to unbind
+     */
     public function unbindScanCode(key:T, scanCode:ScanCode):Void {
 
         var index = indexOfKey(key);
@@ -1115,6 +1212,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a mouse button to an action.
+     * @param key The action to bind to
+     * @param buttonId The mouse button ID (0=left, 1=right, 2=middle)
+     */
     public function bindMouseButton(key:T, buttonId:Int):Void {
 
         var index = indexOfKey(key);
@@ -1141,6 +1243,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all mouse buttons currently bound to an action.
+     * @param key The action to query
+     * @return Array of bound mouse button IDs (empty if none)
+     */
     public function boundMouseButtons(key:T):ReadOnlyArray<Int> {
 
         var index = indexOfKey(key);
@@ -1150,6 +1257,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a mouse button binding from an action.
+     * @param key The action to unbind from
+     * @param buttonId The mouse button ID to unbind
+     */
     public function unbindMouseButton(key:T, buttonId:Int):Void {
 
         var index = indexOfKey(key);
@@ -1163,6 +1275,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a gamepad button to an action.
+     * @param key The action to bind to
+     * @param button The gamepad button to bind
+     */
     public function bindGamepadButton(key:T, button:GamepadButton):Void {
 
         var index = indexOfKey(key);
@@ -1189,6 +1306,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all gamepad buttons currently bound to an action.
+     * @param key The action to query
+     * @return Array of bound gamepad buttons (empty if none)
+     */
     public function boundGamepadButtons(key:T):ReadOnlyArray<GamepadButton> {
 
         var index = indexOfKey(key);
@@ -1198,6 +1320,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a gamepad button binding from an action.
+     * @param key The action to unbind from
+     * @param button The gamepad button to unbind
+     */
     public function unbindGamepadButton(key:T, button:GamepadButton):Void {
 
         var index = indexOfKey(key);
@@ -1278,6 +1405,12 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a gamepad analog axis to an axis action.
+     * The axis value will be passed through directly.
+     * @param key The axis action to bind to
+     * @param axis The gamepad axis to bind
+     */
     public function bindGamepadAxis(key:T, axis:GamepadAxis):Void {
 
         var axisIndex = indexOfKey(key);
@@ -1304,6 +1437,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Gets all gamepad axes currently bound to an axis action.
+     * @param key The axis action to query
+     * @return Array of bound gamepad axes (empty if none)
+     */
     public function boundGamepadAxes(key:T):ReadOnlyArray<GamepadAxis> {
 
         var axisIndex = indexOfKey(key);
@@ -1313,6 +1451,11 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Removes a gamepad axis binding from an axis action.
+     * @param key The axis action to unbind from
+     * @param axis The gamepad axis to unbind
+     */
     public function unbindGamepadAxis(key:T, axis:GamepadAxis):Void {
 
         var axisIndex = indexOfKey(key);
@@ -1326,6 +1469,13 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a gamepad axis to a button action with a threshold.
+     * The button will be "pressed" when the axis value crosses the threshold.
+     * @param key The button action to bind to
+     * @param axis The gamepad axis to bind
+     * @param startValue The threshold value (positive for > threshold, negative for < threshold)
+     */
     public function bindGamepadAxisToButton(key:T, axis:GamepadAxis, startValue:Float):Void {
 
         var index = indexOfKey(key);
@@ -1407,6 +1557,13 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Binds a button action to trigger an axis action when pressed.
+     * This allows button presses to set axis values.
+     * @param key The button action that triggers the axis
+     * @param axisKey The axis action to trigger
+     * @param axisValue The axis value to set when button is pressed
+     */
     public function bindConvertedToAxis(key:T, axisKey:T, axisValue:Float):Void {
 
         var index = indexOfKey(key);
@@ -1425,24 +1582,48 @@ class InputMapImpl<T> extends InputMapBase {
 
     }
 
+    /**
+     * Checks if an action is currently pressed (held down).
+     * Returns true for every frame while the input is held.
+     * @param key The action to check
+     * @return True if the action is currently pressed
+     */
     public function pressed(key:T):Bool {
 
         return enabled && _pressedKey(indexOfKey(key)) > 0;
 
     }
 
+    /**
+     * Checks if an action was just pressed this frame.
+     * Returns true only on the frame the input was initially pressed.
+     * @param key The action to check
+     * @return True if the action was just pressed this frame
+     */
     public function justPressed(key:T):Bool {
 
         return enabled && _pressedKey(indexOfKey(key)) == 1;
 
     }
 
+    /**
+     * Checks if an action was just released this frame.
+     * Returns true only on the frame the input was released.
+     * @param key The action to check
+     * @return True if the action was just released this frame
+     */
     public function justReleased(key:T):Bool {
 
         return enabled && _pressedKey(indexOfKey(key)) == -1;
 
     }
 
+    /**
+     * Gets the current value of an axis action.
+     * Returns 0.0 if the input map is disabled or no axis is active.
+     * @param key The axis action to check
+     * @return The current axis value (typically -1.0 to 1.0)
+     */
     public function axisValue(key:T):Float {
 
         return enabled ? axisValues[indexOfKey(key)] : 0.0;
@@ -1451,28 +1632,44 @@ class InputMapImpl<T> extends InputMapBase {
 
 }
 
+/**
+ * Represents the type of physical input that triggered an action.
+ * Used internally to track which input system generated an event.
+ */
 enum abstract InputMapKeyKind(Int) from Int to Int {
 
+    /** No input type (default state) */
     var NONE = 0;
 
+    /** Input from a keyboard key code */
     var KEY_CODE = 1;
 
+    /** Input from a keyboard scan code */
     var SCAN_CODE = 2;
 
+    /** Input from a mouse button */
     var MOUSE_BUTTON = 3;
 
+    /** Input from a gamepad button */
     var GAMEPAD_BUTTON = 4;
 
+    /** Input from a gamepad analog axis */
     var GAMEPAD_AXIS = 5;
 
 }
 
+/**
+ * Internal data structure for converting button inputs to axis values.
+ * Stores the target axis index and the value to apply when activated.
+ */
 @:structInit
 @:allow(ceramic.InputMapImpl)
 class InputMapConvertToAxis {
 
+    /** The index of the target axis action */
     var index:Int;
 
+    /** The axis value to apply (stored as int * 1000 for precision) */
     var value:Int;
 
 }

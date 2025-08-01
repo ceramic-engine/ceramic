@@ -14,16 +14,30 @@ import ceramic.Point;
 using ceramic.Extensions;
 
 /**
- * Visuals are the building blocks to display things on screen.
- * A raw visual doesn't display anything but can have children
- * that can be more specialized visuals like `Quad`, `Mesh` or `Text` etc...
- *
+ * Base class for all visual elements in Ceramic.
+ * 
+ * Visuals are the building blocks to display things on screen. While a raw Visual
+ * doesn't render anything by itself, it serves as a container for other visuals
+ * and provides core functionality like transformation, hierarchy, and event handling.
+ * 
+ * Specialized visual classes like Quad, Mesh, Text, etc. extend this class to
+ * provide actual rendering capabilities.
+ * 
+ * Key features:
+ * - Hierarchical parent-child relationships
+ * - Transform properties (position, scale, rotation, skew)
+ * - Event handling (pointer events, focus)
+ * - Depth sorting and rendering order
+ * - Hit testing and touch input
+ * - Shader and blend mode support
+ * 
+ * Example usage:
  * ```haxe
  * var visual = new Visual();
- * visual.pos(x, y);
- * visual.size(someWidth, someHeight);
+ * visual.pos(100, 100);
+ * visual.size(200, 150);
  * visual.onPointerDown(this, info -> {
- *     trace('clicked');
+ *     trace('Visual clicked at ${info.x}, ${info.y}');
  * });
  * ```
  */

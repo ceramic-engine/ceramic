@@ -5,6 +5,30 @@ import haxe.atomic.AtomicBool;
 import haxe.atomic.AtomicInt;
 #end
 
+/**
+ * Internal manager for audio filter worklets across audio buses.
+ * 
+ * AudioFilters handles the lifecycle and processing of audio filter worklets,
+ * which are small processing units that modify audio in real-time. It manages:
+ * - Thread-safe registration and removal of worklets
+ * - Organizing worklets by audio bus
+ * - Synchronizing worklet changes between threads
+ * - Processing audio through active worklets
+ * 
+ * This class is used internally by the audio backend and should not be
+ * accessed directly. Use AudioFilter and AudioMixer for public audio
+ * filtering functionality.
+ * 
+ * Thread Safety:
+ * - On native platforms (sys), uses mutexes and atomic operations
+ * - Ensures safe access from both main thread and audio thread
+ * - Batches worklet changes to minimize lock contention
+ * 
+ * @see AudioFilter
+ * @see AudioFilterWorklet
+ * @see AudioMixer
+ * @see Audio
+ */
 class AudioFilters {
 
     #if sys
@@ -29,6 +53,15 @@ class AudioFilters {
 
     private static final workletsByBus:Array<Array<AudioFilterWorklet>> = [];
 
+    /**
+     * Synchronizes pending worklet changes with the active worklet lists.
+     * 
+     * This method processes queued additions and removals of worklets,
+     * updating the per-bus worklet arrays. Called by the audio backend
+     * before processing audio to ensure all worklet changes are applied.
+     * 
+     * Thread-safe on native platforms using mutex locks.
+     */
     @:allow(backend.Audio)
     private static function syncWorklets():Void {
         if (workletsDirty) {
@@ -90,6 +123,14 @@ class AudioFilters {
         }
     }
 
+    /**
+     * Creates a new audio filter worklet and queues it for addition.
+     * 
+     * @param bus The audio bus ID where this worklet will process audio
+     * @param filterId Unique identifier for the filter
+     * @param workletClass The worklet class to instantiate
+     * @return The created worklet instance
+     */
     @:allow(backend.Audio)
     private static function createWorklet(bus:Int, filterId:Int, workletClass:Class<AudioFilterWorklet>):AudioFilterWorklet {
         final worklet = Type.createInstance(workletClass, [filterId, bus]);
@@ -104,6 +145,15 @@ class AudioFilters {
         return worklet;
     }
 
+    /**
+     * Destroys an audio filter worklet by queuing it for removal.
+     * 
+     * Searches for the worklet with the given filterId across all buses
+     * and pending additions, then marks it for removal during the next sync.
+     * 
+     * @param bus The audio bus ID (currently unused but kept for API consistency)
+     * @param filterId Unique identifier of the filter to destroy
+     */
     @:allow(backend.Audio)
     private static function destroyWorklet(bus:Int, filterId:Int):Void {
         #if sys
@@ -136,6 +186,15 @@ class AudioFilters {
         #end
     }
 
+    /**
+     * Begins a parameter update operation for a filter worklet.
+     * 
+     * On native platforms, this acquires the necessary locks to ensure
+     * thread-safe parameter updates. Must be paired with endUpdateFilterWorkletParams.
+     * 
+     * @param bus The audio bus ID
+     * @param filterId Unique identifier of the filter being updated
+     */
     @:allow(backend.Audio)
     private static function beginUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
         #if sys
@@ -148,6 +207,14 @@ class AudioFilters {
         #end
     }
 
+    /**
+     * Ends a parameter update operation for a filter worklet.
+     * 
+     * Releases locks acquired by beginUpdateFilterWorkletParams.
+     * 
+     * @param bus The audio bus ID
+     * @param filterId Unique identifier of the filter being updated
+     */
     @:allow(backend.Audio)
     private static function endUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
         #if sys
@@ -160,6 +227,19 @@ class AudioFilters {
         #end
     }
 
+    /**
+     * Processes audio through all active worklets on a specific bus.
+     * 
+     * Called by the audio backend during audio processing. Applies each
+     * worklet's processing in sequence to the provided audio buffer.
+     * 
+     * @param bus The audio bus ID to process
+     * @param buffer The audio buffer containing samples to process
+     * @param samples Number of samples per channel in the buffer
+     * @param channels Number of audio channels (1 for mono, 2 for stereo)
+     * @param sampleRate Sample rate in Hz (e.g., 44100, 48000)
+     * @param time Current audio time in seconds
+     */
     @:allow(backend.Audio)
     private static function processBusAudioWorklets(bus:Int, buffer:AudioFilterBuffer, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
 

@@ -2,6 +2,29 @@ package ceramic;
 
 import tracker.Observable;
 
+/**
+ * Base class for state machine implementations.
+ * 
+ * StateMachineBase provides the core functionality for state machines in Ceramic.
+ * It manages state lifecycle, transitions, and integration with the entity system.
+ * This class is typically not used directly - use StateMachine<T> instead.
+ * 
+ * Features:
+ * - Automatic state updates via StateMachineSystem
+ * - Pausable state execution
+ * - State locking to prevent transitions
+ * - Component interface for entity attachment
+ * - Observable pattern for state change events
+ * 
+ * The state machine automatically calls:
+ * - exit() on the previous state
+ * - enter() on the new state
+ * - update(delta) on the active state each frame
+ * 
+ * @see StateMachine
+ * @see State
+ * @see StateMachineSystem
+ */
 class StateMachineBase extends Entity implements Observable implements Component {
 
     /**
@@ -51,6 +74,11 @@ class StateMachineBase extends Entity implements Observable implements Component
 
     }
 
+    /**
+     * Updates the current state.
+     * Called automatically each frame if autoUpdate is true and not paused.
+     * @param delta Time elapsed since last update in seconds
+     */
     public function update(delta:Float):Void {
 
         // Override in subclasses

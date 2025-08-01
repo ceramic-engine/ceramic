@@ -2,8 +2,60 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * A mesh that creates regular polygons with a configurable number of sides.
+ *
+ * Ngon (N-gon) can create any regular polygon from triangles to circles.
+ * The shape is centered at its anchor point (default 0.5, 0.5) with
+ * vertices evenly distributed around the perimeter.
+ *
+ * Common shapes by side count:
+ * - 3: Triangle
+ * - 4: Square (rotated 45°)
+ * - 5: Pentagon
+ * - 6: Hexagon
+ * - 8: Octagon
+ * - 32+: Circle approximation
+ *
+ * The first vertex is positioned at (radius, 0) relative to center,
+ * with subsequent vertices placed counter-clockwise.
+ *
+ * @example
+ * ```haxe
+ * // Create a hexagon
+ * var hexagon = new Ngon();
+ * hexagon.sides = 6;
+ * hexagon.radius = 40;
+ * hexagon.color = Color.YELLOW;
+ *
+ * // Create a smooth circle
+ * var circle = new Ngon();
+ * circle.sides = 64;
+ * circle.radius = 50;
+ * circle.color = Color.WHITE;
+ *
+ * // Animated shape morphing
+ * var morph = new Ngon();
+ * morph.radius = 30;
+ * morph.color = Color.PINK;
+ * app.onUpdate(this, delta -> {
+ *     morph.sides = Math.round(3 + Math.sin(Timer.now) * 3);
+ * });
+ * ```
+ *
+ * @see Mesh
+ * @see Arc
+ */
 class Ngon extends Mesh {
 
+    /**
+     * Number of sides for the polygon.
+     *
+     * Minimum 3 for a triangle. Higher values create
+     * smoother shapes that approximate a circle.
+     *
+     * Default: 32 (smooth circle approximation)
+     */
     public var sides(default,set):Int = 32;
     inline function set_sides(sides:Int):Int {
         if (this.sides == sides) return sides;
@@ -12,6 +64,14 @@ class Ngon extends Mesh {
         return sides;
     }
 
+    /**
+     * Radius of the polygon in pixels.
+     *
+     * Distance from center to vertices. The total size
+     * will be radius * 2 in both width and height.
+     *
+     * Default: 50
+     */
     public var radius(default,set):Float = 50;
     function set_radius(radius:Float):Float {
         if (this.radius == radius) return radius;
@@ -20,6 +80,12 @@ class Ngon extends Mesh {
         return radius;
     }
 
+    /**
+     * Creates a new N-gon polygon.
+     *
+     * The shape is anchored at its center (0.5, 0.5) by default,
+     * making rotation and scaling behave naturally.
+     */
     public function new() {
 
         super();
@@ -28,6 +94,13 @@ class Ngon extends Mesh {
 
     }
 
+    /**
+     * Generates the polygon mesh geometry.
+     *
+     * Creates a fan of triangles from the center point to
+     * vertices distributed evenly around the perimeter.
+     * The first perimeter vertex is at angle 0 (right side).
+     */
     override function computeContent() {
 
         var count:Int = sides;

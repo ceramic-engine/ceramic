@@ -6,10 +6,39 @@ import sys.io.File;
 #end
 
 /**
- * A file watcher for ceramic compatible with `interpret.Watcher`.
+ * Cross-platform file monitoring system for hot-reloading and file change detection.
+ * 
+ * FileWatcher provides a unified API for monitoring file changes across different platforms
+ * including native (sys), Node.js, and Electron environments. It periodically checks for
+ * file modifications and notifies registered callbacks when changes are detected.
+ * 
+ * The watcher can operate in two modes:
+ * - Content checking mode (default): Compares actual file content to detect changes
+ * - Timestamp mode: Only checks modification time (faster but less reliable)
+ * 
+ * This implementation is compatible with the interpret.Watcher interface, allowing it
+ * to be used with scripting and hot-reload systems.
+ * 
+ * Example:
+ * ```haxe
+ * var watcher = new FileWatcher();
+ * var stopWatching = watcher.watch("config.json", function(content) {
+ *     trace("Config file changed: " + content);
+ * });
+ * 
+ * // Later, to stop watching:
+ * stopWatching();
+ * ```
+ * 
+ * @see ceramic.Entity
  */
 class FileWatcher extends Entity #if interpret implements interpret.Watcher #end {
 
+    /**
+     * The interval in seconds between file checks.
+     * Lower values provide faster detection but use more CPU.
+     * Default: 1.0 second
+     */
     public static var UPDATE_INTERVAL:Float = 1.0;
 
     #if web
@@ -18,12 +47,22 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
     #end
 
     /**
-     * If set to `true`, actual content of files will be compared
+     * Whether to compare actual file content or just modification times.
+     * 
+     * When true (default), the watcher reads and compares file content to detect
+     * changes, which is more reliable but slower. When false, only modification
+     * timestamps are checked, which is faster but may miss some changes.
      */
     var checkContent:Bool = true;
 
+    /**
+     * Map of file paths to their watched state information.
+     */
     var watched:Map<String,WatchedFile> = new Map();
 
+    /**
+     * Accumulator for time since last file check.
+     */
     var timeSinceLastCheck:Float = 0.0;
 
     public function new() {
@@ -44,6 +83,11 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     }
 
+    /**
+     * Checks if file watching is supported on the current platform.
+     * 
+     * @return True if the platform supports file watching, false otherwise
+     */
     public function canWatch():Bool {
 
         #if (!sys && !hxnodejs && !nodejs && !node)
@@ -65,6 +109,23 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     }
 
+    /**
+     * Starts watching a file for changes.
+     * 
+     * Multiple callbacks can be registered for the same file. Each callback
+     * receives the new file content when a change is detected.
+     * 
+     * Example:
+     * ```haxe
+     * var stop = watcher.watch("data.txt", function(content) {
+     *     trace("File updated with content: " + content);
+     * });
+     * ```
+     * 
+     * @param path The file path to watch
+     * @param onUpdate Callback function that receives the new file content
+     * @return A function that stops watching when called
+     */
     public function watch(path:String, onUpdate:String->Void):Void->Void {
 
         if (!canWatch()) {
@@ -103,6 +164,11 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
     }
 
 /// Internal
+
+    /**
+     * Update tick called by the app's update loop.
+     * Checks all watched files for changes at the configured interval.
+     */
 
     function tick(delta:Float) {
 
@@ -156,6 +222,12 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     }
 
+    /**
+     * Checks if a path points to a regular file (not a directory).
+     * 
+     * @param path The path to check
+     * @return True if the path is a file, false otherwise
+     */
     function isFile(path:String):Bool {
 
         #if (sys || hxnodejs || nodejs || node)
@@ -174,6 +246,12 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     }
 
+    /**
+     * Gets the last modification time of a file.
+     * 
+     * @param path The file path
+     * @return Modification time in milliseconds since epoch, or -1 if unavailable
+     */
     function lastModified(path:String):Float {
 
         #if (sys || hxnodejs || nodejs || node)
@@ -196,6 +274,12 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
     }
 
+    /**
+     * Reads the content of a file as a string.
+     * 
+     * @param path The file path
+     * @return The file content, or null if unavailable
+     */
     function getContent(path:String):String {
 
         #if (sys || hxnodejs || nodejs || node)
@@ -216,13 +300,26 @@ class FileWatcher extends Entity #if interpret implements interpret.Watcher #end
 
 }
 
+/**
+ * Internal data structure for tracking watched file state.
+ */
 @:allow(ceramic.FileWatcher)
 private class WatchedFile {
 
+    /**
+     * List of callbacks to notify when the file changes.
+     */
     public var updateCallbacks:Array<String->Void> = [];
 
+    /**
+     * Last known modification time of the file.
+     * -1 indicates the file hasn't been checked yet.
+     */
     public var mtime:Float = -1;
 
+    /**
+     * Cached content of the file for comparison.
+     */
     public var content:String = null;
 
     public function new() {}

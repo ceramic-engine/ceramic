@@ -8,6 +8,13 @@ import tracker.Observable;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * Component that handles text selection and cursor display for Text visuals.
+ * 
+ * This component provides visual feedback for text selection including
+ * selection highlighting and text cursor display. It also handles
+ * pointer-based text selection and double-click word selection.
+ */
 class SelectText extends Entity implements Component implements Observable {
 
 /// Internal statics
@@ -16,22 +23,50 @@ class SelectText extends Entity implements Component implements Observable {
 
 /// Events
 
+    /**
+     * Event fired when the text selection changes.
+     * 
+     * @param selectionStart Start position of the selection
+     * @param selectionEnd End position of the selection
+     * @param inverted Whether the selection is inverted (cursor at start)
+     */
     @event function selection(selectionStart:Int, selectionEnd:Int, inverted:Bool);
 
 /// Public properties
 
+    /**
+     * The Text entity this component is attached to.
+     */
     public var entity:Text;
 
+    /**
+     * Color used for text selection highlighting.
+     */
     public var selectionColor:Color;
 
+    /**
+     * Color of the text cursor.
+     */
     public var textCursorColor:Color;
 
+    /**
+     * Horizontal offset for the text cursor position.
+     */
     public var textCursorOffsetX:Float = 0;
 
+    /**
+     * Vertical offset for the text cursor position.
+     */
     public var textCursorOffsetY:Float = 0;
 
+    /**
+     * Height factor for the text cursor (1.0 = full line height).
+     */
     public var textCursorHeightFactor:Float = 1;
 
+    /**
+     * Width of the text cursor in pixels.
+     */
     public var textCursorWidth:Float = 1;
 
     /**
@@ -39,16 +74,36 @@ class SelectText extends Entity implements Component implements Observable {
      */
     @observe public var container:Visual = null;
 
+    /**
+     * Whether to allow text selection using pointer/mouse.
+     */
     @observe public var allowSelectingFromPointer:Bool = false;
 
+    /**
+     * Whether to show the text cursor.
+     */
     @observe public var showCursor:Bool = false;
 
+    /**
+     * Start position of the current text selection.
+     * -1 means no selection.
+     */
     @observe public var selectionStart:Int = -1;
 
+    /**
+     * End position of the current text selection.
+     * -1 means no selection.
+     */
     @observe public var selectionEnd:Int = -1;
 
+    /**
+     * Whether the selection is inverted (cursor at start instead of end).
+     */
     @observe public var invertedSelection:Bool = false;
 
+    /**
+     * Whether the pointer is currently pressed down.
+     */
     @observe public var pointerIsDown:Bool = false;
 
 /// Internal properties
@@ -69,6 +124,16 @@ class SelectText extends Entity implements Component implements Observable {
 
 /// Lifecycle
 
+    /**
+     * Create a new SelectText component.
+     * 
+     * @param selectionColor Color for selection highlighting
+     * @param textCursorColor Color of the text cursor
+     * @param textCursorOffsetX Horizontal offset for cursor position
+     * @param textCursorOffsetY Vertical offset for cursor position
+     * @param textCursorHeightFactor Height factor for cursor (1.0 = full line height)
+     * @param textCursorWidth Width of the cursor in pixels
+     */
     public function new(selectionColor:Color, textCursorColor:Color, textCursorOffsetX:Float = 0, textCursorOffsetY:Float = 0, textCursorHeightFactor:Float = 1, textCursorWidth:Float = 1) {
 
         super();

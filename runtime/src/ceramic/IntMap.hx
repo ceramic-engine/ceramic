@@ -6,6 +6,33 @@ using ceramic.Extensions;
 
 /**
  * An object map that uses integers as key.
+ * 
+ * IntMap provides efficient storage and retrieval of values indexed by integers.
+ * It's optimized for performance with support for null values and optional iteration.
+ * 
+ * Features:
+ * - O(1) average case get/set operations
+ * - Support for null values with proper handling
+ * - Optional iteration support with iterableKeys
+ * - Automatic resizing of internal storage
+ * - Memory-efficient storage using vectors
+ * 
+ * The implementation uses IntIntMap internally to map keys to value indices,
+ * with special handling for null values to distinguish between "no value" and
+ * "null value" cases.
+ * 
+ * Example usage:
+ * ```haxe
+ * var map = new IntMap<String>();
+ * map.set(42, "hello");
+ * map.set(10, null); // Null values are supported
+ * trace(map.get(42)); // "hello"
+ * trace(map.exists(10)); // true (even though value is null)
+ * ```
+ * 
+ * @see IntIntMap
+ * @see IntFloatMap
+ * @see IntBoolMap
  */
 class IntMap<V> {
 
@@ -41,6 +68,12 @@ class IntMap<V> {
     public var values(default,null):Vector<V>;
     #end
 
+    /**
+     * Creates a new IntMap.
+     * @param size Initial capacity (default: 16)
+     * @param fillFactor Fill factor for internal map (default: 0.5)
+     * @param iterable Enable iteration support (default: false)
+     */
     public function new(size:Int = 16, fillFactor:Float = 0.5, iterable:Bool = false) {
 
         initialSize = size;
@@ -55,6 +88,11 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Gets the value associated with the given key.
+     * @param key The integer key
+     * @return The value, or null if key doesn't exist
+     */
     public function get(key:Int):V {
 
         return getInline(key);
@@ -68,6 +106,11 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Checks if a key exists in the map.
+     * @param key The integer key to check
+     * @return True if the key exists (even if value is null)
+     */
     public function exists(key:Int) {
 
         return existsInline(key);
@@ -80,6 +123,11 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Sets a value for the given key.
+     * @param key The integer key
+     * @param value The value to set (can be null)
+     */
     public function set(key:Int, value:V):Void {
 
         var index = _keys.get(key);
@@ -133,6 +181,10 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Removes a key-value pair from the map.
+     * @param key The integer key to remove
+     */
     public function remove(key:Int) {
 
         var index = _keys.get(key);
@@ -160,6 +212,10 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Creates a shallow copy of this map.
+     * @return A new IntMap with the same key-value pairs
+     */
     public function copy():IntMap<V> {
 
         var map = new IntMap<V>();
@@ -175,6 +231,9 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Clears all key-value pairs from the map.
+     */
     public function clear():Void {
 
         _keys = new IntIntMap(initialSize, initialFillFactor);
@@ -187,14 +246,26 @@ class IntMap<V> {
 
     }
 
+    /**
+     * Returns an iterator over the values in this map.
+     * Note: Map must be created with iterable=true
+     */
     public inline function iterator():IntMapIterator<V> {
         return new IntMapIterator(this);
     }
 
+    /**
+     * Returns an iterator over the keys in this map.
+     * Note: Map must be created with iterable=true
+     */
     public inline function keys():IntMapKeyIterator<V> {
         return new IntMapKeyIterator(this);
     }
 
+    /**
+     * Returns an iterator over key-value pairs in this map.
+     * Note: Map must be created with iterable=true
+     */
     public inline function keyValueIterator():IntMapKeyValueIterator<V> {
         return new IntMapKeyValueIterator(this);
     }

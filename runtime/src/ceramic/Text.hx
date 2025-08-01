@@ -12,16 +12,30 @@ using ceramic.Extensions;
  */
 class Text extends Visual {
 
+    /**
+     * Event fired when the glyph quads change.
+     */
     @event function glyphQuadsChange();
 
+    /**
+     * Array of glyph quads used to render the text.
+     * Each quad represents a single character glyph.
+     */
     public var glyphQuads(default,null):Array<GlyphQuad> = [];
 
+    /**
+     * The number of lines in the rendered text.
+     */
     public var numLines(get,null):Int = 1;
     function get_numLines():Int {
         if (contentDirty) computeContent();
         return this.numLines;
     }
 
+    /**
+     * The color of the text.
+     * Default is white.
+     */
     public var color(default, set):Color = Color.WHITE;
     function set_color(color:Color):Color {
         if (this.color == color) return color;
@@ -38,6 +52,10 @@ class Text extends Visual {
         return color;
     }
 
+    /**
+     * The text content to display.
+     * Must not be null.
+     */
     public var content(default, set):String = '';
     function set_content(content:String):String {
         Assert.assert(content != null, 'Text.content should not be null');
@@ -47,6 +65,10 @@ class Text extends Visual {
         return content;
     }
 
+    /**
+     * The font size in points.
+     * Default is 20.
+     */
     public var pointSize(default, set):Float = 20;
     function set_pointSize(pointSize:Float):Float {
         if (this.pointSize == pointSize) return pointSize;
@@ -55,6 +77,11 @@ class Text extends Visual {
         return pointSize;
     }
 
+    /**
+     * The line height multiplier.
+     * 1.0 means default line height, 2.0 means double line height, etc.
+     * Default is 1.0.
+     */
     public var lineHeight(default, set):Float = 1.0;
     function set_lineHeight(lineHeight:Float):Float {
         if (this.lineHeight == lineHeight) return lineHeight;
@@ -63,6 +90,10 @@ class Text extends Visual {
         return lineHeight;
     }
 
+    /**
+     * Additional spacing between letters in pixels.
+     * Default is 0.0.
+     */
     public var letterSpacing(default, set):Float = 0.0;
     function set_letterSpacing(letterSpacing:Float):Float {
         if (this.letterSpacing == letterSpacing) return letterSpacing;
@@ -71,6 +102,10 @@ class Text extends Visual {
         return letterSpacing;
     }
 
+    /**
+     * The bitmap font used to render the text.
+     * If null, the default font will be used.
+     */
     public var font(default, set):BitmapFont;
     function set_font(font:BitmapFont):BitmapFont {
 
@@ -98,6 +133,10 @@ class Text extends Visual {
         return font;
     }
 
+    /**
+     * X coordinate for text clipping.
+     * Set to -1 to disable clipping on this axis.
+     */
     public var clipTextX(default,set):Float = -1;
     function set_clipTextX(clipTextX:Float):Float {
         if (this.clipTextX == clipTextX) return clipTextX;
@@ -106,6 +145,10 @@ class Text extends Visual {
         return clipTextX;
     }
 
+    /**
+     * Y coordinate for text clipping.
+     * Set to -1 to disable clipping on this axis.
+     */
     public var clipTextY(default,set):Float = -1;
     function set_clipTextY(clipTextY:Float):Float {
         if (this.clipTextY == clipTextY) return clipTextY;
@@ -114,6 +157,10 @@ class Text extends Visual {
         return clipTextY;
     }
 
+    /**
+     * Width for text clipping.
+     * Set to -1 to disable clipping on this axis.
+     */
     public var clipTextWidth(default,set):Float = -1;
     function set_clipTextWidth(clipTextWidth:Float):Float {
         if (this.clipTextWidth == clipTextWidth) return clipTextWidth;
@@ -122,6 +169,10 @@ class Text extends Visual {
         return clipTextWidth;
     }
 
+    /**
+     * Height for text clipping.
+     * Set to -1 to disable clipping on this axis.
+     */
     public var clipTextHeight(default,set):Float = -1;
     function set_clipTextHeight(clipTextHeight:Float):Float {
         if (this.clipTextHeight == clipTextHeight) return clipTextHeight;
@@ -130,6 +181,14 @@ class Text extends Visual {
         return clipTextHeight;
     }
 
+    /**
+     * Set text clipping bounds.
+     *
+     * @param x The x coordinate of the clipping rectangle
+     * @param y The y coordinate of the clipping rectangle
+     * @param width The width of the clipping rectangle
+     * @param height The height of the clipping rectangle
+     */
     public function clipText(x:Float, y:Float, width:Float, height:Float):Void {
         clipTextX = x;
         clipTextY = y;
@@ -137,6 +196,12 @@ class Text extends Visual {
         clipTextHeight = height;
     }
 
+    /**
+     * Pre-rendered size for MSDF fonts.
+     * Set to -1 to disable pre-rendering.
+     * When set to a positive value, the font will be pre-rendered at this size, which
+     * can be useful to improve performances and reduce draw calls in some situations.
+     */
     public var preRenderedSize(default, set):Int = -1;
     function set_preRenderedSize(preRenderedSize:Int):Int {
         if (this.preRenderedSize == preRenderedSize) return preRenderedSize;
@@ -155,6 +220,10 @@ class Text extends Visual {
         contentDirty = true;
     }
 
+    /**
+     * Text alignment (LEFT, CENTER, or RIGHT).
+     * Default is LEFT.
+     */
     public var align(default, set):TextAlign = LEFT;
     function set_align(align:TextAlign):TextAlign {
         if (this.align == align) return align;
@@ -175,6 +244,11 @@ class Text extends Visual {
         return fitWidth;
     }
 
+    /**
+     * Maximum difference in line widths when using fitWidth.
+     * Set to -1 to disable line balancing.
+     * When set, the text will try to balance line widths to be more uniform.
+     */
     public var maxLineDiff(default, set):Float = -1;
     function set_maxLineDiff(maxLineDiff:Float):Float {
         if (this.maxLineDiff == maxLineDiff) return maxLineDiff;
@@ -217,6 +291,12 @@ class Text extends Visual {
         return super.get_width();
     }
 
+    /**
+     * Scale the text width to match the target width.
+     * Only adjusts scaleX to match the requested width.
+     *
+     * @param targetWidth The desired width
+     */
     function scaleWidth(targetWidth:Float):Void {
         // Only adjust scaleX to match requested width
         if (_width == targetWidth) return;
@@ -229,6 +309,12 @@ class Text extends Visual {
         return super.get_height();
     }
 
+    /**
+     * Scale the text height to match the target height.
+     * Only adjusts scaleY to match the requested height.
+     *
+     * @param targetHeight The desired height
+     */
     function scaleHeight(targetHeight:Float):Void {
         // Only adjust scaleY to match requested height
         if (_height == targetHeight) return;
@@ -274,6 +360,10 @@ class Text extends Visual {
 
 /// Display
 
+    /**
+     * Compute and layout the text content.
+     * This method recalculates all glyph positions and updates the visual size.
+     */
     override function computeContent() {
 
         if (font == null) {
@@ -299,6 +389,14 @@ class Text extends Visual {
 
     }
 
+    /**
+     * Compute glyph quads for rendering.
+     *
+     * @param fitWidth The width to fit text into (-1 for no fitting)
+     * @param maxLineDiff The maximum difference in line widths for balancing
+     * @param fixedNumLines Fixed number of lines to use (-1 for automatic)
+     * @return The number of lines in the laid out text
+     */
     function computeGlyphQuads(fitWidth:Float, maxLineDiff:Float, fixedNumLines:Int = -1) {
 
         var x = 0.0;
@@ -658,8 +756,10 @@ class Text extends Visual {
 /// Helpers
 
     /**
-     * Get the line number matching the given `y` position.
-     * `y` is relative this `Text` visual.
+     * Get the line number matching the given y position.
+     *
+     * @param y The y position relative to this Text visual
+     * @return The line number (0-based)
      */
     public function lineForYPosition(y:Float):Int {
 
@@ -684,8 +784,11 @@ class Text extends Visual {
     }
 
     /**
-     * Get the character index position relative to `line` at the requested `x` value.
-     * `x` is relative this `Text` visual.
+     * Get the character index position relative to a line at the requested x value.
+     *
+     * @param line The line number (0-based)
+     * @param x The x position relative to this Text visual
+     * @return The character position within the line
      */
     public function posInLineForX(line:Int, x:Float):Int {
 
@@ -719,7 +822,11 @@ class Text extends Visual {
     }
 
     /**
-     * Get the _global_ character index from the given `line` and `posInLine` index position relative to `line`
+     * Get the global character index from the given line and position within that line.
+     *
+     * @param line The line number (0-based)
+     * @param posInLine The position within the line
+     * @return The global character index in the content string
      */
     public function indexForPosInLine(line:Int, posInLine:Int):Int {
 
@@ -743,8 +850,10 @@ class Text extends Visual {
     }
 
     /**
-     * Get an `x` position from the given character `index`.
-     * `x` is relative to this `Text` visual.
+     * Get an x position from the given character index.
+     *
+     * @param index The global character index in the content string
+     * @return The x position relative to this Text visual
      */
     public function xPositionAtIndex(index:Int):Float {
 
@@ -780,7 +889,10 @@ class Text extends Visual {
     }
 
     /**
-     * Get the line number (starting from zero) of the character at the given `index`
+     * Get the line number of the character at the given index.
+     *
+     * @param index The global character index in the content string
+     * @return The line number (0-based)
      */
     public function lineForIndex(index:Int):Int {
 
@@ -812,7 +924,10 @@ class Text extends Visual {
     }
 
     /**
-     * Get a character index position relative to its line from its _global_ `index` position.
+     * Get a character index position relative to its line from its global index position.
+     *
+     * @param index The global character index in the content string
+     * @return The position within the line
      */
     public function posInLineForIndex(index:Int):Int {
 
@@ -856,6 +971,10 @@ class Text extends Visual {
 
 /// Font destroyed
 
+    /**
+     * Internal callback when the font is destroyed.
+     * Resets the font to the default font.
+     */
     function fontDestroyed(_) {
 
         // Remove font (and set default one) because it has been destroyed

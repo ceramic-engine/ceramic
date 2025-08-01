@@ -2,21 +2,72 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * A lightweight tweening engine for animating numeric values over time.
+ * 
+ * Tweens provide:
+ * - Smooth transitions between values with easing functions
+ * - Duration-based animations
+ * - Automatic cleanup when complete or owner is destroyed
+ * - Frame-perfect timing with delta time compensation
+ * 
+ * Features:
+ * - 30+ built-in easing functions (quad, cubic, elastic, bounce, etc.)
+ * - Custom easing function support
+ * - Bezier curve easing
+ * - "Eager" mode for immediate first frame updates
+ * - Owner-based lifecycle management
+ * 
+ * Example usage:
+ * ```haxe
+ * // Simple tween from 0 to 100 over 1 second
+ * Tween.start(this, LINEAR, 1.0, 0, 100, (value, time) -> {
+ *     myObject.x = value;
+ * });
+ * 
+ * // With easing and completion callback
+ * var tween = Tween.start(this, ELASTIC_EASE_OUT, 2.0, oldScale, newScale, 
+ *     (value, time) -> myObject.scale = value
+ * );
+ * tween.onceComplete(this, () -> trace("Animation complete!"));
+ * ```
+ * 
+ * @see Easing
+ * @see BezierEasing
+ */
 @:allow(ceramic.App)
 class Tween extends Entity {
 
 /// Events
 
+    /**
+     * Event triggered on each frame with the current interpolated value.
+     * 
+     * @param value The current interpolated value between fromValue and toValue
+     * @param time The elapsed time since the tween started (in seconds)
+     */
     @event function update(value:Float, time:Float);
 
+    /**
+     * Event triggered when the tween completes its full duration.
+     * Not triggered if the tween is destroyed before completion.
+     */
     @event function complete();
 
 /// Properties
 
     var owner:Entity;
 
+    /**
+     * The easing function used for this tween.
+     * Determines how the value transitions from start to end.
+     */
     public var easing(default, null):Easing;
 
+    /**
+     * The total duration of this tween in seconds.
+     * If duration is 0 or negative, the tween completes immediately.
+     */
     public var duration(default, null):Float;
 
     var remaining:Float;
@@ -35,8 +86,16 @@ class Tween extends Entity {
 
     var didTickThisFrame:Bool = false;
 
+    /**
+     * The current interpolated value.
+     * Updated each frame between fromValue and toValue based on elapsed time and easing.
+     */
     public var value(default, null):Float;
 
+    /**
+     * The elapsed time since the tween started (in seconds).
+     * Ranges from 0 to duration.
+     */
     public var time(default, null):Float;
 
 /// Lifecycle
@@ -157,6 +216,17 @@ class Tween extends Entity {
     static var _tweens:Array<Tween> = [];
     static var _iteratedTweens:Array<Tween> = [];
 
+    /**
+     * Start a new tween animation.
+     * 
+     * @param owner Optional owner entity. If provided and destroyed, the tween is also destroyed.
+     * @param easing The easing function to use. Defaults to QUAD_EASE_IN_OUT.
+     * @param duration Duration in seconds. If <= 0, completes immediately.
+     * @param fromValue Starting value
+     * @param toValue Ending value
+     * @param handleValueTime Callback function called each frame with (value, time)
+     * @return The created Tween instance
+     */
     public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
@@ -168,6 +238,21 @@ class Tween extends Entity {
 
     }
 
+    /**
+     * Start a new "eager" tween animation.
+     * 
+     * Eager tweens update immediately on the first frame instead of waiting
+     * for the next frame. This ensures the target property is set to an
+     * interpolated value right away, preventing visual jumps.
+     * 
+     * @param owner Optional owner entity. If provided and destroyed, the tween is also destroyed.
+     * @param easing The easing function to use. Defaults to QUAD_EASE_IN_OUT.
+     * @param duration Duration in seconds. If <= 0, completes immediately.
+     * @param fromValue Starting value
+     * @param toValue Ending value
+     * @param handleValueTime Callback function called each frame with (value, time)
+     * @return The created Tween instance
+     */
     public static function eagerStart(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
@@ -299,6 +384,14 @@ class Tween extends Entity {
 
     }
 
+    /**
+     * Apply an easing function to a normalized value (0-1).
+     * Useful for custom animations without creating a full tween.
+     * 
+     * @param easing The easing function to apply
+     * @param value Input value (typically 0-1, but depends on the easing)
+     * @return The eased value
+     */
     public static function ease(easing:Easing, value:Float):Float {
 
         TweenEasingFunction.k = value;
@@ -391,7 +484,11 @@ class Tween extends Entity {
     }
 
     /**
-     * Get a tween easing function as a plain Float->Float function.
+     * Convert an Easing enum value to a standalone Float->Float function.
+     * Useful when you need to apply easing outside of the tween system.
+     * 
+     * @param easing The easing type to convert
+     * @return A function that takes a value (0-1) and returns the eased value
      */
     public static function easingFunction(easing:Easing):Float->Float {
 
@@ -411,17 +508,27 @@ class Tween extends Entity {
 
 }
 
+/**
+ * Internal utility class containing easing function implementations.
+ * Uses static methods and a static `k` variable to avoid boxing
+ * on C++ targets, reducing garbage collection pressure.
+ */
 @:allow(ceramic.Tween)
 private class TweenEasingFunction {
 
     /**
-     * Using `k` as static variable allows us to call easing function dynamically
-     * without needing boxing of float type on c++ target when it is passed as arg.
-     * (boxing of primitive types on c++ creates trash object references that give pressure to GC.
-     * When we can, we try to avoid it.)
+     * The value being eased, stored as a static variable to avoid boxing.
+     * 
+     * Using a static variable instead of function parameters prevents
+     * boxing of primitive float values on C++ targets, which would
+     * create garbage and pressure the garbage collector.
      */
     public static var k:Float = 0;
 
+    /**
+     * Temporary storage for custom easing functions.
+     * Set before calling custom() and cleared after.
+     */
     public static var customEasing:Float->Float = null;
 
 /// Custom

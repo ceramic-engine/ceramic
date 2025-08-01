@@ -9,21 +9,102 @@ using StringTools;
 import ceramic.Quad;
 #end
 
+/**
+ * A texture that can be rendered to, allowing off-screen rendering.
+ * 
+ * RenderTexture enables rendering visuals to a texture instead of the screen.
+ * This is essential for many advanced graphics techniques and effects.
+ * 
+ * Key features:
+ * - Off-screen rendering for post-processing effects
+ * - Render-to-texture for reflections, shadows, minimaps
+ * - Texture composition and layering
+ * - Dynamic texture generation
+ * - Render dependency management
+ * 
+ * Common uses:
+ * - Post-processing filters (blur, glow, distortion)
+ * - Dynamic texture generation (procedural textures)
+ * - Render passes for complex effects
+ * - UI rendering to texture
+ * - Reflection/refraction effects
+ * - Shadow mapping
+ * 
+ * RenderTextures are automatically managed by Ceramic's rendering system,
+ * which handles render order based on texture dependencies.
+ * 
+ * @example
+ * ```haxe
+ * // Create a render texture
+ * var rt = new RenderTexture(512, 512);
+ * 
+ * // Render visuals to it
+ * myVisual.renderTarget = rt;
+ * 
+ * // Use as a regular texture
+ * var quad = new Quad();
+ * quad.texture = rt;
+ * 
+ * // Manual rendering with stamp
+ * rt.autoRender = false;
+ * rt.stamp(myVisual, () -> {
+ *     trace('Rendering complete');
+ * });
+ * 
+ * // Clear with color
+ * rt.clear(Color.BLUE, 0.5, 0, 0, 100, 100, () -> {
+ *     trace('Clear complete');
+ * });
+ * ```
+ * 
+ * @see Texture
+ * @see Visual.renderTarget
+ * @see Filter
+ */
 @:allow(ceramic.App)
 class RenderTexture extends Texture {
 
     static var _clearQuad:Quad = null;
 
+    /**
+     * Whether this texture automatically renders when visuals target it.
+     * - true: Renders automatically when needed (default)
+     * - false: Manual control via stamp() or renderDirty flag
+     */
     public var autoRender:Bool = true;
 
+    /**
+     * Whether to clear the texture before each render.
+     * - true: Clears to transparent before rendering (default)
+     * - false: Preserves previous contents (for accumulation effects)
+     */
     public var clearOnRender:Bool = true;
 
+    /**
+     * Marks the texture as needing to be rendered.
+     * Set to true to trigger a render in the next frame.
+     * Automatically set when visuals targeting this texture change.
+     */
     public var renderDirty:Bool = false;
 
+    /**
+     * Whether this render texture has a depth buffer.
+     * Required for proper depth testing and 3D rendering.
+     */
     public var depth(default, null):Bool = true;
 
+    /**
+     * Whether this render texture has a stencil buffer.
+     * Required for stencil-based masking effects.
+     */
     public var stencil(default, null):Bool = true;
 
+    /**
+     * Antialiasing level (multisampling).
+     * - 0 = No antialiasing (default)
+     * - 2, 4, 8, etc. = Number of samples
+     * Higher values provide smoother edges but use more GPU resources.
+     */
     public var antialiasing(default, null):Int = 0;
 
     #if ceramic_rendertexture_priority_use_haxe_map
@@ -32,6 +113,11 @@ class RenderTexture extends Texture {
     @:noCompletion public var dependingTextures:IntIntMap = null;
     #end
 
+    /**
+     * Render priority for dependency sorting.
+     * Used internally to determine render order when textures depend on each other.
+     * Higher priority textures render first.
+     */
     public var priority(default, null):Float = 0;
 
     @:noCompletion public var incomingEdges:Int = 0;
@@ -62,6 +148,16 @@ class RenderTexture extends Texture {
 
 /// Lifecycle
 
+    /**
+     * Creates a new render texture.
+     * 
+     * @param width Width in logical pixels
+     * @param height Height in logical pixels
+     * @param density Pixel density multiplier (-1 = use screen density)
+     * @param depth Enable depth buffer (default: true)
+     * @param stencil Enable stencil buffer (default: true)
+     * @param antialiasing Multisampling level (default: 0)
+     */
     public function new(width:Float, height:Float, density:Float = -1, depth:Bool = true, stencil:Bool = true, antialiasing:Int = 0 #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         if (density == -1) density = screen.texturesDensity;
@@ -114,10 +210,15 @@ class RenderTexture extends Texture {
 
     /**
      * Draws the given visual onto the render texture.
-     * The drawing operation is not done synchronously.
-     * It waits for the next draw stage of the app to perform it,
-     * then calls done() when finished.
-     * This is expected to be used with a texture `autoRender` set to `false`.
+     * 
+     * The drawing operation is asynchronous - it happens during the next
+     * render frame. The visual is temporarily assigned to this render texture,
+     * rendered, then restored to its original state.
+     * 
+     * This is typically used with autoRender set to false for manual control.
+     * 
+     * @param visual The visual to render onto this texture
+     * @param done Callback invoked after rendering completes
      */
     public function stamp(visual:Visual, done:Void->Void) {
 
@@ -192,11 +293,20 @@ class RenderTexture extends Texture {
     }
 
     /**
-     * Clears the texture, or a specific area of it with a fill color and alpha.
-     * The drawing operation is not done synchronously.
-     * It waits for the next draw stage of the app to perform it,
-     * then calls done() when finished.
-     * This is expected to be used with a texture `autoRender` set to `false`.
+     * Clears the texture or a specific area with a color.
+     * 
+     * The clear operation is asynchronous - it happens during the next
+     * render frame. Use -1 for clip parameters to clear the entire texture.
+     * 
+     * This is typically used with autoRender set to false for manual control.
+     * 
+     * @param color Fill color (default: white)
+     * @param alpha Fill alpha (default: 0 = transparent)
+     * @param clipX X position of area to clear (-1 = full texture)
+     * @param clipY Y position of area to clear (-1 = full texture)
+     * @param clipWidth Width of area to clear (-1 = full texture)
+     * @param clipHeight Height of area to clear (-1 = full texture)
+     * @param done Callback invoked after clearing completes
      */
     public function clear(color:Color = 0xFFFFFF, alpha:Float = 0, clipX:Float = -1, clipY:Float = -1, clipWidth:Float = -1, clipHeight:Float = -1, done:Void->Void) {
 

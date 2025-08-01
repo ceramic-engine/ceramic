@@ -10,24 +10,76 @@ using StringTools;
 using ceramic.Extensions;
 
 /**
- * A fragment is a group of visuals rendered from data (.fragment file)
+ * A fragment is a powerful container that manages groups of entities and visuals
+ * loaded from fragment data files (.fragment).
+ * 
+ * Fragments provide:
+ * - Dynamic entity instantiation from data definitions
+ * - Timeline-based animation support with tracks and keyframes
+ * - Component system integration
+ * - Hierarchical entity management
+ * - Asset loading and dependency management
+ * 
+ * Fragments are commonly used for:
+ * - UI layouts and screens
+ * - Reusable game objects and prefabs
+ * - Animated sequences and cutscenes
+ * - Data-driven content that needs to be loaded/unloaded dynamically
+ * 
+ * @see FragmentData
+ * @see FragmentItem
+ * @see Timeline
  */
 class Fragment extends Layer {
 
+    /**
+     * The asset manager used to load resources referenced by this fragment.
+     * If not provided, the fragment will use the default app assets.
+     */
     public var assets(default,null):Assets = null;
 
+    /**
+     * Array of all entity instances created from fragment items.
+     * This includes all types of entities: visuals, components, and other objects.
+     */
     public var entities(default,null):Array<Entity>;
 
+    /**
+     * Array of fragment item definitions loaded from fragment data.
+     * Each item describes an entity to be instantiated with its properties.
+     */
     public var items(default,null):Array<FragmentItem>;
 
+    /**
+     * Array of timeline track data for animating entity properties.
+     * Each track defines keyframe animations for a specific entity field.
+     */
     public var tracks(default,null):Array<TimelineTrackData>;
 
+    /**
+     * Frames per second for timeline animations.
+     * Affects the playback speed of all timeline tracks in this fragment.
+     * Default is 30 FPS.
+     */
     public var fps(default,set):Int = 30;
 
+    /**
+     * The fragment data that defines this fragment's content.
+     * Setting this property will instantiate/update all entities and animations.
+     */
     public var fragmentData(default,set):FragmentData = null;
 
+    /**
+     * Whether this fragment can be resized.
+     * When true, the fragment dimensions can be changed after initialization.
+     */
     public var resizable:Bool = false;
 
+    /**
+     * Whether the timeline should automatically update each frame.
+     * Set to false to manually control timeline playback.
+     * Default is true.
+     */
     public var autoUpdateTimeline(default, set):Bool = true;
     function set_autoUpdateTimeline(autoUpdateTimeline:Bool):Bool {
         if (this.autoUpdateTimeline != autoUpdateTimeline) {
@@ -39,14 +91,37 @@ class Fragment extends Layer {
         return autoUpdateTimeline;
     }
 
+    /**
+     * Number of pending asset loads.
+     * When this reaches 0, the fragment becomes ready.
+     */
     public var pendingLoads(default,null):Int = 0;
 
+    /**
+     * The timeline instance managing animations for this fragment.
+     * Created automatically when tracks are added.
+     */
     public var timeline:Timeline = null;
 
+    /**
+     * Whether the fragment has finished loading all assets and is ready to use.
+     * Becomes true when all pending loads complete.
+     */
     public var ready(default,null):Bool = false;
 
+    /**
+     * Event emitted when the fragment becomes ready.
+     * All assets are loaded and entities are instantiated.
+     */
     @event function _ready();
 
+    /**
+     * Schedule a callback to be executed when the fragment is ready.
+     * If already ready, the callback is executed immediately.
+     * 
+     * @param owner The entity that owns this callback (for cleanup)
+     * @param cb The callback to execute when ready
+     */
     public function scheduleWhenReady(owner:Entity, cb:()->Void) {
 
         if (ready) {
@@ -79,6 +154,12 @@ class Fragment extends Layer {
 
     static var cachedFragmentData:Map<String,FragmentData> = new Map();
 
+    /**
+     * Cache fragment data for later retrieval by ID.
+     * This allows fragments to reference other fragments efficiently.
+     * 
+     * @param fragmentData The fragment data to cache
+     */
     public static function cacheData(fragmentData:FragmentData) {
 
         cachedFragmentData.set(fragmentData.id, fragmentData);
@@ -86,10 +167,11 @@ class Fragment extends Layer {
     }
 
     /**
-     * A static helper to get a fragment data object from fragment id.
-     * Fragments need to be cached first with `cacheFragmentData()`.
-     * @param fragmentId
-     * @return Null<FragmentData>
+     * Retrieve cached fragment data by ID.
+     * The data must have been previously cached with `cacheData()`.
+     * 
+     * @param fragmentId The ID of the fragment data to retrieve
+     * @return The cached fragment data, or null if not found
      */
     public static function getData(fragmentId:String):Null<FragmentData> {
 
@@ -99,6 +181,12 @@ class Fragment extends Layer {
 
 /// Lifecycle
 
+    /**
+     * Create a new fragment instance.
+     * 
+     * @param assets Optional asset manager for loading resources.
+     *               If not provided, uses the default app assets.
+     */
     public function new(?assets:Assets) {
 
         super();
@@ -277,6 +365,14 @@ class Fragment extends Layer {
 
 /// Public API
 
+    /**
+     * Create or update an entity from a fragment item definition.
+     * If an entity with the same ID already exists, it will be updated.
+     * Otherwise, a new entity is created and added to the fragment.
+     * 
+     * @param item The fragment item definition
+     * @return The created or updated entity instance
+     */
     public function putItem(item:FragmentItem):Entity {
 
         var existing = get(item.id);
@@ -498,10 +594,23 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Get an entity by its ID.
+     * 
+     * @param itemId The ID of the entity to retrieve
+     * @return The entity instance, or null if not found
+     */
     public extern inline overload function get(itemId:String):Entity {
         return _get(itemId);
     }
 
+    /**
+     * Get an entity by its ID with type casting.
+     * 
+     * @param itemId The ID of the entity to retrieve
+     * @param type The expected entity type
+     * @return The typed entity instance, or null if not found
+     */
     public extern inline overload function get<T:Entity>(itemId:String, type:Class<T>):T {
         return _getWithType(itemId, type);
     }
@@ -548,6 +657,12 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Get a fragment item definition by ID.
+     * 
+     * @param itemId The ID of the item to retrieve
+     * @return The fragment item definition, or null if not found
+     */
     public function getItem(itemId:String):FragmentItem {
 
         for (item in items) {
@@ -561,6 +676,12 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Get a fragment item definition by name.
+     * 
+     * @param name The name of the item to retrieve
+     * @return The fragment item definition, or null if not found
+     */
     public function getItemByName(name:String):FragmentItem {
 
         for (item in items) {
@@ -574,6 +695,12 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Get the entity class name for a fragment item.
+     * 
+     * @param itemId The ID of the item
+     * @return The fully qualified class name of the entity type
+     */
     public function typeOfItem(itemId:String):String {
 
         var item = getItem(itemId);
@@ -587,6 +714,12 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Remove an entity and its item definition from the fragment.
+     * The entity will be destroyed.
+     * 
+     * @param itemId The ID of the item to remove
+     */
     public function removeItem(itemId:String):Void {
 
         for (entity in entities) {
@@ -610,6 +743,10 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Remove all entities and item definitions from the fragment.
+     * All entities will be destroyed.
+     */
     public function removeAllItems():Void {
 
         for (entity in [].concat(entities)) {
@@ -685,8 +822,9 @@ class Fragment extends Layer {
     }
 
     /**
-     * Fragment components mapping. Does not contain components
-     * created separatelywith `component()` or macro-based components or components property.
+     * Components defined at the fragment level (not on individual entities).
+     * These are separate from components added via `component()` or the components property.
+     * Setting this property will add/remove/update components as needed.
      */
     public var fragmentComponents(default,set):ReadOnlyMap<String,Component> = null;
     function set_fragmentComponents(fragmentComponents:ReadOnlyMap<String,Component>):ReadOnlyMap<String,Component> {
@@ -750,11 +888,11 @@ class Fragment extends Layer {
     static var _usedKeyframes:Array<TimelineKeyframe> = [];
 
     /**
-     * Create or update a timeline track from the provided track data
-     * @param entityType
-     *      (optional) entity type being targeted by the track.
-     *      If not provided, will try to resolve it from track's target entity id
-     * @param track Track data used to create or update timeline track
+     * Create or update a timeline track for animating entity properties.
+     * The track will be added to the fragment's timeline, creating it if needed.
+     * 
+     * @param entityType Optional entity type. If not provided, will be resolved from the entity ID.
+     * @param track The track data containing entity ID, field name, and keyframes
      */
     public function putTrack(?entityType:String, track:TimelineTrackData):Void {
 
@@ -958,6 +1096,13 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Get timeline track data for a specific entity field.
+     * 
+     * @param entity The entity ID
+     * @param field The field name being animated
+     * @return The track data, or null if not found
+     */
     public function getTrack(entity:String, field:String):TimelineTrackData {
 
         if (tracks != null) {
@@ -972,6 +1117,12 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Remove a timeline track for a specific entity field.
+     * 
+     * @param entity The entity ID
+     * @param field The field name being animated
+     */
     public function removeTrack(entity:String, field:String):Void {
 
         if (tracks != null) {
@@ -1001,6 +1152,10 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Create the timeline instance if it doesn't exist yet.
+     * Called automatically when tracks or labels are added.
+     */
     public function createTimelineIfNeeded() {
 
         if (timeline == null) {
@@ -1012,9 +1167,11 @@ class Fragment extends Layer {
     }
 
     /**
-     * Create or update a timeline label from the provided label index and name
-     * @param index Label index (position)
-     * @param name Label name
+     * Create or update a timeline label at a specific position.
+     * Labels can be used to mark important points in the animation.
+     * 
+     * @param index The timeline position (frame index)
+     * @param name The label name
      */
     public function putLabel(index:Int, name:String):Void {
 
@@ -1027,9 +1184,10 @@ class Fragment extends Layer {
     }
 
     /**
-     * Return the index (position) of the given label name or -1 if no such label exists.
-     * @param name
-     * @return Int
+     * Get the timeline position of a label by name.
+     * 
+     * @param name The label name
+     * @return The frame index, or -1 if the label doesn't exist
      */
     public function indexOfLabel(name:String):Int {
 
@@ -1042,9 +1200,10 @@ class Fragment extends Layer {
     }
 
     /**
-     * Return the label at the given index (position), if any exists.
-     * @param index
-     * @return Int
+     * Get the label name at a specific timeline position.
+     * 
+     * @param index The frame index
+     * @return The label name, or null if no label exists at that position
      */
     public function labelAtIndex(index:Int):String {
 
@@ -1057,8 +1216,9 @@ class Fragment extends Layer {
     }
 
     /**
-     * Remove label with the given name
-     * @param name Label name
+     * Remove a timeline label by name.
+     * 
+     * @param name The label name to remove
      */
     public function removeLabel(name:String):Void {
 
@@ -1069,8 +1229,9 @@ class Fragment extends Layer {
     }
 
     /**
-     * Remove label at the given index (position)
-     * @param index Label index
+     * Remove a timeline label at a specific position.
+     * 
+     * @param index The frame index where the label should be removed
      */
     public function removeLabelAtIndex(index:Int):Void {
 
@@ -1080,6 +1241,10 @@ class Fragment extends Layer {
 
     }
 
+    /**
+     * Whether the timeline playback is paused.
+     * Setting this to true stops all animations in the fragment.
+     */
     public var paused(get, set):Bool;
     function get_paused():Bool {
         return timeline != null && timeline.paused;
@@ -1094,19 +1259,38 @@ class Fragment extends Layer {
     }
 
     #if ceramic_fragment_float_events
+    /**
+     * Event emitted when floatA value changes.
+     * Can be used for custom fragment behaviors.
+     */
     @event function floatAChange(floatA:Float, prevFloatA:Float);
 
+    /**
+     * Event emitted when floatB value changes.
+     * Can be used for custom fragment behaviors.
+     */
     @event function floatBChange(floatB:Float, prevFloatB:Float);
 
+    /**
+     * Event emitted when floatC value changes.
+     * Can be used for custom fragment behaviors.
+     */
     @event function floatCChange(floatC:Float, prevFloatC:Float);
 
+    /**
+     * Event emitted when floatD value changes.
+     * Can be used for custom fragment behaviors.
+     */
     @event function floatDChange(floatD:Float, prevFloatD:Float);
     #end
 
     #if ceramic_fragment_location_event
     /**
-     * Emit this event to change current location.
-     * Behavior depends on how this event is handled and does nothing by default.
+     * Event for changing the current location/state of the fragment.
+     * The behavior depends on how this event is handled by listeners.
+     * Common uses include scene transitions or state changes.
+     * 
+     * @param location The new location identifier
      */
     @event public function location(location:String);
     #end

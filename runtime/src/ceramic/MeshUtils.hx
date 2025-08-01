@@ -2,20 +2,98 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * Low-level utility class for generating mesh data arrays.
+ *
+ * MeshUtils provides static methods for creating vertices, indices, and UV coordinates
+ * for grid-based meshes. These utilities are the foundation for procedural mesh generation
+ * and are used by MeshExtensions for higher-level operations.
+ *
+ * Key features:
+ * - Grid vertex generation with staggering support
+ * - Triangle index generation with mirroring options
+ * - UV coordinate mapping for grid texturing
+ * - Support for custom vertex attributes
+ * - Efficient array reuse
+ *
+ * Grid coordinate system:
+ * ```
+ * 0,0 --- 1,0 --- 2,0
+ *  |       |       |
+ * 0,1 --- 1,1 --- 2,1
+ *  |       |       |
+ * 0,2 --- 1,2 --- 2,2
+ * ```
+ *
+ * @example
+ * ```haxe
+ * // Create a 5x5 grid mesh
+ * var vertices = MeshUtils.createVerticesGrid(null, 5, 5, 200, 200);
+ * var indices = MeshUtils.createIndicesGrid(null, 5, 5);
+ * var uvs = MeshUtils.createUVsGrid(null, 5, 5);
+ *
+ * var mesh = new Mesh();
+ * mesh.color = Color.WHITE;
+ * mesh.vertices = vertices;
+ * mesh.indices = indices;
+ * mesh.uvs = uvs;
+ * ```
+ *
+ * @see MeshExtensions For higher-level mesh creation methods
+ * @see Mesh The mesh class that uses these utilities
+ */
 class MeshUtils {
 
     /**
-     * Create vertices to form a grid with the given options
-     * @param vertices (optional) The existing vertices. If provided, will be used as result instead of creating a new array
-     * @param columns The number of columns in the grid
-     * @param rows The number of rows in the grid
-     * @param width The total width of the grid
-     * @param height The total height of the grid
-     * @param staggerX (optional, default 0) A stagger value to offset rows by this value
-     * @param staggerY (optional, default 0) A stagger value to offset columns by this value
-     * @param attrLength (optional, default 0) The number of attribute values per vertex
-     * @param attrValues (optional) The attributes buffer that will be added to vertex data
-     * @return The generated vertices
+     * Creates a grid of vertices with optional staggering and custom attributes.
+     *
+     * Generates vertices arranged in a rectangular grid pattern. Each vertex consists
+     * of x,y coordinates followed by optional custom attributes. The total number of
+     * vertices is (columns+1) × (rows+1).
+     *
+     * Staggering creates offset patterns useful for:
+     * - Hexagonal grids (staggerX with odd rows offset)
+     * - Diamond/isometric grids (both staggerX and staggerY)
+     * - Wave effects and deformations
+     *
+     * Vertex data layout: [x, y, ...customAttributes]
+     *
+     * @param vertices Existing array to reuse, or null to create new array.
+     *                 If provided and larger than needed, will be truncated.
+     * @param columns Number of columns in the grid (cells, not vertices)
+     * @param rows Number of rows in the grid (cells, not vertices)
+     * @param width Total width of the grid in pixels
+     * @param height Total height of the grid in pixels
+     * @param staggerX Horizontal offset applied to odd-numbered rows.
+     *                 Use cellWidth*0.5 for hexagonal grids.
+     * @param staggerY Vertical offset applied to odd-numbered columns.
+     *                 Rarely used, but can create diamond patterns.
+     * @param attrLength Number of custom float attributes per vertex.
+     *                   Common values: 2 for UV, 4 for color, etc.
+     * @param attrValues Array of attribute values to assign.
+     *                   If null, attributes are initialized to 0.
+     *                   Length must equal (columns+1)×(rows+1)×attrLength.
+     * @return Array of vertex data with length (columns+1)×(rows+1)×(2+attrLength)
+     *
+     * @example
+     * ```haxe
+     * // Simple 10x10 grid
+     * var vertices = MeshUtils.createVerticesGrid(null, 10, 10, 400, 400);
+     *
+     * // Hexagonal grid with horizontal stagger
+     * var cellWidth = 40;
+     * var vertices = MeshUtils.createVerticesGrid(
+     *     null, 10, 10, 400, 400,
+     *     cellWidth * 0.5, 0
+     * );
+     *
+     * // Grid with per-vertex colors (4 floats: r,g,b,a)
+     * var colors = [/* color data */];
+     * var vertices = MeshUtils.createVerticesGrid(
+     *     null, 10, 10, 400, 400,
+     *     0, 0, 4, colors
+     * );
+     * ```
      */
     public static function createVerticesGrid(?vertices:Array<Float>, columns:Int, rows:Int, width:Float, height:Float, staggerX:Float = 0, staggerY:Float = 0, attrLength:Int = 0, ?attrValues:Array<Float>):Array<Float> {
 
@@ -112,14 +190,58 @@ class MeshUtils {
     }
 
     /**
-     * Create indices to form a grid with the given options
-     * @param indices (optional) The existing indices. If provided, will be used as result instead of creating a new array
-     * @param columns The number of columns in the grid
-     * @param rows The number of rows in the grid
-     * @param mirrorX (optional, default false) Mirror triangles horizontally in odd columns
-     * @param mirrorY (optional, default false) Mirror triangles vertically in odd rows
-     * @param mirrorFlip (optional, default false) Invert the mirroring described by `mirrorX` and `mirrorY`
-     * @return The generated indices
+     * Creates triangle indices for a grid of vertices.
+     *
+     * Generates indices that connect grid vertices into triangles, with each grid cell
+     * split into two triangles. The total number of triangles is columns×rows×2.
+     *
+     * Triangle winding order (default, no mirroring):
+     * ```
+     * TL --- TR
+     * |\     |
+     * | \    |  Cell split: TL-TR-BL and TR-BR-BL
+     * |  \   |
+     * |   \  |
+     * |    \ |
+     * BL --- BR
+     * ```
+     *
+     * Mirroring options change the diagonal direction in alternating cells,
+     * which helps:
+     * - Reduce visual patterns in deformed meshes
+     * - Create more natural-looking terrain
+     * - Improve shading on curved surfaces
+     *
+     * @param indices Existing array to reuse, or null to create new array.
+     *                If provided and larger than needed, will be truncated.
+     * @param columns Number of columns in the grid (cells, not vertices)
+     * @param rows Number of rows in the grid (cells, not vertices)
+     * @param mirrorX Mirror triangle diagonal in odd-numbered columns.
+     *                Creates horizontal alternation pattern.
+     * @param mirrorY Mirror triangle diagonal in odd-numbered rows.
+     *                Creates vertical alternation pattern.
+     * @param mirrorFlip Inverts the mirroring pattern.
+     *                   If true, mirrors even cells instead of odd.
+     * @return Array of indices with length columns×rows×6
+     *         (2 triangles × 3 vertices per cell)
+     *
+     * @example
+     * ```haxe
+     * // Standard grid triangulation
+     * var indices = MeshUtils.createIndicesGrid(null, 10, 10);
+     *
+     * // Alternating pattern for natural terrain
+     * var indices = MeshUtils.createIndicesGrid(
+     *     null, 10, 10,
+     *     true, true  // Mirror both X and Y
+     * );
+     *
+     * // Custom pattern with flipped mirroring
+     * var indices = MeshUtils.createIndicesGrid(
+     *     null, 10, 10,
+     *     true, false, true  // Mirror X on even columns
+     * );
+     * ```
      */
     public static function createIndicesGrid(?indices:Array<Int>, columns:Int, rows:Int, mirrorX:Bool = false, mirrorY:Bool = false, mirrorFlip:Bool = false):Array<Int> {
 
@@ -176,13 +298,48 @@ class MeshUtils {
     }
 
     /**
-     * Create uvs to match a grid with the given options.
-     * The uvs will be distributed linearly across the mesh so that
-     * when displaying a texture it would be stretched to the grid.
-     * @param uvs (optional) The existing uvs. If provided, will be used as result instead of creating a new array
-     * @param columns The number of columns in the grid
-     * @param rows The number of rows in the grid
-     * @return The generated uvs
+     * Creates UV coordinates for a grid of vertices.
+     *
+     * Generates UV coordinates that map linearly across the grid from 0 to 1,
+     * stretching any applied texture across the entire mesh. Each vertex gets
+     * a UV coordinate based on its grid position.
+     *
+     * UV mapping:
+     * - Top-left vertex: (0, 0)
+     * - Top-right vertex: (1, 0)
+     * - Bottom-left vertex: (0, 1)
+     * - Bottom-right vertex: (1, 1)
+     *
+     * Offsets allow texture scrolling and tiling effects.
+     *
+     * @param uvs Existing array to reuse, or null to create new array.
+     *            If provided and larger than needed, will be truncated.
+     * @param columns Number of columns in the grid (cells, not vertices)
+     * @param rows Number of rows in the grid (cells, not vertices)
+     * @param offsetX Horizontal UV offset for texture scrolling.
+     *                Values > 1 create tiling if texture wrap is enabled.
+     * @param offsetY Vertical UV offset for texture scrolling.
+     *                Values > 1 create tiling if texture wrap is enabled.
+     * @return Array of UV coordinates with length (columns+1)×(rows+1)×2
+     *
+     * @example
+     * ```haxe
+     * // Standard UV mapping (texture stretched across grid)
+     * var uvs = MeshUtils.createUVsGrid(null, 10, 10);
+     *
+     * // Scrolling texture effect
+     * var uvs = MeshUtils.createUVsGrid(
+     *     null, 10, 10,
+     *     time * 0.1, 0  // Scroll horizontally over time
+     * );
+     *
+     * // Tiled texture (requires texture wrap mode)
+     * var uvs = MeshUtils.createUVsGrid(
+     *     null, 10, 10,
+     *     0, 0  // UVs will go from 0 to 1
+     * );
+     * // Then scale UVs by tile count in shader or modify here
+     * ```
      */
     public static function createUVsGrid(?uvs:Array<Float>, columns:Int, rows:Int, offsetX:Float = 0, offsetY:Float = 0):Array<Float> {
 
