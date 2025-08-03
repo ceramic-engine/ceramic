@@ -21,18 +21,70 @@ import tracker.Observable;
 
 using StringTools;
 
+/**
+ * A color input field with an integrated color picker popup.
+ * 
+ * This field provides multiple ways to input colors:
+ * - Direct hex color input (#RRGGBB format)
+ * - Visual color preview box that opens a color picker when clicked
+ * - Full-featured color picker with HSB/HSLuv spectrum and sliders
+ * 
+ * The field validates hex input in real-time and shows a live preview.
+ * The color picker appears as a floating popup positioned intelligently
+ * to stay within screen bounds.
+ * 
+ * Features:
+ * - Hex color validation with automatic formatting
+ * - Live color preview
+ * - Floating color picker with triangle pointer
+ * - Smart positioning to avoid screen edges
+ * - Keyboard shortcuts (Escape to close, Enter/Space to toggle)
+ * - Theme-aware styling
+ * - Disabled state support
+ * 
+ * Example usage:
+ * ```haxe
+ * var colorField = new ColorFieldView();
+ * colorField.value = Color.BLUE;
+ * colorField.setValue = (field, color) -> {
+ *     myObject.color = color;
+ * };
+ * ```
+ * 
+ * @see ColorPickerView
+ * @see FieldView
+ */
 class ColorFieldView extends FieldView {
 
+    /**
+     * The theme to use for styling. If null, uses the global context theme.
+     */
     @observe public var theme:Theme = null;
 
+    /**
+     * Shared point instance for coordinate calculations.
+     */
     static var _point = new Point();
 
+    /**
+     * Regular expression to validate complete 6-digit hex color codes.
+     */
     static var RE_HEX_COLOR = ~/^[0-F][0-F][0-F][0-F][0-F][0-F]$/;
 
+    /**
+     * Regular expression to validate partial hex color input.
+     */
     static var RE_HEX_COLOR_ANY_LENGTH = ~/^[0-F]+$/;
 
 /// Hooks
 
+    /**
+     * Hook function called when the color value changes.
+     * Override this to handle color changes.
+     * 
+     * @param field The color field that changed
+     * @param value The new color value
+     */
     public dynamic function setValue(field:ColorFieldView, value:Color):Void {
 
         this.value = value;
@@ -41,8 +93,16 @@ class ColorFieldView extends FieldView {
 
 /// Public properties
 
+    /**
+     * The current color value.
+     * Updates the hex display and color preview when changed.
+     */
     @observe public var value:Color = Color.WHITE;
 
+    /**
+     * Whether the field is disabled.
+     * Disabled fields cannot be edited and appear dimmed.
+     */
     @observe public var disabled(default, set):Bool = false;
     function set_disabled(disabled:Bool):Bool {
         if (this.disabled != disabled) {
@@ -60,6 +120,9 @@ class ColorFieldView extends FieldView {
 
 /// Internal properties
 
+    /**
+     * Whether the color picker popup is currently visible.
+     */
     @observe var pickerVisible:Bool = false;
 
     @component var keyBindings:KeyBindings;
@@ -88,6 +151,16 @@ class ColorFieldView extends FieldView {
 
     var editingThisFrame:Bool = false;
 
+    /**
+     * Creates a new ColorFieldView.
+     * 
+     * Initializes:
+     * - Hex color text input with # prefix
+     * - Color preview box
+     * - Hidden color picker container
+     * - Keyboard shortcuts and event handlers
+     * - Theme-based styling
+     */
     public function new() {
 
         super();
@@ -193,6 +266,9 @@ class ColorFieldView extends FieldView {
 
 /// Layout
 
+    /**
+     * Focuses the field and activates text editing.
+     */
     override function focus() {
 
         super.focus();
@@ -203,6 +279,10 @@ class ColorFieldView extends FieldView {
 
     }
 
+    /**
+     * Handles focus loss by validating and correcting the hex input.
+     * If the input is empty or invalid, resets to the current color value.
+     */
     override function didLostFocus() {
 
         super.didLostFocus();
@@ -398,6 +478,13 @@ class ColorFieldView extends FieldView {
 
     }
 
+    /**
+     * Validates and processes hex color input from the text field.
+     * Handles various input formats (#RRGGBB, 0xRRGGBB, RRGGBB).
+     * Updates the color value if valid, otherwise reverts to current value.
+     * 
+     * @param text The input text to validate
+     */
     function updateFromEditText(text:String) {
 
         if (text == '')
@@ -427,6 +514,10 @@ class ColorFieldView extends FieldView {
 
     }
 
+    /**
+     * Updates the UI elements to reflect the current color value.
+     * Updates the hex text display and color preview box.
+     */
     function updateFromValue() {
 
         var value = this.value;
@@ -488,6 +579,10 @@ class ColorFieldView extends FieldView {
 
     }
 
+    /**
+     * Creates or destroys the color picker popup based on visibility state.
+     * Handles picker creation, positioning, and color synchronization.
+     */
     function updatePickerContainer() {
 
         var pickerVisible = this.pickerVisible;

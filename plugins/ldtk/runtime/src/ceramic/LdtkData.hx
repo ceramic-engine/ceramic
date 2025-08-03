@@ -1,12 +1,20 @@
 package ceramic;
 
-// This is a hierarchy of classes following LDtk project JSON structure slightly adapted for Ceramic and optimized to reduce memory footprint and dynamic access costs.
-// It is also resolving entity, layer and field instances from data referencing Uids.
-// Used internally but also accessible to user code.
-// Its usage is preferred over directly using ldtk.Json.ProjectJson, especially on static targets like C# of C++
-// because the memory footprint of this LdtkData class is much lower than a plain JSON hierarchy (static access instead of dynamic access, much fewer allocated strings etc...).
-// That said, you can also use ldtk-haxe-api to read fully statically typed project data: https://ldtk.io/docs/game-dev/haxe-in-game-api/usage/,
-// although it is completely optional and not needed by Ceramic itself.
+/**
+ * This is a hierarchy of classes following LDtk project JSON structure slightly adapted for Ceramic
+ * and optimized to reduce memory footprint and dynamic access costs.
+ * 
+ * It resolves entity, layer and field instances from data referencing Uids.
+ * Used internally but also accessible to user code.
+ * 
+ * Its usage is preferred over directly using ldtk.Json.ProjectJson, especially on static targets
+ * like C# or C++ because the memory footprint of this LdtkData class is much lower than a plain
+ * JSON hierarchy (static access instead of dynamic access, much fewer allocated strings etc...).
+ * 
+ * That said, you can also use ldtk-haxe-api to read fully statically typed project data:
+ * https://ldtk.io/docs/game-dev/haxe-in-game-api/usage/,
+ * although it is completely optional and not needed by Ceramic itself.
+ */
 
 import ceramic.Color;
 import ceramic.Shortcuts.*;
@@ -15,7 +23,15 @@ import haxe.DynamicAccess;
 using StringTools;
 
 /**
- * Ldtk data root
+ * Root class representing an LDtk project data structure.
+ * 
+ * This is the main entry point for working with LDtk level data in Ceramic.
+ * It contains all the project definitions, worlds, and levels from an LDtk file.
+ * 
+ * The data structure is optimized for performance on static targets and provides
+ * easy access to all LDtk entities, layers, and tilesets.
+ * 
+ * @see https://ldtk.io/ for more information about LDtk
  */
 class LdtkData extends Entity {
 
@@ -80,6 +96,12 @@ class LdtkData extends Entity {
 
     private static var _entityInstances:Array<LdtkEntityInstance> = null;
 
+    /**
+     * Creates a new LdtkData instance from JSON data.
+     * @param json The parsed LDtk project JSON data
+     * @param loadExternalLevelData Optional callback to load external level data when using multi-file projects
+     * @param loadLevelCeramicTilemap Optional callback to load Ceramic tilemap for a level
+     */
     public function new(?json:DynamicAccess<Dynamic>, ?loadExternalLevelData:(relPath:String, callback:(levelData:DynamicAccess<Dynamic>)->Void)->Void, ?loadLevelCeramicTilemap:(level:LdtkLevel)->Void) {
 
         super();
@@ -167,6 +189,11 @@ class LdtkData extends Entity {
 
     }
 
+    /**
+     * Gets a world by its identifier.
+     * @param identifier The world identifier to search for
+     * @return The matching LdtkWorld, or null if not found
+     */
     public function world(identifier:String):LdtkWorld {
 
         if (this.worlds != null) {
@@ -182,6 +209,11 @@ class LdtkData extends Entity {
 
     }
 
+    /**
+     * Gets a world by its unique instance identifier (IID).
+     * @param iid The world IID to search for
+     * @return The matching LdtkWorld, or null if not found
+     */
     public function worldByIid(iid:String):LdtkWorld {
 
         if (this.worlds != null) {
@@ -519,6 +551,10 @@ class LdtkData extends Entity {
 
 }
 
+/**
+ * Represents a Table of Contents entry for entities marked with exportToToc.
+ * Provides quick access to all instances of a specific entity type across the project.
+ */
 class LdtkTocEntry {
 
     /**
@@ -537,6 +573,11 @@ class LdtkTocEntry {
      */
     public var instancesData:Array<LdtkTocInstanceData>;
 
+    /**
+     * Creates a new table of contents entry.
+     * @param ldtkData The parent LdtkData object
+     * @param json The JSON data for this entry
+     */
     public function new(?ldtkData:LdtkData, ?json:DynamicAccess<Dynamic>) {
 
         this.ldtkData = ldtkData;
@@ -568,6 +609,10 @@ class LdtkTocEntry {
 
 }
 
+/**
+ * Contains instance data for an entity referenced in the table of contents.
+ * Includes location information to quickly find entities across levels.
+ */
 class LdtkTocInstanceData {
 
     /**
@@ -640,6 +685,15 @@ class LdtkTocInstanceData {
 
 }
 
+/**
+ * Represents a world in an LDtk project.
+ * 
+ * A world contains multiple levels arranged according to a specific layout
+ * (Free, GridVania, LinearHorizontal, or LinearVertical).
+ * 
+ * In multi-world projects, each world acts as a separate game area or chapter.
+ * Single-world projects will have one default world containing all levels.
+ */
 class LdtkWorld {
 
     /**
@@ -792,6 +846,17 @@ enum abstract LdtkWorldLayout(Int) from Int to Int {
 
 /**
  * A structure containing all the definitions of an LDtk project
+ */
+/**
+ * Contains all the definitions used in an LDtk project.
+ * 
+ * This includes:
+ * - Entity definitions
+ * - Layer definitions  
+ * - Tileset definitions
+ * - Enum definitions
+ * 
+ * These definitions describe the structure and rules that levels follow.
  */
 class LdtkDefinitions {
 
@@ -984,6 +1049,12 @@ class LdtkDefinitions {
 
 /**
  * An LDtk entity definition
+ */
+/**
+ * Defines an entity type that can be placed in levels.
+ * 
+ * Entities are game objects like players, enemies, items, triggers, etc.
+ * This definition describes the entity's appearance, fields, and behavior rules.
  */
 class LdtkEntityDefinition {
 
@@ -1515,6 +1586,15 @@ enum abstract LdtkLayerType(Int) from Int to Int {
 
 }
 
+/**
+ * Defines a layer type that can be used in levels.
+ * 
+ * Layers can be:
+ * - IntGrid: Integer grid for collision maps, zones, etc.
+ * - Entities: Container for entity instances
+ * - Tiles: Manual tile placement
+ * - AutoLayer: Rule-based automatic tile placement
+ */
 class LdtkLayerDefinition {
 
     /**
@@ -2406,6 +2486,18 @@ class LdtkIntGridValue {
 
 }
 
+/**
+ * Represents a single level in an LDtk world.
+ * 
+ * Contains all the layer instances, entities, and properties for one game level.
+ * Levels can reference external data files in multi-file projects.
+ * 
+ * Each level has:
+ * - Position in world coordinates
+ * - Background settings
+ * - Layer instances with tiles and entities
+ * - Custom field values
+ */
 class LdtkLevel {
 
     /**
@@ -2938,6 +3030,12 @@ enum abstract LdtkLevelLocation(Int) from Int to Int {
 
 }
 
+/**
+ * An instance of a custom field value.
+ * 
+ * Represents the actual value of a custom field for an entity or level instance.
+ * The value can be of various types: Int, Float, String, Bool, Color, Enum, etc.
+ */
 class LdtkFieldInstance {
 
     /**
@@ -3040,6 +3138,12 @@ class LdtkFieldInstance {
 
 }
 
+/**
+ * An instance of a layer in a level.
+ * 
+ * Contains the actual tile data, entity instances, and int grid values
+ * for this specific layer in this specific level.
+ */
 class LdtkLayerInstance {
 
     /**
@@ -3296,6 +3400,12 @@ class LdtkLayerInstance {
 
 }
 
+/**
+ * An instance of an entity placed in a level.
+ * 
+ * Contains the entity's position, size, field values, and tile information.
+ * This is the actual game object data as opposed to the entity definition.
+ */
 class LdtkEntityInstance {
 
     /**
@@ -3475,6 +3585,14 @@ class LdtkEntityInstance {
 // }
 
 @:noCompletion
+/**
+ * Helper utilities for LDtk data manipulation.
+ * 
+ * Provides methods for:
+ * - Converting colors between formats
+ * - Managing circular reference detection in toString methods
+ * - Other utility functions
+ */
 class LdtkDataHelpers {
 
     public static var TO_STRING_MAX_ITEM_LENGTH:Int = 128;

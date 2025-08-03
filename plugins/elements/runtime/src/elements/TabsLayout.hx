@@ -16,10 +16,51 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
+/**
+ * A horizontal tab layout component for organizing content into multiple pages.
+ * 
+ * TabsLayout provides a tab-based interface with clickable tab headers that can
+ * switch between different content views. It supports visual feedback for hover
+ * and selection states, individual tab themes, and disabled tabs. The layout
+ * automatically manages tab positioning, borders, and background rendering.
+ * 
+ * Key features:
+ * - Clickable tab headers with hover effects
+ * - Individual tab theming and state management
+ * - Disabled tab support
+ * - Automatic border and background management
+ * - Integration with window systems
+ * - Configurable margins and spacing
+ * - Depth-based tab ordering for visual layering
+ * 
+ * Usage example:
+ * ```haxe
+ * var tabsLayout = new TabsLayout();
+ * tabsLayout.tabs = ['Tab 1', 'Tab 2', 'Tab 3'];
+ * tabsLayout.selectedIndex = 0;
+ * tabsLayout.marginX = 5;
+ * tabsLayout.marginY = 2;
+ * 
+ * tabsLayout.onSelectedIndexChange(this, (index, prev) -> {
+ *     trace('Selected tab: ' + index);
+ *     // Switch content based on selected tab
+ * });
+ * 
+ * add(tabsLayout);
+ * ```
+ */
 class TabsLayout extends RowLayout implements Observable {
 
+    /** Custom theme override for this tabs layout. If null, uses the global context theme */
     @observe public var theme:Theme = null;
 
+    /** 
+     * Horizontal margin extending beyond the tabs layout bounds.
+     * 
+     * This margin affects border and background rendering, extending the visual
+     * elements beyond the actual tab bounds for seamless integration with
+     * surrounding content.
+     */
     public var marginX(default, set):Float = 0;
     function set_marginX(marginX:Float):Float {
         if (this.marginX != marginX) {
@@ -29,6 +70,13 @@ class TabsLayout extends RowLayout implements Observable {
         return marginX;
     }
 
+    /** 
+     * Vertical margin extending beyond the tabs layout bounds.
+     * 
+     * This margin affects border and background rendering, extending the visual
+     * elements beyond the actual tab bounds for seamless integration with
+     * surrounding content.
+     */
     public var marginY(default, set):Float = 0;
     function set_marginY(marginY:Float):Float {
         if (this.marginY != marginY) {
@@ -39,36 +87,59 @@ class TabsLayout extends RowLayout implements Observable {
     }
 
     /**
-     * If this field is managed by a WindowItem, this is the WindowItem.
+     * Reference to the WindowItem managing this tabs layout, if applicable.
+     * 
+     * When the tabs layout is managed by a WindowItem, this property provides
+     * access to the window context for coordination and event handling.
      */
     public var windowItem:WindowItem = null;
 
+    /** Index of the currently selected tab. -1 means no tab is selected */
     @observe public var selectedIndex:Int = -1;
 
+    /** Array of tab labels to display in the tab headers */
     @observe public var tabs:ReadOnlyArray<String> = [];
 
+    /** Array of states for each tab (NORMAL, DISABLED, etc.) */
     @observe public var tabStates:ReadOnlyArray<TabState> = [];
 
+    /** Array of custom themes for individual tabs. Uses default theme if null for a tab */
     @observe public var tabThemes:ReadOnlyArray<Theme> = [];
 
+    /** Internal array of TextView components representing the tab headers */
     @observe var tabViews:Array<TextView> = [];
 
+    /** Index of the tab currently being hovered by the mouse. -1 means no hover */
     @observe var hoverIndex:Int = -1;
 
+    /** Cache of previously applied tab labels for change detection */
     var appliedTabs:Array<String> = null;
 
+    /** Border element rendered before the selected tab */
     var beforeBorder:Quad;
 
+    /** Border element rendered after the selected tab */
     var afterBorder:Quad;
 
+    /** Background element rendered before the selected tab area */
     var beforeSelectedBackground:Quad = null;
 
+    /** Background element rendered after the selected tab area */
     var afterSelectedBackground:Quad = null;
 
+    /** Background element rendered above the tabs */
     var topBackground:Quad = null;
 
+    /** Background element rendered below the tabs */
     var bottomBackground:Quad = null;
 
+    /**
+     * Creates a new TabsLayout.
+     * 
+     * Sets up the basic layout properties, creates border elements, and initializes
+     * automatic updates for tab management and styling. Configures the layout for
+     * overlapping tabs with custom depth management.
+     */
     public function new() {
 
         super();
@@ -99,6 +170,13 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    /**
+     * Updates the tab views based on the current tabs array.
+     * 
+     * Creates new TextView components for new tabs, removes unused tab views,
+     * and updates the visual hierarchy. This method is called automatically
+     * when the tabs array changes.
+     */
     function updateTabs() {
 
         var tabs = this.tabs;
@@ -144,6 +222,14 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    /**
+     * Indicates whether this tabs layout should render window background.
+     * 
+     * This method is used by the window system to determine background rendering
+     * behavior. Always returns true for tabs layouts.
+     * 
+     * @return true to enable window background rendering
+     */
     @:keep
     function renderWindowBackground():Bool {
 
@@ -151,6 +237,15 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    /**
+     * Initializes event handlers and behavior for a tab view.
+     * 
+     * Sets up hover tracking, click/touch handling for tab selection,
+     * and automatic touchable state management based on tab state.
+     * 
+     * @param index The index of this tab
+     * @param tabView The TextView component for this tab
+     */
     function initTabView(index:Int, tabView:TextView) {
 
         tabView.onPointerOver(this, _ -> {
@@ -180,6 +275,13 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    /**
+     * Performs layout of tab views and manages visual depth ordering.
+     * 
+     * Updates tab depth values to create proper visual layering with the selected
+     * tab on top, positions border elements around the selected tab, and manages
+     * background element positioning based on margins and selection state.
+     */
     override function layout() {
 
         super.layout();
@@ -274,6 +376,14 @@ class TabsLayout extends RowLayout implements Observable {
 
     }
 
+    /**
+     * Updates the visual style of all tabs and background elements.
+     * 
+     * Applies theme-based styling to tab views based on their state (selected,
+     * hovered, disabled, normal). Manages border colors, background colors,
+     * text colors, and transparency. Also handles creation and destruction
+     * of background elements based on theme settings.
+     */
     function updateStyle() {
 
         var theme = this.theme;

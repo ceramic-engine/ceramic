@@ -67,9 +67,39 @@ using haxe.macro.Tools;
 typedef IntPointer = (?val:Int)->Int;
 
 /**
- * API inspired by Dear ImGui,
- * but using ceramic elements UI,
- * making it work with any ceramic target
+ * Immediate mode UI system for Ceramic inspired by Dear ImGui.
+ * 
+ * Im provides a stateless, code-driven UI API that creates and manages UI elements
+ * on-the-fly. Unlike traditional retained-mode UI systems where you create and
+ * maintain UI objects, Im allows you to declare UI in a procedural way:
+ * 
+ * ```haxe
+ * Im.begin();
+ * 
+ * if (Im.button("Click me!")) {
+ *     trace("Button clicked!");
+ * }
+ * 
+ * Im.textField("Name", namePointer);
+ * Im.slider("Volume", volumePointer, 0, 100);
+ * 
+ * Im.end();
+ * ```
+ * 
+ * Key features:
+ * - Immediate mode paradigm - UI is rebuilt every frame
+ * - Automatic layout with rows and columns
+ * - Built-in controls: buttons, text fields, sliders, checkboxes, etc.
+ * - Window management with docking and tabs
+ * - Theme support with runtime customization
+ * - Cross-platform compatibility through Ceramic
+ * 
+ * The system uses pointers (functions that get/set values) to bind controls
+ * to data, allowing the UI to automatically reflect and modify application state.
+ * 
+ * @see ImSystem
+ * @see Window
+ * @see Theme
  */
 class Im {
 
@@ -191,6 +221,17 @@ class Im {
 
     static var _shouldSkipRender:Bool = false;
 
+    /**
+     * Initializes the Im system if not already initialized.
+     * 
+     * This method ensures that:
+     * - The global context view exists
+     * - A default theme is created
+     * - The Im system is ready for use
+     * 
+     * This is automatically called by most Im methods, but can be
+     * called manually if early initialization is needed.
+     */
     public static function initIfNeeded():Void {
 
         if (context.view == null) {
@@ -207,12 +248,38 @@ class Im {
 
     }
 
+    /**
+     * Extracts the ID portion from a window key.
+     * 
+     * Window keys can contain both an ID and a title. This method
+     * extracts just the ID portion, which is used for window lookup
+     * and persistence.
+     * 
+     * Currently returns the key as-is, but may parse complex keys
+     * in the future (e.g., "id###title" format).
+     * 
+     * @param key The window key to extract ID from
+     * @return The extracted ID
+     */
     public static function extractId(key:String):String {
 
         return key;
 
     }
 
+    /**
+     * Extracts the title portion from a window key.
+     * 
+     * Window keys can contain both an ID and a title. This method
+     * extracts just the title portion, which is displayed in the
+     * window header.
+     * 
+     * Currently returns the key as-is, but may parse complex keys
+     * in the future (e.g., "id###title" format).
+     * 
+     * @param key The window key to extract title from
+     * @return The extracted title
+     */
     public static function extractTitle(key:String):String {
 
         return key;
@@ -440,6 +507,16 @@ class Im {
 
     }
 
+    /**
+     * Sets the rendering depth for the entire Im UI layer.
+     * 
+     * This affects the z-order of all Im windows and controls relative
+     * to other visuals in the scene. Higher values render on top.
+     * 
+     * Must be called before any windows are created to take effect.
+     * 
+     * @param depth The depth value to set
+     */
     public static function depth(depth:Float):Void {
 
         // Create view if needed
@@ -452,6 +529,18 @@ class Im {
 
     }
 
+    /**
+     * Gets a window by its key.
+     * 
+     * Returns the Window instance if it exists, or null if no window
+     * with the given key has been created yet.
+     * 
+     * This is useful for checking if a window is open or accessing
+     * its properties from outside the begin/end block.
+     * 
+     * @param key The window key
+     * @return The Window instance or null
+     */
     public static function get(key:String):Window {
 
         var id = extractId(key);
@@ -532,24 +621,71 @@ class Im {
 
     }
 
+    /**
+     * Checks if any Command (Mac) or Control (Windows/Linux) key is being used.
+     * 
+     * This is useful for detecting platform-specific modifier keys for
+     * keyboard shortcuts. Returns true if any focused field is using
+     * these keys.
+     * 
+     * @return True if Cmd/Ctrl keys are in use
+     */
     public static function usesCmdOrCtrl():Bool {
 
         return usesScanCode(LMETA) || usesScanCode(RMETA) || usesScanCode(LCTRL) || usesScanCode(RCTRL);
 
     }
 
+    /**
+     * Checks if any Shift key is being used.
+     * 
+     * Returns true if any focused field is using either the left or
+     * right Shift key. Useful for detecting shift-modified shortcuts.
+     * 
+     * @return True if Shift keys are in use
+     */
     public static function usesShift():Bool {
 
         return usesScanCode(LSHIFT) || usesScanCode(RSHIFT);
 
     }
 
+    /**
+     * Begins an Im window with separate key and title.
+     * 
+     * This starts the declaration of a new window or continues an existing one.
+     * All Im controls called after begin() will be added to this window until
+     * end() is called.
+     * 
+     * The key is used to identify the window across frames, while the title
+     * is displayed in the window header.
+     * 
+     * @param key Unique identifier for the window
+     * @param title Display title for the window header
+     * @param width Initial window width (default: 200)
+     * @param height Initial window height (default: 400)
+     * @param pos Source position (auto-provided)
+     * @return The Window instance
+     */
     public extern inline static overload function begin(key:String, title:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
 
         return _begin(key, title, width, height, pos);
 
     }
 
+    /**
+     * Begins an Im window using the key as both identifier and title.
+     * 
+     * This starts the declaration of a new window or continues an existing one.
+     * All Im controls called after begin() will be added to this window until
+     * end() is called.
+     * 
+     * @param key Unique identifier and display title for the window
+     * @param width Initial window width (default: 200)
+     * @param height Initial window height (default: 400)
+     * @param pos Source position (auto-provided)
+     * @return The Window instance
+     */
     public extern inline static overload function begin(key:String, width:Float = WindowData.DEFAULT_WIDTH, height:Float = WindowData.DEFAULT_HEIGHT, ?pos:haxe.PosInfos):Window {
 
         return _begin(key, null, width, height, pos);
@@ -732,6 +868,17 @@ class Im {
 
     // }
 
+    /**
+     * Begins a tab bar container.
+     * 
+     * Creates a horizontal tab bar where each tab() call adds a new tab.
+     * The selected tab is controlled by the StringPointer parameter.
+     * 
+     * Must be followed by one or more tab() calls and ended with endTabs().
+     * 
+     * @param selected Pointer to the currently selected tab ID
+     * @return True if the selected tab changed this frame
+     */
     public extern inline static overload function beginTabs(selected:StringPointer):Bool {
 
         return _beginTabs(selected);
@@ -781,6 +928,13 @@ class Im {
 
     }
 
+    /**
+     * Ends a tab bar container.
+     * 
+     * Must be called after beginTabs() and all tab() declarations.
+     * Will assert if called without a matching beginTabs() or if
+     * no tabs were declared.
+     */
     public static function endTabs():Void {
 
         assert(_currentTabBarItem.length > 0, 'beginTabs() must be called before endTabs()');
@@ -792,12 +946,30 @@ class Im {
 
     }
 
+    /**
+     * Declares a tab in the current tab bar.
+     * 
+     * Uses the key as both the tab ID and display title.
+     * Must be called between beginTabs() and endTabs().
+     * 
+     * @param key Tab identifier and display title
+     * @return True if this tab is currently selected
+     */
     public static inline extern overload function tab(key:String):Bool {
 
         return _tab(key, null);
 
     }
 
+    /**
+     * Declares a tab in the current tab bar with separate ID and title.
+     * 
+     * Must be called between beginTabs() and endTabs().
+     * 
+     * @param key Tab identifier for selection tracking
+     * @param title Display title for the tab
+     * @return True if this tab is currently selected
+     */
     public static inline extern overload function tab(key:String, title:String):Bool {
 
         return _tab(key, title);
@@ -835,6 +1007,29 @@ class Im {
 
     }
 
+    /**
+     * Begins a row layout for subsequent controls.
+     * 
+     * Controls added after beginRow() will be arranged horizontally
+     * in a single row until endRow() is called. The width of each
+     * control is determined by its flex value.
+     * 
+     * Nested rows are not supported - calling beginRow() while already
+     * in a row will trigger an assertion.
+     * 
+     * @example
+     * ```haxe
+     * Im.beginRow();
+     * Im.button("Left");    // Default flex=1
+     * Im.flex(2);
+     * Im.button("Middle");  // Takes up twice the space
+     * Im.button("Right");   // Default flex=1
+     * Im.endRow();
+     * ```
+     * 
+     * @see endRow
+     * @see flex
+     */
     public static function beginRow():Void {
 
         assert(_inRow == false, 'Called beginRow() multiple times! (nested rows are not supported)');
@@ -845,6 +1040,14 @@ class Im {
 
     }
 
+    /**
+     * Ends the current row layout.
+     * 
+     * Must be called after beginRow() to complete the row.
+     * Resets the flex value to default (1) for subsequent controls.
+     * 
+     * @see beginRow
+     */
     public static function endRow():Void {
 
         _inRow = false;
@@ -852,12 +1055,43 @@ class Im {
 
     }
 
+    /**
+     * Begins tracking changes to control values.
+     * 
+     * After calling this method, any changes to control values
+     * (text fields, sliders, checkboxes, etc.) will be tracked.
+     * Call endChangeCheck() to check if any values changed.
+     * 
+     * Change checks can be nested - each begin/end pair tracks
+     * changes independently.
+     * 
+     * @example
+     * ```haxe
+     * Im.beginChangeCheck();
+     * Im.textField("Name", namePointer);
+     * Im.slider("Volume", volumePointer, 0, 100);
+     * if (Im.endChangeCheck()) {
+     *     trace("Settings changed!");
+     *     saveSettings();
+     * }
+     * ```
+     * 
+     * @see endChangeCheck
+     */
     public static function beginChangeCheck():Void {
 
         _changeChecks.push(false);
 
     }
 
+    /**
+     * Ends change tracking and returns if any changes occurred.
+     * 
+     * Must be called after beginChangeCheck(). Returns true if any
+     * control values changed between the begin/end calls.
+     * 
+     * @return True if any tracked values changed
+     */
     public static function endChangeCheck():Bool {
 
         assert(_changeChecks.length > 0, 'beginChangeCheck() must be called before endChangeCheck()');
@@ -874,74 +1108,183 @@ class Im {
 
     }
 
+    /**
+     * Sets the label position for subsequent controls.
+     * 
+     * Controls where labels appear relative to their input fields:
+     * - LEFT: Label to the left of the field
+     * - RIGHT: Label to the right of the field
+     * - TOP: Label above the field
+     * - BOTTOM: Label below the field
+     * 
+     * @param labelPosition The position to use (default: RIGHT)
+     */
     public static function labelPosition(labelPosition:LabelPosition = DEFAULT_LABEL_POSITION):Void {
 
         _labelPosition = labelPosition;
 
     }
 
+    /**
+     * Sets the width of labels for subsequent controls.
+     * 
+     * Can be specified as:
+     * - Absolute pixels: positive values
+     * - Percentage: use ViewSize.percent()
+     * - Auto-size: use ViewSize.auto()
+     * 
+     * @param labelWidth The width to use (default: 35%)
+     */
     public static function labelWidth(labelWidth:Float = DEFAULT_LABEL_WIDTH):Void {
 
         _labelWidth = labelWidth;
 
     }
 
+    /**
+     * Sets the text alignment for subsequent text controls.
+     * 
+     * Affects text(), labels, and other text-based controls.
+     * 
+     * @param textAlign The alignment to use (LEFT, CENTER, RIGHT)
+     */
     public static function textAlign(textAlign:TextAlign = DEFAULT_TEXT_ALIGN):Void {
 
         _textAlign = textAlign;
 
     }
 
+    /**
+     * Sets whether subsequent controls should be disabled.
+     * 
+     * Disabled controls are rendered with reduced opacity and
+     * don't respond to user interaction.
+     * 
+     * @param disabled True to disable controls, false to enable
+     */
     public static function disabled(disabled:Bool):Void {
 
         _fieldsDisabled = disabled;
 
     }
 
+    /**
+     * Sets the flex value for the next control in a row.
+     * 
+     * When in a row layout (between beginRow/endRow), flex determines
+     * the relative width of controls. A control with flex=2 will be
+     * twice as wide as a control with flex=1.
+     * 
+     * Only applies to the next control added.
+     * 
+     * @param flex The flex value (default: 1)
+     */
     public static function flex(flex:Int):Void {
 
         _flex = flex;
 
     }
 
+    /**
+     * Resets the text color to the default theme color.
+     * 
+     * Removes any custom text color override, allowing subsequent
+     * text to use the theme's default text color.
+     */
     public static extern inline overload function textColor():Void {
         _themeTextColor = Color.NONE;
         _updateTheme();
     }
 
+    /**
+     * Sets a custom text color for subsequent controls.
+     * 
+     * Overrides the theme's text color until reset. Affects all
+     * text-based controls including labels, buttons, and text fields.
+     * 
+     * @param color The color to use for text
+     */
     public static extern inline overload function textColor(color:Color):Void {
         _themeTextColor = color;
         _updateTheme();
     }
 
+    /**
+     * Resets the background color to the default theme color.
+     * 
+     * Removes any custom background color override, allowing subsequent
+     * controls to use the theme's default background color.
+     */
     public static extern inline overload function background():Void {
         _themeBackgroundColor = Color.NONE;
         _updateTheme();
     }
 
+    /**
+     * Sets a custom background color for subsequent controls.
+     * 
+     * Overrides the theme's background color until reset. Affects
+     * controls that have background fills like windows, panels, and
+     * input fields.
+     * 
+     * @param color The color to use for backgrounds
+     */
     public static extern inline overload function background(color:Color):Void {
         _themeBackgroundColor = color;
         _updateTheme();
     }
 
+    /**
+     * Resets the tint color to default (no tint).
+     * 
+     * Removes any color tinting applied to subsequent controls,
+     * returning them to their original theme colors.
+     */
     public static extern inline overload function tint():Void {
         _themeTint = Color.NONE;
         _themeAltTint = Color.NONE;
         _updateTheme();
     }
 
+    /**
+     * Sets a tint color for subsequent controls.
+     * 
+     * Applies a color overlay to controls, blending with their
+     * original colors. Both primary and alternate elements will
+     * use the same tint color.
+     * 
+     * @param tint The tint color to apply
+     */
     public static extern inline overload function tint(tint:Color):Void {
         _themeTint = tint;
         _themeAltTint = tint;
         _updateTheme();
     }
 
+    /**
+     * Sets separate tint colors for primary and alternate elements.
+     * 
+     * Allows different tinting for primary controls (buttons, fields)
+     * and alternate elements (backgrounds, borders).
+     * 
+     * @param tint The tint color for primary elements
+     * @param altTint The tint color for alternate elements
+     */
     public static extern inline overload function tint(tint:Color, altTint:Color):Void {
         _themeTint = tint;
         _themeAltTint = altTint;
         _updateTheme();
     }
 
+    /**
+     * Sets whether subsequent text should be rendered in bold.
+     * 
+     * Affects text(), labels, and other text-based controls.
+     * The actual bold rendering depends on the font's bold variant
+     * being available.
+     * 
+     * @param bold True for bold text, false for normal
+     */
     public static function bold(bold:Bool):Void {
         _bold = bold;
     }
@@ -1035,6 +1378,14 @@ class Im {
 
     }
 
+    /**
+     * Sets the asset manager to use for loading images and other resources.
+     * 
+     * When set, Im will use this asset manager for loading images referenced
+     * by asset ID. If not set, Im will use the default asset manager.
+     * 
+     * @param assets The asset manager to use, or null to use default
+     */
     public static function assets(?assets:Assets):Void {
 
         _assets = assets;
@@ -1059,6 +1410,17 @@ class Im {
         return _currentWindowData;
     }
 
+    /**
+     * Sets the theme to use for subsequent controls.
+     * 
+     * The theme controls colors, fonts, and other visual properties
+     * of Im controls. Pass null to revert to the default theme.
+     * 
+     * Changes to the theme affect all controls created after this
+     * call within the current frame.
+     * 
+     * @param theme The theme to use, or null for default
+     */
     public static function theme(theme:Theme):Void {
 
         initIfNeeded();
@@ -1087,6 +1449,21 @@ class Im {
 
     }
 
+    /**
+     * Sets the position of the current window.
+     * 
+     * Positions the window at the specified coordinates with optional
+     * anchor points. The window becomes non-movable when positioned
+     * manually.
+     * 
+     * Must be called between begin() and end().
+     * 
+     * @param x X position in screen coordinates
+     * @param y Y position in screen coordinates
+     * @param anchorX Horizontal anchor (0=left, 0.5=center, 1=right)
+     * @param anchorY Vertical anchor (0=top, 0.5=center, 1=bottom)
+     * @param roundXY Whether to round coordinates to whole pixels
+     */
     public static function position(x:Float, y:Float, anchorX:Float = 0, anchorY:Float = 0, roundXY:Bool = true):Void {
 
         var windowData = _currentWindowData;
@@ -1100,6 +1477,18 @@ class Im {
 
     }
 
+    /**
+     * Sets the scrollbar visibility for the current window.
+     * 
+     * Controls when scrollbars appear in the window:
+     * - AUTO: Show when content overflows
+     * - ALWAYS: Always visible
+     * - NEVER: Never show scrollbars
+     * 
+     * Must be called between begin() and end().
+     * 
+     * @param visibility The scrollbar visibility mode
+     */
     public static function scrollbar(visibility:ScrollbarVisibility):Void {
 
         var windowData = _currentWindowData;
@@ -1110,6 +1499,12 @@ class Im {
 
     }
 
+    /**
+     * Requests focus for the current window.
+     * 
+     * The window will be brought to front and receive input focus.
+     * Must be called between begin() and end().
+     */
     public static function focus():Void {
 
         var windowData = _currentWindowData;
@@ -1120,6 +1515,12 @@ class Im {
 
     }
 
+    /**
+     * Marks the current window as expanded.
+     * 
+     * Expanded windows start maximized and cannot be collapsed.
+     * Must be called between begin() and end().
+     */
     public static function expanded():Void {
 
         var windowData = _currentWindowData;
@@ -1129,6 +1530,14 @@ class Im {
 
     }
 
+    /**
+     * Sets whether the current window should display a header.
+     * 
+     * The header contains the window title and optional close button.
+     * Windows without headers cannot be dragged by the title bar.
+     * 
+     * @param header True to show header, false to hide
+     */
     public static function header(header:Bool):Void {
 
         var windowData = _currentWindowData;
@@ -1137,6 +1546,15 @@ class Im {
 
     }
 
+    /**
+     * Makes the window display with a modal overlay.
+     * 
+     * An overlay darkens the background and blocks interaction with
+     * other windows. Returns true if the overlay (outside the window)
+     * was clicked this frame.
+     * 
+     * @return True if the overlay background was clicked
+     */
     public static function overlay():Bool {
 
         var windowData = _currentWindowData;
@@ -1153,6 +1571,13 @@ class Im {
 
     }
 
+    /**
+     * Sets the alignment of the window title in the header.
+     * 
+     * Only applies to windows with headers enabled.
+     * 
+     * @param titleAlign The text alignment (LEFT, CENTER, RIGHT)
+     */
     public static function titleAlign(titleAlign:TextAlign):Void {
 
         var windowData = _currentWindowData;
@@ -1161,6 +1586,15 @@ class Im {
 
     }
 
+    /**
+     * Makes the window closable with a close button.
+     * 
+     * Adds a close button to the window header. If an isOpen pointer
+     * is provided, it will be set to false when the window is closed.
+     * 
+     * @param isOpen Optional pointer to control window open state
+     * @return True if the window was closed this frame
+     */
     public static function closable(?isOpen:BoolPointer):Bool {
 
         var windowData = _currentWindowData;
@@ -1180,10 +1614,46 @@ class Im {
 
     }
 
+    /**
+     * Creates a list view with standard-sized items.
+     * 
+     * Displays a scrollable list of items with optional features:
+     * - Selection tracking through the selected pointer
+     * - Drag-and-drop sorting
+     * - Item locking/unlocking
+     * - Item deletion
+     * - Item duplication
+     * 
+     * @param height List height in pixels (-1 for auto)
+     * @param items Pointer to the array of items to display
+     * @param selected Pointer to the selected item index
+     * @param sortable Enable drag-and-drop reordering
+     * @param lockable Enable lock/unlock toggle per item
+     * @param trashable Enable delete button per item
+     * @param duplicable Enable duplicate button per item
+     * @return Status flags indicating what changed
+     */
     public static extern inline overload function list(height:Float = -1, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
         return _list(height, true, items, selected, sortable, lockable, trashable, duplicable);
     }
 
+    /**
+     * Creates a list view with configurable item size.
+     * 
+     * Same as list() but allows control over item size:
+     * - bigItems=true: Larger items with more padding
+     * - bigItems=false: Compact items with minimal padding
+     * 
+     * @param bigItems Use larger item size
+     * @param height List height in pixels (-1 for auto)
+     * @param items Pointer to the array of items to display
+     * @param selected Pointer to the selected item index
+     * @param sortable Enable drag-and-drop reordering
+     * @param lockable Enable lock/unlock toggle per item
+     * @param trashable Enable delete button per item
+     * @param duplicable Enable duplicate button per item
+     * @return Status flags indicating what changed
+     */
     public static extern inline overload function list(bigItems:Bool, height:Float = -1, items:ArrayPointer, ?selected:IntPointer, sortable:Bool = false, lockable:Bool = false, trashable:Bool = false, duplicable:Bool = false):ListStatus {
         return _list(height, !bigItems, items, selected, sortable, lockable, trashable, duplicable);
     }
@@ -1341,6 +1811,17 @@ class Im {
 
     }
 
+    /**
+     * Creates a checkbox control.
+     * 
+     * Displays a checkbox that toggles a boolean value. The checkbox
+     * shows a checkmark when true and is empty when false.
+     * 
+     * @param title Optional label for the checkbox
+     * @param value Pointer to the boolean value
+     * @param alignLabel Align label using standard label width
+     * @return Status flags indicating checked state and if changed
+     */
     public inline extern static overload function check(?title:String, value:BoolPointer, alignLabel:Bool = false):CheckStatus {
 
         return _check(title, value, alignLabel);
@@ -1386,6 +1867,16 @@ class Im {
 
     }
 
+    /**
+     * Creates a color picker field.
+     * 
+     * Shows a color preview that opens a color picker dialog when clicked.
+     * The color value is stored as an integer in ARGB format.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the color value
+     * @return True if the color changed this frame
+     */
     public static function editColor(?title:String, value:IntPointer):Bool {
 
         var windowData = _currentWindowData;
@@ -1421,6 +1912,21 @@ class Im {
 
     }
 
+    /**
+     * Creates a text input field.
+     * 
+     * Supports single-line or multi-line text editing with optional
+     * placeholder text and autocomplete suggestions.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the string value
+     * @param multiline Enable multi-line editing
+     * @param placeholder Text shown when field is empty
+     * @param autocompleteCandidates List of autocomplete suggestions
+     * @param focused Request focus on this field
+     * @param autocompleteOnFocus Show autocomplete when focused
+     * @return Status flags indicating edit state
+     */
     public static function editText(?title:String, value:StringPointer, multiline:Bool = false, ?placeholder:String, ?autocompleteCandidates:Array<String>, focused:Bool = false, autocompleteOnFocus:Bool = true):EditTextStatus {
 
         var windowData = _currentWindowData;
@@ -1470,6 +1976,17 @@ class Im {
 
     #if plugin_dialogs
 
+    /**
+     * Creates a directory picker field.
+     * 
+     * Shows a text field with a browse button that opens a directory
+     * selection dialog. Only available when dialogs plugin is enabled.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the directory path string
+     * @param placeholder Text shown when field is empty
+     * @return True if the directory changed this frame
+     */
     public static function editDir(?title:String, value:StringPointer, ?placeholder:String):Bool {
 
         var windowData = _currentWindowData;
@@ -1508,6 +2025,18 @@ class Im {
 
     }
 
+    /**
+     * Creates a file picker field.
+     * 
+     * Shows a text field with a browse button that opens a file
+     * selection dialog. Only available when dialogs plugin is enabled.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the file path string
+     * @param placeholder Text shown when field is empty
+     * @param filters File type filters for the dialog
+     * @return True if the file path changed this frame
+     */
     public static function editFile(?title:String, value:StringPointer, ?placeholder:String, ?filters:DialogsFileFilter):Bool {
 
         var windowData = _currentWindowData;
@@ -1549,6 +2078,19 @@ class Im {
 
     #end
 
+    /**
+     * Creates an integer input field.
+     * 
+     * Allows numeric input with optional min/max constraints.
+     * Non-numeric input is automatically filtered out.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the integer value
+     * @param placeholder Text shown when field is empty
+     * @param minValue Minimum allowed value
+     * @param maxValue Maximum allowed value
+     * @return True if the value changed this frame
+     */
     public static function editInt(
         #if (display || completion)
         ?title:String, value:IntPointer, ?placeholder:String, ?minValue:Int, ?maxValue:Int
@@ -1593,6 +2135,20 @@ class Im {
 
     }
 
+    /**
+     * Creates a float input field.
+     * 
+     * Allows decimal numeric input with optional min/max constraints
+     * and rounding precision.
+     * 
+     * @param title Optional label for the field
+     * @param value Pointer to the float value
+     * @param placeholder Text shown when field is empty
+     * @param minValue Minimum allowed value
+     * @param maxValue Maximum allowed value
+     * @param round Rounding precision (e.g., 100 = 2 decimals)
+     * @return True if the value changed this frame
+     */
     public static function editFloat(
         #if (display || completion)
         ?title:String, value:FloatPointer, ?placeholder:String, ?minValue:Float, ?maxValue:Float, ?round:Int
@@ -1638,6 +2194,18 @@ class Im {
 
     }
 
+    /**
+     * Creates an integer slider control.
+     * 
+     * Provides a draggable slider for selecting integer values within
+     * a specified range. More intuitive than text input for ranges.
+     * 
+     * @param title Optional label for the slider
+     * @param value Pointer to the integer value
+     * @param minValue Minimum slider value
+     * @param maxValue Maximum slider value
+     * @return True if the value changed this frame
+     */
     public static function slideInt(
         ?title:String, value:IntPointer, minValue:Int, maxValue:Int
     ):Bool {
@@ -1677,6 +2245,19 @@ class Im {
 
     }
 
+    /**
+     * Creates a float slider control.
+     * 
+     * Provides a draggable slider for selecting float values within
+     * a specified range with configurable precision.
+     * 
+     * @param title Optional label for the slider
+     * @param value Pointer to the float value
+     * @param minValue Minimum slider value
+     * @param maxValue Maximum slider value
+     * @param round Rounding precision (e.g., 100 = 2 decimals)
+     * @return True if the value changed this frame
+     */
     public static function slideFloat(
         ?title:String, value:FloatPointer, minValue:Float, maxValue:Float, round:Int = 1000
     ):Bool {
@@ -1717,6 +2298,18 @@ class Im {
 
     }
 
+    /**
+     * Displays a custom visual element.
+     * 
+     * Embeds any Ceramic Visual object within the Im layout. The visual
+     * can be scaled to fit within constraints or displayed at its natural size.
+     * 
+     * @param title Optional label for the visual
+     * @param visual The Visual object to display
+     * @param scaleToFit Scale the visual to fit available space
+     * @param alignLabel Align label using standard label width
+     * @param useFilter Apply texture filtering when scaling
+     */
     public static function visual(?title:String, visual:Visual, scaleToFit:Bool = false, alignLabel:Bool = false, useFilter:Bool = true):Void {
 
         var windowData = _currentWindowData;
@@ -1739,6 +2332,18 @@ class Im {
 
     }
 
+    /**
+     * Displays an image from a texture tile.
+     * 
+     * Shows a TextureTile (sub-region of a texture) within the Im layout.
+     * 
+     * @param title Optional label for the image
+     * @param tile The texture tile to display
+     * @param scaleToFit Scale image to fit available space
+     * @param alignLabel Align label using standard label width
+     * @param textureFilter Texture filtering mode (LINEAR/NEAREST)
+     * @return The Quad visual displaying the image
+     */
     inline extern overload public static function image(?title:String, tile:TextureTile, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
 
         return _imageWithTile(title, tile, scaleToFit, alignLabel, textureFilter);
@@ -1751,12 +2356,45 @@ class Im {
 
     }
 
+    /**
+     * Displays an image from an asset ID with label.
+     * 
+     * Loads and displays an image asset by ID. The asset is automatically
+     * managed and loaded if not already available.
+     * 
+     * @param title Label for the image
+     * @param assetId Asset identifier (can omit "image:" prefix)
+     * @param frameX X position of sub-region (-1 for full image)
+     * @param frameY Y position of sub-region (-1 for full image)
+     * @param frameWidth Width of sub-region (-1 for full width)
+     * @param frameHeight Height of sub-region (-1 for full height)
+     * @param scaleToFit Scale image to fit available space
+     * @param alignLabel Align label using standard label width
+     * @param textureFilter Texture filtering mode (LINEAR/NEAREST)
+     * @return The Quad visual displaying the image
+     */
     inline extern overload public static function image(title:String, assetId:String, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
 
         return _imageWithAsset(title, assetId, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
 
     }
 
+    /**
+     * Displays an image from an asset ID without label.
+     * 
+     * Loads and displays an image asset by ID. The asset is automatically
+     * managed and loaded if not already available.
+     * 
+     * @param assetId Asset identifier (can omit "image:" prefix)
+     * @param frameX X position of sub-region (-1 for full image)
+     * @param frameY Y position of sub-region (-1 for full image)
+     * @param frameWidth Width of sub-region (-1 for full width)
+     * @param frameHeight Height of sub-region (-1 for full height)
+     * @param scaleToFit Scale image to fit available space
+     * @param alignLabel Align label using standard label width
+     * @param textureFilter Texture filtering mode (LINEAR/NEAREST)
+     * @return The Quad visual displaying the image
+     */
     inline extern overload public static function image(assetId:String, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
 
         return _imageWithAsset(null, assetId, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
@@ -1792,6 +2430,23 @@ class Im {
 
     }
 
+    /**
+     * Displays an image from a texture.
+     * 
+     * Shows a Texture object within the Im layout, optionally displaying
+     * only a sub-region of the texture.
+     * 
+     * @param title Optional label for the image
+     * @param texture The texture to display
+     * @param frameX X position of sub-region (-1 for full image)
+     * @param frameY Y position of sub-region (-1 for full image)
+     * @param frameWidth Width of sub-region (-1 for full width)
+     * @param frameHeight Height of sub-region (-1 for full height)
+     * @param scaleToFit Scale image to fit available space
+     * @param alignLabel Align label using standard label width
+     * @param textureFilter Texture filtering mode (LINEAR/NEAREST)
+     * @return The Quad visual displaying the image
+     */
     inline extern overload public static function image(?title:String, texture:Texture, frameX:Float = -1, frameY:Float = -1, frameWidth:Float = -1, frameHeight:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false, ?textureFilter:TextureFilter):Quad {
 
         return _image(title, texture, null, frameX, frameY, frameWidth, frameHeight, scaleToFit, alignLabel, textureFilter);
@@ -1995,6 +2650,12 @@ class Im {
 
     #end
 
+    /**
+     * Adds a standard margin space.
+     * 
+     * Inserts negative spacing to reduce the gap between form items.
+     * Useful for tightening layouts.
+     */
     public static function margin():Void {
 
         initIfNeeded();
@@ -2003,6 +2664,14 @@ class Im {
 
     }
 
+    /**
+     * Adds vertical spacing.
+     * 
+     * Inserts empty vertical space between controls. Use negative values
+     * to reduce spacing. Default uses theme spacing.
+     * 
+     * @param height Space height in pixels (default: theme spacing)
+     */
     public static function space(height:Float = DEFAULT_SPACE_HEIGHT):Void {
 
         var windowData = _currentWindowData;
@@ -2018,6 +2687,14 @@ class Im {
 
     }
 
+    /**
+     * Adds a horizontal line separator.
+     * 
+     * Draws a horizontal line to visually separate sections.
+     * The line color is determined by the current theme.
+     * 
+     * @param height Total height including padding (default: 7)
+     */
     public static function separator(height:Float = DEFAULT_SEPARATOR_HEIGHT):Void {
 
         var windowData = _currentWindowData;
@@ -2033,18 +2710,43 @@ class Im {
 
     }
 
+    /**
+     * Creates a button with explicit enabled state.
+     * 
+     * @param title The button label
+     * @param enabled Whether the button is clickable
+     * @return True if the button was clicked this frame
+     */
     inline extern overload public static function button(title:String, enabled:Bool):Bool {
 
         return _button(title, enabled);
 
     }
 
+    /**
+     * Creates a clickable button.
+     * 
+     * The button uses the current theme for styling and respects
+     * the disabled state set by disabled().
+     * 
+     * @param title The button label
+     * @return True if the button was clicked this frame
+     */
     inline extern overload public static function button(title:String):Bool {
 
         return _button(title, true);
 
     }
 
+    /**
+     * Internal button implementation.
+     * 
+     * Creates a button control and tracks click state across frames.
+     * 
+     * @param title The button label
+     * @param enabled Whether the button can be clicked
+     * @return True if clicked this frame
+     */
     public static function _button(title:String, enabled:Bool):Bool {
 
         var windowData = _currentWindowData;
@@ -2075,18 +2777,43 @@ class Im {
 
     }
 
+    /**
+     * Sets the font point size for subsequent text.
+     * 
+     * Affects text(), labels, and all text-based controls until
+     * changed again or the frame ends.
+     * 
+     * @param pointSize Font size in points (default: 12)
+     */
     public static function pointSize(pointSize:Int = 12):Void {
 
         _pointSize = pointSize;
 
     }
 
+    /**
+     * Sets the pre-rendered font size for bitmap fonts.
+     * 
+     * When using bitmap fonts, this specifies which pre-rendered
+     * size to use. Set to -1 to use automatic size selection.
+     * 
+     * @param preRenderedSize The bitmap font size to use, or -1 for auto
+     */
     public static function preRenderedSize(preRenderedSize:Int = -1):Void {
 
         _preRenderedSize = preRenderedSize;
 
     }
 
+    /**
+     * Displays static text.
+     * 
+     * Renders a text label using the current theme settings.
+     * The text is not selectable or editable.
+     * 
+     * @param value The text to display
+     * @param align Optional text alignment override
+     */
     public static function text(value:String, ?align:TextAlign):Void {
 
         var windowData = _currentWindowData;
@@ -2123,6 +2850,14 @@ class Im {
 
     }
 
+    /**
+     * Ends the current window declaration.
+     * 
+     * Must be called after begin() and all window content has been added.
+     * This finalizes the window layout and renders all controls.
+     * 
+     * Will assert if called without a matching begin().
+     */
     public static function end():Void {
 
         assert(_currentWindowData != null, 'Called end() without calling begin() before!');
@@ -2576,6 +3311,15 @@ class Im {
 
 /// Focused?
 
+    /**
+     * Gets the currently focused Im window.
+     * 
+     * Returns the Window that currently has input focus, or null
+     * if no Im window is focused. Useful for checking if the Im
+     * UI is capturing input.
+     * 
+     * @return The focused Window or null
+     */
     inline public static function focusedWindow():Window {
 
         return Context.context.focusedWindow;
@@ -2584,6 +3328,16 @@ class Im {
 
 /// Filter event owners
 
+    /**
+     * Allows events from a specific entity owner.
+     * 
+     * When Im windows are focused, they block events from other entities
+     * by default. Use this to whitelist specific entities whose events
+     * should still be processed. The entity is automatically removed
+     * from the allowed list when destroyed.
+     * 
+     * @param owner The entity to allow events from
+     */
     public static function allow(owner:Entity):Void {
 
         if (_allowedOwners.indexOf(owner) == -1) {
@@ -2593,6 +3347,15 @@ class Im {
 
     }
 
+    /**
+     * Removes an entity from the allowed owners list.
+     * 
+     * Events from this entity will be blocked again when Im windows
+     * are focused. Also removes the destroy listener if the entity
+     * still exists.
+     * 
+     * @param owner The entity to remove from allowed list
+     */
     public static function filter(owner:Entity):Void {
 
         if (_allowedOwners.indexOf(owner) != -1) {
@@ -2711,6 +3474,25 @@ class Im {
 
 /// Confirm / Alert / Choice dialogs
 
+    /**
+     * Shows a confirmation dialog (synchronous version).
+     * 
+     * Displays a modal dialog with Yes/No buttons. The dialog can be
+     * canceled by clicking outside if cancelable is true.
+     * 
+     * This version returns immediately with the current status. Use
+     * the returned ConfirmStatus to check if the user made a choice.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param yes Custom "Yes" button text
+     * @param no Custom "No" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param key Optional unique key for persistent dialogs
+     * @return Current dialog status
+     */
     public extern inline static overload function confirm(
         title:String,
         message:String,
@@ -2732,6 +3514,25 @@ class Im {
 
     }
 
+    /**
+     * Shows a confirmation dialog (async version with boolean callback).
+     * 
+     * Displays a modal dialog with Yes/No buttons. The dialog can be
+     * canceled by clicking outside if cancelable is true.
+     * 
+     * This version shows the dialog and calls the callback when the
+     * user makes a choice. The callback receives true for "Yes",
+     * false for "No" or cancel.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param yes Custom "Yes" button text
+     * @param no Custom "No" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param callback Called with true if confirmed, false otherwise
+     */
     public extern inline static overload function confirm(
         title:String,
         message:String,
@@ -2753,6 +3554,24 @@ class Im {
 
     }
 
+    /**
+     * Shows a confirmation dialog (async version with void callback).
+     * 
+     * Displays a modal dialog with Yes/No buttons. The dialog can be
+     * canceled by clicking outside if cancelable is true.
+     * 
+     * This version shows the dialog and calls the callback only when
+     * the user clicks "Yes". Clicking "No" or cancel does nothing.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param yes Custom "Yes" button text
+     * @param no Custom "No" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param callback Called only if user confirms
+     */
     public extern inline static overload function confirm(
         title:String,
         message:String,
@@ -2869,6 +3688,24 @@ class Im {
 
     }
 
+    /**
+     * Shows an information dialog (synchronous version).
+     * 
+     * Displays a modal dialog with an OK button. The dialog can be
+     * canceled by clicking outside if cancelable is true.
+     * 
+     * This version returns immediately with the current status. Use
+     * the returned InfoStatus to check if the user clicked OK.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param ok Custom "OK" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param key Optional unique key for persistent dialogs
+     * @return Current dialog status
+     */
     public extern inline static overload function info(
         title:String,
         message:String,
@@ -2892,6 +3729,23 @@ class Im {
 
     }
 
+    /**
+     * Shows an information dialog (async version).
+     * 
+     * Displays a modal dialog with an OK button. The dialog can be
+     * canceled by clicking outside if cancelable is true.
+     * 
+     * This version shows the dialog and calls the callback when the
+     * user clicks OK. Canceling the dialog does not call the callback.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param ok Custom "OK" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param callback Called when user clicks OK
+     */
     public extern inline static overload function info(
         title:String,
         message:String,
@@ -2998,6 +3852,27 @@ class Im {
 
     }
 
+    /**
+     * Shows a text input dialog (synchronous version).
+     * 
+     * Displays a modal dialog with a text field and OK/Cancel buttons.
+     * The dialog can be canceled by clicking outside if cancelable is true.
+     * 
+     * This version returns immediately with the current status. The text
+     * value is read from and written to the provided StringPointer.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param value Pointer to the text value
+     * @param placeholder Placeholder text for empty field
+     * @param cancelable Allow closing by clicking outside
+     * @param ok Custom "OK" button text
+     * @param cancel Custom "Cancel" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param key Optional unique key for persistent dialogs
+     * @return Current dialog status
+     */
     public extern inline static overload function prompt(
         title:String,
         message:String,
@@ -3025,6 +3900,26 @@ class Im {
 
     }
 
+    /**
+     * Shows a text input dialog (async version).
+     * 
+     * Displays a modal dialog with a text field and OK/Cancel buttons.
+     * The dialog can be canceled by clicking outside if cancelable is true.
+     * 
+     * This version shows the dialog and calls the callback when the
+     * user clicks OK. The callback receives the entered text. Canceling
+     * the dialog does not call the callback.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param placeholder Placeholder text for empty field
+     * @param cancelable Allow closing by clicking outside
+     * @param ok Custom "OK" button text
+     * @param cancel Custom "Cancel" button text
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param callback Called with entered text when OK is clicked
+     */
     public extern inline static overload function prompt(
         title:String,
         message:String,
@@ -3157,6 +4052,24 @@ class Im {
 
     }
 
+    /**
+     * Shows a multiple choice dialog (synchronous version).
+     * 
+     * Displays a modal dialog with multiple buttons for each choice.
+     * The dialog can be canceled by clicking outside if cancelable is true.
+     * 
+     * This version returns immediately with the current status. Use
+     * the returned ChoiceStatus to check which choice was selected.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param choices Array of choice button labels
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param key Optional unique key for persistent dialogs
+     * @return Current dialog status with selected index
+     */
     public extern inline static overload function choice(
         title:String,
         message:String,
@@ -3180,6 +4093,24 @@ class Im {
 
     }
 
+    /**
+     * Shows a multiple choice dialog (async version).
+     * 
+     * Displays a modal dialog with multiple buttons for each choice.
+     * The dialog can be canceled by clicking outside if cancelable is true.
+     * 
+     * This version shows the dialog and calls the callback when the
+     * user makes a choice. The callback receives the selected index
+     * and the choice text. Canceling does not call the callback.
+     * 
+     * @param title Dialog window title
+     * @param message Message to display
+     * @param cancelable Allow closing by clicking outside
+     * @param choices Array of choice button labels
+     * @param width Dialog width in pixels
+     * @param height Dialog height in pixels
+     * @param callback Called with index and text of selected choice
+     */
     public extern inline static overload function choice(
         title:String,
         message:String,
@@ -3302,6 +4233,19 @@ class Im {
 
     }
 
+    /**
+     * Generates a unique handle for storing values.
+     * 
+     * Handles provide a way to store values that persist across frames
+     * without explicitly creating pointers. The handle is unique per
+     * source location and occurrence within a frame.
+     * 
+     * Used internally by the pointer macros (Im.bool(), Im.int(), etc.)
+     * to create implicit storage locations.
+     * 
+     * @param pos Source position info (auto-provided)
+     * @return A unique handle identifier
+     */
     public static function handle(#if !completion ?pos:haxe.PosInfos #end):Handle {
 
         #if !completion

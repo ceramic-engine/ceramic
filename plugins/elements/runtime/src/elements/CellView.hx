@@ -24,22 +24,73 @@ using StringTools;
 using ceramic.VisualTransition;
 using elements.Tooltip;
 
+/**
+ * A themeable cell view for list or collection display with interactive features.
+ * 
+ * CellView provides a rich set of features for displaying items in collections:
+ * - Title and subtitle text display with automatic truncation
+ * - Selection state with visual feedback
+ * - Optional icons for kind/type indication
+ * - Action buttons for lock, duplicate, and delete operations
+ * - Drag and drop support with visual feedback and auto-scrolling
+ * - Hover states and smooth transitions
+ * - Theme-aware styling with light/dark mode support
+ * - Input style mode for form-like appearance
+ * 
+ * The view is commonly used within CellCollectionView for displaying
+ * lists of items with consistent styling and behavior.
+ * 
+ * Example usage:
+ * ```haxe
+ * var cell = new CellView();
+ * cell.title = "Item Name";
+ * cell.subTitle = "Description";
+ * cell.kindIcon = Entypo.DOC_TEXT;
+ * cell.handleTrash = () -> deleteItem();
+ * cell.bindDragDrop(click, handleReorder);
+ * ```
+ * 
+ * @see CellCollectionView
+ * @see DragDrop
+ * @see Theme
+ */
 class CellView extends LayersLayout implements Observable {
 
     static var _notVisibleTransform:Transform = null;
 
     static var _point:Point = new Point(0, 0);
 
+    /**
+     * The theme to use for styling. If null, uses the global context theme.
+     */
     @observe public var theme:Theme = null;
 
 /// Public properties
 
+    /**
+     * Whether this cell is currently selected.
+     * Selected cells display with accent colors and borders.
+     */
     @observe public var selected:Bool = false;
 
+    /**
+     * The main title text to display in the cell.
+     * Text is automatically truncated if it exceeds the available width.
+     */
     @observe public var title:String = null;
 
+    /**
+     * The subtitle text displayed below the title.
+     * Rendered in italic style with smaller font size.
+     * Text is automatically truncated if it exceeds the available width.
+     */
     @observe public var subTitle:String = null;
 
+    /**
+     * The index of this cell within its parent collection.
+     * Used for drag and drop reordering operations.
+     * Setting a new index resets the hover state.
+     */
     @observe public var itemIndex(default, set):Int = -1;
     function set_itemIndex(itemIndex:Int):Int {
         if (this.itemIndex != itemIndex) {
@@ -49,22 +100,58 @@ class CellView extends LayersLayout implements Observable {
         return itemIndex;
     }
 
+    /**
+     * Reference to the parent collection view containing this cell.
+     * Used to check scrolling state for hover behavior.
+     */
     @observe public var collectionView:CellCollectionView = null;
 
+    /**
+     * When true, applies input-style theming with lighter appearance.
+     * Used for cells that represent form inputs or editable fields.
+     */
     @observe public var inputStyle:Bool = false;
 
+    /**
+     * When true in input style, displays the title with italic skew
+     * to indicate an empty or placeholder value.
+     */
     @observe public var displaysEmptyValue:Bool = false;
 
+    /**
+     * Whether this cell represents a locked/protected item.
+     * Locked cells display with a darker background and lock icon.
+     */
     @observe public var locked:Bool = false;
 
+    /**
+     * Optional icon to display on the left side indicating the item type.
+     * Uses the Entypo icon set.
+     */
     @observe public var kindIcon:Null<Entypo> = null;
 
+    /**
+     * Callback invoked when the trash/delete button is clicked.
+     * If null, the trash button is not displayed.
+     */
     @observe public var handleTrash:Void->Void = null;
 
+    /**
+     * Callback invoked when the lock/unlock button is clicked.
+     * If null, the lock button is not displayed.
+     */
     @observe public var handleLock:Void->Void = null;
 
+    /**
+     * Callback invoked when the duplicate button is clicked.
+     * If null, the duplicate button is not displayed.
+     */
     @observe public var handleDuplicate:Void->Void = null;
 
+    /**
+     * Whether this cell is currently being dragged.
+     * Read-only property updated during drag operations.
+     */
     @observe public var dragging(default, null):Bool = false;
 
 /// Internal
@@ -101,6 +188,16 @@ class CellView extends LayersLayout implements Observable {
 
 /// Lifecycle
 
+    /**
+     * Creates a new CellView instance.
+     * 
+     * Initializes the cell with:
+     * - Column layout for title and subtitle
+     * - Text views with appropriate styling
+     * - Border configuration
+     * - Event handlers for hover states
+     * - Auto-updating style based on theme and state
+     */
     public function new() {
 
         super();
@@ -146,6 +243,10 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates the title text view based on the current title property.
+     * Hides the text view when title is null.
+     */
     function updateTitle() {
 
         var title = this.title;
@@ -160,6 +261,10 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates the subtitle text view based on the current subTitle property.
+     * Hides the text view when subTitle is null.
+     */
     function updateSubTitle() {
 
         var subTitle = this.subTitle;
@@ -174,6 +279,10 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Clips the title text to fit within the available width.
+     * Called during layout to prevent text overflow.
+     */
     function layoutTitle() {
 
         titleTextView.text.clipText(
@@ -184,6 +293,10 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Clips the subtitle text to fit within the available width.
+     * Called during layout to prevent text overflow.
+     */
     function layoutSubTitle() {
 
         subTitleTextView.text.clipText(
@@ -194,6 +307,11 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates the icon layout based on current icon properties.
+     * Creates icon buttons for trash, lock, duplicate, and kind icon as needed.
+     * Adjusts text padding when a kind icon is present.
+     */
     function updateIcons() {
 
         var displayTrash = handleTrash != null;
@@ -310,6 +428,16 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates all visual styling based on current state and theme.
+     * 
+     * Handles different visual states:
+     * - Selected: Accent colors and borders
+     * - Locked: Darker background with muted text
+     * - Hover: Light background (when not scrolling)
+     * - Input style: Different padding and border configuration
+     * - Empty value: Italic skewed text
+     */
     function updateStyle() {
 
         var theme = this.theme;
@@ -417,6 +545,13 @@ class CellView extends LayersLayout implements Observable {
 
 /// Drag & Drop
 
+    /**
+     * Enables drag and drop functionality for this cell.
+     * 
+     * @param click Optional click component to use for drag detection
+     * @param handleDrop Callback invoked when the cell is dropped at a new position
+     *                   Receives the target itemIndex where the cell should be moved
+     */
     public function bindDragDrop(?click:Click, handleDrop:(itemIndex:Int)->Void) {
 
         if (_notVisibleTransform == null) {
@@ -439,6 +574,10 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Disables drag and drop functionality for this cell.
+     * Cleans up drag handlers and resets dragging state.
+     */
     public function unbindDragDrop() {
 
         if (dragDrop != null) {
@@ -449,6 +588,12 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Creates a visual clone of this cell for drag visualization.
+     * The clone has all the same properties but is marked as a dragging clone.
+     * 
+     * @return A new CellView with identical appearance
+     */
     function cloneForDragDrop():CellView {
 
         var cloned = new CellView();
@@ -493,6 +638,12 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Finds the first parent scroller that has scrolling enabled.
+     * Used for auto-scrolling during drag operations.
+     * 
+     * @return The nearest enabled parent Scroller, or null if none found
+     */
     function firstEnabledParentScroller():Scroller {
 
         var scroller = firstParentWithClass(Scroller);
@@ -538,6 +689,13 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates the drag visualization and other cells based on drag position.
+     * Handles:
+     * - Moving the dragged cell visual
+     * - Calculating which cells should shift position
+     * - Determining auto-scroll needs when near container edges
+     */
     function updateFromDrag() {
 
         var dragging = dragDrop.dragging;
@@ -609,6 +767,11 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Updates the positions of other cells in response to dragging.
+     * Cells shift up or down with smooth transitions based on the
+     * dragged cell's position relative to their centers.
+     */
     function updateOtherCellsFromDrag() {
 
         var thisStep = this.height;
@@ -660,6 +823,12 @@ class CellView extends LayersLayout implements Observable {
 
     }
 
+    /**
+     * Performs auto-scrolling when dragging near container edges.
+     * Called every frame during drag operations.
+     * 
+     * @param delta Time elapsed since last frame
+     */
     function scrollFromDragIfNeeded(delta:Float) {
 
         if (dragAutoScroll != 0) {

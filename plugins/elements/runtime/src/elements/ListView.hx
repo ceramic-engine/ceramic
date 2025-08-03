@@ -13,59 +13,133 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
+/**
+ * A comprehensive list view with sorting, item management, and interaction features.
+ * 
+ * ListView provides a feature-rich interface for displaying and managing lists of data.
+ * It supports various operations including sorting, item selection, locking/unlocking,
+ * duplication, and deletion. The view uses a CollectionView internally for efficient
+ * scrolling and item recycling.
+ * 
+ * Features:
+ * - Dynamic item lists with automatic updates
+ * - Sortable items with drag-and-drop reordering
+ * - Item selection with visual feedback
+ * - Lock/unlock functionality for individual items
+ * - Item duplication and deletion operations
+ * - Two item height modes (small and large)
+ * - Scroll control with optional scrollbar
+ * - Theme integration and styling
+ * - Event-driven architecture for item operations
+ * - Integration with WindowItem for window management
+ * 
+ * Example usage:
+ * ```haxe
+ * var items = ["Item 1", "Item 2", "Item 3"];
+ * var listView = new ListView(items);
+ * listView.trashable = true;
+ * listView.sortable = true;
+ * listView.onTrashItem(this, (index) -> {
+ *     items.splice(index, 1);
+ * });
+ * ```
+ * 
+ * @see CellCollectionView
+ * @see CellView
+ * @see WindowItem
+ */
 @:allow(elements.ListViewDataSource)
 class ListView extends View implements Observable {
 
+    /** Standard height for small list items (30 pixels) */
     public static final CELL_HEIGHT_SMALL:Int = 30;
 
+    /** Standard height for large list items (39 pixels) */
     public static final CELL_HEIGHT_LARGE:Int = 39;
 
+/// Events
+
+    /** Emitted when an item should be moved above another item in the list */
     @event function moveItemAboveItem(itemIndex:Int, otherItemIndex:Int);
 
+    /** Emitted when an item should be moved below another item in the list */
     @event function moveItemBelowItem(itemIndex:Int, otherItemIndex:Int);
 
+    /** Emitted when an item should be deleted/trashed */
     @event function trashItem(itemIndex:Int);
 
+    /** Emitted when an item should be locked */
     @event function lockItem(itemIndex:Int);
 
+    /** Emitted when an item should be unlocked */
     @event function unlockItem(itemIndex:Int);
 
+    /** Emitted when an item should be duplicated */
     @event function duplicateItem(itemIndex:Int);
 
+/// Public properties
+
+    /** The internal collection view that handles item display and scrolling */
     public var collectionView(default, null):CellCollectionView;
 
+    /** The data source providing item data to the collection view */
     public var dataSource(default, set):CollectionViewDataSource;
+    /**
+     * Sets the data source for the collection view.
+     * 
+     * @param dataSource The new data source
+     * @return The assigned data source
+     */
     function set_dataSource(dataSource:CollectionViewDataSource):CollectionViewDataSource {
         this.dataSource = dataSource;
         collectionView.dataSource = dataSource;
         return dataSource;
     }
 
+    /** Custom theme override for this list view */
     @observe public var theme:Theme = null;
 
+    /** The array of items to display in the list */
     @observe public var items:Array<Dynamic>;
 
+    /** Index of the currently selected item (-1 for no selection) */
     @observe public var selectedIndex:Int = -1;
 
+    /** Whether items can be deleted/trashed */
     @observe public var trashable:Bool = false;
 
+    /** Whether items can be locked/unlocked */
     @observe public var lockable:Bool = false;
 
+    /** Whether items can be duplicated */
     @observe public var duplicable:Bool = false;
 
+    /** Whether items can be reordered via drag and drop */
     @observe public var sortable:Bool = false;
 
+    /** Whether to use small item height (30px) instead of large (39px) */
     @observe public var smallItems:Bool = false;
 
+    /** Whether scrolling is enabled for the list */
     @observe public var scrollEnabled:Bool = true;
 
     /**
-     * If this field is managed by a WindowItem, this is the WindowItem.
+     * Optional WindowItem for window-specific list management.
+     * Used for coordinating list operations within a window context.
      */
     public var windowItem:WindowItem = null;
 
+    /** Whether to automatically check and update item locked states */
     public var autoCheckLocked:Bool = true;
 
+    /**
+     * Creates a new ListView instance.
+     * 
+     * Initializes the list view with the provided items array and sets up
+     * the internal collection view, data source, and automatic update handlers.
+     * 
+     * @param items The initial array of items to display
+     */
     public function new(items:Array<Dynamic>) {
 
         super();
@@ -91,6 +165,12 @@ class ListView extends View implements Observable {
 
     }
 
+    /**
+     * Updates scroll behavior based on the scrollEnabled property.
+     * 
+     * Enables or disables scrolling and scrollbar visibility based on
+     * the current scrollEnabled setting.
+     */
     function updateFromScrollEnabled() {
 
         final scrollEnabled = this.scrollEnabled;
@@ -103,6 +183,12 @@ class ListView extends View implements Observable {
 
     }
 
+    /**
+     * Updates the collection view when items change.
+     * 
+     * Reloads the collection view data and ensures proper layout and
+     * scrolling when the items array or related properties change.
+     */
     function updateFromItems() {
 
         var items = this.items;
@@ -121,6 +207,11 @@ class ListView extends View implements Observable {
 
     }
 
+    /**
+     * Overrides layout to properly size the collection view.
+     * 
+     * Ensures the collection view matches the size of this ListView.
+     */
     override function layout() {
 
         super.layout();
@@ -129,6 +220,13 @@ class ListView extends View implements Observable {
 
     }
 
+    /**
+     * Checks item locked states if auto-checking is enabled.
+     * 
+     * Called every frame to update locked states when autoCheckLocked is true.
+     * 
+     * @param delta Time elapsed since last frame
+     */
     function checkLockedIfNeeded(delta:Float) {
 
         if (!autoCheckLocked)
@@ -138,18 +236,39 @@ class ListView extends View implements Observable {
 
     }
 
+    /**
+     * Called after a lock item event is emitted.
+     * 
+     * Triggers a check of all item locked states to update the UI.
+     * 
+     * @param itemIndex The index of the item that was locked
+     */
     function didEmitLockItem(itemIndex:Int) {
 
         checkLocked();
 
     }
 
+    /**
+     * Called after an unlock item event is emitted.
+     * 
+     * Triggers a check of all item locked states to update the UI.
+     * 
+     * @param itemIndex The index of the item that was unlocked
+     */
     function didEmitUnlockItem(itemIndex:Int) {
 
         checkLocked();
 
     }
 
+    /**
+     * Checks and updates the locked state of all visible items.
+     * 
+     * Iterates through all visible cell views and updates their locked
+     * state based on the 'locked' property of their corresponding items.
+     * Automatically deselects any item that becomes locked.
+     */
     function checkLocked() {
 
         var items = this.items;
@@ -178,24 +297,55 @@ class ListView extends View implements Observable {
 
 }
 
+/**
+ * Data source implementation for ListView's collection view.
+ * 
+ * Handles the interface between ListView and its internal CellCollectionView,
+ * providing item data, managing cell creation and recycling, and binding
+ * cell behavior to list functionality.
+ * 
+ * @see CollectionViewDataSource
+ * @see ListView
+ * @see CellView
+ */
 class ListViewDataSource implements CollectionViewDataSource {
 
+    /** Reference to the parent ListView */
     var listView:ListView;
 
+    /**
+     * Creates a new data source for the specified ListView.
+     * 
+     * @param listView The ListView this data source serves
+     */
     public function new(listView:ListView) {
 
         this.listView = listView;
 
     }
 
-    /** Get the number of elements. */
+    /**
+     * Returns the number of items in the collection.
+     * 
+     * @param collectionView The requesting collection view
+     * @return The number of items in the ListView's items array
+     */
     public function collectionViewSize(collectionView:CollectionView):Int {
 
         return listView.items != null ? listView.items.length : 0;
 
     }
 
-    /** Get the item frame at the requested index. */
+    /**
+     * Configures the frame dimensions for an item at the specified index.
+     * 
+     * Sets the width to fill the collection view (minus scrollbar space if enabled)
+     * and height based on the smallItems setting.
+     * 
+     * @param collectionView The requesting collection view
+     * @param itemIndex The index of the item
+     * @param frame The frame to configure
+     */
     public function collectionViewItemFrameAtIndex(collectionView:CollectionView, itemIndex:Int, frame:CollectionViewItemFrame):Void {
 
         frame.width = collectionView.width - (listView.scrollEnabled ? 12 : 0);
@@ -203,17 +353,34 @@ class ListViewDataSource implements CollectionViewDataSource {
 
     }
 
-    /** Called when a view is not used anymore at the given index. Lets the dataSource
-        do some cleanup if needed, before this view gets reused (if it can).
-        Returns `true` if the view can be reused at another index of `false` otherwise. */
+    /**
+     * Called when a view is no longer needed at the given index.
+     * 
+     * Allows cleanup before view reuse. Currently always returns true
+     * to allow cell recycling for optimal performance.
+     * 
+     * @param collectionView The requesting collection view
+     * @param itemIndex The index where the view was used
+     * @param view The view being released
+     * @return `true` if the view can be reused, `false` otherwise
+     */
     public function collectionViewReleaseItemAtIndex(collectionView:CollectionView, itemIndex:Int, view:View):Bool {
 
         return true;
 
     }
 
-    /** Get a view at the given index. If `reusableView` is provided,
-        it can be recycled as the new item to avoid creating new instances. */
+    /**
+     * Creates or recycles a view for the item at the specified index.
+     * 
+     * If a reusable view is provided, it's recycled and updated with the new
+     * item index. Otherwise, a new CellView is created and fully configured.
+     * 
+     * @param collectionView The requesting collection view
+     * @param itemIndex The index of the item to display
+     * @param reusableView Optional view to recycle
+     * @return A configured CellView for the item
+     */
     public function collectionViewItemAtIndex(collectionView:CollectionView, itemIndex:Int, reusableView:View):View {
 
         var cell:CellView = null;
@@ -232,6 +399,15 @@ class ListViewDataSource implements CollectionViewDataSource {
 
     }
 
+    /**
+     * Binds data and behavior to a CellView.
+     * 
+     * Sets up automatic data binding, theme updates, click handling,
+     * drag-and-drop behavior, and action handlers (trash, lock, duplicate)
+     * for the cell based on ListView configuration.
+     * 
+     * @param cell The CellView to bind
+     */
     function bindCellView(cell:CellView):Void {
 
         cell.autorun(function() {
@@ -393,18 +569,44 @@ class ListViewDataSource implements CollectionViewDataSource {
 
     }
 
+    /**
+     * Handles changes in cell dragging state.
+     * 
+     * Updates the collection view's items behavior to prevent recycling
+     * during drag operations for smoother interaction.
+     * 
+     * @param dragging Current dragging state
+     * @param wasDragging Previous dragging state
+     */
     function handleCellDraggingChange(dragging:Bool, wasDragging:Bool) {
 
         updateItemsBehaviorFromDragging();
 
     }
 
+    /**
+     * Handles cell destruction.
+     * 
+     * Updates items behavior when a cell is destroyed to ensure
+     * proper state management.
+     * 
+     * @param destroyed The destroyed entity
+     */
     function handleCellDestroy(destroyed:Entity) {
 
         updateItemsBehaviorFromDragging();
 
     }
 
+    /**
+     * Updates collection view behavior based on dragging state.
+     * 
+     * Switches between LAZY and RECYCLE behaviors:
+     * - LAZY: When any cell is being dragged (prevents recycling)
+     * - RECYCLE: When no cells are being dragged (allows recycling)
+     * 
+     * This ensures smooth drag interactions while maintaining performance.
+     */
     function updateItemsBehaviorFromDragging() {
 
         var frames = listView.collectionView.frames;

@@ -6,9 +6,30 @@ import haxe.macro.Printer;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
 
+/**
+ * Build macro for audio filters and worklets that generates parameter bindings and Web Audio API integration.
+ * This macro handles the complex translation between Ceramic's audio filter system and the underlying
+ * Web Audio API worklet architecture.
+ * 
+ * For filters:
+ * - Generates getter/setter properties for @param annotated fields
+ * - Links filter parameters to worklet parameters
+ * - Creates initialization code for default values
+ * 
+ * For worklets:
+ * - Processes @param metadata for Web Audio API parameter descriptors
+ * - Generates optimized parameter accessors
+ * - Handles platform-specific code generation
+ * 
+ * On web platforms, this macro also tracks all filter and worklet references
+ * for bundling and deployment.
+ */
 class AudioFiltersMacro {
 
     #if (macro && web)
+    /**
+     * Collects all audio filter class references for web deployment.
+     */
     static var filterReferences:Array<{
         pack: Array<String>,
         name: String,
@@ -17,6 +38,10 @@ class AudioFiltersMacro {
         min: Int,
         max: Int
     }> = [];
+    
+    /**
+     * Collects all audio worklet class references for web deployment.
+     */
     static var workletReferences:Array<{
         pack: Array<String>,
         name: String,
@@ -25,8 +50,17 @@ class AudioFiltersMacro {
         min: Int,
         max: Int
     }> = [];
+    
+    /**
+     * Cache of file content hashes to avoid redundant file reads.
+     */
     static var fileHashes:Map<String,String> = new Map();
 
+    /**
+     * Computes or retrieves cached MD5 hash of a file's content.
+     * @param filePath Path to the file to hash
+     * @return MD5 hash string
+     */
     static function getHash(filePath:String):String {
         var hash = fileHashes.get(filePath);
         if (hash == null) {
@@ -37,6 +71,11 @@ class AudioFiltersMacro {
     }
     #end
 
+    /**
+     * Initializes the audio filters macro system.
+     * On web platforms, registers a post-generation hook to output
+     * filter and worklet metadata for the build system.
+     */
     public static function init():Void {
 
         #if web
@@ -73,6 +112,13 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Build macro for AudioFilter subclasses.
+     * Generates parameter accessors and links to the associated worklet class.
+     * On web platforms, also tracks the filter for deployment.
+     * 
+     * @return Modified fields with parameter properties and initialization
+     */
     macro static public function buildFilter():Array<Field> {
 
         #if (web && ceramic_build_audio_worklets && !completion && !display)
@@ -96,6 +142,13 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Build macro for AudioFilterWorklet subclasses.
+     * Processes @param annotated fields to generate Web Audio API parameter descriptors.
+     * On web platforms, modifies the process() method for platform-specific behavior.
+     * 
+     * @return Modified fields with parameter getters and metadata
+     */
     macro static public function buildWorklet():Array<Field> {
 
         #if (web && ceramic_build_audio_worklets)
@@ -154,6 +207,14 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Processes filter class fields to generate parameter bindings.
+     * Analyzes the workletClass() method to extract worklet parameters
+     * and generates corresponding properties on the filter.
+     * 
+     * @param fields Original class fields
+     * @return Modified fields with parameter properties and initialization
+     */
     static function processFilterParams(fields:Array<Field>):Array<Field> {
 
         var workletFields:Array<ClassField> = null;
@@ -315,6 +376,14 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Processes worklet class fields to generate parameter accessors.
+     * Converts @param annotated fields into getter properties that
+     * read from the Web Audio API parameter arrays.
+     * 
+     * @param fields Original class fields
+     * @return Modified fields with parameter getters
+     */
     static function processWorkletParams(fields:Array<Field>):Array<Field> {
 
         var paramIndex:Int = 0;
@@ -376,6 +445,13 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Converts an expression to a ComplexType for type resolution.
+     * Used to parse the return value of workletClass() methods.
+     * 
+     * @param e Expression to convert
+     * @return ComplexType representation
+     */
     static function exprToComplexType(e:Expr):ComplexType {
 
         var printer = new Printer();
@@ -389,6 +465,13 @@ class AudioFiltersMacro {
 
     }
 
+    /**
+     * Checks if a field has the @param metadata annotation.
+     * Fields with this annotation are exposed as audio parameters.
+     * 
+     * @param field Field to check
+     * @return True if field has @param metadata
+     */
     static function fieldHasParamMeta(field:Field):Bool {
 
         if (field.meta == null || field.meta.length == 0) return false;

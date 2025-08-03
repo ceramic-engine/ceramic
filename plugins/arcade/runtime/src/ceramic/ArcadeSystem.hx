@@ -6,45 +6,108 @@ using ceramic.Extensions;
 
 #if plugin_arcade
 
+/**
+ * Main system managing Arcade physics simulation in Ceramic.
+ * 
+ * This system integrates the Arcade physics engine with Ceramic's visual system,
+ * automatically synchronizing physics bodies with their visual representations.
+ * It manages physics worlds, groups, and handles the update cycle for all physics objects.
+ * 
+ * The system operates in two phases:
+ * - Early update: Updates physics simulation and processes collisions
+ * - Late update: Applies physics results back to visual positions
+ * 
+ * Usage example:
+ * ```haxe
+ * // Access the arcade system
+ * var arcade = app.systems.arcade;
+ * 
+ * // Use the default world
+ * arcade.world.gravity.y = 800;
+ * 
+ * // Create custom worlds
+ * var customWorld = arcade.createWorld();
+ * ```
+ * 
+ * @see ArcadeWorld for physics world configuration
+ * @see VisualArcadePhysics for adding physics to visuals
+ */
 @:allow(ceramic.App)
 class ArcadeSystem extends System {
 
     /**
-     * When this event is fired, it's the right time to make your bodies collide/overlap
-     * @param delta 
+     * Event fired after physics simulation but before results are applied.
+     * This is the ideal time to check for collisions and overlaps between bodies.
+     * @param delta Time elapsed since last frame in seconds
      */
     @event function update(delta:Float);
 
+    /**
+     * Internal queue for physics items pending destruction.
+     * Items are queued during update and flushed after to avoid modifying arrays during iteration.
+     */
     @:allow(ceramic.VisualArcadePhysics)
     var _destroyedItems:Array<VisualArcadePhysics> = [];
+    
+    /**
+     * Internal queue for newly created physics items.
+     * Items are queued during update and added after to avoid modifying arrays during iteration.
+     */
     @:allow(ceramic.VisualArcadePhysics)
     var _createdItems:Array<VisualArcadePhysics> = [];
+    
+    /**
+     * Internal flag to prevent item list modifications during update loops.
+     */
     @:allow(ceramic.VisualArcadePhysics)
     var _freezeItems:Bool = false;
 
+    /**
+     * All active physics items in the system.
+     * Each item represents a visual with attached physics body.
+     */
     public var items(default, null):Array<VisualArcadePhysics> = [];
 
     /**
-     * All worlds used with arcade physics
+     * All physics worlds managed by this system.
+     * Multiple worlds can be used to create separate physics simulations
+     * (e.g., foreground and background layers with different gravity).
      */
     public var worlds(default, null):Array<ArcadeWorld> = [];
 
     /**
-     * Default world used for arcade physics
+     * The default physics world used when creating physics bodies.
+     * This world is automatically created and its bounds updated to match screen size
+     * when `autoUpdateWorldBounds` is true.
      */
     public var world:ArcadeWorld = null;
 
     /**
-     * Groups by id
+     * Named collision groups for organizing physics bodies.
+     * Groups allow efficient collision detection between specific sets of objects.
+     * 
+     * Example:
+     * ```haxe
+     * arcade.groups.set("enemies", new arcade.Group());
+     * arcade.groups.set("bullets", new arcade.Group());
+     * // Later: arcade.world.collide(groups.get("enemies"), groups.get("bullets"));
+     * ```
      */
     public var groups:Map<String, arcade.Group> = new Map();
 
     /**
-     * If `true`, default world (`world`) bounds will be
-     * updated automatically to match screen size.
+     * When true, the default world's bounds are automatically updated
+     * to match the screen size on each frame. This ensures physics
+     * boundaries adjust when the window is resized.
+     * 
+     * Set to false if you want to manually control world bounds.
      */
     public var autoUpdateWorldBounds:Bool = true;
 
+    /**
+     * Creates a new ArcadeSystem instance.
+     * Automatically creates the default physics world with screen dimensions.
+     */
     public function new() {
 
         super();
@@ -56,6 +119,12 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Creates a new physics world with screen dimensions.
+     * 
+     * @param autoAdd If true, automatically adds the world to the system's world list
+     * @return The newly created ArcadeWorld
+     */
     public function createWorld(autoAdd:Bool = true):ArcadeWorld {
 
         var world = new ArcadeWorld(0, 0, screen.width, screen.height);
@@ -68,6 +137,12 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Adds a physics world to the system.
+     * The world will be updated each frame along with other active worlds.
+     * 
+     * @param world The ArcadeWorld to add
+     */
     public function addWorld(world:ArcadeWorld):Void {
 
         if (worlds.indexOf(world) == -1) {
@@ -79,6 +154,12 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Removes a physics world from the system.
+     * The world will no longer be updated by the system.
+     * 
+     * @param world The ArcadeWorld to remove
+     */
     public function removeWorld(world:ArcadeWorld):Void {
 
         if (!worlds.remove(world)) {
@@ -87,6 +168,10 @@ class ArcadeSystem extends System {
         
     }
 
+    /**
+     * Updates all physics worlds with the given time delta.
+     * @param delta Time elapsed since last frame in seconds
+     */
     inline function updateWorlds(delta:Float):Void {
 
         for (i in 0...worlds.length) {
@@ -96,12 +181,22 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Updates a single physics world.
+     * @param world The world to update
+     * @param delta Time elapsed since last frame in seconds
+     */
     inline function updateWorld(world:ArcadeWorld, delta:Float):Void {
 
         world.elapsed = delta;
 
     }
 
+    /**
+     * Early update phase: synchronizes visual properties to physics bodies
+     * and runs physics simulation.
+     * @param delta Time elapsed since last frame in seconds
+     */
     override function earlyUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
@@ -168,6 +263,11 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Late update phase: applies physics simulation results back to visuals.
+     * This includes position updates and rotation if enabled.
+     * @param delta Time elapsed since last frame in seconds
+     */
     override function lateUpdate(delta:Float):Void {
 
         if (delta <= 0) return;
@@ -208,6 +308,9 @@ class ArcadeSystem extends System {
 
     }
 
+    /**
+     * Removes all items queued for destruction from the active items list.
+     */
     inline function flushDestroyedItems():Void {
 
         while (_destroyedItems.length > 0) {
@@ -217,6 +320,9 @@ class ArcadeSystem extends System {
         
     }
 
+    /**
+     * Adds all newly created items to the active items list.
+     */
     inline function flushCreatedItems():Void {
 
         while (_createdItems.length > 0) {

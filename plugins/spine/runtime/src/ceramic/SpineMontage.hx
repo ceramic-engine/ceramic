@@ -3,24 +3,104 @@ package ceramic;
 import ceramic.Shortcuts.*;
 
 /**
- * An utility to group an pre-configure spine animations together as a single `montage`
+ * A powerful utility for managing and orchestrating Spine animations as a cohesive montage.
+ *
+ * SpineMontage provides a high-level interface for configuring, sequencing, and controlling
+ * Spine animations with predefined settings. It allows you to group related animations
+ * together and define transitions, callbacks, and default behaviors for each animation state.
+ *
+ * The class supports both enum-based and string-based animation keys through its generic
+ * type parameter T, making it type-safe when used with enums while still flexible for
+ * dynamic animation names.
+ *
+ * Key features:
+ * - Type-safe animation management with enum support
+ * - Animation chaining and sequencing with automatic transitions
+ * - Per-animation configuration (speed, loop, track, skin)
+ * - Begin/complete callbacks for animation lifecycle events
+ * - Default settings that apply to all animations
+ * - Automatic Spine instance lifecycle management
+ *
+ * @example Using with an enum
+ * ```haxe
+ * enum HeroAnimation {
+ *     IDLE;
+ *     WALK;
+ *     RUN;
+ *     JUMP;
+ *     ATTACK;
+ * }
+ *
+ * var montage = new SpineMontage<HeroAnimation>({
+ *     spine: {
+ *         data: heroSpineData,
+ *         scale: 0.5
+ *     },
+ *     defaults: {
+ *         track: 0,
+ *         speed: 1.0
+ *     },
+ *     animations: {
+ *         IDLE: { anim: "idle", loop: true },
+ *         WALK: { anim: "walk", loop: true, speed: 1.2 },
+ *         RUN: { anim: "run", loop: true, speed: 1.5 },
+ *         JUMP: { anim: "jump", next: IDLE },
+ *         ATTACK: {
+ *             anim: "attack",
+ *             next: IDLE,
+ *             complete: () -> trace("Attack finished!")
+ *         }
+ *     },
+ *     start: Idle
+ * });
+ *
+ * // Later in code
+ * montage.play(Walk);
+ * montage.play(Attack); // Will auto-transition to Idle when complete
+ * ```
+ *
+ * @example Using with strings
+ * ```haxe
+ * var montage = new SpineMontage<String>();
+ * montage.createSpine(spineData);
+ * montage.set("intro", { anim: "intro_animation", next: "loop" });
+ * montage.set("loop", { anim: "loop_animation", loop: true });
+ * montage.play("intro");
+ * ```
  */
 class SpineMontage<T> extends Entity implements Component {
 
     @:noCompletion public var entity:Spine;
 
     /**
-     * Fired when starting an animation
+     * Fired when starting an animation.
+     * This event is emitted after the animation has been applied to the Spine instance
+     * and after any begin callback has been executed.
+     *
+     * @param animation The animation key that just started
      */
     @event function beginAnimation(animation:T);
 
     /**
-     * Fired when completing an animation
+     * Fired when completing an animation.
+     * This event is emitted when a non-looping animation finishes playing,
+     * after any complete callback has been executed but before transitioning
+     * to the next animation (if configured).
+     *
+     * @param animation The animation key that just completed
      */
     @event function completeAnimation(animation:T);
 
     /**
-     * The spine object this montage works with
+     * The Spine instance this montage controls.
+     *
+     * When setting a new Spine instance:
+     * - Previous instance event listeners are cleaned up
+     * - If the previous instance was bound, it gets destroyed
+     * - Current animation (if any) is reapplied to the new instance
+     *
+     * The Spine instance can be bound to this montage's lifecycle,
+     * meaning it will be automatically destroyed when the montage is destroyed.
      */
     public var spine(get, set):Spine;
 
@@ -52,39 +132,65 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * The current animation in montage
+     * The currently playing animation in the montage.
+     *
+     * Setting this property will:
+     * 1. Stop the current animation (if any)
+     * 2. Apply the new animation's configuration
+     * 3. Execute any begin callback
+     * 4. Emit the beginAnimation event
+     * 5. Start playing the animation on the Spine instance
+     *
+     * Set to null to stop all animations and hide the Spine instance.
      */
     @observe public var animation(default, set):T = null;
 
     /**
-     * Default animation settings
+     * Default animation settings that apply to all animations unless overridden.
+     *
+     * These defaults include:
+     * - track: The animation track to use (default: 0)
+     * - speed: Time scale multiplier (default: 1.0)
+     * - loop: Whether animations loop by default (default: false)
+     * - skin: Default skin name to use (default: null)
+     *
+     * Individual animations can override any of these defaults.
      */
     public var defaults(default, null):SpineMontageDefaults = null;
 
     /**
-     * Animation instances by (stringified) key.
-     * Note: this is not used on enum-based SpineMontage instances.
+     * Internal storage for animation configurations mapped by their string representation.
+     * For enum-based montages, enum values are converted to strings for storage.
+     * This allows the same storage mechanism to work for both enum and string keys.
      */
     var animationInstances:Map<String, SpineMontageAnimation<T>> = null;
 
     /**
-     * Montage animation instance currently applied to display an animation (if any)
+     * The animation configuration currently being used to display an animation.
+     * This holds the complete configuration including animation name, speed, loop settings, etc.
+     * Will be null when no animation is playing.
      */
     var currentAnimationInstance:SpineMontageAnimation<T> = null;
 
     /**
-     * Is `true` if the linked `Spine` instance is bound to this montage,
-     * meaning it will be destroyed if montage gets destroyed and vice versa.
+     * Indicates whether the Spine instance lifecycle is bound to this montage.
+     * When true:
+     * - Destroying the montage will also destroy the Spine instance
+     * - Destroying the Spine instance will also destroy the montage
+     * This creates a strong ownership relationship between the two objects.
      */
     var boundToSpineInstance:Bool = false;
 
     /**
-     * Internal value to keep track of the number of times we set animation
+     * Internal counter tracking animation changes.
+     * Used to detect when animations are changed externally during callbacks,
+     * preventing the montage from overriding explicit animation changes.
      */
     var numSetAnimation:Int = 0;
 
     /**
-     * Used enum type, if applicable
+     * Stores the enum type when T is an enum.
+     * Currently unused but reserved for potential future enum-specific features.
      */
     var enumType:Enum<T> = null;
 
@@ -135,9 +241,18 @@ class SpineMontage<T> extends Entity implements Component {
     /// Lifecycle
 
     /**
-     * Create a new spine montage.
-     * @param  settings if provided, will be used to configure this montage.
-     *         See `SpineMontageSettings` for more info.
+     * Creates a new SpineMontage instance with optional initial configuration.
+     *
+     * The settings parameter allows you to configure all aspects of the montage
+     * at creation time, including:
+     * - Creating or using an existing Spine instance
+     * - Setting default animation parameters
+     * - Defining all animation configurations
+     * - Specifying an initial animation to play
+     *
+     * @param settings Optional configuration object containing spine setup,
+     *                 animation definitions, and default values.
+     *                 See `SpineMontageSettings` for detailed options.
      */
     public function new(?settings:SpineMontageSettings<T>) {
 
@@ -380,6 +495,25 @@ class SpineMontage<T> extends Entity implements Component {
 
     /// Public API
 
+    /**
+     * Sets multiple animation configurations at once using a dynamic object.
+     *
+     * Each field in the animations object should have a name matching the
+     * animation key (as a string) and a value of type SpineMontageAnimation<T>
+     * containing the configuration for that animation.
+     *
+     * @param animations Object with animation configurations keyed by name
+     * @throws String If any animation instance in the object is null
+     *
+     * @example
+     * ```haxe
+     * montage.setAnimations({
+     *     "idle": { anim: "idle_loop", loop: true },
+     *     "walk": { anim: "walk_cycle", loop: true, speed: 1.2 },
+     *     "jump": { anim: "jump_up", next: "idle" }
+     * });
+     * ```
+     */
     public function setAnimations(animations:Dynamic<SpineMontageAnimation<T>>) {
 
         for (name in Reflect.fields(animations)) {
@@ -394,12 +528,31 @@ class SpineMontage<T> extends Entity implements Component {
 
     }
 
+    /**
+     * Sets the default animation parameters that apply to all animations.
+     *
+     * These defaults are used as fallback values when an animation doesn't
+     * specify its own value for a particular setting.
+     *
+     * @param defaults The default configuration to use
+     */
     public function setDefaults(defaults:SpineMontageDefaults) {
 
         this.defaults = defaults;
 
     }
 
+    /**
+     * Associates an existing Spine instance with this montage.
+     *
+     * This method allows you to provide a pre-configured Spine instance
+     * rather than creating a new one. Any previously associated Spine
+     * instance will be properly cleaned up based on its binding status.
+     *
+     * @param spine The Spine instance to use
+     * @param bound Whether to bind the Spine instance lifecycle to this montage.
+     *              When true, destroying either object will destroy the other.
+     */
     public function useSpine(spine:Spine, bound:Bool = true):Void {
 
         // Will unbind any managed spine if needed
@@ -414,9 +567,15 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * Create a spine object with the given `SpineData` object.
-     * @param spineData The `SpineData` object to use
-     * @param bound (default `true`) Whether this spine object is bound to montage lifecycle.
+     * Creates a new Spine instance using the provided SpineData.
+     *
+     * This is a convenience method that creates and configures a new Spine
+     * instance with the given data. The created instance is automatically
+     * set as inactive until an animation is played.
+     *
+     * @param spineData The SpineData containing skeleton and atlas information
+     * @param bound Whether to bind the created Spine instance lifecycle to this montage.
+     *              When true, destroying either object will destroy the other.
      */
     public function createSpine(spineData:SpineData, bound:Bool = true):Void {
 
@@ -436,7 +595,12 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * Stop current animation (this is equivalent to `montage.animation = null;`)
+     * Stops the current animation and hides the Spine instance.
+     *
+     * This is equivalent to setting `animation = null` and will:
+     * - Stop any playing animation
+     * - Hide the Spine instance (set active to false)
+     * - Clear the current animation state
      */
     public function stop():Void {
 
@@ -445,8 +609,21 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * `montage.play(animation);` is stricly equivalent to: `montage.animation = animation;`
-     * @param reset If set to `true`, will reset the animation to its initial state, even if setting the same animation a second time.
+     * Plays the specified animation.
+     *
+     * This is the primary method for starting animations in the montage.
+     * By default, if the same animation is already playing, it continues
+     * without interruption. Use the reset parameter to force a restart.
+     *
+     * @param animation The animation key to play
+     * @param reset If true, forces the animation to restart from the beginning,
+     *              even if it's already the current animation
+     *
+     * @example
+     * ```haxe
+     * montage.play(HeroAnimation.Walk);
+     * montage.play(HeroAnimation.Jump, true); // Force restart
+     * ```
      */
     public function play(animation:T, reset:Bool = false):Void {
         if (reset) {
@@ -460,7 +637,24 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * Configure an animation for key `key`
+     * Configures a single animation in the montage.
+     *
+     * Use this method to add or update the configuration for a specific
+     * animation key. The configuration includes the actual Spine animation
+     * name, playback settings, callbacks, and transition information.
+     *
+     * @param key The animation key to configure
+     * @param animationInstance The configuration for this animation
+     *
+     * @example
+     * ```haxe
+     * montage.set(HeroAnimation.Victory, {
+     *     anim: "victory_dance",
+     *     speed: 0.8,
+     *     complete: () -> trace("Victory!"),
+     *     next: HeroAnimation.Idle
+     * });
+     * ```
      */
     public function set(key:T, animationInstance:SpineMontageAnimation<T>):Void {
 
@@ -469,7 +663,10 @@ class SpineMontage<T> extends Entity implements Component {
     }
 
     /**
-     * Get configured animation for key `key`
+     * Retrieves the configuration for a specific animation key.
+     *
+     * @param key The animation key to look up
+     * @return The animation configuration if found, null otherwise
      */
     public function get(key:T):SpineMontageAnimation<T> {
 

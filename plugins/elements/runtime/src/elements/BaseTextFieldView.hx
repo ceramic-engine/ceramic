@@ -20,18 +20,46 @@ import tracker.Autorun.unobserve;
 using StringTools;
 using ceramic.Extensions;
 
+/**
+ * Base class for text field UI elements with autocomplete functionality.
+ * 
+ * Provides a foundation for text input fields with features like:
+ * - Text editing with EditText integration
+ * - Autocomplete suggestions with fuzzy search
+ * - Keyboard navigation for suggestions
+ * - Customizable value submission and validation
+ * - Integration with the field system for UI forms
+ * 
+ * This is an abstract base class meant to be extended by concrete implementations
+ * like TextFieldView, ColorFieldView, etc.
+ * 
+ * @see TextFieldView
+ * @see ColorFieldView
+ * @see SelectFieldView
+ */
 class BaseTextFieldView extends FieldView {
 
+    /** Shared point instance for coordinate calculations */
     static var _point = new Point(0, 0);
 
+    /** Maximum height of the autocomplete suggestions dropdown in pixels */
     static final MAX_LIST_HEIGHT = 200;
 
+    /** When forcing suggestions display, show all candidates if fewer than this count */
     static final FORCED_SUGGESTION_FULL_LIST_UNDER_COUNT = 10;
 
+    /** Height of each suggestion item in the dropdown */
     static final ITEM_HEIGHT = SelectListView.ITEM_HEIGHT;
 
 /// Hooks
 
+    /**
+     * Hook called when the text value changes.
+     * Updates the internal text value and calls setValue.
+     * 
+     * @param field The field instance (this)
+     * @param textValue The new text value
+     */
     public dynamic function setTextValue(field:BaseTextFieldView, textValue:String):Void {
 
         this.textValue = textValue;
@@ -39,18 +67,37 @@ class BaseTextFieldView extends FieldView {
 
     }
 
+    /**
+     * Hook for setting the underlying value from text.
+     * Override this to convert text to the appropriate data type.
+     * 
+     * @param field The field instance (this)
+     * @param value The value to set (typically string)
+     */
     public dynamic function setValue(field:BaseTextFieldView, value:Dynamic):Void {
 
         // Default implementation does nothing
 
     }
 
+    /**
+     * Hook for clearing/resetting the field value.
+     * Override this to handle empty field state.
+     * 
+     * @param field The field instance (this)
+     */
     public dynamic function setEmptyValue(field:BaseTextFieldView):Void {
 
         // Default implementation does nothing
 
     }
 
+    /**
+     * Hook called when the user submits the field (e.g., pressing Enter).
+     * Override this to handle form submission or value confirmation.
+     * 
+     * @param field The field instance (this)
+     */
     public dynamic function submit(field:BaseTextFieldView):Void {
 
         // Default implementation does nothing
@@ -59,8 +106,13 @@ class BaseTextFieldView extends FieldView {
 
 /// Public properties
 
+    /** The current text value displayed in the field */
     @observe public var textValue:String = '';
 
+    /** 
+     * Array of autocomplete suggestion candidates.
+     * When set, enables autocomplete functionality with fuzzy search.
+     */
     public var autocompleteCandidates(default, set):Array<String> = null;
 
     function set_autocompleteCandidates(autocompleteCandidates:Array<String>):Array<String> {
@@ -84,22 +136,32 @@ class BaseTextFieldView extends FieldView {
         return autocompleteCandidates;
     }
 
+    /** Delay in seconds before showing autocomplete suggestions after typing */
     public var autocompleteDelay:Float = 0.01;
 
+    /** Maximum number of autocomplete suggestions to display */
     public var autocompleteMaxResults:Int = 10;
 
+    /** Whether to show autocomplete suggestions when the field gains focus */
     public var autocompleteOnFocus:Bool = false;
 
+    /** Whether to clip suggestions dropdown to scrolling container bounds */
     public var clipSuggestions:Bool = false;
 
 /// Internal
 
+    /** Flag tracking if text is being edited in the current frame */
     var editingThisFrame:Bool = false;
 
+    /** Flag tracking if suggestions are visible in the current frame */
     var suggestionsVisibleThisFrame:Bool = false;
 
 /// Lifecycle
 
+    /**
+     * Creates a new BaseTextFieldView.
+     * Sets up update handlers and autocomplete functionality.
+     */
     function new() {
 
         super();
@@ -145,20 +207,28 @@ class BaseTextFieldView extends FieldView {
 
 /// Internal properties
 
+    /** Key bindings for text selection and autocomplete shortcuts */
     @component var keyBindings:KeyBindings;
 
+    /** The TextView component for displaying text */
     var textView:TextView;
 
+    /** The EditText component for text input when focused */
     var editText:EditText = null;
 
+    /** Timer cancellation function for autocomplete delay */
     var cancelAutoComplete:Void->Void = null;
 
+    /** Processed candidates with normalized search strings */
     var processedAutocompleteCandidates:Array<{search:String, original:String}> = null;
 
+    /** The dropdown list view for showing suggestions */
     var suggestionsView:SelectListView = null;
 
+    /** Container view for positioning the suggestions dropdown */
     var suggestionsContainer:View = null;
 
+    /** Current filtered list of suggestions to display */
     var suggestions:Array<String> = null;
 
 /// Internal
@@ -235,6 +305,12 @@ class BaseTextFieldView extends FieldView {
 
 /// Auto-completion
 
+    /**
+     * Updates the autocomplete suggestions based on current text.
+     * Uses fuzzy search to filter candidates.
+     * 
+     * @param force Whether to force showing suggestions even with empty/full matches
+     */
     function updateAutocompleteSuggestions(force:Bool = false) {
 
         var textValue = textView.content;
@@ -533,6 +609,13 @@ class BaseTextFieldView extends FieldView {
 
     }
 
+    /**
+     * Transforms text for autocomplete matching.
+     * Replaces spaces with underscores for better fuzzy matching.
+     * 
+     * @param text The text to transform
+     * @return The transformed text
+     */
     inline static function transformTextForCompletion(text:String):String {
 
         return text.replace(' ', '_');
@@ -541,6 +624,11 @@ class BaseTextFieldView extends FieldView {
 
 /// Key bindings
 
+    /**
+     * Sets up keyboard shortcuts for the text field.
+     * - Cmd/Ctrl+A: Select all text
+     * - Cmd/Ctrl+Space: Force show autocomplete suggestions
+     */
     function bindKeyBindings() {
 
         keyBindings = new KeyBindings();

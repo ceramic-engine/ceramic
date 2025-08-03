@@ -1,47 +1,98 @@
 package ceramic;
 
+/**
+ * Configuration for an auto-tiling tile that automatically adjusts its appearance
+ * based on neighboring tiles. Auto-tiles adapt their visual representation to create
+ * seamless connections with adjacent tiles of the same type.
+ * 
+ * Auto-tiling is commonly used for:
+ * - Terrain (grass, dirt, water)
+ * - Walls and platforms
+ * - Pipes and roads
+ * - Any tileable surface that needs edge transitions
+ * 
+ * @see AutoTileKind For different auto-tiling algorithms
+ * @see AutoTiler For the auto-tiling processor
+ * @see Tileset For tileset management
+ */
 @:structInit
 class AutoTile {
 
     /**
-     * The kind of autotile. Depending on this, the autotile
-     * will use more or less tiles on the source tileset
+     * The kind of autotile algorithm to use. Different algorithms require
+     * different tile arrangements in the source tileset and produce different
+     * visual results.
+     * 
+     * Common kinds include:
+     * - BLOB_47: 47-tile blob pattern for organic shapes
+     * - TILESETTER_BLOB_47: Tilesetter-specific 47-tile variant
+     * - Custom patterns for specific use cases
      */
     public var kind:AutoTileKind;
 
     /**
-     * The main gid of this autotile. This is usually the gid that
-     * shows a tile that doesn't have any auto tiling transformation.
+     * The main global tile ID (GID) of this autotile. This is typically the
+     * "standalone" or "center" tile that appears when no auto-tiling 
+     * transformation is needed (i.e., when surrounded by tiles of the same type).
+     * 
+     * The GID corresponds to a specific tile in the tileset and serves as the
+     * base reference for finding related auto-tile variations.
      */
     public var gid:Int;
 
     /**
-     * If set to `true` (default), bounds of the tilemap are considered
-     * "filled" with the same tile and will affect how the auto tiling is computed.
-     * Set it to false if you don't want your tiles to look "connected" with the map bounds.
+     * Controls whether tilemap boundaries affect auto-tiling calculations.
+     * 
+     * When `true` (default):
+     * - Tiles at the edge of the tilemap connect with the boundary
+     * - Creates a "filled" appearance at map edges
+     * - Useful for solid terrain that extends beyond the visible area
+     * 
+     * When `false`:
+     * - Tiles at the edge don't connect with boundaries
+     * - Creates an "island" appearance
+     * - Useful for floating platforms or isolated structures
      */
     public var bounds:Bool = true;
 
     /**
-     * The tileset holding this autotile. Required when using `TILESETTER_BLOB_47` kind.
+     * The tileset containing this autotile's graphics. Required when using
+     * certain auto-tile kinds like `TILESETTER_BLOB_47` that need tileset
+     * information to locate tile variations.
+     * 
+     * The tileset defines the tile dimensions and layout necessary for
+     * computing row/column positions from GIDs.
      */
     public var tileset:Tileset = null;
 
     /**
-     * Column in the tileset matching the main gid of this autotile.
-     * Available when a `tileset` option is provided.
+     * The column position in the tileset grid for the main GID tile.
+     * Automatically computed when `computeValues()` is called.
+     * 
+     * This value is -1 if no tileset is assigned or values haven't been computed.
+     * Column indices start at 0 for the leftmost column.
      */
     public var column(default, null):Int = -1;
 
     /**
-     * Row in the tileset matching the main gid of this autotile.
-     * Available when a `tileset` option is provided.
+     * The row position in the tileset grid for the main GID tile.
+     * Automatically computed when `computeValues()` is called.
+     * 
+     * This value is -1 if no tileset is assigned or values haven't been computed.
+     * Row indices start at 0 for the topmost row.
      */
     public var row(default, null):Int = -1;
 
     /**
-     * Will compute additional values like `row` and `column`
-     * from the existing data. Automatically called by `AutoTiler`.
+     * Computes derived values like `row` and `column` from the current
+     * configuration. This method is automatically called by `AutoTiler`
+     * during processing.
+     * 
+     * The computation requires a valid `tileset` to be assigned. If no
+     * tileset is available, row and column remain at their default -1 values.
+     * 
+     * This method should be called whenever the `gid` or `tileset` changes
+     * to keep the computed values in sync.
      */
     public function computeValues() {
 

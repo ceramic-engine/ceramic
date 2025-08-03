@@ -14,18 +14,42 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
+/**
+ * A color picker gradient view using the HSLuv color space for perceptually uniform color selection.
+ * HSLuv is a human-friendly alternative to HSL that maintains perceptual uniformity across hue
+ * and saturation changes, making color selection more intuitive.
+ * 
+ * The gradient displays:
+ * - Hue along the horizontal axis (0-360 degrees)
+ * - Saturation along the vertical axis (100% at top, 0% at bottom)
+ * - Lightness controlled externally and applied uniformly
+ * 
+ * Users can select colors by clicking/dragging on the gradient, with a visual pointer
+ * indicating the current selection. The pointer automatically adjusts its color for
+ * visibility based on the lightness value.
+ * 
+ * @event updateColorFromPointer Emitted when the color is updated via pointer interaction
+ */
 class ColorPickerHSLuvGradientView extends View {
 
     @event function updateColorFromPointer();
 
+    /** Number of horizontal segments in the gradient mesh for hue precision */
     static var PRECISION_X:Int = 32;
 
+    /** Number of vertical segments in the gradient mesh for saturation precision */
     static var PRECISION_Y:Int = 8;
 
+    /** Reusable point for coordinate conversions */
     static var _point = new Point();
 
+    /** Reusable array for HSLuv color conversions */
     static var _tuple:Array<Float> = [0, 0, 0];
 
+    /**
+     * The currently selected color value.
+     * Setting this updates the gradient and pointer position.
+     */
     public var colorValue(default, set):Color = Color.WHITE;
     function set_colorValue(colorValue:Color):Color {
         if (this.colorValue == colorValue) return colorValue;
@@ -35,27 +59,44 @@ class ColorPickerHSLuvGradientView extends View {
         return colorValue;
     }
 
+    /** Internal flag indicating the spectrum (lightness) is being adjusted */
     @:allow(elements.ColorPickerView)
     var movingSpectrum:Bool = false;
 
+    /** The mesh that renders the HSLuv gradient */
     var gradient:Mesh;
 
+    /** Visual pointer indicating the current color selection */
     var colorPointer:Border;
 
+    /** Target color for pointer border animation */
     var targetPointerColor:Color = Color.NONE;
 
+    /** Active tween for animating pointer color changes */
     var pointerColorTween:Tween = null;
 
+    /** Flag indicating the pointer is being dragged */
     var movingPointer:Bool = false;
 
+    /** Saved X position of the pointer for restoration */
     var savedPointerX:Float = 0;
 
+    /** Saved Y position of the pointer for restoration */
     var savedPointerY:Float = 0;
 
+    /** Filter container for the gradient content */
     var filter:Filter;
 
+    /**
+     * The lightness value (0-1) applied uniformly across the gradient.
+     * This is typically controlled by an external spectrum/slider.
+     */
     public var lightness(default, null):Float = 0.5;
 
+    /**
+     * Creates a new HSLuv gradient color picker view.
+     * Initializes the gradient mesh and selection pointer.
+     */
     public function new() {
 
         super();
@@ -118,6 +159,11 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Updates the gradient mesh colors based on the current lightness value.
+     * Regenerates all vertex colors to reflect the HSLuv color space.
+     * @param lightness Optional new lightness value (0-1)
+     */
     public function updateGradientColors(?lightness:Float) {
 
         if (lightness != null) {
@@ -158,6 +204,10 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Saves the current pointer position for later restoration.
+     * Useful when temporarily moving the pointer during spectrum adjustments.
+     */
     public function savePointerPosition() {
 
         savedPointerX = colorPointer.x;
@@ -165,6 +215,9 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Restores the pointer to its previously saved position.
+     */
     public function restorePointerPosition() {
 
         colorPointer.x = savedPointerX;
@@ -172,6 +225,10 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Calculates the saturation value based on the pointer's vertical position.
+     * @return Saturation value (0-1), where 1 is at the top
+     */
     public function getSaturationFromPointer():Float {
 
         var saturation = 1 - (colorPointer.y / height);
@@ -184,6 +241,10 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Calculates the hue value based on the pointer's horizontal position.
+     * @return Hue value in degrees (0-360)
+     */
     public function getHueFromPointer():Float {
 
         var hue = colorPointer.x / width;
@@ -197,12 +258,22 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Creates a color with the specified hue and saturation using the current lightness.
+     * @param hue Hue value in degrees (0-360)
+     * @param saturation Saturation value (0-1)
+     * @return The resulting color with full opacity
+     */
     function colorWithHueAndSaturation(hue:Float, saturation:Float):AlphaColor {
 
         return new AlphaColor(Color.fromHSLuv(hue, saturation, lightness));
 
     }
 
+    /**
+     * Updates the pointer position based on the current color value.
+     * Also adjusts the pointer border color for visibility.
+     */
     function updatePointerFromColor() {
 
         colorValue.getHSLuv(_tuple);
@@ -241,6 +312,10 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Handles layout updates when the view is resized.
+     * Scales the gradient mesh and updates pointer position accordingly.
+     */
     override function layout() {
 
         filter.size(width, height);
@@ -256,6 +331,10 @@ class ColorPickerHSLuvGradientView extends View {
 
 /// Pointer events
 
+    /**
+     * Handles pointer down events to begin color selection.
+     * @param info Touch/mouse information
+     */
     function handlePointerDown(info:TouchInfo) {
 
         screen.onPointerMove(this, handlePointerMove);
@@ -266,12 +345,20 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Handles pointer move events during color selection.
+     * @param info Touch/mouse information
+     */
     function handlePointerMove(info:TouchInfo) {
 
         updateColorFromTouchInfo(info);
 
     }
 
+    /**
+     * Handles pointer up events to end color selection.
+     * @param info Touch/mouse information
+     */
     function handlePointerUp(info:TouchInfo) {
 
         screen.offPointerMove(handlePointerMove);
@@ -282,6 +369,11 @@ class ColorPickerHSLuvGradientView extends View {
 
     }
 
+    /**
+     * Updates the selected color based on touch/mouse position.
+     * Converts screen coordinates to hue/saturation values and updates the color.
+     * @param info Touch/mouse information containing screen coordinates
+     */
     function updateColorFromTouchInfo(info:TouchInfo) {
 
         screenToVisual(info.x, info.y, _point);

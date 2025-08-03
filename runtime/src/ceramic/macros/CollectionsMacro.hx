@@ -10,8 +10,42 @@ import sys.io.File;
 
 using StringTools;
 
+/**
+ * Build macro that generates type-safe collections from CSV data files.
+ * This macro processes collection definitions from ceramic.yml and creates:
+ * - Collection instances with proper typing
+ * - Static constants for each collection entry ID
+ * - Type-safe access to collection data at compile time
+ *
+ * Collections are defined in ceramic.yml and backed by CSV files containing
+ * the actual data. The macro ensures that collection IDs are valid at compile
+ * time, preventing runtime errors from typos or missing entries.
+ *
+ * Example ceramic.yml:
+ * ```yaml
+ * app:
+ *   ...
+ *
+ *   collections:
+ *     enemies:
+ *       type: EnemyEntry # EnemyEntry extends CollectionEntry base type
+ *       data: enemies  # References enemies.csv
+ * ```
+ *
+ * Generated code allows:
+ * ```haxe
+ * var enemy = collections.enemies.get(Collections.ENEMIES.GOBLIN);
+ * ```
+ */
 class CollectionsMacro {
 
+    /**
+     * Build macro that generates collection fields and constants from CSV data.
+     * Processes each collection defined in ceramic.yml, reads corresponding CSV files,
+     * and generates both collection instances and ID constants.
+     *
+     * @return Array of generated fields including collections and constants
+     */
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -193,8 +227,23 @@ class CollectionsMacro {
 
 /// Internal
 
+    /**
+     * Regular expression to match valid ASCII alphanumeric characters.
+     */
     static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
+    /**
+     * Converts a collection entry ID to a valid Haxe constant name.
+     * Transformation rules:
+     * - Slashes become double underscores
+     * - Dots become single underscores
+     * - camelCase is converted to CAMEL_CASE
+     * - Non-alphanumeric characters become underscores
+     * - Result is always uppercase
+     *
+     * @param input Collection entry ID from CSV
+     * @return Valid Haxe constant name
+     */
     static function toCollectionConstName(input:String):String {
 
         var res = new StringBuf();
@@ -241,6 +290,14 @@ class CollectionsMacro {
 
     }
 
+    /**
+     * Converts a collection name to a valid Haxe field name.
+     * Ensures the field name follows Haxe naming conventions
+     * with lowercase first letter.
+     *
+     * @param input Collection name from ceramic.yml
+     * @return Valid Haxe field name
+     */
     static function toCollectionFieldName(input:String):String {
 
         if (input.toUpperCase() == input.toLowerCase()) {

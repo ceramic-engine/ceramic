@@ -4,13 +4,33 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+/**
+ * Utilities for converting JavaScript/TypeScript syntax to HScript.
+ * 
+ * Provides transpilation of common JS/TS idioms to make scripts more
+ * familiar to web developers while maintaining HScript compatibility.
+ * 
+ * Supported conversions:
+ * - Arrow functions: `() => expr` → `function() expr`
+ * - Arrow functions: `=> ` → `-> `
+ * - For-of loops: `for (x of array)` → `for (x in array)`
+ * - Const declarations: `const` → `var`
+ * - Template literals: `` `text` `` → `"text"`
+ * - Infinite loop protection in while loops
+ */
 class ScriptUtils {
 
     /**
-     * Converts the given `inScript` to hscript.
-     * This will take care of transforming a few idioms borrowed from js/ts to hscript equivalent.
-     * @param inScript 
-     * @return String
+     * Converts JavaScript/TypeScript-like code to HScript.
+     * 
+     * Performs multiple transformation passes:
+     * 1. Clean code (arrow functions, comments, template literals)
+     * 2. Convert for-of loops to for-in
+     * 3. Replace const with var
+     * 4. Add infinite loop protection to while loops
+     * 
+     * @param code Source code with JS/TS syntax
+     * @return Equivalent HScript code
      */
     public static function toHscript(code:String):String {
 
@@ -31,6 +51,10 @@ class ScriptUtils {
         var openParens:Int = 0;
         var loopIndex:Int = 0;
 
+        /**
+         * Updates the current word being processed.
+         * Extracts the word at the current position for keyword detection.
+         */
         inline function updateWord() {
 
             var result:String = '';
@@ -46,12 +70,20 @@ class ScriptUtils {
     
         }
 
+        /**
+         * Updates the remaining code string from current position.
+         */
         inline function updateAfter() {
 
             after = code.substring(i);
     
         }
 
+        /**
+         * Converts for-of loops to for-in loops.
+         * JavaScript: `for (item of array)`
+         * HScript: `for (item in array)`
+         */
         inline function consumeFor() {
 
             if (RE_FOR_OF.match(after)) {
@@ -69,6 +101,13 @@ class ScriptUtils {
 
         }
 
+        /**
+         * Adds infinite loop protection to while loops.
+         * Injects _checkLoop() call to track iterations.
+         * 
+         * Transform: `while (condition)`
+         * To: `while (_checkLoop(index) && (condition))`
+         */
         inline function consumeWhile() {
 
             if (RE_WHILE_START.match(after)) {
@@ -77,6 +116,7 @@ class ScriptUtils {
                 i += RE_WHILE_START.matched(0).length;
                 result.add(RE_WHILE_START.matched(0));
                 result.add('_checkLoop($loopIndex) && (');
+                loopIndex++;
                 while (i < len) {
                     c = code.charAt(i);
                     if (c == '(') {
@@ -166,6 +206,18 @@ class ScriptUtils {
 
     }
 
+    /**
+     * First pass: Cleans and converts basic JS/TS syntax.
+     * 
+     * Handles:
+     * - Arrow function conversion
+     * - Comment preservation
+     * - Template literal conversion
+     * - Regex literal handling
+     * 
+     * @param code Raw JS/TS code
+     * @return Cleaned code with basic conversions
+     */
     static function cleanCode(code:String) {
 
         var i = 0;
@@ -286,6 +338,13 @@ class ScriptUtils {
 
     }
 
+    /**
+     * Throws a parsing error.
+     * 
+     * @param error Error message
+     * @param i Character position where error occurred
+     * @param code Full source code
+     */
     static function fail(error:Dynamic, i:Int, code:String) {
 
         throw '' + error;
@@ -294,16 +353,22 @@ class ScriptUtils {
 
 /// Regular expressions
         
+    /** Matches word characters at start of string */
     static var RE_WORD = ~/^[a-zA-Z0-9_]+/;
     
+    /** Matches word after non-word character */
     static var RE_SEP_WORD = ~/^[^a-zA-Z0-9_]([a-zA-Z0-9_]+)/;
 
+    /** Matches string literals (single, double, or template) */
     static var RE_STRING = ~/^(?:"(?:[^"\\]*(?:\\.[^"\\]*)*)"|'(?:[^'\\]*(?:\\.[^'\\]*)*)'|`(?:[^`\\]*(?:\\.[^`\\]*)*)`)/;
 
+    /** Matches for-of/for-in loop declarations */
     static var RE_FOR_OF = ~/^for\s*\(\s*(var\s+)?([a-zA-Z0-9_]+)\s*(of|in)\s+/;
 
+    /** Matches while loop start */
     static var RE_WHILE_START = ~/^while\s*\(/;
 
+    /** Matches no-argument arrow function */
     static var RE_ARROW_FUNC_NO_ARG = ~/^\(\s*\)\s*=>/;
 
 }

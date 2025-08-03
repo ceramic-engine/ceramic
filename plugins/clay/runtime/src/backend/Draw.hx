@@ -11,30 +11,73 @@ using ceramic.Extensions;
 
 @:allow(backend.Backend)
 @:access(backend.Backend)
+/**
+ * Clay backend rendering and graphics operations implementation.
+ * 
+ * This class handles all OpenGL/WebGL rendering operations for the Clay backend,
+ * including vertex buffer management, texture binding, shader operations,
+ * render targets, and batch rendering optimization.
+ * 
+ * Key features:
+ * - Efficient batch rendering with automatic buffer management
+ * - Support for multi-texture batching
+ * - Render-to-texture capabilities
+ * - Stencil buffer operations for masking
+ * - Custom shader attribute support
+ * - Scissor testing for clipping
+ * - Blend mode management
+ * - Matrix transformations and projections
+ * 
+ * The class uses a buffer cycling system to avoid GPU stalls and provides
+ * platform-specific optimizations for different targets (web, desktop, mobile).
+ */
 class Draw #if !completion implements spec.Draw #end {
 
+    /**
+     * The Ceramic renderer instance used for high-level rendering operations.
+     */
     var renderer:ceramic.Renderer = new ceramic.Renderer();
 
 /// Public API
 
+    /**
+     * Creates a new Draw backend instance.
+     * Initializes the Ceramic renderer for handling visual rendering.
+     */
     public function new() {
 
         renderer = new ceramic.Renderer();
 
     }
 
+    /**
+     * Begins a rendering frame (currently unused).
+     * Reserved for future use or platform-specific initialization.
+     */
     #if !ceramic_debug_draw_backend inline #end function begin():Void {
 
         //
 
     }
 
+    /**
+     * Ends a rendering frame (currently unused).
+     * Reserved for future use or platform-specific cleanup.
+     */
     #if !ceramic_debug_draw_backend inline #end function end():Void {
 
         //
 
     }
 
+    /**
+     * Renders an array of visual objects.
+     * 
+     * On iOS, this method checks if the app is in background to prevent
+     * GPU operations that could cause crashes when the app is not active.
+     * 
+     * @param visuals Array of Visual objects to render
+     */
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
         #if ios
@@ -48,6 +91,10 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Swaps the front and back buffers (unused in Clay backend).
+     * Buffer swapping is handled automatically by Clay framework.
+     */
     inline public function swap():Void {
 
         // Unused
@@ -56,12 +103,35 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
+    /**
+     * Maximum number of vertices that can be stored in a single buffer.
+     */
     #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
+    
+    /**
+     * Maximum number of indices that can be stored in a single buffer.
+     */
     #if !ceramic_debug_draw_backend inline #end static var MAX_INDICES:Int = 16384;
+    
+    /**
+     * Maximum number of buffer sets to cycle through.
+     * Buffer cycling prevents GPU stalls by using multiple buffer sets.
+     */
     #if !ceramic_debug_draw_backend inline #end static var MAX_BUFFERS:Int = 64;
 
+    /**
+     * Vertex attribute location for position data (x, y, z).
+     */
     #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_POS:Int = 0;
+    
+    /**
+     * Vertex attribute location for texture coordinate data (u, v).
+     */
     #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_UV:Int = 1;
+    
+    /**
+     * Vertex attribute location for color data (r, g, b, a).
+     */
     #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_COLOR:Int = 2;
 
     #if cpp
@@ -153,6 +223,13 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _primitiveType:Int = GL.TRIANGLES;
 
+    /**
+     * Initializes the vertex and index buffers for rendering.
+     * 
+     * This method sets up the buffer management system and prepares
+     * the first set of buffers for use. Should be called before any
+     * rendering operations begin.
+     */
     #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         _activeTextureSlot = 0;
@@ -162,6 +239,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Prepares the next set of vertex buffers for use.
+     * 
+     * This implements a buffer cycling system to avoid GPU stalls. Instead of
+     * reusing the same buffer immediately (which could cause the GPU to wait),
+     * it cycles through multiple buffer sets.
+     * 
+     * Buffer allocation:
+     * - Position buffer: Full vertex capacity (MAX_VERTS_SIZE)
+     * - UV buffer: 2/3 of vertex capacity (optimized for quads)
+     * - Color buffer: Full vertex capacity (4 floats per vertex)
+     * - Index buffer: MAX_INDICES * 2 capacity
+     * 
+     * On C++ targets, additional ArrayBufferView objects are created for
+     * efficient memory access without copying.
+     */
     function prepareNextBuffers():Void {
 
         _buffersIndex++;
@@ -203,6 +296,16 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Begins a rendering pass by enabling vertex attributes.
+     * 
+     * Enables the core vertex attributes used by all shaders:
+     * - Position (x, y, z)
+     * - Texture coordinates (u, v)
+     * - Color (r, g, b, a)
+     * 
+     * Additional attributes are enabled dynamically based on the active shader.
+     */
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
         GL.enableVertexAttribArray(ATTRIBUTE_POS);
@@ -211,6 +314,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Clears the current render target to transparent white.
+     * 
+     * This method clears the color buffer with a transparent white background.
+     * When rendering to a texture, this marks the render target as updated.
+     */
     #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
         #if !ceramic_debug_draw_backend inline #end Graphics.clear(
@@ -226,6 +335,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Clears the current render target and applies the application background color.
+     * 
+     * This method clears the color buffer with the application's configured
+     * background color (fully opaque). Used for the main screen clearing.
+     */
     #if !ceramic_debug_draw_backend inline #end public function clearAndApplyBackground():Void {
 
         var background = ceramic.App.app.settings.background;
@@ -243,18 +358,40 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Enables alpha blending for transparent rendering.
+     * 
+     * This activates the GPU's blending functionality, allowing pixels to be
+     * combined based on their alpha values. Must be enabled for transparency
+     * to work correctly.
+     */
     #if !ceramic_debug_draw_backend inline #end public function enableBlending():Void {
 
         Graphics.enableBlending();
 
     }
 
+    /**
+     * Disables alpha blending.
+     * 
+     * When disabled, pixels are rendered opaque regardless of alpha values.
+     * This can improve performance when rendering fully opaque content.
+     */
     #if !ceramic_debug_draw_backend inline #end public function disableBlending():Void {
 
         Graphics.disableBlending();
 
     }
 
+    /**
+     * Sets the active texture unit slot for multi-texturing.
+     * 
+     * Modern GPUs support multiple texture units, allowing shaders to sample
+     * from multiple textures simultaneously. This method selects which texture
+     * unit subsequent texture operations will affect.
+     * 
+     * @param slot The texture unit index (0-based)
+     */
     #if !ceramic_debug_draw_backend inline #end public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
@@ -262,6 +399,15 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Sets the primitive type for rendering.
+     * 
+     * Determines how vertices are interpreted:
+     * - TRIANGLE: Every 3 vertices form a triangle (default)
+     * - LINE: Every 2 vertices form a line
+     * 
+     * @param primitiveType The primitive type to use for subsequent draw calls
+     */
     #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
         _primitiveType = switch primitiveType {
@@ -271,12 +417,32 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Gets the currently active texture unit slot.
+     * 
+     * @return The index of the active texture unit
+     */
     #if !ceramic_debug_draw_backend inline #end public function getActiveTexture():Int {
 
         return _activeTextureSlot;
 
     }
 
+    /**
+     * Sets the active render target for subsequent drawing operations.
+     * 
+     * This method switches between rendering to a texture (off-screen) or to the
+     * main screen buffer. When switching targets, it handles:
+     * - MSAA buffer blitting for antialiased render targets
+     * - Projection and view matrix updates
+     * - Viewport configuration
+     * - Optional automatic clearing
+     * 
+     * When renderTarget is null, rendering switches back to the main screen.
+     * 
+     * @param renderTarget The render texture to render to, or null for main screen
+     * @param force Force the render target switch even if it's the same target
+     */
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         if (_currentRenderTarget != renderTarget || force) {
@@ -359,6 +525,23 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Activates a shader program for rendering.
+     * 
+     * This method:
+     * - Sets the shader as the active GPU program
+     * - Uploads projection and modelview matrices as uniforms
+     * - Configures vertex layout based on shader attributes
+     * - Determines if multi-texture batching is supported
+     * - Calculates maximum vertices per batch based on attribute size
+     * 
+     * The vertex size calculation includes:
+     * - 3 floats for position (x, y, z)
+     * - Custom float attributes defined by the shader
+     * - 1 float for texture slot (if multi-texturing is enabled)
+     * 
+     * @param shader The shader to activate
+     */
     #if !ceramic_debug_draw_backend inline #end public function useShader(shader:backend.Shader):Void {
 
         _activeShader = shader;
@@ -386,6 +569,12 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Resets all vertex buffer indexes to zero.
+     * 
+     * This prepares the buffers for a new batch of vertices.
+     * Called when starting a new draw batch or after flushing.
+     */
     #if !ceramic_debug_draw_backend inline #end function resetIndexes():Void {
 
         _numIndices = 0;
@@ -399,6 +588,23 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Sets separate blend functions for RGB and alpha channels.
+     * 
+     * This allows fine control over how colors are blended, with different
+     * blend modes for color (RGB) and transparency (alpha) channels.
+     * 
+     * Common blend modes:
+     * - ONE: Use source value as-is
+     * - ZERO: Ignore value (multiply by 0)
+     * - SRC_ALPHA: Multiply by source alpha
+     * - ONE_MINUS_SRC_ALPHA: Multiply by (1 - source alpha)
+     * 
+     * @param srcRgb Blend factor for source RGB
+     * @param dstRgb Blend factor for destination RGB
+     * @param srcAlpha Blend factor for source alpha
+     * @param dstAlpha Blend factor for destination alpha
+     */
     #if !ceramic_debug_draw_backend inline #end public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         Graphics.setBlendFuncSeparate(
@@ -410,10 +616,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Called before drawing a quad (currently unused).
+     * 
+     * Reserved for future optimizations or quad-specific setup.
+     * 
+     * @param quad The quad about to be drawn
+     */
     #if !ceramic_debug_draw_backend inline #end public function beginDrawQuad(quad:ceramic.Quad):Void {
 
     }
 
+    /**
+     * Called after drawing a quad (currently unused).
+     * 
+     * Reserved for future optimizations or quad-specific cleanup.
+     */
     #if !ceramic_debug_draw_backend inline #end public function endDrawQuad():Void {
 
     }
@@ -426,6 +644,21 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Enables scissor testing to clip rendering to a rectangular area.
+     * 
+     * Scissor testing restricts rendering to pixels within the specified
+     * rectangle. Any pixels outside this area are discarded by the GPU.
+     * 
+     * The coordinates are transformed by the current modelview matrix and
+     * adjusted for screen density. When rendering to a texture, the Y
+     * coordinate is flipped to account for texture coordinate differences.
+     * 
+     * @param x Left edge of the scissor rectangle in logical coordinates
+     * @param y Top edge of the scissor rectangle in logical coordinates
+     * @param width Width of the scissor rectangle in logical pixels
+     * @param height Height of the scissor rectangle in logical pixels
+     */
     public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
 
         GL.enable(GL.SCISSOR_TEST);
@@ -445,12 +678,29 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Disables scissor testing.
+     * 
+     * After calling this, rendering is no longer clipped to a rectangular area.
+     */
     #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
 
         GL.disable(GL.SCISSOR_TEST);
 
     }
 
+    /**
+     * Enables stencil testing for masked rendering.
+     * 
+     * This configures the stencil test to only render pixels where the
+     * stencil buffer equals 1. Used after drawing to the stencil buffer
+     * to render content only within the stenciled area.
+     * 
+     * Stencil configuration:
+     * - Test: Passes when stencil buffer equals 1
+     * - Mask: Stencil buffer is read-only (0x00)
+     * - Color: All color channels are written
+     */
     #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
         // This part is not provided by clay because too specific for now
@@ -464,6 +714,17 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Disables stencil testing for normal rendering.
+     * 
+     * Resets stencil configuration to default values where all pixels
+     * pass the stencil test and the stencil buffer can be written to.
+     * 
+     * Stencil configuration:
+     * - Test: Always passes
+     * - Mask: Stencil buffer is writable (0xFF)
+     * - Color: All color channels are written
+     */
     #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
         // This part is not provided by clay because too specific for now
@@ -477,6 +738,19 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Begins drawing to the stencil buffer for masking operations.
+     * 
+     * This sets up the GPU to write to the stencil buffer instead of
+     * the color buffer. Pixels drawn will mark areas in the stencil
+     * buffer with a value of 1, creating a mask for subsequent rendering.
+     * 
+     * Stencil configuration:
+     * - Clears stencil buffer to 0xFF
+     * - Writes 1 to stencil buffer where pixels are drawn
+     * - Disables color output (only stencil is affected)
+     * - Always passes stencil test during mask creation
+     */
     #if !ceramic_debug_draw_backend inline #end public function beginDrawingInStencilBuffer():Void {
 
         _drawingInStencilBuffer = true;
@@ -503,12 +777,28 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Binds a texture to the current texture unit.
+     * 
+     * Makes the texture available for sampling in shaders. The texture
+     * will be bound to the currently active texture unit.
+     * 
+     * @param backendItem The texture to bind
+     */
     #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
         Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
 
     }
 
+    /**
+     * Binds no texture or a default white texture.
+     * 
+     * On web targets, binds a 1x1 white texture because WebGL requires
+     * a texture to be bound. On native targets, unbinds any texture.
+     * 
+     * Used when rendering untextured geometry or solid colors.
+     */
     #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
 
         #if web
@@ -556,6 +846,21 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Updates the projection matrix for orthographic rendering.
+     * 
+     * Creates an orthographic projection matrix that maps logical
+     * coordinates to normalized device coordinates (-1 to 1).
+     * 
+     * The projection uses:
+     * - Origin at top-left (0,0)
+     * - X increases rightward
+     * - Y increases downward
+     * - Z range from -1000 to 1000 for layering
+     * 
+     * @param width Viewport width in logical pixels
+     * @param height Viewport height in logical pixels
+     */
     #if !ceramic_debug_draw_backend inline #end function updateProjectionMatrix(width:Float, height:Float):Void {
 
         // Making orthographic projection
@@ -585,6 +890,23 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Updates the view matrix for camera transformations.
+     * 
+     * The view matrix handles:
+     * - Camera position and rotation (via transform parameter)
+     * - Screen density scaling for high-DPI displays
+     * - Y-axis flipping for render-to-texture (textures have inverted Y)
+     * 
+     * The matrix is inverted at the end because the view matrix
+     * represents the inverse of the camera transform.
+     * 
+     * @param density Screen density multiplier (e.g., 2 for retina)
+     * @param width Viewport width in logical pixels
+     * @param height Viewport height in logical pixels
+     * @param transform Optional camera transform
+     * @param flipY -1 to flip Y axis (for render targets), 1 for normal
+     */
     #if !ceramic_debug_draw_backend inline #end function updateViewMatrix(density:Float, width:Float, height:Float, ?transform:ceramic.Transform, flipY:Float = 1):Void {
 
         if (transform != null) {
@@ -643,6 +965,16 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Adds a vertex position to the current batch.
+     * 
+     * On C++ targets, uses direct memory access for performance.
+     * On other targets, uses array access.
+     * 
+     * @param x X coordinate in screen space
+     * @param y Y coordinate in screen space  
+     * @param z Z coordinate for depth ordering (0-1 range typically)
+     */
     #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float, y:Float, z:Float):Void {
 
         #if cpp
@@ -724,6 +1056,17 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Adds a vertex color to the current batch.
+     * 
+     * Colors are stored as floating-point values from 0.0 to 1.0.
+     * The color will be interpolated across the triangle/line.
+     * 
+     * @param r Red component (0.0 to 1.0)
+     * @param g Green component (0.0 to 1.0)
+     * @param b Blue component (0.0 to 1.0)
+     * @param a Alpha component (0.0 to 1.0)
+     */
     #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
         #if cpp
@@ -748,6 +1091,18 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Checks if the current batch should be flushed before adding more vertices.
+     * 
+     * Returns true if adding the specified number of vertices or indices
+     * would exceed buffer capacity, indicating that the current batch
+     * should be sent to the GPU before continuing.
+     * 
+     * @param numVerticesAfter Number of vertices to be added
+     * @param numIndicesAfter Number of indices to be added
+     * @param customFloatAttributesSize Size of custom attributes (unused)
+     * @return True if flush is needed, false otherwise
+     */
     #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
 
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
@@ -768,6 +1123,22 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var debugShader:clay.graphics.Shader = null;
 
+    /**
+     * Flushes the current batch of vertices to the GPU.
+     * 
+     * This is the core rendering method that:
+     * 1. Creates GPU buffers from the accumulated vertex data
+     * 2. Configures vertex attributes for the shader
+     * 3. Handles multi-texture batching if supported
+     * 4. Sets up custom shader attributes
+     * 5. Issues the draw call to render all triangles/lines
+     * 6. Cleans up temporary buffers
+     * 7. Prepares for the next batch
+     * 
+     * The method uses temporary GPU buffers that are deleted after
+     * rendering to avoid memory leaks. Buffer data is uploaded as
+     * STREAM_DRAW for optimal performance with dynamic geometry.
+     */
     #if !ceramic_debug_draw_backend inline #end public function flush():Void {
 
         var batchMultiTexture = _batchMultiTexture;

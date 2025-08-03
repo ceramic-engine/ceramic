@@ -1,42 +1,78 @@
 package elements;
 
+/**
+ * Enumeration defining different scrollbar visibility behaviors for scrollable containers.
+ * 
+ * This enum controls how and when scrollbars appear in scrolling layouts, providing
+ * different strategies for managing the trade-off between visual space and scroll
+ * functionality feedback.
+ * 
+ * Usage example:
+ * ```haxe
+ * var scrollView = new ScrollView();
+ * scrollView.scrollbarVisibility = ScrollbarVisibility.AUTO_SHOW;
+ * ```
+ */
 enum abstract ScrollbarVisibility(Int) {
 
     /**
-     * Adds a scrollbar only if the content is higher than the container.
-     * When the scrollbar is not there, it give a bit more width to
-     * the content as the space for the scrollbar is free.
+     * Dynamically adds a scrollbar only when content exceeds container height.
+     * 
+     * When the scrollbar is not present, content uses the full available width
+     * including the space normally reserved for the scrollbar. This maximizes
+     * content area but may cause layout shifts when scrollbars appear/disappear.
+     * 
+     * Best for: Content that rarely needs scrolling
      */
     var AUTO_ADD = 0;
 
     /**
-     * Like `AUTO_ADD`, but when the scrollbar is added, it stays,
-     * even if the content fits again within the visible area later.
-     * This can be useful to prevent continuous inner width changes
-     * and scrollbar appearing and disappearing over and over
-     * again when the content height varies many times. The only way to
-     * make the scrollbar disappear again would be to increase the
-     * height of the window itself so that the current content fits in it.
+     * Like AUTO_ADD, but once added, the scrollbar persists until container resizes.
+     * 
+     * When content initially requires scrolling, the scrollbar appears and remains
+     * visible even if content later shrinks to fit. This prevents oscillating
+     * scrollbar visibility when content height fluctuates frequently, providing
+     * stable layout at the cost of some visual space.
+     * 
+     * The scrollbar only disappears if the container itself grows large enough
+     * to accommodate the current content without scrolling.
+     * 
+     * Best for: Dynamic content with frequently changing heights
      */
     var AUTO_ADD_STAY = 1;
 
     /**
-     * Show a scrollbar only if the content is higher than the container.
-     * When the scrollbar is not visible, the content doesn't have more
-     * width than when the scrollbar is visible. The extra width is always
-     * reserved for the scrollbar, which is only hidden in the hierarchy
-     * as needed, not really removed entirely.
+     * Shows/hides scrollbar based on content overflow, but always reserves space.
+     * 
+     * Content width remains constant regardless of scrollbar visibility because
+     * the scrollbar space is always reserved. When not needed, the scrollbar
+     * is hidden (visibility = false) rather than removed from layout.
+     * 
+     * This prevents layout shifts while providing visual feedback only when needed.
+     * 
+     * Best for: Stable layouts where content width consistency is important
      */
     var AUTO_SHOW = 2;
 
     /**
-     * The scrollbar is always included and visible, given that the container
-     * has a fixed height.
+     * Scrollbar is always present and visible regardless of content size.
+     * 
+     * Provides consistent visual indication of scroll capability and stable
+     * layout dimensions. The scrollbar may be inactive when content fits
+     * within the container.
+     * 
+     * Best for: Fixed-height containers where scroll indication is always desired
      */
     var ALWAYS = 3;
 
     /**
-     * There is never a scrollbar
+     * No scrollbar is ever displayed, regardless of content overflow.
+     * 
+     * Content may still be scrollable through other means (touch, mouse wheel),
+     * but no visual scrollbar indicator is provided. This maximizes content
+     * area but provides no visual feedback about scroll state.
+     * 
+     * Best for: Touch interfaces or minimal designs where scrollbars are undesired
      */
     var NEVER = -1;
 

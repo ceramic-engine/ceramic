@@ -6,42 +6,75 @@ import ceramic.FontAsset;
 import ceramic.Shortcuts.*;
 import tracker.Model;
 
+/**
+ * Comprehensive theme configuration for the elements UI system.
+ * 
+ * Defines all visual properties including colors, fonts, spacing, and alpha values
+ * for various UI components. Themes can be customized per-context or per-component.
+ * 
+ * Features:
+ * - Serializable properties for persistence
+ * - Color tinting for theme variations
+ * - Cloning for creating theme variants
+ * - Support for custom fonts
+ * 
+ * The theme uses a consistent naming scheme:
+ * - `light*`: Brightest variants
+ * - `medium*`: Mid-tone variants
+ * - `dark*`: Darker variants
+ * - `darker*`: Darkest variants
+ * 
+ * @see Context
+ * @see Model
+ */
 class Theme extends Model {
 
 /// Behaviors
 
+    /** Whether to show background colors in form layouts */
     @serialize public var backgroundInFormLayout:Bool = false;
 
 /// Text colors
 
+    /** Color for text in input fields */
     @serialize public var fieldTextColor:Color = 0xFFFFFF;
 
+    /** Color for placeholder text in empty fields */
     @serialize public var fieldPlaceholderColor:Color = 0x888888;
 
+    /** Light text color for primary content */
     @serialize public var lightTextColor:Color = 0xF3F3F3;
 
+    /** Medium text color for secondary content */
     @serialize public var mediumTextColor:Color = 0xCCCCCC;
 
+    /** Dark text color for tertiary content */
     @serialize public var darkTextColor:Color = 0x888888;
 
+    /** Darker text color for least prominent content */
     @serialize public var darkerTextColor:Color = 0x555555;
 
 /// Icon colors
 
+    /** Default color for icons and glyphs */
     @serialize public var iconColor:Color = 0xFFFFFF;
 
 /// Text fonts
 
+    /** Custom medium weight font override */
     @serialize public var customMediumFont:BitmapFont = null;
 
+    /** Medium weight font (uses custom or falls back to default) */
     public var mediumFont(get,never):BitmapFont;
     function get_mediumFont():BitmapFont {
         var font = customMediumFont;
         return font != null ? font : app.assets.font(settings.defaultFont);
     }
 
+    /** Custom bold font override */
     @serialize public var customBoldFont:BitmapFont = null;
 
+    /** Bold font (uses custom or falls back to default) */
     public var boldFont(get,never):BitmapFont;
     function get_boldFont():BitmapFont {
         var font = customBoldFont;
@@ -136,6 +169,9 @@ class Theme extends Model {
 
     @serialize public var windowBorderAlpha:Float = 1;
 
+    /**
+     * Creates a new Theme with default dark color scheme.
+     */
     public function new() {
 
         super();
@@ -144,6 +180,12 @@ class Theme extends Model {
 
 /// Helpers
 
+    /**
+     * Creates a deep copy of this theme.
+     * 
+     * @param toTheme Optional theme instance to copy into (creates new if null)
+     * @return The cloned theme
+     */
     public function clone(?toTheme:Theme):Theme {
 
         if (toTheme == null)
@@ -199,7 +241,13 @@ class Theme extends Model {
     }
 
     /**
-     * Apply the given `tint` color using `baseTheme` as lightness references
+     * Apply the given `tint` color using `baseTheme` as lightness references.
+     * 
+     * Recolors most theme elements while preserving relative brightness relationships.
+     * Selection and highlight colors are not affected (use applyAltTint for those).
+     * 
+     * @param baseTheme Base theme to derive lightness values from (defaults to context theme)
+     * @param tint Color to tint the theme with (uses HSLuv color space)
      */
     public function applyTint(?baseTheme:Theme, tint:Color):Void {
 
@@ -254,7 +302,13 @@ class Theme extends Model {
     }
 
     /**
-     * Apply the given alt `tint` color using `baseTheme` as lightness references
+     * Apply the given alt `tint` color using `baseTheme` as lightness references.
+     * 
+     * Specifically tints selection, highlight, and focus colors.
+     * Use this for accent color customization.
+     * 
+     * @param baseTheme Base theme to derive lightness values from (defaults to context theme)
+     * @param tint Accent color to apply (uses HSLuv color space)
      */
     public function applyAltTint(?baseTheme:Theme, tint:Color):Void {
 
@@ -284,6 +338,11 @@ class Theme extends Model {
 
     }
 
+    /**
+     * Sets the background color for tabs and windows.
+     * 
+     * @param color The background color to apply
+     */
     public function applyBackgroundColor(color:Color):Void {
 
         tabsBackgroundColor = color;
@@ -291,6 +350,12 @@ class Theme extends Model {
 
     }
 
+    /**
+     * Sets all text color variants to the same color.
+     * Useful for high contrast or monochrome themes.
+     * 
+     * @param color The text color to apply to all variants
+     */
     public function applyTextColor(color:Color):Void {
 
         lightTextColor = color;

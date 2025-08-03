@@ -6,17 +6,56 @@ import ceramic.ScanCode;
 import clay.sdl.SDL;
 #end
 
+/**
+ * Clay backend implementation for system text input handling.
+ * 
+ * This class manages the platform-specific text input mechanisms,
+ * including:
+ * - IME (Input Method Editor) support for complex scripts
+ * - Virtual keyboard positioning on mobile platforms
+ * - Hardware keyboard input processing
+ * - Modifier key state tracking (Shift, Ctrl, Meta)
+ * 
+ * The implementation uses SDL's text input API on native platforms,
+ * which provides proper IME support and handles international text
+ * input correctly.
+ * 
+ * @see spec.TextInput The interface this class implements
+ * @see ceramic.TextInput For the high-level text input API
+ */
 class TextInput implements spec.TextInput {
 
+    /** Whether text input mode is currently active */
     var inputActive:Bool = false;
 
+    /** X position of the text input area (for IME positioning) */
     var inputRectX = 0;
+    /** Y position of the text input area (for IME positioning) */
     var inputRectY = 0;
+    /** Width of the text input area */
     var inputRectW = 0;
+    /** Height of the text input area */
     var inputRectH = 0;
 
     public function new() {}
 
+    /**
+     * Starts text input mode.
+     * 
+     * This activates the system's text input mechanisms including:
+     * - Virtual keyboard on mobile devices
+     * - IME composition window positioning
+     * - Text input event processing
+     * 
+     * The rectangle parameters help position IME windows and virtual
+     * keyboards near the text being edited.
+     * 
+     * @param initialText Initial text content (currently unused)
+     * @param x X position of the text input area
+     * @param y Y position of the text input area
+     * @param w Width of the text input area (minimum 1 pixel)
+     * @param h Height of the text input area (minimum 1 pixel)
+     */
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
         #if ceramic_debug_text_input
@@ -51,6 +90,13 @@ class TextInput implements spec.TextInput {
 
     }
 
+    /**
+     * Stops text input mode.
+     * 
+     * This deactivates text input, hiding virtual keyboards and
+     * closing any IME composition windows. The input area is reset
+     * to prevent any lingering visual artifacts.
+     */
     public function stop():Void {
 
         #if ceramic_debug_text_input
@@ -86,6 +132,15 @@ class TextInput implements spec.TextInput {
 
 /// Internal
 
+    /**
+     * Handles text input events from the system.
+     * 
+     * Processes Unicode text input, including composed characters
+     * from IME systems. Filters out spaces (handled separately)
+     * and forwards the text to the high-level text input system.
+     * 
+     * @param text The input text (may be multiple characters for IME)
+     */
     function handleTextInput(text:String) {
 
         #if ceramic_debug_text_input
@@ -114,6 +169,19 @@ class TextInput implements spec.TextInput {
 
     }
 
+    /**
+     * Handles key press events for text editing.
+     * 
+     * Processes special keys like:
+     * - Navigation (arrows, home, end)
+     * - Editing (backspace, delete, enter)
+     * - Modifiers (shift, ctrl, meta/cmd)
+     * 
+     * Regular character input is handled by handleTextInput instead.
+     * 
+     * @param keyCode Virtual key code
+     * @param scanCode Physical key scan code
+     */
     function handleKeyDown(keyCode:Int, scanCode:Int) {
 
         // Keyboard input could have been handled at ceramic cross-platform api level,
@@ -186,6 +254,16 @@ class TextInput implements spec.TextInput {
 
     }
 
+    /**
+     * Handles key release events.
+     * 
+     * Only tracks modifier key releases (Shift, Ctrl, Meta) as these
+     * affect text input behavior and selection. Regular keys are
+     * processed on key down only.
+     * 
+     * @param keyCode Virtual key code
+     * @param scanCode Physical key scan code
+     */
     function handleKeyUp(keyCode:Int, scanCode:Int) {
 
         if (scanCode == ScanCode.LSHIFT) {

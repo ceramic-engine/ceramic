@@ -15,22 +15,79 @@ import spine.support.utils.JsonValue;
 
 using StringTools;
 
+/**
+ * Asset loader for Spine 2D skeletal animation data.
+ * 
+ * This asset handles loading Spine JSON files along with their associated
+ * texture atlases and images. It automatically manages:
+ * - JSON skeleton data parsing
+ * - Atlas file loading with texture page management
+ * - Hot-reloading when source files change
+ * - Texture density switching for different screen resolutions
+ * - Spine data lifecycle and memory management
+ * 
+ * ## File Structure
+ * 
+ * A typical Spine asset folder contains:
+ * - `skeleton.json` - The skeleton and animation data
+ * - `skeleton.atlas` - Texture atlas definition
+ * - `skeleton.png` - One or more texture pages
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * var spineAsset = assets.spine('hero');
+ * var spine = new Spine();
+ * spine.spineData = spineAsset.spineData;
+ * ```
+ * 
+ * @see SpineData
+ * @see Spine
+ */
 class SpineAsset extends Asset {
 
 /// Events
 
+    /**
+     * Emitted when the spine data is replaced during hot-reload.
+     * This allows Spine instances to update their data automatically.
+     * 
+     * @param newSpineData The newly loaded spine data
+     * @param prevSpineData The previous spine data being replaced
+     */
     @event function replaceSpineData(newSpineData:SpineData, prevSpineData:SpineData);
 
 /// Properties
 
+    /**
+     * The raw JSON string containing the skeleton data.
+     * Available after the asset is loaded.
+     */
     public var json:String = null;
 
+    /**
+     * The parsed texture atlas containing all texture regions.
+     * Maps skeleton attachments to texture coordinates.
+     */
     public var atlas:TextureAtlas = null;
 
+    /**
+     * The fully loaded Spine data ready for use in animations.
+     * Contains skeleton structure, animations, and texture references.
+     */
     @observe public var spineData:SpineData = null;
 
+    /**
+     * Scale factor applied to the skeleton data.
+     * Use this to adjust the size of Spine animations at load time.
+     * Default is 1.0.
+     */
     public var scale:Float = 1.0;
 
+    /**
+     * Map of atlas pages to their corresponding image assets.
+     * Used internally to manage texture loading and lifecycle.
+     */
     public var pages:Map<AtlasPage,ImageAsset> = new Map();
 
 /// Internal
@@ -39,6 +96,13 @@ class SpineAsset extends Asset {
 
 /// Lifecycle
 
+    /**
+     * Creates a new Spine asset.
+     * 
+     * @param name The asset name (typically the folder name containing Spine files)
+     * @param variant Optional variant for different asset versions
+     * @param options Asset loading options, including scale factor
+     */
     override public function new(name:String, ?variant:String, ?options:AssetOptions) {
 
         super('spine', name, variant, options);
@@ -56,6 +120,16 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Loads the Spine asset files.
+     * 
+     * This method:
+     * 1. Discovers JSON and atlas files in the asset folder
+     * 2. Loads the JSON skeleton data
+     * 3. Loads the atlas file and its texture pages
+     * 4. Creates the SpineData instance
+     * 5. Handles hot-reload if files were previously loaded
+     */
     override public function load() {
 
         if (owner != null) {
@@ -260,6 +334,16 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Loads a texture page for the atlas.
+     * 
+     * Called by the SpineTextureLoader when the atlas references a texture.
+     * Creates an ImageAsset for each texture page and tracks it.
+     * 
+     * @param page The atlas page to load
+     * @param path The texture file path
+     * @param basePath Optional base directory path
+     */
     function loadPage(page:AtlasPage, path:String, ?basePath:String):Void {
 
         log.info('Load atlas page ${page.name} / $path / $basePath');
@@ -281,6 +365,13 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Unloads a texture page from memory.
+     * 
+     * Removes the page from tracking and destroys its image asset.
+     * 
+     * @param page The atlas page to unload
+     */
     function unloadPage(page:AtlasPage):Void {
 
         var asset = pages.get(page);
@@ -295,6 +386,10 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Called when the texture density changes (e.g., switching to @2x textures).
+     * Triggers a reload if the atlas path changes due to density.
+     */
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         if (status == READY) {
@@ -306,6 +401,10 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Checks if texture density change requires reloading the asset.
+     * This happens when different density atlases are available.
+     */
     function checkTexturesDensity():Void {
 
         if (owner == null || !owner.reloadOnTextureDensityChange)
@@ -324,6 +423,10 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Handles hot-reload when asset files change on disk.
+     * Automatically reloads the Spine data when source files are modified.
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath() && !app.backend.textures.supportsHotReloadPath())
@@ -345,6 +448,10 @@ class SpineAsset extends Asset {
 
     }
 
+    /**
+     * Cleans up the asset and releases all resources.
+     * Destroys the SpineData and all associated textures.
+     */
     override function destroy():Void {
 
         super.destroy();

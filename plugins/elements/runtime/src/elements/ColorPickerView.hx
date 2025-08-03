@@ -14,36 +14,73 @@ import tracker.Observable;
 
 using ceramic.VisualTransition;
 
+/**
+ * A comprehensive color picker interface combining multiple color selection methods.
+ * 
+ * This view provides:
+ * - HSB/HSL color gradient with hue spectrum
+ * - HSLuv perceptually uniform color space option
+ * - RGB numeric input fields (0-255)
+ * - HSL/HSLuv numeric input fields (H: 0-360, S/L: 0-100%)
+ * - Saved color palette with drag-and-drop reordering
+ * - Color mode switching between HSL and HSLuv
+ * 
+ * The picker automatically synchronizes all input methods - changing the color
+ * through any interface updates all others. Users can save frequently used
+ * colors to a palette for quick access.
+ * 
+ * Layout:
+ * - Left: Gradient picker and spectrum
+ * - Center: RGB input fields
+ * - Right: HSL/HSLuv input fields and buttons
+ * - Bottom: Saved color palette (when colors exist)
+ */
 class ColorPickerView extends LayersLayout implements Observable implements RelatedToFieldView {
 
+    /** Width of input field rows */
     static final FIELD_ROW_WIDTH = 41.0;
 
+    /** Vertical spacing between fields */
     static final FIELD_ADVANCE = 26.0;
 
+    /** Vertical spacing for buttons */
     static final BUTTON_ADVANCE = 24.0;
 
+    /** Additional gap between field groups */
     static final FIELD_Y_GAP = 1.0;
 
+    /** General padding for the picker */
     static final PADDING = 6.0;
 
+    /** Size of the main color gradient square */
     static final GRADIENT_SIZE = 158.0;
 
+    /** Width of the hue/lightness spectrum bar */
     static final SPECTRUM_WIDTH = 12.0;
 
+    /** Size of palette color swatches */
     static final PALETTE_COLOR_SIZE = ColorPickerPaletteColorView.PALETTE_COLOR_SIZE;
 
+    /** Gap between palette colors */
     static final PALETTE_COLOR_GAP = 2.0;
 
+    /** Reusable array for HSLuv conversions */
     static var _tuple:Array<Float> = [0, 0, 0];
 
 /// Public properties
 
+    /** Optional custom theme for this picker */
     @observe public var theme:Theme = null;
 
+    /** The currently selected color value (read-only, use setColor methods to change) */
     @observe public var colorValue(default, null):Color = Color.WHITE;
 
 /// Internal
 
+    /**
+     * Computed property that returns the palette color currently being dragged.
+     * @return The dragging color view or null if none
+     */
     @compute function draggingColorPreview():ColorPickerPaletteColorView {
 
         var paletteColorPreviews = this.paletteColorPreviews;
@@ -61,6 +98,11 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     }
 
+    /**
+     * Computes the palette index where a dragged color should be dropped.
+     * Uses distance calculation to find the nearest palette slot.
+     * @return The target index or -1 if no valid drop location
+     */
     @compute function draggingColorDropIndex():Int {
 
         var draggingColorPreview = this.draggingColorPreview;
@@ -104,12 +146,15 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     }
 
+    /** Height of the palette area */
     @observe var paletteHeight:Float = 0;
 
+    /** Whether to use HSLuv color space instead of HSL */
     var hsluv(get, set):Bool;
     inline function get_hsluv():Bool return context.user.colorPickerHsluv;
     inline function set_hsluv(hsluv:Bool) return context.user.colorPickerHsluv = hsluv;
 
+    /** User's saved palette colors */
     var paletteColors(get, set):ReadOnlyArray<Color>;
     inline function get_paletteColors():ReadOnlyArray<Color> return context.user.paletteColors;
     inline function set_paletteColors(paletteColors:ReadOnlyArray<Color>) return context.user.paletteColors = paletteColors;
@@ -168,6 +213,10 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
 /// Lifecycle
 
+    /**
+     * Creates a new color picker view.
+     * @param colorFieldView Optional associated color field for context
+     */
     public function new(?colorFieldView:ColorFieldView) {
 
         super();
@@ -462,6 +511,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
 /// Public API
 
+    /**
+     * Sets the selected color from RGB values.
+     * Updates all UI elements to reflect the new color.
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     */
     public function setColorFromRGB(r:Int, g:Int, b:Int) {
 
         updatingColor++;
@@ -483,6 +539,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     }
 
+    /**
+     * Sets the selected color from HSL values.
+     * Updates all UI elements to reflect the new color.
+     * @param h Hue in degrees (0-360)
+     * @param s Saturation (0-1)
+     * @param l Lightness (0-1)
+     */
     public function setColorFromHSL(h:Float, s:Float, l:Float) {
 
         updatingColor++;
@@ -504,6 +567,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     }
 
+    /**
+     * Sets the selected color from HSB/HSV values.
+     * Updates all UI elements to reflect the new color.
+     * @param h Hue in degrees (0-360)
+     * @param s Saturation (0-1)
+     * @param b Brightness/Value (0-1)
+     */
     public function setColorFromHSB(h:Float, s:Float, b:Float) {
 
         updatingColor++;
@@ -525,6 +595,13 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
     }
 
+    /**
+     * Sets the selected color from HSLuv values.
+     * HSLuv provides perceptually uniform color selection.
+     * @param h Hue in degrees (0-360)
+     * @param s Saturation (0-1)
+     * @param l Lightness (0-1)
+     */
     public function setColorFromHSLuv(h:Float, s:Float, l:Float) {
 
         updatingColor++;
@@ -991,6 +1068,11 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
 
 /// Related field view
 
+    /**
+     * Returns the associated field view for this color picker.
+     * Used for contextual positioning and updates.
+     * @return The related ColorFieldView or null
+     */
     public function relatedFieldView():FieldView {
 
         return colorFieldView;

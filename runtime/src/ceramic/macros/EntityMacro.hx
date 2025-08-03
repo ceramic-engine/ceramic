@@ -8,14 +8,53 @@ import haxe.macro.TypeTools;
 using StringTools;
 using haxe.macro.ExprTools;
 
+/**
+ * Build macro for Entity classes that provides extensive compile-time processing.
+ * This macro is the heart of Ceramic's entity system, handling:
+ * 
+ * - **Component management**: @component fields are transformed into properties with lifecycle
+ * - **Owner management**: @owner fields automatically destroy owned entities
+ * - **Content tracking**: @content fields trigger contentDirty when changed
+ * - **Autorun methods**: @autorun methods are automatically called and tracked
+ * - **StateMachine integration**: Validates state methods match enum values
+ * - **Field introspection**: Generates runtime field info for serialization
+ * - **Lifecycle enforcement**: Ensures proper destroy() implementation
+ * 
+ * The macro performs deep AST transformation to inject lifecycle management code,
+ * ensuring entities properly clean up resources and maintain parent-child relationships.
+ */
 class EntityMacro {
 
+    /**
+     * Persistent cache of field names by type name for runtime introspection.
+     * Used by serialization and debugging systems.
+     */
     @:persistent static var fieldNamesByTypeName:Map<String,Array<String>> = null;
 
+    /**
+     * Tracks which classes have been processed to avoid duplicate transformations.
+     */
     static var processed:Map<String,Bool> = new Map();
 
+    /**
+     * Flag to ensure super.destroy() is called in overridden destroy methods.
+     */
     static var hasSuperDestroy:Bool = false;
 
+    /**
+     * Main build macro that processes Entity subclasses.
+     * Transforms fields based on metadata annotations and enforces entity lifecycle.
+     * 
+     * Key transformations:
+     * - @component fields become managed components with automatic cleanup
+     * - @owner fields get automatic destruction in destroy()
+     * - @content fields trigger contentDirty on change
+     * - @autorun methods are called automatically
+     * - StateMachine state methods are validated
+     * - Field info is generated for runtime introspection
+     * 
+     * @return Transformed fields with injected lifecycle management
+     */
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -945,8 +984,14 @@ class EntityMacro {
     }
 
     /**
-     * Replace `super.destroy();`
-     * with `{ _lifecycleState = -1; super.destroy(); }`
+     * Transforms super.destroy() calls to ensure proper lifecycle state management.
+     * Replaces `super.destroy();` with `{ _lifecycleState = -1; super.destroy(); }`
+     * to allow the parent destroy() to execute even when marked as destroyed.
+     * 
+     * This is critical for proper cleanup chain execution in entity hierarchies.
+     * 
+     * @param e Expression to transform
+     * @return Transformed expression with lifecycle state management
      */
     static function transformSuperDestroy(e:Expr):Expr {
 
@@ -964,6 +1009,17 @@ class EntityMacro {
 
     }
 
+    /**
+     * Creates an implicit constructor if needed for component initialization.
+     * When an entity has @component fields but no constructor, this generates
+     * one that properly calls super() and initializes components.
+     * 
+     * @param constructor Existing constructor field (may be null)
+     * @param parentConstructor Parent class constructor for argument resolution
+     * @param newFields Array to add the new constructor to
+     * @param classPath Full class path for error reporting
+     * @return Constructor field (existing or newly created)
+     */
     static function createConstructorIfNeeded(constructor:Field, parentConstructor:haxe.macro.Type.ClassField, newFields:Array<Field>, classPath:String):Field {
 
         if (constructor == null) {
@@ -1032,8 +1088,13 @@ class EntityMacro {
     static var _appendConstructorSuperToAppend:Expr;
 
     /**
-     * Append constructor `super(...);`
-     * with `toAppend` expr
+     * Appends initialization code after super() call in constructor.
+     * Used to inject component initialization code at the proper point
+     * in the constructor chain.
+     * 
+     * @param e Constructor expression to modify
+     * @param toAppend Code to inject after super() call
+     * @return Modified expression with injected code
      */
     static function appendConstructorSuper(e:Expr, toAppend:Expr):Expr {
 
@@ -1054,6 +1115,17 @@ class EntityMacro {
 
     }
 
+    /**
+     * Checks if a field has any entity-related metadata annotations.
+     * Returns flags indicating which annotations are present:
+     * - Bit 0: @component
+     * - Bit 1: @owner
+     * - Bit 2: @content
+     * - Bit 3: @autorun
+     * 
+     * @param field Field to check for metadata
+     * @return Flags with bits set for each annotation type
+     */
     static function hasRelevantMeta(field:Field):Flags {
 
         if (field.meta == null || field.meta.length == 0) return 0;
@@ -1081,6 +1153,14 @@ class EntityMacro {
 
     }
 
+    /**
+     * Converts a ComplexType to its string representation for field info.
+     * Handles type parameters, package paths, and StdTypes unwrapping.
+     * Used for runtime type information in serialization.
+     * 
+     * @param type Complex type to convert
+     * @return String representation of the type
+     */
     static function complexTypeToString(type:ComplexType):String {
 
         var typeStr:String = null;
@@ -1142,6 +1222,13 @@ class EntityMacro {
 
 /// Completion specific
 
+    /**
+     * Simplified build macro for code completion context.
+     * Only performs minimal transformations needed for IDE features,
+     * particularly inferring delta parameter types for state update methods.
+     * 
+     * @return Lightly processed fields for completion
+     */
     macro static public function buildForCompletion():Array<Field> {
 
         var fields = Context.getBuildFields();
@@ -1168,6 +1255,13 @@ class EntityMacro {
 
     }
 
+    /**
+     * Retrieves cached field names for a given type.
+     * Used by runtime introspection systems to discover entity fields.
+     * 
+     * @param typeName Fully qualified type name
+     * @return Array of field names or null if not cached
+     */
     public static function getFieldNamesFromTypeName(typeName:String):Array<String> {
 
         if (fieldNamesByTypeName == null)

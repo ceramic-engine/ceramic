@@ -5,14 +5,61 @@ import ceramic.Shortcuts.*;
 using StringTools;
 
 /**
- * A cross-platform and high level HTTP request utility
+ * A cross-platform and high level HTTP request utility that provides a unified interface
+ * for making HTTP requests across all supported Ceramic platforms.
+ * 
+ * This class serves as the main entry point for HTTP networking in Ceramic applications,
+ * providing automatic header formatting, parameter encoding, and response processing.
+ * 
+ * Features:
+ * - Cross-platform HTTP requests (web, mobile, desktop, Unity)
+ * - Automatic parameter encoding for GET and POST requests
+ * - Header normalization and formatting
+ * - Support for both text and binary responses
+ * - Timeout handling
+ * - Content-Length automatic calculation
+ * 
+ * Example usage:
+ * ```haxe
+ * Http.request({
+ *     url: "https://api.example.com/data",
+ *     method: GET,
+ *     params: ["key" => "value"],
+ *     headers: ["Authorization" => "Bearer token"],
+ *     timeout: 30
+ * }, function(response) {
+ *     if (response.status == 200) {
+ *         trace("Success: " + response.content);
+ *     } else {
+ *         trace("Error: " + response.error);
+ *     }
+ * });
+ * ```
  */
 class Http {
 
+    /**
+     * Performs an HTTP request with the specified options.
+     * 
+     * This method handles the complete HTTP request lifecycle including:
+     * - Header formatting and normalization
+     * - Parameter encoding for GET/POST requests
+     * - Content-Length calculation
+     * - Response processing and cleanup
+     * 
+     * @param options The HTTP request configuration including URL, method, headers, parameters, and timeout
+     * @param done Callback function that receives the HTTP response when the request completes
+     */
     public static function request(
         options:ceramic.HttpRequestOptions,
         done:ceramic.HttpResponse->Void):Void {
 
+        /**
+         * Formats header keys to proper HTTP header case (e.g., "content-type" -> "Content-Type").
+         * 
+         * @param key The header key to format
+         * @return The formatted header key with proper capitalization
+         */
         inline function formatHeaderKey(key:String) {
 
             var formatKey = [];

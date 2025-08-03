@@ -7,10 +7,57 @@ import haxe.macro.Expr;
 
 using StringTools;
 
+/**
+ * Macro for automatic plugin initialization in the Ceramic framework.
+ * 
+ * This macro discovers enabled plugins at compile-time based on compiler defines
+ * and generates code to initialize them. It provides a centralized way to
+ * initialize all plugins without manually maintaining a list.
+ * 
+ * ## How It Works
+ * 
+ * 1. Scans compiler defines for keys starting with `plugin_`
+ * 2. Derives plugin class names from the define keys
+ * 3. Checks if each plugin class exists and has a `pluginInit()` method
+ * 4. Generates initialization calls for all valid plugins
+ * 
+ * ## Plugin Naming Convention
+ * 
+ * - Define: `plugin_<name>` (e.g., `plugin_spine`, `plugin_ui`)
+ * - Class: `<Name>Plugin` (e.g., `SpinePlugin`, `UiPlugin`)
+ * - Special cases handled: `imgui` -> `ImGuiPlugin`
+ * 
+ * ## Example
+ * 
+ * ```haxe
+ * // In your main application:
+ * PluginsMacro.initPlugins();
+ * 
+ * // With -D plugin_spine -D plugin_ui, generates:
+ * // @:privateAccess ceramic.SpinePlugin.pluginInit();
+ * // @:privateAccess ceramic.UiPlugin.pluginInit();
+ * ```
+ * 
+ * ## Plugin Requirements
+ * 
+ * Plugins must:
+ * - Be in the `ceramic` package
+ * - Have a static `pluginInit()` method
+ * - Follow the naming convention
+ * 
+ * @see ceramic.App Where plugins are initialized during app startup
+ */
 class PluginsMacro {
 
     /**
-     * Resolves plugin classes and calls pluginInit() for each of them.
+     * Resolves plugin classes and generates initialization calls for each enabled plugin.
+     * 
+     * This macro examines compiler defines at compile-time to determine which
+     * plugins are enabled, then generates the appropriate initialization code.
+     * Plugin initialization calls are made with @:privateAccess to allow
+     * access to private pluginInit methods.
+     * 
+     * @return Expression block containing all plugin initialization calls
      */
     macro public static function initPlugins() {
 

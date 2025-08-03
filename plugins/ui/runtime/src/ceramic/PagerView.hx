@@ -14,6 +14,22 @@ using ceramic.Extensions;
  * children with all the same size as the pager bounds.
  *
  * It also supports looping (when paging is enabled)
+ * 
+ * Key features:
+ * - Efficient view recycling for large datasets
+ * - Page-based scrolling with configurable spacing
+ * - Optional looping for infinite scrolling
+ * - Preloading of adjacent pages
+ * - Configurable visibility bounds
+ * 
+ * @example
+ * ```haxe
+ * var pager = new PagerView();
+ * pager.size(400, 300);
+ * pager.loop = true;
+ * pager.preloadAmplitude = 2; // Preload 2 pages before/after
+ * pager.dataSource = myDataSource;
+ * ```
  */
 class PagerView extends ScrollView {
 
@@ -21,12 +37,31 @@ class PagerView extends ScrollView {
 
     static var _tmpArray:Array<Int> = [];
 
+    /**
+     * The data source that provides page views and manages their lifecycle.
+     * Setting this will trigger a reload of all pages.
+     */
     public var dataSource(default,set):PagerViewDataSource = null;
 
+    /**
+     * Whether to automatically destroy page views when they are no longer needed.
+     * If false, views are kept alive but deactivated when recycled.
+     * Default: true
+     */
     public var autoDestroyItems:Bool = true;
 
+    /**
+     * Maximum number of reusable views to keep in the pool.
+     * Higher values reduce view creation overhead but consume more memory.
+     * Default: 1
+     */
     public var maxReusableViewsCount:Int = 1;
 
+    /**
+     * Extra padding beyond the visible bounds to keep pages active.
+     * Useful for preloading content just outside the viewport.
+     * Default: 0.0
+     */
     public var visibleOutset(default,set):Float = 0.0;
     function set_visibleOutset(visibleOutset:Float):Float {
         if (this.visibleOutset != visibleOutset) {
@@ -51,6 +86,11 @@ class PagerView extends ScrollView {
         return preloadAmplitude;
     }
 
+    /**
+     * Whether to deactivate pages that are outside the visible bounds (plus outset).
+     * When true, invisible pages have their active property set to false.
+     * Default: true
+     */
     public var hidePagesOutsideBounds(default,set):Bool = true;
     function set_hidePagesOutsideBounds(hidePagesOutsideBounds:Bool):Bool {
         if (this.hidePagesOutsideBounds != hidePagesOutsideBounds) {
@@ -90,7 +130,11 @@ class PagerView extends ScrollView {
     }
 
     /**
-     * Control how children depth is sorted.
+     * Control how children depth is sorted:
+     * - SAME: All pages have the same depth
+     * - INCREMENT: Later pages have higher depth
+     * - DECREMENT: Earlier pages have higher depth
+     * Default: SAME
      */
     public var childrenDepth(default,set):ChildrenDepth = SAME;
     function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {
@@ -100,6 +144,13 @@ class PagerView extends ScrollView {
         return childrenDepth;
     }
 
+    /**
+     * Defines how page views are managed:
+     * - RECYCLE: Views are recycled when scrolled out of view
+     * - FREEZE: Views remain active but frozen when out of view
+     * - LAZY: Views are created on demand and kept
+     * Default: RECYCLE
+     */
     public var itemsBehavior(default, set):CollectionViewItemsBehavior = RECYCLE;
     function set_itemsBehavior(itemsBehavior:CollectionViewItemsBehavior):CollectionViewItemsBehavior {
         if (this.itemsBehavior != itemsBehavior) {
@@ -113,14 +164,23 @@ class PagerView extends ScrollView {
         return itemsBehavior;
     }
 
+    /**
+     * Pool of views available for recycling
+     */
     var reusableViews:Array<View> = [];
 
     var prevLayoutWidth:Float = -1;
 
     var prevLayoutHeight:Float = -1;
 
+    /**
+     * Map of currently loaded page views by index
+     */
     var pageViews:IntMap<View> = null;
 
+    /**
+     * Total number of pages from the data source
+     */
     var numPages:Int = 0;
 
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
@@ -166,6 +226,11 @@ class PagerView extends ScrollView {
         return dataSource;
     }
 
+    /**
+     * Reload all data from the data source.
+     * This will query the data source for the current page count
+     * and trigger a layout update.
+     */
     public function reloadData():Void {
 
         if (dataSource != null) {
@@ -216,6 +281,11 @@ class PagerView extends ScrollView {
 
     }
 
+    /**
+     * Get the index of the page closest to the current scroll position.
+     * This takes into account the page size, spacing, and looping behavior.
+     * @return The index of the closest page (0-based)
+     */
     public function closestPageIndex():Int {
 
         var scroll:Float = (direction == VERTICAL) ? scroller.scrollY : scroller.scrollX;
@@ -239,6 +309,14 @@ class PagerView extends ScrollView {
 
     }
 
+    /**
+     * Compute which pages should be loaded based on current scroll position.
+     * This method handles:
+     * - Loading pages within the preload amplitude
+     * - Recycling pages that are too far away
+     * - Managing the reusable view pool
+     * - Applying looping logic if enabled
+     */
     public function computeLoadedPages():Void {
 
         final shouldHandleUnloads = (itemsBehavior != FREEZE && itemsBehavior != LAZY && scroller.status != DRAGGING);
@@ -346,6 +424,10 @@ class PagerView extends ScrollView {
 
     }
 
+    /**
+     * Configure and position a page view at the given index.
+     * Handles positioning, depth sorting, visibility, and looping adjustments.
+     */
     function handlePageView(pageIndex:Int, pageView:View) {
 
         var pageX:Float = 0;
@@ -435,6 +517,11 @@ class PagerView extends ScrollView {
 
     }
 
+    /**
+     * Check and adjust the scroller position for looping behavior.
+     * When looping is enabled, this ensures the scroll position
+     * wraps around seamlessly at the boundaries.
+     */
     function checkScrollerPosition() {
 
         if (loop && numPages > 1) {
@@ -471,24 +558,46 @@ class PagerView extends ScrollView {
 
 /// Helpers
 
+    /**
+     * Calculate the target horizontal scroll position for a specific page.
+     * @param pageIndex The index of the target page
+     * @param allowOverscroll Whether to allow scrolling beyond boundaries
+     * @return The X scroll position that would center the page
+     */
     public function getTargetScrollXForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
         return scroller.getTargetScrollXForPageIndex(pageIndex, allowOverscroll);
 
     }
 
+    /**
+     * Calculate the target vertical scroll position for a specific page.
+     * @param pageIndex The index of the target page
+     * @param allowOverscroll Whether to allow scrolling beyond boundaries
+     * @return The Y scroll position that would center the page
+     */
     public function getTargetScrollYForPageIndex(pageIndex:Int, allowOverscroll:Bool = false):Float {
 
         return scroller.getTargetScrollYForPageIndex(pageIndex, allowOverscroll);
 
     }
 
+    /**
+     * Immediately scroll to the specified page without animation.
+     * @param pageIndex The index of the page to scroll to
+     */
     public function scrollToPageIndex(pageIndex:Int):Void {
 
         scroller.scrollToPageIndex(pageIndex);
 
     }
 
+    /**
+     * Smoothly scroll to the specified page with animation.
+     * @param pageIndex The index of the page to scroll to
+     * @param duration Animation duration in seconds (default: 0.15)
+     * @param easing Optional easing function for the animation
+     */
     public function smoothScrollToPageIndex(pageIndex:Int, duration:Float = 0.15, ?easing:Easing) {
 
         // When looping, we allow to overscroll because the looping logic will then "loop"

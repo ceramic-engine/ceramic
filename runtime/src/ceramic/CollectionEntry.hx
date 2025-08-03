@@ -8,28 +8,28 @@ using ceramic.Extensions;
 
 /**
  * Base class for entries that can be stored in a Collection.
- * 
+ *
  * CollectionEntry provides:
  * - Automatic unique ID generation
  * - Runtime index for fast integer-based identification
  * - Flexible data deserialization from raw data (CSV, JSON, etc.)
  * - Type conversion for common data types
- * 
+ *
  * When creating custom collection entries, extend this class and add
  * your specific fields. The FieldInfoMacro will automatically generate
  * type information for proper deserialization.
- * 
+ *
  * Example usage:
  * ```haxe
- * class Enemy extends CollectionEntry {
+ * class EnemyEntry extends CollectionEntry {
  *     public var health:Int = 100;
  *     public var damage:Float = 10.5;
  *     public var isFlying:Bool = false;
  *     public var enemyType:EnemyType; // Enum support
  * }
- * 
+ *
  * // Create from raw data (e.g., from CSV)
- * var enemy = new Enemy();
+ * var enemy = new EnemyEntry();
  * enemy.setRawData({
  *     id: "goblin1",
  *     health: "50",
@@ -38,7 +38,7 @@ using ceramic.Extensions;
  *     enemyType: "GOBLIN"
  * });
  * ```
- * 
+ *
  * @see Collection
  * @see FieldInfo
  */
@@ -70,7 +70,7 @@ class CollectionEntry {
 
     /**
      * A unique runtime index for this collection entry instance.
-     * 
+     *
      * Warning: This index is not persistent and will vary between app runs!
      * Use it only for fast runtime lookups, never for saving/loading data.
      * For persistent identification, use the 'id' field instead.
@@ -92,7 +92,7 @@ class CollectionEntry {
 
     /**
      * Sets entry fields from raw data, with automatic type conversion.
-     * 
+     *
      * Supports conversion from strings (e.g., CSV data) to:
      * - Bool: "true"/"false", "yes"/"no", "1"/"0"
      * - Int: Numeric strings
@@ -100,9 +100,9 @@ class CollectionEntry {
      * - Color: Integer color values
      * - String: Any value (null becomes null)
      * - Enum: Case-insensitive enum constructor names
-     * 
+     *
      * Fields marked with @skipEmpty meta will be skipped if the raw value is null or empty.
-     * 
+     *
      * @param data Object containing field names and raw values
      */
     public function setRawData(data:Dynamic) {
@@ -189,10 +189,10 @@ class CollectionEntry {
 
     /**
      * Override this method to handle custom field deserialization.
-     * 
+     *
      * Return true to skip default type conversion for the field.
      * Useful for complex types or custom parsing logic.
-     * 
+     *
      * @param name The field name
      * @param rawValue The raw value to process
      * @return True if field was handled, false to use default conversion

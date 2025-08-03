@@ -5,26 +5,74 @@ import tracker.Autorun;
 
 using ceramic.Extensions;
 
+/**
+ * The base view class for building UI layouts in Ceramic.
+ * 
+ * View extends Layer and adds sophisticated layout capabilities:
+ * - Flexible sizing with fixed, percentage, fill, and auto modes
+ * - Padding and offset support
+ * - Border rendering with customizable colors and sizes
+ * - Automatic layout computation and propagation
+ * - Integration with the view layout system
+ * 
+ * Views can be composed hierarchically to create complex UI layouts.
+ * The layout system automatically computes sizes based on constraints
+ * and propagates changes through the view tree.
+ * 
+ * Key concepts:
+ * - viewWidth/viewHeight: Define how the view should be sized
+ * - computedSize: The actual size after layout computation
+ * - padding: Inner spacing that affects content placement
+ * - offset: Position adjustment relative to default layout position
+ * - flex: Relative sizing weight for flexible layouts
+ * 
+ * @example
+ * ```haxe
+ * var container = new View();
+ * container.viewSize(ViewSize.fill(), 200); // Full width, 200px height
+ * container.padding(10); // 10px padding on all sides
+ * container.borderSize = 2;
+ * container.borderColor = Color.WHITE;
+ * ```
+ * 
+ * @see LinearLayout For arranging views in rows/columns
+ * @see LayersLayout For stacking views
+ * @see ViewSize For sizing options
+ */
 class View extends Layer {
 
 /// Events
 
+    /**
+     * Emitted when the view's layout is computed.
+     * This happens after size computation and before visual positioning.
+     */
     @event function layout_();
 
 /// Properties
 
     /**
-     * Same as `children` but typed as a list of `View` instances instead of `Visual` (thus only contains children that are of `View` type).
+     * Same as `children` but typed as a list of `View` instances instead of `Visual`.
+     * Only contains children that are of `View` type, making it convenient for
+     * layout operations that only affect View children.
      */
     public var subviews:ReadOnlyArray<View> = null;
 
     /**
-     * ComputedSize after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`
+     * ComputedSize after being computed by View layout engine from constraints and `viewWidth`/`viewHeight`.
+     * This represents the actual dimensions the view will have after layout computation,
+     * which may differ from explicitly set dimensions due to constraints.
      */
     public var computedSize:ComputedViewSize = null;
 
     /**
-     * Width that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
+     * Width that will be processed by View layout engine.
+     * Options:
+     * - Numeric value: Fixed width in pixels
+     * - ViewSize.percent(n): Percentage of parent width
+     * - ViewSize.fill(): Fill available parent width
+     * - ViewSize.auto(): Size based on content
+     * Default: ViewSize.auto()
      */
     public var viewWidth(default,set):ViewSize = ViewSize.auto();
     function set_viewWidth(viewWidth:ViewSize):ViewSize {
@@ -35,7 +83,13 @@ class View extends Layer {
     }
 
     /**
-     * Height that will be processed by View layout engine. Can be a numeric value, a percentage (with `ViewSize.percent()`), automatic (with `ViewSize.fill()`) or undefined (with `ViewSize.none()`).
+     * Height that will be processed by View layout engine.
+     * Options:
+     * - Numeric value: Fixed height in pixels
+     * - ViewSize.percent(n): Percentage of parent height
+     * - ViewSize.fill(): Fill available parent height
+     * - ViewSize.auto(): Size based on content
+     * Default: ViewSize.auto()
      */
     public var viewHeight(default,set):ViewSize = ViewSize.auto();
     function set_viewHeight(viewHeight:ViewSize):ViewSize {
@@ -46,7 +100,9 @@ class View extends Layer {
     }
 
     /**
-     * Set `viewWidth` and `viewHeight`
+     * Set `viewWidth` and `viewHeight` in a single call.
+     * @param width The width sizing mode
+     * @param height The height sizing mode
      */
     inline public function viewSize(width:ViewSize, height:ViewSize) {
         viewWidth = width;
@@ -54,12 +110,20 @@ class View extends Layer {
     }
 
     /**
-     * Set padding. Order and number of parameters following CSS padding convention.
-     * Examples:
-     * ```
-     * padding(10) // top=10, right=10, bottom=10, left=10
-     * padding(3, 5) // top=3, right=5, bottom=3, left=5
-     * padding(3, 5, 8, 4) // top=3, right=5, bottom=8, left=4
+     * Set padding using CSS-style shorthand.
+     * Padding creates space inside the view between its edges and content.
+     * 
+     * @param top Top padding (or all sides if only parameter)
+     * @param right Right padding (or horizontal if 2 params)
+     * @param bottom Bottom padding (or bottom if 3+ params)
+     * @param left Left padding
+     * 
+     * @example
+     * ```haxe
+     * padding(10);          // All sides: 10px
+     * padding(10, 20);      // Vertical: 10px, Horizontal: 20px  
+     * padding(10, 20, 30);  // Top: 10px, Horizontal: 20px, Bottom: 30px
+     * padding(10, 20, 30, 40); // Top: 10px, Right: 20px, Bottom: 30px, Left: 40px
      * ```
      */
     public function padding(top:Float, ?right:Float, ?bottom:Float, ?left:Float):Void {
@@ -83,6 +147,11 @@ class View extends Layer {
         paddingBottom = bottom;
     }
 
+    /**
+     * Left padding in pixels.
+     * Space between the left edge and content.
+     * Default: 0
+     */
     public var paddingLeft(default,set):Float = 0;
     function set_paddingLeft(paddingLeft:Float):Float {
         if (this.paddingLeft == paddingLeft) return paddingLeft;
@@ -91,6 +160,11 @@ class View extends Layer {
         return paddingLeft;
     }
 
+    /**
+     * Right padding in pixels.
+     * Space between the right edge and content.
+     * Default: 0
+     */
     public var paddingRight(default,set):Float = 0;
     function set_paddingRight(paddingRight:Float):Float {
         if (this.paddingRight == paddingRight) return paddingRight;
@@ -99,6 +173,11 @@ class View extends Layer {
         return paddingRight;
     }
 
+    /**
+     * Top padding in pixels.
+     * Space between the top edge and content.
+     * Default: 0
+     */
     public var paddingTop(default,set):Float = 0;
     function set_paddingTop(paddingTop:Float):Float {
         if (this.paddingTop == paddingTop) return paddingTop;
@@ -107,6 +186,11 @@ class View extends Layer {
         return paddingTop;
     }
 
+    /**
+     * Bottom padding in pixels.
+     * Space between the bottom edge and content.
+     * Default: 0
+     */
     public var paddingBottom(default,set):Float = 0;
     function set_paddingBottom(paddingBottom:Float):Float {
         if (this.paddingBottom == paddingBottom) return paddingBottom;
@@ -119,7 +203,10 @@ class View extends Layer {
      * Offset this view position by `x` and `y`.
      * This offset is added to the view's resulting position
      * from its default layout. This has only effect when the view is layouted
-     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`.
+     * Useful for fine-tuning positions without breaking the layout flow.
+     * @param x Horizontal offset in pixels
+     * @param y Vertical offset in pixels
      */
     inline public function offset(x:Float, y:Float):Void {
         offsetX = x;
@@ -127,10 +214,10 @@ class View extends Layer {
     }
 
     /**
-     * Offset this view position by `offsetX`.
-     * This offset is added to the view's resulting position
-     * from its default layout. This has only effect when the view is layouted
-     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     * Horizontal offset in pixels.
+     * This offset is added to the view's X position after layout computation.
+     * Only affects views in layouts that support offsets (LinearLayout, LayersLayout).
+     * Default: 0
      */
     public var offsetX(default,set):Float = 0;
     function set_offsetX(offsetX:Float):Float {
@@ -141,10 +228,10 @@ class View extends Layer {
     }
 
     /**
-     * Offset this view position by `offsetY`.
-     * This offset is added to the view's resulting position
-     * from its default layout. This has only effect when the view is layouted
-     * by a layout class that handle offsets: `LinearLayout`, `LayersLayout`
+     * Vertical offset in pixels.
+     * This offset is added to the view's Y position after layout computation.
+     * Only affects views in layouts that support offsets (LinearLayout, LayersLayout).
+     * Default: 0
      */
     public var offsetY(default,set):Float = 0;
     function set_offsetY(offsetY:Float):Float {
@@ -155,12 +242,18 @@ class View extends Layer {
     }
 
     /**
-     * A hint to tell how much space this view should take,
-     *     relative to the space taken by a whole group of views.
-     *     Example:
-     *
-     *         view1.flex = 1; // Fills 1/3 of available space
-     *         view2.flex = 2; // Fills 2/3 of available space
+     * Flex weight for flexible layouts.
+     * Determines how much space this view should take relative to siblings.
+     * Only used in layouts that support flex distribution (e.g., LinearLayout).
+     * 
+     * @example
+     * ```haxe
+     * // Three views in a horizontal layout:
+     * view1.flex = 1; // Takes 1/6 of space
+     * view2.flex = 2; // Takes 2/6 of space  
+     * view3.flex = 3; // Takes 3/6 of space
+     * ```
+     * Default: 1
      */
     public var flex(default,set):Int = 1;
     inline function set_flex(flex:Int):Int {
@@ -171,8 +264,10 @@ class View extends Layer {
     }
 
     /**
-     * Setting this to `false` will prevent this view from updating its layout.
-     * Default is `true`
+     * Controls whether this view participates in layout updates.
+     * Set to false to temporarily prevent layout computation.
+     * Useful for optimization when making multiple changes.
+     * Default: true (after initialization)
      */
     public var canLayout:Bool;
 
@@ -191,13 +286,27 @@ class View extends Layer {
         return layoutDirty;
     }
     #else
+    /**
+     * Indicates whether this view needs layout recomputation.
+     * Automatically set to true when properties affecting layout change.
+     * The layout system will process dirty views in the next update cycle.
+     */
     public var layoutDirty:Bool = true;
     #end
 
 /// Border
 
+    /**
+     * Internal border visual component.
+     * Created on demand when border properties are set.
+     */
     var border:Border = null;
 
+    /**
+     * Z-depth of the border visual.
+     * Controls rendering order relative to view content.
+     * Default: 0
+     */
     public var borderDepth(default,set):Float = 0;
     inline function set_borderDepth(borderDepth:Float):Float {
         if (this.borderDepth == borderDepth) return borderDepth;
@@ -206,6 +315,10 @@ class View extends Layer {
         return borderDepth;
     }
 
+    /**
+     * Alpha transparency of the border (0.0 to 1.0).
+     * Default: 1 (fully opaque)
+     */
     public var borderAlpha(default,set):Float = 1;
     inline function set_borderAlpha(borderAlpha:Float):Float {
         if (this.borderAlpha == borderAlpha) return borderAlpha;
@@ -214,6 +327,13 @@ class View extends Layer {
         return borderAlpha;
     }
 
+    /**
+     * Position of the border relative to view bounds.
+     * - INSIDE: Border is drawn inside the view bounds
+     * - OUTSIDE: Border is drawn outside the view bounds
+     * - CENTER: Border is centered on the view edge
+     * Default: INSIDE
+     */
     public var borderPosition(default,set):BorderPosition = INSIDE;
     inline function set_borderPosition(borderPosition:BorderPosition):BorderPosition {
         if (this.borderPosition == borderPosition) return borderPosition;
@@ -222,6 +342,12 @@ class View extends Layer {
         return borderPosition;
     }
 
+    /**
+     * Border thickness in pixels for all sides.
+     * Set to 0 to hide the border.
+     * Individual side sizes can override this value.
+     * Default: 0
+     */
     public var borderSize(default,set):Float = 0;
     inline function set_borderSize(borderSize:Float):Float {
         if (this.borderSize == borderSize) return borderSize;
@@ -230,6 +356,11 @@ class View extends Layer {
         return borderSize;
     }
 
+    /**
+     * Top border thickness in pixels.
+     * Set to -1 to use borderSize value.
+     * Default: -1
+     */
     public var borderTopSize(default,set):Float = -1;
     inline function set_borderTopSize(borderTopSize:Float):Float {
         if (this.borderTopSize == borderTopSize) return borderTopSize;
@@ -238,6 +369,11 @@ class View extends Layer {
         return borderTopSize;
     }
 
+    /**
+     * Bottom border thickness in pixels.
+     * Set to -1 to use borderSize value.
+     * Default: -1
+     */
     public var borderBottomSize(default,set):Float = -1;
     inline function set_borderBottomSize(borderBottomSize:Float):Float {
         if (this.borderBottomSize == borderBottomSize) return borderBottomSize;
@@ -246,6 +382,11 @@ class View extends Layer {
         return borderBottomSize;
     }
 
+    /**
+     * Left border thickness in pixels.
+     * Set to -1 to use borderSize value.
+     * Default: -1
+     */
     public var borderLeftSize(default,set):Float = -1;
     inline function set_borderLeftSize(borderLeftSize:Float):Float {
         if (this.borderLeftSize == borderLeftSize) return borderLeftSize;
@@ -254,6 +395,11 @@ class View extends Layer {
         return borderLeftSize;
     }
 
+    /**
+     * Right border thickness in pixels.
+     * Set to -1 to use borderSize value.
+     * Default: -1
+     */
     public var borderRightSize(default,set):Float = -1;
     inline function set_borderRightSize(borderRightSize:Float):Float {
         if (this.borderRightSize == borderRightSize) return borderRightSize;
@@ -262,6 +408,11 @@ class View extends Layer {
         return borderRightSize;
     }
 
+    /**
+     * Border color for all sides.
+     * Individual side colors can override this value.
+     * Default: Color.GRAY
+     */
     public var borderColor(default,set):Color = Color.GRAY;
     inline function set_borderColor(borderColor:Color):Color {
         if (this.borderColor == borderColor) return borderColor;
@@ -270,6 +421,11 @@ class View extends Layer {
         return borderColor;
     }
 
+    /**
+     * Top border color.
+     * Set to Color.NONE to use borderColor value.
+     * Default: Color.NONE
+     */
     public var borderTopColor(default,set):Color = Color.NONE;
     inline function set_borderTopColor(borderTopColor:Color):Color {
         if (this.borderTopColor == borderTopColor) return borderTopColor;
@@ -278,6 +434,11 @@ class View extends Layer {
         return borderTopColor;
     }
 
+    /**
+     * Bottom border color.
+     * Set to Color.NONE to use borderColor value.
+     * Default: Color.NONE
+     */
     public var borderBottomColor(default,set):Color = Color.NONE;
     inline function set_borderBottomColor(borderBottomColor:Color):Color {
         if (this.borderBottomColor == borderBottomColor) return borderBottomColor;
@@ -286,6 +447,11 @@ class View extends Layer {
         return borderBottomColor;
     }
 
+    /**
+     * Left border color.
+     * Set to Color.NONE to use borderColor value.
+     * Default: Color.NONE
+     */
     public var borderLeftColor(default,set):Color = Color.NONE;
     inline function set_borderLeftColor(borderLeftColor:Color):Color {
         if (this.borderLeftColor == borderLeftColor) return borderLeftColor;
@@ -294,6 +460,11 @@ class View extends Layer {
         return borderLeftColor;
     }
 
+    /**
+     * Right border color.
+     * Set to Color.NONE to use borderColor value.
+     * Default: Color.NONE
+     */
     public var borderRightColor(default,set):Color = Color.NONE;
     inline function set_borderRightColor(borderRightColor:Color):Color {
         if (this.borderRightColor == borderRightColor) return borderRightColor;
@@ -302,12 +473,20 @@ class View extends Layer {
         return borderRightColor;
     }
 
+    /**
+     * Check if any border should be displayed based on size settings.
+     * @return true if any border side has a size > 0
+     */
     inline function shouldDisplayBorder() {
 
         return borderSize > 0 || borderTopSize > 0 || borderBottomSize > 0 || borderLeftSize > 0 || borderRightSize > 0;
 
     }
 
+    /**
+     * Create and initialize the border visual component.
+     * Called automatically when border properties are set.
+     */
     function initBorder():Void {
 
         border = new Border();
@@ -315,6 +494,10 @@ class View extends Layer {
 
     }
 
+    /**
+     * Update or create the border visual based on current properties.
+     * Handles border creation, updates, and cleanup when no border is needed.
+     */
     function updateBorder():Void {
 
         if (shouldDisplayBorder()) {
@@ -610,8 +793,18 @@ class View extends Layer {
 
 /// Parent view helper
 
+    /**
+     * Custom parent view override.
+     * Used by containers like ScrollView to establish parent-child relationships
+     * without actual visual hierarchy changes.
+     */
     var customParentView:Null<View> = null;
 
+    /**
+     * The parent View of this view.
+     * Returns customParentView if set, otherwise checks if the visual parent is a View.
+     * This property is crucial for layout propagation.
+     */
     public var parentView(get, never):Null<View>;
 
     function get_parentView():Null<View> {
@@ -624,6 +817,11 @@ class View extends Layer {
 
 /// Lifecycle
 
+    /**
+     * Create a new View.
+     * Initializes the view with sensible defaults and registers it with the ViewSystem.
+     * Layout computation is deferred until after initialization to prevent premature calculations.
+     */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -682,6 +880,11 @@ class View extends Layer {
 
     }
 
+    /**
+     * Remove all child views from this view.
+     * This is more efficient than removing views one by one.
+     * Only affects View children, not other Visual types.
+     */
     public function removeAllViews():Void {
 
         if (subviews == null) return;
@@ -701,8 +904,15 @@ class View extends Layer {
     }
 
     /**
-     * Auto compute size from constraints and `viewWidth`/`viewHeight`.
-     * @param applyComputedSize if `true`, apply the computed size to the view.
+     * Compute the view's size based on its sizing modes and constraints.
+     * This forces a size computation even if the view is not dirty.
+     * @param applyComputedSize if `true`, immediately apply the computed size using size()
+     * 
+     * @example
+     * ```haxe
+     * view.viewSize(ViewSize.auto(), ViewSize.fill());
+     * view.autoComputeSize(true); // Computes and applies size
+     * ```
      */
     inline public function autoComputeSize(applyComputedSize:Bool = false):Void {
 
@@ -712,8 +922,9 @@ class View extends Layer {
     }
 
     /**
-     * Auto compute size (if needed) from constraints and `viewWidth`/`viewHeight`.
-     * @param applyComputedSize if `true`, apply the computed size to the view.
+     * Compute the view's size only if it hasn't been computed for the current context.
+     * More efficient than autoComputeSize() as it avoids redundant calculations.
+     * @param applyComputedSize if `true`, immediately apply the computed size using size()
      */
     inline public function autoComputeSizeIfNeeded(applyComputedSize:Bool = false):Void {
 
@@ -723,8 +934,9 @@ class View extends Layer {
     }
 
     /**
-     * Apply the computed size to the view.
-     * This is equivalent to `size(computedWidth, computedHeight)`
+     * Apply the computed size to the view's actual width and height.
+     * This is equivalent to `size(computedSize.computedWidth, computedSize.computedHeight)`.
+     * Does nothing if no computed size is available.
      */
     inline public function applyComputedSize():Void {
 
@@ -735,8 +947,16 @@ class View extends Layer {
     }
 
     /**
-     * Compute size with intrinsic bounds, allowing to scale the bounds to fit current layout constraints.
-     * Typically used to compute image size with _scale to fit_ requirements and similar
+     * Compute size while maintaining aspect ratio of intrinsic bounds.
+     * Useful for images, videos, or any content with a natural aspect ratio.
+     * 
+     * @param parentWidth Available width from parent
+     * @param parentHeight Available height from parent
+     * @param layoutMask Constraints on how the view can be sized
+     * @param persist Whether to persist the computed size for reuse
+     * @param intrinsicWidth Natural width of the content
+     * @param intrinsicHeight Natural height of the content
+     * @return Scale factor applied to fit the content
      */
     public function computeSizeWithIntrinsicBounds(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool, intrinsicWidth:Float, intrinsicHeight:Float):Float {
 
@@ -874,6 +1094,15 @@ class View extends Layer {
 
     }
 
+    /**
+     * Core size computation method.
+     * Calculates the view's dimensions based on its sizing mode and parent constraints.
+     * 
+     * @param parentWidth Available width from parent container
+     * @param parentHeight Available height from parent container  
+     * @param layoutMask Constraints defining how the view can grow/shrink
+     * @param persist Whether to cache the result for the given context
+     */
     public function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool):Void {
 
         var computedWidth = ComputedViewSize.NO_SIZE;
@@ -943,6 +1172,10 @@ class View extends Layer {
 
     }
 
+    /**
+     * Called just before emitting the layout event.
+     * Updates borders and calls the layout() method.
+     */
     inline function willEmitLayout():Void {
 
         updateBorder();
@@ -950,6 +1183,16 @@ class View extends Layer {
 
     }
 
+    /**
+     * Perform layout operations for this view.
+     * Override this method in subclasses to implement custom layout logic.
+     * Called after size computation and before the layout event is emitted.
+     * 
+     * Common operations in layout():
+     * - Position child views
+     * - Update visual components
+     * - Apply computed dimensions
+     */
     function layout():Void {
 
         // Override in subclasses
@@ -958,6 +1201,17 @@ class View extends Layer {
 
 /// On-demand explicit layout
 
+    /**
+     * Request a layout update for all views in the next frame.
+     * This is called automatically when view properties change.
+     * Multiple calls are batched into a single layout pass.
+     * 
+     * @example
+     * ```haxe
+     * view.width = 200; // Automatically calls requestLayout()
+     * View.requestLayout(); // Manual call if needed
+     * ```
+     */
     public static function requestLayout():Void {
 
         if (_layoutRequested) {
@@ -1080,7 +1334,15 @@ class View extends Layer {
 /// Screen size helpers
 
     /**
-     * Will set this view size to screen size, and update view size each time screen size changes.
+     * Bind this view's size to the screen dimensions.
+     * The view will automatically resize when the screen size changes.
+     * @param factor Scale factor to apply to screen dimensions (default: 1.0)
+     * 
+     * @example
+     * ```haxe
+     * view.bindToScreenSize(); // Full screen size
+     * view.bindToScreenSize(0.5); // Half screen size
+     * ```
      */
     override public function bindToScreenSize(factor:Float = 1.0):Void {
 
@@ -1095,8 +1357,9 @@ class View extends Layer {
     }
 
     /**
-     * Will set this visual size to target size (`settings.targetWidth` and `settings.targetHeight`),
-     * and update view size each time it changes.
+     * Bind this view's size to the target resolution defined in settings.
+     * Useful for maintaining consistent UI across different screen sizes.
+     * The view will automatically resize when target settings change.
      */
     override public function bindToTargetSize():Void {
 
@@ -1112,6 +1375,11 @@ class View extends Layer {
 
 /// View size helpers
 
+    /**
+     * Create a percentage-based ViewSize value.
+     * @param value Percentage (0-100)
+     * @return Encoded percentage value for use with viewWidth/viewHeight
+     */
     inline public function percent(value:Float):Float {
 
         return ViewSize.percent(value);
@@ -1124,12 +1392,22 @@ class View extends Layer {
 
     }
 
+    /**
+     * Create a fill ViewSize value.
+     * The view will fill all available space in its parent.
+     * @return Fill size constant
+     */
     inline public function fill():Float {
 
         return ViewSize.fill();
 
     }
 
+    /**
+     * Create an auto ViewSize value.
+     * The view will size itself based on its content.
+     * @return Auto size constant
+     */
     inline public function auto():Float {
 
         return ViewSize.auto();

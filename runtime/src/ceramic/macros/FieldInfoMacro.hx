@@ -9,11 +9,62 @@ using StringTools;
 using haxe.macro.ExprTools;
 
 /**
- * Used to expose var/property field types to runtime.
- * This is an alternative to marking classes with @:rtti which exposes much more informations than what we actually need.
+ * Build macro that generates runtime field type information for classes.
+ * 
+ * This macro provides a lightweight alternative to Haxe's @:rtti metadata,
+ * exposing only the field type information needed for runtime introspection
+ * without the overhead of full runtime type information.
+ * 
+ * The macro automatically generates a static `_fieldInfo` property containing
+ * type information for all non-static fields (variables and properties) in
+ * the class.
+ * 
+ * ## Usage
+ * 
+ * Apply this macro to a class using the @:build metadata:
+ * 
+ * ```haxe
+ * @:build(ceramic.macros.FieldInfoMacro.build())
+ * class MyClass {
+ *     public var intField:Int = 0;
+ *     public var stringField:String = "";
+ *     public var customField:MyCustomType;
+ * }
+ * 
+ * // At runtime, access field types:
+ * var fieldInfo = MyClass._fieldInfo;
+ * trace(fieldInfo.intField.type); // "Int"
+ * trace(fieldInfo.stringField.type); // "String"
+ * trace(fieldInfo.customField.type); // "MyCustomType"
+ * ```
+ * 
+ * ## Generated Structure
+ * 
+ * The macro generates a static field `_fieldInfo` with the following structure:
+ * - Keys: Field names from the class
+ * - Values: Objects containing `type` property with the field's type as a string
+ * 
+ * ## Features
+ * 
+ * - Processes all instance fields (excludes static fields)
+ * - Handles both variables (FVar) and properties (FProp)
+ * - Resolves complex types including generics
+ * - Fallback to Dynamic for unresolvable types
+ * - Marked with @:noCompletion to hide from IDE autocomplete
+ * 
+ * @see ceramic.FieldInfo For runtime access to field type information
  */
 class FieldInfoMacro {
 
+    /**
+     * Build macro entry point that processes class fields and generates runtime type information.
+     * 
+     * This method is called at compile-time when the macro is applied to a class.
+     * It examines all non-static fields, extracts their type information, and
+     * generates a static `_fieldInfo` property containing this data.
+     * 
+     * @return Modified array of fields including the generated _fieldInfo field
+     */
     macro static public function build():Array<Field> {
 
         var fields = Context.getBuildFields();
@@ -83,6 +134,20 @@ class FieldInfoMacro {
 
     }
 
+    /**
+     * Converts a Haxe ComplexType to its string representation.
+     * 
+     * This method handles various type structures including:
+     * - Simple types (Int, String, etc.)
+     * - Fully qualified types with packages (ceramic.Visual)
+     * - Generic types with type parameters (Array<String>, Map<Int,String>)
+     * - Nested generic types
+     * 
+     * Falls back to "Dynamic" for types that cannot be resolved.
+     * 
+     * @param type The ComplexType to convert
+     * @return String representation of the type suitable for runtime use
+     */
     static function complexTypeToString(type:ComplexType):String {
 
         var typeStr:String = null;

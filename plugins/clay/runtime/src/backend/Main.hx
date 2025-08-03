@@ -13,36 +13,94 @@ using StringTools;
 import clay.sdl.SDL;
 #end
 
+/**
+ * Main entry point for Clay backend applications.
+ * 
+ * This class handles the initial setup and configuration of Clay applications,
+ * including platform-specific initialization for web, desktop, and mobile targets.
+ * It configures Clay's rendering settings, handles Electron integration,
+ * manages window sizing and orientation, and sets up the Ceramic application lifecycle.
+ * 
+ * Key responsibilities:
+ * - Clay framework initialization and configuration
+ * - Platform-specific setup (web, desktop, mobile)
+ * - Electron runner integration for development
+ * - Window and viewport management
+ * - Orientation handling for mobile devices
+ * - Error handling and logging setup
+ */
 class Main {
 
+    /**
+     * The Ceramic project instance.
+     */
     static var project:Project = null;
 
+    /**
+     * Clay events handler instance for managing application lifecycle events.
+     */
     static var events:ClayEvents = null;
 
+    /**
+     * The main Ceramic application instance.
+     */
     static var app:ceramic.App;
 
     #if web
 
+    /**
+     * Timestamp of the last resize event (web only).
+     */
     static var lastResizeTime:Float = -1;
 
+    /**
+     * Width from the last resize event (web only).
+     */
     static var lastNewWidth:Int = -1;
 
+    /**
+     * Height from the last resize event (web only).
+     */
     static var lastNewHeight:Int = -1;
 
+    /**
+     * Flag indicating if the web application is ready to display (web only).
+     */
     static var readyToDisplay:Bool = false;
 
+    /**
+     * Counter for ongoing resize operations (web only).
+     */
     static var resizing:Int = 0;
 
+    /**
+     * ID of the HTML container element (web only).
+     */
     static var containerElId:String = null;
 
+    /**
+     * Current container width in pixels (web only).
+     */
     static var containerWidth:Int = 0;
 
+    /**
+     * Current container height in pixels (web only).
+     */
     static var containerHeight:Int = 0;
 
+    /**
+     * Current container pixel ratio (web only).
+     */
     static var containerPixelRatio:Float = 0;
 
     #end
 
+    /**
+     * Main entry point for Clay backend applications.
+     * 
+     * Initializes the Clay framework with custom configuration and event handling.
+     * This is called automatically when the application starts.
+     */
     public static function main() {
 
         events = @:privateAccess new ClayEvents(ready);
@@ -51,6 +109,20 @@ class Main {
 
     }
 
+    /**
+     * Configures Clay framework settings for the Ceramic application.
+     * 
+     * This function handles:
+     * - OpenGL/WebGL version configuration
+     * - Platform-specific rendering settings
+     * - Window configuration (size, fullscreen, resizable)
+     * - Electron runner integration and development features
+     * - Web-specific container and viewport handling
+     * - Mobile platform optimizations
+     * - Error handling setup
+     * 
+     * @param config The Clay configuration object to customize
+     */
     static function configure(config:clay.Config) {
 
         // TODO we could probably tidy this file at some point :D
@@ -285,6 +357,18 @@ class Main {
 
     #if web
 
+    /**
+     * Updates the web container size if needed (web only).
+     * 
+     * This function continuously monitors the HTML container size and updates
+     * the Canvas element accordingly. It handles:
+     * - Device pixel ratio changes
+     * - Container resize events
+     * - Smooth resize transitions with debouncing
+     * - Visibility management during resize operations
+     * 
+     * @param t Frame time (default 0.016 for 60fps)
+     */
     static function _updateContainerSizeIfNeeded(t:Float = 0.016) {
 
         var containerEl = js.Browser.document.getElementById(containerElId);
@@ -353,9 +437,24 @@ class Main {
 
     #end
 
+    /**
+     * Flag indicating if the display is ready for rendering.
+     */
     static var _displayReady:Bool = false;
+    
+    /**
+     * Callback function waiting for display ready state.
+     */
     static var _pendingDisplayReadyDone:Void->Void = null;
 
+    /**
+     * Application loader that waits for display ready state.
+     * 
+     * This loader ensures the application doesn't start rendering until
+     * the display system is fully initialized and ready.
+     * 
+     * @param done Callback to execute when display is ready
+     */
     static function _appLoaderCheckDisplayReady(done:Void->Void) {
 
         if (_displayReady) {
@@ -367,6 +466,17 @@ class Main {
 
     }
 
+    /**
+     * Called when the Clay backend is ready and initialized.
+     * 
+     * This function handles final initialization steps including:
+     * - Key-value storage initialization
+     * - Web-specific display setup and extension loading
+     * - Electron runner communication
+     * - Display readiness management
+     * 
+     * This method is called by ClayEvents and should not be called directly.
+     */
     @:allow(backend.ClayEvents)
     static function ready():Void {
 
@@ -421,6 +531,20 @@ class Main {
 
 /// Internal
 
+    /**
+     * Configures screen orientation for mobile devices (SDL platforms only).
+     * 
+     * This function converts Ceramic's orientation settings into SDL hints
+     * to control which orientations are allowed on mobile platforms.
+     * 
+     * Supported orientations:
+     * - Portrait (upright)
+     * - Portrait upside down
+     * - Landscape left
+     * - Landscape right
+     * 
+     * Multiple orientations can be combined using bitwise OR operations.
+     */
     static function configureOrientation() {
 
         #if clay_sdl

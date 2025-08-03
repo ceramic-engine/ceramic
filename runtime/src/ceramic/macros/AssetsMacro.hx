@@ -8,22 +8,67 @@ import sys.FileSystem;
 
 using StringTools;
 
+/**
+ * Build macro that generates compile-time constants for all project assets.
+ * This macro scans the assets directory and creates type-safe string constants
+ * for each asset file, allowing compile-time verification of asset references.
+ * 
+ * The macro supports multiple asset sources:
+ * - Project-specific assets (highest priority)
+ * - Plugin-provided assets (medium priority)
+ * - Ceramic default assets (lowest priority)
+ * 
+ * Asset constants are generated based on file paths, with special handling for:
+ * - Density variants (@2x, @3x, etc.)
+ * - Directory hierarchies (converted to double underscores)
+ * - File extensions (filtered by asset type)
+ */
 class AssetsMacro {
 
+    /**
+     * Backend information provider for platform-specific asset extensions.
+     */
     public static var backendInfo:backend.Info = null;
 
+    /**
+     * Complete list of all asset file paths discovered during compilation.
+     */
     public static var allAssets:Array<String> = null;
 
+    /**
+     * Complete list of all asset directory paths.
+     */
     public static var allAssetDirs:Array<String> = null;
 
+    /**
+     * Map of asset base names to all variants (different densities, extensions).
+     */
     public static var assetsByBaseName:Map<String,Array<String>> = null;
 
+    /**
+     * Map of directory base names to all matching directories.
+     */
     public static var assetDirsByBaseName:Map<String,Array<String>> = null;
 
+    /**
+     * Regular expression to match valid ASCII characters for constant names.
+     */
     public static var reAsciiChar = ~/^[a-zA-Z0-9]$/;
 
+    /**
+     * Regular expression to match valid constant name start characters.
+     */
     public static var reConstStart = ~/^[a-zA-Z_]$/;
 
+    /**
+     * Generates static constants for assets of a specific type.
+     * Creates fields like `PLAYER_SPRITE` for "player.png" assets.
+     * 
+     * @param kind Asset type: 'image', 'text', 'sound', 'shader', 'font', 'atlas', 'database', 'fragments'
+     * @param extensions Additional file extensions to include beyond defaults
+     * @param dir Whether to generate constants for directories instead of files
+     * @return Array of generated fields to add to the class
+     */
     macro static public function buildNames(kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
 
         #if ceramic_debug_macro
@@ -47,6 +92,17 @@ class AssetsMacro {
 
     }
 
+    /**
+     * Computes asset name constants for a specific asset type.
+     * Processes discovered assets and generates static fields with AssetId typing.
+     * 
+     * @param inFields Existing fields (unused but kept for API compatibility)
+     * @param pos Source position for generated fields
+     * @param kind Asset type determining default extensions
+     * @param extensions Additional extensions to include
+     * @param dir Whether to process directories instead of files
+     * @return Array of generated constant fields
+     */
     static public function computeNames(inFields:Array<Field>, pos:Position, kind:String, ?extensions:Array<String>, dir:Bool = false):Array<Field> {
 
         if (extensions == null) extensions = [];
@@ -136,6 +192,16 @@ class AssetsMacro {
 
     }
 
+    /**
+     * Generates static arrays and maps containing all discovered assets.
+     * Creates fields for:
+     * - `all`: Array of all asset paths
+     * - `allDirs`: Array of all directory paths
+     * - `allByName`: Map of base names to asset variants
+     * - `allDirsByName`: Map of base names to directory variants
+     * 
+     * @return Array of generated fields for asset listings
+     */
     macro static public function buildLists():Array<Field> {
 
         initData(DefinesMacro.jsonDefinedValue('assets_path'), Context.definedValue('ceramic_extra_assets_paths'), DefinesMacro.jsonDefinedValue('ceramic_assets_path'));
@@ -245,6 +311,15 @@ class AssetsMacro {
 
     }
 
+    /**
+     * Initializes asset discovery by scanning all asset directories.
+     * Processes assets in priority order: project > plugins > ceramic defaults.
+     * Builds maps of assets by base name for efficient lookup.
+     * 
+     * @param assetsPath Project's main assets directory
+     * @param ceramicPluginsAssetsPathsRaw JSON-encoded array of plugin asset paths
+     * @param ceramicAssetsPath Ceramic's default assets directory
+     */
     public static function initData(assetsPath:String, ceramicPluginsAssetsPathsRaw:String, ceramicAssetsPath:String):Void {
 
         if (backendInfo == null) backendInfo = new backend.Info();
@@ -350,6 +425,18 @@ class AssetsMacro {
 
     }
 
+    /**
+     * Converts an asset path to a valid Haxe constant name.
+     * Transformation rules:
+     * - Slashes become double underscores
+     * - Dots become single underscores
+     * - camelCase is converted to CAMEL_CASE
+     * - Non-alphanumeric characters become underscores
+     * - Result is always uppercase
+     * 
+     * @param input Asset path to convert
+     * @return Valid Haxe constant name
+     */
     public static function toAssetConstName(input:String):String {
 
         var res = new StringBuf();
@@ -397,6 +484,15 @@ class AssetsMacro {
 
     }
 
+    /**
+     * Recursively retrieves all files in a directory as a flat array.
+     * Excludes system files like .DS_Store by default.
+     * 
+     * @param dir Directory to scan
+     * @param excludeSystemFiles Whether to exclude system files
+     * @param subCall Internal flag for recursive calls
+     * @return Array of file paths relative to the initial directory
+     */
     static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false):Array<String> {
 
         var result:Array<String> = [];

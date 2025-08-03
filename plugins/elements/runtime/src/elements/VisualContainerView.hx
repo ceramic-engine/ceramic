@@ -9,14 +9,81 @@ import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 import tracker.Observable;
 
+/**
+ * A view container that displays and manages a single visual element with scaling and filtering options.
+ * 
+ * This class provides a wrapper view for displaying visual elements with various scaling modes,
+ * content alignment options, and optional filter effects. It handles the lifecycle of the
+ * contained visual and can automatically destroy it when removed.
+ * 
+ * ## Features
+ * 
+ * - Multiple scaling modes: FIT, FILL, CUSTOM
+ * - Content alignment control
+ * - Optional filter effects
+ * - Automatic visual lifecycle management
+ * - Configurable destruction behavior
+ * 
+ * ## Scaling Modes
+ * 
+ * - `FIT`: Scales the visual to fit within the container while maintaining aspect ratio
+ * - `FILL`: Stretches the visual to completely fill the container
+ * - `CUSTOM`: Uses a manually specified scale value
+ * 
+ * ## Usage Examples
+ * 
+ * ```haxe
+ * // Create a container with a visual
+ * var container = new VisualContainerView();
+ * container.visual = mySprite;
+ * container.scaling = VisualContainerViewScaling.FIT;
+ * container.contentAlign = CENTER;
+ * 
+ * // Add a filter effect
+ * var filter = new Filter();
+ * container.filter = filter;
+ * 
+ * // Custom scaling
+ * container.scaling = VisualContainerViewScaling.CUSTOM;
+ * container.visualScale = 2.0; // 200% scale
+ * ```
+ * 
+ * @see VisualContainerViewScaling
+ * @see Filter
+ * @see Visual
+ * @see LayoutAlign
+ */
 class VisualContainerView extends View implements Observable {
 
 /// Public properties
 
+    /**
+     * Whether to automatically destroy the visual when it's removed from this container.
+     * When true, the visual will be destroyed when replaced or when the container is cleared.
+     * When false, the visual will only be deactivated but not destroyed.
+     * 
+     * @default true
+     */
     public var destroyVisualOnRemove:Bool = true;
 
+    /**
+     * Whether to automatically destroy the filter when it's removed from this container.
+     * When true, the filter will be destroyed when replaced or set to null.
+     * When false, the filter will only be removed but not destroyed.
+     * 
+     * @default true
+     */
     public var destroyFilterOnRemove:Bool = true;
 
+    /**
+     * Optional filter effect to apply to the contained visual.
+     * 
+     * When set, the visual is rendered through the filter, which can apply
+     * various visual effects. The filter is automatically managed and can
+     * be destroyed when replaced if destroyFilterOnRemove is true.
+     * 
+     * @see Filter
+     */
     public var filter(default, set):Filter = null;
     function set_filter(filter:Filter):Filter {
         if (this.filter != filter) {
@@ -55,23 +122,50 @@ class VisualContainerView extends View implements Observable {
     }
 
     /**
-     * Content alignment
-     * TODO use it
+     * Controls how the visual content is aligned within the container.
+     * 
+     * This property determines the positioning of the contained visual
+     * when it doesn't fill the entire container space.
+     * 
+     * @default CENTER
+     * @see LayoutAlign
      */
     @observe public var contentAlign:LayoutAlign = CENTER;
 
     /**
-     * Visual scale (ignored unless `scaling` is `CUSTOM`)
+     * The scale factor to apply to the visual when using CUSTOM scaling mode.
+     * 
+     * This value is only used when the scaling property is set to CUSTOM.
+     * In other scaling modes, the scale is automatically calculated.
+     * 
+     * @default 1.0
+     * @see scaling
      */
     @observe public var visualScale:Float = 1.0;
 
     /**
-     * How the visual is scaled depending on its constraints
+     * Determines how the visual is scaled within the container.
+     * 
+     * - FIT: Scales the visual to fit within the container while maintaining aspect ratio
+     * - FILL: Stretches the visual to completely fill the container (may distort aspect ratio)
+     * - CUSTOM: Uses the manually specified visualScale value
+     * 
+     * @default FIT
+     * @see VisualContainerViewScaling
+     * @see visualScale
      */
     @observe public var scaling:VisualContainerViewScaling = VisualContainerViewScaling.FIT;
 
     /**
-     * The actual visual to display
+     * The visual element to display within this container.
+     * 
+     * When set, the visual is added to the container (or filter content if a filter is active)
+     * and its lifecycle is managed according to the destroyVisualOnRemove setting.
+     * The visual is automatically activated when added and positioned according to the
+     * current scaling and alignment settings.
+     * 
+     * @see destroyVisualOnRemove
+     * @see filter
      */
     @observe public var visual(default,set):Visual = null;
     function set_visual(visual:Visual):Visual {
@@ -103,10 +197,21 @@ class VisualContainerView extends View implements Observable {
 
 /// Internal
 
+    /**
+     * The computed scale value for FIT scaling mode.
+     * This is calculated automatically based on the container and visual dimensions.
+     * @private
+     */
     var computedVisualScale:Float = 1.0;
 
 /// Lifecycle
 
+    /**
+     * Creates a new visual container view.
+     * 
+     * Initializes the container with default settings and sets up automatic
+     * visual scale updates when properties change.
+     */
     public function new() {
 
         super();
@@ -115,6 +220,12 @@ class VisualContainerView extends View implements Observable {
 
     }
 
+    /**
+     * Clears the container by removing the visual and calling the parent clear method.
+     * 
+     * This will destroy the visual if destroyVisualOnRemove is true,
+     * or simply deactivate it if false.
+     */
     override function clear() {
 
         visual = null;
@@ -123,6 +234,16 @@ class VisualContainerView extends View implements Observable {
 
     }
 
+    /**
+     * Updates the visual's scale based on the current scaling mode.
+     * 
+     * Calculates and applies the appropriate scale factor based on the scaling mode:
+     * - CUSTOM: Uses the visualScale property
+     * - FIT: Uses the computed scale to fit within the container
+     * - FILL: Scale is handled in layout() for stretching
+     * 
+     * @private
+     */
     function updateVisualScale() {
 
         var scaling = this.scaling;
@@ -148,6 +269,18 @@ class VisualContainerView extends View implements Observable {
 
 /// Layout
 
+    /**
+     * Computes the size of the container and calculates the visual scale for FIT mode.
+     * 
+     * This method is called during layout to determine the container's size and
+     * calculate the appropriate scale factor for the contained visual when using FIT scaling.
+     * 
+     * @param parentWidth Available width from the parent
+     * @param parentHeight Available height from the parent
+     * @param layoutMask Layout constraints mask
+     * @param persist Whether to persist the computed values
+     * @private
+     */
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
 
         super.computeSize(parentWidth, parentHeight, layoutMask, persist);
@@ -165,6 +298,15 @@ class VisualContainerView extends View implements Observable {
 
     }
 
+    /**
+     * Performs layout of the container's elements.
+     * 
+     * Positions and sizes the filter (if present) and the visual element.
+     * For FILL scaling mode, applies separate X and Y scaling to stretch
+     * the visual to completely fill the available space.
+     * 
+     * @private
+     */
     override function layout() {
 
         var availableWidth = width - paddingLeft - paddingRight;

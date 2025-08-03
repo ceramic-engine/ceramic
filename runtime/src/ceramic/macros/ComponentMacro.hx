@@ -3,14 +3,49 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+/**
+ * Build macro for the Component interface that handles entity binding.
+ * This macro automatically generates the necessary fields and methods to properly
+ * implement the Component pattern in Ceramic.
+ * 
+ * Key features:
+ * - Automatically adds an 'entity' field if not explicitly defined
+ * - Generates setEntity() and getEntity() methods for proper entity binding
+ * - Supports multiple entity properties with @entity metadata
+ * - Ensures components inherit from ceramic.Entity
+ * - Handles type-safe casting of entity properties
+ * 
+ * Entity properties can be defined in two ways:
+ * 1. A field named 'entity' (automatically recognized)
+ * 2. Any field with @entity metadata
+ * 
+ * The macro ensures that when a component is added to an entity,
+ * all entity properties are properly set with type checking.
+ */
 class ComponentMacro {
 
     #if (haxe_ver < 4)
+    /**
+     * Flag to track if macro context reuse handler is registered (Haxe 3 compatibility).
+     */
     static var onReused:Bool = false;
     #end
 
+    /**
+     * Cache of processed classes to avoid redundant processing.
+     */
     static var processed = new Map<String,Bool>();
 
+    /**
+     * Build macro that processes Component implementations.
+     * Adds required fields and methods for proper entity binding:
+     * - entity field(s) for storing reference to owner entity
+     * - setEntity() for binding component to entity with type checking
+     * - getEntity() for retrieving the owner entity
+     * - initializerName for component factory registration
+     * 
+     * @return Modified fields array with component infrastructure
+     */
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -262,6 +297,16 @@ class ComponentMacro {
 
     }
 
+    /**
+     * Generates the setEntity() method implementation.
+     * Creates type-safe setter that casts the entity parameter to the appropriate
+     * type for each entity field. Supports multiple entity properties with
+     * automatic type checking using Std.isOfType().
+     * 
+     * @param fields Array to add the generated method to
+     * @param entityFields Entity properties that need to be set
+     * @param callSuper Whether to call super.setEntity() (for subclasses)
+     */
     static function computeSetEntityField(fields:Array<Field>, entityFields:Array<Field>, callSuper:Bool):Void {
 
         var setEntityExprs = [];
@@ -325,6 +370,15 @@ class ComponentMacro {
 
     }
 
+    /**
+     * Generates the getEntity() method implementation.
+     * Returns the first entity field value, providing access to the
+     * component's owner entity.
+     * 
+     * @param fields Array to add the generated method to
+     * @param entityFields Entity properties to read from
+     * @param callSuper Whether to call super.getEntity() (for subclasses)
+     */
     static function computeGetEntityField(fields:Array<Field>, entityFields:Array<Field>, callSuper:Bool):Void {
 
         #if (!display && !completion)

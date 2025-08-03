@@ -12,24 +12,61 @@ import tracker.Autorun.unobserve;
 
 using StringTools;
 
+/**
+ * A numeric input field with an integrated slider for intuitive value adjustment.
+ * 
+ * SliderFieldView combines a text input field with a horizontal slider, allowing users
+ * to either type values directly or drag the slider handle. The component supports
+ * numeric ranges, rounding precision, and can be disabled. The slider provides visual
+ * feedback and makes it easy to explore value ranges.
+ * 
+ * Key features:
+ * - Text input with numeric validation
+ * - Integrated horizontal slider with draggable handle
+ * - Configurable min/max value ranges
+ * - Precision rounding support
+ * - Keyboard focus and tab navigation
+ * - Optional text input disabling (slider-only mode)
+ * - Visual feedback for hover, focus, and disabled states
+ * 
+ * Usage example:
+ * ```haxe
+ * var slider = new SliderFieldView(0, 100); // min: 0, max: 100
+ * slider.value = 50;
+ * slider.round = 1; // round to integers
+ * slider.enabledTextInput = true;
+ * slider.onValueChange(this, (value, prev) -> {
+ *     trace('Value changed to: ' + value);
+ * });
+ * add(slider);
+ * ```
+ */
 class SliderFieldView extends BaseTextFieldView {
 
+    /** Custom theme override for this slider field. If null, uses the global context theme */
     @observe public var theme:Theme = null;
 
+    /** Reusable point for coordinate calculations during slider interaction */
     static var _point = new Point();
 
 /// Public properties
 
+    /** The current numeric value of the slider */
     @observe public var value:Float = 0.0;
 
+    /** Minimum allowed value for the slider */
     @observe public var minValue:Float = 0.0;
 
+    /** Maximum allowed value for the slider */
     @observe public var maxValue:Float = 0.0;
 
+    /** Whether the text input portion is enabled for direct typing */
     @observe public var enabledTextInput:Bool = true;
 
+    /** Visual style of the field (DEFAULT, OVERLAY, or MINIMAL) */
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    /** Whether the entire slider field is disabled and non-interactive */
     @observe public var disabled(default, set):Bool = false;
     function set_disabled(disabled:Bool):Bool {
         if (this.disabled != disabled) {
@@ -45,14 +82,31 @@ class SliderFieldView extends BaseTextFieldView {
         return disabled;
     }
 
+    /**
+     * Precision for value rounding.
+     * 
+     * - `-1`: No rounding (default)
+     * - `1`: Round to integers  
+     * - `10`: Round to tenths (0.1)
+     * - `100`: Round to hundredths (0.01)
+     * - etc.
+     */
     public var round:Int = -1;
 
 /// Internal properties
 
+    /** Container view for the slider track and handle */
     var sliderContainer:View;
 
+    /** The draggable handle/indicator of the slider */
     var sliderSquare:View;
 
+    /**
+     * Creates a new SliderFieldView with the specified value range.
+     * 
+     * @param minValue Minimum value for the slider (default: 0)
+     * @param maxValue Maximum value for the slider (default: 1)
+     */
     public function new(minValue:Float = 0, maxValue:Float = 1) {
 
         super();
@@ -115,6 +169,11 @@ class SliderFieldView extends BaseTextFieldView {
 
 /// Layout
 
+    /**
+     * Handles focus events for the slider field.
+     * 
+     * When the field gains focus, the text input is also focused for immediate editing.
+     */
     override function focus() {
 
         super.focus();
@@ -150,6 +209,12 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Clips the text display to fit within the available text area.
+     * 
+     * @param width Available width for text
+     * @param height Available height for text
+     */
     function clipText(width:Float, height:Float) {
 
         var text = textView.text;
@@ -168,6 +233,12 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Positions the slider handle based on the current value.
+     * 
+     * Calculates the handle position as a proportion of the value within the min/max range,
+     * accounting for container padding and handle width.
+     */
     function layoutSliderContainer() {
 
         var minX = sliderContainer.paddingLeft;
@@ -276,6 +347,12 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Applies rounding to a value based on the round precision setting.
+     * 
+     * @param value The value to round
+     * @return The rounded value
+     */
     function applyRound(value:Float):Float {
 
         if (round == 1) {
@@ -291,6 +368,13 @@ class SliderFieldView extends BaseTextFieldView {
 
 /// Slider
 
+    /**
+     * Handles mouse/touch down events on the slider.
+     * 
+     * Starts slider interaction, sets initial value, and begins tracking pointer movement.
+     * 
+     * @param info Touch/mouse interaction information
+     */
     function handleSliderDown(info:TouchInfo) {
 
         sliderContainer.screenToVisual(info.x, info.y, _point);
@@ -301,6 +385,13 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Handles pointer movement during slider dragging.
+     * 
+     * Updates the slider value based on the current pointer position.
+     * 
+     * @param info Touch/mouse interaction information
+     */
     function handleSliderMove(info:TouchInfo) {
 
         sliderContainer.screenToVisual(info.x, info.y, _point);
@@ -308,6 +399,13 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Handles pointer release events, ending slider interaction.
+     * 
+     * Removes pointer tracking listeners when slider dragging ends.
+     * 
+     * @param info Touch/mouse interaction information
+     */
     function handleSliderUp(info:TouchInfo) {
 
         screen.offPointerMove(handleSliderMove);
@@ -315,6 +413,14 @@ class SliderFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Converts a horizontal slider position to a value within the min/max range.
+     * 
+     * Calculates the proportional value based on slider position, applies range limits
+     * and rounding, then updates the field value.
+     * 
+     * @param sliderX Horizontal position within the slider container
+     */
     function setValueFromSliderX(sliderX:Float) {
 
         var leftMargin = sliderContainer.paddingLeft + sliderSquare.width * 0.5;

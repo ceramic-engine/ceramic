@@ -16,37 +16,91 @@ import format.tmx.Data.TmxMap;
 using StringTools;
 using ceramic.TilemapPlugin;
 
+/**
+ * Asset type for loading tilemap data from various formats (TMX, LDtk).
+ * Handles loading of tilemap files, external tilesets, and associated textures.
+ * 
+ * Supported formats:
+ * - TMX (Tiled Map Editor): XML-based format with optional external TSX tilesets
+ * - LDtk (Level Designer Toolkit): JSON-based format with modern features
+ * 
+ * The asset automatically:
+ * - Parses tilemap data into a unified TilemapData structure
+ * - Loads required tileset textures
+ * - Handles external tileset references
+ * - Supports hot-reloading when files change
+ * - Manages texture density changes for different screen resolutions
+ * 
+ * ## Usage Example:
+ * ```haxe
+ * // Load a TMX tilemap
+ * assets.add(Tilemaps.LEVEL1);
+ * assets.load();
+ * 
+ * // Access the tilemap data
+ * var tilemapData = assets.tilemap(Tilemaps.LEVEL1).tilemapData;
+ * 
+ * // Create a visual from the data
+ * var tilemap = new Tilemap();
+ * tilemap.tilemapData = tilemapData;
+ * ```
+ * 
+ * @see TilemapData The unified tilemap data structure
+ * @see Tilemap The visual component for rendering tilemaps
+ * @see TilemapParser For parsing tilemap formats
+ */
 class TilemapAsset extends Asset {
 
 /// Properties
 
     /**
-     * If the tilemap originates from a Tiled/TMX file, this will
-     * contain the TMX data that you can use for custom logic etc...
+     * If the tilemap originates from a Tiled/TMX file, this contains
+     * the raw TMX data structure. Useful for accessing custom properties,
+     * object layers, or other TMX-specific features not converted to TilemapData.
+     * 
+     * This is null for non-TMX tilemaps.
      */
     @observe public var tmxMap:TmxMap = null;
 
     #if plugin_ldtk
 
     /**
-     * If the tilemap data originates from an LDtk file, this will
-     * contain the LDtk data that you can use for custom logic and access generated tilemaps
+     * If the tilemap originates from an LDtk file, this contains
+     * the complete LDtk data structure. Provides access to:
+     * - All levels in the project
+     * - Entity instances
+     * - Custom fields
+     * - Generated tilemaps
+     * 
+     * This is null for non-LDtk tilemaps.
      */
     @observe public var ldtkData:LdtkData = null;
 
     #end
 
     /**
-     * The tilemap data that can be used with a Ceramic `Tilemap` visual.
+     * The unified tilemap data that can be used with Ceramic's Tilemap visual.
+     * This is the primary output of the asset, containing layers, tilesets,
+     * and tile placement data in a format-agnostic structure.
+     * 
+     * For TMX files, this contains the first/main tilemap.
+     * For LDtk files, access individual level tilemaps through ldtkData.
      */
     @observe public var tilemapData:TilemapData = null;
 
 /// Internal
 
+    /**
+     * Cache for external TSX tileset data loaded from separate files.
+     * Maps from tileset source path to raw XML content.
+     */
     var tsxRawData:Map<String,String> = null;
 
     #if plugin_ldtk
 
+    /**
+     * List of external LDtk level file paths for hot-reload monitoring.
+     */
     var ldtkExternalSources:Array<String> = null;
 
     #end
@@ -102,6 +156,15 @@ class TilemapAsset extends Asset {
 
 /// Tiled Map Editor format (TMX & TSX)
 
+    /**
+     * Loads a TMX (Tiled Map Editor) format tilemap.
+     * Handles:
+     * 1. Loading the main TMX file
+     * 2. Loading external TSX tilesets if referenced
+     * 3. Parsing the XML data into TmxMap structure
+     * 4. Converting to unified TilemapData
+     * 5. Loading all required textures
+     */
     function loadTmxTiledMap() {
 
         // Load tmx asset
@@ -186,6 +249,19 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Loads external TSX tileset files referenced by the TMX map.
+     * TSX files allow sharing tilesets between multiple maps.
+     * 
+     * This method:
+     * - Parses the TMX to find external tileset references
+     * - Checks the cache for already-loaded TSX data
+     * - Loads any missing TSX files
+     * - Caches the results for future use
+     * 
+     * @param rawTmxData The raw TMX XML content
+     * @param done Callback with success status
+     */
     function loadExternalTsxTilesetData(rawTmxData:String, done:Bool->Void) {
 
         var tilemapParser = owner.getTilemapParser();
@@ -251,6 +327,12 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Adds a text asset for loading an external TSX tileset file.
+     * 
+     * @param textAssets The Assets instance to add the asset to
+     * @param source The relative path to the TSX file from the TMX location
+     */
     function addTilesetTextAsset(textAssets:Assets, source:String):Void {
 
         var path = Path.join([Path.directory(this.path), source]);
@@ -262,6 +344,14 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Resolves raw TSX data from the cache by filename.
+     * Called by the parser when it encounters an external tileset reference.
+     * 
+     * @param name The TSX filename to resolve
+     * @param cwd The current working directory (unused but part of parser interface)
+     * @return The raw TSX XML content, or null if not loaded
+     */
     function resolveTsxRawData(name:String, cwd:String):String {
 
         if (tsxRawData != null) {
@@ -272,6 +362,20 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Loads a texture from a source path, used by tileset loading.
+     * 
+     * This method:
+     * - Checks if the texture is already loaded
+     * - Creates an ImageAsset if needed
+     * - Configures the asset (e.g., for filtering)
+     * - Shares loaded textures with the owner Assets instance
+     * - Sets NEAREST filter by default (pixel-perfect for tilemaps)
+     * 
+     * @param source The relative path to the image file
+     * @param configureAsset Optional callback to configure the ImageAsset
+     * @param done Callback that receives the loaded texture (or null on failure)
+     */
     function loadTextureFromSource(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void):Void {
 
         if (source != null) {
@@ -348,6 +452,18 @@ class TilemapAsset extends Asset {
 
 /// LDtk
 
+    /**
+     * Loads an LDtk (Level Designer Toolkit) format tilemap project.
+     * 
+     * Handles:
+     * 1. Loading the main .ldtk JSON file
+     * 2. Loading external level files if the project uses them
+     * 3. Parsing the LDtk data structure
+     * 4. Loading tileset textures for all levels
+     * 5. Generating TilemapData for each level
+     * 
+     * The `skip` option in AssetOptions can exclude specific levels from loading.
+     */
     function loadLdtk() {
 
         // Load ldtk asset
@@ -432,6 +548,13 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Loads an external LDtk level file (.ldtkl).
+     * Used when LDtk projects are configured to save levels in separate files.
+     * 
+     * @param source The path to the external level file
+     * @param callback Receives the raw level JSON data, or null on failure
+     */
     function loadExternalLdtkLevelData(source:String, callback:(rawLevelData:String)->Void):Void {
 
         log.info('Load external LDtk level $source');
@@ -478,6 +601,13 @@ class TilemapAsset extends Asset {
 
 #end
 
+    /**
+     * Handles texture density changes for responsive asset loading.
+     * Called when the screen density changes (e.g., moving between displays).
+     * 
+     * @param newDensity The new texture density multiplier
+     * @param prevDensity The previous texture density multiplier
+     */
     override function texturesDensityDidChange(newDensity:Float, prevDensity:Float):Void {
 
         if (status == READY) {
@@ -489,6 +619,11 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Checks and updates textures for the current screen density.
+     * Currently a no-op as tileset textures handle density changes themselves,
+     * but kept for potential future use.
+     */
     function checkTexturesDensity():Void {
 
         // This is called, but we don't need to do anything so far,
@@ -496,6 +631,16 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Handles file change notifications for hot-reloading.
+     * Automatically reloads the tilemap when:
+     * - The main tilemap file changes
+     * - Any external level files change (LDtk)
+     * - Any referenced tileset files change
+     * 
+     * @param newFiles Map of current file paths to modification times
+     * @param previousFiles Map of previous file paths to modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath() && !app.backend.textures.supportsHotReloadPath())
@@ -546,6 +691,14 @@ class TilemapAsset extends Asset {
 
     }
 
+    /**
+     * Cleans up the tilemap asset and all associated data.
+     * Destroys:
+     * - The TilemapData instance
+     * - The LDtk data (if applicable)
+     * - References to TMX data
+     * - All loaded textures and sub-assets
+     */
     override function destroy():Void {
 
         super.destroy();

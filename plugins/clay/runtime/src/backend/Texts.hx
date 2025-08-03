@@ -12,10 +12,46 @@ import sys.io.File;
 #end
 
 
+/**
+ * Clay backend implementation for loading text files.
+ * 
+ * This class handles loading of text-based resources from various sources:
+ * - Local filesystem (when available)
+ * - HTTP/HTTPS URLs
+ * - Application bundle resources
+ * 
+ * Features:
+ * - Asynchronous and synchronous loading modes
+ * - Request deduplication to prevent redundant loads
+ * - Hot reload support for development
+ * - Automatic UTF-8 text decoding
+ * - URL query parameter stripping for cache busting
+ * 
+ * Common text file types include JSON, XML, configuration files,
+ * shader source code, and other text-based assets.
+ * 
+ * @see spec.Texts The interface this class implements
+ * @see TextAsset For the high-level text asset interface
+ */
 class Texts implements spec.Texts {
 
     public function new() {}
 
+    /**
+     * Loads text content from the specified path.
+     * 
+     * The path can be:
+     * - Relative to the assets directory (e.g., "data/config.json")
+     * - Absolute filesystem path (e.g., "/usr/local/data/config.txt")
+     * - HTTP/HTTPS URL (e.g., "https://example.com/data.json")
+     * 
+     * Multiple requests for the same path are automatically deduplicated,
+     * with all callbacks being notified when the load completes.
+     * 
+     * @param path Path to the text file to load
+     * @param options Optional loading configuration (sync/async, immediate queue)
+     * @param _done Callback invoked with the loaded text (null on error)
+     */
     public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
         var synchronous = options != null && options.loadMethod == SYNC;
@@ -105,6 +141,12 @@ class Texts implements spec.Texts {
 
     }
 
+    /**
+     * Indicates whether this backend supports hot reloading of text files.
+     * Clay backend always supports hot reload for development efficiency.
+     * 
+     * @return true, indicating hot reload is supported
+     */
     inline public function supportsHotReloadPath():Bool {
 
         return true;
@@ -113,6 +155,10 @@ class Texts implements spec.Texts {
 
 /// Internal
 
+    /**
+     * Tracks pending load operations to prevent duplicate requests.
+     * Maps file paths to arrays of callbacks waiting for that file.
+     */
     var loadingTextCallbacks:Map<String,Array<String->Void>> = new Map();
 
 }

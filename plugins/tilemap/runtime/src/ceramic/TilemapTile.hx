@@ -1,5 +1,46 @@
 package ceramic;
 
+/**
+ * Represents a single tile in a tilemap, storing both the tile ID and transformation flags.
+ * 
+ * TilemapTile is an abstract type over Int that encodes multiple pieces of information:
+ * - The global tile ID (GID) referencing a tile in a tileset
+ * - Horizontal flip flag
+ * - Vertical flip flag
+ * - Diagonal flip flag (for 90° rotations)
+ * 
+ * This encoding follows the Tiled Map Editor (TMX) format specification, where the
+ * upper 3 bits store transformation flags and the lower 29 bits store the GID.
+ * 
+ * ## Bit Layout
+ * 
+ * ```
+ * Bit 31: Horizontal flip
+ * Bit 30: Vertical flip
+ * Bit 29: Diagonal flip (swap X/Y axis)
+ * Bits 0-28: Global tile ID (GID)
+ * ```
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * // Create a tile with GID 42
+ * var tile:TilemapTile = 42;
+ * 
+ * // Apply transformations
+ * tile.horizontalFlip = true;
+ * tile.verticalFlip = true;
+ * 
+ * // Rotate the tile
+ * tile.rotateRight(); // 90° clockwise
+ * 
+ * // Get the actual tile ID
+ * var gid = tile.gid; // Gets ID without flags
+ * ```
+ * 
+ * @see TilemapLayerData
+ * @see TilemapQuad
+ */
 abstract TilemapTile(Int) from Int to Int {
 
     // Some portions of this code come from https://github.com/Yanrishatum/haxe-format-tiled
@@ -10,12 +51,21 @@ abstract TilemapTile(Int) from Int to Int {
     private inline static var FLAGS_MASK:Int = 0x1FFFFFFF;
     private inline static var FLAGS_ONLY:Int = 0xE0000000;
 
+    /**
+     * Creates a new TilemapTile with the given value.
+     * The value can include both GID and transformation flags.
+     * @param value The tile value (GID + optional flags)
+     */
     inline public function new(value:Int) {
 
         this = value;
 
     }
 
+    /**
+     * Flips the tile horizontally.
+     * When the tile is diagonally flipped (rotated), this affects the vertical flip instead.
+     */
     inline public function flipX():Void {
         if (diagonalFlip) {
             verticalFlip = !verticalFlip;
@@ -25,6 +75,10 @@ abstract TilemapTile(Int) from Int to Int {
         }
     }
 
+    /**
+     * Flips the tile vertically.
+     * When the tile is diagonally flipped (rotated), this affects the horizontal flip instead.
+     */
     inline public function flipY():Void {
         if (diagonalFlip) {
             horizontalFlip = !horizontalFlip;
@@ -34,6 +88,11 @@ abstract TilemapTile(Int) from Int to Int {
         }
     }
 
+    /**
+     * Rotates the tile 90 degrees clockwise.
+     * This is achieved by manipulating the combination of flip flags.
+     * Multiple rotations can be combined to achieve 180° or 270° rotation.
+     */
     inline public function rotateRight():Void {
         final hFlip = get_horizontalFlip();
         final vFlip = get_verticalFlip();
@@ -64,6 +123,11 @@ abstract TilemapTile(Int) from Int to Int {
         }
     }
 
+    /**
+     * Rotates the tile 90 degrees counter-clockwise.
+     * This is achieved by manipulating the combination of flip flags.
+     * Multiple rotations can be combined to achieve 180° or 270° rotation.
+     */
     inline public function rotateLeft():Void {
         final hFlip = get_horizontalFlip();
         final vFlip = get_verticalFlip();

@@ -2,10 +2,48 @@ package ceramic;
 
 using StringTools;
 
+/**
+ * A view that displays text with automatic sizing and alignment options.
+ * 
+ * TextView wraps a Text visual and provides additional layout features:
+ * - Automatic size computation based on text content
+ * - Vertical and horizontal alignment within the view bounds
+ * - Text wrapping with fitWidth support
+ * - Padding support for text positioning
+ * - Special centering option for single-line text
+ * 
+ * This is the preferred way to display text within UI layouts as it
+ * properly integrates with the View sizing system.
+ * 
+ * @example
+ * ```haxe
+ * var label = new TextView();
+ * label.content = "Hello World";
+ * label.font = myFont;
+ * label.textColor = Color.WHITE;
+ * label.align = CENTER;
+ * label.verticalAlign = CENTER;
+ * label.viewSize(200, 50); // Text centered in 200x50 area
+ * ```
+ * 
+ * @see Text The underlying text visual
+ * @see View The base view class
+ */
 class TextView extends View {
 
+    /**
+     * The underlying Text visual that renders the actual text.
+     * This is automatically created and managed by the TextView.
+     */
     public var text(default,null):Text;
 
+    /**
+     * Vertical alignment of the text within the view bounds.
+     * - TOP: Align to top edge (plus padding)
+     * - CENTER: Center vertically
+     * - BOTTOM: Align to bottom edge (minus padding)
+     * Default: TOP
+     */
     public var verticalAlign(default,set):LayoutAlign = TOP;
     function set_verticalAlign(verticalAlign:LayoutAlign):LayoutAlign {
         if (this.verticalAlign == verticalAlign) return verticalAlign;
@@ -14,6 +52,10 @@ class TextView extends View {
         return verticalAlign;
     }
 
+    /**
+     * The bitmap font used to render the text.
+     * Changing the font will trigger a layout update.
+     */
     public var font(get,set):BitmapFont;
     inline function get_font():BitmapFont return text.font;
     function set_font(font:BitmapFont):BitmapFont {
@@ -23,6 +65,10 @@ class TextView extends View {
         return font;
     }
 
+    /**
+     * Pre-rendered font size for performance optimization.
+     * See Text.preRenderedSize for details.
+     */
     public var preRenderedSize(get,set):Int;
     inline function get_preRenderedSize():Int return text.preRenderedSize;
     function set_preRenderedSize(preRenderedSize:Int):Int {
@@ -32,6 +78,10 @@ class TextView extends View {
         return preRenderedSize;
     }
 
+    /**
+     * The color of the text.
+     * This is a convenience property that maps to text.color.
+     */
     public var textColor(get,set):Color;
     inline function get_textColor():Color return text.color;
     function set_textColor(textColor:Color):Color {
@@ -40,6 +90,10 @@ class TextView extends View {
         return textColor;
     }
 
+    /**
+     * The alpha transparency of the text (0.0 to 1.0).
+     * This is a convenience property that maps to text.alpha.
+     */
     public var textAlpha(get,set):Float;
     inline function get_textAlpha():Float return text.alpha;
     function set_textAlpha(textAlpha:Float):Float {
@@ -48,6 +102,11 @@ class TextView extends View {
         return textAlpha;
     }
 
+    /**
+     * The text content to display.
+     * Supports multiline text with \n line breaks.
+     * Setting this will trigger a layout update.
+     */
     public var content(get,set):String;
     inline function get_content():String return text.content;
     function set_content(content:String):String {
@@ -57,6 +116,11 @@ class TextView extends View {
         return content;
     }
 
+    /**
+     * The point size of the text.
+     * This scales the font size relative to the font's native size.
+     * Setting this will trigger a layout update.
+     */
     public var pointSize(get,set):Float;
     inline function get_pointSize():Float return text.pointSize;
     function set_pointSize(pointSize:Float):Float {
@@ -66,6 +130,11 @@ class TextView extends View {
         return pointSize;
     }
 
+    /**
+     * Minimum height for the view.
+     * The view will not be smaller than this height even if the text is shorter.
+     * Default: 0
+     */
     public var minHeight(default,set):Float = 0;
     function set_minHeight(minHeight:Float):Float {
         if (this.minHeight == minHeight) return minHeight;
@@ -74,6 +143,11 @@ class TextView extends View {
         return minHeight;
     }
 
+    /**
+     * Line height multiplier for text spacing.
+     * Values > 1.0 increase space between lines.
+     * Values < 1.0 decrease space between lines.
+     */
     public var lineHeight(get,set):Float;
     inline function get_lineHeight():Float return text.lineHeight;
     function set_lineHeight(lineHeight:Float):Float {
@@ -83,6 +157,10 @@ class TextView extends View {
         return lineHeight;
     }
 
+    /**
+     * Additional spacing between letters in pixels.
+     * Positive values increase spacing, negative values decrease it.
+     */
     public var letterSpacing(get,set):Float;
     inline function get_letterSpacing():Float return text.letterSpacing;
     function set_letterSpacing(letterSpacing:Float):Float {
@@ -92,6 +170,12 @@ class TextView extends View {
         return letterSpacing;
     }
 
+    /**
+     * Horizontal text alignment within the view.
+     * - LEFT: Align text to the left
+     * - CENTER: Center text horizontally
+     * - RIGHT: Align text to the right
+     */
     public var align(get,set):TextAlign;
     inline function get_align():TextAlign return text.align;
     function set_align(align:TextAlign):TextAlign {
@@ -101,6 +185,12 @@ class TextView extends View {
         return align;
     }
 
+    /**
+     * If true, automatically centers the text horizontally when it's only one line.
+     * This overrides the align property for single-line text.
+     * Useful for buttons or labels that should center short text.
+     * Default: false
+     */
     public var centerIfOneLine(default,set):Bool = false;
     function set_centerIfOneLine(centerIfOneLine:Bool):Bool {
         if (this.centerIfOneLine == centerIfOneLine) return centerIfOneLine;
@@ -109,6 +199,11 @@ class TextView extends View {
         return centerIfOneLine;
     }
 
+    /**
+     * Maximum line width difference ratio for text wrapping.
+     * Controls how evenly lines are distributed when wrapping.
+     * See Text.maxLineDiff for details.
+     */
     public var maxLineDiff(get,set):Float;
     inline function get_maxLineDiff():Float return text.maxLineDiff;
     function set_maxLineDiff(maxLineDiff:Float):Float {
@@ -118,6 +213,11 @@ class TextView extends View {
         return maxLineDiff;
     }
 
+    /**
+     * If true, disables automatic text wrapping based on view width.
+     * The text will render on a single line unless it contains explicit line breaks.
+     * Default: false
+     */
     public var noFitWidth(default,set):Bool = false;
     function set_noFitWidth(noFitWidth:Bool):Bool {
         if (this.noFitWidth == noFitWidth) return noFitWidth;
@@ -126,6 +226,10 @@ class TextView extends View {
         return noFitWidth;
     }
 
+    /**
+     * Create a new TextView.
+     * Automatically creates the underlying Text visual with sensible defaults.
+     */
     public function new() {
 
         super();
@@ -138,6 +242,11 @@ class TextView extends View {
 
     }
 
+    /**
+     * Compute the size of the view based on text content.
+     * This method automatically sizes the view to fit the text,
+     * respecting any explicit width/height constraints.
+     */
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
 
         #if ceramic_debug_layout
@@ -252,6 +361,11 @@ class TextView extends View {
 
     }
 
+    /**
+     * Position the text within the view based on alignment settings.
+     * Handles all combinations of vertical and horizontal alignment,
+     * taking padding into account.
+     */
     override function layout() {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, width);

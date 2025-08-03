@@ -18,18 +18,58 @@ import tracker.Observable;
 
 using StringTools;
 
+/**
+ * A dropdown selection field that allows users to choose from a predefined list of options.
+ * 
+ * SelectFieldView provides a text-based dropdown interface with keyboard navigation support.
+ * It displays the currently selected value and shows a dropdown list when activated. The field
+ * supports null values, keyboard shortcuts, and intelligent positioning of the dropdown list.
+ * 
+ * Key features:
+ * - Dropdown list with hover and click selection
+ * - Keyboard navigation (Arrow keys, Enter, Space, Escape)
+ * - Support for null values with custom text
+ * - Auto-positioning above/below based on available space
+ * - Focus management and escape handling
+ * - Clipping support for scrollable containers
+ * 
+ * Usage example:
+ * ```haxe
+ * var selectField = new SelectFieldView();
+ * selectField.list = ['Option 1', 'Option 2', 'Option 3'];
+ * selectField.nullValueText = 'Choose an option...';
+ * selectField.value = 'Option 1';
+ * selectField.onValueChange(this, (value, prev) -> {
+ *     trace('Selected: ' + value);
+ * });
+ * add(selectField);
+ * ```
+ */
 class SelectFieldView extends FieldView {
 
+    /** Custom theme override for this select field. If null, uses the global context theme */
     @observe public var theme:Theme = null;
 
+    /** Reusable point for coordinate calculations */
     static var _point = new Point();
 
+    /** Maximum height of the dropdown list in pixels */
     static final MAX_LIST_HEIGHT = 200;
 
+    /** Height of each item in the dropdown list */
     static final ITEM_HEIGHT = SelectListView.ITEM_HEIGHT;
 
 /// Hooks
 
+    /**
+     * Hook called when the field value changes.
+     * 
+     * Override this function to implement custom behavior when the value is set.
+     * The default implementation does nothing.
+     * 
+     * @param field The select field instance
+     * @param value The new value being set
+     */
     public dynamic function setValue(field:SelectFieldView, value:String):Void {
 
         // Default implementation does nothing
@@ -38,34 +78,53 @@ class SelectFieldView extends FieldView {
 
 /// Public properties
 
+    /** The currently selected value. Can be null if no value is selected */
     @observe public var value:String = null;
 
+    /** Array of available options to choose from */
     @observe public var list:ReadOnlyArray<String> = [];
 
+    /** Text to display when value is null. If null, empty text is shown */
     @observe public var nullValueText:String = null;
 
+    /** Visual style of the field (DEFAULT, OVERLAY, or MINIMAL) */
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    /** Whether to clip the dropdown list to scrollable container bounds */
     public var clipList:Bool = false;
 
 /// Internal properties
 
+    /** Whether the dropdown list is currently visible */
     @observe var listVisible:Bool = false;
 
+    /** Container for the field display elements */
     var container:RowLayout;
 
+    /** Text view displaying the current selection */
     var textView:TextView;
 
+    /** The dropdown list view component */
     var listView:SelectListView;
 
+    /** Container for positioning the dropdown list */
     var listContainer:View;
 
+    /** Arrow/triangle indicator showing dropdown availability */
     var tip:Line;
 
+    /** Whether the dropdown list is positioned above the field */
     var listIsAbove:Bool = false;
 
+    /** Tracks if list was visible in the current frame for input handling */
     var listVisibleThisFrame:Bool = false;
 
+    /**
+     * Creates a new SelectFieldView.
+     * 
+     * Sets up the field container, text display, dropdown positioning,
+     * keyboard navigation, and all necessary event handlers.
+     */
     public function new() {
 
         super();
@@ -211,6 +270,12 @@ class SelectFieldView extends FieldView {
 
 /// Layout
 
+    /**
+     * Handles focus events for the field.
+     * 
+     * Currently delegates to parent focus behavior. Text editing is disabled
+     * for select fields in favor of dropdown selection.
+     */
     override function focus() {
 
         super.focus();
@@ -242,6 +307,12 @@ class SelectFieldView extends FieldView {
 
     }
 
+    /**
+     * Layouts the field container and clips text to fit available space.
+     * 
+     * Ensures the displayed text doesn't overflow into the dropdown arrow area
+     * by clipping it to the available width minus arrow space.
+     */
     function layoutContainer() {
 
         if (textView != null) {
@@ -254,6 +325,12 @@ class SelectFieldView extends FieldView {
 
     }
 
+    /**
+     * Layouts the dropdown list container.
+     * 
+     * Sizes the list view to match the field width and calculated height
+     * based on the number of available options.
+     */
     function layoutListContainer() {
 
         if (listView != null) {
@@ -266,6 +343,11 @@ class SelectFieldView extends FieldView {
 
     }
 
+    /**
+     * Calculates the optimal height for the dropdown list.
+     * 
+     * @return Height in pixels, limited by MAX_LIST_HEIGHT
+     */
     function listHeight() {
 
         return Math.min(ITEM_HEIGHT * (list.length + (nullValueText != null ? 1 : 0)), MAX_LIST_HEIGHT);
@@ -299,6 +381,12 @@ class SelectFieldView extends FieldView {
     }
     */
 
+    /**
+     * Updates the displayed text based on the current value.
+     * 
+     * Shows the selected value or the null value text if no value is selected.
+     * Sanitizes the display text by trimming whitespace and replacing newlines.
+     */
     function updateFromValue() {
 
         var value = this.value;
@@ -460,6 +548,9 @@ class SelectFieldView extends FieldView {
 
     }
 
+    /**
+     * Toggles the visibility of the dropdown list.
+     */
     function toggleListVisible() {
 
         listVisible = !listVisible;

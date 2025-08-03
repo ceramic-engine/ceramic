@@ -13,10 +13,39 @@ import sys.io.File;
 #end
 
 
+/**
+ * Clay backend implementation for loading binary data files.
+ * 
+ * This class handles loading of raw binary data from various sources including:
+ * - Local filesystem (when available)
+ * - HTTP/HTTPS URLs
+ * - Application bundle resources
+ * 
+ * The implementation includes:
+ * - Asynchronous loading with callback support
+ * - Request deduplication (multiple requests for the same file share one load operation)
+ * - Hot reload support for development
+ * - Automatic path resolution relative to assets directory
+ * 
+ * @see spec.Binaries The interface this class implements
+ * @see BinaryAsset For the high-level binary asset interface
+ */
 class Binaries implements spec.Binaries {
 
     public function new() {}
 
+    /**
+     * Loads binary data from the specified path.
+     * 
+     * The path can be:
+     * - Relative to the assets directory (e.g., "data/config.bin")
+     * - Absolute filesystem path (e.g., "/usr/local/data/config.bin")
+     * - HTTP/HTTPS URL (e.g., "https://example.com/data.bin")
+     * 
+     * @param path Path to the binary file to load
+     * @param options Optional loading configuration (immediate callback execution)
+     * @param _done Callback invoked with the loaded bytes data (null on error)
+     */
     public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
         var immediate = options != null ? options.immediate : null;
@@ -105,6 +134,12 @@ class Binaries implements spec.Binaries {
 
     }
 
+    /**
+     * Indicates whether this backend supports hot reloading of binary files.
+     * Clay backend always supports hot reload for development efficiency.
+     * 
+     * @return true, indicating hot reload is supported
+     */
     inline public function supportsHotReloadPath():Bool {
 
         return true;
@@ -113,6 +148,10 @@ class Binaries implements spec.Binaries {
 
 /// Internal
 
+    /**
+     * Tracks pending load operations to prevent duplicate requests.
+     * Maps file paths to arrays of callbacks waiting for that file.
+     */
     var loadingBinaryCallbacks:Map<String,Array<Bytes->Void>> = new Map();
 
 }

@@ -3,8 +3,55 @@ package ceramic.macros;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 
+/**
+ * Build macro that implements lazy initialization for class fields.
+ * 
+ * This macro transforms fields marked with the `@lazy` metadata into properties
+ * that are initialized on first access rather than at construction time.
+ * This is useful for expensive computations or resources that may not always be needed.
+ * 
+ * ## Usage
+ * 
+ * Apply this macro to a class and mark fields with @lazy:
+ * 
+ * ```haxe
+ * @:build(ceramic.macros.LazyMacro.build())
+ * class MyClass {
+ *     @lazy var expensiveResource = new ExpensiveResource();
+ *     @lazy var computedValue = performComplexCalculation();
+ * }
+ * 
+ * // The resources are not created until first access:
+ * var obj = new MyClass(); // No resources allocated yet
+ * var res = obj.expensiveResource; // ExpensiveResource created now
+ * ```
+ * 
+ * ## How It Works
+ * 
+ * For each @lazy field, the macro generates:
+ * 1. A private flag field (e.g., `lazyExpensiveResource`) to track initialization
+ * 2. A property with get/set accessors replacing the original field
+ * 3. A getter that checks the flag and initializes the value on first access
+ * 4. A setter that allows the value to be changed after initialization
+ * 
+ * ## Requirements
+ * 
+ * - Fields must have an initialization expression
+ * - Works with both instance and static fields
+ * - Type can be inferred from the initialization expression
+ * 
+ * @see ceramic.Lazy For the interface that lazy-initialized objects can implement
+ */
 class LazyMacro {
 
+    /**
+     * Build macro entry point that processes fields marked with @lazy metadata.
+     * 
+     * Transforms lazy fields into properties with deferred initialization,
+     * generating the necessary backing fields and accessor methods.
+     * 
+     * @return Modified array of fields with lazy initialization implemented
+     */
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -134,6 +181,12 @@ class LazyMacro {
 
     }
 
+    /**
+     * Checks if a field has the @lazy metadata attached.
+     * 
+     * @param field The field to check
+     * @return True if the field has @lazy metadata, false otherwise
+     */
     static function hasLazyMeta(field:Field):Bool {
 
         if (field.meta == null || field.meta.length == 0) return false;

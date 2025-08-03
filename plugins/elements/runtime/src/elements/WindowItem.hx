@@ -18,15 +18,72 @@ using StringTools;
 using ceramic.Extensions;
 
 /**
- * A simple class to hold window item data.
- * The same class is used for every window item kind so
- * that it's easier to recycle it and avoid allocating
- * too much data at every frame.
+ * A versatile data container for window UI elements with efficient pooling and recycling.
+ *
+ * This class serves as a universal data holder for all types of window items (buttons, text fields,
+ * lists, etc.) to minimize memory allocations during UI updates. It uses an object pooling system
+ * and stores data in generic fields that are interpreted differently based on the item kind.
+ *
+ * ## Features
+ *
+ * - Object pooling for memory efficiency
+ * - Generic data storage for all item types
+ * - Automatic view creation and updates
+ * - Item comparison for change detection
+ * - Lifecycle management with recycling
+ *
+ * ## Data Storage
+ *
+ * The class uses generic fields (int0-4, float0-4, bool0-4, string0-4, any0-5, arrays)
+ * that are interpreted differently based on the WindowItemKind. This approach allows
+ * a single class to handle all UI element types efficiently.
+ *
+ * This class is used internally by `Im.*` methods and is typically not used by end user.
+ *
+ * ## Usage Examples
+ *
+ * ```haxe
+ * // Get a window item from the pool
+ * var item = WindowItem.get();
+ * item.kind = BUTTON;
+ * item.string0 = "Click Me"; // Button text
+ * item.bool0 = true;         // Button enabled state
+ *
+ * // Create a view from the item
+ * var view = item.updateView(null);
+ *
+ * // Recycle when done
+ * item.recycle();
+ * ```
+ *
+ * @see WindowItemKind
+ * @see WindowData
+ * @see Pool
  */
 class WindowItem {
 
+    /**
+     * Object pool for efficient WindowItem reuse.
+     * Minimizes garbage collection by recycling items instead of creating new ones.
+     * @private
+     */
     static var pool = new Pool<WindowItem>();
 
+    /**
+     * Retrieves a WindowItem from the object pool.
+     *
+     * Gets a recycled item from the pool if available, otherwise creates a new one.
+     * This is the preferred way to create WindowItem instances for memory efficiency.
+     *
+     * @return A WindowItem instance ready for use
+     *
+     * ## Examples
+     * ```haxe
+     * var item = WindowItem.get();
+     * item.kind = TEXT;
+     * item.string0 = "Hello World";
+     * ```
+     */
     public static function get():WindowItem {
 
         var item = pool.get();
@@ -37,88 +94,270 @@ class WindowItem {
 
     }
 
+    /**
+     * The type of window item, determining how data fields are interpreted.
+     *
+     * @see WindowItemKind
+     */
     public var kind:WindowItemKind = UNKNOWN;
 
+    /**
+     * Reference to the previous version of this item for comparison.
+     * Used to detect changes and optimize updates.
+     */
     public var previous:WindowItem = null;
 
+    /**
+     * Theme to use for styling this item.
+     * If null, the default theme is used.
+     */
     public var theme:Theme = null;
 
+    /**
+     * Generic integer field #0.
+     * Usage varies by item kind (e.g., selected index, numeric value, flags).
+     */
     public var int0:Int = 0;
 
+    /**
+     * Generic integer field #1.
+     * Usage varies by item kind (e.g., updated value, secondary index).
+     */
     public var int1:Int = 0;
 
+    /**
+     * Generic integer field #2.
+     * Usage varies by item kind (e.g., flags, text alignment, point size).
+     */
     public var int2:Int = 0;
 
+    /**
+     * Generic integer field #3.
+     * Usage varies by item kind (e.g., preRenderedSize, additional flags).
+     */
     public var int3:Int = 0;
 
+    /**
+     * Label position for labeled items (LEFT, RIGHT, etc.).
+     * Used by LabeledView components to position labels relative to content.
+     */
     public var labelPosition:Int = 0;
 
+    /**
+     * Whether this item is disabled.
+     * Disabled items typically appear grayed out and don't respond to interaction.
+     */
     public var disabled:Bool = false;
 
+    /**
+     * Flex value for layout purposes.
+     * Controls how the item grows/shrinks in flexible layouts.
+     */
     public var flex:Int = 1;
 
+    /**
+     * Generic float field #0.
+     * Usage varies by item kind (e.g., current value, height, minimum value).
+     */
     public var float0:Float = 0;
 
+    /**
+     * Generic float field #1.
+     * Usage varies by item kind (e.g., updated value, width).
+     */
     public var float1:Float = 0;
 
+    /**
+     * Width allocated for labels in labeled items.
+     * Used by LabeledView components to size the label area.
+     */
     public var labelWidth:Float = 0;
 
+    /**
+     * Generic float field #3.
+     * Usage varies by item kind (e.g., minimum value, range start).
+     */
     public var float3:Float = 0;
 
+    /**
+     * Generic float field #4.
+     * Usage varies by item kind (e.g., maximum value, range end).
+     */
     public var float4:Float = 0;
 
+    /**
+     * Generic boolean field #0.
+     * Usage varies by item kind (e.g., multiline, enabled state, scale to fit).
+     */
     public var bool0:Bool = false;
 
+    /**
+     * Generic boolean field #1.
+     * Usage varies by item kind (e.g., submit flag, apply filter).
+     */
     public var bool1:Bool = false;
 
+    /**
+     * Generic boolean field #2.
+     * Usage varies by item kind (e.g., focus flag, auto-state).
+     */
     public var bool2:Bool = false;
 
+    /**
+     * Generic boolean field #3.
+     * Usage varies by item kind (e.g., blur flag, additional state).
+     */
     public var bool3:Bool = false;
 
+    /**
+     * Generic boolean field #4.
+     * Usage varies by item kind (e.g., autocomplete on focus).
+     */
     public var bool4:Bool = false;
 
+    /**
+     * Generic string field #0.
+     * Usage varies by item kind (e.g., current text value, button text, content).
+     */
     public var string0:String = null;
 
+    /**
+     * Generic string field #1.
+     * Usage varies by item kind (e.g., updated value, null value text, selected tab).
+     */
     public var string1:String = null;
 
+    /**
+     * Generic string field #2.
+     * Usage varies by item kind (e.g., label text, field name).
+     */
     public var string2:String = null;
 
+    /**
+     * Generic string field #3.
+     * Usage varies by item kind (e.g., placeholder text, dialog title).
+     */
     public var string3:String = null;
 
+    /**
+     * Generic string field #4.
+     * Usage varies by item kind (e.g., additional text, help text).
+     */
     public var string4:String = null;
 
+    /**
+     * Generic any-type field #0.
+     * Usage varies by item kind (e.g., data object, file filters, list items).
+     */
     public var any0:Any = null;
 
+    /**
+     * Generic any-type field #1.
+     * Usage varies by item kind (e.g., updated data, moved items).
+     */
     public var any1:Any = null;
 
+    /**
+     * Generic any-type field #2.
+     * Usage varies by item kind (e.g., trashed items, additional data).
+     */
     public var any2:Any = null;
 
+    /**
+     * Generic any-type field #3.
+     * Usage varies by item kind (e.g., locked items, state data).
+     */
     public var any3:Any = null;
 
+    /**
+     * Generic any-type field #4.
+     * Usage varies by item kind (e.g., unlocked items, extra state).
+     */
     public var any4:Any = null;
 
+    /**
+     * Generic any-type field #5.
+     * Usage varies by item kind (e.g., duplicated items, extended data).
+     */
     public var any5:Any = null;
 
+    /**
+     * Visual element associated with this item.
+     * Used by VISUAL kind items to display custom visual content.
+     */
     public var visual:Visual = null;
 
+    /**
+     * Generic integer array field #0.
+     * Usage varies by item kind (e.g., tab states, indices, flags array).
+     */
     public var intArray0:Array<Int> = null;
 
+    /**
+     * Generic string array field #0.
+     * Usage varies by item kind (e.g., options list, available tabs, file list).
+     */
     public var stringArray0:Array<String> = null;
 
+    /**
+     * Generic string array field #1.
+     * Usage varies by item kind (e.g., tab labels, secondary options).
+     */
     public var stringArray1:Array<String> = null;
 
+    /**
+     * Generic any-type array field #0.
+     * Usage varies by item kind (e.g., data objects, theme list, items collection).
+     */
     public var anyArray0:Array<Any> = null;
 
+    /**
+     * Row identifier for grid-based layouts or grouping.
+     * Used to organize items into logical rows.
+     */
     public var row:Int = -1;
 
+    /**
+     * Creates a new WindowItem instance.
+     *
+     * Note: Use WindowItem.get() instead of direct construction
+     * to benefit from object pooling.
+     *
+     * @see get
+     */
     public function new() {}
 
+    /**
+     * Checks if this item has a managed visual that should be destroyed on cleanup.
+     *
+     * Returns true if this is a VISUAL item with the managed flag set (int0 > 0)
+     * and a visual is actually assigned.
+     *
+     * @return true if the visual should be automatically managed
+     */
     inline public function hasManagedVisual():Bool {
 
         return kind == VISUAL && int0 > 0 && visual != null;
 
     }
 
+    /**
+     * Compares this item with another to determine if they represent the same UI element.
+     *
+     * This comparison is used to detect when items can be reused between frames
+     * rather than recreated. The comparison logic varies by item kind, typically
+     * checking the label similarity and other identifying characteristics.
+     *
+     * @param item The other WindowItem to compare against
+     * @return true if the items represent the same UI element
+     *
+     * ## Comparison Logic by Kind
+     * - SELECT: Label + options array equality
+     * - Text/Edit fields: Label similarity
+     * - VISUAL: Label + visual reference equality
+     * - Static items (TEXT, BUTTON, etc.): Always true
+     * - Unknown: Always false
+     */
     public function isSameItem(item:WindowItem):Bool {
 
         if (item == null)
@@ -200,12 +439,40 @@ class WindowItem {
 
     }
 
+    /**
+     * Checks if another item has a similar label configuration.
+     *
+     * Compares the label presence (string2 field) between items to determine
+     * if they have compatible labeling. Both items should either have labels
+     * or both should be unlabeled.
+     *
+     * @param item The other item to compare labels with
+     * @return true if both items have similar label states
+     * @private
+     */
     inline function isSimilarLabel(item:WindowItem):Bool {
 
         return ((item.string2 != null && string2 != null) || (item.string2 == null && string2 == null));
 
     }
 
+    /**
+     * Creates or updates a View based on this item's data and kind.
+     *
+     * This method is the main entry point for converting window item data
+     * into actual UI views. It delegates to specific creation methods based
+     * on the item kind and applies common properties like flex layout.
+     *
+     * @param view Existing view to update, or null to create a new one
+     * @return The created or updated view, or null for unknown kinds
+     *
+     * ## View Creation Process
+     * 1. Determines the appropriate view type from the item kind
+     * 2. Creates a new view or updates the existing one
+     * 3. Applies item data to the view properties
+     * 4. Sets up event handlers and callbacks
+     * 5. Applies common layout properties (flex)
+     */
     public function updateView(view:View):View {
 
         view = switch kind {
@@ -266,6 +533,21 @@ class WindowItem {
 
     }
 
+    /**
+     * Resets all fields to default values and returns the item to the object pool.
+     *
+     * This method cleans up the item's state and makes it available for reuse.
+     * It resets all data fields to their default values and handles visual
+     * cleanup appropriately. After calling this method, the item should not
+     * be used until retrieved again from the pool.
+     *
+     * ## Cleanup Process
+     * 1. Resets all data fields to default values
+     * 2. Handles visual deactivation if not parented
+     * 3. Returns the item to the object pool for reuse
+     *
+     * @see get
+     */
     public function recycle() {
 
         kind = UNKNOWN;

@@ -1,7 +1,53 @@
 package ceramic;
 
+/**
+ * A layout container that stacks children on top of each other like layers.
+ *
+ * LayersLayout positions all children at the same location (with offsets applied),
+ * creating a stack where each child view overlaps the previous ones. The layout
+ * automatically adjusts its size to fit the largest child.
+ *
+ * Key features:
+ * - Children are stacked with increasing depth values
+ * - Container size adapts to the largest child
+ * - Each child can have independent positioning via offsets
+ * - Supports padding that affects all children
+ *
+ * Common use cases:
+ * - Card stacks or overlapping UI elements
+ * - Background/foreground layering
+ * - Overlay containers
+ * - Z-ordered visual effects
+ *
+ * @example
+ * ```haxe
+ * var layers = new LayersLayout();
+ * layers.padding(20);
+ *
+ * // Add background layer
+ * var bg = new View();
+ * bg.viewSize(ViewSize.fill(), ViewSize.fill());
+ * bg.transparent = false;
+ * bg.color = Color.GRAY;
+ * layers.add(bg);
+ *
+ * // Add content layer on top
+ * var content = new TextView();
+ * content.text = "Layered Content";
+ * content.offsetX = 10; // Offset from padding
+ * content.offsetY = 10;
+ * layers.add(content);
+ * ```
+ *
+ * @see View
+ * @see LinearLayout for sequential layouts
+ */
 class LayersLayout extends View {
 
+    /**
+     * Creates a new LayersLayout.
+     * The layout is transparent by default to show layered content.
+     */
     public function new() {
 
         super();
@@ -10,6 +56,11 @@ class LayersLayout extends View {
 
     }
 
+    /**
+     * Computes the layout size based on the largest child dimensions.
+     * The final size is the maximum width and height among all active children,
+     * plus any padding.
+     */
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, parentWidth);
@@ -117,6 +168,12 @@ class LayersLayout extends View {
 
     }
 
+    /**
+     * Positions all child views within the padded area.
+     * Each child is placed at the same base position (accounting for anchors),
+     * with individual offsets applied. Depth values increase for each child
+     * to maintain proper layering order.
+     */
     override function layout() {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, width);

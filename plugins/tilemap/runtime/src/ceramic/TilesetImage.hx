@@ -2,6 +2,37 @@ package ceramic;
 
 import tracker.Model;
 
+/**
+ * Represents the image resource used by a tileset.
+ * 
+ * TilesetImage encapsulates the texture and metadata for a tileset's graphical data.
+ * It manages the texture lifecycle, including asset retention and hot-reloading support.
+ * The image dimensions can be specified explicitly or derived from the loaded texture.
+ * 
+ * ## Features
+ * 
+ * - **Texture Management**: Handles texture loading and lifecycle
+ * - **Asset Retention**: Properly retains/releases texture assets
+ * - **Hot-Reload Support**: Automatically updates when texture assets are replaced
+ * - **Dimension Tracking**: Stores image dimensions for layout calculations
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * var image = new TilesetImage();
+ * image.source = "tiles/terrain.png";
+ * image.texture = assets.texture("tiles/terrain");
+ * 
+ * // Dimensions are automatically set from texture if not specified
+ * trace('Image size: ${image.width}x${image.height}');
+ * 
+ * // Attach to a tileset
+ * tileset.image = image;
+ * ```
+ * 
+ * @see Tileset
+ * @see Texture
+ */
 class TilesetImage extends Model {
 
     /**
@@ -57,6 +88,12 @@ class TilesetImage extends Model {
 
 /// Internal
 
+    /**
+     * Internal callback for texture hot-reloading.
+     * Called when the texture asset is replaced at runtime.
+     * @param newTexture The new texture instance
+     * @param prevTexture The previous texture being replaced
+     */
     function replaceTexture(newTexture:Texture, prevTexture:Texture) {
 
         this.texture = newTexture;

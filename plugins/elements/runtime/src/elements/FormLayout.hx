@@ -12,22 +12,65 @@ import tracker.Observable;
 
 using ceramic.Extensions;
 
+/**
+ * A specialized column layout designed for forms in the Elements UI framework.
+ * 
+ * FormLayout extends ColumnLayout to provide form-specific styling and behavior:
+ * - Automatic background rendering for form sections
+ * - Integrated tab focus navigation
+ * - Theme-aware styling with proper spacing and padding
+ * - Support for custom item backgrounds and window backgrounds
+ * 
+ * The layout automatically divides the form into three background sections:
+ * - Top background (above first item)
+ * - Individual item backgrounds (optional, between items)
+ * - Bottom background (below last item)
+ * 
+ * @see ColumnLayout
+ * @see TabFocus
+ */
 class FormLayout extends ColumnLayout implements Observable {
 
+    /**
+     * Empty array constant used for reflection method calls.
+     */
     static final EMPTY_ARRAY:ReadOnlyArray<Dynamic> = [];
 
+    /**
+     * Custom theme for this form. If null, uses the global context theme.
+     */
     @observe public var theme:Theme = null;
 
+    /**
+     * Tab focus component for keyboard navigation within the form.
+     */
     @component public var tabFocus:TabFocus;
 
+    /**
+     * Background quad for the top section of the form.
+     */
     var backgroundTop:Quad = null;
 
+    /**
+     * Array of background quads for individual form items.
+     */
     var backgrounds:Array<Quad> = null;
 
+    /**
+     * Background quad for the bottom section of the form.
+     */
     var backgroundBottom:Quad = null;
 
 /// Lifecycle
 
+    /**
+     * Creates a new FormLayout instance.
+     * 
+     * Initializes the form with:
+     * - Non-transparent background
+     * - Tab focus navigation
+     * - Automatic style and background updates
+     */
     public function new() {
 
         super();
@@ -41,6 +84,14 @@ class FormLayout extends ColumnLayout implements Observable {
 
     }
 
+    /**
+     * Destroys the form layout and all its background components.
+     * 
+     * Cleans up:
+     * - All item background quads
+     * - Top background quad
+     * - Bottom background quad
+     */
     override function destroy() {
 
         if (backgrounds != null) {
@@ -70,6 +121,16 @@ class FormLayout extends ColumnLayout implements Observable {
 
 /// Layout
 
+    /**
+     * Performs form layout, positioning all backgrounds and items.
+     * 
+     * The layout process:
+     * 1. Calls parent layout to position items
+     * 2. Updates background components
+     * 3. Positions top background from top edge to first item
+     * 4. Positions item backgrounds centered on each item
+     * 5. Positions bottom background from last item to bottom edge
+     */
     override function layout() {
 
         super.layout();
@@ -115,6 +176,16 @@ class FormLayout extends ColumnLayout implements Observable {
 
 /// Internal
 
+    /**
+     * Computes and updates all background components based on current theme settings.
+     * 
+     * This method:
+     * - Creates or updates background quads as needed
+     * - Applies theme colors and alpha values
+     * - Respects individual item theme overrides
+     * - Handles items that render their own backgrounds
+     * - Activates/deactivates backgrounds based on theme settings
+     */
     function computeBackgrounds() {
 
         var theme = this.theme;
@@ -227,6 +298,14 @@ class FormLayout extends ColumnLayout implements Observable {
 
     }
 
+    /**
+     * Updates the form's visual style based on the current theme.
+     * 
+     * Applies:
+     * - Background color from theme
+     * - Item spacing for proper form layout
+     * - Padding around form content
+     */
     function updateStyle() {
 
         var theme = this.theme;

@@ -10,22 +10,109 @@ import ceramic.Visual;
 import elements.Context.context;
 import tracker.Observable;
 
+/**
+ * A tooltip component that displays informational text when hovering over visual elements.
+ * 
+ * This class provides a tooltip implementation that can be attached to any visual element
+ * as a component. The tooltip displays text content in a styled bubble with a pointer
+ * triangle, appearing on hover and disappearing when the pointer leaves the element.
+ * 
+ * ## Features
+ * 
+ * - Automatic positioning relative to the target element
+ * - Theme-based styling with customizable appearance
+ * - Speech bubble design with pointer triangle
+ * - Hover-based show/hide behavior
+ * - Component-based attachment system
+ * 
+ * ## Usage Examples
+ * 
+ * ```haxe
+ * // Add a tooltip to any visual element
+ * var button = new Button();
+ * Tooltip.tooltip(button, "Click me to save your work");
+ * 
+ * // Update tooltip content
+ * Tooltip.tooltip(button, "Updated tooltip text");
+ * 
+ * // Remove tooltip
+ * Tooltip.tooltip(button, null);
+ * 
+ * // Create tooltip manually
+ * var myTooltip = new Tooltip("Custom tooltip content");
+ * someVisual.component('tooltip', myTooltip);
+ * ```
+ * 
+ * @see Component
+ * @see Theme
+ * @see Visual
+ */
 class Tooltip extends Visual implements Component implements Observable {
 
+    /**
+     * Shared point instance for coordinate calculations.
+     * Used to avoid allocating new Point objects during positioning calculations.
+     * @private
+     */
     static var _point:Point = new Point(0, 0);
 
+    /**
+     * The theme used for styling this tooltip.
+     * If null, the context's default theme will be used.
+     */
     @observe public var theme:Theme = null;
 
+    /**
+     * The text content displayed in the tooltip.
+     * This is the main message shown to the user.
+     */
     @observe public var content:String;
 
+    /**
+     * The visual element this tooltip is attached to.
+     * @private
+     */
     var entity:Visual;
 
+    /**
+     * The text visual that displays the tooltip content.
+     * @private
+     */
     var text:Text;
 
+    /**
+     * The background bubble quad for the tooltip.
+     * @private
+     */
     var bubble:Quad;
 
+    /**
+     * The triangle pointer that points to the target element.
+     * @private
+     */
     var bubbleTriangle:Triangle;
 
+    /**
+     * Adds, updates, or removes a tooltip from a visual element.
+     * 
+     * This static method provides a convenient way to manage tooltips on visual elements.
+     * It automatically creates, updates, or removes tooltip components as needed.
+     * 
+     * @param visual The visual element to attach the tooltip to
+     * @param content The tooltip text to display, or null to remove the tooltip
+     * 
+     * ## Examples
+     * ```haxe
+     * // Add a tooltip
+     * Tooltip.tooltip(myButton, "Click to save");
+     * 
+     * // Update tooltip content
+     * Tooltip.tooltip(myButton, "Click to save (Ctrl+S)");
+     * 
+     * // Remove tooltip
+     * Tooltip.tooltip(myButton, null);
+     * ```
+     */
     public static function tooltip(visual:Visual, content:String) {
 
         if (content == null) {
@@ -44,6 +131,15 @@ class Tooltip extends Visual implements Component implements Observable {
 
     }
 
+    /**
+     * Creates a new tooltip with the specified content.
+     * 
+     * The tooltip is automatically added to the context view with high depth
+     * to ensure it appears above other UI elements. The visual structure includes
+     * a background bubble, pointer triangle, and text content.
+     * 
+     * @param content The text content to display in the tooltip
+     */
     public function new(content:String) {
 
         super();
@@ -75,6 +171,15 @@ class Tooltip extends Visual implements Component implements Observable {
 
     }
 
+    /**
+     * Binds this tooltip as a component to its entity.
+     * 
+     * Sets up the hover behavior for showing and hiding the tooltip.
+     * The tooltip appears when the pointer enters the entity and disappears when it leaves.
+     * Positioning is automatically calculated relative to the entity's center.
+     * 
+     * @private
+     */
     function bindAsComponent() {
 
         active = false;
@@ -99,6 +204,15 @@ class Tooltip extends Visual implements Component implements Observable {
 
     }
 
+    /**
+     * Updates the layout and positioning based on the current text content.
+     * 
+     * Recalculates the size and positions of all visual elements (text, bubble, triangle)
+     * to accommodate the current content. The tooltip is automatically sized to fit
+     * the text with appropriate padding.
+     * 
+     * @private
+     */
     function updateTextContent() {
 
         text.content = this.content;
@@ -120,6 +234,15 @@ class Tooltip extends Visual implements Component implements Observable {
 
     }
 
+    /**
+     * Updates the visual styling of the tooltip based on the current theme.
+     * 
+     * Applies theme colors and fonts to all visual elements. If no custom theme
+     * is set, uses the context's default theme. The bubble and triangle use
+     * overlay colors with appropriate alpha values.
+     * 
+     * @private
+     */
     function updateStyle() {
 
         var theme = this.theme;

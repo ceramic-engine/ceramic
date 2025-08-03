@@ -12,14 +12,64 @@ import haxe.xml.Access as Fast;
 import haxe.xml.Fast;
 #end
 
+/**
+ * Universal tilemap parser supporting multiple tilemap formats.
+ * 
+ * TilemapParser provides a unified interface for parsing different tilemap file formats
+ * and converting them to Ceramic's TilemapData structure. Currently supports TMX (Tiled Map Editor)
+ * format, with optional LDtk support when the ldtk plugin is enabled.
+ * 
+ * ## Features
+ * 
+ * - **TMX Support**: Full parsing of Tiled Map Editor (.tmx) files
+ * - **TSX Support**: External tileset (.tsx) file loading
+ * - **LDtk Support**: Level Designer Toolkit parsing (requires ldtk plugin)
+ * - **Tileset Caching**: Automatically caches parsed tilesets for performance
+ * - **Texture Loading**: Supports custom texture loading callbacks
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * var parser = new TilemapParser();
+ * 
+ * // Parse TMX file
+ * var tmxMap = parser.parseTmx(tmxContent);
+ * 
+ * // Convert to TilemapData with texture loading
+ * var tilemapData = parser.tmxMapToTilemapData(tmxMap, 
+ *     (source, configureAsset, done) -> {
+ *         // Load texture from source path
+ *         var texture = assets.texture(source);
+ *         done(texture);
+ *     }
+ * );
+ * 
+ * // Apply to tilemap
+ * var tilemap = new Tilemap();
+ * tilemap.tilemapData = tilemapData;
+ * ```
+ * 
+ * @see TilemapData
+ * @see TilemapTmxParser
+ * @see TilemapLdtkParser
+ */
 class TilemapParser {
 
+    /**
+     * Internal TMX parser instance, created lazily when needed.
+     */
     var tmxParser:TilemapTmxParser = null;
 
     #if plugin_ldtk
+    /**
+     * Internal LDtk parser instance, created lazily when needed.
+     */
     var ldtkParser:TilemapLdtkParser = null;
     #end
 
+    /**
+     * Creates a new tilemap parser instance.
+     */
     public function new() {}
 
     /**
@@ -62,6 +112,12 @@ class TilemapParser {
 
     }
 
+    /**
+     * Extracts the names of all external tileset files referenced in a TMX file.
+     * This is useful for pre-loading TSX files before parsing the main TMX.
+     * @param rawTmxData The raw TMX XML data as a string
+     * @return Array of external tileset filenames (relative paths as specified in TMX)
+     */
     public function parseExternalTilesetNames(rawTmxData:String):Array<String> {
 
         var xml = Xml.parse(rawTmxData);
@@ -89,6 +145,14 @@ class TilemapParser {
 
     }
 
+    /**
+     * Converts a parsed TMX map to Ceramic's TilemapData format.
+     * This method handles the conversion of all map properties, tilesets, and layers.
+     * @param tmxMap The parsed TMX map data
+     * @param loadTexture Optional callback for loading tileset textures. If provided, will be called
+     *                    for each tileset image with (source, configureAsset, done) parameters
+     * @return A new TilemapData instance ready to be used with a Tilemap visual
+     */
     public function tmxMapToTilemapData(tmxMap:TmxMap, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void):TilemapData {
 
         var tilemapData = new TilemapData();

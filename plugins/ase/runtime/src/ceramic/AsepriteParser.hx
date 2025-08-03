@@ -14,10 +14,46 @@ import haxe.io.BytesInput;
 using ceramic.Extensions;
 
 /**
- * Utility class to parse `.ase`/`.aseprite` files
+ * Parser for Aseprite (.ase/.aseprite) animation files.
+ * 
+ * This class provides utilities to parse Aseprite files and convert them into
+ * formats usable by the Ceramic engine. It handles layer compositing, frame
+ * extraction, texture atlas packing, and sprite sheet generation.
+ * 
+ * Key features:
+ * - Parses all Aseprite data including frames, layers, tags, slices, and palettes
+ * - Composites layers with proper blend modes and opacity
+ * - Detects and deduplicates identical frames to save memory
+ * - Packs frames into texture atlases for efficient rendering
+ * - Generates sprite sheets for animation playback (when sprite plugin is enabled)
+ * - Supports indexed color mode with palette lookups
+ * - Handles premultiplied alpha for correct blending
+ * 
+ * The parser supports all standard Aseprite blend modes including:
+ * Normal, Multiply, Screen, Overlay, Darken, Lighten, Color Dodge,
+ * Color Burn, Hard Light, Soft Light, Difference, Exclusion,
+ * Hue, Saturation, Color, Luminosity, Addition, Subtract, and Divide.
+ * 
+ * @see AsepriteData for the parsed data structure
+ * @see AsepriteBlendFuncs for blend mode implementations
  */
 class AsepriteParser {
 
+    /**
+     * Parses an Aseprite file and returns structured data for use in Ceramic.
+     * 
+     * This method processes all frames, composites layers, detects duplicates,
+     * and optionally packs frames into a texture atlas.
+     * 
+     * @param ase The raw Aseprite file data to parse
+     * @param prefix Prefix for naming texture regions in the atlas (e.g., "player")
+     * @param atlasPacker Optional texture atlas packer to add frames to
+     * @param singleFrame If >= 0, only parse up to this frame number (for partial loading)
+     * @param premultiplyAlpha Whether to premultiply alpha for correct GPU blending (default: true)
+     * @param options Optional parsing options:
+     *                - layers: Array of layer names to include (null = all visible layers)
+     * @return Parsed AsepriteData containing frames, tags, layers, and atlas references
+     */
     public static function parseAse(ase:Ase, prefix:String, ?atlasPacker:TextureAtlasPacker, singleFrame:Int = -1, premultiplyAlpha:Bool = true, ?options:{?layers:Array<String>}):AsepriteData {
 
         var palette:AsepritePalette = null;
@@ -167,6 +203,18 @@ class AsepriteParser {
 
     }
 
+    /**
+     * Creates a texture from a specific frame in parsed Aseprite data.
+     * 
+     * This method is useful when you need a standalone texture from a single frame
+     * rather than using the texture atlas. It handles frame deduplication and
+     * proper positioning of trimmed frames.
+     * 
+     * @param asepriteData The parsed Aseprite data
+     * @param frame Frame index to extract (0-based)
+     * @param density Texture density for high-DPI displays (default: 1)
+     * @return A new Texture containing the frame's pixels, or null if frame not found
+     */
     public static function parseTextureFromAsepriteData(asepriteData:AsepriteData, frame:Int, density:Float = 1):Texture {
 
         var asepriteFrame = asepriteData.frames[frame];
@@ -211,6 +259,24 @@ class AsepriteParser {
 
     }
 
+    /**
+     * Creates a grid texture containing multiple frames from Aseprite data.
+     * 
+     * This method arranges frames in a grid layout within a single texture,
+     * useful for sprite sheets or tile sets that need a specific layout.
+     * Frames are arranged left-to-right, top-to-bottom with configurable spacing.
+     * 
+     * @param asepriteData The parsed Aseprite data
+     * @param frameStart First frame index to include (0-based)
+     * @param frameEnd Last frame index to include (inclusive)
+     * @param texWidth Width of the output texture
+     * @param texHeight Height of the output texture
+     * @param spacing Pixels between frames (default: 0)
+     * @param padding Pixels of padding around the entire grid (default: 0)
+     * @param density Texture density for high-DPI displays (default: 1)
+     * @return A new Texture containing the frame grid
+     * @throws String if frame size won't fit in the specified texture dimensions
+     */
     public static function parseGridTextureFromAsepriteData(asepriteData:AsepriteData, frameStart:Int, frameEnd:Int, texWidth:Int, texHeight:Int, spacing:Int = 0, padding:Int = 0, density:Float = 1):Texture {
 
         if (asepriteData.ase.width + padding > texWidth || asepriteData.ase.height + padding > texHeight) {
@@ -276,6 +342,21 @@ class AsepriteParser {
 
     #if plugin_sprite
 
+    /**
+     * Creates a sprite sheet from parsed Aseprite data.
+     * 
+     * This method generates a SpriteSheet with animations based on the tags
+     * defined in the Aseprite file. Each tag becomes an animation with proper
+     * frame sequencing, durations, and loop settings.
+     * 
+     * The sprite sheet uses the texture atlas from the AsepriteData for
+     * efficient rendering of animations.
+     * 
+     * Only available when the sprite plugin is enabled.
+     * 
+     * @param asepriteData The parsed Aseprite data containing frames and tags
+     * @return A new SpriteSheet ready for animation playback
+     */
     public static function parseSheetFromAsepriteData(asepriteData:AsepriteData):SpriteSheet {
 
         var sheet = new SpriteSheet();
@@ -347,6 +428,22 @@ class AsepriteParser {
 
     #end
 
+    /**
+     * Parses and composites pixel data for a single frame.
+     * 
+     * This internal method handles the complex task of:
+     * - Extracting cel data from each layer
+     * - Handling linked cels that reference other frames
+     * - Computing the packed bounds by trimming transparent pixels
+     * - Compositing layers with blend modes and opacity
+     * 
+     * @param ase The Aseprite file data
+     * @param palette Color palette for indexed color mode
+     * @param layers Array of layer definitions
+     * @param frame The frame to parse pixels for
+     * @param allFrameLayers Accumulated frame layer data for linked cel lookups
+     * @param filterLayers Optional array of layer names to include (null = all visible)
+     */
     static function parseAseFramePixels(ase:Ase, palette:AsepritePalette, layers:Array<LayerChunk>, frame:AsepriteFrame, allFrameLayers:Array<Array<AsepriteFrameLayer>>, filterLayers:Array<String>):Void {
 
         var packedWidth:Int = ase.width;
@@ -697,6 +794,19 @@ class AsepriteParser {
 
     }
 
+    /**
+     * Extracts pixel data from a cel chunk.
+     * 
+     * Handles different color depths:
+     * - 32-bit RGBA: Direct pixel data
+     * - 16-bit Grayscale+Alpha: Converted to RGBA
+     * - 8-bit Indexed: Palette lookup to RGBA
+     * 
+     * @param ase The Aseprite file data for color depth info
+     * @param palette Color palette for indexed color mode
+     * @param celChunk The cel containing compressed pixel data
+     * @return RGBA pixel data as UInt8Array
+     */
     static function parseAseCelPixels(ase:Ase, palette:AsepritePalette, celChunk:CelChunk):UInt8Array {
 
         if (ase.header.colorDepth == 32) {

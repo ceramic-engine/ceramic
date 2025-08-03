@@ -16,21 +16,87 @@ import clay.opengl.GL;
 import clay.sdl.SDL;
 #end
 
+/**
+ * Clay backend screen and window management implementation.
+ * 
+ * This class handles screen-related operations including:
+ * - Window dimensions and display properties
+ * - Window title and fullscreen state management
+ * - Screenshot capture functionality (texture, PNG, raw pixels)
+ * - Mouse and touch input event handling
+ * - Audio context resumption on web platforms
+ * 
+ * Platform-specific features:
+ * - Web: HTML5 Canvas and Electron integration for fullscreen
+ * - Desktop (SDL): Direct OpenGL framebuffer reading for screenshots
+ * - Mobile: Touch input event handling and audio context management
+ */
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
+    /**
+     * Creates a new Screen backend instance.
+     */
     public function new() {}
 
 /// Events
 
+    /**
+     * Fired when the screen/window is resized.
+     */
     @event function resize();
 
+    /**
+     * Fired when a mouse button is pressed down.
+     * @param buttonId Mouse button ID (0=left, 1=middle, 2=right)
+     * @param x Mouse X coordinate
+     * @param y Mouse Y coordinate
+     */
     @event function mouseDown(buttonId:Int, x:Float, y:Float);
+    
+    /**
+     * Fired when a mouse button is released.
+     * @param buttonId Mouse button ID (0=left, 1=middle, 2=right)
+     * @param x Mouse X coordinate
+     * @param y Mouse Y coordinate
+     */
     @event function mouseUp(buttonId:Int, x:Float, y:Float);
+    
+    /**
+     * Fired when the mouse wheel is scrolled.
+     * @param x Horizontal scroll amount
+     * @param y Vertical scroll amount
+     */
     @event function mouseWheel(x:Float, y:Float);
+    
+    /**
+     * Fired when the mouse cursor moves.
+     * @param x Mouse X coordinate
+     * @param y Mouse Y coordinate
+     */
     @event function mouseMove(x:Float, y:Float);
 
+    /**
+     * Fired when a touch begins on the screen.
+     * @param touchIndex Touch point index for multi-touch
+     * @param x Touch X coordinate
+     * @param y Touch Y coordinate
+     */
     @event function touchDown(touchIndex:Int, x:Float, y:Float);
+    
+    /**
+     * Fired when a touch ends.
+     * @param touchIndex Touch point index for multi-touch
+     * @param x Touch X coordinate
+     * @param y Touch Y coordinate
+     */
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
+    
+    /**
+     * Fired when a touch point moves.
+     * @param touchIndex Touch point index for multi-touch
+     * @param x Touch X coordinate
+     * @param y Touch Y coordinate
+     */
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
 #if (web && !no_resume_audio_context)
@@ -65,36 +131,69 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Public API
 
+    /**
+     * Gets the current screen width in pixels.
+     * @return Screen width in pixels
+     */
     inline public function getWidth():Int {
 
         return Clay.app.screenWidth;
 
     }
 
+    /**
+     * Gets the current screen height in pixels.
+     * @return Screen height in pixels
+     */
     inline public function getHeight():Int {
 
         return Clay.app.screenHeight;
 
     }
 
+    /**
+     * Gets the current screen pixel density/scale factor.
+     * @return Pixel density (1.0 = standard, 2.0 = retina/high-DPI, etc.)
+     */
     inline public function getDensity():Float {
 
         return Clay.app.screenDensity;
 
     }
 
+    /**
+     * Sets the window background color.
+     * 
+     * Note: This method is currently unused as background clearing
+     * is handled directly in the draw loop.
+     * 
+     * @param background Background color as integer
+     */
     public function setBackground(background:Int):Void {
 
         // Already handled in draw loop, no need to do anything here.
 
     }
 
+    /**
+     * Sets the window title text.
+     * @param title New window title
+     */
     public function setWindowTitle(title:String):Void {
 
         Clay.app.runtime.setWindowTitle(title);
 
     }
 
+    /**
+     * Sets the window fullscreen state.
+     * 
+     * On web platforms, this checks for Electron runner integration
+     * and uses native fullscreen if available, otherwise falls back
+     * to HTML5 fullscreen API.
+     * 
+     * @param fullscreen True to enable fullscreen, false to disable
+     */
     public function setWindowFullscreen(fullscreen:Bool):Void {
 
         #if web
@@ -114,10 +213,21 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Screenshot
 
+    /**
+     * Index counter for generating unique screenshot identifiers.
+     */
     var nextScreenshotIndex:Int = 0;
 
     #if web
 
+    /**
+     * Captures a screenshot and converts it to a texture (web platform).
+     * 
+     * Uses the HTML5 Canvas toBlob API to capture the current frame buffer
+     * and converts it to a Clay texture object that can be used for rendering.
+     * 
+     * @param done Callback function receiving the texture (null if failed)
+     */
     public function screenshotToTexture(done:(texture:Texture)->Void):Void {
 
         var window = clay.Clay.app.runtime.window;

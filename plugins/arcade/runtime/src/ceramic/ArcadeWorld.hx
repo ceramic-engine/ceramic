@@ -12,16 +12,71 @@ import ceramic.Group;
 
 using ceramic.Extensions;
 
+/**
+ * Extended physics world that integrates Arcade physics with Ceramic's visual system.
+ * 
+ * This class extends the base arcade.World to provide seamless collision detection
+ * between Ceramic visuals, groups, bodies, and tilemaps. It handles the complex
+ * type resolution needed to make different Ceramic object types work with the
+ * physics engine.
+ * 
+ * Key features:
+ * - Automatic type detection for Visual, Group, Body, and Tilemap objects
+ * - Optimized collision detection with quadtree spatial partitioning
+ * - Support for both overlap (trigger) and collide (solid) interactions
+ * - Integration with tilemap plugin for tile-based collisions
+ * - Specialized sorting algorithms for broad-phase optimization
+ * 
+ * Usage example:
+ * ```haxe
+ * var world = arcade.world;
+ * world.gravity.y = 800;
+ * 
+ * // Collide two visuals
+ * world.collide(player, enemy, (body1, body2) -> {
+ *     trace("Player hit enemy!");
+ * });
+ * 
+ * // Check overlaps with a group
+ * world.overlap(player, collectibles, (body1, body2) -> {
+ *     // Collect the item
+ * });
+ * ```
+ * 
+ * @see arcade.World for base physics world functionality
+ * @see ArcadeSystem for the system that manages worlds
+ */
 class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
 #if plugin_arcade
 
+    /**
+     * Creates a new ArcadeWorld with the specified bounds.
+     * 
+     * The world bounds define the area where physics simulation occurs.
+     * Bodies outside these bounds may not collide properly.
+     * 
+     * @param boundsX Left edge of the world
+     * @param boundsY Top edge of the world
+     * @param boundsWidth Width of the world
+     * @param boundsHeight Height of the world
+     */
     public function new(boundsX:Float, boundsY:Float, boundsWidth:Float, boundsHeight:Float) {
 
         super(boundsX, boundsY, boundsWidth, boundsHeight);
 
     }
 
+    /**
+     * Determines the actual type of a collidable element for proper collision routing.
+     * 
+     * This method resolves Ceramic's visual types to their base classes so the
+     * collision system can handle them appropriately. For example, all Visual
+     * subclasses (Quad, Mesh, etc.) are treated as Visual for collision purposes.
+     * 
+     * @param element The collidable element to identify
+     * @return The base class type for collision handling
+     */
     override function getCollidableType(element:Collidable):Class<Dynamic> {
 
         #if js
@@ -59,6 +114,24 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Checks for overlaps between collidable elements without separating them.
+     * 
+     * Overlaps are useful for triggers, collectibles, and other non-solid interactions.
+     * The overlap callback is called for each pair of overlapping bodies.
+     * 
+     * Supports all combinations of:
+     * - Visual vs Visual
+     * - Visual/Body vs Group
+     * - Group vs Group
+     * - Any vs Tilemap/TilemapLayer (with tilemap plugin)
+     * 
+     * @param element1 First element to check
+     * @param element2 Second element to check (or null to check element1 against itself)
+     * @param overlapCallback Called for each overlapping pair (body1, body2)
+     * @param processCallback Optional filter to exclude certain pairs from overlap
+     * @return True if any overlaps occurred
+     */
     override function overlap(element1:Collidable, ?element2:Collidable, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (element2 == null) {
@@ -186,6 +259,18 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Checks for overlaps between all bodies in two arcade groups.
+     * 
+     * This optimized implementation uses temporary arrays to avoid modification
+     * during iteration and applies sorting for broad-phase optimization.
+     * 
+     * @param group1 First group of bodies
+     * @param group2 Second group of bodies
+     * @param overlapCallback Called for each overlapping pair
+     * @param processCallback Optional filter callback
+     * @return True if any overlaps occurred
+     */
     override public function overlapGroupVsGroup(group1:arcade.Group, group2:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -279,6 +364,18 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Checks for overlaps between a single body and all bodies in a group.
+     * 
+     * Uses quadtree spatial partitioning for large groups to improve performance.
+     * Only bodies near the target body are checked for overlap.
+     * 
+     * @param body The body to check
+     * @param group The group of bodies to check against
+     * @param overlapCallback Called for each overlap
+     * @param processCallback Optional filter callback
+     * @return True if any overlaps occurred
+     */
     override public function overlapBodyVsGroup(body:Body, group:arcade.Group, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -347,6 +444,18 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Checks for overlaps between all visuals in two Ceramic groups.
+     * 
+     * Extracts physics bodies from visuals and performs overlap checks.
+     * Handles null bodies gracefully.
+     * 
+     * @param group1 First group of visuals
+     * @param group2 Second group of visuals
+     * @param overlapCallback Called for each overlapping pair
+     * @param processCallback Optional filter callback
+     * @return True if any overlaps occurred
+     */
     function overlapCeramicGroupVsCeramicGroup(group1:Group<Visual>, group2:Group<Visual>, ?overlapCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group1.sortDirection != NONE && (group1.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -576,6 +685,24 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Checks for collisions between collidable elements and separates them.
+     * 
+     * Collisions prevent objects from overlapping by pushing them apart.
+     * The collide callback is called for each pair of colliding bodies after separation.
+     * 
+     * Supports all combinations of:
+     * - Visual vs Visual
+     * - Visual/Body vs Group  
+     * - Group vs Group
+     * - Any vs Tilemap/TilemapLayer (with tilemap plugin)
+     * 
+     * @param element1 First element to check
+     * @param element2 Second element to check (or null to check element1 against itself)
+     * @param collideCallback Called for each colliding pair after separation (body1, body2)
+     * @param processCallback Optional filter to exclude certain pairs from collision
+     * @return True if any collisions occurred
+     */
     // TODO use haxe 4.2 overloads to resolve collidable types
     // at compile time instead of runtime
 
@@ -1105,6 +1232,18 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
 #if plugin_tilemap
 
+    /**
+     * Performs collision detection and separation between a body and a tilemap.
+     * 
+     * Only checks tiles that the body overlaps with for efficiency.
+     * Each colliding tile is treated as a solid immovable body.
+     * 
+     * @param body The physics body to collide
+     * @param tilemap The tilemap to collide against
+     * @param collideCallback Called for each tile collision
+     * @param processCallback Optional filter for specific tiles
+     * @return True if any collisions occurred
+     */
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return #if !debug inline #end separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
@@ -1130,7 +1269,11 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
     }
 
     /**
-     * A body instance used internally to perform tilemap collisions
+     * Reusable body instance for tilemap collisions.
+     * 
+     * Instead of creating a new body for each tile collision, we reuse
+     * this single instance for performance. The body is configured as
+     * immovable and its position/size is updated for each tile.
      */
     var tileBody:Body = null;
 
@@ -1158,6 +1301,21 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    /**
+     * Core tilemap collision implementation for a single layer.
+     * 
+     * This method:
+     * 1. Calculates which tiles the body overlaps
+     * 2. Creates a temporary immovable body for each solid tile
+     * 3. Performs collision/overlap detection
+     * 4. Handles special cases like connected tiles and slopes
+     * 
+     * @param body The body to check
+     * @param layer The tilemap layer
+     * @param collideCallback Called for each collision
+     * @param processCallback Optional filter
+     * @param overlapOnly If true, only detect overlaps without separation
+     */
     function separateBodyVsTilemapLayer(body:Body, layer:TilemapLayer, collideCallback:Body->Body->Void, processCallback:Body->Body->Bool, overlapOnly:Bool) {
 
         _total = 0;
@@ -1609,6 +1767,17 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
 #end
 
+    /**
+     * Sorts a Ceramic visual group for optimized collision detection.
+     * 
+     * Sorting bodies by position allows the collision system to exit early
+     * when checking pairs, significantly improving performance for large groups.
+     * 
+     * Uses specialized merge sort implementations optimized for each direction.
+     * 
+     * @param group The group to sort
+     * @param sortDirection The direction to sort (or INHERIT to use group/world setting)
+     */
     public function sortCeramicGroup(group:Group<Visual>, sortDirection:SortDirection = SortDirection.INHERIT) {
 
         if (group.sortDirection != SortDirection.INHERIT) {

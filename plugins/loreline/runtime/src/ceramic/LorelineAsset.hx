@@ -6,12 +6,42 @@ import loreline.Loreline;
 
 using StringTools;
 
+/**
+ * Asset class for loading and managing Loreline script files.
+ * 
+ * Loreline is a scripting language for narrative content, dialogue trees,
+ * and interactive storytelling. This asset type handles:
+ * - Loading Loreline script files (.lor, .loreline)
+ * - Parsing scripts with import resolution
+ * - Hot-reloading when script files change
+ * - Managing script dependencies
+ * 
+ * Example usage:
+ * ```haxe
+ * assets.add('loreline:dialogue/intro');
+ * assets.onceComplete(this, success -> {
+ *     var script = assets.loreline('dialogue/intro');
+ *     // Use the parsed Loreline script
+ * });
+ * ```
+ * 
+ * @see loreline.Loreline
+ */
 class LorelineAsset extends Asset {
 
 /// Properties
 
+    /**
+     * The parsed Loreline script object.
+     * Contains the dialogue nodes, conditions, and flow logic.
+     * Observable to track when the script is loaded or reloaded.
+     */
     @observe public var lorelineScript:loreline.Script = null;
 
+    /**
+     * List of imported file paths used by this script.
+     * Used for hot-reload detection of dependencies.
+     */
     var importedFiles:Array<String> = null;
 
 /// Lifecycle
@@ -122,6 +152,12 @@ class LorelineAsset extends Asset {
 
     }
 
+    /**
+     * Loads an imported Loreline file referenced by the main script.
+     * @param assets The assets instance to use for loading
+     * @param importPath Path to the imported file
+     * @param importCallback Callback with the loaded text content
+     */
     function loadImported(assets:Assets, importPath:String, importCallback:(data:String)->Void) {
 
         final asset = new TextAsset(importPath);
@@ -147,6 +183,11 @@ class LorelineAsset extends Asset {
 
     }
 
+    /**
+     * Handles file change detection for hot-reloading.
+     * Monitors both the main script file and any imported files.
+     * Triggers a reload when any monitored file changes.
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())

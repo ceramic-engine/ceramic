@@ -7,10 +7,27 @@ import haxe.macro.Expr;
 
 using StringTools;
 
+/**
+ * Build macro that processes ceramic.yml configuration and generates app metadata at compile time.
+ * This macro is responsible for extracting app information from the project configuration
+ * and making it available as static properties on the App class.
+ * 
+ * The macro processes collections defined in ceramic.yml, ensuring their types are resolved
+ * at compile time, and converts the configuration data into a format suitable for runtime use.
+ */
 class AppMacro {
 
+    /**
+     * Cached computed info to avoid reprocessing during the same compilation.
+     */
     static var computedInfo:Dynamic;
 
+    /**
+     * Gets the computed app information from raw JSON string.
+     * Results are cached after first computation to improve build performance.
+     * @param rawInfo JSON string containing app configuration from ceramic.yml
+     * @return Processed app configuration object
+     */
     static public function getComputedInfo(rawInfo:String):Dynamic {
 
         if (AppMacro.computedInfo == null) AppMacro.computedInfo = computeInfo(rawInfo);
@@ -18,6 +35,15 @@ class AppMacro {
 
     }
 
+    /**
+     * Build macro that adds app configuration data as a static field to the App class.
+     * This macro:
+     * - Loads collection types defined in ceramic.yml to ensure they're compiled
+     * - Converts configuration arrays to objects for easier access
+     * - Adds an 'info' field containing all app metadata
+     * 
+     * @return Modified fields array with added 'info' field
+     */
     macro static public function build():Array<Field> {
 
         #if ceramic_debug_macro
@@ -66,6 +92,14 @@ class AppMacro {
 
     }
 
+    /**
+     * Processes raw app info JSON string into a structured object.
+     * Handles double JSON parsing (the raw info is JSON-encoded twice) and
+     * converts arrays to objects for easier compile-time access.
+     * 
+     * @param rawInfo Double-encoded JSON string from ceramic.yml configuration
+     * @return Processed configuration object with arrays converted to objects
+     */
     static function computeInfo(rawInfo:String):Dynamic {
 
         var data:Dynamic = {};
@@ -82,6 +116,16 @@ class AppMacro {
 
     }
 
+    /**
+     * Recursively converts arrays in configuration data to objects.
+     * This transformation is necessary because Haxe macros work better with
+     * object fields than array indices when generating compile-time code.
+     * 
+     * Arrays are converted to objects with keys like "item0", "item1", etc.
+     * 
+     * @param data Configuration data that may contain arrays
+     * @return Transformed data with arrays converted to objects
+     */
     static function convertArrays(data:Dynamic):Dynamic {
 
         var newData:Dynamic = {};

@@ -7,16 +7,41 @@ import ceramic.View;
 import elements.Context.context;
 import tracker.Observable;
 
+/**
+ * A toggle switch UI element for boolean (true/false) values.
+ *
+ * Displays as a sliding switch that can be toggled between on and off states.
+ * Supports keyboard navigation (Space to toggle, Enter for on, Backspace/Delete for off)
+ * and mouse/touch interaction.
+ *
+ * The visual style adapts based on the `inputStyle` property:
+ * - DEFAULT: Standard switch with background
+ * - OVERLAY: Transparent background, suitable for overlays
+ * - MINIMAL: Minimal style with just borders
+ *
+ * @see FieldView
+ * @see InputStyle
+ */
 class BooleanFieldView extends FieldView {
 
+    /** Custom theme override for this field */
     @observe public var theme:Theme = null;
 
+    /** Container view for the switch background */
     var switchContainer:View;
 
+    /** The sliding square indicator within the switch */
     var switchSquare:View;
 
 /// Hooks
 
+    /**
+     * Hook called when the boolean value changes.
+     * Override this to handle value updates.
+     *
+     * @param field The field instance (this)
+     * @param value The new boolean value
+     */
     public dynamic function setValue(field:BooleanFieldView, value:Bool):Void {
 
         // Default implementation does nothing
@@ -25,10 +50,13 @@ class BooleanFieldView extends FieldView {
 
 /// Public properties
 
+    /** The current boolean value (true = on, false = off) */
     @observe public var value:Bool = false;
 
+    /** Visual style of the switch (DEFAULT, OVERLAY, or MINIMAL) */
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    /** Whether the switch is disabled (non-interactive) */
     @observe public var disabled(default, set):Bool = false;
     function set_disabled(disabled:Bool):Bool {
         if (this.disabled != disabled) {
@@ -43,6 +71,10 @@ class BooleanFieldView extends FieldView {
 
 /// Internal properties
 
+    /**
+     * Creates a new BooleanFieldView with a toggle switch.
+     * Sets up the visual components and interaction handlers.
+     */
     public function new() {
 
         super();
@@ -91,6 +123,10 @@ class BooleanFieldView extends FieldView {
 
 /// Layout
 
+    /**
+     * Positions the switch indicator based on the current value.
+     * Slides to the right when true, left when false.
+     */
     function layoutSwitchContainer() {
 
         if (destroyed)
@@ -113,6 +149,14 @@ class BooleanFieldView extends FieldView {
 
 /// Internal
 
+    /**
+     * Handles keyboard input for the switch.
+     * - Space: Toggle value
+     * - Enter: Set to true
+     * - Backspace/Delete: Set to false
+     *
+     * @param key The key event
+     */
     function handleKeyDown(key:Key) {
 
         if (FieldSystem.shared.focusedField != this) return;
@@ -135,6 +179,10 @@ class BooleanFieldView extends FieldView {
 
     }
 
+    /**
+     * Toggles the boolean value between true and false.
+     * Calls the setValue hook with the new value.
+     */
     function toggleValue() {
 
         this.value = !value;
@@ -142,6 +190,10 @@ class BooleanFieldView extends FieldView {
 
     }
 
+    /**
+     * Updates the visual style of the switch based on theme and state.
+     * Applies different colors and borders for focused, disabled, and value states.
+     */
     function updateStyle() {
 
         var theme = this.theme;

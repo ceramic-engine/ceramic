@@ -14,10 +14,36 @@ import ceramic.Path;
 import ceramic.Shortcuts.*;
 import haxe.crypto.Md5;
 
+/**
+ * Clay backend implementation for persistent key-value storage.
+ * 
+ * This class provides cross-platform persistent storage with different
+ * implementations based on the target platform:
+ * 
+ * - **Desktop (sys + SQLite)**: Uses SQLite database for efficient storage
+ * - **Desktop (sys without SQLite)**: Falls back to individual files
+ * - **Web**: Uses browser localStorage API
+ * 
+ * Key features:
+ * - All data is encoded with MD5 hashing for integrity verification
+ * - Keys are hashed to avoid filesystem issues with special characters
+ * - Supports importing initial SQLite database from assets
+ * - Thread-safe on platforms that support it
+ * 
+ * The SQLite implementation allows importing a pre-populated database
+ * from assets on first run, useful for shipping default data.
+ * 
+ * @see spec.IO The interface this class implements
+ * @see ceramic.PersistentData For the high-level storage API
+ */
 class IO implements spec.IO {
 
     public function new() {}
 
+    /**
+     * Initializes the key-value storage backend if needed.
+     * Called by the main backend during initialization.
+     */
     @:allow(backend.Main)
     function initKeyValueIfNeeded() {
 
@@ -29,8 +55,18 @@ class IO implements spec.IO {
 
 #if (sys && ceramic_sqlite && !ceramic_no_sqlite_save_string)
 
+    /** SQLite-based key-value storage instance */
     var keyValue:SqliteKeyValue = null;
 
+    /**
+     * Initializes the SQLite database for key-value storage.
+     * 
+     * Creates the database in the platform's storage directory.
+     * If ceramic_import_assets_sqlite_db is defined, imports an
+     * initial database from assets on first run.
+     * 
+     * @throws String if storage directory is null or database import fails
+     */
     function initKeyValue():Void {
 
         var storageDir = ceramic.App.app.backend.info.storageDirectory();
@@ -87,6 +123,10 @@ class IO implements spec.IO {
     }
 
     #if ceramic_import_assets_sqlite_db
+    /**
+     * Removes the marker that indicates the database was imported from assets.
+     * This forces a fresh import on next initialization.
+     */
     public function unmarkDbImportedFromAssets() {
 
         var testKey:String = ceramic.macros.DefinesMacro.getDefine('ceramic_import_assets_sqlite_db');
@@ -95,6 +135,16 @@ class IO implements spec.IO {
     }
     #end
 
+    /**
+     * Saves a string value with the given key.
+     * 
+     * The key is hashed with MD5 and prefixed with 'data ~ ' before storage.
+     * If str is null, the key is deleted from storage.
+     * 
+     * @param key The storage key
+     * @param str The string to save, or null to delete
+     * @return true if successful
+     */
     public function saveString(key:String, str:String):Bool {
 
         if (keyValue == null) {
@@ -106,6 +156,16 @@ class IO implements spec.IO {
 
     }
 
+    /**
+     * Appends a string to an existing value.
+     * 
+     * If no value exists for the key, creates a new entry.
+     * The appended string is also encoded with HashedString.
+     * 
+     * @param key The storage key
+     * @param str The string to append
+     * @return true if successful
+     */
     public function appendString(key:String, str:String):Bool {
 
         if (keyValue == null) {
@@ -117,6 +177,12 @@ class IO implements spec.IO {
 
     }
 
+    /**
+     * Reads a string value for the given key.
+     * 
+     * @param key The storage key
+     * @return The stored string, or null if not found
+     */
     public function readString(key:String):String {
 
         if (keyValue == null) {
@@ -130,6 +196,10 @@ class IO implements spec.IO {
 
 #elseif sys
 
+    /**
+     * File-based implementation of saveString for sys targets without SQLite.
+     * Stores each key-value pair as a separate file in the storage directory.
+     */
     public function saveString(key:String, str:String):Bool {
 
         var _key = Md5.encode('data ~ ' + key);
@@ -192,6 +262,10 @@ class IO implements spec.IO {
 
 #elseif web
 
+    /**
+     * Browser localStorage implementation of saveString.
+     * Limited by browser storage quotas (typically 5-10MB).
+     */
     public function saveString(key:String, str:String):Bool {
 
         try {

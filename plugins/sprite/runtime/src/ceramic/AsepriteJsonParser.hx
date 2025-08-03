@@ -3,13 +3,29 @@ package ceramic;
 import ceramic.Shortcuts.*;
 
 /**
- * Utility class to parse sprite sheet json data
- * (aseprite json format, but could be exported by another software)
+ * Parser for Aseprite JSON format sprite sheets.
+ * Converts Aseprite JSON data into Ceramic's TextureAtlas and SpriteSheet structures.
+ * 
+ * Supports:
+ * - Frame extraction with trimming and rotation
+ * - Animation sequences from frame tags
+ * - Directional playback (forward, reverse, pingpong)
+ * - Frame timing information
+ * 
+ * Note: Only supports the array format for frames, not the hash format.
  */
 class AsepriteJsonParser {
 
+    /**
+     * Internal flag to prevent spamming warnings about unsupported formats.
+     */
     static var didLogHashWarning:Bool = false;
 
+    /**
+     * Check if the provided JSON data is in Aseprite format.
+     * @param json The JSON data to validate
+     * @return True if this is valid Aseprite JSON with frames as an array
+     */
     public static function isAsepriteJson(json:Dynamic):Bool {
 
         if (json != null && json.frames != null) {
@@ -29,6 +45,12 @@ class AsepriteJsonParser {
 
     }
 
+    /**
+     * Parse Aseprite JSON data into a TextureAtlas.
+     * Creates texture regions for each frame in the sprite sheet.
+     * @param data The Aseprite JSON data
+     * @return A TextureAtlas containing all frame regions
+     */
     public static function parseAtlasFromJson(data:AsepriteJson):TextureAtlas {
 
         var page:TextureAtlasPage = new TextureAtlasPage(
@@ -71,6 +93,13 @@ class AsepriteJsonParser {
 
     }
 
+    /**
+     * Parse Aseprite JSON data into a SpriteSheet with animations.
+     * Creates animation sequences from frame tags with proper timing.
+     * @param data The Aseprite JSON data
+     * @param atlas The TextureAtlas containing frame regions
+     * @return A SpriteSheet with all animations configured
+     */
     public static function parseSheetFromJson(data:AsepriteJson, atlas:TextureAtlas):SpriteSheet {
 
         var sheet = new SpriteSheet();
@@ -89,11 +118,15 @@ class AsepriteJsonParser {
 
             var frames:Array<SpriteSheetFrame> = [];
 
+            /**
+             * Helper function to add a frame to the animation.
+             * @param index Frame index in the atlas
+             */
             inline function addFrame(index:Int) {
 
                 var region = atlas.regions[index];
                 var frame = new SpriteSheetFrame(atlas, region.name, 0, region);
-                frame.duration = data.frames[index].duration * 0.001;
+                frame.duration = data.frames[index].duration * 0.001; // Convert ms to seconds
                 frames.push(frame);
 
             }

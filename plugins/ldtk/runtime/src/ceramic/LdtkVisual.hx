@@ -3,12 +3,35 @@ package ceramic;
 import ceramic.LdtkData;
 
 /**
- * A default visual implementation to make LDtk entities visible
+ * A default visual implementation to render LDtk entities.
+ * 
+ * This class automatically creates the appropriate visual representation
+ * for an LDtk entity based on its tile settings and render mode.
+ * 
+ * Supported tile render modes:
+ * - Cover: Scales tile to cover the entire entity bounds
+ * - FitInside: Scales tile to fit within entity bounds while maintaining aspect ratio
+ * - Repeat: Tiles the texture to fill the entity bounds
+ * - Stretch: Stretches the tile to match entity dimensions
+ * - FullSizeCropped: Shows tile at original size, cropped to entity bounds
+ * - FullSizeUncropped: Shows tile at original size, even if larger than entity
+ * - NineSlice: Uses nine-slice scaling for UI elements
+ * 
+ * @see LdtkEntityInstance
  */
 class LdtkVisual extends Quad {
 
+    /**
+     * The LDtk entity instance this visual represents.
+     * Contains all the entity data including position, size, and custom fields.
+     */
     public var ldtkEntity(default, null):LdtkEntityInstance;
 
+    /**
+     * Creates a new visual representation for an LDtk entity.
+     * Automatically sets up the appropriate rendering based on the entity's tile settings.
+     * @param ldtkEntity The LDtk entity instance to visualize
+     */
     public function new(ldtkEntity:LdtkEntityInstance) {
 
         super();
@@ -19,6 +42,11 @@ class LdtkVisual extends Quad {
 
     }
 
+    /**
+     * Sets up the visual representation based on the entity's properties.
+     * Handles positioning, sizing, anchoring, and creates the appropriate
+     * visual elements based on the tile render mode.
+     */
     function setup() {
 
         transparent = true;

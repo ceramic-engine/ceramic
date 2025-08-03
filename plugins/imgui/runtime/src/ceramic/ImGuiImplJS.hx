@@ -5,25 +5,63 @@ import imguijs.ImGui;
 import ceramic.Shortcuts.*;
 import clay.graphics.Graphics;
 
+/**
+ * JavaScript/WebGL implementation of Dear ImGui integration for Ceramic.
+ * This backend uses the emscripten-compiled version of ImGui for web targets.
+ * 
+ * The implementation handles:
+ * - Dynamic loading of ImGui JavaScript modules
+ * - WebGL rendering context setup
+ * - Custom font loading and texture management
+ * - Frame lifecycle management
+ * - Input event forwarding between Ceramic and ImGui
+ * 
+ * @see ImGuiSystem
+ */
 class ImGuiImplJS {
 
+    /**
+     * Reference to the ImGui implementation object loaded from JavaScript.
+     * This provides the WebGL-specific rendering functions.
+     */
     static var ImGui_Impl(get,never):Dynamic;
     inline static function get_ImGui_Impl():Dynamic return untyped window.ImGui_Impl;
 
+    /**
+     * ImGui IO structure for handling input and configuration.
+     */
     static var io:ImGuiIO = null;
 
+    /**
+     * Whether a frame is currently being rendered.
+     * Used to prevent multiple calls to endFrame() without a matching newFrame().
+     */
     static var framePending:Bool = false;
 
     #if imgui_font
+    /**
+     * Reference to the loaded custom font.
+     * Used to push/pop the font during frame rendering.
+     */
     static var imFont:ImFont;
     #end
 
+    /**
+     * Initializes the ImGui JavaScript implementation.
+     * Loads the required JavaScript modules and sets up the WebGL backend.
+     * @param done Callback invoked when initialization is complete
+     */
     public static function init(done:()->Void):Void {
 
         loadImGui(done);
 
     }
 
+    /**
+     * Dynamically loads a JavaScript file.
+     * @param src The URL of the script to load
+     * @param done Callback with success status (true if loaded successfully)
+     */
     static function loadScript(src:String, done:Bool->Void) {
 
         var didCallDone = false;
@@ -46,6 +84,11 @@ class ImGuiImplJS {
 
     }
 
+    /**
+     * Loads the ImGui JavaScript modules in sequence.
+     * First loads the main ImGui module, then the implementation module.
+     * @param done Callback invoked when both modules are loaded and initialized
+     */
     static function loadImGui(done:()->Void) {
 
         loadScript('./imgui.umd.js', function(_) {
@@ -60,6 +103,11 @@ class ImGuiImplJS {
 
     }
 
+    /**
+     * Initializes ImGui after the JavaScript modules are loaded.
+     * Creates the context, sets up the style, and initializes the WebGL backend.
+     * @param done Callback invoked when initialization is complete
+     */
     static function initImGui(done:()->Void) {
 
         var canvas = clay.Clay.app.runtime.window;
@@ -83,6 +131,12 @@ class ImGuiImplJS {
     }
 
     #if imgui_font
+    /**
+     * Loads a custom TrueType font for ImGui.
+     * The font is specified via the `imgui_font` compile-time define.
+     * The font texture is created and uploaded to the GPU with LINEAR filtering
+     * for better quality at different scales.
+     */
     static function loadFont() {
 
         var font = app.assets.bytes(ceramic.macros.DefinesMacro.getDefine('imgui_font'));
@@ -113,6 +167,14 @@ class ImGuiImplJS {
     }
     #end
 
+    /**
+     * Begins a new ImGui frame.
+     * Must be called before any ImGui drawing commands.
+     * This method:
+     * - Initializes the WebGL backend for the new frame with current time
+     * - Starts the ImGui frame
+     * - Pushes the custom font if one is loaded
+     */
     public static function newFrame():Void {
 
         ImGui_Impl.NewFrame(Timer.now * 1000);
@@ -125,6 +187,16 @@ class ImGuiImplJS {
 
     }
 
+    /**
+     * Ends the current ImGui frame and renders it.
+     * Must be called after all ImGui drawing commands for the frame.
+     * This method:
+     * - Pops the custom font if one was pushed
+     * - Finalizes the ImGui frame
+     * - Renders the draw data using WebGL
+     * - Updates input capture flags to prevent Ceramic from processing
+     *   events when ImGui wants to capture them
+     */
     public static function endFrame():Void {
 
         if (!framePending) return;

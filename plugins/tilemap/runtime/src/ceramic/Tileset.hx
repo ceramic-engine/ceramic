@@ -9,10 +9,52 @@ using ceramic.Extensions;
 import ceramic.LdtkData;
 #end
 
+/**
+ * Represents a collection of tiles used by a tilemap.
+ * 
+ * A tileset contains the image data and metadata for tiles that can be placed in a tilemap.
+ * Each tile is identified by a global ID (GID) that's unique across all tilesets in a tilemap.
+ * Tilesets support various features including tile spacing, margins, and slope definitions for
+ * physics interactions.
+ * 
+ * ## Features
+ * 
+ * - **Tile Organization**: Tiles arranged in a grid with configurable spacing and margins
+ * - **Global IDs**: Each tile has a unique GID for referencing across layers
+ * - **Slope Support**: Define collision slopes for individual tiles
+ * - **Grid Orientation**: Support for orthogonal and isometric tile arrangements
+ * - **Reactive Properties**: Extends Model for automatic change notifications
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * var tileset = new Tileset();
+ * tileset.name = "terrain";
+ * tileset.firstGid = 1;
+ * tileset.tileSize(32, 32);
+ * tileset.image = tilesetImage;
+ * 
+ * // Add a slope for tile index 5
+ * tileset.slope(5, {
+ *     index: 5,
+ *     y0: 0.0,    // Left edge height (0 = bottom, 1 = top)
+ *     y1: 0.5,    // Right edge height
+ *     rotation: 0 // Optional rotation
+ * });
+ * ```
+ * 
+ * @see TilemapData
+ * @see TilesetImage
+ * @see TileSlope
+ */
 class Tileset extends Model {
 
     #if plugin_ldtk
 
+    /**
+     * Reference to the source LDtk tileset definition when this tileset was imported from LDtk.
+     * Provides access to additional LDtk-specific metadata.
+     */
     @observe public var ldtkTileset:LdtkTilesetDefinition = null;
 
     #end
@@ -157,7 +199,10 @@ class Tileset extends Model {
     }
 
     /**
-     * Get the global id from the given `column` and `row` coordinates
+     * Get the global id from the given column and row coordinates in the tileset.
+     * @param column The column position in the tileset (0-based)
+     * @param row The row position in the tileset (0-based)
+     * @return The global tile ID at the specified position
      */
     public function gidAtPosition(column:Float, row:Float):Int {
 
@@ -165,12 +210,22 @@ class Tileset extends Model {
 
     }
 
+    /**
+     * Gets the column position of a tile within this tileset from its global ID.
+     * @param gid The global tile ID
+     * @return The column position (0-based) within the tileset
+     */
     inline public function columnForGid(gid:Int):Int {
 
         return (gid - firstGid) % columns;
 
     }
 
+    /**
+     * Gets the row position of a tile within this tileset from its global ID.
+     * @param gid The global tile ID
+     * @return The row position (0-based) within the tileset
+     */
     inline public function rowForGid(gid:Int):Int {
 
         return Math.floor((gid - firstGid) / columns);

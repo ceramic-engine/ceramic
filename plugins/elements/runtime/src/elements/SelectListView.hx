@@ -15,26 +15,69 @@ import tracker.Autorun.reobserve;
 import tracker.Autorun.unobserve;
 import tracker.Observable;
 
+/**
+ * A scrollable list view for displaying selectable items in dropdown controls.
+ * 
+ * SelectListView provides a virtualized list interface for selecting from a collection
+ * of string options. It supports highlighting the current selection, null value handling,
+ * and automatic scrolling to selected items. The view uses a CollectionView for efficient
+ * rendering of large lists.
+ * 
+ * Key features:
+ * - Virtualized scrolling for performance with large lists
+ * - Current selection highlighting
+ * - Support for null values with custom display text
+ * - Click and touch interaction
+ * - Automatic scrolling to selected items
+ * - Customizable cell styling through themes
+ * 
+ * Usage example:
+ * ```haxe
+ * var listView = new SelectListView();
+ * listView.list = ['Item 1', 'Item 2', 'Item 3'];
+ * listView.nullValueText = 'None';
+ * listView.value = 'Item 2';
+ * listView.size(200, 150);
+ * listView.onValueChange(this, (value, prev) -> {
+ *     trace('Selected: ' + value);
+ * });
+ * add(listView);
+ * ```
+ */
 class SelectListView extends View implements CollectionViewDataSource implements Observable {
 
+    /** Custom theme override for this list view. If null, uses the global context theme */
     @observe public var theme:Theme = null;
 
+    /** Event emitted when a value is clicked/selected */
     @event function valueClick(value:String);
 
+    /** Height of each item in the list in pixels */
     public static final ITEM_HEIGHT = 26;
 
+    /** Whether to automatically scroll to the selected value when it changes */
     public var autoScrollToValue:Bool = false;
 
+    /** The currently selected value. Can be null if no value is selected */
     @observe public var value:String = null;
 
+    /** Array of string options to display in the list */
     @observe public var list:ReadOnlyArray<String> = [];
 
+    /** Text to display for the null/empty value option. If null, no null option is shown */
     @observe public var nullValueText:String = null;
 
+    /** The collection view that handles virtualized scrolling and cell management */
     var collectionView:CellCollectionView;
 
     //var filter:Filter;
 
+    /**
+     * Creates a new SelectListView.
+     * 
+     * Sets up the collection view for virtualized scrolling, configures data binding,
+     * and initializes automatic scrolling behavior.
+     */
     public function new() {
 
         super();
@@ -69,6 +112,11 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     }
 
+    /**
+     * Updates scroll position to show the current value if auto-scrolling is enabled.
+     * 
+     * This is called automatically when the value changes and autoScrollToValue is true.
+     */
     function updateScrollFromValueIfNeeded() {
 
         var value = this.value;
@@ -83,6 +131,11 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     }
 
+    /**
+     * Scrolls the list to show the currently selected value.
+     * 
+     * @param position How to position the item (START, CENTER, END, ENSURE_VISIBLE)
+     */
     public function scrollToValue(position:CollectionViewItemPosition) {
 
         if (value == null || list == null) {
@@ -106,14 +159,29 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     /// Data source
 
-    /** Get the number of elements. */
+    /**
+     * Returns the total number of items in the list.
+     * 
+     * Includes an extra item if nullValueText is set to represent the null option.
+     * 
+     * @param collectionView The collection view requesting the size
+     * @return Total number of items including null option if applicable
+     */
     public function collectionViewSize(collectionView:CollectionView):Int {
 
         return list.length + (nullValueText != null ? 1 : 0);
 
     }
 
-    /** Get the item frame at the requested index. */
+    /**
+     * Provides the frame (size and position) for an item at the given index.
+     * 
+     * All items have the same height (ITEM_HEIGHT) and fill the collection view width.
+     * 
+     * @param collectionView The collection view requesting the frame
+     * @param itemIndex Index of the item
+     * @param frame Frame object to populate with size information
+     */
     public function collectionViewItemFrameAtIndex(collectionView:CollectionView, itemIndex:Int, frame:CollectionViewItemFrame):Void {
 
         frame.width = collectionView.width;
@@ -121,17 +189,33 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     }
 
-    /** Called when a view is not used anymore at the given index. Lets the dataSource
-        do some cleanup if needed, before this view gets reused (if it can).
-        Returns `true` if the view can be reused at another index of `false` otherwise. */
+    /**
+     * Called when a view is no longer needed at the given index.
+     * 
+     * Allows cleanup before view reuse. For SelectListView, cells can always be reused.
+     * 
+     * @param collectionView The collection view releasing the item
+     * @param itemIndex Index of the item being released
+     * @param view The view being released
+     * @return true if the view can be reused, false otherwise
+     */
     public function collectionViewReleaseItemAtIndex(collectionView:CollectionView, itemIndex:Int, view:View):Bool {
 
         return true;
 
     }
 
-    /** Get a view at the given index. If `reusableView` is provided,
-        it can be recycled as the new item to avoid creating new instances. */
+    /**
+     * Creates or reuses a view for the item at the given index.
+     * 
+     * Creates CellView instances to display list items. Reuses existing views when
+     * possible for performance. Binds cell data and interaction handlers.
+     * 
+     * @param collectionView The collection view requesting the item
+     * @param itemIndex Index of the item
+     * @param reusableView Existing view that can be recycled, if available
+     * @return The view to display for this item
+     */
     public function collectionViewItemAtIndex(collectionView:CollectionView, itemIndex:Int, reusableView:View):View {
 
         var cell:CellView = null;
@@ -151,6 +235,14 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     }
 
+    /**
+     * Binds data and interaction handlers to a cell view.
+     * 
+     * Sets up automatic updates for cell content, selection state, and theme,
+     * and configures click handling for value selection.
+     * 
+     * @param cell The cell view to bind
+     */
     function bindCellView(cell:CellView):Void {
 
         cell.autorun(function() {
@@ -198,6 +290,12 @@ class SelectListView extends View implements CollectionViewDataSource implements
 
     }
 
+    /**
+     * Updates the visual style of the list view based on the current theme.
+     * 
+     * Sets the background color, border appearance, and other visual properties
+     * to match the current theme.
+     */
     function updateStyle() {
 
         var theme = this.theme;

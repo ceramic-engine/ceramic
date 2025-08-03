@@ -8,14 +8,49 @@ using StringTools;
 import ase.Ase;
 #end
 
+/**
+ * Asset loader for sprite sheets and animations.
+ * Supports multiple formats:
+ * - Aseprite JSON format (.sprite files)
+ * - Native Aseprite files (.ase, .aseprite) when ase plugin is enabled
+ * - Custom sprite sheet formats via SpriteSheetParser
+ * 
+ * Automatically handles:
+ * - Texture atlas loading and management
+ * - Hot-reload support for development
+ * - Animation parsing from frame tags
+ * - Memory management and reference counting
+ * 
+ * Example usage:
+ * ```haxe
+ * assets.add(Sprites.CHARACTER);
+ * assets.onceComplete(this, success -> {
+ *     var sprite = new Sprite();
+ *     sprite.sheet = assets.sheet(Sprites.CHARACTER);
+ *     sprite.animation = "idle";
+ * });
+ * ```
+ */
 class SpriteAsset extends Asset {
 
 /// Properties
 
+    /**
+     * The loaded sprite sheet containing animations.
+     * Available after successful loading.
+     */
     @observe public var sheet:SpriteSheet = null;
 
+    /**
+     * Raw text content of the sprite data file.
+     * Contains the JSON or other format data before parsing.
+     */
     @observe public var text:String = null;
 
+    /**
+     * The texture atlas associated with this sprite.
+     * Retrieved from the internal atlas asset.
+     */
     public var atlas(get,never):TextureAtlas;
     function get_atlas():TextureAtlas {
         return atlasAsset != null ? atlasAsset.atlas : null;
@@ -44,6 +79,10 @@ class SpriteAsset extends Asset {
 
     }
 
+    /**
+     * Load the sprite asset.
+     * Automatically detects format based on file extension and loads appropriately.
+     */
     override public function load() {
 
         if (owner != null) {
@@ -87,6 +126,10 @@ class SpriteAsset extends Asset {
 
     }
 
+    /**
+     * Load a standard sprite sheet file (.sprite or other custom formats).
+     * Uses SpriteSheetParser to parse the data after loading the atlas.
+     */
     function loadSpriteSheet() {
 
         atlasAsset = new AtlasAsset(name);
@@ -157,6 +200,11 @@ class SpriteAsset extends Asset {
 
     #if plugin_ase
 
+    /**
+     * Load a native Aseprite file (.ase or .aseprite).
+     * Extracts frames and animations directly from the binary format.
+     * Requires the ase plugin to be enabled.
+     */
     function loadAse() {
 
         var assetReloadedCount = Assets.getReloadCount(Assets.realAssetPath(path, runtimeAssets));
@@ -268,12 +316,24 @@ class SpriteAsset extends Asset {
 
     #end
 
+    /**
+     * Custom atlas parsing method provided to AtlasAsset.
+     * Delegates to SpriteSheetParser for sprite-specific atlas formats.
+     * @param text The raw atlas text data
+     * @return Parsed texture atlas
+     */
     function parseAtlas(text:String):TextureAtlas {
 
         return SpriteSheetParser.parseAtlas(text);
 
     }
 
+    /**
+     * Handle file change notifications for hot-reload.
+     * Automatically reloads the sprite when the source file changes.
+     * @param newFiles Map of current file paths to modification times
+     * @param previousFiles Map of previous file paths to modification times
+     */
     override function assetFilesDidChange(newFiles:ReadOnlyMap<String, Float>, previousFiles:ReadOnlyMap<String, Float>):Void {
 
         if (!app.backend.texts.supportsHotReloadPath())
@@ -295,6 +355,10 @@ class SpriteAsset extends Asset {
 
     }
 
+    /**
+     * Clean up and destroy the sprite asset.
+     * Destroys associated sheet and Aseprite data if present.
+     */
     override function destroy():Void {
 
         super.destroy();

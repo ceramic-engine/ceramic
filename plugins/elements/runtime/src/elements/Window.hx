@@ -16,49 +16,92 @@ import ceramic.View;
 import elements.Context.context;
 import tracker.Observable;
 
+/**
+ * A draggable window container for UI elements.
+ * 
+ * Provides a standard window interface with:
+ * - Draggable header bar
+ * - Optional title text
+ * - Expand/collapse functionality
+ * - Close button support
+ * - Automatic state persistence (position, size, collapsed state)
+ * - Theme customization
+ * - Content scrolling support
+ * 
+ * Windows automatically save their state to the Context's user data
+ * and restore it when recreated with the same ID.
+ * 
+ * @see Context
+ * @see WindowData
+ * @see ColumnLayout
+ */
 class Window extends ColumnLayout implements Observable {
 
+    /** Height of the window header bar in pixels */
     public static final HEADER_HEIGHT:Int = 18;
 
+    /** Pre-rendered font size for title text */
     static final FONT_PRE_RENDERED_SIZE:Int = 20;
 
+    /** Display size for title text */
     static final TITLE_TEXT_SIZE:Int = 12;
 
+    /** Default X position for new windows */
     static final DEFAULT_X:Int = 20;
 
+    /** Default Y position for new windows */
     static final DEFAULT_Y:Int = 20;
 
+    /** Minimum drag distance to start window movement */
     static final DRAG_THRESHOLD:Int = 4;
 
+    /** Shared point instance for coordinate calculations */
     static var _point = new Point(0, 0);
 
+    /** Custom theme override for this window */
     @observe public var theme:Theme = null;
 
+    /** The main content view displayed in the window body */
     @observe public var contentView:View = null;
 
+    /** Title text displayed in the window header */
     @observe public var title:String = null;
 
+    /** Whether the window shows a close button */
     @observe public var closable:Bool = false;
 
+    /** Whether the window can be collapsed/expanded */
     @observe public var collapsible:Bool = true;
 
+    /** Whether to show the window header bar */
     @observe public var header:Bool = true;
 
+    /** Alignment of the title text in the header */
     @observe public var titleAlign:TextAlign = LEFT;
 
+    /**
+     * Computed property that returns true if the content view is scrollable.
+     * 
+     * @return True if contentView is a ScrollView
+     */
     @compute public function scrolls():Bool {
         var contentView = this.contentView;
         return (contentView != null && contentView is ScrollView);
     }
 
+    /** Whether the window can be dragged by its header */
     public var movable:Bool = true;
 
+    /** Optional overlay quad for modal behavior */
     public var overlay:Quad = null;
 
+    /** Emitted when the expand/collapse button is clicked */
     @event function expandCollapseClick();
 
+    /** Emitted when the header is double-clicked */
     @event function headerDoubleClick();
 
+    /** Emitted when the close button is clicked */
     @event function close();
 
     var headerView:RowLayout;
@@ -81,6 +124,10 @@ class Window extends ColumnLayout implements Observable {
 
     var closeCross:CrossX;
 
+    /**
+     * Creates a new Window with default styling and behavior.
+     * Sets up the header, body, and interaction handlers.
+     */
     public function new() {
 
         super();

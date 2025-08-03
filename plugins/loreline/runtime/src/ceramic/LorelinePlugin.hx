@@ -12,11 +12,44 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+/**
+ * Plugin that integrates Loreline scripting language into Ceramic.
+ * 
+ * Loreline is a narrative scripting language designed for:
+ * - Dialogue trees and branching conversations
+ * - Interactive storytelling
+ * - Game narrative and quest systems
+ * - Conditional story flow
+ * 
+ * This plugin provides:
+ * - Asset loading for .lor and .loreline files
+ * - Script parsing with import resolution
+ * - Easy access to parsed scripts through the Assets API
+ * - Hot-reload support for iterative development
+ * 
+ * Usage:
+ * ```haxe
+ * // In ceramic.yml:
+ * plugins:
+ *   - loreline
+ * 
+ * // In your code:
+ * assets.add('loreline:story/chapter1');
+ * var script = assets.loreline('story/chapter1');
+ * ```
+ * 
+ * @see LorelineAsset
+ * @see https://github.com/loreline/loreline for the Loreline language
+ */
 @:access(ceramic.App)
 class LorelinePlugin {
 
 /// Init plugin
 
+    /**
+     * Plugin initialization entry point.
+     * Registers the 'loreline' asset kind with supported file extensions.
+     */
     static function pluginInit() {
 
         App.oncePreInit(function() {
@@ -39,6 +72,13 @@ class LorelinePlugin {
         addLoreline(assets, name, variant, options);
     }
 
+    /**
+     * Adds a Loreline asset to the assets collection.
+     * @param assets The assets collection to add to
+     * @param name The asset name (with or without 'loreline:' prefix)
+     * @param variant Optional variant identifier
+     * @param options Optional asset loading options
+     */
     public static function addLoreline(assets:Assets, name:String, ?variant:String, ?options:AssetOptions):Void {
 
         if (name.startsWith('loreline:')) name = name.substr(9);
@@ -47,6 +87,15 @@ class LorelinePlugin {
 
     }
 
+    /**
+     * Ensures a Loreline asset is loaded before proceeding.
+     * Loads the asset if not already loaded, or returns the existing one.
+     * @param assets The assets collection
+     * @param name The asset name or identifier
+     * @param variant Optional variant identifier
+     * @param options Optional asset loading options
+     * @param done Callback with the loaded LorelineAsset
+     */
     public static function ensureLoreline(assets:Assets, name:Either<String,Dynamic>, ?variant:String, ?options:AssetOptions, done:LorelineAsset->Void):Void {
 
         if (!name.startsWith('loreline:')) name = 'loreline:' + name;
@@ -57,6 +106,13 @@ class LorelinePlugin {
 
     }
 
+    /**
+     * Gets a parsed Loreline script from the assets collection.
+     * @param assets The assets collection
+     * @param name The asset name or identifier
+     * @param variant Optional variant identifier
+     * @return The parsed Loreline script, or null if not found
+     */
     @:access(ceramic.Assets)
     public static function loreline(assets:Assets, name:Either<String,Dynamic>, ?variant:String):loreline.Script {
 
@@ -67,6 +123,13 @@ class LorelinePlugin {
 
     }
 
+    /**
+     * Gets a LorelineAsset from the assets collection.
+     * @param assets The assets collection
+     * @param name The asset name or identifier
+     * @param variant Optional variant identifier
+     * @return The LorelineAsset, or null if not found
+     */
     @:access(ceramic.Assets)
     public static function lorelineAsset(assets:Assets, name:Either<String,Dynamic>, ?variant:String):LorelineAsset {
 

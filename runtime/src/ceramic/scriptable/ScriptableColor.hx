@@ -1,14 +1,52 @@
 package ceramic.scriptable;
 
 /**
- * Class representing a color, based on Int. Provides a variety of methods for creating and converting colors.
- *
- * Colors can be written as Ints. This means you can pass a hex value such as
- * 0x123456 to a function expecting a Color, and it will automatically become a Color "object".
- * Similarly, Colors may be treated as Ints.
- *
- * Note that when using properties of a Color other than RGB, the values are ultimately stored as
- * RGB values, so repeatedly manipulating HSB/HSL/CMYK values may result in a gradual loss of precision.
+ * Scriptable wrapper for Color to expose RGB color functionality to scripts.
+ * 
+ * This class provides comprehensive color manipulation features for scripts.
+ * In scripts, this type is exposed as `Color` (without the Scriptable prefix)
+ * and provides the same functionality as ceramic.Color.
+ * 
+ * Colors are represented as integers in RGB format (0xRRGGBB). You can use
+ * hex values directly or create colors using various color space methods.
+ * 
+ * ## Usage in Scripts
+ * 
+ * ```hscript
+ * // Use predefined colors
+ * var red = Color.RED;
+ * var blue = Color.BLUE;
+ * 
+ * // Create from hex value
+ * var purple = 0x9400D3;
+ * 
+ * // Create from RGB values
+ * var orange = Color.fromRGB(255, 165, 0);
+ * 
+ * // Create from HSB (hue, saturation, brightness)
+ * var cyan = Color.fromHSB(180, 1.0, 1.0);
+ * 
+ * // Interpolate between colors
+ * var blend = Color.interpolate(red, blue, 0.5);
+ * 
+ * // Modify colors
+ * var darkRed = Color.getDarkened(red, 0.3);
+ * var lightBlue = Color.getLightened(blue, 0.3);
+ * ```
+ * 
+ * ## Color Spaces
+ * 
+ * - **RGB**: Red, Green, Blue (0-255 per channel)
+ * - **HSB/HSV**: Hue (0-360°), Saturation (0-1), Brightness/Value (0-1)
+ * - **HSL**: Hue (0-360°), Saturation (0-1), Lightness (0-1)
+ * - **CMYK**: Cyan, Magenta, Yellow, Key/Black (0-1 per channel)
+ * - **HSLuv**: Perceptually uniform color space (if enabled)
+ * 
+ * Note that colors are stored internally as RGB, so repeated conversions
+ * between color spaces may result in precision loss.
+ * 
+ * @see ceramic.Color The actual implementation
+ * @see ceramic.scriptable.ScriptableAlphaColor For colors with alpha channel
  */
 class ScriptableColor {
     

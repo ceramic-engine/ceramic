@@ -20,22 +20,55 @@ package ceramic;
 //
 
 /**
- * Blending function that operate at pixel/color level, ported from Aseprite source code.
+ * Blending functions that operate at pixel/color level, ported from Aseprite source code.
+ * 
+ * This class provides a comprehensive set of blend modes compatible with Aseprite files,
+ * implementing standard compositing operations like multiply, screen, overlay, and more
+ * advanced modes like color dodge, soft light, and HSL-based blending.
+ * 
+ * All blending operations work with RGBA colors and support opacity/transparency.
+ * The implementations are optimized for performance with inline functions and
+ * platform-specific optimizations.
+ * 
+ * References:
+ * - W3C Compositing and Blending Level 1: http://dev.w3.org/fxtf/compositing-1/
+ * - Aseprite source: https://github.com/aseprite/aseprite
+ * 
+ * @see AsepriteData for usage in Aseprite file rendering
  */
 class AsepriteBlendFuncs {
 
+    /**
+     * Temporary storage for float RGB values used in HSL operations.
+     * These avoid allocations in frequently called blend functions.
+     */
     static var _float_r:Float = 0;
 
     static var _float_g:Float = 0;
 
     static var _float_b:Float = 0;
 
+    /**
+     * Bit mask for extracting alpha channel from ARGB color.
+     */
     inline static final A_MASK:Int = 0xFF000000;
 
+    /**
+     * Bit mask for extracting RGB channels from ARGB color.
+     */
     inline static final RGB_MASK:Int = 0x00FFFFFF;
 
+    /**
+     * Bit shift amount for alpha channel in ARGB format.
+     */
     inline static final A_SHIFT:Int = 24;
 
+    /**
+     * Returns the minimum of two integers.
+     * @param a First value
+     * @param b Second value
+     * @return The smaller value
+     */
     public inline static function min(a:Int, b:Int):Int {
         return a < b ? a : b;
     }
@@ -72,11 +105,27 @@ class AsepriteBlendFuncs {
         #end
     }
 
+    /**
+     * Multiply blend mode: Darkens by multiplying colors.
+     * Result = backdrop * source
+     * @param b Backdrop (base) color component (0-255)
+     * @param s Source color component (0-255)
+     * @param t Temporary variable for optimization
+     * @return Blended color component (0-255)
+     */
     public inline static function blendMultiply(b:Int, s:Int, t:Int):Int {
         t = mul_un8_0(b, s, t);
         return mul_un8_1(t);
     }
 
+    /**
+     * Screen blend mode: Lightens by inverting, multiplying, and inverting again.
+     * Result = 1 - (1-backdrop) * (1-source)
+     * @param b Backdrop color component (0-255)
+     * @param s Source color component (0-255)
+     * @param t Temporary variable for optimization
+     * @return Blended color component (0-255)
+     */
     public inline static function blendScreen(b:Int, s:Int, t:Int):Int {
         t = mul_un8_0(b, s, t);
         return b + s - mul_un8_1(t);
@@ -108,6 +157,13 @@ class AsepriteBlendFuncs {
         return b + s - 2*t;
     }
 
+    /**
+     * Color dodge blend mode: Brightens the backdrop to reflect the source.
+     * Result = backdrop / (1 - source)
+     * @param b Backdrop color component (0-255)
+     * @param s Source color component (0-255)
+     * @return Blended color component (0-255)
+     */
     public inline static function blendColorDodge(b:Int, s:Int):Int
     {
         if (b == 0)
@@ -132,6 +188,13 @@ class AsepriteBlendFuncs {
             return 255 - div_un8(b, s); // return 1 - ((1-b)/s)
     }
 
+    /**
+     * Soft light blend mode: Similar to overlay but softer.
+     * Uses a complex formula that creates a subtle lighting effect.
+     * @param _b Backdrop color component (0-255)
+     * @param _s Source color component (0-255)
+     * @return Blended color component (0-255)
+     */
     public inline static function blendSoftLight(_b:Int, _s:Int):Int
     {
         var b:Float = _b / 255.0;
@@ -170,6 +233,14 @@ class AsepriteBlendFuncs {
     //     return ((t >> 8) + t) >> 8;
     // }
 
+    /**
+     * Optimized 8-bit multiplication (part 1).
+     * Multiplies two 8-bit values with rounding.
+     * @param a First value (0-255)
+     * @param b Second value (0-255)
+     * @param t Temporary storage
+     * @return Intermediate result
+     */
     inline static function mul_un8_0(a:Int, b:Int, t:Int):Int {
         #if cpp
         t = untyped __cpp__('{0} * (uint16_t)({1}) + 0x80', a, b);
@@ -179,6 +250,12 @@ class AsepriteBlendFuncs {
         return t;
     }
 
+    /**
+     * Optimized 8-bit multiplication (part 2).
+     * Completes the multiplication with proper rounding.
+     * @param t Intermediate result from mul_un8_0
+     * @return Final multiplied value (0-255)
+     */
     inline static function mul_un8_1(t:Int):Int {
         return ((t >> 8) + t) >> 8;
     }
@@ -195,14 +272,36 @@ class AsepriteBlendFuncs {
         #end
     }
 
+    /**
+     * Creates an AlphaColor from RGBA components.
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     * @param a Alpha component (0-255)
+     * @return ARGB color value
+     */
     public inline static function rgba(r:Int, g:Int, b:Int, a:Int):AlphaColor {
         return AlphaColor.fromRGBA(r, g, b, a);
     }
 
+    /**
+     * Calculates the luminance of an ARGB color.
+     * Uses standard luminance weights for RGB components.
+     * @param c The color to analyze
+     * @return Luminance value (0-255)
+     */
     public inline static function rgbaLuma(c:AlphaColor):Int {
         return rgbLuma(c.red, c.green, c.blue);
     }
 
+    /**
+     * Calculates luminance from RGB components.
+     * Uses ITU-R BT.709 luma coefficients.
+     * @param r Red component (0-255)
+     * @param g Green component (0-255)
+     * @param b Blue component (0-255)
+     * @return Luminance value (0-255)
+     */
     public inline static function rgbLuma(r:Int, g:Int, b:Int):Int {
         #if cpp
         return untyped __cpp__('({0}*2126 + {1}*7152 + {2}*722) / 10000', r, g, b);
@@ -215,11 +314,26 @@ class AsepriteBlendFuncs {
         #end
     }
 
+    /**
+     * Source blend mode: Replaces backdrop with source.
+     * @param backdrop The base color
+     * @param src The source color
+     * @param opacity Blend opacity (0-255)
+     * @return The source color unchanged
+     */
     public static function rgbaBlenderSrc(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         return src;
     }
 
+    /**
+     * Merge blend mode: Blends colors based on opacity.
+     * Similar to normal blend but with different alpha handling.
+     * @param backdrop The base color
+     * @param src The source color  
+     * @param opacity Blend opacity (0-255)
+     * @return The merged color
+     */
     public static function rgbaBlenderMerge(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         var bR:Int = 0; var bG:Int = 0; var bB:Int = 0; var bA:Int = 0;
@@ -287,6 +401,14 @@ class AsepriteBlendFuncs {
         return rgbaBlenderNormal(backdrop, src, opacity);
     }
 
+    /**
+     * Normal blend mode: Standard alpha compositing.
+     * This is the most common blend mode, implementing Porter-Duff "over" operator.
+     * @param backdrop The base color
+     * @param src The source color
+     * @param opacity Blend opacity (0-255)
+     * @return The composited color
+     */
     public static function rgbaBlenderNormal(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         var t:Int = 0;
@@ -347,6 +469,14 @@ class AsepriteBlendFuncs {
         return inline rgbaBlenderNormal(src, backdrop, 255);
     }
 
+    /**
+     * Multiply blend mode for RGBA colors.
+     * Darkens the image by multiplying color values.
+     * @param backdrop The base color
+     * @param src The source color
+     * @param opacity Blend opacity (0-255)
+     * @return The blended color
+     */
     public static function rgbaBlenderMultiply(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         var t:Int = 0;
@@ -454,11 +584,26 @@ class AsepriteBlendFuncs {
     //////////////////////////////////////////////////////////////////////
     // HSV blenders
 
+    /**
+     * Calculates luminance using different weights than rgbLuma.
+     * Uses NTSC/PAL weights for backward compatibility.
+     * @param r Red component (0-1)
+     * @param g Green component (0-1)
+     * @param b Blue component (0-1)
+     * @return Luminance value (0-1)
+     */
     public inline static function lum(r:Float, g:Float, b:Float):Float
     {
         return 0.3*r + 0.59*g + 0.11*b;
     }
 
+    /**
+     * Calculates color saturation.
+     * @param r Red component (0-1)
+     * @param g Green component (0-1)
+     * @param b Blue component (0-1)
+     * @return Saturation value (0-1)
+     */
     public inline static function sat(r:Float, g:Float, b:Float):Float
     {
         return Math.max(r, Math.max(g, b)) - Math.min(r, Math.min(g, b));
@@ -514,6 +659,13 @@ class AsepriteBlendFuncs {
         min = 0;
     }
 
+    /**
+     * HSL Hue blend mode: Uses hue from source, saturation and luminosity from backdrop.
+     * @param backdrop The base color
+     * @param src The source color
+     * @param opacity Blend opacity (0-255)
+     * @return The blended color
+     */
     public static function rgbaBlenderHslHue(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         var r:Float = backdrop.red/255.0;
@@ -594,6 +746,14 @@ class AsepriteBlendFuncs {
         return inline rgbaBlenderNormal(backdrop, src, opacity);
     }
 
+    /**
+     * Addition blend mode: Adds color values together.
+     * Results are clamped to prevent overflow.
+     * @param backdrop The base color
+     * @param src The source color
+     * @param opacity Blend opacity (0-255)
+     * @return The blended color
+     */
     public static function rgbaBlenderAddition(backdrop:AlphaColor, src:AlphaColor, opacity:Int):AlphaColor
     {
         var r:Int = backdrop.red + src.red;

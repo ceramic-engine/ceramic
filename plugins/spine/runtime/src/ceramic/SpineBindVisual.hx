@@ -5,8 +5,46 @@ import spine.attachments.RegionAttachment;
 
 using ceramic.Extensions;
 
+/**
+ * Utility class for binding Ceramic visuals to Spine skeleton slots.
+ * 
+ * This class provides static methods to:
+ * - Show/hide specific slots
+ * - Attach Ceramic visuals (Text, Quad, Mesh, etc.) to Spine slots
+ * - Synchronize visual properties with slot transforms and colors
+ * 
+ * Common use cases include:
+ * - Attaching particle effects to bones
+ * - Displaying dynamic text on characters
+ * - Overlaying custom graphics on skeleton parts
+ * - Creating hybrid Spine/Ceramic animations
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * // Attach a text label to a character's head
+ * var nameText = new Text();
+ * nameText.content = "Player 1";
+ * SpineBindVisual.bindVisual(spine, "head_slot", nameText, 0, -50);
+ * 
+ * // Hide a slot
+ * SpineBindVisual.hideSlot(spine, "weapon_slot");
+ * ```
+ * 
+ * @see SpineBindVisualOptions
+ * @see Spine
+ */
 class SpineBindVisual {
 
+    /**
+     * Hides a specific slot in the Spine skeleton.
+     * 
+     * The slot will not be rendered but continues to be updated.
+     * Use this to dynamically hide equipment, body parts, etc.
+     * 
+     * @param spine The Spine instance
+     * @param slotName Name of the slot to hide
+     */
     public static function hideSlot(spine:Spine, slotName:String):Void {
 
         if (spine.hiddenSlots == null) {
@@ -18,6 +56,14 @@ class SpineBindVisual {
 
     }
 
+    /**
+     * Shows a previously hidden slot in the Spine skeleton.
+     * 
+     * Reverses the effect of `hideSlot()`.
+     * 
+     * @param spine The Spine instance
+     * @param slotName Name of the slot to show
+     */
     public static function showSlot(spine:Spine, slotName:String):Void {
 
         if (spine.hiddenSlots == null) {
@@ -30,6 +76,20 @@ class SpineBindVisual {
 
     }
 
+    /**
+     * Binds a Ceramic visual to a Spine slot.
+     * 
+     * The visual will follow the slot's transform (position, rotation, scale)
+     * and optionally inherit its color and alpha. The visual becomes a child
+     * of the Spine instance for proper rendering order.
+     * 
+     * @param spine The Spine instance to bind to
+     * @param slotName Name of the slot to follow
+     * @param visual The Ceramic visual to attach
+     * @param offsetX Horizontal offset from the slot position
+     * @param offsetY Vertical offset from the slot position
+     * @return Configuration options for customizing the binding behavior
+     */
     public static function bindVisual(spine:Spine, slotName:String, visual:Visual, offsetX:Float = 0.0, offsetY:Float = 0.0):SpineBindVisualOptions {
 
         var options = new SpineBindVisualOptions();

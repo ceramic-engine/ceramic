@@ -2,8 +2,51 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * Visual representation of a single layer within a tilemap.
+ * 
+ * A TilemapLayer renders tiles from a TilemapLayerData structure, handling tile placement,
+ * clipping, rendering order, and optional collision detection. Each layer consists of a grid
+ * of TilemapQuad instances that display individual tiles from the tilemap's tilesets.
+ * 
+ * ## Features
+ * 
+ * - **Tile Rendering**: Automatically creates and manages TilemapQuad instances for visible tiles
+ * - **Clipping Support**: Can render only a subset of tiles based on clip bounds
+ * - **Render Order**: Respects the tilemap's render order (RIGHT_DOWN, LEFT_UP, etc.)
+ * - **Tile Filtering**: Supports applying visual filters to all tiles in the layer
+ * - **Collision Detection**: When using the arcade physics plugin, supports tile-based collisions
+ * - **Tile Transformations**: Handles horizontal/vertical/diagonal flipping of tiles
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * // Layers are typically created automatically by Tilemap
+ * var tilemap = new Tilemap();
+ * tilemap.tilemapData = myTilemapData;
+ * 
+ * // Access a specific layer
+ * var layer = tilemap.layer('collision');
+ * 
+ * // Apply a filter to all tiles in the layer
+ * var blur = new Filter();
+ * blur.shader = assets.shader('blur');
+ * layer.tilesFilter = blur;
+ * 
+ * // Configure collision (requires arcade plugin)
+ * layer.checkCollision(true, true); // Enable up/down and left/right collisions
+ * ```
+ * 
+ * @see Tilemap
+ * @see TilemapLayerData
+ * @see TilemapQuad
+ */
 class TilemapLayer extends Visual {
 
+    /**
+     * Event emitted when the tile quads array changes.
+     * This happens when tiles are added, removed, or when the layer is re-rendered.
+     */
     @event function tileQuadsChange();
 
     #if plugin_arcade
@@ -88,9 +131,17 @@ class TilemapLayer extends Visual {
 
     #end
 
+    /**
+     * The parent tilemap that owns this layer.
+     * Set automatically when the layer is created by a Tilemap.
+     */
     @:allow(ceramic.Tilemap)
     public var tilemap(default, null):Tilemap = null;
 
+    /**
+     * The layer data that defines the tiles and properties for this layer.
+     * Changing this will trigger a complete re-render of the layer.
+     */
     public var layerData(default,set):TilemapLayerData = null;
     function set_layerData(layerData:TilemapLayerData):TilemapLayerData {
         if (this.layerData == layerData) return layerData;
@@ -99,6 +150,10 @@ class TilemapLayer extends Visual {
         return layerData;
     }
 
+    /**
+     * Scale factor applied to all tiles in this layer.
+     * Default is 1.0 (no scaling). Useful for creating zoom effects or different tile sizes.
+     */
     public var tileScale(default,set):Float = 1.0;
     function set_tileScale(tileScale:Float):Float {
         if (this.tileScale == tileScale) return tileScale;
@@ -107,8 +162,18 @@ class TilemapLayer extends Visual {
         return tileScale;
     }
 
+    /**
+     * Array of TilemapQuad instances representing visible tiles in this layer.
+     * This array is automatically managed and updated when the layer re-renders.
+     * Use `tileQuadByIndex()` or `tileQuadByColumnAndRow()` to access specific tiles.
+     */
     public var tileQuads(default,null):Array<TilemapQuad> = [];
 
+    /**
+     * Color tint applied to all tiles in this layer.
+     * This is multiplied with the layer's base color from layerData.
+     * Default is WHITE (no tint).
+     */
     public var tilesColor(default,set):Color = Color.WHITE;
     function set_tilesColor(tilesColor:Color):Color {
         if (this.tilesColor != tilesColor) {
@@ -183,7 +248,8 @@ class TilemapLayer extends Visual {
     }
 
     /**
-     * A mapping to retrieve an existing tileQuad from its index
+     * Internal mapping to retrieve an existing tileQuad from its tile index.
+     * Maps from tile index to array position in tileQuads (1-based).
      */
     var tileQuadMapping:IntIntMap = new IntIntMap();
 
@@ -209,6 +275,11 @@ class TilemapLayer extends Visual {
 
 /// Display
 
+    /**
+     * Computes the visual content of this layer based on the current layer data.
+     * This method is called automatically when contentDirty is true.
+     * It calculates layer dimensions and generates/updates all tile quads.
+     */
     override function computeContent() {
 
         if (layerData == null) {
@@ -228,6 +299,10 @@ class TilemapLayer extends Visual {
 
     }
 
+    /**
+     * Computes and sets the position and size of this layer based on layer data.
+     * Takes into account tile dimensions and layer offsets.
+     */
     function computePosAndSize() {
 
         var layerData = this.layerData;
@@ -244,6 +319,12 @@ class TilemapLayer extends Visual {
 
     }
 
+    /**
+     * Generates and updates TilemapQuad instances for all visible tiles in this layer.
+     * Handles tile clipping, render order, transformations, and pooling of quad instances.
+     * @param tilemap The parent tilemap
+     * @param tilemapData The tilemap data containing tileset information
+     */
     function computeTileQuads(tilemap:Tilemap, tilemapData:TilemapData) {
 
         var usedQuads = 0;
@@ -491,6 +572,12 @@ class TilemapLayer extends Visual {
 
 /// Helpers
 
+    /**
+     * Retrieves the TilemapQuad at the specified column and row position.
+     * @param column The column index (0-based)
+     * @param row The row index (0-based)
+     * @return The TilemapQuad at the position, or null if no tile exists there
+     */
     public function tileQuadByColumnAndRow(column:Int, row:Int):TilemapQuad {
 
         var index = row * layerData.columns + column;
@@ -498,6 +585,11 @@ class TilemapLayer extends Visual {
 
     }
 
+    /**
+     * Retrieves the TilemapQuad at the specified tile index.
+     * @param index The tile index in the layer's tile array
+     * @return The TilemapQuad at the index, or null if no tile exists there
+     */
     public function tileQuadByIndex(index:Int):TilemapQuad {
 
         var arrayIndex = tileQuadMapping.get(index);

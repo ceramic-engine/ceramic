@@ -5,24 +5,71 @@ import ceramic.Shortcuts.*;
 import ceramic.UInt8Array;
 import clay.graphics.Graphics;
 
+/**
+ * SDL2 backend binding for Dear ImGui.
+ * This class is used internally to initialize SDL2-specific ImGui functionality.
+ */
 @:headerInclude("imgui_impl_sdl.h")
 class ImGuiImplSDL {
+    /**
+     * Binds the SDL2 implementation. This method exists to ensure
+     * the header is included during compilation.
+     */
     @:keep public static function bind() {}
 }
 
+/**
+ * OpenGL 3 backend binding for Dear ImGui.
+ * This class is used internally to initialize OpenGL-specific ImGui functionality.
+ */
 @:headerInclude("imgui_impl_opengl3.h")
 class ImGuiImplOpenGl3 {
+    /**
+     * Binds the OpenGL 3 implementation. This method exists to ensure
+     * the header is included during compilation.
+     */
     @:keep public static function bind() {}
 }
 
+/**
+ * C++ implementation of Dear ImGui integration for Ceramic.
+ * This backend uses SDL2 and OpenGL to render ImGui interfaces.
+ * 
+ * The implementation handles:
+ * - ImGui context initialization with SDL2 and OpenGL backends
+ * - Custom font loading and texture management
+ * - Frame lifecycle management
+ * - Input event forwarding between Ceramic and ImGui
+ * 
+ * @see ImGuiSystem
+ */
 class ImGuiImplCPP {
 
+    /**
+     * Whether a frame is currently being rendered.
+     * Used to prevent multiple calls to endFrame() without a matching newFrame().
+     */
     static var framePending:Bool = false;
 
+    /**
+     * Whether the texture filter has been set for the font texture.
+     * This is done once after the first frame to ensure proper rendering.
+     */
     static var didSetTextureFilter:Bool = false;
 
+    /**
+     * The texture filter to use for ImGui textures.
+     * Defaults to NEAREST for pixel-perfect rendering, but changes to LINEAR
+     * when a custom font is loaded.
+     */
     static var textureFilter:clay.Types.TextureFilter = NEAREST;
 
+    /**
+     * Initializes the ImGui C++ implementation.
+     * Sets up SDL2 and OpenGL backends, creates the ImGui context,
+     * and optionally loads a custom font.
+     * @param done Callback invoked when initialization is complete
+     */
     public static function init(done:()->Void):Void {
 
         ImGuiImplSDL.bind();
@@ -51,6 +98,12 @@ class ImGuiImplCPP {
     }
 
     #if imgui_font
+    /**
+     * Loads a custom TrueType font for ImGui.
+     * The font is specified via the `imgui_font` compile-time define.
+     * The font texture is created and uploaded to the GPU with LINEAR filtering
+     * for better quality at different scales.
+     */
     static function loadFont() {
 
         var font = app.assets.bytes(ceramic.macros.DefinesMacro.getDefine('imgui_font'));
@@ -79,6 +132,14 @@ class ImGuiImplCPP {
     }
     #end
 
+    /**
+     * Begins a new ImGui frame.
+     * Must be called before any ImGui drawing commands.
+     * This method:
+     * - Initializes the OpenGL and SDL2 backends for the new frame
+     * - Starts the ImGui frame
+     * - Sets texture filtering on the font texture (first frame only)
+     */
     public static function newFrame():Void {
 
         var window = clay.Clay.app.runtime.window;
@@ -105,6 +166,15 @@ class ImGuiImplCPP {
 
     }
 
+    /**
+     * Ends the current ImGui frame and renders it.
+     * Must be called after all ImGui drawing commands for the frame.
+     * This method:
+     * - Finalizes the ImGui frame
+     * - Renders the draw data using OpenGL
+     * - Updates input capture flags to prevent Ceramic from processing
+     *   events when ImGui wants to capture them
+     */
     public static function endFrame():Void {
 
         if (!framePending) return;

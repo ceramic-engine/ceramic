@@ -25,15 +25,29 @@ package ceramic;
  */
 
 /**
-    ArcadeSortGroupLeftRight provides a stable implementation of merge sort through its `sort`
-    method. It should be used instead of `Array.sort` in cases where the order
-    of equal elements has to be retained on all targets.
-    
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
-    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
-**/
+ * Specialized merge sort implementation for sorting physics bodies.
+ *
+ * This class provides a stable, high-performance sort specifically optimized for
+ * Arcade physics collision detection. The implementation is based on Haxe's standard
+ * library merge sort but has been heavily optimized with inlined functions and
+ * specialized comparison logic for physics bodies.
+ *
+ * Four different sort orders are provided:
+ * - ArcadeSortGroupLeftRight: Sort by X position ascending (left to right)
+ * - ArcadeSortGroupRightLeft: Sort by X position descending (right to left)
+ * - ArcadeSortGroupTopBottom: Sort by Y position ascending (top to bottom)
+ * - ArcadeSortGroupBottomTop: Sort by Y position descending (bottom to top)
+ *
+ * @see ArcadeWorld for usage in collision detection
+ */
 class ArcadeSortGroupLeftRight {
 
+    /**
+     * Compares two visuals based on their physics body X position.
+     * @param a First visual to compare
+     * @param b Second visual to compare
+     * @return 1 if a.body.x >= b.body.x, -1 otherwise, 0 if either has no body
+     */
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
@@ -47,16 +61,14 @@ class ArcadeSortGroupLeftRight {
     }
 
     /**
-        Sorts Array `a` according to the comparison function `cmp`, where
-        `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-        negative Int if `x < y`.
-
-        This operation modifies Array `a` in place.
-
-        This operation is stable: The order of equal elements is preserved.
-
-        If `a` or `cmp` are null, the result is unspecified.
-    **/
+     * Sorts an array of visuals by their physics body position.
+     *
+     * This operation modifies the array in place and preserves the relative order
+     * of visuals with the same position (stable sort). Visuals without physics
+     * bodies are treated as having position 0.
+     *
+     * @param a The array of visuals to sort
+     */
     static inline public function sort(a:Array<Visual>) {
         rec(a, 0, a.length);
     }
@@ -177,15 +189,29 @@ class ArcadeSortGroupLeftRight {
 }
 
 /**
-    ArcadeSortGroupLeftRight provides a stable implementation of merge sort through its `sort`
-    method. It should be used instead of `Array.sort` in cases where the order
-    of equal elements has to be retained on all targets.
-    
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
-    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
-**/
+ * Specialized merge sort implementation for sorting physics bodies.
+ *
+ * This class provides a stable, high-performance sort specifically optimized for
+ * Arcade physics collision detection. The implementation is based on Haxe's standard
+ * library merge sort but has been heavily optimized with inlined functions and
+ * specialized comparison logic for physics bodies.
+ *
+ * Four different sort orders are provided:
+ * - ArcadeSortGroupLeftRight: Sort by X position ascending (left to right)
+ * - ArcadeSortGroupRightLeft: Sort by X position descending (right to left)
+ * - ArcadeSortGroupTopBottom: Sort by Y position ascending (top to bottom)
+ * - ArcadeSortGroupBottomTop: Sort by Y position descending (bottom to top)
+ *
+ * @see ArcadeWorld for usage in collision detection
+ */
 class ArcadeSortGroupRightLeft {
 
+    /**
+     * Compares two visuals based on their physics body X position (reversed).
+     * @param a First visual to compare
+     * @param b Second visual to compare
+     * @return 1 if b.body.x >= a.body.x, -1 otherwise, 0 if either has no body
+     */
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
@@ -199,16 +225,14 @@ class ArcadeSortGroupRightLeft {
     }
 
     /**
-        Sorts Array `a` according to the comparison function `cmp`, where
-        `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-        negative Int if `x < y`.
-
-        This operation modifies Array `a` in place.
-
-        This operation is stable: The order of equal elements is preserved.
-
-        If `a` or `cmp` are null, the result is unspecified.
-    **/
+     * Sorts an array of visuals by their physics body position.
+     *
+     * This operation modifies the array in place and preserves the relative order
+     * of visuals with the same position (stable sort). Visuals without physics
+     * bodies are treated as having position 0.
+     *
+     * @param a The array of visuals to sort
+     */
     static inline public function sort(a:Array<Visual>) {
         rec(a, 0, a.length);
     }
@@ -329,15 +353,29 @@ class ArcadeSortGroupRightLeft {
 }
 
 /**
-    ArcadeSortGroupTopBottom provides a stable implementation of merge sort through its `sort`
-    method. It should be used instead of `Array.sort` in cases where the order
-    of equal elements has to be retained on all targets.
-    
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
-    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
-**/
+ * Specialized merge sort implementation for sorting physics bodies.
+ *
+ * This class provides a stable, high-performance sort specifically optimized for
+ * Arcade physics collision detection. The implementation is based on Haxe's standard
+ * library merge sort but has been heavily optimized with inlined functions and
+ * specialized comparison logic for physics bodies.
+ *
+ * Four different sort orders are provided:
+ * - ArcadeSortGroupLeftRight: Sort by X position ascending (left to right)
+ * - ArcadeSortGroupRightLeft: Sort by X position descending (right to left)
+ * - ArcadeSortGroupTopBottom: Sort by Y position ascending (top to bottom)
+ * - ArcadeSortGroupBottomTop: Sort by Y position descending (bottom to top)
+ *
+ * @see ArcadeWorld for usage in collision detection
+ */
 class ArcadeSortGroupTopBottom {
 
+    /**
+     * Compares two visuals based on their physics body Y position.
+     * @param a First visual to compare
+     * @param b Second visual to compare
+     * @return 1 if a.body.y >= b.body.y, -1 otherwise, 0 if either has no body
+     */
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
@@ -351,16 +389,14 @@ class ArcadeSortGroupTopBottom {
     }
 
     /**
-        Sorts Array `a` according to the comparison function `cmp`, where
-        `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-        negative Int if `x < y`.
-
-        This operation modifies Array `a` in place.
-
-        This operation is stable: The order of equal elements is preserved.
-
-        If `a` or `cmp` are null, the result is unspecified.
-    **/
+     * Sorts an array of visuals by their physics body position.
+     *
+     * This operation modifies the array in place and preserves the relative order
+     * of visuals with the same position (stable sort). Visuals without physics
+     * bodies are treated as having position 0.
+     *
+     * @param a The array of visuals to sort
+     */
     static inline public function sort(a:Array<Visual>) {
         rec(a, 0, a.length);
     }
@@ -481,15 +517,29 @@ class ArcadeSortGroupTopBottom {
 }
 
 /**
-    ArcadeSortGroupBottomTop provides a stable implementation of merge sort through its `sort`
-    method. It should be used instead of `Array.sort` in cases where the order
-    of equal elements has to be retained on all targets.
-    
-    This specific implementation has been modified to be exclusively used with array of `ceramic.Visual` instances.
-    The compare function (and the rest of the implementation) are inlined to get the best performance out of it.
-**/
+ * Specialized merge sort implementation for sorting physics bodies.
+ *
+ * This class provides a stable, high-performance sort specifically optimized for
+ * Arcade physics collision detection. The implementation is based on Haxe's standard
+ * library merge sort but has been heavily optimized with inlined functions and
+ * specialized comparison logic for physics bodies.
+ *
+ * Four different sort orders are provided:
+ * - ArcadeSortGroupLeftRight: Sort by X position ascending (left to right)
+ * - ArcadeSortGroupRightLeft: Sort by X position descending (right to left)
+ * - ArcadeSortGroupTopBottom: Sort by Y position ascending (top to bottom)
+ * - ArcadeSortGroupBottomTop: Sort by Y position descending (bottom to top)
+ *
+ * @see ArcadeWorld for usage in collision detection
+ */
 class ArcadeSortGroupBottomTop {
 
+    /**
+     * Compares two visuals based on their physics body Y position (reversed).
+     * @param a First visual to compare
+     * @param b Second visual to compare
+     * @return 1 if b.body.y > a.body.y, -1 otherwise, 0 if either has no body
+     */
     static inline function cmp(a:Visual, b:Visual):Int {
 
         var result = 0;
@@ -503,16 +553,14 @@ class ArcadeSortGroupBottomTop {
     }
 
     /**
-        Sorts Array `a` according to the comparison function `cmp`, where
-        `cmp(x,y)` returns 0 if `x == y`, a positive Int if `x > y` and a
-        negative Int if `x < y`.
-
-        This operation modifies Array `a` in place.
-
-        This operation is stable: The order of equal elements is preserved.
-
-        If `a` or `cmp` are null, the result is unspecified.
-    **/
+     * Sorts an array of visuals by their physics body position.
+     *
+     * This operation modifies the array in place and preserves the relative order
+     * of visuals with the same position (stable sort). Visuals without physics
+     * bodies are treated as having position 0.
+     *
+     * @param a The array of visuals to sort
+     */
     static inline public function sort(a:Array<Visual>) {
         rec(a, 0, a.length);
     }

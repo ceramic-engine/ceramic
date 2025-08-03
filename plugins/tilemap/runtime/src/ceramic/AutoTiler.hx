@@ -2,18 +2,88 @@ package ceramic;
 
 using ceramic.Extensions;
 
+/**
+ * Component that automatically processes tilemap tiles to apply auto-tiling rules.
+ * Auto-tiling analyzes neighboring tiles and replaces them with appropriate variants
+ * to create seamless connections and transitions.
+ * 
+ * The AutoTiler supports multiple auto-tiling algorithms (EDGE_16, EDGE_CORNER_32,
+ * EXPANDED_47, etc.) and can handle complex tile arrangements including:
+ * - Edge connections (straight borders)
+ * - Corner pieces (diagonal connections)
+ * - Overlapping tiles for detailed transitions
+ * - Custom tile mappings for different tileset standards
+ * 
+ * ## Usage Example:
+ * ```haxe
+ * // Define auto-tiles for grass terrain
+ * var grassAutoTile = {
+ *     kind: EXPANDED_47,
+ *     gid: 10,  // Base grass tile GID
+ *     bounds: true  // Connect with map edges
+ * };
+ * 
+ * // Create auto-tiler
+ * var autoTiler = new AutoTiler([grassAutoTile]);
+ * 
+ * // Add to tilemap layer
+ * tilemapLayer.component(autoTiler);
+ * ```
+ * 
+ * The component automatically updates when the layer's tiles change,
+ * recomputing auto-tiling for affected areas.
+ * 
+ * @see AutoTile For auto-tile configuration
+ * @see AutoTileKind For supported algorithms
+ * @see TilemapLayerData For the tilemap data structure
+ */
 class AutoTiler extends Entity implements Component {
 
+    /**
+     * The tilemap layer data this auto-tiler processes.
+     * Automatically bound when added as a component to a TilemapLayerData entity.
+     */
     @entity var layerData:TilemapLayerData;
 
+    /**
+     * Event fired when a single tile is computed during auto-tiling.
+     * Useful for custom post-processing or debugging tile placement.
+     * 
+     * @param autoTiler This AutoTiler instance
+     * @param autoTile The auto-tile rule that was applied
+     * @param computedTiles The array of computed tiles being built
+     * @param index The index of the tile that was just computed
+     */
     @event function computeTile(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int);
 
+    /**
+     * Event fired after all tiles have been computed but before they are
+     * applied to the layer. Allows for final adjustments to the tile array.
+     * 
+     * @param autoTiler This AutoTiler instance
+     * @param computedTiles The complete array of computed tiles
+     */
     @event function computeTiles(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>);
 
+    /**
+     * Read-only array of auto-tile configurations.
+     * Each auto-tile defines a GID and algorithm for processing tiles.
+     */
     public var autoTiles(default, null):ReadOnlyArray<AutoTile>;
 
+    /**
+     * Internal map for fast lookup of auto-tiles by their GID.
+     * Built during construction from the autoTiles array.
+     */
     var gidMap:IntMap<AutoTile>;
 
+    /**
+     * Creates a new AutoTiler with the specified auto-tile configurations.
+     * 
+     * @param autoTiles Array of auto-tile rules to apply
+     * @param handleComputeTile Optional callback for each computed tile
+     * @param handleComputeTiles Optional callback after all tiles are computed
+     */
     public function new(autoTiles:Array<AutoTile>, ?handleComputeTile:(autoTiler:AutoTiler, autoTile:AutoTile, computedTiles:Array<TilemapTile>, index:Int)->Void, ?handleComputeTiles:(autoTiler:AutoTiler, computedTiles:Array<TilemapTile>)->Void) {
 
         super();
@@ -37,6 +107,10 @@ class AutoTiler extends Entity implements Component {
 
     }
 
+    /**
+     * Called when this auto-tiler is bound as a component to a TilemapLayerData.
+     * Sets up event listeners and performs initial auto-tiling computation.
+     */
     function bindAsComponent() {
 
         layerData.onTilesChange(this, handleTilesChange);
@@ -44,12 +118,33 @@ class AutoTiler extends Entity implements Component {
 
     }
 
+    /**
+     * Handles changes to the layer's tile data.
+     * Automatically recomputes auto-tiling when tiles are modified.
+     * 
+     * @param tiles The new tile array
+     * @param prevTiles The previous tile array (before the change)
+     */
     function handleTilesChange(tiles:ReadOnlyArray<TilemapTile>, prevTiles:ReadOnlyArray<TilemapTile>):Void {
 
         computeAutoTiles(tiles);
 
     }
 
+    /**
+     * Core auto-tiling computation method. Analyzes each tile in the layer
+     * and applies appropriate auto-tiling transformations based on neighboring tiles.
+     * 
+     * The algorithm:
+     * 1. Iterates through each tile position
+     * 2. Checks if the tile matches any auto-tile rule
+     * 3. Examines neighboring tiles (4 cardinal + 4 diagonal)
+     * 4. Computes edge and corner masks based on matches
+     * 5. Selects appropriate tile variant from the tileset
+     * 6. Handles overlapping tiles for detailed transitions
+     * 
+     * @param tiles The source tile array to process
+     */
     function computeAutoTiles(tiles:ReadOnlyArray<TilemapTile>):Void {
 
         var computedTiles:Array<TilemapTile> = [];
@@ -325,7 +420,18 @@ class AutoTiler extends Entity implements Component {
 
     }
 
+    /**
+     * Static lookup table mapping 8-bit masks to tile indices for EDGE_CORNER_32 auto-tiling.
+     * The mask encodes which edges and corners connect to matching tiles.
+     * Built lazily on first access.
+     */
     public static var edgeCorner32Map(get,null):ReadOnlyArray<Int> = null;
+    /**
+     * Builds the edge-corner mapping table for 32-tile auto-tiling.
+     * Maps each possible combination of edge and corner connections to a tile index.
+     * 
+     * @return Read-only array where index is the 8-bit mask and value is tile offset
+     */
     static function get_edgeCorner32Map():ReadOnlyArray<Int> {
         if (edgeCorner32Map == null) {
             var map:Array<Int> = [];
@@ -364,7 +470,18 @@ class AutoTiler extends Entity implements Component {
         return edgeCorner32Map;
     }
 
+    /**
+     * Static lookup table for EXPANDED_BOTTOM_CORNER_26 auto-tiling.
+     * Maps 47-tile indices to their 26-tile equivalents, removing top corners.
+     * Built lazily on first access.
+     */
     public static var expandedBottomCorner26Map(get,null):ReadOnlyArray<Int> = null;
+    /**
+     * Builds the mapping table for 26-tile bottom-corner-only auto-tiling.
+     * Reduces the 47-tile set by mapping tiles with top corners to simpler variants.
+     * 
+     * @return Read-only array mapping 47-tile indices to 26-tile indices
+     */
     static function get_expandedBottomCorner26Map():ReadOnlyArray<Int> {
         if (expandedBottomCorner26Map == null) {
             var map:Array<Int> = [];
@@ -410,7 +527,21 @@ class AutoTiler extends Entity implements Component {
         return expandedBottomCorner26Map;
     }
 
+    /**
+     * Static lookup table for TILESETTER_BLOB_47 tile positions.
+     * Maps tile indices to X,Y offsets in the Tilesetter blob layout.
+     * Built lazily on first access.
+     */
     public static var tilesetterBlob47Map(get,null):ReadOnlyArray<Int> = null;
+    /**
+     * Builds the position mapping for Tilesetter's 47-tile blob layout.
+     * Each tile index maps to X,Y offsets from the base tile position.
+     * 
+     * The array stores pairs of values: [x0,y0, x1,y1, x2,y2, ...]
+     * where index i maps to offset (map[i*2], map[i*2+1]).
+     * 
+     * @return Read-only array of X,Y offset pairs
+     */
     static function get_tilesetterBlob47Map():ReadOnlyArray<Int> {
         if (tilesetterBlob47Map == null) {
             var map:Array<Int> = [];
@@ -608,7 +739,18 @@ class AutoTiler extends Entity implements Component {
         return tilesetterBlob47Map;
     }
 
+    /**
+     * Inverted lookup table for EDGE_CORNER_32 mapping.
+     * Maps tile indices back to their 8-bit mask values.
+     * Built lazily on first access.
+     */
     public static var edgeCorner32InvertedMap(get,null):ReadOnlyArray<Int> = null;
+    /**
+     * Builds the inverted edge-corner mapping table.
+     * Useful for analyzing which connections a specific tile index represents.
+     * 
+     * @return Read-only array where index is tile offset and value is 8-bit mask
+     */
     static function get_edgeCorner32InvertedMap():ReadOnlyArray<Int> {
         if (edgeCorner32InvertedMap == null) {
             var edgeCorner32Map = AutoTiler.edgeCorner32Map;
@@ -624,41 +766,56 @@ class AutoTiler extends Entity implements Component {
         return edgeCorner32InvertedMap;
     }
 
+    /**
+     * Validates whether a given edge/corner combination is valid for EDGE_CORNER_32 tiling.
+     * 
+     * Rules enforced:
+     * - If all corners are present, all edges must also be present
+     * - A corner can only exist if both adjacent edges are present
+     *   (e.g., top-left corner requires both left and top edges)
+     * 
+     * This validation ensures visually correct tile connections without
+     * impossible configurations like floating corners.
+     * 
+     * @param value 8-bit value encoding edges (bits 0-3) and corners (bits 4-7)
+     * @return true if the combination is valid, false otherwise
+     */
     public static function isValidEdgeCorner32Combination(value:Int):Bool {
 
         var flags:Flags = value;
 
         var corners:Flags = 0;
-        corners.setBool(0, flags.bool(4));
-        corners.setBool(1, flags.bool(5));
-        corners.setBool(2, flags.bool(6));
-        corners.setBool(3, flags.bool(7));
+        corners.setBool(0, flags.bool(4));  // Top-left
+        corners.setBool(1, flags.bool(5));  // Top-right
+        corners.setBool(2, flags.bool(6));  // Bottom-right
+        corners.setBool(3, flags.bool(7));  // Bottom-left
 
         if (corners == 15) {
+            // All corners present - all edges must be present too
             if (!flags.bool(0) || !flags.bool(1) || !flags.bool(2) || !flags.bool(3)) {
                 return false;
             }
         }
         else if (corners != 0) {
-            // Top-left corner
+            // Top-left corner requires left and top edges
             if (!flags.bool(4)) {
                 if (!flags.bool(0) || !flags.bool(1)) {
                     return false;
                 }
             }
-            // Top-right corner
+            // Top-right corner requires top and right edges
             if (!flags.bool(5)) {
                 if (!flags.bool(1) || !flags.bool(2)) {
                     return false;
                 }
             }
-            // Bottom-right corner
+            // Bottom-right corner requires right and bottom edges
             if (!flags.bool(6)) {
                 if (!flags.bool(2) || !flags.bool(3)) {
                     return false;
                 }
             }
-            // Bottom-left corner
+            // Bottom-left corner requires bottom and left edges
             if (!flags.bool(7)) {
                 if (!flags.bool(3) || !flags.bool(0)) {
                     return false;

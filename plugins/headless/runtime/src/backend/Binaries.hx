@@ -10,10 +10,34 @@ import sys.io.File;
 
 using StringTools;
 
+/**
+ * Binary file loading implementation for the headless backend.
+ * 
+ * This class handles loading binary files from the filesystem.
+ * On platforms with filesystem access, it can actually load
+ * files. On other platforms, it provides placeholder functionality.
+ * 
+ * Binary files are loaded as Haxe Bytes objects, which can be
+ * used for any type of binary data like images, sounds, or
+ * custom file formats.
+ */
 class Binaries implements spec.Binaries {
 
+    /**
+     * Creates a new binary file loading system.
+     */
     public function new() {}
 
+    /**
+     * Loads a binary file from the specified path.
+     * 
+     * On platforms with filesystem access, this will actually load
+     * the file content. On other platforms, it returns null or empty data.
+     * 
+     * @param path Path to the binary file (absolute or relative to assets)
+     * @param options Optional loading parameters (currently unused)
+     * @param _done Callback function called with the loaded bytes (or null on failure)
+     */
     public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
         var done = function(binary:Bytes) {
@@ -25,13 +49,14 @@ class Binaries implements spec.Binaries {
 
         #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 
+        // Convert relative paths to absolute paths based on assets directory
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
         if (path.startsWith('http://') || path.startsWith('https://')) {
-            // Not implemented (yet?)
+            // HTTP loading not implemented in headless mode
             done(null);
             return;
         }
@@ -51,6 +76,7 @@ class Binaries implements spec.Binaries {
 
         #else
 
+        // On platforms without filesystem access, return empty data
         ceramic.App.app.logger.warning('Backend cannot read file at path: $path ; returning empty string');
         done('');
 
@@ -58,6 +84,11 @@ class Binaries implements spec.Binaries {
 
     }
 
+    /**
+     * Indicates whether this backend supports hot reloading of binary assets.
+     * 
+     * @return Always false for the headless backend
+     */
     inline public function supportsHotReloadPath():Bool {
         
         return false;

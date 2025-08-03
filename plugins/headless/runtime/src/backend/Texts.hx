@@ -9,10 +9,33 @@ import sys.io.File;
 
 using StringTools;
 
+/**
+ * Text file loading implementation for the headless backend.
+ * 
+ * This class handles loading text files from the filesystem.
+ * On platforms with filesystem access, it can actually load
+ * files. On other platforms, it provides placeholder functionality.
+ * 
+ * Text files are commonly used for configuration, data files,
+ * JSON, XML, and other text-based assets.
+ */
 class Texts implements spec.Texts {
 
+    /**
+     * Creates a new text file loading system.
+     */
     public function new() {}
 
+    /**
+     * Loads a text file from the specified path.
+     * 
+     * On platforms with filesystem access, this will actually load
+     * the file content. On other platforms, it returns an empty string.
+     * 
+     * @param path Path to the text file (absolute or relative to assets)
+     * @param options Optional loading parameters (currently unused)
+     * @param _done Callback function called with the loaded text (or null on failure)
+     */
     public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
         var done = function(text:String) {
@@ -24,13 +47,14 @@ class Texts implements spec.Texts {
 
         #if (!ceramic_no_fs && (sys || node || nodejs || hxnodejs))
 
+        // Convert relative paths to absolute paths based on assets directory
         path = Path.isAbsolute(path) || path.startsWith('http://') || path.startsWith('https://') ?
             path
         :
             Path.join([ceramic.App.app.settings.assetsPath, path]);
 
         if (path.startsWith('http://') || path.startsWith('https://')) {
-            // Not implemented (yet?)
+            // HTTP loading not implemented in headless mode
             done(null);
             return;
         }
@@ -50,6 +74,7 @@ class Texts implements spec.Texts {
 
         #else
 
+        // On platforms without filesystem access, return empty string
         ceramic.App.app.logger.warning('Backend cannot read file at path: $path ; returning empty string');
         done('');
 
@@ -57,6 +82,11 @@ class Texts implements spec.Texts {
 
     }
 
+    /**
+     * Indicates whether this backend supports hot reloading of text assets.
+     * 
+     * @return Always false for the headless backend
+     */
     inline public function supportsHotReloadPath():Bool {
         
         return false;

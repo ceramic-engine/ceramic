@@ -8,10 +8,54 @@ using ceramic.Extensions;
 import ceramic.LdtkData;
 #end
 
+/**
+ * Data model representing a single layer within a tilemap.
+ * 
+ * TilemapLayerData holds all the information needed to render and interact with a tilemap layer,
+ * including tile indices, dimensions, positioning, and visual properties. This is a reactive Model
+ * that notifies observers when properties change, allowing TilemapLayer visuals to update automatically.
+ * 
+ * ## Features
+ * 
+ * - **Tile Storage**: Holds tile indices referencing tilesets via global IDs (GIDs)
+ * - **Auto-tiling Support**: Can store both original and computed tiles after auto-tiling
+ * - **Per-tile Properties**: Supports per-tile alpha and offset values
+ * - **Layer Properties**: Position, size, visibility, opacity, and blending modes
+ * - **Reactive Updates**: Extends Model for automatic change notifications
+ * 
+ * ## Usage Example
+ * 
+ * ```haxe
+ * // Create a new layer data
+ * var layer = new TilemapLayerData();
+ * layer.name = 'collision';
+ * layer.grid(20, 15); // 20x15 tiles
+ * layer.tileSize(32, 32); // 32x32 pixel tiles
+ * 
+ * // Set tiles (array of TilemapTile values)
+ * var tiles = [];
+ * for (i in 0...300) {
+ *     tiles.push(i == 150 ? 1 : 0); // Single tile in center
+ * }
+ * layer.tiles = tiles;
+ * 
+ * // Configure visual properties
+ * layer.opacity = 0.8;
+ * layer.color = Color.RED;
+ * ```
+ * 
+ * @see TilemapData
+ * @see TilemapLayer
+ * @see TilemapTile
+ */
 class TilemapLayerData extends Model {
 
     #if plugin_ldtk
 
+    /**
+     * Reference to the source LDtk layer instance when this layer was imported from LDtk.
+     * Provides access to additional LDtk-specific data and properties.
+     */
     @observe public var ldtkLayer:LdtkLayerInstance = null;
 
     #end
@@ -199,12 +243,24 @@ class TilemapLayerData extends Model {
 
 /// Helpers
 
+    /**
+     * Converts column and row coordinates to a tile index.
+     * @param column The column position (0-based)
+     * @param row The row position (0-based)
+     * @return The tile index in the flat tiles array
+     */
     #if !debug inline #end public function indexFromColumnAndRow(column:Int, row:Int):Int {
 
         return row * columns + column;
 
     }
 
+    /**
+     * Retrieves the tile at the specified column and row position from the tiles array.
+     * @param column The column position (0-based)
+     * @param row The row position (0-based)
+     * @return The TilemapTile at the position
+     */
     #if !debug inline #end public function tileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
         var index = indexFromColumnAndRow(column, row);
@@ -212,6 +268,13 @@ class TilemapLayerData extends Model {
 
     }
 
+    /**
+     * Retrieves the computed tile at the specified column and row position.
+     * Used when auto-tiling has been applied to get the final tile value.
+     * @param column The column position (0-based)
+     * @param row The row position (0-based)
+     * @return The computed TilemapTile at the position
+     */
     #if !debug inline #end public function computedTileByColumnAndRow(column:Int, row:Int):TilemapTile {
 
         var index = indexFromColumnAndRow(column, row);
@@ -219,12 +282,22 @@ class TilemapLayerData extends Model {
 
     }
 
+    /**
+     * Gets the column position from a tile index.
+     * @param index The tile index in the flat array
+     * @return The column position (0-based)
+     */
     #if !debug inline #end public function columnAtIndex(index:Int):Int {
 
         return index % columns;
 
     }
 
+    /**
+     * Gets the row position from a tile index.
+     * @param index The tile index in the flat array
+     * @return The row position (0-based)
+     */
     #if !debug inline #end public function rowAtIndex(index:Int):Int {
 
         return Math.floor(index / columns);

@@ -11,11 +11,31 @@ import ceramic.Shortcuts.*;
 
 using StringTools;
 
+/**
+ * Plugin that adds sprite sheet and animation support to Ceramic.
+ * 
+ * Provides:
+ * - SpriteAsset loading for various sprite sheet formats
+ * - Sprite visual for animated sprites
+ * - SpriteSystem for automatic sprite updates
+ * - Asset extensions for easy sprite access
+ * 
+ * Supported formats:
+ * - Aseprite JSON exports (.sprite files)
+ * - Native Aseprite files (.ase, .aseprite) when ase plugin is enabled
+ * 
+ * This plugin is automatically initialized when included in the project.
+ */
 @:access(ceramic.App)
 class SpritePlugin {
 
 /// Init plugin
 
+    /**
+     * Initialize the sprite plugin.
+     * Called automatically by Ceramic during app initialization.
+     * Registers asset kinds and converters for sprite support.
+     */
     static function pluginInit() {
 
         App.oncePreInit(function() {
@@ -35,10 +55,20 @@ class SpritePlugin {
 
 /// Asset extensions
 
+    /**
+     * Internal helper for asset kind registration.
+     */
     private static function _addSprite(assets:Assets, name:String, variant:String, options:AssetOptions):Void {
         addSprite(assets, name, variant, options);
     }
 
+    /**
+     * Add a sprite asset to the assets list for loading.
+     * @param assets The assets instance to add to
+     * @param name The sprite asset name (without 'sprite:' prefix)
+     * @param variant Optional variant name
+     * @param options Loading options
+     */
     public static function addSprite(assets:Assets, name:String, ?variant:String, ?options:AssetOptions):Void {
 
         if (name.startsWith('sprite:')) name = name.substr(7);
@@ -47,6 +77,14 @@ class SpritePlugin {
 
     }
 
+    /**
+     * Ensure a sprite asset is loaded, loading it if necessary.
+     * @param assets The assets instance
+     * @param name The sprite asset name or AssetId
+     * @param variant Optional variant name
+     * @param options Loading options
+     * @param done Callback with the loaded SpriteAsset
+     */
     public static function ensureSprite(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:SpriteAsset->Void):Void {
 
         if (!name.startsWith('sprite:')) name = 'sprite:' + name;
@@ -57,6 +95,13 @@ class SpritePlugin {
 
     }
 
+    /**
+     * Get a loaded sprite sheet by name.
+     * @param assets The assets instance
+     * @param name The sprite asset name or AssetId
+     * @param variant Optional variant name
+     * @return The SpriteSheet if loaded, null otherwise
+     */
     public static function sheet(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):SpriteSheet {
 
         var asset = spriteAsset(assets, name, variant);
@@ -66,6 +111,14 @@ class SpritePlugin {
 
     }
 
+    /**
+     * Get a loaded sprite asset by name.
+     * Searches in the current assets and parent assets if not found.
+     * @param assets The assets instance
+     * @param name The sprite asset name or AssetId
+     * @param variant Optional variant name
+     * @return The SpriteAsset if loaded, null otherwise
+     */
     @:access(ceramic.Assets)
     public static function spriteAsset(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String):SpriteAsset {
 

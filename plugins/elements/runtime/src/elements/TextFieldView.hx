@@ -22,8 +22,69 @@ import tracker.Observable;
 
 using StringTools;
 
+/**
+ * A flexible text input field view with support for various input types and validation.
+ * 
+ * This class extends BaseTextFieldView to provide a complete text field implementation
+ * with support for different input types (text, numeric, file/directory dialogs),
+ * styling options, placeholder text, and various layout configurations.
+ * 
+ * ## Features
+ * 
+ * - Multiple input types: TEXT, NUMERIC, DIR, FILE
+ * - Placeholder text support
+ * - Multiline text editing
+ * - Text alignment options
+ * - Disabled state handling
+ * - Theme-based styling
+ * - Dialog integration for file/directory selection (when plugin_dialogs is available)
+ * 
+ * ## Input Types
+ * 
+ * - `TEXT`: Standard text input
+ * - `NUMERIC`: Numeric input with validation
+ * - `DIR`: Directory picker (requires plugin_dialogs)
+ * - `FILE`: File picker (requires plugin_dialogs)
+ * 
+ * ## Usage Examples
+ * 
+ * ```haxe
+ * // Create a basic text field
+ * var textField = new TextFieldView(TEXT);
+ * textField.placeholder = "Enter your name";
+ * textField.textAlign = CENTER;
+ * 
+ * // Create a numeric field
+ * var numericField = new TextFieldView(NUMERIC);
+ * numericField.placeholder = "Enter a number";
+ * 
+ * // Create a multiline text area
+ * var textArea = new TextFieldView(TEXT);
+ * textArea.multiline = true;
+ * textArea.placeholder = "Enter description";
+ * 
+ * #if plugin_dialogs
+ * // Create a directory picker
+ * var dirField = new TextFieldView(DIR("Select Project Directory"));
+ * 
+ * // Create a file picker
+ * var fileField = new TextFieldView(FILE("Select Image", [
+ *     { name: "Images", extensions: ["png", "jpg", "gif"] }
+ * ]));
+ * #end
+ * ```
+ * 
+ * @see BaseTextFieldView
+ * @see TextFieldKind
+ * @see Theme
+ * @see InputStyle
+ */
 class TextFieldView extends BaseTextFieldView {
 
+    /**
+     * The theme used for styling this text field.
+     * If null, the context's default theme will be used.
+     */
     @observe public var theme:Theme = null;
 
 /// Overrides
@@ -40,6 +101,12 @@ class TextFieldView extends BaseTextFieldView {
 
 /// Public properties
 
+    /**
+     * Whether this text field supports multiline text input.
+     * When true, the text field will accept and display multiple lines of text.
+     * 
+     * @default false
+     */
     public var multiline(default,set):Bool = false;
     function set_multiline(multiline:Bool):Bool {
         this.multiline = multiline;
@@ -48,22 +115,57 @@ class TextFieldView extends BaseTextFieldView {
         return multiline;
     }
 
+    /**
+     * The placeholder text displayed when the field is empty.
+     * This text provides a hint to the user about what to enter.
+     */
     @observe public var placeholder:String = '';
 
+    /**
+     * The visual style of the input field.
+     * Controls the appearance and rendering style of the text field.
+     * 
+     * @see InputStyle
+     */
     @observe public var inputStyle:InputStyle = DEFAULT;
 
+    /**
+     * The text alignment within the field.
+     * Controls how text is aligned horizontally within the input area.
+     */
     @observe public var textAlign:TextAlign = LEFT;
 
+    /**
+     * Whether the text field is disabled.
+     * When disabled, the field cannot be edited or interacted with.
+     */
     @observe public var disabled:Bool = false;
 
 /// Internal properties
 
+    /**
+     * The layers layout container for organizing visual elements.
+     * @private
+     */
     var layers:LayersLayout;
 
+    /**
+     * The text view used to display the placeholder text.
+     * @private
+     */
     var placeholderView:TextView;
 
+    /**
+     * The type of text field, determining its input behavior.
+     * This is set during construction and cannot be changed afterward.
+     */
     public var kind(default, null):TextFieldKind;
 
+    /**
+     * Creates a new text field view.
+     * 
+     * @param kind The type of text field to create (TEXT, NUMERIC, DIR, FILE)
+     */
     public function new(kind:TextFieldKind = TEXT) {
 
         super();
@@ -164,6 +266,10 @@ class TextFieldView extends BaseTextFieldView {
 
 /// Public API
 
+    /**
+     * Focuses the text field, making it ready for text input.
+     * If the field is disabled, this method has no effect.
+     */
     override function focus() {
 
         super.focus();
@@ -184,6 +290,13 @@ class TextFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Clips the text to fit within the specified dimensions.
+     * 
+     * @param width The width to clip to
+     * @param height The height to clip to
+     * @private
+     */
     function clipText(width:Float, height:Float) {
 
         var text = textView.text;
@@ -196,6 +309,11 @@ class TextFieldView extends BaseTextFieldView {
 
 /// Internal
 
+    /**
+     * Handles when text editing stops.
+     * Releases focus if there are no active suggestions.
+     * @private
+     */
     function handleStopEditText() {
 
         // Release focus when stopping edition
@@ -205,6 +323,11 @@ class TextFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Updates the placeholder display based on current state.
+     * The placeholder is shown when the field is empty and either unfocused or disabled.
+     * @private
+     */
     function updatePlaceholder() {
 
         var displayedText = textValue;
@@ -221,6 +344,12 @@ class TextFieldView extends BaseTextFieldView {
 
     }
 
+    /**
+     * Updates the visual style of the text field based on the current theme and state.
+     * Applies different styling for OVERLAY vs DEFAULT input styles,
+     * and handles disabled and focused states.
+     * @private
+     */
     function updateStyle() {
 
         var theme = this.theme;
@@ -279,16 +408,46 @@ class TextFieldView extends BaseTextFieldView {
 
 }
 
+/**
+ * Defines the different types of text field inputs available.
+ * 
+ * Each kind determines the behavior and user interface of the text field:
+ * - TEXT: Standard text input
+ * - NUMERIC: Numeric input with validation
+ * - DIR: Directory selection dialog (requires plugin_dialogs)
+ * - FILE: File selection dialog (requires plugin_dialogs)
+ */
 enum TextFieldKind {
 
+    /**
+     * Standard text input field.
+     * Allows any text input without special validation.
+     */
     TEXT;
 
+    /**
+     * Numeric input field.
+     * Validates input to ensure only numeric values are accepted.
+     */
     NUMERIC;
 
     #if plugin_dialogs
 
+    /**
+     * Directory picker field.
+     * When clicked, opens a directory selection dialog.
+     * 
+     * @param title Optional title for the directory selection dialog
+     */
     DIR(?title:String);
 
+    /**
+     * File picker field.
+     * When clicked, opens a file selection dialog.
+     * 
+     * @param title Optional title for the file selection dialog
+     * @param filters Optional array of file filters to restrict selectable file types
+     */
     FILE(?title:String, ?filters:Array<DialogsFileFilter>);
 
     #end

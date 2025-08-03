@@ -4,10 +4,54 @@ import ceramic.Shortcuts.*;
 
 using ceramic.Extensions;
 
+/**
+ * A scrollable collection view that efficiently displays large data sets using view recycling.
+ *
+ * CollectionView is designed for performance when displaying many items by only creating
+ * views for visible items and recycling them as the user scrolls. It supports both
+ * vertical and horizontal scrolling layouts.
+ *
+ * Key features:
+ * - Efficient view recycling for large data sets
+ * - Customizable layouts via CollectionViewLayout
+ * - Automatic item visibility management
+ * - Smooth scrolling to specific items
+ * - Multiple item behavior modes (RECYCLE, FREEZE, LAZY)
+ *
+ * @example
+ * ```haxe
+ * var collection = new CollectionView();
+ * collection.size(400, 600);
+ *
+ * // Set up a flow layout
+ * var layout = new CollectionViewFlowLayout();
+ * layout.itemSize = { width: 100, height: 100 };
+ * layout.spacing = 10;
+ * collection.collectionViewLayout = layout;
+ *
+ * // Implement data source
+ * collection.dataSource = new MyCustomCollectionViewDataSource();
+ * ```
+ *
+ * @see CollectionViewDataSource
+ * @see CollectionViewLayout
+ * @see CollectionViewFlowLayout
+ */
 class CollectionView extends ScrollView {
 
+    /**
+     * Reference to the current layout if it's a CollectionViewFlowLayout.
+     * This provides optimized access to flow layout specific properties.
+     * Will be null if using a different layout type.
+     */
     public var collectionViewFlowLayout(default,null):CollectionViewFlowLayout;
 
+    /**
+     * The layout object responsible for positioning items in the collection.
+     * Changing the layout will trigger a full relayout of all items.
+     *
+     * @see CollectionViewFlowLayout for the default grid-based layout
+     */
     public var collectionViewLayout(default,set):CollectionViewLayout;
     function set_collectionViewLayout(collectionViewLayout:CollectionViewLayout):CollectionViewLayout {
         if (this.collectionViewLayout != collectionViewLayout) {
@@ -22,14 +66,40 @@ class CollectionView extends ScrollView {
         return collectionViewLayout;
     }
 
+    /**
+     * The data source that provides items for the collection view.
+     * Setting a new data source will reload all data and recreate visible items.
+     *
+     * The data source must implement:
+     * - collectionViewSize(): Number of items
+     * - collectionViewItemAtIndex(): Create/configure item views
+     * - collectionViewItemFrameAtIndex(): Set item dimensions
+     * - collectionViewReleaseItemAtIndex(): Handle item recycling
+     */
     public var dataSource(default,set):CollectionViewDataSource = null;
 
+    /**
+     * Whether to automatically destroy item views when they're removed.
+     * Set to false if you want to manage item lifecycle manually.
+     * Default is true for automatic memory management.
+     */
     public var autoDestroyItems:Bool = true;
 
+    /**
+     * Maximum number of recycled views to keep in memory.
+     * Higher values can improve scrolling performance but use more memory.
+     * Lower values save memory but may cause more view creation during scrolling.
+     * Default is 1.
+     */
     public var maxReusableViewsCount:Int = 1;
 
     /**
-     * Control how children depth is sorted.
+     * Controls how item views are assigned depth values for rendering order.
+     * - INCREMENT: Each item has higher depth (later items on top)
+     * - DECREMENT: Each item has lower depth (earlier items on top)
+     * - SAME: All items at same depth (order by index)
+     * - CUSTOM: Manual depth assignment
+     * Default is SAME.
      */
     public var childrenDepth(default,set):ChildrenDepth = SAME;
     function set_childrenDepth(childrenDepth:ChildrenDepth):ChildrenDepth {
@@ -39,8 +109,20 @@ class CollectionView extends ScrollView {
         return childrenDepth;
     }
 
+    /**
+     * Read-only array of frames representing the position and size of each item.
+     * Frames are computed by the layout and used for visibility culling.
+     */
     public var frames:ReadOnlyArray<CollectionViewItemFrame> = [];
 
+    /**
+     * Determines how item views are managed:
+     * - RECYCLE: Reuse views for performance (default)
+     * - FREEZE: Keep all created views active
+     * - LAZY: Create views only when visible
+     *
+     * RECYCLE is recommended for large data sets.
+     */
     public var itemsBehavior(default, set):CollectionViewItemsBehavior = RECYCLE;
     function set_itemsBehavior(itemsBehavior:CollectionViewItemsBehavior):CollectionViewItemsBehavior {
         if (this.itemsBehavior != itemsBehavior) {
@@ -54,12 +136,25 @@ class CollectionView extends ScrollView {
         return itemsBehavior;
     }
 
+    /**
+     * Pool of recycled views available for reuse.
+     * Managed automatically based on itemsBehavior and maxReusableViewsCount.
+     */
     var reusableViews:Array<View> = [];
 
+    /**
+     * Previous layout width, used to detect size changes.
+     */
     var prevLayoutWidth:Float = -1;
 
+    /**
+     * Previous layout height, used to detect size changes.
+     */
     var prevLayoutHeight:Float = -1;
 
+    /**
+     * Creates a new CollectionView with a default flow layout.
+     */
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
@@ -93,6 +188,16 @@ class CollectionView extends ScrollView {
         return dataSource;
     }
 
+    /**
+     * Reloads all data from the data source.
+     * This will:
+     * - Destroy all existing item views
+     * - Query the data source for the new item count
+     * - Create frames for all items
+     * - Trigger a layout update
+     *
+     * Call this when your underlying data changes.
+     */
     public function reloadData():Void {
 
         if (this.frames.length > 0) {
@@ -160,6 +265,14 @@ class CollectionView extends ScrollView {
 
     }
 
+    /**
+     * Finds the index of the item closest to the given coordinates.
+     *
+     * @param x X coordinate to test
+     * @param y Y coordinate to test
+     * @param includeScroll Whether to account for current scroll position
+     * @return Index of the closest item, or -1 if no items
+     */
     public function findClosestItem(x:Float, y:Float, includeScroll:Bool = true):Int {
 
         var bestDiffX = 99999999.0;
@@ -218,6 +331,16 @@ class CollectionView extends ScrollView {
 
     }
 
+    /**
+     * Updates which items are visible and manages view recycling.
+     * This is called automatically when scrolling or layout changes.
+     *
+     * The method will:
+     * - Determine which frames are in the visible area
+     * - Recycle views that moved off-screen
+     * - Create or reuse views for newly visible items
+     * - Position and size all visible views
+     */
     public function computeVisibleItems():Void {
 
         if (dataSource == null) return;
@@ -402,6 +525,13 @@ class CollectionView extends ScrollView {
 
 /// Helpers
 
+    /**
+     * Calculates the scroll X position needed to show an item at the desired position.
+     *
+     * @param itemIndex Index of the item to scroll to
+     * @param itemPosition Where to position the item (START, MIDDLE, END, ENSURE_VISIBLE)
+     * @return Target scroll X value
+     */
     public function getTargetScrollXForItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Float {
 
         if (itemIndex < 0) {
@@ -447,6 +577,13 @@ class CollectionView extends ScrollView {
 
     }
 
+    /**
+     * Calculates the scroll Y position needed to show an item at the desired position.
+     *
+     * @param itemIndex Index of the item to scroll to
+     * @param itemPosition Where to position the item (START, MIDDLE, END, ENSURE_VISIBLE)
+     * @return Target scroll Y value
+     */
     public function getTargetScrollYForItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Float {
 
         if (itemIndex < 0) {
@@ -492,6 +629,16 @@ class CollectionView extends ScrollView {
 
     }
 
+    /**
+     * Immediately scrolls to show the specified item.
+     *
+     * @param itemIndex Index of the item to scroll to
+     * @param itemPosition Where to position the item:
+     *                     - ENSURE_VISIBLE: Scroll minimum amount to make visible
+     *                     - START: Position at start of view
+     *                     - MIDDLE: Center in view
+     *                     - END: Position at end of view
+     */
     public function scrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE):Void {
 
         var targetScrollX = scroller.scrollX;
@@ -510,6 +657,14 @@ class CollectionView extends ScrollView {
 
     }
 
+    /**
+     * Smoothly animates scrolling to show the specified item.
+     *
+     * @param itemIndex Index of the item to scroll to
+     * @param itemPosition Where to position the item (see scrollToItem)
+     * @param duration Animation duration in seconds (default: 0.15)
+     * @param easing Easing function for the animation
+     */
     public function smoothScrollToItem(itemIndex:Int, itemPosition:CollectionViewItemPosition = CollectionViewItemPosition.ENSURE_VISIBLE, duration:Float = 0.15, ?easing:Easing) {
 
         var targetScrollX = scroller.scrollX;

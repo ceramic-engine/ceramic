@@ -6,10 +6,39 @@ import tracker.Model;
 
 using ceramic.Extensions;
 
+/**
+ * Container for sprite animations and texture atlas data.
+ * Manages frame-based animations with timing information and texture regions.
+ * 
+ * Can be created from:
+ * - Aseprite JSON exports via SpriteAsset
+ * - Manual configuration using grid-based animations
+ * - Custom animation definitions
+ * 
+ * Example usage:
+ * ```haxe
+ * // Load from asset
+ * var sheet = assets.sheet("character");
+ * 
+ * // Or create manually with grid
+ * var sheet = new SpriteSheet();
+ * sheet.texture = myTexture;
+ * sheet.grid(32, 32);
+ * sheet.addGridAnimation("walk", 0, 3, 0.1);
+ * ```
+ */
 class SpriteSheet extends Model {
 
+    /**
+     * Array of animations available in this sprite sheet.
+     * Each animation contains frames with timing information.
+     */
     @serialize public var animations:ReadOnlyArray<SpriteSheetAnimation> = [];
 
+    /**
+     * The texture atlas containing all sprite frames.
+     * Automatically manages asset retention when changed.
+     */
     @observe public var atlas(default,set):TextureAtlas = null;
     function set_atlas(atlas:TextureAtlas):TextureAtlas {
         if (this.atlas == atlas) return atlas;
@@ -33,10 +62,24 @@ class SpriteSheet extends Model {
         return atlas;
     }
 
+    /**
+     * Grid cell width for grid-based sprite sheets.
+     * Set to -1 when not using grid layout.
+     */
     @serialize public var gridWidth:Int = -1;
 
+    /**
+     * Grid cell height for grid-based sprite sheets.
+     * Set to -1 when not using grid layout.
+     */
     @serialize public var gridHeight:Int = -1;
 
+    /**
+     * Configure the sprite sheet as a grid with uniform cell dimensions.
+     * Required before using addGridAnimation().
+     * @param gridWidth Width of each cell in pixels
+     * @param gridHeight Height of each cell in pixels
+     */
     inline public function grid(gridWidth:Int, gridHeight:Int):Void {
         this.gridWidth = gridWidth;
         this.gridHeight = gridHeight;
@@ -50,7 +93,8 @@ class SpriteSheet extends Model {
 
     /**
      * The texture used to display sprites in this spritesheet.
-     * This is a shorthand of `image.texture`
+     * Setting this creates an implicit atlas if one doesn't exist.
+     * This is a convenience property for simple single-texture sprite sheets.
      */
     public var texture(get, set):Texture;
     inline function get_texture():Texture {
@@ -96,12 +140,14 @@ class SpriteSheet extends Model {
     }
 
     /**
-     * The reference to the sprite sheet file
+     * The reference to the sprite sheet source file path.
+     * Used for debugging and asset tracking.
      */
     @serialize public var source:String = null;
 
     /**
-     * The asset related to this sprite sheet (if any)
+     * The asset instance that loaded this sprite sheet.
+     * Null if the sheet was created manually.
      */
     public var asset:SpriteAsset = null;
 
@@ -127,6 +173,11 @@ class SpriteSheet extends Model {
 
 /// Helpers
 
+    /**
+     * Find an animation by name.
+     * @param name The animation name to search for
+     * @return The animation if found, null otherwise
+     */
     public function animation(name:String):Null<SpriteSheetAnimation> {
 
         for (i in 0...animations.length) {
@@ -140,6 +191,10 @@ class SpriteSheet extends Model {
 
     }
 
+    /**
+     * Add a new animation to this sprite sheet.
+     * @param animation The animation to add
+     */
     public function addAnimation(animation:SpriteSheetAnimation):Void {
 
         var animations = [].concat(this.animations.original);
@@ -149,12 +204,14 @@ class SpriteSheet extends Model {
     }
 
     /**
-     * This can be used to configure animations on simple grid spritesheets.
+     * Add an animation using grid cell indices.
+     * Requires grid dimensions to be set first via grid().
+     * Cells are numbered left-to-right, top-to-bottom starting from 0.
      * @param name Name of the animation to add
-     * @param start Start cell of the animation
-     * @param end End cell of the animation
-     * @param frameDuration Duration of a single frame
-     * @return SpriteSheetAnimation the resulting animation instance
+     * @param start Start cell index (inclusive)
+     * @param end End cell index (inclusive)
+     * @param frameDuration Duration of each frame in seconds
+     * @return The created animation instance
      */
     public extern inline overload function addGridAnimation(name:String, start:Int, end:Int, frameDuration:Float):SpriteSheetAnimation {
 
@@ -163,11 +220,12 @@ class SpriteSheet extends Model {
     }
 
     /**
-     * This can be used to configure animations on simple grid spritesheets.
+     * Add an animation using specific grid cell indices.
+     * Allows non-sequential frame ordering.
      * @param name Name of the animation to add
-     * @param cells Cell array of the animation
-     * @param frameDuration Duration of a single frame
-     * @return SpriteSheetAnimation the resulting animation instance
+     * @param cells Array of cell indices to include in the animation
+     * @param frameDuration Duration of each frame in seconds
+     * @return The created animation instance
      */
     public extern inline overload function addGridAnimation(name:String, cells:Array<Int>, frameDuration:Float):SpriteSheetAnimation {
 

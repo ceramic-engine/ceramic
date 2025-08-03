@@ -6,6 +6,58 @@ import haxe.macro.TypeTools;
 
 using haxe.macro.ExprTools;
 
+/**
+ * Advanced build macro for creating type-safe state machines with generic type parameters.
+ *
+ * This macro enables the creation of strongly-typed state machines that use enums or
+ * enum abstracts as state definitions. It generates specialized implementations based
+ * on the type parameter provided to `StateMachine<T>`.
+ *
+ * ## Features
+ *
+ * - **Type Safety**: States are defined by enum values, preventing invalid states
+ * - **Auto-generated Methods**: Automatically calls enter/update/exit methods
+ * - **Entity Integration**: Can bind state machines to specific entity types
+ * - **State Objects**: Support for State class instances per enum value
+ * - **Performance**: Generates optimized code with inline methods
+ *
+ * ## Usage
+ *
+ * ```haxe
+ * // Define states as an enum
+ * enum PlayerState {
+ *     IDLE;
+ *     WALKING;
+ *     JUMPING;
+ * }
+ *
+ * // Create a state machine
+ * var machine = new StateMachine<PlayerState>();
+ * machine.state = WALKING;
+ *
+ * // With entity binding
+ * var machine = new StateMachine<PlayerState, Player>();
+ * ```
+ *
+ * ## Generated Implementations
+ *
+ * The macro generates specialized classes like:
+ * - `StateMachine_PlayerState` for enum-based state machines
+ * - `StateMachine_String` for dynamic string-based state machines
+ * - Entity-specific variants when a second type parameter is provided
+ *
+ * ## Method Conventions
+ *
+ * For each state, the following methods are automatically called if they exist:
+ * - `{StateName}_enter()` - Called when entering the state
+ * - `{StateName}_update(delta:Float)` - Called each frame while in the state
+ * - `{StateName}_exit()` - Called when leaving the state
+ *
+ * These methods can be defined either on the state machine subclass or the bound entity.
+ *
+ * @see ceramic.StateMachine For the runtime state machine API
+ * @see ceramic.State For state objects that can be assigned to states
+ */
 class StateMachineMacro {
 
     @:persistent static var stateTypeByImplName:Map<String,ComplexType> = null;
@@ -23,7 +75,18 @@ class StateMachineMacro {
     static var stringStateMachineDefined:Bool = false;
 
     /**
-     * Depending on the generic type parameter used, will return (and create, if needed) a specific implementation.
+     * Build macro that generates specialized state machine implementations based on generic type parameters.
+     *
+     * This method is called when `StateMachine<T>` is used and creates a specific
+     * implementation class tailored to the provided type parameter.
+     *
+     * Supported type parameters:
+     * - `Enum` types: Generate type-safe state machines
+     * - `@:enum abstract` types: Generate type-safe state machines for abstracts
+     * - `String`: Generate dynamic state machines
+     * - Second parameter for entity binding: `StateMachine<State, Entity>`
+     *
+     * @return The ComplexType of the generated state machine implementation
      */
     macro static public function buildGeneric():ComplexType {
 
@@ -142,6 +205,15 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Sanitizes package names to avoid conflicts with reserved names.
+     *
+     * Specifically handles the "components" package which conflicts with
+     * some targets by renaming it to "components_".
+     *
+     * @param pack The package array to sanitize
+     * @return Sanitized package array
+     */
     static function sanitizePack(pack:Array<String>):Array<String> {
         if (pack == null || pack.length < 0)
             return pack;
@@ -152,6 +224,12 @@ class StateMachineMacro {
         return pack;
     }
 
+    /**
+     * Extracts and sanitizes an enum type from a type reference.
+     *
+     * @param type The enum type reference
+     * @return The extracted enum type with sanitized package names
+     */
     static function extractEnumType(type:haxe.macro.Type.Ref<haxe.macro.Type.EnumType>) {
 
         if (type == null || type.get() == null)
@@ -162,6 +240,12 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Extracts and sanitizes an abstract type from a type reference.
+     *
+     * @param type The abstract type reference
+     * @return The extracted abstract type with sanitized package names
+     */
     static function extractAbstractType(type:haxe.macro.Type.Ref<haxe.macro.Type.AbstractType>) {
 
         if (type == null || type.get() == null)
@@ -172,6 +256,12 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Extracts and sanitizes a class type from a type reference.
+     *
+     * @param type The class type reference
+     * @return The extracted class type with sanitized package names
+     */
     static function extractClassType(type:haxe.macro.Type.Ref<haxe.macro.Type.ClassType>) {
 
         if (type == null || type.get() == null)
@@ -182,6 +272,12 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Sanitizes a ComplexType by fixing package names.
+     *
+     * @param complexType The ComplexType to sanitize
+     * @return Sanitized ComplexType with fixed package names
+     */
     static function sanitizeComplexType(complexType:ComplexType) {
 
         if (complexType == null)
@@ -196,6 +292,24 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Creates a type-safe state machine implementation for enum or abstract types.
+     *
+     * This method generates a complete state machine class with:
+     * - Type-safe state management
+     * - State instance storage and retrieval
+     * - Entity binding support
+     * - Optimized state indexing
+     *
+     * @param currentPos Current source position for error reporting
+     * @param t Enum type reference (if using enum states)
+     * @param params Type parameters for the enum
+     * @param abstractT Abstract type reference (if using abstract states)
+     * @param abstractParams Type parameters for the abstract
+     * @param entityT Entity class type reference (for entity binding)
+     * @param entityParams Type parameters for the entity
+     * @return ComplexType of the generated state machine implementation
+     */
     static function createStaticStateMachine(
         currentPos:Position,
         t:haxe.macro.Type.Ref<haxe.macro.Type.EnumType>,
@@ -438,7 +552,7 @@ class StateMachineMacro {
                     doc: '',
                     meta: []
                 });
-                
+
                 fields.push({
                     pos: currentPos,
                     name: 'get',
@@ -598,9 +712,22 @@ class StateMachineMacro {
     }
 
     /**
-     * Called on `StateMachinImpl` subclasses. Will generate code that will automatically
-     * call `enter{State}()`, `update{State}(delta)` and `exit{State}()` from the enum definition.
-     * Won't do anything on dynamic (String-based) implementation
+     * Build macro that generates state lifecycle methods for StateMachineImpl subclasses.
+     *
+     * This method is called on StateMachineImpl subclasses and generates the
+     * _enterState(), _updateState(), and _exitState() methods that automatically
+     * call the appropriate state-specific methods based on the current state.
+     *
+     * For each enum value (state), it looks for and calls:
+     * - `{StateName}_enter()` when entering the state
+     * - `{StateName}_update(delta)` each frame while in the state
+     * - `{StateName}_exit()` when leaving the state
+     *
+     * These methods can exist on either:
+     * - The state machine subclass itself
+     * - The bound entity (if using StateMachine<State, Entity>)
+     *
+     * @return Modified array of fields with generated state management methods
      */
     static function buildFields():Array<Field> {
 
@@ -895,6 +1022,15 @@ class StateMachineMacro {
 
     }
 
+    /**
+     * Retrieves the state type (enum/abstract) associated with a state machine implementation.
+     *
+     * Used internally by other macros to determine what type of states
+     * a particular state machine implementation uses.
+     *
+     * @param implName The name of the state machine implementation class
+     * @return The ComplexType of the states used by this implementation
+     */
     public static function getStateTypeFromImplName(implName:String):ComplexType {
 
         if (stateTypeByImplName == null)

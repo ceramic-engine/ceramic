@@ -1,11 +1,47 @@
 package ceramic;
 
 /**
- * A layout that arranges its children either horizontally
- * in a single column or vertically in a single row.
+ * A flexible layout container that arranges its children in a single line,
+ * either horizontally or vertically. Supports flexible sizing, spacing,
+ * alignment, and "fill" behavior for responsive layouts.
+ *
+ * LinearLayout is the foundation for building structured UI layouts,
+ * allowing children to be arranged sequentially with automatic sizing
+ * based on content or available space.
+ *
+ * @example
+ * ```haxe
+ * var layout = new LinearLayout();
+ * layout.direction = VERTICAL;
+ * layout.itemSpacing = 10;
+ * layout.align = CENTER;
+ *
+ * // Add children with different sizing
+ * var header = new TextView();
+ * header.viewHeight = 50; // Fixed height
+ *
+ * var content = new View();
+ * content.viewHeight = fill(); // Takes remaining space
+ * content.flex = 2; // Takes 2x space compared to other FILL views
+ *
+ * layout.add(header);
+ * layout.add(content);
+ * ```
+ *
+ * @see RowLayout A horizontal-only variant
+ * @see ColumnLayout A vertical-only variant
+ * @see View The base class for all UI components
  */
 class LinearLayout extends View {
 
+    /**
+     * The layout direction determining how children are arranged.
+     * - VERTICAL: Children are stacked top-to-bottom
+     * - HORIZONTAL: Children are placed left-to-right
+     *
+     * Changing direction automatically adjusts the alignment mode
+     * to match the new orientation.
+     */
     public var direction(default, set):LayoutDirection = VERTICAL;
 
     function set_direction(direction:LayoutDirection):LayoutDirection {
@@ -30,6 +66,17 @@ class LinearLayout extends View {
         return direction;
     }
 
+    /**
+     * The spacing between child views in pixels.
+     * Can be a percentage value relative to the parent size along
+     * the layout axis (height for vertical, width for horizontal).
+     *
+     * @example
+     * ```haxe
+     * layout.itemSpacing = 10; // 10 pixels between items
+     * layout.itemSpacing = PERCENT(5); // 5% of parent size
+     * ```
+     */
     public var itemSpacing(default, set):Float = 0;
 
     function set_itemSpacing(itemSpacing:Float):Float {
@@ -40,6 +87,14 @@ class LinearLayout extends View {
         return itemSpacing;
     }
 
+    /**
+     * Controls how children are aligned along the layout axis.
+     * - For VERTICAL layouts: TOP, CENTER, or BOTTOM
+     * - For HORIZONTAL layouts: LEFT, CENTER, or RIGHT
+     *
+     * The alignment determines where children are positioned when
+     * they don't fill the entire available space.
+     */
     public var align(default, set):LayoutAlign = TOP;
 
     function set_align(align:LayoutAlign):LayoutAlign {
@@ -51,7 +106,13 @@ class LinearLayout extends View {
     }
 
     /**
-     * Control how children depth is sorted.
+     * Controls how depth values are assigned to children for render ordering.
+     * - INCREMENT: First child gets depth 1, second gets 2, etc.
+     * - DECREMENT: First child gets highest depth, decreasing for each
+     * - SAME: All children get depth 1
+     * - CUSTOM: Depth values are managed manually
+     *
+     * @see ChildrenDepth
      */
     public var childrenDepth(default, set):ChildrenDepth = INCREMENT;
 
@@ -63,6 +124,10 @@ class LinearLayout extends View {
         return childrenDepth;
     }
 
+    /**
+     * Creates a new LinearLayout instance.
+     * By default, the layout is transparent and arranges children vertically.
+     */
     public function new() {
 
         super();
@@ -71,6 +136,16 @@ class LinearLayout extends View {
 
     }
 
+    /**
+     * Computes the size of this layout based on its children and constraints.
+     * Handles both fixed and flexible (FILL) sized children, respecting padding
+     * and spacing. The computation differs based on layout direction.
+     *
+     * @param parentWidth Available width from parent
+     * @param parentHeight Available height from parent
+     * @param parentLayoutMask Constraints from parent layout
+     * @param persist Whether to save computed sizes for layout phase
+     */
     override function computeSize(parentWidth:Float, parentHeight:Float, parentLayoutMask:ViewLayoutMask, persist:Bool) {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, parentWidth);
@@ -389,6 +464,17 @@ class LinearLayout extends View {
 
     }
 
+    /**
+     * Positions and sizes all child views according to the layout rules.
+     * Children are arranged sequentially along the layout axis with proper
+     * spacing and alignment. FILL children expand to use remaining space.
+     *
+     * The layout process:
+     * 1. Calculates space for fixed-size children
+     * 2. Distributes remaining space among FILL children based on flex values
+     * 3. Positions children with spacing and alignment
+     * 4. Applies depth sorting based on childrenDepth setting
+     */
     override function layout() {
 
         var paddingLeft = ViewSize.computeWithParentSize(paddingLeft, width);

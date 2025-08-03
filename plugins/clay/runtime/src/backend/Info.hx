@@ -1,11 +1,31 @@
 package backend;
 
+/**
+ * Clay backend implementation providing platform and asset information.
+ * 
+ * This class supplies information about:
+ * - System capabilities and storage locations
+ * - Supported asset file extensions
+ * - Platform-specific audio format support
+ * 
+ * The audio format detection on web platforms dynamically tests browser
+ * capabilities to determine which formats can be played, accounting for
+ * different browser implementations and versions.
+ */
 class Info #if !completion implements spec.Info #end {
 
     public function new() {}
 
 /// System
 
+    /**
+     * Gets the platform-specific directory for persistent storage.
+     * 
+     * On SDL platforms (desktop), returns the user preferences directory
+     * where the application can store settings and save data.
+     * 
+     * @return The storage directory path, or null if not available
+     */
     inline public function storageDirectory():String {
         #if (clay_sdl && !macro)
         return clay.Clay.app.io.appPathPrefs();
@@ -16,20 +36,49 @@ class Info #if !completion implements spec.Info #end {
 
 /// Assets
 
+    /**
+     * Gets the list of supported image file extensions.
+     * 
+     * @return Array of extensions: ['png', 'jpg', 'jpeg']
+     */
     inline public function imageExtensions():Array<String> {
         return ['png', 'jpg', 'jpeg'];
     }
 
+    /**
+     * Gets the list of file extensions treated as text assets.
+     * 
+     * These files are loaded as text rather than binary data.
+     * 
+     * @return Array of extensions: ['txt', 'json', 'fnt', 'atlas']
+     */
     inline public function textExtensions():Array<String> {
         return ['txt', 'json', 'fnt', 'atlas'];
     }
 
     #if (js && web)
+    /** Cached list of supported sound extensions */
     static var _soundExtensions:Array<String> = null;
+    /** Regular expression to detect Opera browser version */
     static var RE_OPERA = ~/OPR\/([0-6].)/g;
+    /** Regular expression to extract Safari version */
     static var RE_SAFARI_VERSION = ~/Version\/(.*?) /;
     #end
 
+    /**
+     * Gets the list of supported audio file extensions.
+     * 
+     * On web platforms, this dynamically detects browser audio capabilities
+     * by testing audio format support. The detection code is ported from
+     * howler.js and handles browser-specific quirks:
+     * - Old Opera versions that don't support MP3
+     * - Safari version compatibility
+     * - Format support varies by browser
+     * 
+     * On native platforms, returns all common formats.
+     * 
+     * @return Array of supported extensions (e.g., ['ogg', 'mp3', 'wav'])
+     */
     inline public function soundExtensions():Array<String> {
         #if (js && web)
         if (_soundExtensions != null)
@@ -86,6 +135,11 @@ class Info #if !completion implements spec.Info #end {
         #end
     }
 
+    /**
+     * Gets the list of shader file extensions.
+     * 
+     * @return Array of extensions: ['frag', 'vert'] for fragment and vertex shaders
+     */
     inline public function shaderExtensions():Array<String> {
         return ['frag', 'vert'];
     }

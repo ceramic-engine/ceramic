@@ -4,30 +4,67 @@ import tracker.Autorun;
 import tracker.Observable;
 
 /**
- * A view to display and layout images.
+ * A view component for displaying and laying out images with flexible scaling options.
+ * 
+ * ImageView provides automatic image loading from asset IDs and supports multiple
+ * scaling modes to fit images within their container. It handles texture management
+ * and cleanup automatically.
+ * 
+ * Features:
+ * - Automatic asset loading from image paths or asset IDs
+ * - Multiple scaling modes (FIT, FILL, CUSTOM)
+ * - Proper texture lifecycle management
+ * - Reactive updates when image or scaling properties change
+ * 
+ * @example
+ * ```haxe
+ * var imageView = new ImageView();
+ * imageView.size(200, 150);
+ * imageView.image = "hero.png";
+ * imageView.scaling = FIT; // Scale to fit within bounds
+ * 
+ * // Or use FILL to cover the entire area
+ * imageView.scaling = FILL;
+ * 
+ * // Or use custom scaling
+ * imageView.scaling = CUSTOM;
+ * imageView.imageScale = 2.0;
+ * ```
+ * 
+ * @see ImageViewScaling
+ * @see View
  */
 class ImageView extends View implements Observable {
 
 /// Public properties
 
     /**
-     * Image scale (ignored unless `scaling` is `CUSTOM`)
+     * Custom scale factor for the image.
+     * Only applied when scaling mode is set to CUSTOM.
+     * Default is 1.0 (original size).
      */
     @observe public var imageScale:Float = 1.0;
 
     /**
-     * How the image is scaled depending on its constraints
+     * Determines how the image is scaled within the view bounds.
+     * - FIT: Scale to fit within bounds while maintaining aspect ratio
+     * - FILL: Scale to fill the entire bounds, cropping if necessary
+     * - CUSTOM: Use the imageScale value
+     * Default is FIT.
      */
     @observe public var scaling:ImageViewScaling = ImageViewScaling.FIT;
 
     /**
-     * The actual image (as asset id or string) to display
+     * The image to display, specified as an asset ID or path.
+     * Setting this will automatically load the image texture.
+     * Set to null to clear the image.
      */
     @observe public var image:AssetId<String> = null;
 
     /**
-     * If set to `true`, the internal quad of the image view
-     * will inherit the view's alpha
+     * Whether the internal image quad inherits the view's alpha value.
+     * When true, the image opacity is multiplied by the view's alpha.
+     * Default follows the quad's inheritAlpha setting.
      */
     public var imageQuadInheritsAlpha(get, set):Bool;
     inline function get_imageQuadInheritsAlpha():Bool return imageQuad.inheritAlpha;
@@ -37,14 +74,27 @@ class ImageView extends View implements Observable {
 
 /// Internal
 
+    /**
+     * The internal quad used to render the image texture.
+     */
     var imageQuad:Quad = null;
 
+    /**
+     * The computed scale factor based on FIT scaling mode.
+     */
     var computedImageScale:Float = 1.0;
 
+    /**
+     * Reference to the currently loaded texture for lifecycle management.
+     */
     var loadedTexture:Texture = null;
 
 /// Lifecycle
 
+    /**
+     * Creates a new ImageView with default settings.
+     * The view is transparent by default and contains a centered image quad.
+     */
     public function new() {
 
         super();
@@ -61,6 +111,10 @@ class ImageView extends View implements Observable {
 
     }
 
+    /**
+     * Updates the image quad scale based on the current scaling mode.
+     * Called automatically when scaling or imageScale properties change.
+     */
     function updateImageScale() {
 
         var scaling = this.scaling;
@@ -80,6 +134,10 @@ class ImageView extends View implements Observable {
 
     }
 
+    /**
+     * Loads and sets the image texture based on the current image property.
+     * Handles asset loading, texture management, and cleanup of previous textures.
+     */
     function updateImage() {
 
         var image = this.image;
@@ -119,6 +177,13 @@ class ImageView extends View implements Observable {
 
     }
 
+    /**
+     * Directly sets the image texture without going through asset loading.
+     * Useful when you already have a texture reference.
+     * Handles cleanup of previously loaded textures.
+     * 
+     * @param texture The texture to display, or null to clear
+     */
     public function setImageTexture(texture:Texture):Void {
 
         if (imageQuad.texture == texture) return;
@@ -147,6 +212,10 @@ class ImageView extends View implements Observable {
 
 /// Layout
 
+    /**
+     * Computes the view size based on the image dimensions and constraints.
+     * Calculates the appropriate scale factor for FIT mode.
+     */
     override function computeSize(parentWidth:Float, parentHeight:Float, layoutMask:ViewLayoutMask, persist:Bool) {
 
         super.computeSize(parentWidth, parentHeight, layoutMask, persist);
@@ -166,6 +235,10 @@ class ImageView extends View implements Observable {
 
     }
 
+    /**
+     * Positions and sizes the image quad within the view bounds.
+     * Handles different scaling modes including cropping for FILL mode.
+     */
     override function layout() {
 
         var availableWidth = width - paddingLeft - paddingRight;

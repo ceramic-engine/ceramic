@@ -16,10 +16,29 @@ import sys.io.File;
 using StringTools;
 
 /**
- * Export Runtime Type Information into external XML files.
+ * Exports Runtime Type Information (RTTI) for classes marked with @:rtti metadata.
+ * RTTI allows runtime introspection of class structure, including fields, methods,
+ * and their types. This is essential for features like serialization, debugging tools,
+ * and dynamic type inspection.
+ * 
+ * The macro:
+ * - Identifies all classes with @:rtti metadata
+ * - Includes subclasses of @:rtti classes automatically
+ * - Extracts RTTI XML data from compiled classes
+ * - Saves RTTI files with MD5-hashed names for cache invalidation
+ * 
+ * RTTI files are stored in the .cache/rtti directory and can be loaded
+ * at runtime for reflection purposes.
  */
 class ExportRtti {
 
+    /**
+     * Initializes the RTTI export process.
+     * Called during compilation to extract and save RTTI data for marked classes.
+     * The process runs in two phases:
+     * 1. onGenerate: Identifies which types need RTTI exported
+     * 2. onAfterGenerate: Extracts and saves the actual RTTI data
+     */
     public static function init():Void {
 
         #if ceramic_debug_macro
@@ -117,6 +136,12 @@ class ExportRtti {
 
 /// Internal
 
+    /**
+     * Determines the path for storing RTTI files.
+     * Creates a .cache/rtti directory in the target output path.
+     * 
+     * @return Path to RTTI directory or null if target path not defined
+     */
     static function getRttiPath():String {
 
         var targetPath = DefinesMacro.jsonDefinedValue('target_path');
@@ -134,6 +159,12 @@ class ExportRtti {
 
     }
 
+    /**
+     * Recursively deletes a file or directory and all its contents.
+     * Used to clean up previous RTTI exports before generating new ones.
+     * 
+     * @param toDelete Path to file or directory to delete
+     */
     public static function deleteRecursive(toDelete:String):Void {
 
         if (FileSystem.isDirectory(toDelete)) {

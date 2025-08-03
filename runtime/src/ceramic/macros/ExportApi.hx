@@ -18,12 +18,40 @@ import sys.io.File;
 using StringTools;
 
 /**
- * Export Runtime Type Information into external XML files.
+ * Exports Ceramic's public API as TypeScript definition files (.d.ts).
+ * This macro generates type definitions for use in HScript/JavaScript contexts,
+ * enabling proper code completion and type checking when scripting Ceramic applications.
+ * 
+ * The macro processes all types listed in AllApi.hx and generates:
+ * - Class and interface definitions with proper inheritance
+ * - Method signatures with parameters and return types
+ * - Property declarations with appropriate types
+ * - Enum definitions with constructors
+ * - Type aliases and generic type parameters
+ * 
+ * The generated api.d.ts file allows TypeScript-aware editors to provide
+ * intelligent code completion when writing Ceramic scripts.
  */
 class ExportApi {
 
+    /**
+     * Subdirectory name for the generated API files.
+     */
     static var outputSubPath:String = 'api';
 
+    /**
+     * Main export function that generates TypeScript definitions for Ceramic's API.
+     * Called during compilation to create api.d.ts file containing type information
+     * for all public classes, interfaces, and enums exposed to scripts.
+     * 
+     * The function:
+     * 1. Reads AllApi.hx to determine which types to export
+     * 2. Processes each type using Haxe's macro type system
+     * 3. Generates TypeScript-compatible type definitions
+     * 4. Writes the results to api.d.ts
+     * 
+     * @param outputSubPath Directory name for output files (default: 'api')
+     */
     public static function export(outputSubPath:String = 'api'):Void {
 
         ExportApi.outputSubPath = outputSubPath;
@@ -589,6 +617,12 @@ class ExportApi {
 
 /// Internal
 
+    /**
+     * Determines the export path based on compiler output settings.
+     * Places API files alongside the compiled output.
+     * 
+     * @return Full path to the API export directory or null if unavailable
+     */
     public static function getExportPath():String {
 
         var output = Compiler.getOutput();
@@ -603,6 +637,12 @@ class ExportApi {
 
     }
 
+    /**
+     * Recursively deletes a file or directory and all its contents.
+     * Used to clean up previous API exports before generating new ones.
+     * 
+     * @param toDelete Path to file or directory to delete
+     */
     public static function deleteRecursive(toDelete:String):Void {
 
         if (FileSystem.isDirectory(toDelete)) {
@@ -628,6 +668,13 @@ class ExportApi {
 
     }
 
+    /**
+     * Recursively collects fields from parent anonymous types.
+     * Used to properly handle type definitions that extend other anonymous types.
+     * 
+     * @param parentFields Array to collect parent fields into
+     * @param a Reference to anonymous type to process
+     */
     static function walkParentAnon(parentFields:Array<haxe.macro.Type.ClassField>, a:haxe.macro.Type.Ref<haxe.macro.Type.AnonType>):Void {
         var anon = a.get();
         switch anon.status {
@@ -646,6 +693,14 @@ class ExportApi {
         }
     }
 
+    /**
+     * Converts a Haxe ComplexType to its TypeScript string representation.
+     * Handles type parameters, package paths, and special types like StdTypes.
+     * 
+     * @param typesToExport Map of type names to their exported aliases
+     * @param type Complex type to convert
+     * @return TypeScript-compatible type string
+     */
     static function complexTypeToString(typesToExport:Map<String, String>, type:ComplexType):String {
 
         var typeStr:String = null;
@@ -705,6 +760,14 @@ class ExportApi {
 
     }
 
+    /**
+     * Converts a Haxe Type to its TypeScript string representation.
+     * Handles all Haxe type variants including classes, enums, functions, etc.
+     * 
+     * @param typesToExport Map of type names to their exported aliases
+     * @param type Haxe type to convert
+     * @return TypeScript-compatible type string
+     */
     static function typeToString(typesToExport:Map<String, String>, type:haxe.macro.Type):String {
 
         var typeStr = 'Dynamic';
@@ -803,6 +866,14 @@ class ExportApi {
 
     }
 
+    /**
+     * Converts an array of type parameters to a comma-separated string.
+     * Used for generic type parameters in TypeScript definitions.
+     * 
+     * @param typesToExport Map of type names to their exported aliases
+     * @param params Array of type parameters
+     * @return Comma-separated type parameter string
+     */
     static function typeParamsToString(typesToExport:Map<String, String>, params:Array<haxe.macro.Type>):String {
 
         if (params == null || params.length == 0)
@@ -818,6 +889,14 @@ class ExportApi {
 
     }
 
+    /**
+     * Converts type names from Haxe to TypeScript conventions.
+     * Handles scriptable type prefixes, package names, and special mappings.
+     * 
+     * @param typesToExport Map of type names to their exported aliases
+     * @param typeStr Type string to convert
+     * @return Converted type string for TypeScript
+     */
     static function convertType(typesToExport:Map<String, String>, typeStr:String):String {
 
         if (typeStr.charAt(typeStr.length - 2) == '.') {
@@ -839,6 +918,10 @@ class ExportApi {
 
     }
 
+    /**
+     * Regular expression to parse import statements from AllApi.hx.
+     * Captures the imported type and optional alias.
+     */
     static var RE_IMPORT = ~/^import\s+([^;\s]+)\s*(?:(?:as|in)\s*([^;\s]+)\s*)?;/;
 
 }

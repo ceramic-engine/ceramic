@@ -2,21 +2,66 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+/**
+ * Sprite visual that displays animations from sprite sheets.
+ * Supports frame-by-frame animation playback with timing control,
+ * easing, and automatic size computation from frames.
+ * 
+ * The sprite can play animations from SpriteSheet data which can be
+ * loaded from various formats including Aseprite JSON exports.
+ * 
+ * @param T The type used for animation identifiers. Defaults to String
+ *          but can be an enum for type-safe animation names.
+ * 
+ * Example usage:
+ * ```haxe
+ * var sprite = new Sprite();
+ * sprite.sheet = assets.sheet("character");
+ * sprite.animation = "walk";
+ * sprite.loop = true;
+ * ```
+ */
 class Sprite<T=String> extends Visual {
 
+    /**
+     * Whether to automatically compute the sprite's size from the
+     * current animation frame. When true, the sprite will resize
+     * itself to match the original frame dimensions.
+     */
     public var autoComputeSize:Bool = true;
 
+    /**
+     * The current texture region being displayed.
+     * This is automatically updated during animation playback.
+     */
     public var region(get, set):TextureAtlasRegion;
     inline function get_region():TextureAtlasRegion {
         return quad.tile != null ? cast quad.tile : null;
     }
 
+    /**
+     * The name of the current animation as a string.
+     * This is the string representation of the `animation` property.
+     */
     public var animationName(default,null):String;
 
+    /**
+     * Optional easing function to apply to animation playback.
+     * When set, the animation timeline will be transformed by this easing.
+     */
     public var easing(default,null):Easing = null;
 
+    /**
+     * Time scale multiplier for animation playback speed.
+     * Values > 1.0 speed up the animation, < 1.0 slow it down.
+     */
     public var timeScale:Float = 1.0;
 
+    /**
+     * The current animation being played.
+     * Can be a String or an enum value depending on the type parameter T.
+     * Setting this property resets the animation time to 0.
+     */
     public var animation(default,set):T = null;
     function set_animation(animation:T):T {
         if (this.animation == animation) return animation;
@@ -40,6 +85,10 @@ class Sprite<T=String> extends Visual {
         return animation;
     }
 
+    /**
+     * Horizontal offset applied to the frame position.
+     * Useful for fine-tuning sprite alignment.
+     */
     public var frameOffsetX(default,set):Float = 0;
     function set_frameOffsetX(frameOffsetX:Float):Float {
         if (this.frameOffsetX != frameOffsetX) {
@@ -49,6 +98,10 @@ class Sprite<T=String> extends Visual {
         return frameOffsetX;
     }
 
+    /**
+     * Vertical offset applied to the frame position.
+     * Useful for fine-tuning sprite alignment.
+     */
     public var frameOffsetY(default,set):Float = 0;
     function set_frameOffsetY(frameOffsetY:Float):Float {
         if (this.frameOffsetY != frameOffsetY) {
@@ -58,11 +111,20 @@ class Sprite<T=String> extends Visual {
         return frameOffsetY;
     }
 
+    /**
+     * Set both frame offset values at once.
+     * @param frameOffsetX Horizontal offset
+     * @param frameOffsetY Vertical offset
+     */
     public function frameOffset(frameOffsetX:Float, frameOffsetY:Float) {
         this.frameOffsetX = frameOffsetX;
         this.frameOffsetY = frameOffsetY;
     }
 
+    /**
+     * The sprite sheet containing animation data.
+     * Setting this property resets the animation time.
+     */
     public var sheet(default,set):SpriteSheet = null;
     function set_sheet(sheet:SpriteSheet):SpriteSheet {
         if (this.sheet == sheet) return sheet;
@@ -77,6 +139,10 @@ class Sprite<T=String> extends Visual {
         return sheet;
     }
 
+    /**
+     * Compute the sprite size based on the first frame of the current animation.
+     * This is called automatically when autoComputeSize is true and an animation is set.
+     */
     public function computeSizeFromAnimation() {
 
         if (animationName != null && sheet != null) {
@@ -127,20 +193,38 @@ class Sprite<T=String> extends Visual {
 
     /**
      * Is this sprite paused?
+     * When true, animation playback is suspended but time is preserved.
      */
     public var paused:Bool = false;
 
     /**
      * Is this sprite looping?
+     * When true, animation restarts from beginning after completion.
+     * When false, animation stops on the last frame.
      */
     public var loop:Bool = true;
 
+    /**
+     * The internal quad used to render the sprite frame.
+     * This is automatically managed by the sprite.
+     */
     public var quad(default,null):Quad;
 
+    /**
+     * Current playback time in seconds within the animation.
+     * Automatically increments during update unless paused.
+     */
     public var time(default,null):Float = 0;
 
+    /**
+     * Internal flag tracking when animation data needs to be refreshed.
+     */
     var currentAnimationDirty:Bool = false;
 
+    /**
+     * The current animation data from the sprite sheet.
+     * Automatically resolved from animationName when accessed.
+     */
     public var currentAnimation(get, null):SpriteSheetAnimation = null;
     function get_currentAnimation():SpriteSheetAnimation {
         // Process current animation (if needed)
@@ -172,8 +256,15 @@ class Sprite<T=String> extends Visual {
         return this.currentAnimation;
     }
 
+    /**
+     * The current frame being displayed from the animation.
+     */
     var currentAnimationFrame:SpriteSheetFrame = null;
 
+    /**
+     * Create a new Sprite instance.
+     * The sprite is automatically added to the SpriteSystem for updates.
+     */
     public function new() {
 
         super();
@@ -187,6 +278,9 @@ class Sprite<T=String> extends Visual {
     }
 
     #if cs
+    /**
+     * Internal method for C# target compatibility.
+     */
     function _updateIfNotPausedAndAutoUpdating(delta:Float) {
         if (!paused && autoUpdate) {
             update(delta);
@@ -194,6 +288,11 @@ class Sprite<T=String> extends Visual {
     }
     #end
 
+    /**
+     * Update the sprite animation.
+     * This is called automatically each frame if autoUpdate is true.
+     * @param delta Time elapsed since last update in seconds
+     */
     public function update(delta:Float):Void {
 
         var currentAnimation = this.currentAnimation;
@@ -268,6 +367,11 @@ class Sprite<T=String> extends Visual {
 
     }
 
+    /**
+     * Compute the visual content of the sprite.
+     * Updates the internal quad position and texture based on the current frame.
+     * This is called automatically when contentDirty is true.
+     */
     override function computeContent() {
 
         var region = this.region;
@@ -290,6 +394,9 @@ class Sprite<T=String> extends Visual {
 
     }
 
+    /**
+     * Destroy this sprite and remove it from the update system.
+     */
     override function destroy() {
 
         SpriteSystem.shared.sprites.remove(cast this);
