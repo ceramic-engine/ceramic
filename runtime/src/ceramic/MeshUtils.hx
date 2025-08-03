@@ -88,7 +88,9 @@ class MeshUtils {
      * );
      *
      * // Grid with per-vertex colors (4 floats: r,g,b,a)
-     * var colors = [/* color data */];
+     * var colors = [
+     *     // color data
+     * ];
      * var vertices = MeshUtils.createVerticesGrid(
      *     null, 10, 10, 400, 400,
      *     0, 0, 4, colors

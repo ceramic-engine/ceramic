@@ -10,18 +10,18 @@ using ceramic.Extensions;
 
 /**
  * The main asset management class for Ceramic framework.
- * 
+ *
  * Handles loading, managing, and hot-reloading of various asset types including:
  * - Images/Textures
  * - Fonts (bitmap and TTF/OTF)
- * - Atlases (texture atlases) 
+ * - Atlases (texture atlases)
  * - Text files
  * - Binary data
  * - Sounds/Audio
  * - Databases (CSV)
  * - Fragments (JSON-based UI/game fragments)
  * - Shaders
- * 
+ *
  * Features:
  * - Reference counting for memory management
  * - Asset variants and density handling for multi-resolution support
@@ -29,7 +29,7 @@ using ceramic.Extensions;
  * - Parent-child asset relationships
  * - Custom asset type registration
  * - Parallel/serial loading strategies
- * 
+ *
  * @example
  * ```haxe
  * var assets = new Assets();
@@ -288,7 +288,7 @@ class Assets extends Entity {
      * // Add all assets
      * assets.addAll();
      * // Add only assets in 'sprites' folder
-     * assets.addAll(~/sprites\/.*/);  
+     * assets.addAll(~/^sprites\/.*$/);
      * ```
      */
     public function addAll(?pathPattern:EReg):Void {
@@ -1010,7 +1010,7 @@ class Assets extends Entity {
 
     /**
      * Get a loaded font by name.
-     * @param name The font name or asset ID  
+     * @param name The font name or asset ID
      * @param variant Optional variant suffix
      * @return The font, or null if not found
      */
@@ -1182,24 +1182,24 @@ class Assets extends Entity {
     /**
      * Watch the given asset directory for changes.
      * Any file change will fire `assetFilesChange` event and optionally trigger hot reload.
-     * 
+     *
      * This is particularly useful during development to see asset changes without restarting.
      * Behavior may differ depending on the platform.
-     * 
+     *
      * @param path The assets path to watch. If null, uses the default assets path from project configuration.
      *             You can use `ceramic.macros.DefinesMacro.getJsonDefine('assets_path')` to get the default.
      * @param hotReload If true (default), assets will automatically reload when their files change
      * @return WatchDirectory instance used internally
-     * 
+     *
      * @example
      * ```haxe
      * // Watch default assets directory with hot reload
      * assets.watchDirectory();
-     * 
-     * // Watch custom path without hot reload  
+     *
+     * // Watch custom path without hot reload
      * assets.watchDirectory('/path/to/assets', false);
      * ```
-     * 
+     *
      * Note: When using web target via electron, add `ceramic_use_electron` define.
      */
     public function watchDirectory(?path:String, hotReload:Bool = true):WatchDirectory {
