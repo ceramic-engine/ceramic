@@ -3,10 +3,38 @@ package backend;
 import cs.NativeArray;
 import unityengine.rendering.VertexAttributeDescriptor;
 
+#if !no_backend_docs
+/**
+ * Represents a Unity material configuration for Ceramic rendering.
+ * 
+ * This class caches material state including textures, shaders, blend modes,
+ * and stencil settings. It provides efficient comparison and updating of
+ * Unity materials to minimize state changes during rendering.
+ * 
+ * Materials are reused when possible to reduce GPU state switches and
+ * improve batching efficiency. The class tracks shader parameter versions
+ * to only update Unity materials when parameters actually change.
+ * 
+ * @see backend.Materials Manages the pool of material instances
+ * @see backend.Draw Uses materials for rendering operations
+ */
+#end
 class MaterialData {
 
+    #if !no_backend_docs
+    /**
+     * The underlying Unity Material object.
+     * Stored as Dynamic to avoid direct Unity API dependencies.
+     */
+    #end
     public var material:Dynamic = null;
 
+    #if !no_backend_docs
+    /**
+     * Array of textures used by this material.
+     * Setting this property creates a defensive copy to prevent external modifications.
+     */
+    #end
     public var textures(default, set):NativeArray<backend.Texture> = null;
     inline function set_textures(textures:NativeArray<backend.Texture>):NativeArray<backend.Texture> {
         if (textures != null) {
@@ -22,24 +50,91 @@ class MaterialData {
         return this.textures;
     }
 
+    #if !no_backend_docs
+    /**
+     * The shader program used by this material.
+     */
+    #end
     public var shader:backend.Shader = null;
 
+    #if !no_backend_docs
+    /**
+     * Source RGB blend factor for color blending.
+     * Default: ONE (use source color as-is)
+     */
+    #end
     public var srcRgb:backend.BlendMode = ONE;
 
+    #if !no_backend_docs
+    /**
+     * Destination RGB blend factor for color blending.
+     * Default: ONE_MINUS_SRC_ALPHA (standard alpha blending)
+     */
+    #end
     public var dstRgb:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
 
+    #if !no_backend_docs
+    /**
+     * Source alpha blend factor.
+     * Default: ONE (use source alpha as-is)
+     */
+    #end
     public var srcAlpha:backend.BlendMode = ONE;
 
+    #if !no_backend_docs
+    /**
+     * Destination alpha blend factor.
+     * Default: ONE_MINUS_SRC_ALPHA (standard alpha blending)
+     */
+    #end
     public var dstAlpha:backend.BlendMode = ONE_MINUS_SRC_ALPHA;
 
+    #if !no_backend_docs
+    /**
+     * Stencil buffer state for masking operations.
+     * Default: NONE (no stencil testing)
+     */
+    #end
     public var stencil:backend.StencilState = NONE;
 
+    #if !no_backend_docs
+    /**
+     * Vertex attribute descriptors for the mesh using this material.
+     * Defines the vertex buffer layout (position, UV, color, etc.)
+     */
+    #end
     public var vertexBufferAttributes:NativeArray<VertexAttributeDescriptor> = null;
 
+    #if !no_backend_docs
+    /**
+     * Version number of shader parameters.
+     * Used to detect when material properties need updating.
+     */
+    #end
     public var paramsVersion:Int = -1;
 
+    #if !no_backend_docs
+    /**
+     * Creates a new MaterialData instance with default settings.
+     */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
+    /**
+     * Checks if this material matches the given configuration.
+     * Used to determine if a material can be reused for rendering.
+     * 
+     * @param textures Array of textures to compare
+     * @param shader Shader to compare
+     * @param srcRgb Source RGB blend mode
+     * @param dstRgb Destination RGB blend mode
+     * @param srcAlpha Source alpha blend mode
+     * @param dstAlpha Destination alpha blend mode
+     * @param stencil Stencil state to compare
+     * @return true if all parameters match this material's configuration
+     */
+    #end
     inline public function matches(
         textures:NativeArray<backend.Texture>,
         shader:backend.Shader,
@@ -82,6 +177,13 @@ class MaterialData {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Synchronizes shader parameters with the Unity material.
+     * Only updates parameters if the shader's version has changed,
+     * avoiding unnecessary GPU state changes.
+     */
+    #end
     inline public function syncShaderParams():Void {
 
         var shaderImpl:ShaderImpl = shader;
@@ -155,6 +257,14 @@ class MaterialData {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Converts Ceramic blend mode to Unity's blend mode enum.
+     * 
+     * @param blending The Ceramic blend mode to convert
+     * @return Corresponding Unity blend mode
+     */
+    #end
     public static function blendingToUnityBlending(blending:backend.BlendMode):unityengine.rendering.BlendMode {
 
         return switch blending {

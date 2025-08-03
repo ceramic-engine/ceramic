@@ -4,22 +4,53 @@ import ceramic.Path;
 import unityengine.AudioMixer;
 import unityengine.MonoBehaviour;
 
+/**
+ * Main entry point for the Unity backend integration.
+ * Handles initialization, update loop, and synchronization with Unity's lifecycle.
+ * Supports both standard Unity and Universal Render Pipeline (URP) configurations.
+ */
 class Main {
 
+    /**
+     * The Ceramic project instance.
+     */
     public static var project:Project = null;
 
+    /**
+     * Timestamp of the last update, used for delta time calculation.
+     */
     static var _lastUpdateTime:Float = 0;
 
+    /**
+     * Timestamp of the last regular update (URP only).
+     * Used for input and screen updates in render pipeline.
+     */
     #if unity_urp
     static var _lastRegularUpdateTime:Float = 0;
     #end
 
+    /**
+     * Flag indicating if a critical error has occurred.
+     * Prevents further updates when true.
+     */
     static var _hasCriticalError:Bool = false;
 
+    /**
+     * Unity MonoBehaviour instance for coroutines and Unity API access.
+     */
     public static var monoBehaviour:MonoBehaviour = null;
 
+    /**
+     * Unity AudioMixer for global audio processing.
+     */
     public static var audioMixer:AudioMixer = null;
 
+    /**
+     * Synchronizes with Unity components and initializes Ceramic if needed.
+     * Called from Unity's C# side to establish the connection.
+     * @param monoBehaviour Unity MonoBehaviour for lifecycle hooks
+     * @param audioMixer Unity AudioMixer for audio processing
+     */
     @:keep public static function sync(monoBehaviour:MonoBehaviour, audioMixer:AudioMixer):Void {
 
         Main.monoBehaviour = monoBehaviour;
@@ -31,6 +62,10 @@ class Main {
 
     }
 
+    /**
+     * Main initialization function for the Ceramic Unity backend.
+     * Sets up project settings, initializes the app, and starts the update loop.
+     */
     @:keep public static function main():Void {
 
         // Force to sync app fps with screen fps
@@ -54,6 +89,10 @@ class Main {
 
     #if unity_urp
 
+    /**
+     * Regular update for Universal Render Pipeline.
+     * Handles screen and input updates separately from rendering.
+     */
     @:keep public static function regularUpdate() {
 
         if (_hasCriticalError)
@@ -68,6 +107,10 @@ class Main {
 
     }
 
+    /**
+     * Render pass update for Universal Render Pipeline.
+     * Called during the render pass to update and render the app.
+     */
     @:keep public static function renderPassUpdate() {
 
         if (_hasCriticalError)
@@ -79,6 +122,11 @@ class Main {
 
     #end
 
+    /**
+     * Main update loop for the Ceramic app.
+     * Processes input, updates app state, and triggers rendering.
+     * Includes error handling to mark critical errors.
+     */
     @:keep public static function update() {
 
         if (_hasCriticalError)
@@ -113,12 +161,20 @@ class Main {
 
     }
 
+    /**
+     * Checks if a critical error has occurred.
+     * @return True if the app has encountered a critical error
+     */
     @:noCompletion public static function hasCriticalError():Bool {
 
         return _hasCriticalError;
 
     }
 
+    /**
+     * Marks that a critical error has occurred.
+     * This will prevent further updates from running.
+     */
     @:noCompletion public static function markCriticalError():Void {
 
         _hasCriticalError = true;

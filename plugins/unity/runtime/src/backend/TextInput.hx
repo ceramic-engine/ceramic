@@ -5,16 +5,39 @@ import unityengine.inputsystem.Keyboard;
 
 using StringTools;
 
+#if !no_backend_docs
+/**
+ * Unity backend implementation for text input handling.
+ * Captures keyboard input from Unity's Input System and converts it to Ceramic text events.
+ * Handles special keys like arrows, backspace, enter, and escape.
+ */
+#end
 class TextInput implements spec.TextInput {
 
+    #if !no_backend_docs
+    /**
+     * Whether text input is currently active.
+     * When true, keyboard input is captured and converted to text events.
+     */
+    #end
     public var textInputActive(default, null):Bool = false;
 
+    #if !no_backend_docs
+    /**
+     * Creates a new TextInput handler and binds to Unity's keyboard events.
+     */
+    #end
     public function new() {
 
         bindTextInput();
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Binds to Unity's onTextInput event for character input.
+     */
+    #end
     function bindTextInput():Void {
 
         if (Keyboard.current != null) {
@@ -23,6 +46,13 @@ class TextInput implements spec.TextInput {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Handles raw text input from Unity.
+     * Defers processing to next frame to avoid timing issues.
+     * @param csChar Unicode character from Unity
+     */
+    #end
     @:keep function handleTextInput(csChar:Char16):Void {
 
         ceramic.App.app.onceImmediate(function() {
@@ -31,6 +61,13 @@ class TextInput implements spec.TextInput {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Processes text input and converts to appropriate Ceramic events.
+     * Handles special keys and filters non-printable characters.
+     * @param csChar Unicode character to process
+     */
+    #end
     @:keep function _handleTextInput(csChar:Char16):Void {
 
         if (textInputActive) {
@@ -118,6 +155,17 @@ class TextInput implements spec.TextInput {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Starts text input mode.
+     * TODO: Show virtual keyboard on mobile devices.
+     * @param initialText Initial text value (currently unused)
+     * @param x Text field X position (for virtual keyboard positioning)
+     * @param y Text field Y position (for virtual keyboard positioning)
+     * @param w Text field width
+     * @param h Text field height
+     */
+    #end
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
         textInputActive = true;
@@ -126,6 +174,12 @@ class TextInput implements spec.TextInput {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Stops text input mode.
+     * Disables keyboard capture.
+     */
+    #end
     public function stop():Void {
 
         textInputActive = false;

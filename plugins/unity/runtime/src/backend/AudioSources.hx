@@ -10,8 +10,45 @@ import unityengine.GameObject;
 import ceramic.Assert.assert;
 #end
 
+#if !no_backend_docs
+/**
+ * Manages pooled Unity AudioSource components for efficient audio playback.
+ * 
+ * This singleton class handles creation, pooling, and recycling of AudioSource
+ * components in Unity, as well as managing audio mixer groups (buses) and
+ * MiniLoud integration for advanced audio filtering.
+ * 
+ * Key features:
+ * - Object pooling to avoid repeated AudioSource allocation/deallocation
+ * - Audio bus system with Unity AudioMixer integration
+ * - MiniLoud support for buses that require audio filtering
+ * - Automatic cleanup of existing AudioSource components on initialization
+ * 
+ * The system creates AudioSource components on-demand and pools them when
+ * finished to improve performance. Each bus can have its own mixer group
+ * and optional MiniLoud component for DSP processing.
+ * 
+ * @example
+ * ```haxe
+ * // Get a pooled AudioSource
+ * var source = AudioSources.shared.get();
+ * source.clip = myAudioClip;
+ * source.Play();
+ * 
+ * // Return to pool when done
+ * source.Stop();
+ * AudioSources.shared.recycle(source);
+ * ```
+ */
+#end
 class AudioSources {
 
+    #if !no_backend_docs
+    /**
+     * The singleton instance of AudioSources.
+     * Automatically created on first access using the main GameObject and AudioMixer.
+     */
+    #end
     public static var shared(get,null):AudioSources = null;
     static function get_shared():AudioSources {
         if (shared == null) {
@@ -20,8 +57,20 @@ class AudioSources {
         return shared;
     }
 
+    #if !no_backend_docs
+    /**
+     * GameObjects created for MiniLoud audio processing, indexed by bus number.
+     * Each bus that uses filtering gets its own GameObject with a MiniLoud component.
+     */
+    #end
     var miniLoudObjectByBus:Array<GameObject> = [];
 
+    #if !no_backend_docs
+    /**
+     * MiniLoud components for audio filtering, indexed by bus number.
+     * These handle advanced DSP processing for buses with filters applied.
+     */
+    #end
     var miniLoudComponentByBus:Array<MiniLoudUnity> = [];
 
     #if !no_backend_docs
@@ -66,6 +115,15 @@ class AudioSources {
     #end
     var bussesNotFound:Array<Bool> = [];
 
+    #if !no_backend_docs
+    /**
+     * Creates a new AudioSources manager.
+     * Removes any existing AudioSource components from the GameObject to ensure clean state.
+     * 
+     * @param gameObject The GameObject to attach AudioSources to
+     * @param audioMixer The main AudioMixer for bus routing
+     */
+    #end
     public function new(gameObject:GameObject, audioMixer:AudioMixer) {
 
         this.gameObject = gameObject;
@@ -75,6 +133,12 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Removes all existing AudioSource components from the GameObject.
+     * Called during initialization to ensure no lingering components interfere.
+     */
+    #end
     function removeExistingAudioSourceComponents():Void {
 
         untyped __cs__('UnityEngine.AudioSource[] _sources = {0}.GetComponents<UnityEngine.AudioSource>()', gameObject);
@@ -82,6 +146,14 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Gets an AudioSource from the pool or creates a new one if pool is empty.
+     * The returned AudioSource is ready for configuration and playback.
+     * 
+     * @return A pooled or newly created AudioSource component
+     */
+    #end
     public function get():AudioSource {
 
         if (pool.length > 0) {
@@ -95,6 +167,14 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Returns an AudioSource to the pool for reuse.
+     * Clears the AudioSource's state (mixer group and clip) before pooling.
+     * 
+     * @param audioSource The AudioSource to recycle (must be owned by this manager)
+     */
+    #end
     public function recycle(audioSource:AudioSource):Void {
 
         #if ceramic_unity_debug_audiosource
@@ -108,6 +188,16 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Gets or creates an AudioBus for the specified index.
+     * Looks for a mixer group named "Bus_N" where N is the bus index.
+     * Caches both found buses and missing buses to avoid repeated lookups.
+     * 
+     * @param busIndex The index of the bus to retrieve (0-based)
+     * @return The AudioBus if found, null if no matching mixer group exists
+     */
+    #end
     public function bus(busIndex:Int):AudioBus {
 
         var bus:AudioBus = busses[busIndex];
@@ -139,6 +229,15 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Creates an audio filter callback for the specified bus.
+     * Sets up MiniLoud audio processing to handle real-time DSP effects.
+     * The filter processes audio samples through the Audio backend's filter chain.
+     * 
+     * @param busIndex The bus index to create a filter for
+     */
+    #end
     public function createBusFilter(
         busIndex:Int
     ):Void {
@@ -149,6 +248,16 @@ class AudioSources {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Gets or creates a MiniLoud component for the specified bus.
+     * MiniLoud provides advanced audio processing capabilities beyond Unity's built-in system.
+     * Creates a dedicated GameObject if needed and configures the mixer group routing.
+     * 
+     * @param busIndex The bus index to get MiniLoud for
+     * @return The MiniLoudUnity component for this bus
+     */
+    #end
     public function miniLoudObject(busIndex:Int):MiniLoudUnity {
 
         var comp:MiniLoudUnity = miniLoudComponentByBus[busIndex];

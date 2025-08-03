@@ -8,10 +8,42 @@ import unityengine.rendering.VertexAttributeFormat;
 
 using ceramic.Extensions;
 
+#if !no_backend_docs
+/**
+ * Manages a pool of Unity materials for efficient rendering.
+ * 
+ * This class implements a material caching system that reuses Unity Material
+ * objects when possible. By avoiding material creation and state changes,
+ * it significantly improves rendering performance and reduces draw calls.
+ * 
+ * Materials are matched based on:
+ * - Textures used
+ * - Shader program
+ * - Blend modes (source and destination for RGB and alpha)
+ * - Stencil state
+ * 
+ * The system automatically creates appropriate vertex layouts based on
+ * shader requirements and manages Unity-specific material properties.
+ * 
+ * @see MaterialData The material configuration class
+ * @see backend.Draw Uses this system for batch rendering
+ */
+#end
 class Materials {
 
+    #if !no_backend_docs
+    /**
+     * Repository of cached material instances.
+     * Materials are reused when their configuration matches.
+     */
+    #end
     var repository:Array<MaterialData>;
 
+    #if !no_backend_docs
+    /**
+     * Creates a new Materials manager instance.
+     */
+    #end
     public function new() {
 
         repository = [];

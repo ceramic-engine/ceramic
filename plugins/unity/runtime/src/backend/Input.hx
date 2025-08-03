@@ -15,6 +15,24 @@ import unityengine.inputsystem.controls.KeyControl;
 
 using ceramic.Extensions;
 
+#if !no_backend_docs
+/**
+ * Unity implementation of the Input backend interface.
+ * 
+ * Handles keyboard and gamepad input using Unity's new Input System package.
+ * This implementation provides:
+ * - Full keyboard support with scan codes and key codes
+ * - Gamepad support including analog sticks, triggers, and gyroscope
+ * - Custom layout overrides for DualShock/DualSense controllers
+ * - Efficient input state tracking and event dispatching
+ * 
+ * The class bridges Unity's Input System with Ceramic's input events,
+ * converting Unity's polling-based system to Ceramic's event-driven model.
+ * 
+ * @see spec.Input The interface this class implements
+ * @see backend.Backend Provides this input instance
+ */
+#end
 @:allow(Main)
 class Input implements tracker.Events implements spec.Input {
 
@@ -25,16 +43,85 @@ class Input implements tracker.Events implements spec.Input {
     #end
     inline static final GAMEPAD_STORAGE_SIZE:Int = 20;
 
+    #if !no_backend_docs
+    /**
+     * Fired when a keyboard key is pressed down.
+     * @param key The key information including scan code and key code
+     */
+    #end
     @event function keyDown(key:ceramic.Key);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when a keyboard key is released.
+     * @param key The key information including scan code and key code
+     */
+    #end
     @event function keyUp(key:ceramic.Key);
 
+    #if !no_backend_docs
+    /**
+     * Fired when a gamepad analog stick or trigger value changes.
+     * @param gamepadId The gamepad index (0-based)
+     * @param axisId The axis index (0-3: left X/Y, right X/Y)
+     * @param value The axis value (-1 to 1 for sticks, 0 to 1 for triggers)
+     */
+    #end
     @event function gamepadAxis(gamepadId:Int, axisId:Int, value:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when a gamepad button is pressed.
+     * @param gamepadId The gamepad index (0-based)
+     * @param buttonId The button index (follows standard gamepad layout)
+     */
+    #end
     @event function gamepadDown(gamepadId:Int, buttonId:Int);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when a gamepad button is released.
+     * @param gamepadId The gamepad index (0-based)
+     * @param buttonId The button index (follows standard gamepad layout)
+     */
+    #end
     @event function gamepadUp(gamepadId:Int, buttonId:Int);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when gamepad gyroscope data is available.
+     * @param gamepadId The gamepad index (0-based)
+     * @param dx Rotation around X axis (degrees)
+     * @param dy Rotation around Y axis (degrees)
+     * @param dz Rotation around Z axis (degrees)
+     */
+    #end
     @event function gamepadGyro(gamepadId:Int, dx:Float, dy:Float, dz:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when a gamepad is connected.
+     * @param gamepadId The gamepad index (0-based)
+     * @param name The display name of the gamepad
+     */
+    #end
     @event function gamepadEnable(gamepadId:Int, name:String);
+    
+    #if !no_backend_docs
+    /**
+     * Fired when a gamepad is disconnected.
+     * @param gamepadId The gamepad index (0-based)
+     */
+    #end
     @event function gamepadDisable(gamepadId:Int);
 
+    #if !no_backend_docs
+    /**
+     * Creates a new Input instance.
+     * Initializes keyboard mappings and registers custom gamepad layouts
+     * for enhanced DualShock/DualSense controller support with gyroscope.
+     */
+    #end
     public function new() {
 
         initKeyCodesMapping();
@@ -42,6 +129,14 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Updates input state and dispatches events.
+     * Called every frame by the backend to poll Unity's input system.
+     * 
+     * @param delta Time elapsed since last update (used for gyro calculations)
+     */
+    #end
     @:allow(backend.Backend)
     inline function update(delta:Float):Void {
 
@@ -522,12 +617,31 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Starts gamepad rumble/vibration.
+     * Currently not implemented in Unity backend.
+     * 
+     * @param gamepadId The gamepad index (0-based)
+     * @param lowFrequency Low frequency motor intensity (0-1)
+     * @param highFrequency High frequency motor intensity (0-1)
+     * @param duration Duration in seconds
+     */
+    #end
     public function startGamepadRumble(gamepadId:Int, lowFrequency:Float, highFrequency:Float, duration:Float):Void {
 
         // TODO: Implement me
 
     };
 
+    #if !no_backend_docs
+    /**
+     * Stops gamepad rumble/vibration.
+     * Currently not implemented in Unity backend.
+     * 
+     * @param gamepadId The gamepad index (0-based)
+     */
+    #end
     public function stopGamepadRumble(gamepadId:Int): Void {
 
         // TODO: Implement me

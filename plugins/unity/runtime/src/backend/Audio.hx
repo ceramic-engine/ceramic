@@ -6,14 +6,63 @@ import unityengine.AudioClip;
 
 using StringTools;
 
+#if !no_backend_docs
+/**
+ * Unity backend implementation for audio playback and management.
+ * 
+ * This class provides the bridge between Ceramic's audio system and Unity's
+ * AudioSource/AudioClip system. It handles:
+ * - Loading audio resources from Unity's Resources folder
+ * - Playing, pausing, and controlling audio playback
+ * - Managing audio buses with effects processing
+ * - Audio filter worklet integration for DSP effects
+ * - Resource lifecycle management with reference counting
+ * 
+ * The implementation uses Unity's built-in audio system while providing
+ * Ceramic's unified audio API, including support for:
+ * - Multiple audio buses with independent effects chains
+ * - Real-time audio filtering via worklets
+ * - 3D spatial audio via pan controls
+ * - Pitch shifting and time stretching
+ * 
+ * @see AudioResourceImpl The Unity-specific audio resource wrapper
+ * @see AudioHandleImpl The Unity-specific playback handle
+ * @see AudioSources Unity audio source pool manager
+ */
+#end
 class Audio implements spec.Audio {
 
 /// Lifecycle
 
+    #if !no_backend_docs
+    /**
+     * Create a new Unity audio backend instance.
+     * Initializes the audio system but doesn't create any Unity objects yet.
+     */
+    #end
     public function new() {}
 
 /// Public API
 
+    #if !no_backend_docs
+    /**
+     * Load an audio file from Unity's Resources folder or file system.
+     * 
+     * The loading process:
+     * 1. Normalizes the path (absolute or relative to assets)
+     * 2. Checks if already loaded (returns cached with increased retain count)
+     * 3. Checks if currently loading (adds callback to queue)
+     * 4. Loads via Unity's Resources.Load<AudioClip> API
+     * 5. Caches the result and notifies all waiting callbacks
+     * 
+     * File extensions are automatically stripped for Unity Resources API.
+     * HTTP/HTTPS URLs are not currently supported.
+     * 
+     * @param path Path to the audio file (relative to Resources or absolute)
+     * @param options Loading options (currently unused)
+     * @param _done Callback with loaded AudioResource or null on failure
+     */
+    #end
     public function load(path:String, ?options:LoadAudioOptions, _done:AudioResource->Void):Void {
 
         var done = function(resource:AudioResource) {
@@ -112,6 +161,22 @@ class Audio implements spec.Audio {
 
     var nextSamplesBufferIndex:Int = 0;
 
+    #if !no_backend_docs
+    /**
+     * Create an audio resource from raw PCM sample data.
+     * 
+     * This method creates a Unity AudioClip from the provided samples and
+     * wraps it in an AudioResource. Supports both interleaved and planar
+     * audio formats. The resource is automatically cached with a unique ID.
+     * 
+     * @param buffer Raw PCM samples as 32-bit floats
+     * @param samples Number of samples per channel
+     * @param channels Number of audio channels (1=mono, 2=stereo)
+     * @param sampleRate Sample rate in Hz (e.g., 44100, 48000)
+     * @param interleaved true if samples are interleaved, false if planar
+     * @return Created AudioResource or null on failure
+     */
+    #end
     public function createFromSamplesBuffer(buffer:Float32Array, samples:Int, channels:Int, sampleRate:Float, interleaved:Bool):AudioResource {
 
         var id = 'samples:' + (nextSamplesBufferIndex++);
@@ -147,18 +212,40 @@ class Audio implements spec.Audio {
         return null;
     }
 
+    #if !no_backend_docs
+    /**
+     * Get the duration of an audio resource in seconds.
+     * @param audio The audio resource
+     * @return Duration in seconds
+     */
+    #end
     inline public function getDuration(audio:AudioResource):Float {
 
         return (audio:AudioResourceImpl).unityResource.length;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Resume the audio context (required for web, no-op for Unity).
+     * Unity doesn't have the same audio context restrictions as web browsers,
+     * so this always succeeds immediately.
+     * @param done Callback with success status (always true)
+     */
+    #end
     inline public function resumeAudioContext(done:Bool->Void):Void {
 
         done(true);
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Destroy an audio resource and release its memory.
+     * Uses reference counting - only unloads from Unity when retain count reaches 0.
+     * @param audio The audio resource to destroy
+     */
+    #end
     inline public function destroy(audio:AudioResource):Void {
 
         var id = (audio:AudioResourceImpl).path;
@@ -173,12 +260,34 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Create a muted audio handle (not implemented in Unity backend).
+     * @param audio The audio resource
+     * @return Always returns null
+     */
+    #end
     public function mute(audio:AudioResource):AudioHandle {
 
         return null;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Play an audio resource with specified parameters.
+     * Creates a new AudioHandle that controls the playback instance.
+     * 
+     * @param audio The audio resource to play
+     * @param volume Volume level (0.0 to 1.0)
+     * @param pan Stereo pan (-1.0 = left, 0.0 = center, 1.0 = right)
+     * @param pitch Pitch multiplier (1.0 = normal)
+     * @param position Start position in seconds
+     * @param loop Whether to loop the playback
+     * @param bus Audio bus index for routing and effects
+     * @return Handle for controlling the playback
+     */
+    #end
     public function play(audio:AudioResource, volume:Float = 0.5, pan:Float = 0, pitch:Float = 1, position:Float = 0, loop:Bool = false, bus:Int = 0):AudioHandle {
 
         var handle = new AudioHandleImpl(audio, bus, busHasFilter[bus] == true);
@@ -195,18 +304,36 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Pause audio playback.
+     * @param handle The audio handle to pause
+     */
+    #end
     public function pause(handle:AudioHandle):Void {
 
         (handle:AudioHandleImpl).pause();
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Resume paused audio playback.
+     * @param handle The audio handle to resume
+     */
+    #end
     public function resume(handle:AudioHandle):Void {
 
         (handle:AudioHandleImpl).resume();
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Stop audio playback completely.
+     * @param handle The audio handle to stop
+     */
+    #end
     public function stop(handle:AudioHandle):Void {
 
         (handle:AudioHandleImpl).stop();
@@ -261,12 +388,37 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Check if hot reload is supported for audio paths.
+     * Unity backend doesn't support hot reload.
+     * @return Always false
+     */
+    #end
     inline public function supportsHotReloadPath():Bool {
 
         return false;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Add an audio filter to a specific bus.
+     * 
+     * This creates or updates the filter chain for the specified bus.
+     * Filters are processed in the order they were added. The implementation:
+     * 1. Marks the bus as having filters
+     * 2. Creates Unity bus filter if needed
+     * 3. Initializes the filter worklet for DSP processing
+     * 4. Synchronizes filter parameters
+     * 
+     * Thread-safe with spin locks for audio thread coordination.
+     * 
+     * @param bus The audio bus index
+     * @param filter The audio filter to add
+     * @param onReady Callback when filter is ready for processing
+     */
+    #end
     public function addFilter(bus:Int, filter:ceramic.AudioFilter, onReady:(bus:Int)->Void):Void {
 
         busHasFilter[bus] = true;
@@ -326,6 +478,15 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Remove an audio filter from a bus.
+     * Cleans up the filter worklet and updates the filter chain.
+     * 
+     * @param bus The audio bus index
+     * @param filterId The unique ID of the filter to remove
+     */
+    #end
     public function removeFilter(bus:Int, filterId:Int):Void {
 
         audioFiltersLock.acquire();
@@ -361,6 +522,15 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Notify that filter parameters have changed and need syncing.
+     * The actual parameter update happens in the next audio processing callback.
+     * 
+     * @param bus The audio bus index
+     * @param filterId The filter whose parameters changed
+     */
+    #end
     public function filterParamsChanged(bus:Int, filterId:Int):Void {
 
         audioFiltersLock.acquire();
@@ -387,6 +557,15 @@ class Audio implements spec.Audio {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Called from Unity audio thread when a bus filter is created.
+     * Marks the bus as active and notifies any waiting callbacks.
+     * 
+     * @param bus The audio bus index
+     * @param instanceId Unity instance ID (unused)
+     */
+    #end
     static function _unityFilterCreate(bus:Int, instanceId:Int):Void {
         // Already acquired
         //audioFiltersLock.acquire();
@@ -408,6 +587,14 @@ class Audio implements spec.Audio {
         //audioFiltersLock.release();
     }
 
+    #if !no_backend_docs
+    /**
+     * Execute callbacks in the main thread.
+     * Used to safely notify from audio thread context.
+     * 
+     * @param toNotify Array of callbacks to execute
+     */
+    #end
     static function _notifyCallbacksInMainThread(toNotify:Array<()->Void>):Void {
         ceramic.Runner.runInMain(() -> {
             for (i in 0...toNotify.length) {
@@ -417,12 +604,42 @@ class Audio implements spec.Audio {
         });
     }
 
+    #if !no_backend_docs
+    /**
+     * Called from Unity audio thread when a bus filter is destroyed.
+     * Marks the bus as inactive.
+     * 
+     * @param bus The audio bus index
+     * @param instanceId Unity instance ID (unused)
+     */
+    #end
     static function _unityFilterDestroy(bus:Int, instanceId:Int):Void {
         audioFiltersLock.acquire();
         activeBusFilters[bus] = false;
         audioFiltersLock.release();
     }
 
+    #if !no_backend_docs
+    /**
+     * Audio processing callback from Unity's audio thread.
+     * 
+     * This is called for each audio buffer that needs processing. It:
+     * 1. Ensures the bus filter is marked as created
+     * 2. Creates worklets for any new filters
+     * 3. Syncs filter parameters if they've changed
+     * 4. Processes the audio through all active filter worklets
+     * 
+     * Thread-safe with careful lock management to avoid audio glitches.
+     * 
+     * @param bus The audio bus being processed
+     * @param instanceId Unity instance ID
+     * @param aBuffer Audio sample buffer to process
+     * @param aSamples Number of samples in the buffer
+     * @param aChannels Number of audio channels
+     * @param aSamplerate Sample rate in Hz
+     * @param time Current audio time
+     */
+    #end
     static function _unityFilterProcess(bus:Int, instanceId:Int, aBuffer:Float32Array, aSamples:Int, aChannels:Int, aSamplerate:Single, time:Float):Void {
 
         audioFiltersLock.acquire();
@@ -504,6 +721,8 @@ class Audio implements spec.Audio {
 
 /// Internal
 
+    // Thread synchronization for audio filter management
+
     static final audioFiltersLock = new ceramic.SpinLock();
     static final filterLocksByBus:Array<ceramic.SpinLock> = [];
 
@@ -518,12 +737,24 @@ class Audio implements spec.Audio {
 
     static final postWorkletSyncCallbacks:Array<()->Void> = [];
 
+    #if !no_backend_docs
+    /** Cached list of supported sound file extensions */
+    #end
     var soundExtensions:Array<String> = null;
 
+    #if !no_backend_docs
+    /** Callbacks waiting for audio resources currently being loaded */
+    #end
     var loadingAudioCallbacks:Map<String,Array<AudioResource->Void>> = new Map();
 
+    #if !no_backend_docs
+    /** Cache of loaded audio resources by path */
+    #end
     var loadedAudioResources:Map<String,AudioResourceImpl> = new Map();
 
+    #if !no_backend_docs
+    /** Reference count for loaded resources (for memory management) */
+    #end
     var loadedAudioRetainCount:Map<String,Int> = new Map();
 
 } //Audio

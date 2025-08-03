@@ -12,10 +12,23 @@ import unityengine.inputsystem.controls.TouchControl;
 
 using ceramic.Extensions;
 
+#if !no_backend_docs
+/**
+ * Unity backend implementation for screen and input handling.
+ * Manages window properties, mouse/touch input, and screenshot capture functionality.
+ * Handles Unity's Input System for both mouse and multi-touch interactions.
+ */
+#end
 @:keep
 @:allow(Main)
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
+    #if !no_backend_docs
+    /**
+     * Creates a new Screen instance and initializes display properties.
+     * Automatically detects screen dimensions and calculates pixel density.
+     */
+    #end
     public function new() {
 
         isEditor = untyped __cs__('UnityEngine.Application.isEditor');
@@ -38,59 +51,184 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Current screen width in logical pixels (after density scaling).
+     */
+    #end
     var width:Int = 0;
 
+    #if !no_backend_docs
+    /**
+     * Current screen height in logical pixels (after density scaling).
+     */
+    #end
     var height:Int = 0;
 
+    #if !no_backend_docs
+    /**
+     * Screen pixel density multiplier (DPI / 160).
+     * Used to convert between physical and logical pixels.
+     */
+    #end
     var density:Float = 1;
 
+    #if !no_backend_docs
+    /**
+     * Whether the application is running in Unity Editor.
+     * Editor mode uses density = 1 regardless of display DPI.
+     */
+    #end
     var isEditor:Bool = false;
 
 /// Events
 
+    #if !no_backend_docs
+    /**
+     * Emitted when the screen dimensions or density changes.
+     */
+    #end
     @event function resize();
 
+    #if !no_backend_docs
+    /**
+     * Emitted when a mouse button is pressed.
+     * @param buttonId Button identifier (0=left, 1=middle, 2=right)
+     * @param x Mouse X position in logical pixels
+     * @param y Mouse Y position in logical pixels
+     */
+    #end
     @event function mouseDown(buttonId:Int, x:Float, y:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Emitted when a mouse button is released.
+     * @param buttonId Button identifier (0=left, 1=middle, 2=right)
+     * @param x Mouse X position in logical pixels
+     * @param y Mouse Y position in logical pixels
+     */
+    #end
     @event function mouseUp(buttonId:Int, x:Float, y:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Emitted when the mouse wheel is scrolled.
+     * @param x Horizontal scroll delta
+     * @param y Vertical scroll delta
+     */
+    #end
     @event function mouseWheel(x:Float, y:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Emitted when the mouse cursor moves.
+     * @param x Mouse X position in logical pixels
+     * @param y Mouse Y position in logical pixels
+     */
+    #end
     @event function mouseMove(x:Float, y:Float);
 
+    #if !no_backend_docs
+    /**
+     * Emitted when a touch begins.
+     * @param touchIndex Touch identifier (0-based index)
+     * @param x Touch X position in logical pixels
+     * @param y Touch Y position in logical pixels
+     */
+    #end
     @event function touchDown(touchIndex:Int, x:Float, y:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Emitted when a touch ends.
+     * @param touchIndex Touch identifier (0-based index)
+     * @param x Touch X position in logical pixels
+     * @param y Touch Y position in logical pixels
+     */
+    #end
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
+    
+    #if !no_backend_docs
+    /**
+     * Emitted when a touch moves.
+     * @param touchIndex Touch identifier (0-based index)
+     * @param x Touch X position in logical pixels
+     * @param y Touch Y position in logical pixels
+     */
+    #end
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
 /// Public API
 
+    #if !no_backend_docs
+    /**
+     * Gets the current screen width in logical pixels.
+     * @return Screen width after density scaling
+     */
+    #end
     inline public function getWidth():Int {
 
         return width;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Gets the current screen height in logical pixels.
+     * @return Screen height after density scaling
+     */
+    #end
     inline public function getHeight():Int {
 
         return height;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Gets the current screen pixel density multiplier.
+     * @return Density factor (DPI / 160), minimum 1.0
+     */
+    #end
     inline public function getDensity():Float {
 
         return density;
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Sets the background color for the screen.
+     * Note: In Unity backend, this is handled during rendering.
+     * @param background RGB color value (0xRRGGBB)
+     */
+    #end
     public function setBackground(background:Int):Void {
 
         // Background will be updated when drawing
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Sets the window title.
+     * Note: Not implemented in Unity backend.
+     * @param title Window title string
+     */
+    #end
     public function setWindowTitle(title:String):Void {
 
         // TODO
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Toggles fullscreen mode.
+     * Note: Not implemented in Unity backend.
+     * @param fullscreen Whether to enable fullscreen
+     */
+    #end
     public function setWindowFullscreen(fullscreen:Bool):Void {
 
         // TODO
@@ -99,6 +237,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Internal
 
+    #if !no_backend_docs
+    /**
+     * Updates screen dimensions and processes input events.
+     * Called internally by the backend each frame.
+     */
+    #end
     @:allow(backend.Backend)
     function update() {
 
@@ -133,16 +277,47 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Mouse input
 
+    #if !no_backend_docs
+    /**
+     * Tracks left mouse button state.
+     */
+    #end
     var mouseLeftPressed:Bool = false;
 
+    #if !no_backend_docs
+    /**
+     * Tracks middle mouse button state.
+     */
+    #end
     var mouseMiddlePressed:Bool = false;
 
+    #if !no_backend_docs
+    /**
+     * Tracks right mouse button state.
+     */
+    #end
     var mouseRightPressed:Bool = false;
 
+    #if !no_backend_docs
+    /**
+     * Current mouse X position in logical pixels.
+     */
+    #end
     var mouseX:Float = -1;
 
+    #if !no_backend_docs
+    /**
+     * Current mouse Y position in logical pixels.
+     */
+    #end
     var mouseY:Float = -1;
 
+    #if !no_backend_docs
+    /**
+     * Processes mouse input from Unity's Input System.
+     * Handles button states, movement, and wheel scrolling.
+     */
+    #end
     function updateMouseInput() {
 
         var mouse = Mouse.current;
@@ -210,22 +385,69 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Touch input
 
+    #if !no_backend_docs
+    /**
+     * Maps Unity touch IDs to Ceramic touch indices.
+     */
+    #end
     var touchIdToIndex:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    #if !no_backend_docs
+    /**
+     * Tracks which touch indices are currently in use.
+     * Maps index to Unity touch ID.
+     */
+    #end
     var usedTouchIndexes:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    #if !no_backend_docs
+    /**
+     * Touch indices processed in the current frame.
+     */
+    #end
     var processedTouchIndexes:Array<Int> = [];
 
+    #if !no_backend_docs
+    /**
+     * Number of touches from the previous frame.
+     */
+    #end
     var prevNumTouches:Int = 0;
 
+    #if !no_backend_docs
+    /**
+     * Touch indices from the previous frame.
+     */
+    #end
     var prevProcessedTouchIndexes:Array<Int> = [];
 
+    #if !no_backend_docs
+    /**
+     * Touch positions for the current frame (x,y pairs).
+     */
+    #end
     var processedTouchPositions:Array<Float> = [];
 
+    #if !no_backend_docs
+    /**
+     * Touch positions from the previous frame (x,y pairs).
+     */
+    #end
     var prevProcessedTouchPositions:Array<Float> = [];
 
+    #if !no_backend_docs
+    /**
+     * Highest touch start time seen, used to filter stale touches.
+     */
+    #end
     var touchHighestStartTime:Float = -1;
 
+    #if !no_backend_docs
+    /**
+     * Processes touch input from Unity's Input System.
+     * Handles multi-touch with proper ID tracking and robustness checks.
+     */
+    #end
     function updateTouchInput() {
 
         var touchScreen = Touchscreen.current;
@@ -360,8 +582,19 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
 /// Screenshot
 
+    #if !no_backend_docs
+    /**
+     * Counter for generating unique screenshot texture names.
+     */
+    #end
     var nextScreenshotIndex:Int = 0;
 
+    #if !no_backend_docs
+    /**
+     * Captures the current screen as a texture.
+     * @param done Callback with the captured texture (null on failure)
+     */
+    #end
     public function screenshotToTexture(done:(texture:Texture)->Void):Void {
 
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
@@ -376,6 +609,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Captures the current screen as PNG data.
+     * @param path Optional file path to save the PNG
+     * @param done Callback with PNG bytes (null if path provided or on failure)
+     */
+    #end
     public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
 
         if (path != null) {
@@ -396,6 +636,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Captures the current screen as raw pixel data.
+     * @param done Callback with pixel array, width, and height (null array on failure)
+     */
+    #end
     public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
 
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
