@@ -9,6 +9,7 @@ import sys.io.File;
 
 using StringTools;
 
+#if !no_backend_docs
 /**
  * Text file loading implementation for the headless backend.
  * 
@@ -19,13 +20,17 @@ using StringTools;
  * Text files are commonly used for configuration, data files,
  * JSON, XML, and other text-based assets.
  */
+#end
 class Texts implements spec.Texts {
 
+    #if !no_backend_docs
     /**
      * Creates a new text file loading system.
      */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
     /**
      * Loads a text file from the specified path.
      * 
@@ -36,6 +41,7 @@ class Texts implements spec.Texts {
      * @param options Optional loading parameters (currently unused)
      * @param _done Callback function called with the loaded text (or null on failure)
      */
+    #end
     public function load(path:String, ?options:LoadTextOptions, _done:String->Void):Void {
 
         var done = function(text:String) {
@@ -82,11 +88,13 @@ class Texts implements spec.Texts {
 
     }
 
+    #if !no_backend_docs
     /**
      * Indicates whether this backend supports hot reloading of text assets.
      * 
      * @return Always false for the headless backend
      */
+    #end
     inline public function supportsHotReloadPath():Bool {
         
         return false;

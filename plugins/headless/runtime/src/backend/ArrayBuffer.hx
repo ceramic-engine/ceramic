@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * ArrayBuffer type definition for the headless backend.
  * 
@@ -11,4 +12,5 @@ package backend;
  * typically the backing store for typed arrays like Float32Array
  * and UInt8Array.
  */
+#end
 typedef ArrayBuffer = Dynamic;

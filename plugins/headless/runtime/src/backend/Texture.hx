@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Texture type definition for the headless backend.
  * 
@@ -11,6 +12,7 @@ package backend;
  * and properties but don't contain actual pixel data
  * since no rendering occurs.
  */
+#end
 #if documentation
 
 typedef Texture = TextureImpl;

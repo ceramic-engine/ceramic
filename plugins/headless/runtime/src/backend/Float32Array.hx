@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Float32Array implementation for the headless backend.
  * 
@@ -10,17 +11,21 @@ package backend;
  * Float32Arrays are commonly used for vertex data, audio buffers,
  * and other numerical computations where memory layout is important.
  */
+#end
 typedef Float32Array = Float32ArrayImplHeadless;
 
+#if !no_backend_docs
 /**
  * Implementation class for Float32Array in headless mode.
  * 
  * This wraps a standard Haxe Array<Float> and provides the same
  * interface as platform-specific typed array implementations.
  */
+#end
 @:forward
 abstract Float32ArrayImplHeadless(Array<Float>) from Array<Float> to Array<Float> {
 
+    #if !no_backend_docs
     /**
      * Creates a new Float32Array with the specified size.
      * 
@@ -28,6 +33,7 @@ abstract Float32ArrayImplHeadless(Array<Float>) from Array<Float> to Array<Float
      * 
      * @param size Number of float elements to allocate
      */
+    #end
     public function new(size:Int) {
 
         this = [];

@@ -10,6 +10,7 @@ import sys.io.File;
 
 using StringTools;
 
+#if !no_backend_docs
 /**
  * Binary file loading implementation for the headless backend.
  * 
@@ -21,13 +22,17 @@ using StringTools;
  * used for any type of binary data like images, sounds, or
  * custom file formats.
  */
+#end
 class Binaries implements spec.Binaries {
 
+    #if !no_backend_docs
     /**
      * Creates a new binary file loading system.
      */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
     /**
      * Loads a binary file from the specified path.
      * 
@@ -38,6 +43,7 @@ class Binaries implements spec.Binaries {
      * @param options Optional loading parameters (currently unused)
      * @param _done Callback function called with the loaded bytes (or null on failure)
      */
+    #end
     public function load(path:String, ?options:LoadBinaryOptions, _done:Bytes->Void):Void {
 
         var done = function(binary:Bytes) {
@@ -84,11 +90,13 @@ class Binaries implements spec.Binaries {
 
     }
 
+    #if !no_backend_docs
     /**
      * Indicates whether this backend supports hot reloading of binary assets.
      * 
      * @return Always false for the headless backend
      */
+    #end
     inline public function supportsHotReloadPath():Bool {
         
         return false;

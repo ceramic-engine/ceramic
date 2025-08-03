@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Shader type definition for the headless backend.
  * 
@@ -9,4 +10,5 @@ package backend;
  * attribute definitions and interface for API compatibility
  * but don't perform actual GPU compilation or rendering.
  */
+#end
 abstract Shader(ShaderImpl) from ShaderImpl to ShaderImpl {}

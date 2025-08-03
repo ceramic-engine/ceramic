@@ -436,9 +436,11 @@ class Textures implements spec.Textures {
 
     }
 
+    #if !no_backend_docs
     /**
      * If this returns a value above 1, that means this backend supports multi-texture batching.
      */
+    #end
     public function maxTexturesByBatch():Int {
 
         // Might do some more checks later

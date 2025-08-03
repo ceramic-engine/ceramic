@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Implementation class for audio resources in the headless backend.
  * 
@@ -12,13 +13,16 @@ package backend;
  * all the same audio playback functions as other backends, but will
  * not produce any actual sound output.
  */
+#end
 class AudioResourceImpl {
 
+    #if !no_backend_docs
     /**
      * Creates a new mock audio resource.
      * 
      * In headless mode, no actual audio data is loaded or stored.
      */
+    #end
     public function new() {}
 
 }

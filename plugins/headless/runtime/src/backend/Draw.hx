@@ -2,6 +2,7 @@ package backend;
 
 using ceramic.Extensions;
 
+#if !no_backend_docs
 /**
  * Drawing and rendering implementation for the headless backend.
  * 
@@ -20,53 +21,85 @@ using ceramic.Extensions;
  * - Performance testing of non-rendering code paths
  * - Debugging rendering logic without visual dependencies
  */
+#end
 @:allow(backend.Backend)
 class Draw #if !completion implements spec.Draw #end {
 
+    #if !no_backend_docs
     /** Maximum number of vertices that can be buffered before flushing */
+    #end
     #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
+    #if !no_backend_docs
     /** Maximum number of indices that can be buffered before flushing */
+    #end
     #if !ceramic_debug_draw_backend inline #end static var MAX_INDICES:Int = 16384;
 
+    #if !no_backend_docs
     /** Size of each vertex in the buffer (in floats) */
+    #end
     static var _vertexSize:Int = 0;
+    #if !no_backend_docs
     /** Current number of indices in the buffer */
+    #end
     static var _numIndices:Int = 0;
 
+    #if !no_backend_docs
     /** Current number of positions in the buffer */
+    #end
     static var _numPos:Int = 0;
+    #if !no_backend_docs
     /** Current index in the position buffer */
+    #end
     static var _posIndex:Int = 0;
 
+    #if !no_backend_docs
     /** Current number of UV coordinates in the buffer */
+    #end
     static var _numUVs:Int = 0;
+    #if !no_backend_docs
     /** Current index in the UV buffer */
+    #end
     static var _uvIndex:Int = 0;
 
+    #if !no_backend_docs
     /** Current number of colors in the buffer */
+    #end
     static var _numColors:Int = 0;
+    #if !no_backend_docs
     /** Current index in the color buffer */
+    #end
     static var _colorIndex:Int = 0;
 
+    #if !no_backend_docs
     /** Current index for custom float attributes */
+    #end
     static var _floatAttributesIndex:Int = 0;
 
+    #if !no_backend_docs
     /** Currently active shader */
+    #end
     static var _currentShader:ShaderImpl;
 
+    #if !no_backend_docs
     /** Maximum number of vertices that can fit in the current configuration */
+    #end
     static var _maxVerts:Int = 0;
 
+    #if !no_backend_docs
     /** Currently active texture slot */
+    #end
     static var _activeTextureSlot:Int = 0;
 
 /// Public API
 
+    #if !no_backend_docs
     /**
      * Creates a new headless draw implementation.
      */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
     /**
      * Gets the visual item type for a given visual object.
      * 
@@ -78,6 +111,7 @@ class Draw #if !completion implements spec.Draw #end {
      * @param visual The visual object to categorize
      * @return The visual item type (QUAD, MESH, or NONE)
      */
+    #end
     inline public function getItem(visual:ceramic.Visual):VisualItem {
 
         // The backend decides how each visual should be drawn.
@@ -98,6 +132,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    #if !no_backend_docs
     /**
      * Draws an array of visual objects.
      * 
@@ -105,17 +140,20 @@ class Draw #if !completion implements spec.Draw #end {
      * 
      * @param visuals Array of visual objects to draw
      */
+    #end
     public function draw(visuals:Array<ceramic.Visual>):Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Swaps the front and back buffers to display rendered content.
      * 
      * In headless mode, this is a no-op since there are no buffers to swap.
      */
+    #end
     public function swap():Void {
 
         // Unused in headless
@@ -124,40 +162,47 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
+    #if !no_backend_docs
     /**
      * Initializes vertex and index buffers for rendering.
      * 
      * In headless mode, this is a no-op since no GPU buffers are allocated.
      */
+    #end
     inline public function initBuffers():Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Begins a new rendering pass.
      * 
      * In headless mode, this is a no-op since no rendering occurs.
      */
+    #end
     inline public function beginRender():Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the current render target.
      * 
      * @param renderTarget The texture to render to (null for screen)
      * @param force Whether to force the render target change
      */
+    #end
     inline public function setRenderTarget(renderTarget:ceramic.RenderTexture, force:Bool = false):Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the current shader for rendering.
      * 
@@ -166,6 +211,7 @@ class Draw #if !completion implements spec.Draw #end {
      * 
      * @param shader The shader implementation to use
      */
+    #end
     inline public function useShader(shader:backend.ShaderImpl):Void {
 
         _currentShader = shader;
@@ -183,39 +229,46 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    #if !no_backend_docs
     /**
      * Clears the current render target.
      * 
      * In headless mode, this is a no-op since no rendering surface exists.
      */
+    #end
     inline public function clear():Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Enables alpha blending for subsequent draw calls.
      * 
      * In headless mode, this is a no-op since no rendering occurs.
      */
+    #end
     inline public function enableBlending():Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Disables alpha blending for subsequent draw calls.
      * 
      * In headless mode, this is a no-op since no rendering occurs.
      */
+    #end
     inline public function disableBlending():Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the blend function for RGB and alpha channels separately.
      * 
@@ -224,28 +277,33 @@ class Draw #if !completion implements spec.Draw #end {
      * @param srcAlpha Source blend mode for alpha channel
      * @param dstAlpha Destination blend mode for alpha channel
      */
+    #end
     inline public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
         // Unused in headless
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the currently active texture slot.
      * 
      * @return The active texture slot index
      */
+    #end
     inline public function getActiveTexture():Int {
 
         return _activeTextureSlot;
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the active texture slot for subsequent operations.
      * 
      * @param slot The texture slot index to activate
      */
+    #end
     inline public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
@@ -430,6 +488,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    #if !no_backend_docs
     /**
      * Determines if the vertex buffer should be flushed before adding more data.
      * 
@@ -438,62 +497,73 @@ class Draw #if !completion implements spec.Draw #end {
      * @param customFloatAttributesSize Size of custom attributes
      * @return True if the buffer should be flushed
      */
+    #end
     inline public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
 
         return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the number of vertices that can still fit in the buffer.
      * 
      * @return Number of remaining vertex slots
      */
+    #end
     inline public function remainingVertices():Int {
 
         return _maxVerts - _numPos;
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the number of indices that can still fit in the buffer.
      * 
      * @return Number of remaining index slots
      */
+    #end
     inline public function remainingIndices():Int {
 
         return MAX_INDICES - _numIndices;
 
     }
 
+    #if !no_backend_docs
     /**
      * Checks if there is any buffered geometry to flush.
      * 
      * @return True if there are vertices to render
      */
+    #end
     inline public function hasAnythingToFlush():Bool {
 
         return _numPos > 0;
 
     }
 
+    #if !no_backend_docs
     /**
      * Flushes all buffered geometry and resets buffer indices.
      * 
      * In headless mode, this just resets the buffer state.
      */
+    #end
     inline public function flush():Void {
 
         resetIndexes();
 
     }
 
+    #if !no_backend_docs
     /**
      * Resets all buffer indices to their initial state.
      * 
      * This configures the buffer layout based on whether the current
      * shader supports multiple textures per batch.
      */
+    #end
     #if !ceramic_debug_draw_backend inline #end function resetIndexes():Void {
 
         _numIndices = 0;

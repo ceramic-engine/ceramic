@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Audio handle type definition for the headless backend.
  * 
@@ -11,6 +12,7 @@ package backend;
  * In headless mode, these handles maintain all the same
  * properties as other backends but don't produce actual sound.
  */
+#end
 #if documentation
 
 typedef AudioHandle = AudioHandleImpl;

@@ -2,6 +2,7 @@ package backend;
 
 import haxe.io.Bytes;
 
+#if !no_backend_docs
 /**
  * Screen and window management implementation for the headless backend.
  * 
@@ -13,20 +14,26 @@ import haxe.io.Bytes;
  * The screen dimensions are taken from the application's target settings,
  * and all visual operations are no-ops.
  */
+#end
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
+    #if !no_backend_docs
     /**
      * Creates a new headless screen system.
      */
+    #end
     public function new() {}
 
 /// Events
 
+    #if !no_backend_docs
     /**
      * Fired when the screen/window is resized.
      */
+    #end
     @event function resize();
 
+    #if !no_backend_docs
     /**
      * Fired when a mouse button is pressed down.
      * 
@@ -34,8 +41,10 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param x X coordinate of the mouse cursor
      * @param y Y coordinate of the mouse cursor
      */
+    #end
     @event function mouseDown(buttonId:Int, x:Float, y:Float);
     
+    #if !no_backend_docs
     /**
      * Fired when a mouse button is released.
      * 
@@ -43,24 +52,30 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param x X coordinate of the mouse cursor
      * @param y Y coordinate of the mouse cursor
      */
+    #end
     @event function mouseUp(buttonId:Int, x:Float, y:Float);
     
+    #if !no_backend_docs
     /**
      * Fired when the mouse wheel is scrolled.
      * 
      * @param x Horizontal scroll amount
      * @param y Vertical scroll amount
      */
+    #end
     @event function mouseWheel(x:Float, y:Float);
     
+    #if !no_backend_docs
     /**
      * Fired when the mouse cursor is moved.
      * 
      * @param x New X coordinate of the mouse cursor
      * @param y New Y coordinate of the mouse cursor
      */
+    #end
     @event function mouseMove(x:Float, y:Float);
 
+    #if !no_backend_docs
     /**
      * Fired when a touch begins.
      * 
@@ -68,8 +83,10 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param x X coordinate of the touch
      * @param y Y coordinate of the touch
      */
+    #end
     @event function touchDown(touchIndex:Int, x:Float, y:Float);
     
+    #if !no_backend_docs
     /**
      * Fired when a touch ends.
      * 
@@ -77,8 +94,10 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param x X coordinate of the touch
      * @param y Y coordinate of the touch
      */
+    #end
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
     
+    #if !no_backend_docs
     /**
      * Fired when a touch point moves.
      * 
@@ -86,10 +105,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param x New X coordinate of the touch
      * @param y New Y coordinate of the touch
      */
+    #end
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
 /// Public API
 
+    #if !no_backend_docs
     /**
      * Gets the width of the virtual screen.
      * 
@@ -97,12 +118,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @return The screen width in pixels
      */
+    #end
     inline public function getWidth():Int {
 
         return ceramic.App.app.settings.targetWidth;
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the height of the virtual screen.
      * 
@@ -110,12 +133,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @return The screen height in pixels
      */
+    #end
     inline public function getHeight():Int {
 
         return ceramic.App.app.settings.targetHeight;
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the screen density (pixels per inch scale factor).
      * 
@@ -123,12 +148,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @return The screen density multiplier
      */
+    #end
     inline public function getDensity():Float {
 
         return 1.0;
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the background color of the screen/window.
      * 
@@ -136,12 +163,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @param background The background color as an integer (0xRRGGBB)
      */
+    #end
     public function setBackground(background:Int):Void {
 
         //
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets the title of the window.
      * 
@@ -149,12 +178,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @param title The window title text
      */
+    #end
     public function setWindowTitle(title:String):Void {
 
         //
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets whether the window should be fullscreen.
      * 
@@ -162,12 +193,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @param fullscreen Whether to enable fullscreen mode
      */
+    #end
     public function setWindowFullscreen(fullscreen:Bool):Void {
 
         //
 
     }
 
+    #if !no_backend_docs
     /**
      * Captures a screenshot and returns it as a texture.
      * 
@@ -175,12 +208,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @param done Callback function called with the screenshot texture (always null)
      */
+    #end
     public function screenshotToTexture(done:(texture:Texture)->Void):Void {
 
         done(null);
 
     }
 
+    #if !no_backend_docs
     /**
      * Captures a screenshot and saves it as a PNG file or returns the PNG data.
      * 
@@ -189,12 +224,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * @param path Optional file path to save the PNG to
      * @param done Callback function called with the PNG data (always null)
      */
+    #end
     public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 
     }
 
+    #if !no_backend_docs
     /**
      * Captures a screenshot and returns the raw pixel data.
      * 
@@ -202,6 +239,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      * 
      * @param done Callback function called with pixel data, width, and height (always null, 0, 0)
      */
+    #end
     public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
 
         done(null, 0, 0);

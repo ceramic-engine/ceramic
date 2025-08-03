@@ -24,34 +24,46 @@ class AudioSources {
 
     var miniLoudComponentByBus:Array<MiniLoudUnity> = [];
 
+    #if !no_backend_docs
     /**
      * GameObject on which audio sources are associated with
      */
+    #end
     var gameObject:GameObject;
 
+    #if !no_backend_docs
     /**
      * Main AudioMixer object
      */
+    #end
     var audioMixer:AudioMixer;
 
+    #if !no_backend_docs
     /**
      * All `AudioSource` instances associated with `gameObject`
      */
+    #end
     var all:Array<AudioSource> = [];
 
+    #if !no_backend_docs
     /**
      * `AudioSource` instances currently available for reuse
      */
+    #end
     var pool:Array<AudioSource> = [];
 
+    #if !no_backend_docs
     /**
      * Busses by index
      */
+    #end
     var busses:Array<AudioBus> = [];
 
+    #if !no_backend_docs
     /**
      * An array to keep track of bus that were not found
      */
+    #end
     var bussesNotFound:Array<Bool> = [];
 
     public function new(gameObject:GameObject, audioMixer:AudioMixer) {

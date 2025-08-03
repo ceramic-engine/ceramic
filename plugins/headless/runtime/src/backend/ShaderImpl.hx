@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Shader implementation for the headless backend.
  * 
@@ -11,19 +12,24 @@ package backend;
  * The shader implementation is used by the draw system to determine
  * vertex buffer layout and attribute sizing.
  */
+#end
 class ShaderImpl {
+    #if !no_backend_docs
     /**
      * Array of custom shader attributes defined by this shader.
      * These attributes affect vertex buffer layout and are used
      * to calculate buffer sizing even in headless mode.
      */
+    #end
     public var customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute> = null;
     
+    #if !no_backend_docs
     /**
      * Creates a new shader implementation.
      * 
      * @param customAttributes Optional array of custom shader attributes
      */
+    #end
     public function new(?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>) {
         this.customAttributes = customAttributes;
     }

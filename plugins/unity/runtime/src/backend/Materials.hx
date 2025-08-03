@@ -18,10 +18,12 @@ class Materials {
 
     }
 
+    #if !no_backend_docs
     /**
      * Provide a MaterialData object that matches the given params.
      * If such material doesn't exist yet, creates and instance
      */
+    #end
     public function get(
         textures:NativeArray<backend.Texture>,
         shader:backend.Shader,

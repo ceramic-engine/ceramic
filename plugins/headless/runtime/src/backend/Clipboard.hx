@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Clipboard implementation for the headless backend.
  * 
@@ -10,19 +11,25 @@ package backend;
  * This allows applications to use clipboard operations without errors,
  * with the clipboard data persisting within the application session.
  */
+#end
 class Clipboard implements spec.Clipboard {
 
+    #if !no_backend_docs
     /**
      * Internal storage for clipboard text.
      * This persists clipboard data within the headless environment.
      */
+    #end
     var clipboardText:String = null;
 
+    #if !no_backend_docs
     /**
      * Creates a new headless clipboard system.
      */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
     /**
      * Gets the current text from the clipboard.
      * 
@@ -31,12 +38,14 @@ class Clipboard implements spec.Clipboard {
      * 
      * @return The current clipboard text, or null if none is set
      */
+    #end
     public function getText():String {
         
         return clipboardText;
 
     }
 
+    #if !no_backend_docs
     /**
      * Sets text to the clipboard.
      * 
@@ -45,6 +54,7 @@ class Clipboard implements spec.Clipboard {
      * 
      * @param text The text to store in the clipboard
      */
+    #end
     public function setText(text:String):Void {
 
         clipboardText = text;

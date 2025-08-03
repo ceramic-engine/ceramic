@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Audio resource type definition for the headless backend.
  * 
@@ -11,6 +12,7 @@ package backend;
  * audio data but maintain the same interface for API
  * compatibility.
  */
+#end
 #if documentation
 
 typedef AudioResource = AudioResourceImpl;

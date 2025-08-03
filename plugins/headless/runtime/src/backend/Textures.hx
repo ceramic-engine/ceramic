@@ -3,6 +3,7 @@ package backend;
 import ceramic.ImageType;
 import haxe.io.Bytes;
 
+#if !no_backend_docs
 /**
  * Texture management system for the headless backend.
  * 
@@ -14,13 +15,17 @@ import haxe.io.Bytes;
  * All texture operations return valid objects and maintain state but
  * don't perform actual image loading, GPU uploading, or pixel processing.
  */
+#end
 class Textures implements spec.Textures {
 
+    #if !no_backend_docs
     /**
      * Creates a new headless texture management system.
      */
+    #end
     public function new() {}
 
+    #if !no_backend_docs
     /**
      * Loads a texture from the specified path.
      * 
@@ -31,6 +36,7 @@ class Textures implements spec.Textures {
      * @param options Optional loading parameters (ignored in headless mode)
      * @param _done Callback function called with the loaded texture
      */
+    #end
     public function load(path:String, ?options:LoadTextureOptions, _done:Texture->Void):Void {
 
         var done = function(texture:Texture) {
@@ -44,6 +50,7 @@ class Textures implements spec.Textures {
 
     }
 
+    #if !no_backend_docs
     /**
      * Loads a texture from raw image bytes.
      * 
@@ -55,6 +62,7 @@ class Textures implements spec.Textures {
      * @param options Optional loading parameters (ignored in headless mode)
      * @param _done Callback function called with the loaded texture
      */
+    #end
     public function loadFromBytes(bytes:Bytes, type:ImageType, ?options:LoadTextureOptions, _done:Texture->Void):Void {
 
         var done = function(texture:Texture) {
@@ -68,17 +76,20 @@ class Textures implements spec.Textures {
 
     }
 
+    #if !no_backend_docs
     /**
      * Indicates whether this backend supports hot reloading of texture assets.
      * 
      * @return Always false for the headless backend
      */
+    #end
     inline public function supportsHotReloadPath():Bool {
 
         return false;
 
     }
 
+    #if !no_backend_docs
     /**
      * Creates a texture from raw pixel data.
      * 
@@ -87,12 +98,14 @@ class Textures implements spec.Textures {
      * @param pixels Raw pixel data (ignored in headless mode)
      * @return Always null in headless mode
      */
+    #end
     public function createTexture(width:Int, height:Int, pixels:ceramic.UInt8Array):Texture {
 
         return null;
 
     }
 
+    #if !no_backend_docs
     /**
      * Destroys a texture and frees its resources.
      * 
@@ -100,10 +113,12 @@ class Textures implements spec.Textures {
      * 
      * @param texture The texture to destroy
      */
+    #end
     public function destroyTexture(texture:Texture):Void {
 
     }
 
+    #if !no_backend_docs
     /**
      * Creates a render target texture with the specified properties.
      * 
@@ -117,12 +132,14 @@ class Textures implements spec.Textures {
      * @param antialiasing Antialiasing level (0 = none)
      * @return A mock render target texture
      */
+    #end
     inline public function createRenderTarget(width:Int, height:Int, depth:Bool, stencil:Bool, antialiasing:Int):Texture {
 
         return new TextureImpl(width, height, depth, stencil, antialiasing);
 
     }
 
+    #if !no_backend_docs
     /**
      * Destroys a texture and frees its resources.
      * 
@@ -130,6 +147,7 @@ class Textures implements spec.Textures {
      * 
      * @param texture The texture to destroy
      */
+    #end
     public function destroy(texture:Texture):Void {
 
         //
@@ -194,29 +212,34 @@ class Textures implements spec.Textures {
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the maximum number of textures that can be used in a single batch.
      * 
      * @return Always 1 in headless mode since no actual batching occurs
      */
+    #end
     public function maxTexturesByBatch():Int {
 
         return 1;
 
     }
 
+    #if !no_backend_docs
     /**
      * Gets the texture index for batched rendering.
      * 
      * @param texture The texture to get the index for
      * @return Always -1 in headless mode since no batching occurs
      */
+    #end
     inline public function getTextureIndex(texture:Texture):Int {
 
         return -1;
 
     }
 
+    #if !no_backend_docs
     /**
      * Exports a texture to PNG format.
      * 
@@ -225,12 +248,14 @@ class Textures implements spec.Textures {
      * @param path Optional file path to save to
      * @param done Callback called with the PNG data (always null in headless mode)
      */
+    #end
     public function textureToPng(texture:Texture, reversePremultiplyAlpha:Bool = true, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);
 
     }
 
+    #if !no_backend_docs
     /**
      * Exports raw pixel data to PNG format.
      * 
@@ -240,6 +265,7 @@ class Textures implements spec.Textures {
      * @param path Optional file path to save to
      * @param done Callback called with the PNG data (always null in headless mode)
      */
+    #end
     public function pixelsToPng(width:Int, height:Int, pixels:ceramic.UInt8Array, ?path:String, done:(?data:Bytes)->Void):Void {
 
         done(null);

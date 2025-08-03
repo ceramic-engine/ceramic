@@ -18,9 +18,11 @@ using ceramic.Extensions;
 @:allow(Main)
 class Input implements tracker.Events implements spec.Input {
 
+    #if !no_backend_docs
     /**
      * Internal value to store gamepad state
      */
+    #end
     inline static final GAMEPAD_STORAGE_SIZE:Int = 20;
 
     @event function keyDown(key:ceramic.Key);

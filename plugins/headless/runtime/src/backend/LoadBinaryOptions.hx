@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * Options for loading binary resources in the headless backend.
  * 
@@ -10,6 +11,7 @@ package backend;
  * Currently, no specific options are defined, but the structure
  * allows for future expansion.
  */
+#end
 typedef LoadBinaryOptions = {
     
 }

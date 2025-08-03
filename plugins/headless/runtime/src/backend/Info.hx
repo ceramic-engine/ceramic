@@ -1,5 +1,6 @@
 package backend;
 
+#if !no_backend_docs
 /**
  * System information provider for the headless backend.
  * 
@@ -11,15 +12,19 @@ package backend;
  * This information is used by the asset loading system to
  * determine which file formats to attempt loading.
  */
+#end
 class Info #if !completion implements spec.Info #end {
 
+    #if !no_backend_docs
     /**
      * Creates a new headless info provider.
      */
+    #end
     public function new() {}
 
 /// System
 
+    #if !no_backend_docs
     /**
      * Gets the platform-specific storage directory for persistent data.
      * 
@@ -28,12 +33,14 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Always null in headless mode
      */
+    #end
     inline public function storageDirectory():String {
         return null;
     }
 
 /// Assets
 
+    #if !no_backend_docs
     /**
      * Gets the list of supported image file extensions.
      * 
@@ -43,10 +50,12 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Array of supported image extensions
      */
+    #end
     inline public function imageExtensions():Array<String> {
         return ['png', 'jpg', 'jpeg'];
     }
 
+    #if !no_backend_docs
     /**
      * Gets the list of supported text file extensions.
      * 
@@ -56,10 +65,12 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Array of supported text extensions
      */
+    #end
     inline public function textExtensions():Array<String> {
         return ['txt', 'json', 'fnt', 'atlas'];
     }
 
+    #if !no_backend_docs
     /**
      * Gets the list of supported audio file extensions.
      * 
@@ -69,10 +80,12 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Array of supported audio extensions
      */
+    #end
     inline public function soundExtensions():Array<String> {
         return ['ogg', 'wav'];
     }
 
+    #if !no_backend_docs
     /**
      * Gets the list of supported shader file extensions.
      * 
@@ -82,6 +95,7 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Array of supported shader extensions
      */
+    #end
     inline public function shaderExtensions():Array<String> {
         return ['glsl', 'frag', 'vert'];
     }
