@@ -868,16 +868,16 @@ jobs:
             ceramic-linux-x86_64.zip
             ceramic-linux-arm64.zip
 
-  generate-api-docs:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [create-release]
-    runs-on: ubuntu-22.04
-    steps:
+  # generate-api-docs:
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   needs: [create-release]
+  #   runs-on: ubuntu-22.04
+  #   steps:
 
-      - name: Dispatch event
-        uses: ceramic-engine/repository-dispatch@v1
-        with:
-          token: ${{ secrets.PAT_PUBLIC }}
-          repository: ceramic-engine/api-docs
-          event-type: deploy-api-docs
-          client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
+  #     - name: Dispatch event
+  #       uses: ceramic-engine/repository-dispatch@v1
+  #       with:
+  #         token: ${{ secrets.PAT_PUBLIC }}
+  #         repository: ceramic-engine/api-docs
+  #         event-type: deploy-api-docs
+  #         client-payload: '{"ref": "${{ github.ref }}", "sha": "${{ github.sha }}"}'
