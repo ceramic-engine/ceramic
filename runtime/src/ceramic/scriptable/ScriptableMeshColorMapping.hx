@@ -2,21 +2,21 @@ package ceramic.scriptable;
 
 /**
  * Scriptable wrapper for MeshColorMapping to expose mesh coloring modes to scripts.
- * 
+ *
  * This class provides constants that define how colors are applied to mesh geometry.
  * In scripts, this type is exposed as `MeshColorMapping` (without the Scriptable prefix).
- * 
+ *
  * Color mapping determines how color values are distributed across a mesh's geometry,
  * allowing for uniform coloring, per-triangle coloring, or per-vertex coloring.
- * 
+ *
  * ## Usage in Scripts
- * 
- * ```hscript
+ *
+ * ```haxe
  * // Create a mesh with uniform color
  * var mesh = new Mesh();
  * mesh.colorMapping = MeshColorMapping.MESH;
  * mesh.color = Color.RED; // Entire mesh is red
- * 
+ *
  * // Use per-triangle coloring
  * mesh.colorMapping = MeshColorMapping.INDICES;
  * mesh.colors = [
@@ -24,7 +24,7 @@ package ceramic.scriptable;
  *     Color.GREEN,  // Second triangle
  *     Color.BLUE    // Third triangle
  * ];
- * 
+ *
  * // Use per-vertex coloring for gradients
  * mesh.colorMapping = MeshColorMapping.VERTICES;
  * mesh.colors = [
@@ -34,13 +34,13 @@ package ceramic.scriptable;
  *     Color.YELLOW  // Fourth vertex
  * ];
  * ```
- * 
+ *
  * ## Mapping Modes
- * 
+ *
  * - **MESH**: Single color for the entire mesh (most efficient)
  * - **INDICES**: One color per triangle (3 vertices)
  * - **VERTICES**: One color per vertex (allows smooth gradients)
- * 
+ *
  * @see ceramic.MeshColorMapping The actual implementation
  * @see ceramic.Mesh For using color mapping with meshes
  */

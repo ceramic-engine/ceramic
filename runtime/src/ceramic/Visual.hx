@@ -1221,6 +1221,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         }
         return clipDirty;
     }
+
     /**
      * If set, the visual will be rendered into this target RenderTexture instance
      * instead of being drawn onto screen directly.
@@ -1234,6 +1235,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         return renderTarget;
     }
 
+    /**
+     * The blending to use for this visual.
+     */
     public var blending(default,set):Blending = Blending.AUTO;
     function set_blending(blending:Blending):Blending {
         return this.blending = blending;

@@ -4,60 +4,60 @@ import haxe.ds.Map;
 
 /**
  * Scriptable interface for Map to expose key-value mapping functionality to scripts.
- * 
+ *
  * This interface provides a temporary wrapper around Haxe's Map abstract type
  * until the ExportApi macro can properly extract methods from abstracts.
  * In scripts, this type is exposed as `Map<K,V>`.
- * 
+ *
  * Maps are key-value data structures that allow efficient storage and retrieval
  * of values based on unique keys. The implementation automatically selects the
  * most efficient underlying data structure based on the key type.
- * 
+ *
  * ## Usage in Scripts
- * 
- * ```hscript
+ *
+ * ```haxe
  * // Create a string-to-number map
  * var scores = new Map<String, Int>();
- * 
+ *
  * // Add entries
  * scores.set("Alice", 100);
  * scores.set("Bob", 85);
  * scores.set("Charlie", 92);
- * 
+ *
  * // Get values
  * var aliceScore = scores.get("Alice"); // 100
  * var daveScore = scores.get("Dave");   // null (not found)
- * 
+ *
  * // Check existence
  * if (scores.exists("Bob")) {
  *     trace("Bob has a score");
  * }
- * 
+ *
  * // Remove entries
  * scores.remove("Charlie");
- * 
+ *
  * // Iterate over keys
  * for (name in scores.keys()) {
  *     trace(name + ": " + scores.get(name));
  * }
- * 
+ *
  * // Iterate over values
  * for (score in scores) {
  *     trace("Score: " + score);
  * }
- * 
+ *
  * // Clear all entries
  * scores.clear();
  * ```
- * 
+ *
  * ## Key Types
- * 
+ *
  * Maps support various key types:
  * - String keys: Most common, good performance
  * - Int keys: Very fast lookups
  * - Object keys: Uses object identity for comparison
  * - Enum keys: Compared by value
- * 
+ *
  * @see haxe.ds.Map The actual Haxe Map implementation
  */
 interface ScriptableMap<K,V> {
