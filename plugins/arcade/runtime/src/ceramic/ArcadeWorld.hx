@@ -1244,24 +1244,28 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
      * @param processCallback Optional filter for specific tiles
      * @return True if any collisions occurred
      */
+    @:plugin('tilemap')
     public function collideBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return #if !debug inline #end separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, false);
 
     }
 
+    @:plugin('tilemap')
     public function overlapBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return #if !debug inline #end separateBodyVsTilemap(body, tilemap, collideCallback, processCallback, true);
 
     }
 
+    @:plugin('tilemap')
     public function collideBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return #if !debug inline #end separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
 
     }
 
+    @:plugin('tilemap')
     public function overlapBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         return #if !debug inline #end separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, true);
@@ -1501,6 +1505,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function collideCeramicGroupVsTilemap(group:Group<Visual>, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1535,6 +1540,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function collideCeramicGroupVsTilemapLayer(group:Group<Visual>, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1569,6 +1575,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function collideArcadeGroupVsTilemap(group:arcade.Group, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1601,6 +1608,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function collideArcadeGroupVsTilemapLayer(group:arcade.Group, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1633,6 +1641,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function overlapCeramicGroupVsTilemap(group:Group<Visual>, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1667,6 +1676,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function overlapCeramicGroupVsTilemapLayer(group:Group<Visual>, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1701,6 +1711,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function overlapArcadeGroupVsTilemap(group:arcade.Group, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {
@@ -1733,6 +1744,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     }
 
+    @:plugin('tilemap')
     public function overlapArcadeGroupVsTilemapLayer(group:arcade.Group, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
         if (group.sortDirection != NONE && (group.sortDirection != INHERIT || sortDirection != NONE)) {

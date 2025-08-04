@@ -169,6 +169,7 @@ class TilemapPlugin {
      * @param name The LDtk file name or asset ID
      * @return The LdtkData instance, or null if not found or not an LDtk file
      */
+    @:plugin('ldtk')
     public static function ldtk(assets:Assets, name:Either<String,AssetId<String>>):LdtkData {
 
         var asset = tilemapAsset(assets, name);

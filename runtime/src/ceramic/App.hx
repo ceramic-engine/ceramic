@@ -719,6 +719,7 @@ class App extends Entity {
      * Shared arcade system.
      * (arcade plugin)
      */
+    @:plugin('arcade')
     public var arcade:ArcadeSystem = null;
 
 #end
@@ -729,6 +730,7 @@ class App extends Entity {
      * Shared nape system.
      * (nape plugin)
      */
+    @:plugin('nape')
     public var nape:NapeSystem = null;
 
 #end

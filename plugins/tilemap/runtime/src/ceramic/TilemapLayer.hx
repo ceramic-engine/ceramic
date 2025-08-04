@@ -54,6 +54,7 @@ class TilemapLayer extends Visual {
     /**
      * Shorthand to set `checkCollisionUp`, `checkCollisionRight`, `checkCollisionDown`, `checkCollisionLeft`
      */
+    @:plugin('arcade')
     public extern inline overload function checkCollision(upDown:Bool, rightLeft:Bool) {
         _checkCollision(upDown, rightLeft, upDown, rightLeft);
     }
@@ -61,10 +62,12 @@ class TilemapLayer extends Visual {
     /**
      * Shorthand to set `checkCollisionUp`, `checkCollisionRight`, `checkCollisionDown`, `checkCollisionLeft`
      */
+    @:plugin('arcade')
     public extern inline overload function checkCollision(up:Bool, right:Bool, down:Bool, left:Bool) {
         _checkCollision(up, right, down, left);
     }
 
+    @:plugin('arcade')
     private function _checkCollision(up:Bool, right:Bool, down:Bool, left:Bool) {
         checkCollisionUp = up;
         checkCollisionRight = right;
@@ -76,30 +79,35 @@ class TilemapLayer extends Visual {
      * If this layer is collidable, this determines if it will collide `up`.
      * (when a body is going `downward` torward the tile)
      */
+    @:plugin('arcade')
     public var checkCollisionUp:Bool = true;
 
     /**
      * If this layer is collidable, this determines if it will collide `down`.
      * (when a body is going `upward` toward a tile)
      */
+    @:plugin('arcade')
     public var checkCollisionDown:Bool = true;
 
     /**
      * If this layer is collidable, this determines if it will collide `left`.
      * (when a body is going `rightward` toward the tile)
      */
+    @:plugin('arcade')
     public var checkCollisionLeft:Bool = true;
 
     /**
      * If this layer is collidable, this determines if it will collide `right`.
      * (when a body is going `leftward` toward the tile)
      */
+    @:plugin('arcade')
     public var checkCollisionRight:Bool = true;
 
     /**
      * If this layer is collidable, this determines if it will collide
      * using `tiles` or `computedTiles`
      */
+    @:plugin('arcade')
     public var checkCollisionWithComputedTiles:Bool = false;
 
     /**
@@ -107,12 +115,14 @@ class TilemapLayer extends Visual {
      * that have a value != 0, unless `checkCollisionValues` is provided.
      * In that case, it will collide when matching any value of the array.
      */
+    @:plugin('arcade')
     public var checkCollisionValues:Array<Int> = null;
 
     /**
      * Internal flag used when walking through layers
      */
     @:allow(ceramic.Tilemap)
+    @:plugin('arcade')
     public var collidable(default, null):Bool = false;
 
     @:allow(ceramic.Tilemap)

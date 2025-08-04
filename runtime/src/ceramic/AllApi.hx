@@ -470,6 +470,7 @@ class AllApi {
      * 
      * @param interp The HScript interpreter to configure
      */
+    @:plugin('script')
     public static function configureHscript(interp:hscript.Interp):Void {
 
         interp.variables.set('app', ceramic.Shortcuts.app);

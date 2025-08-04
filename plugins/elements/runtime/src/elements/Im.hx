@@ -1987,6 +1987,7 @@ class Im {
      * @param placeholder Text shown when field is empty
      * @return True if the directory changed this frame
      */
+    @:plugin('dialogs')
     public static function editDir(?title:String, value:StringPointer, ?placeholder:String):Bool {
 
         var windowData = _currentWindowData;
@@ -2037,6 +2038,7 @@ class Im {
      * @param filters File type filters for the dialog
      * @return True if the file path changed this frame
      */
+    @:plugin('dialogs')
     public static function editFile(?title:String, value:StringPointer, ?placeholder:String, ?filters:DialogsFileFilter):Bool {
 
         var windowData = _currentWindowData;
@@ -2560,12 +2562,14 @@ class Im {
 
     #if plugin_spine
 
+    @:plugin('spine')
     inline extern overload public static function spine(?title:String, spineData:SpineData, ?animation:String, ?skin:String, time:Float = -1, scaleToFit:Bool = false, alignLabel:Bool = false):Spine {
 
         return _spine(title, spineData, animation, skin, time, scaleToFit, alignLabel);
 
     }
 
+    @:plugin('spine')
     static function _spine(title:String, spineData:SpineData, animation:String, skin:String, time:Float, scaleToFit:Bool, alignLabel:Bool):Spine {
 
         var windowData = _currentWindowData;

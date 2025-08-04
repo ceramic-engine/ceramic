@@ -88,6 +88,7 @@ class Backend implements tracker.Events implements spec.Backend {
      * HTTP networking backend service.
      * Handles HTTP requests and responses (when http plugin is enabled).
      */
+    @:plugin('http')
     public var http(default,null) = new backend.Http();
     #end
 

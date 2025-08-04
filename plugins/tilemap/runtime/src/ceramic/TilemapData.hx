@@ -48,6 +48,7 @@ class TilemapData extends Model {
      * Only set when the tilemap originates from an LDtk file.
      * Provides access to the original LDtk-specific data.
      */
+    @:plugin('ldtk')
     @observe public var ldtkLevel:LdtkLevel = null;
 
     #end

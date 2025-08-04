@@ -148,6 +148,7 @@ class Shape extends Mesh {
      * @param material Physics material defining friction, elasticity, etc.
      * @return VisualNapePhysics component for further configuration
      */
+    @:plugin('nape')
     override function initNapePhysics(
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,

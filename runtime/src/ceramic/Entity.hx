@@ -91,6 +91,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
     @:noCompletion var _lifecycleState:Int = 0;
 
 #if plugin_script
+    @:plugin('script')
     public var scriptContent(get,set):ScriptContent;
     function get_scriptContent():ScriptContent {
         var comp = component('script');
@@ -114,6 +115,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         return content;
     }
 
+    @:plugin('script')
     public var script(get,set):Script;
     function get_script():Script {
         var comp = component('script');

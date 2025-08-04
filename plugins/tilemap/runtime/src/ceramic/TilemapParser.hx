@@ -356,6 +356,7 @@ class TilemapParser {
      * @param rawLdtkData Raw LDtk data as string
      * @return The LDtk parsed data
      */
+    @:plugin('ldtk')
     public function parseLdtk(rawLdtkData:String, loadExternalLdtkLevelData:(source:String, callback:(rawLevelData:String)->Void)->Void):LdtkData {
 
         // Parse LDtk data
@@ -373,6 +374,7 @@ class TilemapParser {
 
     }
 
+    @:plugin('ldtk')
     public function loadLdtkTilemaps(ldtkData:LdtkData, ?loadTexture:(source:String, configureAsset:(asset:ImageAsset)->Void, done:(texture:Texture)->Void)->Void, skip:Array<String>):Void {
 
         if (ldtkParser == null) {

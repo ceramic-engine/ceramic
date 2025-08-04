@@ -64,6 +64,7 @@ class Group<T:Entity> extends Entity #if plugin_arcade implements arcade.Collida
      * 
      * @see arcade.SortDirection For available sorting options
      */
+    @:plugin('arcade')
     public var sortDirection:arcade.SortDirection;
 
 #end

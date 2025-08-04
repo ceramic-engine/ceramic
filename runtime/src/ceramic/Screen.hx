@@ -1048,72 +1048,84 @@ class Screen extends Entity implements Observable {
 
     #if plugin_elements
 
+    @:plugin('elements')
     inline function canEmitMultiTouchPointerDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitMultiTouchPointerMove(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitMultiTouchPointerUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitMouseDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitMouseMove(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitMouseUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitTouchDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitTouchMove(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitTouchUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitPointerDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitPointerMove(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitPointerUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
@@ -1459,6 +1471,7 @@ class Screen extends Entity implements Observable {
 
     #if plugin_elements
 
+    @:plugin('elements')
     static function _elementsImFocused():Bool {
 
         var context = elements.Context.context;

@@ -139,6 +139,7 @@ class Input extends Entity {
 
     #if plugin_elements
 
+    @:plugin('elements')
     static function _elementsImFocused():Bool {
 
         var context = elements.Context.context;
@@ -146,24 +147,28 @@ class Input extends Entity {
 
     }
 
+    @:plugin('elements')
     inline function canEmitKeyDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitKeyUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitGamepadDown(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
+    @:plugin('elements')
     inline function canEmitGamepadUp(owner:Entity):Bool {
 
         return elements.Im.filterEventOwner(owner);

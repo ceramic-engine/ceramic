@@ -74,6 +74,7 @@ class TilemapAsset extends Asset {
      * 
      * This is null for non-LDtk tilemaps.
      */
+    @:plugin('ldtk')
     @observe public var ldtkData:LdtkData = null;
 
     #end

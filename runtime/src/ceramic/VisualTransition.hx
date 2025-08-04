@@ -1019,6 +1019,7 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
     }
 
     #if plugin_ui
+    @:plugin('ui')
     public var offsetX(get, set):Float;
     function get_offsetX():Float return this.offsetXTarget;
     function set_offsetX(offsetX:Float):Float {
@@ -1030,6 +1031,7 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return offsetX;
     }
 
+    @:plugin('ui')
     public var offsetY(get, set):Float;
     function get_offsetY():Float return this.offsetYTarget;
     function set_offsetY(offsetY:Float):Float {
@@ -1041,11 +1043,13 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return offsetY;
     }
 
+    @:plugin('ui')
     public function offset(offsetX:Float, offsetY:Float):Void {
         inline set_offsetX(offsetX);
         inline set_offsetY(offsetY);
     }
 
+    @:plugin('ui')
     public var viewWidth(get, set):Float;
     function get_viewWidth():Float return this.viewWidthTarget;
     function set_viewWidth(viewWidth:Float):Float {
@@ -1057,6 +1061,7 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return viewWidth;
     }
 
+    @:plugin('ui')
     public var viewHeight(get, set):Float;
     function get_viewHeight():Float return this.viewHeightTarget;
     function set_viewHeight(viewHeight:Float):Float {
@@ -1068,6 +1073,7 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return viewHeight;
     }
 
+    @:plugin('ui')
     public function viewSize(viewWidth:Float, viewHeight:Float):Void {
         inline set_viewWidth(viewWidth);
         inline set_viewHeight(viewHeight);

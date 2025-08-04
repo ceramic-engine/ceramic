@@ -357,6 +357,7 @@ class AsepriteParser {
      * @param asepriteData The parsed Aseprite data containing frames and tags
      * @return A new SpriteSheet ready for animation playback
      */
+    @:plugin('sprite')
     public static function parseSheetFromAsepriteData(asepriteData:AsepriteData):SpriteSheet {
 
         var sheet = new SpriteSheet();

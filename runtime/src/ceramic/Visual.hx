@@ -15,14 +15,14 @@ using ceramic.Extensions;
 
 /**
  * Base class for all visual elements in Ceramic.
- * 
+ *
  * Visuals are the building blocks to display things on screen. While a raw Visual
  * doesn't render anything by itself, it serves as a container for other visuals
  * and provides core functionality like transformation, hierarchy, and event handling.
- * 
+ *
  * Specialized visual classes like Quad, Mesh, Text, etc. extend this class to
  * provide actual rendering capabilities.
- * 
+ *
  * Key features:
  * - Hierarchical parent-child relationships
  * - Transform properties (position, scale, rotation, skew)
@@ -30,7 +30,7 @@ using ceramic.Extensions;
  * - Depth sorting and rendering order
  * - Hit testing and touch input
  * - Shader and blend mode support
- * 
+ *
  * Example usage:
  * ```haxe
  * var visual = new Visual();
@@ -113,6 +113,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The arcade physics body bound to this visual.
      */
+    @:plugin('arcade')
     public var arcade(default,set):VisualArcadePhysics = null;
     function set_arcade(arcade:VisualArcadePhysics):VisualArcadePhysics {
         if (this.arcade == arcade) return arcade;
@@ -133,6 +134,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      *      If none is provided, default world (app.arcade.world) will be used.
      * @return A `VisualArcadePhysics` instance
      */
+    @:plugin('arcade')
     public function initArcadePhysics(?world:ArcadeWorld):VisualArcadePhysics {
 
         if (arcade != null) {
@@ -166,6 +168,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The arcade physics body linked to this visual
      */
+    @:plugin('arcade')
     public var body(get,never):arcade.Body;
     inline function get_body():arcade.Body {
         return arcade != null ? arcade.body : null;
@@ -174,6 +177,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Allow this visual to be rotated by arcade physics, via `angularVelocity`, etc...
      */
+    @:plugin('arcade')
     public var allowRotation(get,set):Bool;
     inline function get_allowRotation():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowRotation : true;
@@ -187,6 +191,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * An immovable visual will not receive any impacts from other visual bodies. **Two** immovable visuas can't separate or exchange momentum and will pass through each other.
      */
+    @:plugin('arcade')
     public var immovable(get,set):Bool;
     inline function get_immovable():Bool {
         return arcade != null && arcade.body != null ? arcade.body.immovable : false;
@@ -200,6 +205,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * If set to `true`, arcade world will always separate on the X axis before Y when this body is involved. Otherwise it will check gravity totals first.
      */
+    @:plugin('arcade')
     public var forceX(get,set):Bool;
     inline function get_forceX():Bool {
         return arcade != null && arcade.body != null ? arcade.body.forceX : false;
@@ -213,6 +219,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The x velocity, or rate of change the visual position. Measured in points per second.
      */
+    @:plugin('arcade')
     public var velocityX(get,set):Float;
     inline function get_velocityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.velocityX : 0;
@@ -226,6 +233,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The y velocity, or rate of change the visual position. Measured in points per second.
      */
+    @:plugin('arcade')
     public var velocityY(get,set):Float;
     inline function get_velocityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.velocityY : 0;
@@ -241,6 +249,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param velocityX The velocity on **x** axis
      * @param velocityY The velocity on **y** axis
      */
+    @:plugin('arcade')
     inline public function velocity(velocityX:Float, velocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -252,6 +261,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The maximum x velocity that the visual can reach.
      */
+    @:plugin('arcade')
     public var maxVelocityX(get,set):Float;
     inline function get_maxVelocityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxVelocityX : 10000;
@@ -265,6 +275,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The maximum y velocity that the visual can reach.
      */
+    @:plugin('arcade')
     public var maxVelocityY(get,set):Float;
     inline function get_maxVelocityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxVelocityY : 10000;
@@ -280,6 +291,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param maxVelocityX The max velocity on **x** axis
      * @param maxVelocityY The max velocity on **y** axis
      */
+    @:plugin('arcade')
     inline public function maxVelocity(maxVelocityX:Float, maxVelocityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -291,6 +303,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The x acceleration is the rate of change of the x velocity. Measured in points per second squared.
      */
+    @:plugin('arcade')
     public var accelerationX(get,set):Float;
     inline function get_accelerationX():Float {
         return arcade != null && arcade.body != null ? arcade.body.accelerationX : 0;
@@ -304,6 +317,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The y acceleration is the rate of change of the y velocity. Measured in points per second squared.
      */
+    @:plugin('arcade')
     public var accelerationY(get,set):Float;
     inline function get_accelerationY():Float {
         return arcade != null && arcade.body != null ? arcade.body.accelerationY : 0;
@@ -319,6 +333,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param accelerationX The acceleration on **x** axis
      * @param accelerationY The acceleration on **y** axis
      */
+    @:plugin('arcade')
     inline public function acceleration(accelerationX:Float, accelerationY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -330,6 +345,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Allow this visual to be influenced by drag
      */
+    @:plugin('arcade')
     public var allowDrag(get,set):Bool;
     inline function get_allowDrag():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowDrag : true;
@@ -343,6 +359,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The x drag is the rate of reduction of the x velocity, kind of deceleration. Measured in points per second squared.
      */
+    @:plugin('arcade')
     public var dragX(get,set):Float;
     inline function get_dragX():Float {
         return arcade != null && arcade.body != null ? arcade.body.dragX : 0;
@@ -356,6 +373,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The y drag is the rate of reduction of the y velocity, kind of deceleration. Measured in points per second squared.
      */
+    @:plugin('arcade')
     public var dragY(get,set):Float;
     inline function get_dragY():Float {
         return arcade != null && arcade.body != null ? arcade.body.dragY : 0;
@@ -371,6 +389,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param dragX The drag value on **x** axis
      * @param dragY The drag value on **y** axis
      */
+    @:plugin('arcade')
     inline public function drag(dragX:Float, dragY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -382,6 +401,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The x elasticity of the visual when colliding. `bounceX = 1` means full rebound, `bounceX = 0.5` means 50% rebound velocity.
      */
+    @:plugin('arcade')
     public var bounceX(get,set):Float;
     inline function get_bounceX():Float {
         return arcade != null && arcade.body != null ? arcade.body.bounceX : 0;
@@ -395,6 +415,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The y elasticity of the visual when colliding. `bounceY = 1` means full rebound, `bounceY = 0.5` means 50% rebound velocity.
      */
+    @:plugin('arcade')
     public var bounceY(get,set):Float;
     inline function get_bounceY():Float {
         return arcade != null && arcade.body != null ? arcade.body.bounceY : 0;
@@ -410,6 +431,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param bounceX The bounce value on **x** axis
      * @param bounceY The bounce value on **y** axis
      */
+    @:plugin('arcade')
     inline public function bounce(bounceX:Float, bounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -422,6 +444,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * Enable or disable world bounds specific bounce value with `worldBounceX` and `worldBounceY`.
      * Disabled by default, meaning `bounceX` and `bounceY` are used by default.
      */
+    @:plugin('arcade')
     public var useWorldBounce(get,set):Bool;
     inline function get_useWorldBounce():Bool {
         return arcade != null && arcade.body != null ? arcade.body.useWorldBounce : false;
@@ -435,6 +458,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The x elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceX` used instead).
      */
+    @:plugin('arcade')
     public var worldBounceX(get,set):Float;
     inline function get_worldBounceX():Float {
         return arcade != null && arcade.body != null ? arcade.body.worldBounceX : 0;
@@ -448,6 +472,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The y elasticity of the visual when colliding with world bounds. Ignored if `useWorldBounce` is `false` (`bounceY` used instead).
      */
+    @:plugin('arcade')
     public var worldBounceY(get,set):Float;
     inline function get_worldBounceY():Float {
         return arcade != null && arcade.body != null ? arcade.body.worldBounceY : 0;
@@ -463,6 +488,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param worldBounceX The elasticity value on **x** axis
      * @param worldBounceY The elasticity value on **y** axis
      */
+    @:plugin('arcade')
     inline public function worldBounce(worldBounceX:Float, worldBounceY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -474,6 +500,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The maximum x delta per frame. `0` (default) means no maximum delta.
      */
+    @:plugin('arcade')
     public var maxDeltaX(get,set):Float;
     inline function get_maxDeltaX():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxDeltaX : 0;
@@ -487,6 +514,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The maximum y delta per frame. `0` (default) means no maximum delta.
      */
+    @:plugin('arcade')
     public var maxDeltaY(get,set):Float;
     inline function get_maxDeltaY():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxDeltaY : 0;
@@ -502,6 +530,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param maxDeltaX The max delta value on **x** axis
      * @param maxDeltaY The max delta value on **y** axis
      */
+    @:plugin('arcade')
     inline public function maxDelta(maxDeltaX:Float, maxDeltaY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -513,6 +542,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Allow this visual to be influenced by gravity, either world or local.
      */
+    @:plugin('arcade')
     public var allowGravity(get,set):Bool;
     inline function get_allowGravity():Bool {
         return arcade != null && arcade.body != null ? arcade.body.allowGravity : false;
@@ -526,6 +556,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * This visual's local y gravity, **added** to any world gravity, unless `allowGravity` is set to false.
      */
+    @:plugin('arcade')
     public var gravityX(get,set):Float;
     inline function get_gravityX():Float {
         return arcade != null && arcade.body != null ? arcade.body.gravityX : 0;
@@ -539,6 +570,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * This visual's local x gravity, **added** to any world gravity, unless `allowGravity` is set to false.
      */
+    @:plugin('arcade')
     public var gravityY(get,set):Float;
     inline function get_gravityY():Float {
         return arcade != null && arcade.body != null ? arcade.body.gravityY : 0;
@@ -554,6 +586,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param gravityX The gravity on **x** axis
      * @param gravityY The gravity on **y** axis
      */
+    @:plugin('arcade')
     inline public function gravity(gravityX:Float, gravityY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -565,6 +598,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on **x** axis.
      */
+    @:plugin('arcade')
     public var frictionX(get,set):Float;
     inline function get_frictionX():Float {
         return arcade != null && arcade.body != null ? arcade.body.frictionX : 1;
@@ -578,6 +612,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * If this visual is `immovable` and moving, and another visual body is 'riding' this one, this is the amount of motion the riding body receives on **y** axis.
      */
+    @:plugin('arcade')
     public var frictionY(get,set):Float;
     inline function get_frictionY():Float {
         return arcade != null && arcade.body != null ? arcade.body.frictionY : 0;
@@ -593,6 +628,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param frictionX The friction on **x** axis
      * @param frictionY The friction on **y** axis
      */
+    @:plugin('arcade')
     inline public function friction(frictionX:Float, frictionY:Float):Void {
         if (arcade == null) initArcadePhysics();
         if (arcade.body != null) {
@@ -604,6 +640,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The angular velocity is the rate of change of the visual's rotation. It is measured in degrees per second.
      */
+    @:plugin('arcade')
     public var angularVelocity(get,set):Float;
     inline function get_angularVelocity():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularVelocity : 0;
@@ -617,6 +654,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The maximum angular velocity in degrees per second that the visual can reach.
      */
+    @:plugin('arcade')
     public var maxAngularVelocity(get,set):Float;
     inline function get_maxAngularVelocity():Float {
         return arcade != null && arcade.body != null ? arcade.body.maxAngularVelocity : 1000;
@@ -630,6 +668,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The angular acceleration is the rate of change of the angular velocity. Measured in degrees per second squared.
      */
+    @:plugin('arcade')
     public var angularAcceleration(get,set):Float;
     inline function get_angularAcceleration():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularAcceleration : 0;
@@ -643,6 +682,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The angular drag is the rate of reduction of the angular velocity. Measured in degrees per second squared.
      */
+    @:plugin('arcade')
     public var angularDrag(get,set):Float;
     inline function get_angularDrag():Float {
         return arcade != null && arcade.body != null ? arcade.body.angularDrag : 0;
@@ -656,6 +696,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The mass of the visual's body. When two bodies collide their mass is used in the calculation to determine the exchange of velocity.
      */
+    @:plugin('arcade')
     public var mass(get,set):Float;
     inline function get_mass():Float {
         return arcade != null && arcade.body != null ? arcade.body.mass : 1;
@@ -669,6 +710,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * The speed of the visual's body (read only). Equal to the magnitude of the velocity.
      */
+    @:plugin('arcade')
     public var speed(get,never):Float;
     inline function get_speed():Float {
         return arcade != null && arcade.body != null ? arcade.body.speed : 0;
@@ -677,6 +719,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * Whether the physics system should update the visual's position and rotation based on its velocity, acceleration, drag, and gravity.
      */
+    @:plugin('arcade')
     public var moves(get,set):Bool;
     inline function get_moves():Bool {
         return arcade != null && arcade.body != null ? arcade.body.moves : false;
@@ -690,6 +733,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * When this visual's body collides with another, the amount of overlap (x axis) is stored here.
      */
+    @:plugin('arcade')
     public var overlapX(get,never):Float;
     inline function get_overlapX():Float {
         return arcade != null && arcade.body != null ? arcade.body.overlapX : 1;
@@ -698,6 +742,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * When this visual's body collides with another, the amount of overlap (y axis) is stored here.
      */
+    @:plugin('arcade')
     public var overlapY(get,never):Float;
     inline function get_overlapY():Float {
         return arcade != null && arcade.body != null ? arcade.body.overlapY : 0;
@@ -706,6 +751,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * If a visual's body is overlapping with another body, but neither of them are moving (maybe they spawned on-top of each other?) this is set to `true`.
      */
+    @:plugin('arcade')
     public var embedded(get,never):Bool;
     inline function get_embedded():Bool {
         return arcade != null && arcade.body != null ? arcade.body.embedded : false;
@@ -714,6 +760,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     /**
      * A visual body can be set to collide against the world bounds automatically and rebound back into the world if this is set to true. Otherwise it will leave the world.
      */
+    @:plugin('arcade')
     public var collideWorldBounds(get,never):Bool;
     inline function get_collideWorldBounds():Bool {
         return arcade != null && arcade.body != null ? arcade.body.collideWorldBounds : false;
@@ -766,102 +813,122 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     #else
 
+    @:plugin('arcade')
     inline public function onCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollide(owner, handleVisual1Visual2);
     }
 
+    @:plugin('arcade')
     inline public function onceCollide(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollide(owner, handleVisual1Visual2);
     }
 
+    @:plugin('arcade')
     inline public function offCollide(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offCollide(handleVisual1Visual2);
         }
     }
 
+    @:plugin('arcade')
     inline public function listensCollide():Bool {
         return arcade != null ? arcade.listensCollide() : false;
     }
 
+    @:plugin('arcade')
     inline public function onCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onCollideBody(owner, handleVisualBody);
     }
 
+    @:plugin('arcade')
     inline public function onceCollideBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceCollideBody(owner, handleVisualBody);
     }
 
+    @:plugin('arcade')
     inline public function offCollideBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offCollideBody(handleVisualBody);
         }
     }
 
+    @:plugin('arcade')
     inline public function listensCollideBody():Bool {
         return arcade != null ? arcade.listensCollideBody() : false;
     }
 
+    @:plugin('arcade')
     inline public function onOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlap(owner, handleVisual1Visual2);
     }
 
+    @:plugin('arcade')
     inline public function onceOverlap(owner:Entity, handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlap(owner, handleVisual1Visual2);
     }
 
+    @:plugin('arcade')
     inline public function offOverlap(?handleVisual1Visual2:(visual1:Visual,visual2:Visual)->Void):Void {
         if (arcade != null) {
             arcade.offOverlap(handleVisual1Visual2);
         }
     }
 
+    @:plugin('arcade')
     inline public function listensOverlap():Bool {
         return arcade != null ? arcade.listensOverlap() : false;
     }
 
+    @:plugin('arcade')
     inline public function onOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onOverlapBody(owner, handleVisualBody);
     }
 
+    @:plugin('arcade')
     inline public function onceOverlapBody(owner:Entity, handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceOverlapBody(owner, handleVisualBody);
     }
 
+    @:plugin('arcade')
     inline public function offOverlapBody(?handleVisualBody:(visual:Visual,body:arcade.Body)->Void):Void {
         if (arcade != null) {
             arcade.offOverlapBody(handleVisualBody);
         }
     }
 
+    @:plugin('arcade')
     inline public function listensOverlapBody():Bool {
         return arcade != null ? arcade.listensOverlapBody() : false;
     }
 
+    @:plugin('arcade')
     inline public function onWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
+    @:plugin('arcade')
     inline public function onceWorldBounds(owner:Entity, handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade == null) initArcadePhysics();
         arcade.onceWorldBounds(owner, handleVisualUpDownLeftRight);
     }
 
+    @:plugin('arcade')
     inline public function offWorldBounds(?handleVisualUpDownLeftRight:(visual:Visual,up:Bool,down:Bool,left:Bool,right:Bool)->Void):Void {
         if (arcade != null) {
             arcade.offWorldBounds(handleVisualUpDownLeftRight);
         }
     }
 
+    @:plugin('arcade')
     inline public function listensWorldBounds():Bool {
         return arcade != null ? arcade.listensWorldBounds() : false;
     }
@@ -874,11 +941,12 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
 #if plugin_nape
 
-/// Arcade physics
+/// Nape physics
 
     /**
      * The nape physics (body) of this visual.
      */
+    @:plugin('nape')
     public var nape(default,set):VisualNapePhysics = null;
     function set_nape(nape:VisualNapePhysics):VisualNapePhysics {
         if (this.nape == nape) return nape;
@@ -901,6 +969,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * @param material (optional) A custom material to use with this body.
      * @return A `VisualNapePhysics` instance
      */
+    @:plugin('nape')
     public function initNapePhysics(
         type:ceramic.NapePhysicsBodyType,
         ?space:nape.space.Space,

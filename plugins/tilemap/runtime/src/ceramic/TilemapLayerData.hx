@@ -56,6 +56,7 @@ class TilemapLayerData extends Model {
      * Reference to the source LDtk layer instance when this layer was imported from LDtk.
      * Provides access to additional LDtk-specific data and properties.
      */
+    @:plugin('ldtk')
     @observe public var ldtkLayer:LdtkLayerInstance = null;
 
     #end

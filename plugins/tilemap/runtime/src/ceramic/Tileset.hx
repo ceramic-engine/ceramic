@@ -55,6 +55,7 @@ class Tileset extends Model {
      * Reference to the source LDtk tileset definition when this tileset was imported from LDtk.
      * Provides access to additional LDtk-specific metadata.
      */
+    @:plugin('ldtk')
     @observe public var ldtkTileset:LdtkTilesetDefinition = null;
 
     #end

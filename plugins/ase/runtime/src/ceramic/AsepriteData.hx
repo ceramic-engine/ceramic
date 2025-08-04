@@ -112,6 +112,7 @@ class AsepriteData extends Entity {
      * This provides animation playback functionality when the sprite plugin is enabled.
      * Automatically destroyed when the AsepriteData is destroyed.
      */
+    @:plugin('sprite')
     public var sheet(default, set):SpriteSheet = null;
     function set_sheet(sheet:SpriteSheet):SpriteSheet {
         if (this.sheet != sheet) {
@@ -132,6 +133,7 @@ class AsepriteData extends Entity {
      * Used when the Aseprite file is loaded as a sprite asset.
      * Kept for reference counting and automatic cleanup.
      */
+    @:plugin('sprite')
     public var spriteAsset:SpriteAsset = null;
 
     /**

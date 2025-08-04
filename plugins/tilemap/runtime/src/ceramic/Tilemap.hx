@@ -383,6 +383,7 @@ class Tilemap extends Quad {
     /**
      * Temporary array for tracking layers during collision updates.
      */
+    @:plugin('arcade')
     static var _layers:Array<TilemapLayer> = [];
 
     /**
@@ -392,6 +393,7 @@ class Tilemap extends Quad {
      *
      * Example: `["collision", "walls", "platforms"]`
      */
+    @:plugin('arcade')
     public var collidableLayers(default, set):ReadOnlyArray<String> = null;
     function set_collidableLayers(collidableLayers:ReadOnlyArray<String>):ReadOnlyArray<String> {
         if (this.collidableLayers == collidableLayers) return collidableLayers;
@@ -404,11 +406,13 @@ class Tilemap extends Quad {
      * Computed array of TilemapLayer instances that are marked as collidable.
      * Automatically updated when collidableLayers changes.
      */
+    @:plugin('arcade')
     public var computedCollidableLayers(default, null):ReadOnlyArray<TilemapLayer> = null;
 
     /**
      * Internal flag indicating collidable layers need recomputation.
      */
+    @:plugin('arcade')
     public var collidableLayersDirty:Bool = false;
 
     /**
@@ -418,6 +422,7 @@ class Tilemap extends Quad {
      * When false, physics bodies are kept even when layers become non-collidable,
      * trading memory for performance.
      */
+    @:plugin('arcade')
     public var destroyUnusedBodies(default, set):Bool = false;
     function set_destroyUnusedBodies(destroyUnusedBodies:Bool):Bool {
         if (this.destroyUnusedBodies != destroyUnusedBodies) {
@@ -508,6 +513,7 @@ class Tilemap extends Quad {
      *                               instead of raw tile data
      * @return true if at least one non-empty tile exists at the position
      */
+    @:plugin('arcade')
     public function hasTileAtPosition(x:Float, y:Float, ?layerName:String, checkWithComputedTiles:Bool = false):Bool {
 
         var result:Bool = false;
@@ -559,6 +565,7 @@ class Tilemap extends Quad {
      * @param layerName Optional specific layer to check (checks all collidable layers if null)
      * @return true if collision should occur at this position
      */
+    @:plugin('arcade')
     public function shouldCollideAtPosition(x:Float, y:Float, direction:arcade.Direction = NONE, ?layerName:String):Bool {
 
         var result:Bool = false;
