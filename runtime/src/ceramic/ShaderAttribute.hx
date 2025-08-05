@@ -17,7 +17,6 @@ package ceramic;
  * - Additional texture coordinates
  * - Per-vertex animation data
  * 
- * @example
  * ```haxe
  * // Define custom attributes for a shader
  * var customAttrs:Array<ShaderAttribute> = [

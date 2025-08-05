@@ -13,7 +13,6 @@ using ceramic.Extensions;
  *
  * These methods are available on any Mesh instance through Haxe's static extension feature.
  *
- * @example
  * ```haxe
  * using ceramic.MeshExtensions;
  *
@@ -49,7 +48,6 @@ class MeshExtensions {
      *                        - -1: Auto-detect from mesh.customFloatAttributesSize
      *                        Must be at least 2.
      *
-     * @example
      * ```haxe
      * var mesh = new Mesh();
      * mesh.createQuad(200, 150); // Creates a 200x150 quad
@@ -145,7 +143,6 @@ class MeshExtensions {
      * @param darkColor The dark color to apply to all vertices.
      *                  Alpha is automatically set to 1.0.
      *
-     * @example
      * ```haxe
      * var mesh = new Mesh();
      * mesh.createQuad(100, 100, 6); // 6 floats per vertex
@@ -189,7 +186,6 @@ class MeshExtensions {
      * @param mesh The mesh to modify. Must have 6 floats per vertex.
      * @param darkAlphaColor The dark color with alpha to apply to all vertices.
      *
-     * @example
      * ```haxe
      * var mesh = new Mesh();
      * mesh.createQuad(100, 100, 6); // 6 floats per vertex
@@ -242,7 +238,6 @@ class MeshExtensions {
      *                       - OUTSIDE: Thickness extends outward from radius
      *                       - MIDDLE: Thickness extends equally in both directions
      *
-     * @example
      * ```haxe
      * // Create a 90-degree arc
      * mesh.createArc(50, 90, 10, 32, MIDDLE);
@@ -344,7 +339,6 @@ class MeshExtensions {
      * @param attrValues Optional array of custom attribute values.
      *                   Length must equal (columns+1) * (rows+1) * attrLength
      *
-     * @example
      * ```haxe
      * // Create a 10x10 grid for terrain deformation
      * mesh.createVerticesGrid(10, 10, 400, 400);
@@ -388,7 +382,6 @@ class MeshExtensions {
      * @param mirrorY Mirror triangle orientation in odd rows
      * @param mirrorFlip Inverts the mirroring pattern (even instead of odd)
      *
-     * @example
      * ```haxe
      * // Standard grid
      * mesh.createIndicesGrid(10, 10);
@@ -422,7 +415,6 @@ class MeshExtensions {
      * @param offsetX UV offset in the X direction (texture scrolling)
      * @param offsetY UV offset in the Y direction (texture scrolling)
      *
-     * @example
      * ```haxe
      * // Standard UV mapping
      * mesh.createUVsGrid(10, 10);

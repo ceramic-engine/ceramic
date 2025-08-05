@@ -11,7 +11,6 @@ package ceramic;
  * during rendering. It determines the basic shape that will be drawn from the
  * provided vertex data.
  * 
- * @example
  * ```haxe
  * // Set primitive type for triangle-based rendering (default)
  * renderer.setPrimitiveType(TRIANGLE);

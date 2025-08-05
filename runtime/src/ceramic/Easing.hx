@@ -142,7 +142,6 @@ enum Easing {
      * @param x2 X coordinate of second control point (0-1)
      * @param y2 Y coordinate of second control point
      * 
-     * @example
      * ```haxe
      * // Common bezier curves
      * BEZIER(0.25, 0.1, 0.25, 1)    // ease-out
@@ -161,7 +160,6 @@ enum Easing {
      * 
      * @param easing Function that maps input t (0-1) to output (typically 0-1)
      * 
-     * @example
      * ```haxe
      * // Simple custom easing
      * function smoothStep(t:Float):Float {

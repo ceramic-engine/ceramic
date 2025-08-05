@@ -12,7 +12,6 @@ import ceramic.App.app;
  * Instances are created by calling `sound.play()` and remain
  * valid until the sound finishes playing or is explicitly stopped.
  * 
- * @example
  * ```haxe
  * // Play a sound and control it
  * var player = sound.play();

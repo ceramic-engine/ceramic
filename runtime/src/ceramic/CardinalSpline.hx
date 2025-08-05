@@ -81,7 +81,6 @@ class CardinalSpline {
      * @return Array containing interpolated points [x1,y1, x2,y2, ...]
      *         Length = (numPoints-1) * numSegments * 2 + 2 (+ extra for closed)
      * 
-     * @example
      * ```haxe
      * // Create a smooth curve through 4 points
      * var controlPoints = [

@@ -16,7 +16,6 @@ import ceramic.Scroller;
  * - Momentum-based scrolling with customizable thresholds
  * - Automatic content size management
  *
- * @example
  * ```haxe
  * var scrollView = new ScrollView();
  * scrollView.viewSize(300, 400);

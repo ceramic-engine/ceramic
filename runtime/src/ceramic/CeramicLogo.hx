@@ -16,7 +16,6 @@ using ceramic.Extensions;
  * - Tilt: Adjusts the perspective of the ellipse
  * - Shadow size: Controls the shadow layer thickness
  * 
- * @example
  * ```haxe
  * var logo = new CeramicLogo();
  * logo.size(224, 324); // Double the default size

@@ -9,7 +9,6 @@ package ceramic;
  * and the physics simulation. The physics body drives the visual's
  * position and rotation after each physics update.
  * 
- * @example
  * ```haxe
  * // Create a dynamic physics box
  * var visual = new Quad();

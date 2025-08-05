@@ -27,7 +27,6 @@ using ceramic.Extensions;
  * Textures are typically obtained through asset loading rather than
  * created directly:
  * 
- * @example
  * ```haxe
  * // Load texture through assets
  * var texture = assets.texture('hero');
@@ -225,7 +224,6 @@ class Texture extends Entity {
      * @param pixels Pixel buffer in RGBA format (4 bytes per pixel)
      * @param density Texture density/scale (default: 1.0)
      * @return A new Texture instance
-     * @example
      * ```haxe
      * var pixels = new UInt8Array(100 * 100 * 4);
      * // Fill with red color
@@ -252,7 +250,6 @@ class Texture extends Entity {
      * @param density Texture density/scale (default: 1.0)
      * @param options Additional loading options (backend-specific)
      * @param done Callback receiving the loaded texture, or null if it failed
-     * @example
      * ```haxe
      * var imageBytes = Files.getBytes('custom.png');
      * Texture.fromBytes(imageBytes, 1.0, null, texture -> {

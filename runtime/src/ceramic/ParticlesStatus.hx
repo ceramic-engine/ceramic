@@ -16,7 +16,6 @@ package ceramic;
  * - EMITTING → IDLE: When emission stops and no particles exist
  * - SPREADING → IDLE: When all particles have expired
  * 
- * @example
  * ```haxe
  * // Wait for explosion to finish before removing
  * emitter.explode(50);

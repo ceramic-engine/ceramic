@@ -221,7 +221,7 @@ extern class AudioSource extends Behaviour {
      * If already playing, restarts from beginning.
      * Requires clip to be assigned.
      * 
-     * @example Basic playback:
+     * Basic playback:
      * ```haxe
      * source.clip = myClip;
      * source.volume = 0.8;

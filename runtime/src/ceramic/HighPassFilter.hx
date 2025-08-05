@@ -17,7 +17,6 @@ import ceramic.AudioFilterWorklet;
  * The filter uses a biquad implementation for stable, efficient processing
  * with adjustable resonance (Q factor) for frequency emphasis at the cutoff.
  * 
- * @example
  * ```haxe
  * // Remove low frequencies below 200Hz
  * var highPass = new HighPassFilter();

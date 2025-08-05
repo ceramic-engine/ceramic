@@ -24,7 +24,6 @@ using StringTools;
  * When using HSB/HSL/CMYK properties, values are converted to/from RGB,
  * which may result in gradual precision loss with repeated conversions.
  *
- * @example
  * ```haxe
  * // Create colors in various ways
  * var red = Color.RED;

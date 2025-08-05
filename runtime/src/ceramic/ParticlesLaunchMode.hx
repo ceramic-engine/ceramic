@@ -11,7 +11,6 @@ package ceramic;
  * - The initial velocity calculation method
  * - The overall particle distribution pattern
  * 
- * @example
  * ```haxe
  * // Radial burst effect (CIRCLE mode)
  * emitter.launchMode = CIRCLE;

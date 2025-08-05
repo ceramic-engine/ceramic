@@ -25,7 +25,6 @@ using ceramic.Extensions;
  * 0,2 --- 1,2 --- 2,2
  * ```
  *
- * @example
  * ```haxe
  * // Create a 5x5 grid mesh
  * var vertices = MeshUtils.createVerticesGrid(null, 5, 5, 200, 200);
@@ -75,7 +74,6 @@ class MeshUtils {
      *                   Length must equal (columns+1)×(rows+1)×attrLength.
      * @return Array of vertex data with length (columns+1)×(rows+1)×(2+attrLength)
      *
-     * @example
      * ```haxe
      * // Simple 10x10 grid
      * var vertices = MeshUtils.createVerticesGrid(null, 10, 10, 400, 400);
@@ -227,7 +225,6 @@ class MeshUtils {
      * @return Array of indices with length columns×rows×6
      *         (2 triangles × 3 vertices per cell)
      *
-     * @example
      * ```haxe
      * // Standard grid triangulation
      * var indices = MeshUtils.createIndicesGrid(null, 10, 10);
@@ -324,7 +321,6 @@ class MeshUtils {
      *                Values > 1 create tiling if texture wrap is enabled.
      * @return Array of UV coordinates with length (columns+1)×(rows+1)×2
      *
-     * @example
      * ```haxe
      * // Standard UV mapping (texture stretched across grid)
      * var uvs = MeshUtils.createUVsGrid(null, 10, 10);

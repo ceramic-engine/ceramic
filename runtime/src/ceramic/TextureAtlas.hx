@@ -20,7 +20,6 @@ using ceramic.Extensions;
  * - Regions: Individual images within the pages with position data
  * - Metadata: Names, coordinates, and optional rotation info
  *
- * @example
  * ```haxe
  * // Load a texture atlas
  * var atlas = app.assets.atlas('characters');
@@ -94,7 +93,6 @@ class TextureAtlas extends Entity {
      * @param name The name of the region to find
      * @return The matching TextureAtlasRegion, or null if not found
      *
-     * @example
      * ```haxe
      * // Get specific sprite from atlas
      * var enemyRegion = atlas.region('enemy_walk_01');
@@ -131,7 +129,6 @@ class TextureAtlas extends Entity {
      * This is typically called automatically by the asset loader,
      * but may need manual invocation when building atlases at runtime.
      *
-     * @example
      * ```haxe
      * // Manual atlas creation
      * var atlas = new TextureAtlas();

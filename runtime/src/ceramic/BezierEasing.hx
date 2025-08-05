@@ -170,7 +170,6 @@ class BezierEasing {
      * @param x Progress value from 0 to 1
      * @return Eased value (typically 0 to 1, but can overshoot)
      * 
-     * @example
      * ```haxe
      * var easing = new BezierEasing(0.42, 0, 0.58, 1);
      * tween.progress = easing.ease(elapsed / duration);

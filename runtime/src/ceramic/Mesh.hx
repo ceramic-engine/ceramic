@@ -27,7 +27,6 @@ using ceramic.Extensions;
  * - `colors`: Optional per-vertex colors
  * - `uvs`: Texture coordinates when using a texture
  *
- * @example
  * ```haxe
  * // Create a colored triangle
  * var mesh = new Mesh();

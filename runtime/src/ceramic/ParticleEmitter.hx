@@ -29,7 +29,6 @@ using ceramic.Extensions;
  * - Color and alpha transparency
  * - Custom ranges for randomization
  * 
- * @example
  * ```haxe
  * // Create a fire effect
  * var fire = new ParticleEmitter();
@@ -829,7 +828,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * @param existingVisual A recycled visual if available, null otherwise
      * @return The visual to use for the particle
      * 
-     * @example
      * ```haxe
      * emitter.getCustomParticleVisual = (existing) -> {
      *     if (existing != null) return existing;
@@ -1129,7 +1127,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * 
      * @return A new ParticleItem instance
      * 
-     * @example
      * ```haxe
      * override function createParticleItem():ParticleItem {
      *     return new CustomParticleItem();
@@ -1187,7 +1184,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * @param existingVisual A recycled visual if available, null for new particles
      * @return Visual to use for the particle
      * 
-     * @example
      * ```haxe
      * override function getParticleVisual(existingVisual:Visual):Visual {
      *     if (existingVisual != null) {
@@ -1285,7 +1281,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      *                 -1 = infinite (default), 0 = stop immediately,
      *                 positive = emit that many then stop.
      * 
-     * @example
      * ```haxe
      * // Continuous smoke
      * emitter.emitContinuously(0.05); // 20 particles per second, forever
@@ -1324,7 +1319,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * @param quantity Number of particles to emit instantly.
      *                 Must be 1 or greater, does nothing if less.
      * 
-     * @example
      * ```haxe
      * // Explosion effect
      * emitter.explode(100);
@@ -1375,7 +1369,6 @@ class ParticleEmitter extends Entity implements Component implements Observable 
      * Can be called directly for custom emission patterns beyond
      * the built-in continuous and burst modes.
      * 
-     * @example
      * ```haxe
      * // Emit particles in a custom pattern
      * for (i in 0...5) {

@@ -22,7 +22,6 @@ using StringTools;
  * - Hot reload support
  * - Automatic Text visual updates when font is replaced
  * 
- * @example
  * ```haxe
  * var assets = new Assets();
  * assets.addFont('arial.fnt');

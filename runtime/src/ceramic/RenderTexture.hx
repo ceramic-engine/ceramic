@@ -33,7 +33,6 @@ import ceramic.Quad;
  * RenderTextures are automatically managed by Ceramic's rendering system,
  * which handles render order based on texture dependencies.
  * 
- * @example
  * ```haxe
  * // Create a render texture
  * var rt = new RenderTexture(512, 512);

@@ -19,7 +19,6 @@ import ceramic.Shortcuts.*;
  *
  * The loaded atlas can be used with Quad visuals to display specific regions:
  *
- * @example
  * ```haxe
  * // Load an atlas
  * var atlasAsset = new AtlasAsset('myAtlas');

@@ -15,7 +15,6 @@ using StringTools;
  * This is the preferred way to display text within UI layouts as it
  * properly integrates with the View sizing system.
  * 
- * @example
  * ```haxe
  * var label = new TextView();
  * label.content = "Hello World";

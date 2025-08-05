@@ -32,7 +32,7 @@ extern class TextAsset extends Object {
      * Automatically handles text encoding (usually UTF-8).
      * Line endings are preserved as in the original file.
      * 
-     * @example Loading JSON data:
+     * Loading JSON data:
      * ```haxe
      * var jsonAsset = Resources.Load<TextAsset>("config/settings");
      * var data = Json.parse(jsonAsset.text);
@@ -52,7 +52,7 @@ extern class TextAsset extends Object {
      * - Custom parsing or encoding
      * - Avoiding string allocation for large files
      * 
-     * @example Reading binary data:
+     * Reading binary data:
      * ```haxe
      * var asset = Resources.Load<TextAsset>("data/binary");
      * var bytes = asset.bytes;

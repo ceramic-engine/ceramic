@@ -13,7 +13,6 @@ using ceramic.Extensions;
  * - 3 inner vertices forming the main triangle (fully opaque)
  * - 3 outer vertices extending beyond the triangle bounds (fully transparent)
  * 
- * @example
  * ```haxe
  * var triangle = new AntialiasedTriangle();
  * triangle.size(200, 150);

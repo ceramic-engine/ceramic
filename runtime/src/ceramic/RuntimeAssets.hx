@@ -28,7 +28,6 @@ import sys.FileSystem;
  * It also handles density variants (e.g., @2x, @3x) and provides
  * constant-style names for programmatic access.
  * 
- * @example
  * ```haxe
  * // Create from a directory path
  * var runtimeAssets = RuntimeAssets.fromPath('assets/');

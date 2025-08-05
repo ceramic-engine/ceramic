@@ -15,7 +15,6 @@ import ceramic.Shortcuts.*;
  * - Hot reload during development
  * - Automatic format fallback (tries alternative formats if one fails)
  * 
- * @example
  * ```haxe
  * var assets = new Assets();
  * assets.addSound('music/background');

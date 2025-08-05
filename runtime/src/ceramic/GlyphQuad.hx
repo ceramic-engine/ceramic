@@ -12,7 +12,6 @@ package ceramic;
  * glyph management, pooling, and event handling. Each glyph can be individually
  * positioned, styled, and tracked.
  * 
- * @example
  * ```haxe
  * // Typically created internally by Text, but can be accessed:
  * text.onGlyphQuadsChange(this, (glyphQuads) -> {

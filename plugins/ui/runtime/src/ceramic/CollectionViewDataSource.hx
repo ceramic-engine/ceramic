@@ -9,7 +9,6 @@ package ceramic;
  * - Creating and configuring item views
  * - Managing view recycling
  * 
- * @example
  * ```haxe
  * class MyDataSource implements CollectionViewDataSource {
  *     var items:Array<ItemData>;

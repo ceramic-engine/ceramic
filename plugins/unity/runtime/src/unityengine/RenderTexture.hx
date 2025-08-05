@@ -17,7 +17,7 @@ package unityengine;
  * - Can be used as regular textures after rendering
  * - Supports anti-aliasing and HDR
  * 
- * @example Basic usage:
+ * Basic usage:
  * ```haxe
  * // RenderTextures are typically created and managed
  * // by Ceramic's backend for filters and effects

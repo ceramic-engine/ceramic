@@ -19,7 +19,6 @@ package ceramic;
  * - Overlay containers
  * - Z-ordered visual effects
  *
- * @example
  * ```haxe
  * var layers = new LayersLayout();
  * layers.padding(20);

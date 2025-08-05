@@ -11,7 +11,6 @@ package ceramic;
  * Individual animations can override any of these defaults by providing
  * their own values in their SpineMontageAnimation configuration.
  *
- * @example
  * ```haxe
  * var montage = new SpineMontage<HeroState>({
  *     defaults: {

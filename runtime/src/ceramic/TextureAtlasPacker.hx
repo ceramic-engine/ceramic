@@ -22,7 +22,6 @@ using StringTools;
  * - Support for trimmed sprites with offset data
  * - Variant regions that share texture data
  * 
- * @example
  * ```haxe
  * // Create a packer
  * var packer = new TextureAtlasPacker();
@@ -179,7 +178,6 @@ class TextureAtlasPacker extends Entity {
      * @param removeAtlasRegions If true, also removes matching regions from the final atlas
      * @param matcher Function that returns true for regions to remove
      * 
-     * @example
      * ```haxe
      * // Remove all enemy sprites
      * packer.removeRegionsWithMatcher(true, name -> name.indexOf("enemy_") == 0);
@@ -275,7 +273,6 @@ class TextureAtlasPacker extends Entity {
      * @param removeAtlasRegions If true, also removes matching regions from the final atlas
      * @param prefix The string prefix to match region names against
      * 
-     * @example
      * ```haxe
      * // Remove all UI elements
      * packer.removeRegionsWithPrefix(true, "ui_");
@@ -432,7 +429,6 @@ class TextureAtlasPacker extends Entity {
      * 
      * @param done Callback invoked when packing is complete, receives the atlas
      * 
-     * @example
      * ```haxe
      * // Add multiple regions
      * packer.add("sprite1", pixels1, 32, 32, 32, 32);

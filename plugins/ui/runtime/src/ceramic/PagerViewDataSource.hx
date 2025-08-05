@@ -9,7 +9,6 @@ package ceramic;
  * - Creation and configuration of page views
  * - Recycling behavior for efficient memory usage
  * 
- * @example
  * ```haxe
  * class MyPagerDataSource implements PagerViewDataSource {
  *     var pages:Array<PageData>;

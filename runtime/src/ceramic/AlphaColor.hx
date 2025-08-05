@@ -21,7 +21,6 @@ using StringTools;
  * - 0xFF (255) = Fully opaque
  * - Values in between create partial transparency
  * 
- * @example
  * ```haxe
  * // Create colors with alpha
  * var semiRed = AlphaColor.fromRGBA(255, 0, 0, 128); // 50% transparent red

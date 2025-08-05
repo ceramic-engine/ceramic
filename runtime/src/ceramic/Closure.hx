@@ -49,7 +49,6 @@ class Closure {
      * @param args Optional array of arguments to pass when the method is called.
      *             If not provided, an empty array is used.
      * 
-     * @example
      * ```haxe
      * // Simple function
      * var c1 = new Closure(trace, ["Hello"]);
@@ -76,7 +75,6 @@ class Closure {
      * 
      * @return The return value from the called method, or null if the method returns Void
      * 
-     * @example
      * ```haxe
      * var closure = new Closure(Math.max, [5, 10]);
      * var result = closure.call(); // Returns 10

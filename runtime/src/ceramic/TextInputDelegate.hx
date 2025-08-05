@@ -14,7 +14,6 @@ package ceramic;
  * - Line-based text operations
  * - Proper cursor positioning in wrapped or formatted text
  * 
- * @example
  * ```haxe
  * class MyTextEditor extends Visual implements TextInputDelegate {
  *     var text:Text;
@@ -54,7 +53,6 @@ interface TextInputDelegate {
      * @param toLine The destination line number (0-based)
      * @return The best matching character position in the destination line
      * 
-     * @example
      * ```haxe
      * // Moving cursor from line 2, position 10 to line 3
      * var newPos = delegate.textInputClosestPositionInLine(10, 2, 3);
@@ -71,7 +69,6 @@ interface TextInputDelegate {
      * 
      * @return The total number of lines (always ≥ 1)
      * 
-     * @example
      * ```haxe
      * var lineCount = delegate.textInputNumberOfLines();
      * // Use for boundary checking in cursor navigation
@@ -93,7 +90,6 @@ interface TextInputDelegate {
      * @param lineOffset The character position within the line (0-based)
      * @return The absolute character index in the text string
      * 
-     * @example
      * ```haxe
      * // Get text index for character 5 on line 2
      * var textIndex = delegate.textInputIndexForPosInLine(2, 5);
@@ -113,7 +109,6 @@ interface TextInputDelegate {
      * @param index The absolute character index in the text (0-based)
      * @return The line number containing this character (0-based)
      * 
-     * @example
      * ```haxe
      * // Find which line the cursor is on after inserting text
      * var cursorLine = delegate.textInputLineForIndex(cursorIndex);
@@ -131,7 +126,6 @@ interface TextInputDelegate {
      * @param index The absolute character index in the text (0-based)
      * @return The character's position within its line (0-based)
      * 
-     * @example
      * ```haxe
      * // Get full cursor position from text index
      * var line = delegate.textInputLineForIndex(cursorIndex);

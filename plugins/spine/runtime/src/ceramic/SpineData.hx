@@ -23,7 +23,6 @@ using ceramic.Extensions;
  * resources when no longer needed. It's typically created automatically when loading
  * Spine assets through the asset system.
  * 
- * @example
  * ```haxe
  * // SpineData is usually created internally when loading assets
  * assets.add(Spines.HERO);
@@ -104,7 +103,6 @@ class SpineData extends Entity {
      * @param slotName The name of the slot to find
      * @return The index of the slot if found, or -1 if the slot doesn't exist or if slotName is null
      * 
-     * @example
      * ```haxe
      * var spineData = assets.spine(Spines.HERO);
      * var weaponSlotIndex = spineData.findSlotIndex("weapon");

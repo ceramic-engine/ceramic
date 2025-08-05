@@ -46,7 +46,7 @@ extern class Mesh extends Object {
      * Creates a new empty Mesh.
      * Must set vertex and index data before use.
      * 
-     * @example Creating a simple quad:
+     * Creating a simple quad:
      * ```haxe
      * var mesh = new Mesh();
      * mesh.SetVertexBufferParams(4, vertexLayout);

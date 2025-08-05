@@ -12,7 +12,6 @@ package ceramic;
  * - Type-safe image format specification
  * - Easy integration with file system operations
  * 
- * @example
  * ```haxe
  * // Loading images with specific types
  * var texture = app.assets.texture('logo.png');
@@ -47,7 +46,6 @@ enum abstract ImageType(String) from String to String {
      * - Pixel art (preserves sharp edges)
      * - Any image requiring alpha channel
      * 
-     * @example
      * ```haxe
      * // PNG is ideal for sprites
      * var sprite = app.assets.texture('character.png');
@@ -71,7 +69,6 @@ enum abstract ImageType(String) from String to String {
      * - Large images where file size matters
      * - Images without transparency requirements
      * 
-     * @example
      * ```haxe
      * // JPEG for backgrounds without transparency
      * var background = app.assets.texture('landscape.jpeg');
@@ -97,7 +94,6 @@ enum abstract ImageType(String) from String to String {
      * Note: For animated content, consider using sprite sheets
      * or video formats instead of animated GIFs.
      * 
-     * @example
      * ```haxe
      * // GIF support for compatibility
      * var icon = app.assets.texture('legacy_icon.gif');

@@ -13,7 +13,6 @@ package ceramic;
  * The wrap mode affects both horizontal (U) and vertical (V) directions
  * independently, though Ceramic typically applies the same mode to both axes.
  * 
- * @example
  * ```haxe
  * // Create a tiling background
  * var background = new Quad();
@@ -45,7 +44,6 @@ enum abstract TextureWrap(Int) {
      * 
      * This is typically the default wrap mode.
      * 
-     * @example
      * ```haxe
      * texture.wrapS = CLAMP;
      * texture.wrapT = CLAMP;
@@ -72,7 +70,6 @@ enum abstract TextureWrap(Int) {
      * 
      * Note: Requires power-of-two texture dimensions on some GPUs.
      * 
-     * @example
      * ```haxe
      * // Create an infinitely scrolling background
      * texture.wrapS = REPEAT;
@@ -98,7 +95,6 @@ enum abstract TextureWrap(Int) {
      * 
      * Note: May require power-of-two texture dimensions on some GPUs.
      * 
-     * @example
      * ```haxe
      * // Create a mirrored pattern
      * texture.wrapS = MIRROR;

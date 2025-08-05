@@ -13,7 +13,6 @@ package ceramic;
  * - Sharp pixel rendering with adjustable sharpness
  * - Automatic or manual render control
  * 
- * @example
  * ```haxe
  * // Create a low-res container for retro graphics
  * var lowRes = new LowRes();
@@ -107,7 +106,6 @@ class LowRes extends Layer {
      * Higher values produce smoother edges but require more GPU memory and processing.
      * Use power of 2 values for best results (1, 2, 4).
      * 
-     * @example
      * ```haxe
      * lowRes.density = 2; // Recommended for most cases
      * ```
@@ -125,7 +123,6 @@ class LowRes extends Layer {
      * The container where you add your low-resolution content.
      * All visuals added to this container will be rendered at low resolution.
      * 
-     * @example
      * ```haxe
      * var sprite = new Quad();
      * lowRes.content.add(sprite); // Add to low-res rendering

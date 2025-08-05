@@ -68,7 +68,6 @@ class ComputeFps {
      *             Larger values provide smoother results but slower response
      *             to FPS changes. Default: 10
      * 
-     * @example
      * ```haxe
      * // Quick response (10 frames)
      * var fpsFast = new ComputeFps(10);
@@ -97,7 +96,6 @@ class ComputeFps {
      * 
      * @param delta Time elapsed since last frame in seconds (e.g., 0.016 for 60 FPS)
      * 
-     * @example
      * ```haxe
      * // In your game loop
      * var lastTime = Timer.now();

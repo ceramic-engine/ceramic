@@ -18,7 +18,6 @@ using ceramic.Extensions;
  * - Smooth scrolling to specific items
  * - Multiple item behavior modes (RECYCLE, FREEZE, LAZY)
  *
- * @example
  * ```haxe
  * var collection = new CollectionView();
  * collection.size(400, 600);

@@ -13,7 +13,6 @@ package ceramic;
  * - Item sizing constraints
  * - Efficient visibility culling
  * 
- * @example
  * ```haxe
  * var layout = new CollectionViewFlowLayout();
  * layout.itemSpacingX = 10;

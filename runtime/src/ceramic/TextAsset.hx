@@ -17,7 +17,6 @@ import ceramic.Shortcuts.*;
  * - Hot reload for live content updates
  * - Suitable for loading game data, configurations, or localization files
  *
- * @example
  * ```haxe
  * var assets = new Assets();
  * assets.addText('config.json');

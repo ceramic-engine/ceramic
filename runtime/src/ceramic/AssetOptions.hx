@@ -12,7 +12,6 @@ package ceramic;
  * - `density` (Float) - Override density detection
  * - Custom backend-specific options
  * 
- * @example
  * ```haxe
  * assets.addImage('hero', null, {
  *     premultiplyAlpha: true,

@@ -20,7 +20,6 @@ import ase.Ase;
  * - Texture replacement with automatic visual updates
  * - Integration with texture atlas packing
  * 
- * @example
  * ```haxe
  * var assets = new Assets();
  * assets.addImage('hero.png');

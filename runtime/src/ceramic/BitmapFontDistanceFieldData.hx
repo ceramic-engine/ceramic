@@ -14,7 +14,6 @@ package ceramic;
  * compared to regular SDF by encoding distance information across RGB channels,
  * preserving sharp corners and fine details.
  * 
- * @example
  * ```haxe
  * // Check if font uses distance fields
  * if (font.fontData.distanceField != null) {
@@ -61,7 +60,6 @@ class BitmapFontDistanceFieldData {
      * This value is passed to the MSDF shader to correctly interpret
      * the distance field data during rendering.
      * 
-     * @example
      * ```haxe
      * // In shader setup
      * shader.setFloat('pxRange', fontData.distanceField.distanceRange);

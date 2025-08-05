@@ -25,7 +25,6 @@ class SpineColors {
      * @param result Optional array to store results in. If provided, it will be reused; otherwise a new array is created
      * @return Array of Color values corresponding to each slot. Slots that don't exist or have no color will have Color.NONE
      * 
-     * @example
      * ```haxe
      * var spine = new Spine();
      * spine.load(spineData);
@@ -91,7 +90,6 @@ class SpineColors {
      * @param result Optional array to store results in. If provided, it will be reused; otherwise a new array is created
      * @return Array of Color values corresponding to each slot's dark color. Slots without dark colors will have Color.NONE
      * 
-     * @example
      * ```haxe
      * var spine = new Spine();
      * spine.load(spineData);

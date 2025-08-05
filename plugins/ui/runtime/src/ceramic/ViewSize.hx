@@ -12,7 +12,6 @@ package ceramic;
  * This encoding allows ViewSize to be used directly as a Float while
  * maintaining type safety and avoiding object allocations.
  * 
- * @example
  * ```haxe
  * // Fixed size
  * view.viewWidth = 200; // 200 pixels
@@ -66,7 +65,6 @@ abstract ViewSize(Float) from Float to Float {
      * @param value Percentage value (0-100 typical, negative values allowed)
      * @return Encoded percentage size
      * 
-     * @example
      * ```haxe
      * view.viewWidth = ViewSize.percent(50);  // 50% of parent width
      * view.viewHeight = ViewSize.percent(25); // 25% of parent height
@@ -109,7 +107,6 @@ abstract ViewSize(Float) from Float to Float {
      * in the parent container.
      * @return Encoded fill size value
      * 
-     * @example
      * ```haxe
      * view.viewWidth = ViewSize.fill();  // Use all available width
      * view.viewHeight = ViewSize.fill(); // Use all available height
@@ -141,7 +138,6 @@ abstract ViewSize(Float) from Float to Float {
      * The exact behavior depends on the view type and layout context.
      * @return Encoded auto size value
      * 
-     * @example
      * ```haxe
      * // Text view that sizes to fit its content
      * textView.viewWidth = ViewSize.auto();
@@ -180,7 +176,6 @@ abstract ViewSize(Float) from Float to Float {
      * @param parent The parent container's size in pixels
      * @return The computed size in pixels
      * 
-     * @example
      * ```haxe
      * var width = ViewSize.computeWithParentSize(viewWidth, parentWidth);
      * ```

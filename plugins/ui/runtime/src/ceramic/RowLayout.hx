@@ -8,7 +8,6 @@ package ceramic;
  * the risk of accidentally changing the direction at runtime. It inherits
  * all the alignment, spacing, and distribution features of LinearLayout.
  * 
- * @example
  * ```haxe
  * var row = new RowLayout();
  * row.itemSpacing = 10;

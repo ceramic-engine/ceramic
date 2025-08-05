@@ -14,7 +14,7 @@ package unityengine;
  * - Exposed parameters for runtime control
  * - Snapshot system for mixing states
  * 
- * @example Basic usage:
+ * Basic usage:
  * ```haxe
  * // AudioMixers are typically configured in Unity Editor
  * // and accessed through the backend's bus system
@@ -37,7 +37,7 @@ extern class AudioMixer extends Object {
      *                - Wildcard: "Master/*" (finds all direct children)
      * @return Array of matching AudioMixerGroup objects
      * 
-     * @example Finding all SFX groups:
+     * Finding all SFX groups:
      * ```haxe
      * var sfxGroups = mixer.FindMatchingGroups("SFX");
      * for (group in sfxGroups) {

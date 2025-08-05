@@ -19,7 +19,6 @@ using ceramic.Extensions;
  * The arc is centered at its anchor point (default 0.5, 0.5) and
  * renders from 0° (right) counter-clockwise.
  *
- * @example
  * ```haxe
  * // Create a simple arc
  * var arc = new Arc();

@@ -79,7 +79,6 @@ class DecomposedTransform {
      * Positive values rotate clockwise.
      * Default: 0
      * 
-     * @example
      * ```haxe
      * decomposed.rotation = Math.PI / 2; // 90 degrees
      * decomposed.rotation = Math.PI;     // 180 degrees

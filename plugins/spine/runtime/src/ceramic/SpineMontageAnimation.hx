@@ -11,7 +11,6 @@ package ceramic;
  * The @:structInit metadata allows for convenient object literal syntax
  * when creating instances, making configuration clean and readable.
  * 
- * @example
  * ```haxe
  * var jumpAnimation:SpineMontageAnimation<HeroState> = {
  *     anim: "jump_animation",
@@ -39,7 +38,7 @@ class SpineMontageAnimation<T> {
      * variations of the same animation (e.g., different outfits, weapons).
      * If null, the current skin or default skin will be used.
      * 
-     * @example "warrior", "mage", "red_armor"
+     * "warrior", "mage", "red_armor"
      */
     public var skin:Null<String> = null;
 
@@ -101,7 +100,6 @@ class SpineMontageAnimation<T> {
      * 
      * Set to null for no automatic transition.
      * 
-     * @example
      * ```haxe
      * animations: {
      *     "jump": { anim: "jump", next: "fall" },

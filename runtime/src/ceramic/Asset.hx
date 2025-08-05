@@ -109,7 +109,6 @@ class Asset extends Entity implements Observable {
      * - Call `release()` to decrease (release ownership)
      * - Asset can be safely destroyed when refCount reaches 0
      * 
-     * @example
      * ```haxe
      * var texture = assets.texture('hero');
      * texture.retain(); // refCount = 1

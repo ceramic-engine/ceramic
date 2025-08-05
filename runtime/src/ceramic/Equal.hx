@@ -63,7 +63,6 @@ class Equal {
      * @param b Second value to compare
      * @return True if values are deeply equal, false otherwise
      * 
-     * @example
      * ```haxe
      * // Simple values
      * Equal.equal(5, 5); // true
@@ -125,7 +124,6 @@ class Equal {
      * @param b Second object to compare  
      * @return True if all fields match, false otherwise
      * 
-     * @example
      * ```haxe
      * var obj1 = {x: 10, y: {z: 20}};
      * var obj2 = {x: 10, y: {z: 20}};
@@ -204,7 +202,6 @@ class Equal {
      * @param b Second StringMap
      * @return True if maps have identical key-value pairs
      * 
-     * @example
      * ```haxe
      * var map1 = new StringMap<Int>();
      * map1.set("a", 1);
@@ -245,7 +242,6 @@ class Equal {
      * @param b Second IntMap
      * @return True if maps have identical key-value pairs
      * 
-     * @example
      * ```haxe
      * var map1 = new IntMap<String>();
      * map1.set(1, "one");

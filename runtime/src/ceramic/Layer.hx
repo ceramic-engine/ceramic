@@ -21,7 +21,6 @@ import ceramic.Shortcuts.*;
  * Layers are commonly used to organize your scene hierarchy and apply
  * transformations to groups of objects together.
  *
- * @example
  * ```haxe
  * // Create a game layer that can be scrolled
  * var gameLayer = new Layer();

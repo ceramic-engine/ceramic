@@ -12,7 +12,6 @@ enum ImageViewScaling {
      * The image is scaled by the exact factor regardless of view bounds.
      * Useful for pixel-perfect rendering or specific zoom levels.
      * 
-     * @example
      * ```haxe
      * imageView.scaling = CUSTOM;
      * imageView.imageScale = 2.0; // Double size
@@ -25,7 +24,6 @@ enum ImageViewScaling {
      * The entire image will be visible, but there may be empty space if the
      * aspect ratios don't match. This is the default mode.
      * 
-     * @example
      * ```haxe
      * imageView.scaling = FIT;
      * // Image will be fully visible within bounds
@@ -38,7 +36,6 @@ enum ImageViewScaling {
      * The image will cover the entire area, but parts may be cropped if the
      * aspect ratios don't match. Centers the image and crops edges as needed.
      * 
-     * @example
      * ```haxe
      * imageView.scaling = FILL;
      * // Image will cover entire view, may be cropped

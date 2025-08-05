@@ -19,7 +19,6 @@ package ceramic;
  * - More intuitive for image editing
  * - Used by most image file formats
  * 
- * @example
  * ```haxe
  * // Load image pixels
  * var pixels = texture.fetchPixels();
@@ -52,7 +51,6 @@ class PremultiplyAlpha {
      * @param pixels The pixel data array in RGBA format (4 bytes per pixel).
      *               Must have length divisible by 4. Modified in-place.
      * 
-     * @example
      * ```haxe
      * // Prepare pixels for GPU rendering
      * var pixels = loadImagePixels("sprite.png");
@@ -98,7 +96,6 @@ class PremultiplyAlpha {
      * @param pixels The pixel data array in premultiplied RGBA format.
      *               Must have length divisible by 4. Modified in-place.
      * 
-     * @example
      * ```haxe
      * // Convert back for image editing or saving
      * var pixels = texture.fetchPixels();

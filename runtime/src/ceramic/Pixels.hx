@@ -22,7 +22,6 @@ using ceramic.Extensions;
  * - Each pixel uses 4 consecutive bytes: [R, G, B, A]
  * - Buffer index calculation: (y * width + x) * 4
  * 
- * @example
  * ```haxe
  * // Create a 100x100 red image
  * var pixels = Pixels.create(100, 100, AlphaColor.RED);
@@ -74,7 +73,6 @@ class Pixels {
      * @param copyBlue Whether to copy the blue channel (default: true)
      * @param copyAlpha Whether to copy the alpha channel (default: true)
      * 
-     * @example
      * ```haxe
      * // Copy entire image
      * Pixels.copy(src, 100, dst, 200, 0, 0, 100, 100, 50, 50);
@@ -157,7 +155,6 @@ class Pixels {
      * @param fillColor Initial color for all pixels (including alpha)
      * @return New pixel buffer in RGBA format
      * 
-     * @example
      * ```haxe
      * // Create transparent image
      * var pixels = Pixels.create(256, 256, AlphaColor.TRANSPARENT);
@@ -192,7 +189,6 @@ class Pixels {
      * @param bytes Raw bytes containing RGBA pixel data
      * @return Pixel buffer suitable for use with other Pixels methods
      * 
-     * @example
      * ```haxe
      * var bytes = File.getBytes("raw_image.data");
      * var pixels = Pixels.fromBytes(bytes);
@@ -220,7 +216,6 @@ class Pixels {
      * @param y Y coordinate (0 to height-1)
      * @return Color value at the specified position
      * 
-     * @example
      * ```haxe
      * var color = Pixels.get(buffer, 100, 50, 25);
      * trace('Pixel alpha: ' + color.alpha);
@@ -250,7 +245,6 @@ class Pixels {
      * @param y Y coordinate (0 to height-1)
      * @param color Color value to set (including alpha)
      * 
-     * @example
      * ```haxe
      * // Draw a red pixel
      * Pixels.set(buffer, 100, 50, 25, AlphaColor.RED);
@@ -288,7 +282,6 @@ class Pixels {
      * @param height Height of rectangle in pixels
      * @param color Color to fill the rectangle with (including alpha)
      * 
-     * @example
      * ```haxe
      * // Draw a blue square
      * Pixels.setRectangle(buffer, 200, 50, 50, 100, 100, AlphaColor.BLUE);
@@ -320,7 +313,6 @@ class Pixels {
      * @param path File path where to save the PNG (e.g., "/path/to/image.png")
      * @param done Callback invoked when the export is complete
      * 
-     * @example
      * ```haxe
      * var screenshot = Pixels.create(800, 600, AlphaColor.BLACK);
      * // ... draw to screenshot ...
@@ -346,7 +338,6 @@ class Pixels {
      * @param pixels RGBA pixel buffer to encode
      * @param done Callback invoked with the PNG data as Bytes
      * 
-     * @example
      * ```haxe
      * Pixels.pixelsToPng(256, 256, pixels, (pngBytes) -> {
      *     // Send PNG over network
@@ -382,7 +373,6 @@ class Pixels {
      *                  If null or wrong size, a new buffer is created.
      * @return RGB pixel buffer (3 bytes per pixel)
      * 
-     * @example
      * ```haxe
      * // Convert for JPEG encoding (no alpha support)
      * var rgbPixels = Pixels.rgbaPixelsToRgbPixels(100, 100, rgbaPixels);
@@ -429,7 +419,6 @@ class Pixels {
      *                  If null or wrong size, a new buffer is created.
      * @return RGBA pixel buffer (4 bytes per pixel)
      * 
-     * @example
      * ```haxe
      * // Convert RGB to opaque RGBA
      * var rgbaPixels = Pixels.rgbPixelsToRgbaPixels(100, 100, 255, rgbPixels);
@@ -491,7 +480,6 @@ class Pixels {
      * 
      * @throws String If inPixelsList is empty
      * 
-     * @example
      * ```haxe
      * // Blend 5 frames for motion blur
      * var frames = [frame1, frame2, frame3, frame4, frame5];
@@ -554,7 +542,6 @@ class Pixels {
      * @param bufferWidth Width of the image in pixels.
      *                    Height is calculated from buffer.length / (width × 4).
      * 
-     * @example
      * ```haxe
      * // Flip image loaded from file (often needed for OpenGL)
      * var pixels = loadImagePixels("texture.png");
@@ -605,7 +592,6 @@ class Pixels {
      * @param bufferWidth Width of the image in pixels.
      *                    Height is calculated from buffer.length / (width × 4).
      * 
-     * @example
      * ```haxe
      * // Create mirror image
      * var pixels = loadImagePixels("character.png");

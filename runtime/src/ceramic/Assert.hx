@@ -45,7 +45,6 @@ class Assert {
      * 
      * @throws String Exception containing the failed expression and reason
      * 
-     * @example
      * ```haxe
      * Assert.assert(player.health > 0);
      * Assert.assert(items.length == expectedCount, "Item count mismatch");

@@ -19,7 +19,6 @@ import ceramic.Shortcuts.*;
  * and original dimensions (including trimmed transparent areas), enabling
  * proper sprite alignment and collision detection.
  *
- * @example
  * ```haxe
  * // Get a region from atlas
  * var region = atlas.region("player_idle");

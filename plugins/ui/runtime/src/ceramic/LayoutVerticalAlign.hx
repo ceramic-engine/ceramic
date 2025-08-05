@@ -5,7 +5,6 @@ package ceramic;
  * Controls how elements are positioned along the Y-axis when they have
  * extra vertical space available.
  * 
- * @example
  * ```haxe
  * var view = new View();
  * view.layoutVerticalAlign = CENTER; // Center child vertically

@@ -22,7 +22,6 @@ using ceramic.Extensions;
  * - Creating meshes from outline data
  * - Processing vector graphics
  * 
- * @example
  * ```haxe
  * // Triangulate a square
  * var vertices = [
@@ -58,7 +57,6 @@ class Triangulate {
      *                Will be cleared before adding new indices.
      *                Result length will be 3 × (numVertices - 2).
      * 
-     * @example
      * ```haxe
      * var vertices = [0,0, 100,0, 50,100]; // Triangle
      * var indices = [];
@@ -86,7 +84,6 @@ class Triangulate {
      *                Indices are offset by 'index' parameter.
      *                Does NOT clear existing content.
      * 
-     * @example
      * ```haxe
      * // Triangulate second polygon in a multi-polygon buffer
      * var vertices = [
@@ -220,7 +217,6 @@ private class EarClippingTriangulator {
      * @return Array of triangle indices in clockwise order.
      *         Each group of 3 indices forms one triangle.
      * 
-     * @example
      * ```haxe
      * var triangulator = new EarClippingTriangulator();
      * var vertices = [0,0, 100,0, 100,100, 0,100]; // Square

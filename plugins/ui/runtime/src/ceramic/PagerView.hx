@@ -22,7 +22,6 @@ using ceramic.Extensions;
  * - Preloading of adjacent pages
  * - Configurable visibility bounds
  * 
- * @example
  * ```haxe
  * var pager = new PagerView();
  * pager.size(400, 300);

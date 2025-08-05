@@ -56,7 +56,6 @@ class SpineBounds {
      * @param bounds Optional existing SpineBounds object to populate. If null, a new instance is created
      * @return The populated SpineBounds object containing the computed dimensions and anchor points
      * 
-     * @example
      * ```haxe
      * var spine = new Spine();
      * spine.load(spineData);

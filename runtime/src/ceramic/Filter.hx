@@ -28,7 +28,6 @@ import tracker.Observable;
  * - Explicit render control for performance
  * - Support for texture atlases via TextureTilePacker
  * 
- * @example
  * ```haxe
  * // Create a blur filter
  * var blurFilter = new Filter();

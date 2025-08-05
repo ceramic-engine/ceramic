@@ -58,7 +58,6 @@ class EntityData {
      * 
      * @param entity The entity to remove data from
      * 
-     * @example
      * ```haxe
      * // Clean up entity data
      * EntityData.removeData(myEntity);
@@ -91,7 +90,6 @@ class EntityData {
      *             If not provided and no data exists, an empty object {} is created.
      * @return The entity's dynamic data object
      * 
-     * @example
      * ```haxe
      * // First access creates empty data
      * var data = EntityData.data(player);

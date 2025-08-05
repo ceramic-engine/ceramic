@@ -25,7 +25,6 @@ using ceramic.Extensions;
  * The shape is defined by a series of points forming a closed polygon.
  * Points should be provided in counter-clockwise order for proper rendering.
  *
- * @example
  * ```haxe
  * // Create a triangle
  * var shape = new Shape();

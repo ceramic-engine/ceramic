@@ -74,7 +74,6 @@ class DynamicData extends Entity implements Component {
      * 
      * @return The data object (never null after first access)
      * 
-     * @example
      * ```haxe
      * var dynData = new DynamicData();
      * dynData.data.score = 100; // Auto-creates {}
@@ -103,7 +102,6 @@ class DynamicData extends Entity implements Component {
      * @param data Optional initial data to store. If not provided,
      *             data will be lazily initialized on first access.
      * 
-     * @example
      * ```haxe
      * // With initial data
      * var data1 = new DynamicData({level: 1, xp: 0});

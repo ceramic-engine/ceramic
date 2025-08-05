@@ -24,7 +24,6 @@ import ceramic.Shortcuts.*;
  * The packer divides textures into a grid of fixed-size cells (pads) and
  * allocates contiguous blocks for tiles that need more space.
  * 
- * @example
  * ```haxe
  * // Create a packer for dynamic text
  * var packer = new TextureTilePacker(
@@ -224,7 +223,6 @@ class TextureTilePacker extends Entity {
      * @param height Required tile height in pixels
      * @return The allocated TextureTile, or null if dimensions exceed maximum
      * 
-     * @example
      * ```haxe
      * // Allocate a 100x50 tile
      * var tile = packer.allocTile(100, 50);
@@ -329,7 +327,6 @@ class TextureTilePacker extends Entity {
      * @param tile The tile to release (must be from this packer)
      * @throws String if tile is not a PackedTextureTile
      * 
-     * @example
      * ```haxe
      * // Release a tile when no longer needed
      * packer.releaseTile(myTile);
@@ -392,7 +389,6 @@ class TextureTilePacker extends Entity {
      * @param visual The visual content to render
      * @param done Callback invoked when rendering completes
      * 
-     * @example
      * ```haxe
      * // Render text into a tile
      * var tile = packer.allocTile(200, 50);

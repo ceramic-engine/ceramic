@@ -15,7 +15,6 @@ package ceramic;
  * - Final pan = sound.pan + mixer.pan
  * - Final pitch = sound.pitch + (mixer.pitch - 1)
  * 
- * @example
  * ```haxe
  * // Control all sounds in group 1 (e.g., music)
  * var musicMixer = app.audio.mixer(1);

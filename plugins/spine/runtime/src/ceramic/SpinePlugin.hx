@@ -30,7 +30,7 @@ using StringTools;
  * - Loads required shaders for two-color tinting support
  * - Provides helper methods for accessing Spine assets
  * 
- * @example Loading Spine assets
+ * Loading Spine assets
  * ```haxe
  * // Add a spine asset to load
  * assets.add(Spines.HERO);
@@ -121,7 +121,6 @@ class SpinePlugin {
      * @param variant Optional variant name for different versions of the same asset
      * @param options Optional loading options (density, filter, etc.)
      * 
-     * @example
      * ```haxe
      * assets.addSpine("characters/hero");
      * assets.addSpine("spine:characters/hero");  // Same as above
@@ -149,7 +148,6 @@ class SpinePlugin {
      * @param options Optional loading options
      * @param done Callback executed with the loaded SpineAsset (or null if loading failed)
      * 
-     * @example
      * ```haxe
      * assets.ensureSpine(Spines.HERO, function(asset) {
      *     if (asset != null) {
@@ -182,7 +180,6 @@ class SpinePlugin {
      * @param variant Optional variant name
      * @return The SpineData instance, or null if not found/loaded
      * 
-     * @example
      * ```haxe
      * var heroData = assets.spine(Spines.HERO);
      * if (heroData != null) {
@@ -213,7 +210,6 @@ class SpinePlugin {
      * @param variant Optional variant name
      * @return The SpineAsset if found, null otherwise
      * 
-     * @example
      * ```haxe
      * var asset = assets.spineAsset("characters/hero");
      * if (asset != null && asset.status == READY) {
@@ -244,7 +240,6 @@ class SpinePlugin {
      * @param name An asset constant object with an _id field
      * @return The string identifier for the skeleton
      * 
-     * @example
      * ```haxe
      * var skeletonName = SpinePlugin.toSkeletonName(Spines.HERO);
      * // Returns something like "characters/hero"

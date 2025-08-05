@@ -14,7 +14,6 @@ package ceramic;
  * only the specified portion of the texture. Supports rotation for
  * optimally packed texture atlases and edge insets to prevent bleeding.
  * 
- * @example
  * ```haxe
  * // Create a tile from a sprite sheet
  * var spriteSheet = assets.texture('characters.png');

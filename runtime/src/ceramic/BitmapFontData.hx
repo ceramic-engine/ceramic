@@ -15,7 +15,6 @@ package ceramic;
  * - Kerning data for improved character spacing
  * - Optional distance field data for high-quality scaling
  * 
- * @example
  * ```haxe
  * var fontData:BitmapFontData = {
  *     face: "Arial",
@@ -108,7 +107,6 @@ class BitmapFontData {
      * - Second key: Unicode code point of the second character  
      * - Value: Horizontal adjustment in pixels (usually negative)
      * 
-     * @example
      * ```haxe
      * var kernValue = kernings.get(65)?.get(86); // Kerning for "AV"
      * if (kernValue != null) cursorX += kernValue;

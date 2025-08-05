@@ -10,7 +10,7 @@ package ceramic;
  *
  * The @:structInit metadata enables object literal syntax for easy configuration.
  *
- * @example Complete montage setup
+ * Complete montage setup
  * ```haxe
  * enum PlayerState {
  *     IDLE;
@@ -52,7 +52,7 @@ package ceramic;
  * var montage = new SpineMontage(settings);
  * ```
  *
- * @example Minimal setup with existing Spine instance
+ * Minimal setup with existing Spine instance
  * ```haxe
  * var settings:SpineMontageSettings<String> = {
  *     spine: {
@@ -83,7 +83,6 @@ class SpineMontageSettings<T> {
      * should be played, including its Spine animation name, playback settings,
      * callbacks, and transitions.
      *
-     * @example
      * ```haxe
      * animations: {
      *     IDLE: { anim: "idle_loop", loop: true },
@@ -131,7 +130,6 @@ class SpineMontageSettings<T> {
      * If null, no animation will play initially and you must call
      * play() manually to start an animation.
      *
-     * @example
      * ```haxe
      * start: PlayerState.IDLE  // For enum-based montages
      * start: "intro"          // For string-based montages

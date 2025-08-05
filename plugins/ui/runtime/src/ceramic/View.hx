@@ -26,7 +26,6 @@ using ceramic.Extensions;
  * - offset: Position adjustment relative to default layout position
  * - flex: Relative sizing weight for flexible layouts
  * 
- * @example
  * ```haxe
  * var container = new View();
  * container.viewSize(ViewSize.fill(), 200); // Full width, 200px height
@@ -118,7 +117,6 @@ class View extends Layer {
      * @param bottom Bottom padding (or bottom if 3+ params)
      * @param left Left padding
      * 
-     * @example
      * ```haxe
      * padding(10);          // All sides: 10px
      * padding(10, 20);      // Vertical: 10px, Horizontal: 20px  
@@ -246,7 +244,6 @@ class View extends Layer {
      * Determines how much space this view should take relative to siblings.
      * Only used in layouts that support flex distribution (e.g., LinearLayout).
      * 
-     * @example
      * ```haxe
      * // Three views in a horizontal layout:
      * view1.flex = 1; // Takes 1/6 of space
@@ -908,7 +905,6 @@ class View extends Layer {
      * This forces a size computation even if the view is not dirty.
      * @param applyComputedSize if `true`, immediately apply the computed size using size()
      * 
-     * @example
      * ```haxe
      * view.viewSize(ViewSize.auto(), ViewSize.fill());
      * view.autoComputeSize(true); // Computes and applies size
@@ -1206,7 +1202,6 @@ class View extends Layer {
      * This is called automatically when view properties change.
      * Multiple calls are batched into a single layout pass.
      * 
-     * @example
      * ```haxe
      * view.width = 200; // Automatically calls requestLayout()
      * View.requestLayout(); // Manual call if needed
@@ -1338,7 +1333,6 @@ class View extends Layer {
      * The view will automatically resize when the screen size changes.
      * @param factor Scale factor to apply to screen dimensions (default: 1.0)
      * 
-     * @example
      * ```haxe
      * view.bindToScreenSize(); // Full screen size
      * view.bindToScreenSize(0.5); // Half screen size

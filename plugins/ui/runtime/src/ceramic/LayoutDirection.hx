@@ -5,7 +5,6 @@ package ceramic;
  * Used by various layout components to determine how child elements
  * should be arranged relative to each other.
  * 
- * @example
  * ```haxe
  * var layout = new LinearLayout();
  * layout.direction = HORIZONTAL; // Children arranged left-to-right

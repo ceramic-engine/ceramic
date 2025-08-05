@@ -15,7 +15,6 @@ import ceramic.Shortcuts.*;
  * The component automatically updates the bounds visual to match the
  * entity's current dimensions, making it ideal for dynamic content.
  * 
- * @example
  * ```haxe
  * // Add a red border to show bounds
  * var border = new Quad();
@@ -59,7 +58,6 @@ class VisibleBounds extends Entity implements Component {
      *               - Quad with alpha < 1 for semi-transparent overlay
      *               - Mesh for custom bounds visualization
      * 
-     * @example
      * ```haxe
      * // Create bounds with dashed line (using a texture)
      * var dashedQuad = new Quad();

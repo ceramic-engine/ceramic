@@ -7,7 +7,7 @@ package unityengine;
  * In Ceramic's Unity backend, AudioClips are used to store and play sound effects
  * and music. They can be loaded from Resources or created dynamically at runtime.
  * 
- * @example Loading and playing an AudioClip:
+ * Loading and playing an AudioClip:
  * ```haxe
  * // AudioClips are typically loaded through Ceramic's asset system
  * // This is handled internally by the Unity backend
@@ -101,7 +101,7 @@ extern class AudioClip extends Object {
      * @param stream Whether to create as streaming clip (true) or in-memory (false)
      * @return Newly created AudioClip ready for SetData() calls
      * 
-     * @example Creating a 1-second sine wave:
+     * Creating a 1-second sine wave:
      * ```haxe
      * var clip = AudioClip.Create("sine", 44100, 1, 44100, false);
      * // Then use SetData() to fill with audio samples

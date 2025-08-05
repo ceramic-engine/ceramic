@@ -18,7 +18,6 @@ using StringTools;
  * - Rotation data for optimally packed regions
  * - Filtering modes per page
  * 
- * @example
  * ```haxe
  * // Parse LibGDX format atlas
  * var atlasData = Assets.text('sprites.atlas');

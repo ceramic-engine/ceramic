@@ -13,7 +13,7 @@ package unityengine;
  * The loading happens over multiple frames, allowing the game
  * to remain responsive while assets load in the background.
  * 
- * @example Async texture loading:
+ * Async texture loading:
  * ```haxe
  * var request = Resources.LoadAsync<Texture2D>("textures/large");
  * // Later, check if done:
@@ -61,7 +61,7 @@ extern class ResourceRequest {
      * Check this before accessing the asset property.
      * Once true, the asset is ready to use (or null if failed).
      * 
-     * @example Polling for completion:
+     * Polling for completion:
      * ```haxe
      * function update() {
      *     if (request.isDone) {
@@ -101,7 +101,7 @@ extern class ResourceRequest {
      * Note: Progress may not be linear and can jump.
      * For scenes, stops at 0.9 if allowSceneActivation = false.
      * 
-     * @example Progress bar:
+     * Progress bar:
      * ```haxe
      * loadingBar.scaleX = request.progress;
      * ```

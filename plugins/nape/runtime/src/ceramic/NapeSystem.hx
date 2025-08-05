@@ -18,7 +18,6 @@ using ceramic.Extensions;
  * The system automatically updates visual positions and rotations based on
  * their associated physics bodies after each physics step.
  * 
- * @example
  * ```haxe
  * // Access the default physics space
  * var space = app.nape.space;

@@ -16,7 +16,6 @@ import tracker.Observable;
  * - Proper texture lifecycle management
  * - Reactive updates when image or scaling properties change
  * 
- * @example
  * ```haxe
  * var imageView = new ImageView();
  * imageView.size(200, 150);

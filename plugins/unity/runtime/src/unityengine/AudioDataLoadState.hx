@@ -7,7 +7,7 @@ package unityengine;
  * This is particularly important when AudioClip.loadInBackground is true,
  * as you need to check the state before attempting playback.
  * 
- * @example Checking if audio is ready:
+ * Checking if audio is ready:
  * ```haxe
  * if (audioClip.loadState == AudioDataLoadState.Loaded) {
  *     // Safe to play the audio

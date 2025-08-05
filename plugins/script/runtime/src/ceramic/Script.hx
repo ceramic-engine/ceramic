@@ -19,7 +19,6 @@ import hscript.Parser;
  * - Module system for inter-script communication
  * - Infinite loop protection
  * 
- * @example
  * ```haxe
  * // Create a script that moves an entity
  * var scriptCode = '

@@ -122,7 +122,6 @@ class BackgroundQueue extends Entity {
      * 
      * @param fn The function to execute in the background
      * 
-     * @example
      * ```haxe
      * queue.schedule(() -> {
      *     // This runs in background thread

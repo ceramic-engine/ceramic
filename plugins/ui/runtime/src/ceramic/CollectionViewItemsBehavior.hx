@@ -10,7 +10,6 @@ import ceramic.macros.EnumAbstractMacro;
  * - FREEZE: Best for small, static collections
  * - LAZY: Best for progressively loaded content
  * 
- * @example
  * ```haxe
  * // Use recycling for a large list
  * collectionView.itemsBehavior = RECYCLE;

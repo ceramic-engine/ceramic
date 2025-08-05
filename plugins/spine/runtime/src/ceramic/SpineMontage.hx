@@ -21,7 +21,7 @@ import ceramic.Shortcuts.*;
  * - Default settings that apply to all animations
  * - Automatic Spine instance lifecycle management
  *
- * @example Using with an enum
+ * Using with an enum
  * ```haxe
  * enum HeroAnimation {
  *     IDLE;
@@ -59,7 +59,7 @@ import ceramic.Shortcuts.*;
  * montage.play(Attack); // Will auto-transition to Idle when complete
  * ```
  *
- * @example Using with strings
+ * Using with strings
  * ```haxe
  * var montage = new SpineMontage<String>();
  * montage.createSpine(spineData);
@@ -505,7 +505,6 @@ class SpineMontage<T> extends Entity implements Component {
      * @param animations Object with animation configurations keyed by name
      * @throws String If any animation instance in the object is null
      *
-     * @example
      * ```haxe
      * montage.setAnimations({
      *     "idle": { anim: "idle_loop", loop: true },
@@ -619,7 +618,6 @@ class SpineMontage<T> extends Entity implements Component {
      * @param reset If true, forces the animation to restart from the beginning,
      *              even if it's already the current animation
      *
-     * @example
      * ```haxe
      * montage.play(HeroAnimation.Walk);
      * montage.play(HeroAnimation.Jump, true); // Force restart
@@ -646,7 +644,6 @@ class SpineMontage<T> extends Entity implements Component {
      * @param key The animation key to configure
      * @param animationInstance The configuration for this animation
      *
-     * @example
      * ```haxe
      * montage.set(HeroAnimation.Victory, {
      *     anim: "victory_dance",

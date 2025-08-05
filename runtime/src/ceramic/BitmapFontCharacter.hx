@@ -13,7 +13,6 @@ package ceramic;
  * - Offsets (xOffset, yOffset) position the glyph relative to the baseline
  * - Advance (xAdvance) determines cursor movement after rendering
  *
- * @example
  * ```haxe
  * var charA = font.chars.get(65); // Get letter 'A'
  * var texture = font.pages.get(charA.page);

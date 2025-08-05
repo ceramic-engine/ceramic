@@ -1017,7 +1017,6 @@ class Im {
      * Nested rows are not supported - calling beginRow() while already
      * in a row will trigger an assertion.
      * 
-     * @example
      * ```haxe
      * Im.beginRow();
      * Im.button("Left");    // Default flex=1
@@ -1065,7 +1064,6 @@ class Im {
      * Change checks can be nested - each begin/end pair tracks
      * changes independently.
      * 
-     * @example
      * ```haxe
      * Im.beginChangeCheck();
      * Im.textField("Name", namePointer);

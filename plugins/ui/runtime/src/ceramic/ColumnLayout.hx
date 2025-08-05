@@ -13,7 +13,6 @@ package ceramic;
  * - Padding support
  * - Auto-sizing based on content
  * 
- * @example
  * ```haxe
  * var column = new ColumnLayout();
  * column.itemSpacing = 10;

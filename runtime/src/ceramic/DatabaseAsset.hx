@@ -23,7 +23,6 @@ import haxe.DynamicAccess;
  * - String values can be quoted with double quotes
  * - Use "" to escape quotes within quoted strings
  * 
- * @example
  * ```haxe
  * // Load a CSV database
  * var dbAsset = new DatabaseAsset('enemies');

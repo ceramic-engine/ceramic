@@ -28,7 +28,6 @@ import ceramic.Assert.assert;
  * finished to improve performance. Each bus can have its own mixer group
  * and optional MiniLoud component for DSP processing.
  * 
- * @example
  * ```haxe
  * // Get a pooled AudioSource
  * var source = AudioSources.shared.get();

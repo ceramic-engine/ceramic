@@ -5,7 +5,6 @@ package ceramic;
  * Controls how elements are positioned along the X-axis when they have
  * extra horizontal space available.
  * 
- * @example
  * ```haxe
  * var view = new View();
  * view.layoutHorizontalAlign = CENTER; // Center child horizontally

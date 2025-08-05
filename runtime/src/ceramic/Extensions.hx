@@ -59,7 +59,6 @@ class Extensions<T> {
      * @return The element at the specified index
      * @throws Exception in debug mode if ceramic_debug_unsafe is defined and index is invalid
      * 
-     * @example
      * ```haxe
      * var arr = [10, 20, 30];
      * var value = arr.unsafeGet(1); // 20 (fast access)
@@ -94,7 +93,6 @@ class Extensions<T> {
      * @param value The value to set at the index
      * @throws Exception in debug mode if ceramic_debug_unsafe is defined and index is invalid
      * 
-     * @example
      * ```haxe
      * var arr = [10, 20, 30];
      * arr.unsafeSet(1, 25); // arr is now [10, 25, 30]
@@ -126,7 +124,6 @@ class Extensions<T> {
      * @param array The array to resize
      * @param length The new length (can be larger or smaller)
      * 
-     * @example
      * ```haxe
      * var arr = [1, 2, 3, 4, 5];
      * arr.setArrayLength(3); // [1, 2, 3]
@@ -159,7 +156,6 @@ class Extensions<T> {
      * @param array The array to select from
      * @return A random element from the array
      * 
-     * @example
      * ```haxe
      * var colors = ["red", "green", "blue"];
      * var randomColor = colors.randomElement(); // e.g., "green"
@@ -248,7 +244,6 @@ class Extensions<T> {
      * 
      * @param arr The array to shuffle (modified in place)
      * 
-     * @example
      * ```haxe
      * var deck = [1, 2, 3, 4, 5];
      * deck.shuffle();

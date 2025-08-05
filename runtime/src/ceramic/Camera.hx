@@ -20,7 +20,6 @@ package ceramic;
  * The camera doesn't render anything itself - instead, you apply its
  * transform to your game visuals to create the scrolling effect.
  *
- * @example
  * ```haxe
  * // Create a camera following the player
  * var camera = new Camera(screen.width, screen.height);

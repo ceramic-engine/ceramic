@@ -14,7 +14,6 @@ package ceramic;
  * - Masonry/Pinterest-style layouts
  * - Custom stacking or cascading effects
  * 
- * @example
  * ```haxe
  * class CustomLayout implements CollectionViewLayout {
  *     public function new() {}

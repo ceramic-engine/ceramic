@@ -58,7 +58,6 @@ class Enums {
      * @param nameExpr The constructor name to match against (without quotes)
      * @return True if the enum value's name matches, false if null or different
      * 
-     * @example
      * ```haxe
      * enum Direction {
      *     NORTH;

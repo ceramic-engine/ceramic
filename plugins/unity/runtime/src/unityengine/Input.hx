@@ -33,7 +33,7 @@ extern class Input {
      * Note: Bottom-left origin differs from some systems.
      * Updated every frame when mouse moves.
      * 
-     * @example Converting to Ceramic coordinates:
+     * Converting to Ceramic coordinates:
      * ```haxe
      * var mousePos = Input.mousePosition;
      * // Flip Y for top-left origin if needed
@@ -72,7 +72,7 @@ extern class Input {
      *              3+ = Additional buttons
      * @return True if button is currently pressed
      * 
-     * @example Detecting mouse drag:
+     * Detecting mouse drag:
      * ```haxe
      * if (Input.GetMouseButton(0)) {
      *     // Left button held - handle dragging

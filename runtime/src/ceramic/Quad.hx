@@ -24,7 +24,6 @@ using ceramic.Extensions;
  * Quads are the building blocks for most 2D visuals in Ceramic.
  * They're optimized for performance and batched together when possible.
  * 
- * @example
  * ```haxe
  * // Create a colored rectangle
  * var rect = new Quad();

@@ -20,7 +20,6 @@ import haxe.io.Bytes;
  * - Asynchronous loading
  * - Memory-efficient byte handling
  * 
- * @example
  * ```haxe
  * // Load a binary file
  * var binaryAsset = new BinaryAsset('data');

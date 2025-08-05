@@ -24,7 +24,6 @@ import haxe.atomic.AtomicInt;
  * 3. Override the process() method
  * 4. Create an AudioFilter wrapper for public API
  * 
- * @example
  * ```haxe
  * class MyEchoWorklet extends AudioFilterWorklet {
  *     @param public var delay:Float = 0.5;

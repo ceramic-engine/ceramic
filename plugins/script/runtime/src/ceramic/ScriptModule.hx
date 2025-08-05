@@ -11,7 +11,6 @@ package ceramic;
  * This enables modular script architectures where scripts can interact without
  * direct references to each other.
  * 
- * @example
  * ```javascript
  * // In script A:
  * var health = 100;

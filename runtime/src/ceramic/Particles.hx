@@ -19,7 +19,6 @@ import ceramic.Shortcuts.*;
  * - Forwards all emitter properties with `emitter*` prefix
  * - Lifecycle management - destroying particles destroys the emitter
  * 
- * @example
  * ```haxe
  * // Create auto-emitting smoke
  * var smoke = new Particles();
@@ -99,7 +98,6 @@ class Particles<T:ParticleEmitter> extends Visual {
      * 
      * Default: false
      * 
-     * @example
      * ```haxe
      * particles.emitterInterval = 0.1; // Configure interval first
      * particles.autoEmit = true; // Start emitting
@@ -133,7 +131,6 @@ class Particles<T:ParticleEmitter> extends Visual {
      * 
      * Default: -1 (disabled)
      * 
-     * @example
      * ```haxe
      * // Burst 30 particles every 1.5 seconds
      * particles.autoExplodeQuantity = 30;

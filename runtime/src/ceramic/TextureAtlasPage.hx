@@ -19,7 +19,6 @@ import tracker.Observable;
  * - Filter mode propagation to texture
  * - Named identification for debugging
  *
- * @example
  * ```haxe
  * // Access a page from an atlas
  * var page = atlas.pages[0];

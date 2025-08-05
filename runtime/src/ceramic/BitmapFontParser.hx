@@ -21,7 +21,6 @@ using StringTools;
  * - Kerning pairs
  * - Distance field information (for MSDF fonts)
  * 
- * @example
  * ```haxe
  * // Parse a font definition file
  * var fontData = BitmapFontParser.parse(fontFileContent);

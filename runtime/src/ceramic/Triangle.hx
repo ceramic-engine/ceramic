@@ -21,7 +21,6 @@ using ceramic.Extensions;
  * - Simple decorative elements
  * - Tooltips and speech bubble tails
  *
- * @example
  * ```haxe
  * // Create a simple triangle
  * var triangle = new Triangle();

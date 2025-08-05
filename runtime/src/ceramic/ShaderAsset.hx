@@ -20,7 +20,6 @@ using ceramic.Extensions;
  * - Automatic pairing of vertex and fragment shaders
  * - Default vertex shader fallback
  * 
- * @example
  * ```haxe
  * var assets = new Assets();
  * // Load combined shader

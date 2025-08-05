@@ -11,7 +11,6 @@ package ceramic;
  * Layout masks are used by parent containers to communicate
  * sizing constraints to their children during layout passes.
  * 
- * @example
  * ```haxe
  * // Allow view to grow but not shrink
  * var mask = ViewLayoutMask.INCREASE;

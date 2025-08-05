@@ -28,7 +28,6 @@ using ceramic.Extensions;
  * - Debug visualization
  * - Vector graphics
  * 
- * @example
  * ```haxe
  * // Create a simple line
  * var line = new Line();
@@ -73,7 +72,6 @@ class Line extends Mesh {
      * Note: when editing array content without reassigning it,
      * `contentDirty` must be set to `true` to update the line.
      * 
-     * @example
      * ```haxe
      * line.points = [0, 0, 100, 50, 200, 0]; // V-shaped line
      * 

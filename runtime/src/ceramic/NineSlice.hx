@@ -25,7 +25,6 @@ package ceramic;
  * - Decorative frames
  * - Progress bars
  * 
- * @example
  * ```haxe
  * // Create a scalable button
  * var button = new NineSlice();

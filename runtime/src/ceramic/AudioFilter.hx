@@ -18,7 +18,6 @@ import ceramic.Shortcuts.*;
  * The macro system automatically generates getters/setters for `@param` fields
  * and handles thread-safe parameter updates.
  * 
- * @example
  * ```haxe
  * class MyFilter extends AudioFilter {
  *     @param public var frequency:Float = 1000;

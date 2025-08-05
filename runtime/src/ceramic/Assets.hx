@@ -30,7 +30,6 @@ using ceramic.Extensions;
  * - Custom asset type registration
  * - Parallel/serial loading strategies
  *
- * @example
  * ```haxe
  * var assets = new Assets();
  * assets.addImage('hero.png');
@@ -283,7 +282,6 @@ class Assets extends Entity {
      * Add all assets matching given path pattern (if provided).
      * Automatically detects asset types based on file extensions.
      * @param pathPattern Optional regex pattern to filter asset paths
-     * @example
      * ```haxe
      * // Add all assets
      * assets.addAll();
@@ -1191,7 +1189,6 @@ class Assets extends Entity {
      * @param hotReload If true (default), assets will automatically reload when their files change
      * @return WatchDirectory instance used internally
      *
-     * @example
      * ```haxe
      * // Watch default assets directory with hot reload
      * assets.watchDirectory();

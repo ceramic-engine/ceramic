@@ -47,7 +47,6 @@ class EasingUtils {
      * @return The corresponding Easing enum value
      * @throws String If the string doesn't match any Easing constructor
      * 
-     * @example
      * ```haxe
      * var easing1 = EasingUtils.easingFromString("LINEAR");
      * var easing2 = EasingUtils.easingFromString("BOUNCE_EASE_OUT");
@@ -76,7 +75,6 @@ class EasingUtils {
      * @param easing The Easing enum value to convert
      * @return The string name of the easing constructor
      * 
-     * @example
      * ```haxe
      * var str1 = EasingUtils.easingToString(Easing.LINEAR); // "LINEAR"
      * var str2 = EasingUtils.easingToString(Easing.ELASTIC_EASE_IN); // "ELASTIC_EASE_IN"

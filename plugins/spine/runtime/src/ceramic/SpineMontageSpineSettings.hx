@@ -12,7 +12,7 @@ package ceramic;
  * it will be used and the data field will be ignored. Otherwise, a new
  * Spine instance will be created using the provided SpineData.
  * 
- * @example Using an existing Spine instance
+ * Using an existing Spine instance
  * ```haxe
  * var existingSpine = new Spine();
  * existingSpine.spineData = heroData;
@@ -25,7 +25,7 @@ package ceramic;
  * };
  * ```
  * 
- * @example Creating a new Spine instance
+ * Creating a new Spine instance
  * ```haxe
  * var settings:SpineMontageSpineSettings = {
  *     data: heroSpineData,
@@ -93,7 +93,6 @@ class SpineMontageSpineSettings {
      * 
      * Default: 1.0 (original size)
      * 
-     * @example
      * scale: 0.5  // Half size
      * scale: 2.0  // Double size
      */
@@ -125,7 +124,6 @@ class SpineMontageSpineSettings {
      * 
      * Default: 1.0
      * 
-     * @example
      * depth: 10, depthRange: 5
      * // Attachments will render between depths 10 and 15
      */

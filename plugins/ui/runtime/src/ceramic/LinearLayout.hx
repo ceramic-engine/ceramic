@@ -9,7 +9,6 @@ package ceramic;
  * allowing children to be arranged sequentially with automatic sizing
  * based on content or available space.
  *
- * @example
  * ```haxe
  * var layout = new LinearLayout();
  * layout.direction = VERTICAL;
@@ -71,7 +70,6 @@ class LinearLayout extends View {
      * Can be a percentage value relative to the parent size along
      * the layout axis (height for vertical, width for horizontal).
      *
-     * @example
      * ```haxe
      * layout.itemSpacing = 10; // 10 pixels between items
      * layout.itemSpacing = PERCENT(5); // 5% of parent size

@@ -14,7 +14,7 @@ package unityengine;
  * allowing sounds to be categorized (Music, SFX, UI, etc.) and controlled
  * as groups with individual volume and effects.
  * 
- * @example Typical hierarchy:
+ * Typical hierarchy:
  * ```
  * Master
  * ├── Music

@@ -12,7 +12,6 @@ import spine.support.files.FileHandle;
  * The SpineFile acts as an adapter between Ceramic's asset loading system and
  * Spine's file handling expectations, storing file content in memory as a string.
  * 
- * @example
  * ```haxe
  * // This is typically used internally by SpineAsset
  * var atlasContent = assets.text("hero.atlas").content;

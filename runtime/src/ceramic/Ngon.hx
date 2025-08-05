@@ -20,7 +20,6 @@ using ceramic.Extensions;
  * The first vertex is positioned at (radius, 0) relative to center,
  * with subsequent vertices placed counter-clockwise.
  *
- * @example
  * ```haxe
  * // Create a hexagon
  * var hexagon = new Ngon();

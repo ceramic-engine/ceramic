@@ -35,7 +35,7 @@ extern class ImageConversion {
      * - Smaller file size than TGA
      * - Wide compatibility
      * 
-     * @example Saving a texture:
+     * Saving a texture:
      * ```haxe
      * var pngData = ImageConversion.EncodeToPNG(myTexture);
      * File.saveBytes("screenshot.png", Bytes.ofData(pngData));
@@ -75,7 +75,7 @@ extern class ImageConversion {
      *                       after loading (saves memory)
      * @return True if loading succeeded, false otherwise
      * 
-     * @example Loading downloaded image:
+     * Loading downloaded image:
      * ```haxe
      * var texture = new Texture2D(2, 2); // Size will be replaced
      * if (ImageConversion.LoadImage(texture, imageBytes, false)) {

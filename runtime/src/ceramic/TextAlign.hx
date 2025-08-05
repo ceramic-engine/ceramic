@@ -12,7 +12,6 @@ package ceramic;
  * - Single-line text: Positions the text relative to its anchor
  * - Text bounds: The alignment point determines which edge or center is used
  * 
- * @example
  * ```haxe
  * // Create centered text
  * var title = new Text();
@@ -41,7 +40,6 @@ enum TextAlign {
      * - Default alignment for most text
      * - Natural for left-to-right languages
      * 
-     * @example
      * ```haxe
      * text.align = LEFT;
      * text.pos(10, 10); // Text starts at x=10
@@ -57,7 +55,6 @@ enum TextAlign {
      * - Useful for numeric displays, scores, or right-to-left languages
      * - Common in UI elements like menus
      * 
-     * @example
      * ```haxe
      * text.align = RIGHT;
      * text.pos(screen.width - 10, 10); // Text ends at x=screen.width-10
@@ -73,7 +70,6 @@ enum TextAlign {
      * - Common for titles, headings, and UI labels
      * - Works well with centered anchor points
      * 
-     * @example
      * ```haxe
      * text.align = CENTER;
      * text.anchor(0.5, 0.5);

@@ -20,7 +20,6 @@ package ceramic;
  * - Creating authentic CRT/LCD display effects
  * - Adding subtle visual enhancements to pixel graphics
  * 
- * @example
  * ```haxe
  * // Basic pixel art scaling
  * var pixelArt = new PixelArt();

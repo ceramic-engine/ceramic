@@ -63,7 +63,6 @@ class Csv {
      * @param csv The CSV string to parse
      * @return Array of objects with fields as defined in the header row
      * 
-     * @example
      * ```haxe
      * var csv = 'id,name,description\n' +
      *           '1,"Smith, John","Says ""Hello"""\n' +
@@ -242,7 +241,6 @@ class Csv {
      *               If not provided, fields are auto-discovered from all objects.
      * @return CSV string with header row and data rows
      * 
-     * @example
      * ```haxe
      * var data = [
      *     {id: 1, name: "John", note: "Says "Hi""},

@@ -19,7 +19,6 @@ import ceramic.Shortcuts.*;
  * Each time you call `play()`, a new SoundPlayer instance is created,
  * allowing the same sound to be played multiple times simultaneously.
  * 
- * @example
  * ```haxe
  * // Load and play a sound
  * var sound = assets.sound('jump');

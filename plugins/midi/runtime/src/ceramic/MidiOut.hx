@@ -8,7 +8,6 @@ package ceramic;
  * - Web with bridge: Uses Electron bridge to access native MIDI through IPC
  * - Other platforms: Falls back to no-op base implementation
  * 
- * @example
  * ```haxe
  * var midi = new MidiOut();
  * 

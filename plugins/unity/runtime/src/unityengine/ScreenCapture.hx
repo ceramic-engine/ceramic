@@ -30,7 +30,7 @@ extern class ScreenCapture {
      *                 - 2 = 2x resolution (4x pixels)
      *                 - 4 = 4x resolution (16x pixels)
      * 
-     * @example Capturing at 2x resolution:
+     * Capturing at 2x resolution:
      * ```haxe
      * ScreenCapture.CaptureScreenshot("screenshot.png", 2);
      * ```
@@ -46,7 +46,7 @@ extern class ScreenCapture {
      * @param superSize Resolution multiplier (1-32)
      * @return New Texture2D containing the screenshot
      * 
-     * @example Creating a pause menu background:
+     * Creating a pause menu background:
      * ```haxe
      * var screenshot = ScreenCapture.CaptureScreenshotAsTexture(1);
      * pauseBackground.texture = screenshot;
@@ -64,7 +64,7 @@ extern class ScreenCapture {
      * @param renderTexture Target RenderTexture (must be created)
      *                     Size determines capture resolution
      * 
-     * @example Continuous capture for effects:
+     * Continuous capture for effects:
      * ```haxe
      * // In update loop
      * ScreenCapture.CaptureScreenshotIntoRenderTexture(myRT);

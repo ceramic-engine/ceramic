@@ -19,7 +19,6 @@ import ceramic.Shape;
  * - Card layouts
  * - Any rectangular element requiring soft edges
  * 
- * @example
  * ```haxe
  * // Create a uniformly rounded rectangle
  * var rect = new RoundedRect();
@@ -184,7 +183,6 @@ class RoundedRect extends Shape {
      * @param bottomRight Radius for bottom-right corner (optional)
      * @param bottomLeft Radius for bottom-left corner (optional)
      * 
-     * @example
      * ```haxe
      * // All corners 20px
      * rect.radius(20);

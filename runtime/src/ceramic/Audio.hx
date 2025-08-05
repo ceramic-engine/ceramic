@@ -27,7 +27,6 @@ import sys.thread.Mutex;
  * This class is automatically instantiated by the App and should be
  * accessed via `app.audio`.
  * 
- * @example
  * ```haxe
  * // Get the master mixer
  * var masterMixer = app.audio.mixer(0);

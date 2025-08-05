@@ -18,7 +18,6 @@ enum abstract ChildrenDepth(Int) from Int to Int {
      * Children are layered front-to-back, with later children appearing on top.
      * This is the most common mode for UI containers.
      * 
-     * @example
      * ```haxe
      * view.childrenDepth = INCREMENT;
      * // Child 0: depth = 0
@@ -33,7 +32,6 @@ enum abstract ChildrenDepth(Int) from Int to Int {
      * Children are layered back-to-front, with earlier children appearing on top.
      * Useful for reverse stacking order.
      * 
-     * @example
      * ```haxe
      * view.childrenDepth = DECREMENT;
      * // Child 0: depth = 0
@@ -48,7 +46,6 @@ enum abstract ChildrenDepth(Int) from Int to Int {
      * All children are rendered at the same z-order level.
      * Their relative ordering is determined by their index in the children array.
      * 
-     * @example
      * ```haxe
      * view.childrenDepth = SAME;
      * // All children have depth = 0
@@ -61,7 +58,6 @@ enum abstract ChildrenDepth(Int) from Int to Int {
      * Each child's depth must be set manually.
      * Provides full control over layering when automatic assignment isn't suitable.
      * 
-     * @example
      * ```haxe
      * view.childrenDepth = CUSTOM;
      * // Must set depth manually:

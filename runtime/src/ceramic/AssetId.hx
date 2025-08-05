@@ -9,7 +9,6 @@ package ceramic;
  * The generic type parameter T typically represents the return type
  * of the asset (e.g., Texture, Sound, String).
  * 
- * @example
  * ```haxe
  * // Define typed asset IDs
  * var heroTexture:AssetId<Texture> = 'image:hero';

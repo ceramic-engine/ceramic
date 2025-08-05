@@ -18,7 +18,6 @@ using ceramic.Extensions;
  * - Thread-safe array clearing on native platforms
  * - Debug tracking for allocation and recycling
  * 
- * @example
  * ```haxe
  * // Get a mesh from pool (creates new if pool is empty)
  * var mesh = MeshPool.get();
@@ -137,7 +136,6 @@ class MeshPool {
      * @param pos (Debug only) Source position for allocation tracking
      * @return A ready-to-use Mesh instance
      * 
-     * @example
      * ```haxe
      * var mesh = MeshPool.get();
      * mesh.createQuad(100, 100);
@@ -188,7 +186,6 @@ class MeshPool {
      * 
      * @throws String If the mesh is already in the pool (debug mode only)
      * 
-     * @example
      * ```haxe
      * // When done with a mesh
      * MeshPool.recycle(myMesh);
@@ -283,7 +280,6 @@ class MeshPool {
      * 
      * Note: Array pools are not cleared by this method.
      * 
-     * @example
      * ```haxe
      * // Before loading a new level
      * MeshPool.clear();

@@ -10,7 +10,6 @@ package ceramic;
  * When registered, the Assets system will automatically recognize files with
  * the specified extensions and handle them using your custom logic.
  * 
- * @example
  * ```haxe
  * // Define a custom asset kind for level files
  * var levelAssetKind:CustomAssetKind = {

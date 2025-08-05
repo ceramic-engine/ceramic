@@ -26,7 +26,6 @@ using ceramic.Extensions;
  * 3. Submit batches to GPU with minimal state changes
  * 4. Handle special cases (stencil clipping, render targets)
  * 
- * @example
  * ```haxe
  * // The renderer is typically managed by the App
  * var renderer = app.renderer;

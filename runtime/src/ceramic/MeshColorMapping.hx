@@ -12,7 +12,6 @@ package ceramic;
  * - INDICES: Moderate, one color per triangle
  * - VERTICES: Slowest, most flexible (smooth gradients possible)
  *
- * @example
  * ```haxe
  * var mesh = new Mesh();
  *

@@ -34,7 +34,6 @@ using StringTools;
  * - 'shader:pixelArt' - High-quality pixel art scaling
  * - Various effect shaders depending on plugins
  * 
- * @example
  * ```haxe
  * // Load and apply a custom shader
  * var shader = assets.shader('myEffect').clone();
