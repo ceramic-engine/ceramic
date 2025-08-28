@@ -8,17 +8,17 @@ using ceramic.Extensions;
 
 /**
  * A high-performance map using integer keys and float values.
- * 
+ *
  * IntFloatMap provides fast access and storage for float values indexed by integers.
  * It uses a custom implementation on C++ and C# targets for better performance,
  * falling back to a standard Map on other platforms.
- * 
+ *
  * Features:
  * - O(1) average case for get/set operations
  * - Optional iteration support (must be enabled at construction)
  * - Efficient memory usage with value pooling
  * - Zero default value for missing keys
- * 
+ *
  * Example usage:
  * ```haxe
  * var scores = new IntFloatMap();
@@ -26,7 +26,7 @@ using ceramic.Extensions;
  * var score = scores.get(playerId); // 100.5
  * var missing = scores.get(999); // 0.0 (default)
  * ```
- * 
+ *
  * @see IntIntMap
  * @see IntBoolMap
  */
@@ -53,11 +53,11 @@ class IntFloatMap {
     public var iterableKeys(default,null):Array<Int> = null;
 
     /**
-     * Direct access to the values vector.
+     * Direct access to the values.
      * Can be used to iterate on values directly,
      * but may contain FREE_VALUE markers for removed entries.
      */
-    public var values(default,null):Vector<Float>;
+    public var values(default,null):Array<Float>;
 
     /**
      * Creates a new IntFloatMap.
@@ -71,7 +71,10 @@ class IntFloatMap {
         initialFillFactor = fillFactor;
 
         _keys = new IntIntMap(size, fillFactor, false);
-        values = new Vector(size);
+        values = [];
+        for (i in 0...16) {
+            values.push(0);
+        }
 
         if (iterable) {
             iterableKeys = [];
@@ -88,14 +91,23 @@ class IntFloatMap {
     inline public function getInline(key:Int):Float {
 
         var index = _keys.getInline(key);
-        return index >= RESERVED_GAP ? values.get(index - RESERVED_GAP) : 0.0;
+        return if (index > RESERVED_GAP) {
+            var indexOffset = index - RESERVED_GAP;
+            values.unsafeGet(indexOffset);
+        }
+        else {
+            0.0;
+        }
 
     }
 
     public function clear():Void {
 
-        _keys = new IntIntMap(initialSize, initialFillFactor);
-        values = new Vector(initialSize);
+        _keys.clear();
+        values.setArrayLength(initialSize);
+        for (i in 0...initialSize) {
+            values[i] = 0;
+        }
         nextFreeIndex = 0;
 
         if (iterableKeys != null) {
@@ -121,7 +133,7 @@ class IntFloatMap {
         var index = _keys.get(key);
         if (index >= RESERVED_GAP) {
             // Replace value in array with same index and key
-            values.set(index - RESERVED_GAP, value);
+            values.unsafeSet(index - RESERVED_GAP, value);
         }
         else {
             // New key, use next free index
@@ -129,7 +141,7 @@ class IntFloatMap {
             if (nextFreeIndex >= valuesLen) {
                 resizeValues(valuesLen * 2);
             }
-            values.set(nextFreeIndex, value);
+            values.unsafeSet(nextFreeIndex, value);
             _keys.set(key, nextFreeIndex + RESERVED_GAP);
             // Update iterable keys
             if (iterableKeys != null) {
@@ -140,7 +152,7 @@ class IntFloatMap {
                 // Move free index to next location
                 nextFreeIndex++;
             }
-            while (nextFreeIndex < valuesLen && values.get(nextFreeIndex) != FREE_VALUE);
+            while (nextFreeIndex < valuesLen && values.unsafeGet(nextFreeIndex) != FREE_VALUE);
         }
 
     }
@@ -152,7 +164,7 @@ class IntFloatMap {
             index -= RESERVED_GAP;
 
             // Key exists, set value to FREE (make slot available)
-            values.set(index, FREE_VALUE);
+            values.unsafeSet(index, FREE_VALUE);
 
             // Update next free index if needed
             if (nextFreeIndex > index) {
@@ -189,13 +201,9 @@ class IntFloatMap {
 
     function resizeValues(targetSize:Int) {
 
-        var prevValues = values;
-        values = new Vector<Float>(targetSize);
-        for (i in 0...prevValues.length) {
-            values.set(i, prevValues.get(i));
-        }
-        for (i in prevValues.length...targetSize) {
-            values.set(i, FREE_VALUE);
+        var prevLength = values.length;
+        for (i in prevLength...targetSize) {
+            values[i] = FREE_VALUE;
         }
 
     }
@@ -232,7 +240,7 @@ class IntFloatMap {
      * Only populated if iterable was set to true in constructor.
      */
     public var iterableKeys(default,null):Array<Int> = null;
-    
+
     /** Tracks which keys are in iterableKeys to avoid duplicates */
     var iterableKeysUsed:IntBoolMap = null;
 
