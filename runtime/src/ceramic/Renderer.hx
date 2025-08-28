@@ -6,32 +6,32 @@ using ceramic.Extensions;
 
 /**
  * The core 2D rendering engine for Ceramic, responsible for efficiently drawing all visuals to the screen.
- * 
+ *
  * This implementation-independent renderer works with backend draw implementations to:
  * - Batch draw calls for optimal GPU performance
  * - Manage render state (textures, shaders, blend modes)
  * - Handle render-to-texture operations
  * - Implement stencil-based clipping
  * - Support multi-texture batching when available
- * 
+ *
  * The renderer uses several optimization strategies:
  * - **State batching**: Groups visuals with the same rendering state
  * - **Texture atlasing**: Batches multiple textures in a single draw call
  * - **Vertex buffering**: Minimizes GPU state changes
  * - **Z-ordering**: Maintains proper visual layering
- * 
+ *
  * Rendering pipeline:
  * 1. Sort visuals by depth and rendering state
  * 2. Group visuals into batches with matching states
  * 3. Submit batches to GPU with minimal state changes
  * 4. Handle special cases (stencil clipping, render targets)
- * 
+ *
  * ```haxe
  * // The renderer is typically managed by the App
  * var renderer = app.renderer;
  * renderer.render(true, app.visuals);
  * ```
- * 
+ *
  * @see Visual The base class for all renderable objects
  * @see backend.Draw The backend interface for GPU operations
  * @see Shader For custom GPU shader programs
@@ -49,7 +49,7 @@ class Renderer extends Entity {
      * Currently active GPU shader program.
      */
     var activeShader:backend.Shader = null;
-    
+
     /**
      * Number of custom float attributes per vertex for the active shader.
      */
@@ -64,37 +64,37 @@ class Renderer extends Entity {
      * Last used texture to detect state changes.
      */
     var lastTexture:ceramic.Texture = null;
-    
+
     /**
      * Backend ID of the last used texture.
      */
     var lastTextureId:backend.TextureId = backend.TextureId.DEFAULT;
-    
+
     /**
      * Last used shader to detect state changes.
      */
     var lastShader:ceramic.Shader = null;
-    
+
     /**
      * Last used render target to detect state changes.
      */
     var lastRenderTarget:ceramic.RenderTexture = null;
-    
+
     /**
      * Last computed blending mode to detect state changes.
      */
     var lastComputedBlending:ceramic.Blending = ceramic.Blending.PREMULTIPLIED_ALPHA;
-    
+
     /**
      * Last clipping visual to detect state changes.
      */
     var lastClip:ceramic.Visual = null;
-    
+
     /**
      * Whether the last clip was a regular quad (can use scissor test).
      */
     var lastClipIsRegular:Bool = false;
-    
+
     /**
      * Currently active texture slot for multi-texturing.
      */
@@ -104,7 +104,7 @@ class Renderer extends Entity {
      * Backend texture management interface.
      */
     var backendTextures:backend.Textures;
-    
+
     /**
      * Backend shader management interface.
      */
@@ -114,17 +114,17 @@ class Renderer extends Entity {
      * Logical width of the current texture.
      */
     var texWidth:Int = 0;
-    
+
     /**
      * Logical height of the current texture.
      */
     var texHeight:Int = 0;
-    
+
     /**
      * Actual GPU width of the current texture (may be power of 2).
      */
     var texWidthActual:Int = 0;
-    
+
     /**
      * Actual GPU height of the current texture (may be power of 2).
      */
@@ -134,7 +134,7 @@ class Renderer extends Entity {
      * Default shader for textured rendering.
      */
     var defaultTexturedShader:backend.Shader = null;
-    
+
     /**
      * Default white texture used when no texture is specified.
      */
@@ -144,7 +144,7 @@ class Renderer extends Entity {
      * Current quad being processed (for type casting optimization).
      */
     var quad:ceramic.Quad = null;
-    
+
     /**
      * Current mesh being processed (for type casting optimization).
      */
@@ -165,18 +165,18 @@ class Renderer extends Entity {
      * Indexes of textures used in the current batch.
      */
     var usedTextureIndexes:Array<Int> = [];
-    
+
     /**
      * Number of textures currently bound for multi-texturing.
      */
     var usedTextures:Int = 0;
-    
+
     /**
      * Maximum number of textures that can be used in a single batch.
      * Determined by GPU capabilities and shader limitations.
      */
     var maxUsableTexturesInBatch:Int = -1;
-    
+
     /**
      * Whether the active shader supports multi-texture batching.
      */
@@ -186,6 +186,11 @@ class Renderer extends Entity {
      * Currently active render target.
      */
     var usedRenderTarget:ceramic.RenderTexture = null;
+
+    /**
+     * Z per render target
+     */
+    var zPerRenderTarget = new IntFloatMap();
 
     #if ceramic_debug_draw
     var lastDebugTime:Float = -1;
@@ -208,14 +213,14 @@ class Renderer extends Entity {
 
     /**
      * Renders a list of visuals to the screen or render target.
-     * 
+     *
      * This is the main entry point for the rendering pipeline. It:
      * 1. Initializes rendering state
      * 2. Processes each visual in order
      * 3. Batches visuals with matching states
      * 4. Handles special rendering modes (clipping, render targets)
      * 5. Submits draw calls to the GPU
-     * 
+     *
      * @param isMainRender Whether this is the main render pass (vs render-to-texture)
      * @param ceramicVisuals Array of visuals to render, pre-sorted by depth
      */
@@ -248,6 +253,7 @@ class Renderer extends Entity {
         #end
 
         usedRenderTarget = null;
+        zPerRenderTarget.clear();
 
     #if ceramic_debug_draw
         if (isMainRender) {
@@ -491,14 +497,14 @@ class Renderer extends Entity {
 
     /**
      * Draws a single quad to the current render target.
-     * 
+     *
      * Optimized for the most common rendering case. Handles:
      * - Texture binding and UV mapping
      * - Color and alpha blending
      * - Matrix transformations
      * - Custom shader attributes
      * - Batching with previous quads when possible
-     * 
+     *
      * @param draw Backend draw interface
      * @param quad The quad visual to render
      */
@@ -1186,13 +1192,13 @@ class Renderer extends Entity {
 #if !ceramic_no_mesh
     /**
      * Draws a mesh with arbitrary vertices and triangles.
-     * 
+     *
      * More flexible than drawQuad but with similar optimizations:
      * - Vertex buffer management
      * - Color mapping (per-mesh, per-triangle, or per-vertex)
      * - Custom vertex attributes
      * - Large mesh splitting across multiple draw calls
-     * 
+     *
      * @param draw Backend draw interface
      * @param mesh The mesh visual to render
      */
@@ -1696,12 +1702,12 @@ class Renderer extends Entity {
 
     /**
      * Flushes pending draw commands to the GPU.
-     * 
+     *
      * Called when:
      * - Render state changes (texture, shader, blend mode)
      * - Buffer capacity is reached
      * - Rendering is complete
-     * 
+     *
      * @param draw Backend draw interface
      * @return True if anything was flushed
      */
@@ -1730,11 +1736,11 @@ class Renderer extends Entity {
 
     /**
      * Computes the actual blending mode for a quad.
-     * 
+     *
      * Resolves AUTO blending based on render target:
      * - Regular rendering: PREMULTIPLIED_ALPHA
      * - Render-to-texture: RENDER_TO_TEXTURE
-     * 
+     *
      * @param quad The quad to compute blending for
      * @return The resolved blending mode
      */
@@ -1768,9 +1774,9 @@ class Renderer extends Entity {
 
     /**
      * Computes the actual blending mode for a mesh.
-     * 
+     *
      * Similar to computeQuadBlending but for mesh visuals.
-     * 
+     *
      * @param mesh The mesh to compute blending for
      * @return The resolved blending mode
      */
@@ -1821,12 +1827,12 @@ class Renderer extends Entity {
 
     /**
      * Activates a shader program for subsequent draw calls.
-     * 
+     *
      * Updates:
      * - Active shader state
      * - Multi-texture capability flags
      * - Custom attribute configuration
-     * 
+     *
      * @param draw Backend draw interface
      * @param shader Backend shader to activate (null for default)
      */
@@ -1853,13 +1859,13 @@ class Renderer extends Entity {
 
     /**
      * Configures GPU blending mode for transparency and compositing.
-     * 
+     *
      * Supports various blend modes:
      * - PREMULTIPLIED_ALPHA: Standard alpha blending
      * - ADD: Additive blending for light effects
      * - ALPHA: Non-premultiplied alpha
      * - RENDER_TO_TEXTURE: Special mode for render targets
-     * 
+     *
      * @param draw Backend draw interface
      * @param blending The blending mode to apply
      */
@@ -1940,11 +1946,19 @@ class Renderer extends Entity {
 
     /**
      * Sets the render target for subsequent draw calls.
-     * 
+     *
      * @param draw Backend draw interface
      * @param renderTarget Texture to render to (null for screen)
      */
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function useRenderTarget(draw:backend.Draw, renderTarget:ceramic.RenderTexture):Void {
+
+        // One z per render target
+        if (usedRenderTarget != renderTarget) {
+            final usedI = usedRenderTarget != null ? usedRenderTarget.index : 0;
+            final i = renderTarget != null ? renderTarget.index : 0;
+            zPerRenderTarget.set(usedI, this.z);
+            //this.z = zPerRenderTarget.get(i);
+        }
 
         usedRenderTarget = renderTarget;
         if (renderTarget != null) {
@@ -2013,11 +2027,11 @@ class Renderer extends Entity {
 
     /**
      * Checks if a texture can be added to the current batch.
-     * 
+     *
      * For multi-texture batching, checks if:
      * - Texture is already bound in a slot
      * - Free texture slots are available
-     * 
+     *
      * @param draw Backend draw interface
      * @param texture Texture to check
      * @return True if batching can continue
