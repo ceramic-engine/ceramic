@@ -620,6 +620,7 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             
             // Update text content
             entity.content = newText;
+            app.textInput.text = newText;
             emitUpdate(newText);
         });
         
