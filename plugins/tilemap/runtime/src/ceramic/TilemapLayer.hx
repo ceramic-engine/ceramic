@@ -4,39 +4,39 @@ using ceramic.Extensions;
 
 /**
  * Visual representation of a single layer within a tilemap.
- * 
+ *
  * A TilemapLayer renders tiles from a TilemapLayerData structure, handling tile placement,
  * clipping, rendering order, and optional collision detection. Each layer consists of a grid
  * of TilemapQuad instances that display individual tiles from the tilemap's tilesets.
- * 
+ *
  * ## Features
- * 
+ *
  * - **Tile Rendering**: Automatically creates and manages TilemapQuad instances for visible tiles
  * - **Clipping Support**: Can render only a subset of tiles based on clip bounds
  * - **Render Order**: Respects the tilemap's render order (RIGHT_DOWN, LEFT_UP, etc.)
  * - **Tile Filtering**: Supports applying visual filters to all tiles in the layer
  * - **Collision Detection**: When using the arcade physics plugin, supports tile-based collisions
  * - **Tile Transformations**: Handles horizontal/vertical/diagonal flipping of tiles
- * 
+ *
  * ## Usage Example
- * 
+ *
  * ```haxe
  * // Layers are typically created automatically by Tilemap
  * var tilemap = new Tilemap();
  * tilemap.tilemapData = myTilemapData;
- * 
+ *
  * // Access a specific layer
  * var layer = tilemap.layer('collision');
- * 
+ *
  * // Apply a filter to all tiles in the layer
  * var blur = new Filter();
  * blur.shader = assets.shader('blur');
  * layer.tilesFilter = blur;
- * 
+ *
  * // Configure collision (requires arcade plugin)
  * layer.checkCollision(true, true); // Enable up/down and left/right collisions
  * ```
- * 
+ *
  * @see Tilemap
  * @see TilemapLayerData
  * @see TilemapQuad
@@ -48,6 +48,12 @@ class TilemapLayer extends Visual {
      * This happens when tiles are added, removed, or when the layer is re-rendered.
      */
     @event function tileQuadsChange();
+
+    /**
+     * Event emitted when the tile meshes change.
+     * This happens when tiles are rendered using meshes instead of quads.
+     */
+    @event function tileMeshesChange();
 
     #if plugin_arcade
 
@@ -228,6 +234,14 @@ class TilemapLayer extends Visual {
                     tilesFilterContent.remove(tileQuad);
                 }
             }
+            if (tileMeshes != null) {
+                for (i in 0...tileMeshes.length) {
+                    var tileMesh = tileMeshes.unsafeGet(i);
+                    if (tileMesh.parent == tilesFilterContent) {
+                        tilesFilterContent.remove(tileMesh);
+                    }
+                }
+            }
             if (destroyTilesFilterOnRemove) {
                 this.tilesFilter.destroy();
             }
@@ -244,6 +258,12 @@ class TilemapLayer extends Visual {
                 var tileQuad = tileQuads.unsafeGet(i);
                 tilesFilterContent.add(tileQuad);
             }
+            if (tileMeshes != null) {
+                for (i in 0...tileMeshes.length) {
+                    var tileMesh = tileMeshes.unsafeGet(i);
+                    tilesFilterContent.add(tileMesh);
+                }
+            }
 
             add(tilesFilter);
         }
@@ -252,10 +272,36 @@ class TilemapLayer extends Visual {
                 var tileQuad = tileQuads.unsafeGet(i);
                 add(tileQuad);
             }
+            if (tileMeshes != null) {
+                for (i in 0...tileMeshes.length) {
+                    var tileMesh = tileMeshes.unsafeGet(i);
+                    add(tileMesh);
+                }
+            }
         }
         contentDirty = true;
         return tilesFilter;
     }
+
+    /**
+     * When true, uses a single Mesh object to render all tiles instead of individual quads.
+     * This improves memory usage and performance for large tilemaps.
+     * Default is false for compatibility.
+     */
+    public var useMesh(default,set):Bool = false;
+    function set_useMesh(useMesh:Bool):Bool {
+        if (this.useMesh == useMesh) return useMesh;
+        this.useMesh = useMesh;
+        contentDirty = true;
+        return useMesh;
+    }
+
+    /**
+     * Array of Mesh instances (one per texture) used to render tiles when useMesh is true.
+     * These are reused across re-renders to avoid allocation overhead.
+     * Read-only access from outside the class.
+     */
+    public var tileMeshes(default, null):Array<TilemapMesh> = null;
 
     /**
      * Internal mapping to retrieve an existing tileQuad from its tile index.
@@ -303,7 +349,13 @@ class TilemapLayer extends Visual {
         var tilemapData:TilemapData = tilemap.tilemapData;
 
         computePosAndSize();
-        computeTileQuads(tilemap, tilemapData);
+
+        if (useMesh) {
+            computeTileMeshes(tilemap, tilemapData);
+        }
+        else {
+            computeTileQuads(tilemap, tilemapData);
+        }
 
         contentDirty = false;
 
@@ -337,6 +389,14 @@ class TilemapLayer extends Visual {
      */
     function computeTileQuads(tilemap:Tilemap, tilemapData:TilemapData) {
 
+        // Clear meshes when switching to quads mode
+        if (tileMeshes != null) {
+            for (i in 0...tileMeshes.length) {
+                final mesh = tileMeshes.pop();
+                mesh.recycle();
+            }
+        }
+
         var usedQuads = 0;
         var roundTilesTranslation = tilemap.roundTilesTranslation;
         var layerData = this.layerData;
@@ -355,26 +415,6 @@ class TilemapLayer extends Visual {
             var clipTilesHeight = tilemap.clipTilesHeight;
             if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
                 hasClipping = true;
-            }
-
-            // Computing depth from render order
-            var startDepthX = 0;
-            var startDepthY = 0;
-            var depthXStep = 1;
-            var depthYStep = layerColumns;
-            switch (tilemapData.renderOrder) {
-                case RIGHT_DOWN:
-                case RIGHT_UP:
-                    startDepthY = layerColumns * (layerRows - 1);
-                    depthYStep = -layerColumns;
-                case LEFT_DOWN:
-                    startDepthX = layerColumns - 1;
-                    depthXStep = -1;
-                case LEFT_UP:
-                    startDepthX = layerColumns - 1;
-                    depthXStep = -1;
-                    startDepthY = layerColumns * (layerRows - 1);
-                    depthYStep = -layerColumns;
             }
 
             var offsetX = layerData.offsetX + layerData.x * layerData.tileWidth;
@@ -404,6 +444,27 @@ class TilemapLayer extends Visual {
             }
 
             if (layerData.visible) {
+
+                // Computing depth from render order
+                var startDepthX = 0;
+                var startDepthY = 0;
+                var depthXStep = 1;
+                var depthYStep = layerColumns;
+                switch (tilemapData.renderOrder) {
+                    case RIGHT_DOWN:
+                    case RIGHT_UP:
+                        startDepthY = layerColumns * (layerRows - 1);
+                        depthYStep = -layerColumns;
+                    case LEFT_DOWN:
+                        startDepthX = layerColumns - 1;
+                        depthXStep = -1;
+                    case LEFT_UP:
+                        startDepthX = layerColumns - 1;
+                        depthXStep = -1;
+                        startDepthY = layerColumns * (layerRows - 1);
+                        depthYStep = -layerColumns;
+                }
+
                 var tiles = layerData.computedTiles;
                 var tilesAlpha = layerData.computedTilesAlpha;
                 var tilesOffsetX = layerData.computedTilesOffsetX;
@@ -577,6 +638,460 @@ class TilemapLayer extends Visual {
         }
 
         emitTileQuadsChange();
+
+    }
+
+    /**
+     * Generates and updates Mesh instances (one per texture) for all visible tiles in this layer.
+     * This is more memory-efficient than using individual quads for large tilemaps.
+     * @param tilemap The parent tilemap
+     * @param tilemapData The tilemap data containing tileset information
+     */
+    function computeTileMeshes(tilemap:Tilemap, tilemapData:TilemapData) {
+
+        var layerData = this.layerData;
+
+        // Clear existing tile quads when switching to mesh mode
+        while (tileQuads.length > 0) {
+            var quad = tileQuads.pop();
+            quad.recycle();
+        }
+
+        // Initialize tile meshes if needed
+        if (tileMeshes == null) {
+            tileMeshes = [];
+        }
+
+        // Start counting used meshes
+        var usedMeshes:Int = 0;
+
+        if (layerData.shouldRenderTiles && layerData.hasTiles) {
+
+            var roundTilesTranslation = tilemap.roundTilesTranslation;
+            var width = _width;
+            var height = _height;
+            var layerColumns = layerData.columns;
+            var layerRows = layerData.rows;
+
+            var hasClipping = false;
+            var clipTilesX = tilemap.clipTilesX;
+            var clipTilesY = tilemap.clipTilesY;
+            var clipTilesWidth = tilemap.clipTilesWidth;
+            var clipTilesHeight = tilemap.clipTilesHeight;
+            if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
+                hasClipping = true;
+            }
+
+            var offsetX = layerData.offsetX + layerData.x * layerData.tileWidth;
+            var offsetY = layerData.offsetY + layerData.y * layerData.tileHeight;
+
+            // Setup filter position
+            var filterX:Float = 0.0;
+            var filterY:Float = 0.0;
+            if (tilesFilter != null) {
+                var filterWidth = width;
+                var filterHeight = height;
+                if (hasClipping) {
+                    filterX = Math.floor(clipTilesX / layerData.tileWidth) * layerData.tileWidth - offsetX;
+                    filterY = Math.floor(clipTilesY / layerData.tileHeight) * layerData.tileHeight - offsetY;
+                    tilesFilter.pos(filterX, filterY);
+                    filterWidth = Math.ceil(clipTilesWidth / layerData.tileWidth) * layerData.tileWidth + layerData.tileWidth;
+                    filterHeight = Math.ceil(clipTilesHeight / layerData.tileHeight) * layerData.tileHeight + layerData.tileHeight;
+                }
+                else {
+                    tilesFilter.pos(0, 0);
+                }
+                if (autoSizeTilesFilter && filterWidth > 0 && filterHeight > 0) {
+                    tilesFilter.size(filterWidth, filterHeight);
+                }
+            }
+
+            if (layerData.visible) {
+
+                var tiles = layerData.computedTiles;
+                var tilesAlpha = layerData.computedTilesAlpha;
+                var tilesOffsetX = layerData.computedTilesOffsetX;
+                var tilesOffsetY = layerData.computedTilesOffsetY;
+                if (tiles == null) {
+                    tiles = layerData.tiles;
+                    tilesAlpha = layerData.tilesAlpha;
+                    tilesOffsetX = layerData.tilesOffsetX;
+                    tilesOffsetY = layerData.tilesOffsetY;
+                }
+
+                if (tiles != null) {
+
+                    var minColumn = 0;
+                    var maxColumn = layerColumns - 1;
+                    var minRow = 0;
+                    var maxRow = layerRows - 1;
+                    var tilesPerLayer = layerColumns * layerRows;
+                    var numTiles = tiles.length;
+
+                    if (hasClipping) {
+                        minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
+                        maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
+                        minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
+                        maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                    }
+
+                    var layerColor = Color.multiply(layerData.color, tilesColor);
+                    var layerAlpha = layerData.opacity;
+
+                    // Process all tiles and create/populate meshes as needed
+                    var currentMesh:TilemapMesh = null;
+                    var c = minColumn;
+                    while (c <= maxColumn) {
+                        var r = minRow;
+                        while (r <= maxRow) {
+                            var t = r * layerColumns + c;
+
+                            if (t >= 0 && t < numTiles) {
+                                while (t < numTiles) {
+                                    var tile = tiles.unsafeGet(t);
+
+                                    if (tile != 0) {
+                                        var gid = tile.gid;
+                                        var tileset = tilemapData.tilesetForGid(gid);
+
+                                        if (tileset != null && tileset.image != null && tileset.columns > 0) {
+                                            var texture = tileset.image.texture;
+                                            if (texture != null) {
+                                                var textureIndex = texture.index;
+
+                                                var index = gid - tileset.firstGid;
+
+                                                var column = (t % layerColumns);
+                                                var row = Math.floor(t / layerColumns);
+                                                var alpha = layerAlpha;
+                                                var layerIndex = 0;
+                                                var depthExtra = 0.0;
+                                                var blending = layerData.blending;
+
+                                                if (row >= layerRows) {
+                                                    layerIndex = Math.floor(row / layerRows);
+                                                    row -= layerRows * layerIndex;
+                                                    depthExtra = layerIndex * 0.1;
+                                                    blending = layerData.extraBlending;
+                                                    alpha = layerData.extraOpacity;
+                                                }
+                                                while (row >= layerRows) {
+                                                    row -= layerRows;
+                                                    depthExtra += 0.1;
+                                                }
+
+                                                // Create a combined key from texture index and layer index
+                                                // We use textureIndex * 1000 + layerIndex to create a unique key
+                                                var mesh:TilemapMesh = null;
+                                                if (currentMesh != null && textureIndex == currentMesh.textureIndex && layerIndex == currentMesh.layerIndex) {
+                                                    mesh = currentMesh;
+                                                }
+                                                else {
+                                                    for (m in 0...usedMeshes) {
+                                                        final aMesh = tileMeshes.unsafeGet(m);
+                                                        if (aMesh.layerIndex == layerIndex && aMesh.textureIndex == textureIndex) {
+                                                            mesh = aMesh;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (mesh == null) {
+                                                        mesh = usedMeshes < tileMeshes.length ? tileMeshes[usedMeshes] : null;
+
+                                                        if (mesh == null) {
+                                                            mesh = TilemapMesh.get();
+                                                            mesh.inheritAlpha = true;
+                                                            mesh.anchor(0, 0);
+                                                            if (mesh.vertices == null) mesh.vertices = [];
+                                                            if (mesh.uvs == null) mesh.uvs = [];
+                                                            if (mesh.indices == null) mesh.indices = [];
+                                                            if (mesh.colors == null) mesh.colors = [];
+                                                            tileMeshes.push(mesh);
+                                                            if (tilesFilter != null) {
+                                                                tilesFilter.content.add(mesh);
+                                                            }
+                                                            else {
+                                                                add(mesh);
+                                                            }
+                                                        }
+                                                        usedMeshes++;
+
+                                                        // Created or retrieved a reusable mesh, configure it
+                                                        mesh.texture = texture;
+                                                        mesh.colorMapping = MeshColorMapping.VERTICES;
+                                                        mesh.active = true;
+                                                        mesh.roundTranslation = roundTilesTranslation;
+                                                        mesh.blending = blending;
+                                                        mesh.depth = depthExtra;
+                                                        mesh.layerIndex = layerIndex;
+                                                        mesh.textureIndex = textureIndex;
+                                                        mesh.nextVertexIndice = 0;
+                                                        mesh.nextIndexIndice = 0;
+                                                        mesh.nextColorIndice = 0;
+                                                        mesh.nextQuadIndice = 0;
+                                                    }
+                                                }
+
+                                                var vertexIndex = mesh.nextVertexIndice;
+                                                var indexIndex = mesh.nextIndexIndice;
+                                                var colorIndex = mesh.nextColorIndice;
+                                                var quadIndex = mesh.nextQuadIndice;
+
+                                                if (tilesAlpha != null) {
+                                                    alpha *= tilesAlpha.unsafeGet(t);
+                                                }
+
+                                                var tileLeft = column * tileset.tileWidth;
+                                                if (tilesOffsetX != null) {
+                                                    tileLeft += tilesOffsetX.unsafeGet(t);
+                                                }
+
+                                                var tileTop = row * tileset.tileHeight;
+                                                if (tilesOffsetY != null) {
+                                                    tileTop += tilesOffsetY.unsafeGet(t);
+                                                }
+
+                                                var tileWidth = tileset.tileWidth;
+                                                var tileHeight = tileset.tileHeight;
+
+                                                // Calculate texture coordinates
+                                                var frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
+                                                var frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2 + tileset.spacing) + tileset.margin;
+
+                                                var textureWidth = tileset.image.width;
+                                                var textureHeight = tileset.image.height;
+
+                                                var u1 = frameX / textureWidth;
+                                                var v1 = frameY / textureHeight;
+                                                var u2 = (frameX + tileset.tileWidth) / textureWidth;
+                                                var v2 = (frameY + tileset.tileHeight) / textureHeight;
+
+                                                // Create base UV coordinates for top-left, top-right, bottom-right, bottom-left
+                                                var tlU = u1;
+                                                var tlV = v1;
+                                                var trU = u2;
+                                                var trV = v1;
+                                                var brU = u2;
+                                                var brV = v2;
+                                                var blU = u1;
+                                                var blV = v2;
+
+                                                // Handle flipping and rotation
+                                                if (tile.diagonalFlip) {
+                                                    // When rotateFrame is true in the renderer, with swapped uvW/uvH:
+                                                    // br position gets (uvX + uvW, uvY) where uvW = frameHeight/texWidth
+                                                    // bl position gets (uvX + uvW, uvY + uvH) where uvH = frameWidth/texHeight
+                                                    // tl position gets (uvX, uvY + uvH)
+                                                    // tr position gets (uvX, uvY)
+
+                                                    // Since uvW and uvH are swapped, this means:
+                                                    // br position → top-right of rotated texture (u2, v1)
+                                                    // bl position → bottom-right of rotated texture (u2, v2)
+                                                    // tl position → bottom-left of rotated texture (u1, v2)
+                                                    // tr position → top-left of rotated texture (u1, v1)
+
+                                                    // This is a 90° clockwise rotation
+                                                    var newTlU = u1;  // tl vertex gets bottom-left after rotation
+                                                    var newTlV = v2;
+                                                    var newTrU = u1;  // tr vertex gets top-left after rotation
+                                                    var newTrV = v1;
+                                                    var newBrU = u2;  // br vertex gets top-right after rotation
+                                                    var newBrV = v1;
+                                                    var newBlU = u2;  // bl vertex gets bottom-right after rotation
+                                                    var newBlV = v2;
+
+                                                    tlU = newTlU;
+                                                    tlV = newTlV;
+                                                    trU = newTrU;
+                                                    trV = newTrV;
+                                                    brU = newBrU;
+                                                    brV = newBrV;
+                                                    blU = newBlU;
+                                                    blV = newBlV;
+
+                                                    // After rotation, apply flips - but the meanings are swapped
+                                                    // From computeTileQuads when diagonalFlip is true:
+                                                    // - tile.verticalFlip = true → scaleX = -1 (horizontal flip)
+                                                    // - tile.horizontalFlip = true → scaleY = 1 (no vertical flip)
+                                                    // - tile.horizontalFlip = false → scaleY = -1 (vertical flip)
+
+                                                    if (tile.verticalFlip) {
+                                                        // This causes horizontal flip
+                                                        var tmpU = tlU;
+                                                        var tmpV = tlV;
+                                                        tlU = trU;
+                                                        tlV = trV;
+                                                        trU = tmpU;
+                                                        trV = tmpV;
+
+                                                        tmpU = blU;
+                                                        tmpV = blV;
+                                                        blU = brU;
+                                                        blV = brV;
+                                                        brU = tmpU;
+                                                        brV = tmpV;
+                                                    }
+                                                    if (!tile.horizontalFlip) {
+                                                        // horizontalFlip = false causes vertical flip
+                                                        var tmpU = tlU;
+                                                        var tmpV = tlV;
+                                                        tlU = blU;
+                                                        tlV = blV;
+                                                        blU = tmpU;
+                                                        blV = tmpV;
+
+                                                        tmpU = trU;
+                                                        tmpV = trV;
+                                                        trU = brU;
+                                                        trV = brV;
+                                                        brU = tmpU;
+                                                        brV = tmpV;
+                                                    }
+                                                } else {
+                                                    // No rotation, just apply flips normally
+                                                    if (tile.horizontalFlip) {
+                                                        var tmpU = tlU;
+                                                        var tmpV = tlV;
+                                                        tlU = trU;
+                                                        tlV = trV;
+                                                        trU = tmpU;
+                                                        trV = tmpV;
+
+                                                        tmpU = blU;
+                                                        tmpV = blV;
+                                                        blU = brU;
+                                                        blV = brV;
+                                                        brU = tmpU;
+                                                        brV = tmpV;
+                                                    }
+                                                    if (tile.verticalFlip) {
+                                                        var tmpU = tlU;
+                                                        var tmpV = tlV;
+                                                        tlU = blU;
+                                                        tlV = blV;
+                                                        blU = tmpU;
+                                                        blV = tmpV;
+
+                                                        tmpU = trU;
+                                                        tmpV = trV;
+                                                        trU = brU;
+                                                        trV = brV;
+                                                        brU = tmpU;
+                                                        brV = tmpV;
+                                                    }
+                                                }
+
+                                                // Set vertex positions (scaled)
+                                                var scale = tileScale;
+                                                var scaledWidth = tileWidth * scale;
+                                                var scaledHeight = tileHeight * scale;
+                                                var centerX = tileLeft + tileWidth * 0.5 - filterX;
+                                                var centerY = tileTop + tileHeight * 0.5 - filterY;
+
+                                                // Calculate corners from center (like Quad with anchor 0.5, 0.5)
+                                                var halfWidth = scaledWidth * 0.5;
+                                                var halfHeight = scaledHeight * 0.5;
+
+                                                var x1 = centerX - halfWidth;
+                                                var y1 = centerY - halfHeight;
+                                                var x2 = centerX + halfWidth;
+                                                var y2 = centerY + halfHeight;
+
+                                                var vertices = mesh.vertices;
+                                                var uvs = mesh.uvs;
+                                                var indices = mesh.indices;
+                                                var colors = mesh.colors;
+
+                                                // Top-left vertex
+                                                vertices[vertexIndex] = x1;
+                                                vertices[vertexIndex + 1] = y1;
+                                                uvs[vertexIndex] = tlU;
+                                                uvs[vertexIndex + 1] = tlV;
+
+                                                // Top-right vertex
+                                                vertices[vertexIndex + 2] = x2;
+                                                vertices[vertexIndex + 3] = y1;
+                                                uvs[vertexIndex + 2] = trU;
+                                                uvs[vertexIndex + 3] = trV;
+
+                                                // Bottom-right vertex
+                                                vertices[vertexIndex + 4] = x2;
+                                                vertices[vertexIndex + 5] = y2;
+                                                uvs[vertexIndex + 4] = brU;
+                                                uvs[vertexIndex + 5] = brV;
+
+                                                // Bottom-left vertex
+                                                vertices[vertexIndex + 6] = x1;
+                                                vertices[vertexIndex + 7] = y2;
+                                                uvs[vertexIndex + 6] = blU;
+                                                uvs[vertexIndex + 7] = blV;
+
+                                                // Set indices for two triangles
+                                                var baseVertex = quadIndex * 4;
+                                                indices[indexIndex] = baseVertex;
+                                                indices[indexIndex + 1] = baseVertex + 1;
+                                                indices[indexIndex + 2] = baseVertex + 2;
+                                                indices[indexIndex + 3] = baseVertex;
+                                                indices[indexIndex + 4] = baseVertex + 2;
+                                                indices[indexIndex + 5] = baseVertex + 3;
+
+                                                // Set colors for all 4 vertices
+                                                var alphaColor = new AlphaColor(layerColor, Math.round(alpha * 255));
+                                                colors[colorIndex] = alphaColor;
+                                                colors[colorIndex + 1] = alphaColor;
+                                                colors[colorIndex + 2] = alphaColor;
+                                                colors[colorIndex + 3] = alphaColor;
+
+                                                // Update indices
+                                                mesh.nextVertexIndice = vertexIndex + 8;
+                                                mesh.nextIndexIndice = indexIndex + 6;
+                                                mesh.nextColorIndice = colorIndex + 4;
+                                                mesh.nextQuadIndice = quadIndex + 1;
+                                            }
+                                        }
+                                    }
+
+                                    t += tilesPerLayer;
+                                }
+                            }
+                            r++;
+                        }
+                        c++;
+                    }
+                }
+            }
+        }
+
+        // Resize mesh arrays to actual used size and deactivate unused meshes
+        // We need to iterate through textureLayerToMeshIndex to find the correct keys
+        for (i in 0...usedMeshes) {
+            final mesh = tileMeshes[i];
+
+            var finalVertexCount = mesh.nextVertexIndice;
+            var finalIndexCount = mesh.nextIndexIndice;
+            var finalColorCount = mesh.nextColorIndice;
+
+            // Resize arrays down to actual used size
+            if (mesh.vertices != null && mesh.vertices.length > finalVertexCount) {
+                mesh.vertices.setArrayLength(finalVertexCount);
+            }
+            if (mesh.uvs != null && mesh.uvs.length > finalVertexCount) {
+                mesh.uvs.setArrayLength(finalVertexCount);
+            }
+            if (mesh.indices != null && mesh.indices.length > finalIndexCount) {
+                mesh.indices.setArrayLength(finalIndexCount);
+            }
+            if (mesh.colors != null && mesh.colors.length > finalColorCount) {
+                mesh.colors.setArrayLength(finalColorCount);
+            }
+        }
+
+        // Remove unused meshes
+        while (usedMeshes < tileMeshes.length) {
+            var mesh = tileMeshes.pop();
+            mesh.recycle();
+        }
+
+        emitTileMeshesChange();
 
     }
 
