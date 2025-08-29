@@ -1969,7 +1969,7 @@ class Renderer extends Entity {
             final usedI = usedRenderTarget != null ? usedRenderTarget.index : 0;
             final i = renderTarget != null ? renderTarget.index : 0;
             zPerRenderTarget.set(usedI, this.z);
-            //this.z = zPerRenderTarget.get(i);
+            this.z = zPerRenderTarget.get(i);
         }
 
         usedRenderTarget = renderTarget;
