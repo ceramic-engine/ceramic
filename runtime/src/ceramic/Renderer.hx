@@ -1185,7 +1185,7 @@ class Renderer extends Entity {
         draw.endDrawQuad();
 
         // Increase counts
-        this.z = z + 0.001;
+        this.z = incrementZ(z);
 
     }
 
@@ -1695,10 +1695,22 @@ class Renderer extends Entity {
         draw.endDrawMesh();
 
         // Increase counts
-        this.z = z + 0.001;
+        this.z = incrementZ(z);
 
     }
 #end
+
+    /**
+     * Increments the Z (depth) value with a non-linear progression to maintain
+     * proper rendering order while avoiding Z-fighting issues. The formula applies
+     * a quadratic scaling factor to ensure adequate separation between consecutive
+     * depth values, particularly important for overlapping transparent objects.
+     * @param z The current Z depth value
+     * @return The incremented Z value with non-linear spacing
+     */
+    inline function incrementZ(z:Float):Float {
+        return z + z * z * 0.00001 + 0.00001;
+    }
 
     /**
      * Flushes pending draw commands to the GPU.
