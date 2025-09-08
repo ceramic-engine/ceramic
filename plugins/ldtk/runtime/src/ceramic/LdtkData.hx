@@ -625,20 +625,44 @@ class LdtkTocInstanceData {
      */
     public var fields:DynamicAccess<Dynamic>;
 
+    /**
+     * Entity width in pixels as it appears in the LDtk editor
+     */
     public var widPx:Int;
 
+    /**
+     * Entity height in pixels as it appears in the LDtk editor
+     */
     public var heiPx:Int;
 
+    /**
+     * Entity X coordinate in world pixels (across all levels)
+     */
     public var worldX:Int;
 
+    /**
+     * Entity Y coordinate in world pixels (across all levels)
+     */
     public var worldY:Int;
 
+    /**
+     * Unique instance identifier for the world containing this entity
+     */
     public var worldIid:String;
 
+    /**
+     * Unique instance identifier for the level containing this entity
+     */
     public var levelIid:String;
 
+    /**
+     * Unique instance identifier for the layer containing this entity
+     */
     public var layerIid:String;
 
+    /**
+     * Unique instance identifier for this entity instance
+     */
     public var entityIid:String;
 
     public function new(?tocEntry:LdtkTocEntry, ?json:DynamicAccess<Dynamic>) {
@@ -805,14 +829,29 @@ class LdtkWorld {
 
 enum abstract LdtkWorldLayout(Int) from Int to Int {
 
+    /**
+     * No specific world layout - levels are not arranged in any particular structure
+     */
     var None = 0;
 
+    /**
+     * Free positioning - levels can be placed freely in 2D space without constraints
+     */
     var Free = 1;
 
+    /**
+     * Grid-based layout similar to Metroidvania games - levels snap to a grid for interconnected world structure
+     */
     var GridVania = 2;
 
+    /**
+     * Linear horizontal layout - levels are arranged in a single row from left to right
+     */
     var LinearHorizontal = 3;
 
+    /**
+     * Linear vertical layout - levels are arranged in a single column from top to bottom
+     */
     var LinearVertical = 4;
 
     public static function fromString(str:String):LdtkWorldLayout {
@@ -1312,12 +1351,24 @@ class LdtkTilesetRectangle {
 
 enum abstract LdtkRenderMode(Int) from Int to Int {
 
+    /**
+     * Entity is rendered as a filled rectangle
+     */
     var Rectangle = 1;
 
+    /**
+     * Entity is rendered as a filled ellipse/circle
+     */
     var Ellipse = 2;
 
+    /**
+     * Entity is rendered using a tile/sprite from a tileset
+     */
     var Tile = 3;
 
+    /**
+     * Entity is rendered as a cross/plus sign shape for debugging or placeholder purposes
+     */
     var Cross = 4;
 
     public static function fromString(str:String):LdtkRenderMode {
@@ -1349,18 +1400,39 @@ enum abstract LdtkRenderMode(Int) from Int to Int {
 
 enum abstract LdtkTileRenderMode(Int) from Int to Int {
 
+    /**
+     * Tile is scaled proportionally to cover the entire entity bounds, potentially cropping parts that extend beyond
+     */
     var Cover = 1;
 
+    /**
+     * Tile is scaled proportionally to fit entirely within the entity bounds, potentially leaving empty space
+     */
     var FitInside = 2;
 
+    /**
+     * Tile is repeated/tiled to fill the entity bounds at its original size
+     */
     var Repeat = 3;
 
+    /**
+     * Tile is stretched non-proportionally to exactly fill the entity bounds, potentially distorting the image
+     */
     var Stretch = 4;
 
+    /**
+     * Tile is displayed at its original size, cropped to fit within the entity bounds
+     */
     var FullSizeCropped = 5;
 
+    /**
+     * Tile is displayed at its original size without cropping, potentially extending beyond entity bounds
+     */
     var FullSizeUncropped = 6;
 
+    /**
+     * Tile is rendered using nine-slice scaling for scalable UI elements with preserved corners and borders
+     */
     var NineSlice = 7;
 
     public static function fromString(str:String):LdtkTileRenderMode {
@@ -1551,12 +1623,24 @@ class LdtkEnumValueDefinition {
 
 enum abstract LdtkLayerType(Int) from Int to Int {
 
+    /**
+     * Integer grid layer for collision detection, zones, or level structure data
+     */
     var IntGrid = 1;
 
+    /**
+     * Entity layer containing instances of entity definitions for game objects, NPCs, items, etc.
+     */
     var Entities = 2;
 
+    /**
+     * Tile layer for manual placement of visual tiles from tilesets
+     */
     var Tiles = 3;
 
+    /**
+     * Auto layer with rule-based automatic tile placement based on IntGrid values or other conditions
+     */
     var AutoLayer = 4;
 
     public static function fromString(str:String):LdtkLayerType {
@@ -2088,8 +2172,14 @@ class LdtkTileCustomData {
 
 enum abstract LdtkEmbedAtlas(Int) from Int to Int {
 
+    /**
+     * No embedded atlas - external image files are used for tilesets
+     */
     var None = 0;
 
+    /**
+     * Uses LDtk's internal embedded atlas containing built-in icons and sprites
+     */
     var LdtkIcons = 1;
 
     public static function fromString(str:String):LdtkEmbedAtlas {
@@ -2380,10 +2470,19 @@ class LdtkAutoLayerRuleDefinition {
 
 enum abstract LdtkCheckerMode(Int) from Int to Int {
 
+    /**
+     * No checker pattern applied to auto layer rule tiles
+     */
     var None = 0;
 
+    /**
+     * Horizontal checker pattern for alternating tiles in auto layer rules
+     */
     var Horizontal = 1;
 
+    /**
+     * Vertical checker pattern for alternating tiles in auto layer rules
+     */
     var Vertical = 2;
 
     public static function fromString(str:String):LdtkCheckerMode {
@@ -2413,8 +2512,14 @@ enum abstract LdtkCheckerMode(Int) from Int to Int {
 
 enum abstract LdtkTileMode(Int) from Int to Int {
 
+    /**
+     * Single tile mode - uses only one tile ID from the tileIds array
+     */
     var Single = 1;
 
+    /**
+     * Stamp mode - uses multiple tile IDs from the tileIds array to create a pattern or group
+     */
     var Stamp = 2;
 
     public static function fromString(str:String):LdtkTileMode {
@@ -2983,20 +3088,44 @@ class LdtkLevelNeighbour {
 
 enum abstract LdtkLevelLocation(Int) from Int to Int {
 
+    /**
+     * Level is located to the north (above) of another level
+     */
     var North = 1;
 
+    /**
+     * Level is located to the west (left) of another level
+     */
     var West = 2;
 
+    /**
+     * Level is located to the south (below) of another level
+     */
     var South = 3;
 
+    /**
+     * Level is located to the east (right) of another level
+     */
     var East = 4;
 
+    /**
+     * Level is located to the northeast (upper-right) of another level
+     */
     var NorthEast = 5;
 
+    /**
+     * Level is located to the northwest (upper-left) of another level
+     */
     var NorthWest = 6;
 
+    /**
+     * Level is located to the southeast (lower-right) of another level
+     */
     var SouthEast = 7;
 
+    /**
+     * Level is located to the southwest (lower-left) of another level
+     */
     var SouthWest = 8;
 
     public static function fromString(str:String):LdtkLevelLocation {

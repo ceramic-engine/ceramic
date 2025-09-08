@@ -153,6 +153,10 @@ abstract IntBoolMap(IntIntMap) {
 
 }
 
+/**
+ * Iterator implementation for IntBoolMap values.
+ * Allows iterating over boolean values in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntBoolMap)
 class IntBoolMapIterator {
 
@@ -183,6 +187,10 @@ class IntBoolMapIterator {
 
 }
 
+/**
+ * Iterator implementation for IntBoolMap keys.
+ * Allows iterating over integer keys in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntBoolMap)
 class IntBoolMapKeyIterator {
 
@@ -211,6 +219,10 @@ class IntBoolMapKeyIterator {
 
 }
 
+/**
+ * Iterator implementation for IntBoolMap key-value pairs.
+ * Returns objects with {key:Int, value:Bool} when iterating.
+ */
 @:allow(ceramic.IntBoolMap)
 class IntBoolMapKeyValueIterator {
 

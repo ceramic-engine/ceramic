@@ -1089,6 +1089,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
 #if ceramic_wireframe
 
+    /**
+     * When enabled, renders this visual as wireframe instead of filled.
+     * Only available when compiled with `ceramic_wireframe` flag.
+     */
     public var wireframe(get,set):Bool;
     inline function get_wireframe():Bool {
         // Equivalent to internalFlag(7)
@@ -1316,7 +1320,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * visual.depthRange = -1;
      * ```
      */
-        #if ceramic_no_depth_range
+    #if ceramic_no_depth_range
     public var depthRange(default,set):Float = -1;
     #else
     public var depthRange(default,set):Float = 1;

@@ -85,139 +85,253 @@ class VisualTransition extends Entity implements Component {
      */
     public var duration:Float;
 
+    /**
+     * Flag indicating if any property was modified in the current transition.
+     * Used to determine if a tween needs to be created.
+     */
     var anyPropertyChanged:Bool = false;
 
+    /** Flag indicating if the X position was modified in the current transition. */
     var xChanged:Bool = false;
+    /** Active tween responsible for animating the X position. */
     var xTween:Tween = null;
+    /** Target X position value to animate towards. */
     var xTarget:Float = 0;
+    /** Initial X position value when the transition began. */
     var xStart:Float = 0;
+    /** Final X position value for the current tween segment. */
     var xEnd:Float = 0;
 
+    /** Flag indicating if the Y position was modified in the current transition. */
     var yChanged:Bool = false;
+    /** Active tween responsible for animating the Y position. */
     var yTween:Tween = null;
+    /** Target Y position value to animate towards. */
     var yTarget:Float = 0;
+    /** Initial Y position value when the transition began. */
     var yStart:Float = 0;
+    /** Final Y position value for the current tween segment. */
     var yEnd:Float = 0;
 
+    /** Flag indicating if the depth was modified in the current transition. */
     var depthChanged:Bool = false;
+    /** Active tween responsible for animating the depth value. */
     var depthTween:Tween = null;
+    /** Target depth value to animate towards. */
     var depthTarget:Float = 0;
+    /** Initial depth value when the transition began. */
     var depthStart:Float = 0;
+    /** Final depth value for the current tween segment. */
     var depthEnd:Float = 0;
 
+    /** Flag indicating if the X scale was modified in the current transition. */
     var scaleXChanged:Bool = false;
+    /** Active tween responsible for animating the X scale. */
     var scaleXTween:Tween = null;
+    /** Target X scale value to animate towards. */
     var scaleXTarget:Float = 0;
+    /** Initial X scale value when the transition began. */
     var scaleXStart:Float = 0;
+    /** Final X scale value for the current tween segment. */
     var scaleXEnd:Float = 0;
 
+    /** Flag indicating if the Y scale was modified in the current transition. */
     var scaleYChanged:Bool = false;
+    /** Active tween responsible for animating the Y scale. */
     var scaleYTween:Tween = null;
+    /** Target Y scale value to animate towards. */
     var scaleYTarget:Float = 0;
+    /** Initial Y scale value when the transition began. */
     var scaleYStart:Float = 0;
+    /** Final Y scale value for the current tween segment. */
     var scaleYEnd:Float = 0;
 
+    /** Flag indicating if the X skew was modified in the current transition. */
     var skewXChanged:Bool = false;
+    /** Active tween responsible for animating the X skew. */
     var skewXTween:Tween = null;
+    /** Target X skew value to animate towards. */
     var skewXTarget:Float = 0;
+    /** Initial X skew value when the transition began. */
     var skewXStart:Float = 0;
+    /** Final X skew value for the current tween segment. */
     var skewXEnd:Float = 0;
 
+    /** Flag indicating if the Y skew was modified in the current transition. */
     var skewYChanged:Bool = false;
+    /** Active tween responsible for animating the Y skew. */
     var skewYTween:Tween = null;
+    /** Target Y skew value to animate towards. */
     var skewYTarget:Float = 0;
+    /** Initial Y skew value when the transition began. */
     var skewYStart:Float = 0;
+    /** Final Y skew value for the current tween segment. */
     var skewYEnd:Float = 0;
 
+    /** Flag indicating if the X anchor was modified in the current transition. */
     var anchorXChanged:Bool = false;
+    /** Active tween responsible for animating the X anchor point. */
     var anchorXTween:Tween = null;
+    /** Target X anchor value to animate towards. */
     var anchorXTarget:Float = 0;
+    /** Initial X anchor value when the transition began. */
     var anchorXStart:Float = 0;
+    /** Final X anchor value for the current tween segment. */
     var anchorXEnd:Float = 0;
 
+    /** Flag indicating if the Y anchor was modified in the current transition. */
     var anchorYChanged:Bool = false;
+    /** Active tween responsible for animating the Y anchor point. */
     var anchorYTween:Tween = null;
+    /** Target Y anchor value to animate towards. */
     var anchorYTarget:Float = 0;
+    /** Initial Y anchor value when the transition began. */
     var anchorYStart:Float = 0;
+    /** Final Y anchor value for the current tween segment. */
     var anchorYEnd:Float = 0;
 
+    /** Flag indicating if the rotation was modified in the current transition. */
     var rotationChanged:Bool = false;
+    /** Active tween responsible for animating the rotation. */
     var rotationTween:Tween = null;
+    /** Target rotation value in degrees to animate towards. */
     var rotationTarget:Float = 0;
+    /** Initial rotation value in degrees when the transition began. */
     var rotationStart:Float = 0;
+    /** Final rotation value in degrees for the current tween segment (adjusted for shortest path). */
     var rotationEnd:Float = 0;
 
+    /** Flag indicating if the width was modified in the current transition. */
     var widthChanged:Bool = false;
+    /** Active tween responsible for animating the width. */
     var widthTween:Tween = null;
+    /** Target width value to animate towards. */
     var widthTarget:Float = 0;
+    /** Initial width value when the transition began. */
     var widthStart:Float = 0;
+    /** Final width value for the current tween segment. */
     var widthEnd:Float = 0;
 
+    /** Flag indicating if the height was modified in the current transition. */
     var heightChanged:Bool = false;
+    /** Active tween responsible for animating the height. */
     var heightTween:Tween = null;
+    /** Target height value to animate towards. */
     var heightTarget:Float = 0;
+    /** Initial height value when the transition began. */
     var heightStart:Float = 0;
+    /** Final height value for the current tween segment. */
     var heightEnd:Float = 0;
 
+    /** Flag indicating if the color was modified in the current transition. */
     var colorChanged:Bool = false;
+    /** Active tween responsible for animating the color using RGB interpolation. */
     var colorTween:Tween = null;
+    /** Target color value to animate towards. */
     var colorTarget:Color = Color.NONE;
+    /** Initial color value when the transition began. */
     var colorStart:Color = Color.NONE;
+    /** Final color value for the current tween segment. */
     var colorEnd:Color = Color.NONE;
 
+    /** Flag indicating if the alpha was modified in the current transition. */
     var alphaChanged:Bool = false;
+    /** Active tween responsible for animating the alpha (opacity). */
     var alphaTween:Tween = null;
+    /** Target alpha value (0.0-1.0) to animate towards. */
     var alphaTarget:Float = 0;
+    /** Initial alpha value when the transition began. */
     var alphaStart:Float = 0;
+    /** Final alpha value for the current tween segment. */
     var alphaEnd:Float = 0;
 
+    /** Flag indicating if the X translation was modified in the current transition. */
     var translateXChanged:Bool = false;
+    /** Active tween responsible for animating the X translation. */
     var translateXTween:Tween = null;
+    /** Target X translation value to animate towards. */
     var translateXTarget:Float = 0;
+    /** Initial X translation value when the transition began. */
     var translateXStart:Float = 0;
+    /** Final X translation value for the current tween segment. */
     var translateXEnd:Float = 0;
 
+    /** Flag indicating if the Y translation was modified in the current transition. */
     var translateYChanged:Bool = false;
+    /** Active tween responsible for animating the Y translation. */
     var translateYTween:Tween = null;
+    /** Target Y translation value to animate towards. */
     var translateYTarget:Float = 0;
+    /** Initial Y translation value when the transition began. */
     var translateYStart:Float = 0;
+    /** Final Y translation value for the current tween segment. */
     var translateYEnd:Float = 0;
 
+    /** Flag indicating if the transform was modified in the current transition. */
     var transformChanged:Bool = false;
+    /** Flag indicating if a transform instance was directly assigned (vs. modified). */
     var transformAssigned:Bool = false;
+    /** The transform instance that was directly assigned, if any. */
     var transformAssignedInstance:Transform = null;
+    /** Active tween responsible for animating the transform using matrix interpolation. */
     var transformTween:Tween = null;
+    /** Target transform matrix to animate towards. */
     var transformTarget:Transform = null;
+    /** Initial transform matrix when the transition began. */
     var transformStart:Transform = null;
+    /** Final transform matrix for the current tween segment. */
     var transformEnd:Transform = null;
+    /** Flag indicating if the transform should be set to null at the end of the transition. */
     var transformEndToNull:Bool = false;
+    /** Temporary transform instance used during the transition to avoid allocations. */
     var transformInTransition:Transform = null;
 
     #if plugin_ui
+    /** Flag indicating if the X offset was modified in the current transition (UI plugin only). */
     var offsetXChanged:Bool = false;
+    /** Active tween responsible for animating the X offset (UI plugin only). */
     var offsetXTween:Tween = null;
+    /** Target X offset value to animate towards (UI plugin only). */
     var offsetXTarget:Float = 0;
+    /** Initial X offset value when the transition began (UI plugin only). */
     var offsetXStart:Float = 0;
+    /** Final X offset value for the current tween segment (UI plugin only). */
     var offsetXEnd:Float = 0;
 
+    /** Flag indicating if the Y offset was modified in the current transition (UI plugin only). */
     var offsetYChanged:Bool = false;
+    /** Active tween responsible for animating the Y offset (UI plugin only). */
     var offsetYTween:Tween = null;
+    /** Target Y offset value to animate towards (UI plugin only). */
     var offsetYTarget:Float = 0;
+    /** Initial Y offset value when the transition began (UI plugin only). */
     var offsetYStart:Float = 0;
+    /** Final Y offset value for the current tween segment (UI plugin only). */
     var offsetYEnd:Float = 0;
 
+    /** Flag indicating if the view width was modified in the current transition (UI plugin only). */
     var viewWidthChanged:Bool = false;
+    /** Active tween responsible for animating the view width (UI plugin only). */
     var viewWidthTween:Tween = null;
+    /** Target view width value to animate towards (UI plugin only). */
     var viewWidthTarget:Float = 0;
+    /** Initial view width value when the transition began (UI plugin only). */
     var viewWidthStart:Float = 0;
+    /** Final view width value for the current tween segment (UI plugin only). */
     var viewWidthEnd:Float = 0;
 
+    /** Flag indicating if the view height was modified in the current transition (UI plugin only). */
     var viewHeightChanged:Bool = false;
+    /** Active tween responsible for animating the view height (UI plugin only). */
     var viewHeightTween:Tween = null;
+    /** Target view height value to animate towards (UI plugin only). */
     var viewHeightTarget:Float = 0;
+    /** Initial view height value when the transition began (UI plugin only). */
     var viewHeightStart:Float = 0;
+    /** Final view height value for the current tween segment (UI plugin only). */
     var viewHeightEnd:Float = 0;
 
+    /** Flag indicating if the entity is a View (UI plugin only). Set during component binding. */
     var isView:Bool = false;
     #end
 
@@ -820,6 +934,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         inline set_y(y);
     }
 
+    /**
+     * Target depth value for the transition.
+     * Controls the Z-order/layering of the visual.
+     */
     public var depth(get, set):Float;
     function get_depth():Float return this.depthTarget;
     function set_depth(depth:Float):Float {
@@ -831,6 +949,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return depth;
     }
 
+    /**
+     * Target X scale factor for the transition.
+     */
     public var scaleX(get, set):Float;
     function get_scaleX():Float return this.scaleXTarget;
     function set_scaleX(scaleX:Float):Float {
@@ -842,6 +963,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return scaleX;
     }
 
+    /**
+     * Target Y scale factor for the transition.
+     */
     public var scaleY(get, set):Float;
     function get_scaleY():Float return this.scaleYTarget;
     function set_scaleY(scaleY:Float):Float {
@@ -853,11 +977,21 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return scaleY;
     }
 
+    /**
+     * Set both X and Y scale factors at once.
+     * 
+     * @param scaleX Target X scale factor
+     * @param scaleY Target Y scale factor (defaults to scaleX if -1)
+     */
     public function scale(scaleX:Float, scaleY:Float = -1):Void {
         inline set_scaleX(scaleX);
         inline set_scaleY(scaleY != -1 ? scaleY : scaleX);
     }
 
+    /**
+     * Target X translation for the transition.
+     * This is additional transform translation, separate from position.
+     */
     public var translateX(get, set):Float;
     function get_translateX():Float return this.translateXTarget;
     function set_translateX(translateX:Float):Float {
@@ -869,6 +1003,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return translateX;
     }
 
+    /**
+     * Target Y translation for the transition.
+     * This is additional transform translation, separate from position.
+     */
     public var translateY(get, set):Float;
     function get_translateY():Float return this.translateYTarget;
     function set_translateY(translateY:Float):Float {
@@ -880,11 +1018,20 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return translateY;
     }
 
+    /**
+     * Set both X and Y translation values at once.
+     * 
+     * @param translateX Target X translation
+     * @param translateY Target Y translation (defaults to translateX if -1)
+     */
     public function translate(translateX:Float, translateY:Float = -1):Void {
         inline set_translateX(translateX);
         inline set_translateY(translateY != -1 ? translateY : translateX);
     }
 
+    /**
+     * Target X skew angle in degrees for the transition.
+     */
     public var skewX(get, set):Float;
     function get_skewX():Float return this.skewXTarget;
     function set_skewX(skewX:Float):Float {
@@ -896,6 +1043,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return skewX;
     }
 
+    /**
+     * Target Y skew angle in degrees for the transition.
+     */
     public var skewY(get, set):Float;
     function get_skewY():Float return this.skewYTarget;
     function set_skewY(skewY:Float):Float {
@@ -907,11 +1057,21 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return skewY;
     }
 
+    /**
+     * Set both X and Y skew angles at once.
+     * 
+     * @param skewX Target X skew angle in degrees
+     * @param skewY Target Y skew angle in degrees
+     */
     public function skew(skewX:Float, skewY:Float):Void {
         inline set_skewX(skewX);
         inline set_skewY(skewY);
     }
 
+    /**
+     * Target X anchor point for the transition.
+     * Range: 0.0 (left) to 1.0 (right).
+     */
     public var anchorX(get, set):Float;
     function get_anchorX():Float return this.anchorXTarget;
     function set_anchorX(anchorX:Float):Float {
@@ -923,6 +1083,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return anchorX;
     }
 
+    /**
+     * Target Y anchor point for the transition.
+     * Range: 0.0 (top) to 1.0 (bottom).
+     */
     public var anchorY(get, set):Float;
     function get_anchorY():Float return this.anchorYTarget;
     function set_anchorY(anchorY:Float):Float {
@@ -934,6 +1098,12 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return anchorY;
     }
 
+    /**
+     * Set both X and Y anchor points at once.
+     * 
+     * @param anchorX Target X anchor point (0.0-1.0)
+     * @param anchorY Target Y anchor point (0.0-1.0)
+     */
     public function anchor(anchorX:Float, anchorY:Float):Void {
         inline set_anchorX(anchorX);
         inline set_anchorY(anchorY);
@@ -954,6 +1124,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return rotation;
     }
 
+    /**
+     * Target width for the transition.
+     */
     public var width(get, set):Float;
     function get_width():Float return this.widthTarget;
     function set_width(width:Float):Float {
@@ -965,6 +1138,9 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return width;
     }
 
+    /**
+     * Target height for the transition.
+     */
     public var height(get, set):Float;
     function get_height():Float return this.heightTarget;
     function set_height(height:Float):Float {
@@ -976,11 +1152,21 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return height;
     }
 
+    /**
+     * Set both width and height at once.
+     * 
+     * @param width Target width
+     * @param height Target height
+     */
     public function size(width:Float, height:Float):Void {
         inline set_width(width);
         inline set_height(height);
     }
 
+    /**
+     * Target color for the transition.
+     * Uses RGB interpolation during animation.
+     */
     public var color(get, set):Color;
     function get_color():Color return this.colorTarget;
     function set_color(color:Color):Color {
@@ -1007,6 +1193,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return alpha;
     }
 
+    /**
+     * Target transform matrix for the transition.
+     * Uses matrix interpolation during animation.
+     */
     public var transform(get, set):Transform;
     function get_transform():Transform return this.transformTarget;
     function set_transform(transform:Transform):Transform {
@@ -1019,6 +1209,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
     }
 
     #if plugin_ui
+    /**
+     * Horizontal offset position for UI views (UI plugin only).
+     * Sets the target offsetX value for transition animation.
+     */
     @:plugin('ui')
     public var offsetX(get, set):Float;
     function get_offsetX():Float return this.offsetXTarget;
@@ -1031,6 +1225,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return offsetX;
     }
 
+    /**
+     * Vertical offset position for UI views (UI plugin only).
+     * Sets the target offsetY value for transition animation.
+     */
     @:plugin('ui')
     public var offsetY(get, set):Float;
     function get_offsetY():Float return this.offsetYTarget;
@@ -1049,6 +1247,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         inline set_offsetY(offsetY);
     }
 
+    /**
+     * View width dimension for UI views (UI plugin only).
+     * Sets the target viewWidth value for transition animation.
+     */
     @:plugin('ui')
     public var viewWidth(get, set):Float;
     function get_viewWidth():Float return this.viewWidthTarget;
@@ -1061,6 +1263,10 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         return viewWidth;
     }
 
+    /**
+     * View height dimension for UI views (UI plugin only).
+     * Sets the target viewHeight value for transition animation.
+     */
     @:plugin('ui')
     public var viewHeight(get, set):Float;
     function get_viewHeight():Float return this.viewHeightTarget;

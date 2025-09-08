@@ -59,11 +59,20 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     @:noCompletion var _data:Dynamic = null;
 
+    /**
+     * Whether this entity has custom data attached.
+     * Returns true if the data property has been accessed and initialized.
+     */
     public var hasData(get,never):Bool;
     inline function get_hasData():Bool {
         return _data != null;
     }
 
+    /**
+     * Custom data storage for this entity.
+     * Can store any dynamic value for application-specific purposes.
+     * The storage is lazily initialized on first access.
+     */
     public var data(get,set):Dynamic;
     function get_data():Dynamic {
         if (_data == null) _data = {};
@@ -115,6 +124,11 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
         return content;
     }
 
+    /**
+     * The script component attached to this entity.
+     * Allows scripting behavior through the Script component system.
+     * Setting to null removes the script component.
+     */
     @:plugin('script')
     public var script(get,set):Script;
     function get_script():Script {
@@ -136,6 +150,11 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 #end
 
 #if ceramic_entity_dynamic_events
+    /**
+     * Dynamic event system for this entity.
+     * Allows registering and triggering custom events at runtime.
+     * Only available when ceramic_entity_dynamic_events is defined.
+     */
     public var events(get,never):DynamicEvents<String>;
     function get_events():DynamicEvents<String> {
         var eventsComp:DynamicEvents<String> = cast component('events');

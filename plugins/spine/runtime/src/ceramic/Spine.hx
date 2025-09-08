@@ -76,42 +76,118 @@ class Spine extends Visual {
 
 /// Spine Animation State listener
 
+    /**
+     * Internal listener that handles Spine animation state events.
+     * Forwards animation callbacks to the appropriate event handlers.
+     */
     var listener:SpineListener;
 
+    /**
+     * Maps slot indices to their corresponding mesh objects.
+     * Each slot that renders geometry gets a Mesh for efficient GPU rendering.
+     */
     var slotMeshes:IntMap<Mesh> = new IntMap(16, 0.5, true); // TODO This could be an array or vector
 
+    /**
+     * Reusable SlotInfo object for slot update events.
+     * Avoids creating new objects each frame for performance.
+     */
     var slotInfo:SlotInfo = new SlotInfo();
 
+    /**
+     * Array of child Spine animations attached to this parent.
+     * Enables hierarchical animation composition where child animations follow parent slots.
+     */
     var subSpines:Array<Spine> = null;
 
+    /**
+     * Depth increment between sub-animations to prevent z-fighting.
+     * Each child slot gets a slightly different depth for proper layering.
+     */
     var subDepthStep:Float = 0.01;
 
+    /**
+     * Maps parent slot indices to arrays of child slot binding information.
+     * Used for Spine-in-Spine composition where child animations follow parent slots.
+     */
     var boundParentSlots:IntMap<Array<BindSlot>> = null;
 
+    /**
+     * Maps child slot indices to their parent binding information.
+     * Computed from boundParentSlots for efficient lookup during rendering.
+     */
     var boundChildSlots:IntMap<BindSlot> = null;
 
+    /**
+     * Flag indicating that boundChildSlots needs to be recomputed.
+     * Set when parent slot bindings are modified.
+     */
     var boundChildSlotsDirty:Bool = false;
 
+    /**
+     * Global index of the parent slot that this entire Spine follows.
+     * When set, all child slots transform relative to this parent slot.
+     */
     var globalBoundParentSlotGlobalIndex:Int = -1;
 
+    /**
+     * Reference to the actual parent slot object being followed.
+     * Updated during rendering to track the parent slot's current state.
+     */
     var globalBoundParentSlot:Slot = null;
 
+    /**
+     * Rendering depth of the global parent slot.
+     * Child animations render relative to this depth.
+     */
     var globalBoundParentSlotDepth:Float = 0.0;
 
+    /**
+     * Whether the global parent slot is currently visible.
+     * Child animations are hidden when their parent slot is not visible.
+     */
     var globalBoundParentSlotVisible:Bool = false;
 
+    /**
+     * Stores the setup pose transforms for each bone.
+     * Used for accurate child animation positioning relative to parent slots.
+     */
     var setupBoneTransforms:IntMap<Transform> = null;
 
+    /**
+     * Index of the first slot with a bounding box attachment found during rendering.
+     * Used for hitWithFirstBoundingBox functionality.
+     */
     var firstBoundingBoxSlotIndex:Int = -1;
 
+    /**
+     * Handles clipping attachment processing for rendering masked regions.
+     * Clips slot geometry to defined shapes for visual effects.
+     */
     var clipper:SkeletonClipping = new SkeletonClipping();
 
+    /**
+     * Current clipping shape being applied during rendering.
+     * Generated from clipping attachments in the skeleton.
+     */
     var clipShape:Shape = null;
 
+    /**
+     * Maps slot indices to their clipping shapes.
+     * Caches clipping geometry for performance.
+     */
     var slotClips:IntMap<Shape> = new IntMap(16, 0.5, true);
 
+    /**
+     * When true, suppresses animation events from being fired.
+     * Used during forced rendering to prevent unwanted event callbacks.
+     */
     var muteEvents:Bool = false;
 
+    /**
+     * When true, defers event emission until the next frame.
+     * Prevents issues with events fired during rendering.
+     */
     var deferEvents:Bool = false;
 
 /// Events
@@ -190,6 +266,10 @@ class Spine extends Visual {
 
 /// Render status
 
+    /**
+     * Flag indicating whether a render operation is already scheduled.
+     * Prevents multiple render operations from being queued.
+     */
     var renderScheduled:Bool = false;
 
     // Not sure this is needed, but it may prevent some unnecessary allocation
@@ -222,6 +302,10 @@ class Spine extends Visual {
             }
         }
     }
+    /**
+     * Dynamic reference to the scheduled render function.
+     * Cached to avoid creating new closures each time.
+     */
     var runScheduledRenderDyn:Void->Void = null;
 
     /**
@@ -587,6 +671,10 @@ class Spine extends Visual {
         return skin;
     }
 
+    /**
+     * Internal flag to prevent clearing nextAnimations when setting animation programmatically.
+     * Used during animation chaining to maintain the queue.
+     */
     var _settingNextAnimation = false;
 
     /**
@@ -722,6 +810,10 @@ class Spine extends Visual {
 
 /// Properties (internal)
 
+    /**
+     * Flag indicating that the skeleton should be reset to setup pose on next update.
+     * Set when resetAtChange is true and a new animation starts.
+     */
     var resetSkeleton:Bool = false;
 
 /// Lifecycle
@@ -1863,14 +1955,34 @@ class Spine extends Visual {
 
     }
 
+    /**
+     * Maps skeleton-specific slot indices to global slot indices.
+     * Enables efficient slot operations across different skeleton structures.
+     */
     var globalSlotIndexFromSkeletonSlotIndex:Array<Int> = [];
 
+    /**
+     * Maps global slot indices to their event dispatchers for slot updates.
+     * Enables efficient per-slot event handling without checking all slots.
+     */
     var updateSlotWithNameDispatchers:IntMap<DispatchSlotInfo> = null;
 
+    /**
+     * Array version of updateSlotWithNameDispatchers for efficient iteration.
+     * Kept in sync with the map for cleanup operations.
+     */
     var updateSlotWithNameDispatchersAsList:Array<DispatchSlotInfo> = null;
 
+    /**
+     * Maps global slot indices to their event dispatchers for visible slot updates.
+     * Only fires for slots that are actually being rendered.
+     */
     var updateVisibleSlotWithNameDispatchers:IntMap<DispatchSlotInfo> = null;
 
+    /**
+     * Array version of updateVisibleSlotWithNameDispatchers for efficient iteration.
+     * Kept in sync with the map for cleanup operations.
+     */
     var updateVisibleSlotWithNameDispatchersAsList:Array<DispatchSlotInfo> = null;
 
     inline function updateSlotIndexMappings():Void {
@@ -2347,20 +2459,51 @@ typedef BindSlotOptions = {
 @:allow(ceramic.Spine)
 private class BindSlot {
 
+    /**
+     * Global index of the parent slot that this binding follows.
+     */
     public var fromParentSlot:Int = -1;
 
+    /**
+     * Global index of the local child slot being bound to the parent.
+     * -1 means the entire child Spine follows the parent slot.
+     */
     public var toLocalSlot:Int = -1;
 
+    /**
+     * Rendering depth of the parent slot during the last update.
+     * Used to position child elements at the correct depth.
+     */
     public var parentDepth:Float = 0;
 
+    /**
+     * Whether the parent slot was visible during the last update.
+     * Child elements are hidden when their parent is not visible.
+     */
     public var parentVisible:Bool = false;
 
+    /**
+     * World transform of the parent slot.
+     * Child elements apply this transform to follow the parent.
+     */
     public var parentTransform:Transform = new Transform();
 
+    /**
+     * Reference to the actual parent slot object.
+     * Provides access to parent slot properties like color and attachment.
+     */
     public var parentSlot:Slot = null;
 
+    /**
+     * Whether to apply horizontal flipping when concatenating transforms.
+     * Useful for mirroring child animations relative to parent orientation.
+     */
     public var flipXOnConcat:Bool = false;
 
+    /**
+     * Whether to apply vertical flipping when concatenating transforms.
+     * Useful for inverting child animations relative to parent orientation.
+     */
     public var flipYOnConcat:Bool = false;
 
     public function new() {}

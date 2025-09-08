@@ -366,45 +366,85 @@ enum abstract KeyCode(Int) from Int to Int {
     var CURRENCYUNIT:KeyCode        = 180 | (1<<30);
     /** Currency sub-unit */
     var CURRENCYSUBUNIT:KeyCode     = 181 | (1<<30);
+    /** Keypad left parenthesis (() */
     var KP_LEFTPAREN:KeyCode        = 182 | (1<<30);
+    /** Keypad right parenthesis ()) */
     var KP_RIGHTPAREN:KeyCode       = 183 | (1<<30);
+    /** Keypad left brace ({) */
     var KP_LEFTBRACE:KeyCode        = 184 | (1<<30);
+    /** Keypad right brace (}) */
     var KP_RIGHTBRACE:KeyCode       = 185 | (1<<30);
+    /** Keypad tab */
     var KP_TAB:KeyCode              = 186 | (1<<30);
+    /** Keypad backspace */
     var KP_BACKSPACE:KeyCode        = 187 | (1<<30);
+    /** Keypad A */
     var KP_A:KeyCode                = 188 | (1<<30);
+    /** Keypad B */
     var KP_B:KeyCode                = 189 | (1<<30);
+    /** Keypad C */
     var KP_C:KeyCode                = 190 | (1<<30);
+    /** Keypad D */
     var KP_D:KeyCode                = 191 | (1<<30);
+    /** Keypad E */
     var KP_E:KeyCode                = 192 | (1<<30);
+    /** Keypad F */
     var KP_F:KeyCode                = 193 | (1<<30);
+    /** Keypad XOR (^) */
     var KP_XOR:KeyCode              = 194 | (1<<30);
+    /** Keypad power (^) */
     var KP_POWER:KeyCode            = 195 | (1<<30);
+    /** Keypad percent (%) */
     var KP_PERCENT:KeyCode          = 196 | (1<<30);
+    /** Keypad less than (<) */
     var KP_LESS:KeyCode             = 197 | (1<<30);
+    /** Keypad greater than (>) */
     var KP_GREATER:KeyCode          = 198 | (1<<30);
+    /** Keypad ampersand (&) */
     var KP_AMPERSAND:KeyCode        = 199 | (1<<30);
+    /** Keypad double ampersand (&&) */
     var KP_DBLAMPERSAND:KeyCode     = 200 | (1<<30);
+    /** Keypad vertical bar (|) */
     var KP_VERTICALBAR:KeyCode      = 201 | (1<<30);
+    /** Keypad double vertical bar (||) */
     var KP_DBLVERTICALBAR:Int       = 202 | (1<<30);
+    /** Keypad colon (:) */
     var KP_COLON:KeyCode            = 203 | (1<<30);
+    /** Keypad hash (#) */
     var KP_HASH:KeyCode             = 204 | (1<<30);
+    /** Keypad space */
     var KP_SPACE:KeyCode            = 205 | (1<<30);
+    /** Keypad at (@) */
     var KP_AT:KeyCode               = 206 | (1<<30);
+    /** Keypad exclamation (!) */
     var KP_EXCLAM:KeyCode           = 207 | (1<<30);
+    /** Keypad memory store */
     var KP_MEMSTORE:KeyCode         = 208 | (1<<30);
+    /** Keypad memory recall */
     var KP_MEMRECALL:KeyCode        = 209 | (1<<30);
+    /** Keypad memory clear */
     var KP_MEMCLEAR:KeyCode         = 210 | (1<<30);
+    /** Keypad memory add */
     var KP_MEMADD:KeyCode           = 211 | (1<<30);
+    /** Keypad memory subtract */
     var KP_MEMSUBTRACT:KeyCode      = 212 | (1<<30);
+    /** Keypad memory multiply */
     var KP_MEMMULTIPLY:KeyCode      = 213 | (1<<30);
+    /** Keypad memory divide */
     var KP_MEMDIVIDE:KeyCode        = 214 | (1<<30);
+    /** Keypad plus/minus (+/-) */
     var KP_PLUSMINUS:KeyCode        = 215 | (1<<30);
+    /** Keypad clear */
     var KP_CLEAR:KeyCode            = 216 | (1<<30);
+    /** Keypad clear entry */
     var KP_CLEARENTRY:KeyCode       = 217 | (1<<30);
+    /** Keypad binary */
     var KP_BINARY:KeyCode           = 218 | (1<<30);
+    /** Keypad octal */
     var KP_OCTAL:KeyCode            = 219 | (1<<30);
+    /** Keypad decimal */
     var KP_DECIMAL:KeyCode          = 220 | (1<<30);
+    /** Keypad hexadecimal */
     var KP_HEXADECIMAL:KeyCode      = 221 | (1<<30);
 
     /** Left Control key */

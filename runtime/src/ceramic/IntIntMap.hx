@@ -479,6 +479,10 @@ class IntIntMap {
 
 #else
 
+/**
+ * Fallback implementation of IntIntMap for non-C++/C# targets.
+ * Uses standard Map internally with additional tracking for iteration.
+ */
 class IntIntMap {
 
     /**
@@ -586,6 +590,10 @@ class IntIntMap {
 
 #end
 
+/**
+ * Iterator implementation for IntIntMap values.
+ * Allows iterating over integer values in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntIntMap)
 class IntIntMapIterator {
 
@@ -616,6 +624,10 @@ class IntIntMapIterator {
 
 }
 
+/**
+ * Iterator implementation for IntIntMap keys.
+ * Allows iterating over integer keys in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntIntMap)
 class IntIntMapKeyIterator {
 
@@ -644,6 +656,10 @@ class IntIntMapKeyIterator {
 
 }
 
+/**
+ * Iterator implementation for IntIntMap key-value pairs.
+ * Returns objects with {key:Int, value:Int} when iterating.
+ */
 @:allow(ceramic.IntIntMap)
 class IntIntMapKeyValueIterator {
 

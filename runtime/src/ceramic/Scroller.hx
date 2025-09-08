@@ -14,6 +14,9 @@ import tracker.Observable;
 @:keep
 class Scroller extends Visual implements Observable {
 
+    /**
+     * Shared point instance used for coordinate transformations to avoid allocations.
+     */
     static var _point:Point = new Point(0, 0);
 
 /// Events
@@ -184,6 +187,9 @@ class Scroller extends Visual implements Observable {
 
 /// Global tuning
 
+    /**
+     * Global threshold for minimum drag distance before scroll begins (in pixels).
+     */
     public static var threshold = 4.0;
 
 /// Fine tuning
@@ -264,10 +270,22 @@ class Scroller extends Visual implements Observable {
 
 /// Internal
 
+    /**
+     * Previous pointer X position for tracking pointer movement during scroll updates.
+     * Uses sentinel value -99999999 when not tracking.
+     */
     var prevPointerX:Float = -99999999;
 
+    /**
+     * Previous pointer Y position for tracking pointer movement during scroll updates.
+     * Uses sentinel value -99999999 when not tracking.
+     */
     var prevPointerY:Float = -99999999;
 
+    /**
+     * Current status of drag threshold checking.
+     * Tracks whether the drag threshold has been reached, is pending, or was canceled.
+     */
     var dragThresholdStatus:ScrollerDragThresholdStatus = NONE;
 
 /// Lifecycle
@@ -519,16 +537,40 @@ class Scroller extends Visual implements Observable {
 
 /// State
 
+    /**
+     * Current scroll position along the primary axis (vertical or horizontal).
+     * Used internally for scroll calculations.
+     */
     var position:Float = 0;
 
+    /**
+     * Initial content position when a drag gesture starts.
+     * Used to calculate relative movement during dragging.
+     */
     var contentStart:Float = 0;
 
+    /**
+     * Initial pointer position when a drag gesture starts along the scroll axis.
+     * Used to calculate relative movement during dragging.
+     */
     var pointerStart:Float = 0;
 
+    /**
+     * Initial X coordinate of the pointer when a touch/drag gesture starts.
+     * Used for drag threshold calculations and direction detection.
+     */
     var pointerStartX:Float = 0;
 
+    /**
+     * Initial Y coordinate of the pointer when a touch/drag gesture starts.
+     * Used for drag threshold calculations and direction detection.
+     */
     var pointerStartY:Float = 0;
 
+    /**
+     * Index of the active touch input being tracked for scrolling.
+     * Set to -1 when no touch is active.
+     */
     var touchIndex:Int = -1;
 
     /**
@@ -543,16 +585,40 @@ class Scroller extends Visual implements Observable {
      */
     public var momentum(default,null):Float = 0;
 
+    /**
+     * Whether to perform a snap animation when drag is released.
+     * Set to true when over-scrolled or when paging is enabled.
+     */
     var releaseSnap:Bool = false;
 
+    /**
+     * Flag indicating whether the current scroll motion originated from mouse wheel input.
+     * Affects deceleration behavior and momentum calculations.
+     */
     var fromWheel:Bool = false;
 
+    /**
+     * Timestamp of the last mouse wheel event.
+     * Used to detect when wheel scrolling has ended after a delay.
+     */
     var lastWheelEventTime:Float = -1;
 
+    /**
+     * Whether a click event can be triggered.
+     * Set to false if too much momentum is detected during touch release.
+     */
     var canClick:Bool = false;
 
+    /**
+     * Active horizontal scroll animation tween.
+     * Used for smooth scrolling and bounce animations on the X axis.
+     */
     var tweenX:Tween = null;
 
+    /**
+     * Active vertical scroll animation tween.
+     * Used for smooth scrolling and bounce animations on the Y axis.
+     */
     var tweenY:Tween = null;
 
     /**
@@ -572,10 +638,22 @@ class Scroller extends Visual implements Observable {
         return animating;
     }
 
+    /**
+     * Whether the pointer is currently over the scroller itself.
+     * Used for mouse wheel event handling and focus management.
+     */
     var pointerOnScroller:Bool = false;
 
+    /**
+     * Whether the pointer is currently over a child element within the scroller.
+     * Used for mouse wheel event handling when pointer is over content.
+     */
     var pointerOnScrollerChild:Bool = false;
 
+    /**
+     * Whether this scroller is currently blocking default system scroll behavior.
+     * Prevents browser/system scrolling when this scroller is active.
+     */
     var blockingDefaultScroll:Bool = false;
 
 /// Toggle tracking
@@ -1024,12 +1102,28 @@ class Scroller extends Visual implements Observable {
 
     }
 
+    /**
+     * X coordinate where the scrollbar drag started.
+     * Used for calculating relative movement during scrollbar dragging.
+     */
     var scrollbarDownX:Float = -1;
 
+    /**
+     * Y coordinate where the scrollbar drag started.
+     * Used for calculating relative movement during scrollbar dragging.
+     */
     var scrollbarDownY:Float = -1;
 
+    /**
+     * Initial X position of the scrollbar when dragging starts.
+     * Used to calculate new scroll position during scrollbar interaction.
+     */
     var scrollbarStartX:Float = -1;
 
+    /**
+     * Initial Y position of the scrollbar when dragging starts.
+     * Used to calculate new scroll position during scrollbar interaction.
+     */
     var scrollbarStartY:Float = -1;
 
     function bindScrollbar(scrollbar:Visual):Void {
@@ -1568,6 +1662,10 @@ class Scroller extends Visual implements Observable {
      */
     public var pageMomentumThreshold:Float = -1;
 
+    /**
+     * Page index that was active when a drag gesture started.
+     * Used for paging calculations to determine target page on release.
+     */
     var pageIndexOnStartDrag:Int = 0;
 
     public function pageIndexFromScroll(scrollX:Float, scrollY:Float):Int {

@@ -341,6 +341,10 @@ class IntFloatMap {
 
 #end
 
+/**
+ * Iterator implementation for IntFloatMap values.
+ * Allows iterating over float values in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntFloatMap)
 class IntFloatMapIterator {
 
@@ -371,6 +375,10 @@ class IntFloatMapIterator {
 
 }
 
+/**
+ * Iterator implementation for IntFloatMap keys.
+ * Allows iterating over integer keys in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntFloatMap)
 class IntFloatMapKeyIterator {
 
@@ -399,6 +407,10 @@ class IntFloatMapKeyIterator {
 
 }
 
+/**
+ * Iterator implementation for IntFloatMap key-value pairs.
+ * Returns objects with {key:Int, value:Float} when iterating.
+ */
 @:allow(ceramic.IntFloatMap)
 class IntFloatMapKeyValueIterator {
 

@@ -64,6 +64,18 @@ class StateMachineComponent<T,E:ceramic.Entity> extends StateMachineImpl<T> {
 
 #else
 
+/**
+ * State machine component that can be attached to entities.
+ * 
+ * StateMachineComponent extends the base StateMachine functionality to work
+ * as a component that can be attached to any Entity. The generic type parameters
+ * are T for state type and E for the entity type.
+ * 
+ * @param T The type representing states (typically an enum)
+ * @param E The entity type this component will be attached to
+ * @see StateMachine
+ * @see Component
+ */
 #if !macro
 @:genericBuild(ceramic.macros.StateMachineMacro.buildGeneric())
 #end

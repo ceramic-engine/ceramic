@@ -1659,8 +1659,11 @@ enum abstract InputMapKeyKind(Int) from Int to Int {
 }
 
 /**
- * Internal data structure for converting button inputs to axis values.
- * Stores the target axis index and the value to apply when activated.
+ * Helper class for converting digital button inputs to analog axis values.
+ * 
+ * Used internally by InputMap to simulate analog input from digital buttons,
+ * such as using arrow keys to simulate a joystick. Stores the target axis 
+ * index and the value to apply when activated.
  */
 @:structInit
 @:allow(ceramic.InputMapImpl)

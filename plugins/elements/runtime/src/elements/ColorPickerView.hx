@@ -159,56 +159,82 @@ class ColorPickerView extends LayersLayout implements Observable implements Rela
     inline function get_paletteColors():ReadOnlyArray<Color> return context.user.paletteColors;
     inline function set_paletteColors(paletteColors:ReadOnlyArray<Color>) return context.user.paletteColors = paletteColors;
 
+    /** HSB color gradient view for saturation and brightness selection */
     var hsbGradientView:ColorPickerHSBGradientView;
 
+    /** HSB spectrum view for hue selection (vertical color bar) */
     var hsbSpectrumView:ColorPickerHSBSpectrumView;
 
+    /** HSLuv perceptually uniform gradient view for saturation and lightness selection */
     var hsluvGradientView:ColorPickerHSLuvGradientView;
 
+    /** HSLuv spectrum view for lightness selection (vertical lightness bar) */
     var hsluvSpectrumView:ColorPickerHSLuvSpectrumView;
 
+    /** Text input field for red color component (0-255) */
     var rgbRedField:TextFieldView;
 
+    /** Text input field for green color component (0-255) */
     var rgbGreenField:TextFieldView;
 
+    /** Text input field for blue color component (0-255) */
     var rgbBlueField:TextFieldView;
 
+    /** Cached text value of the red field to detect changes and prevent feedback loops */
     var rgbRedFieldValue:String = '255';
 
+    /** Cached text value of the green field to detect changes and prevent feedback loops */
     var rgbGreenFieldValue:String = '255';
 
+    /** Cached text value of the blue field to detect changes and prevent feedback loops */
     var rgbBlueFieldValue:String = '255';
 
+    /** Header label displaying "RGB" above the RGB input fields */
     var rgbLabel:TextView;
 
+    /** Text input field for hue component in HSL/HSLuv mode (0-360 degrees) */
     var hslHueField:TextFieldView;
 
+    /** Text input field for saturation component in HSL/HSLuv mode (0-100%) */
     var hslSaturationField:TextFieldView;
 
+    /** Text input field for lightness component in HSL/HSLuv mode (0-100%) */
     var hslLightnessField:TextFieldView;
 
+    /** Cached text value of the hue field to detect changes and prevent feedback loops */
     var hslHueFieldValue:String = '0';
 
+    /** Cached text value of the saturation field to detect changes and prevent feedback loops */
     var hslSaturationFieldValue:String = '0';
 
+    /** Cached text value of the lightness field to detect changes and prevent feedback loops */
     var hslLightnessFieldValue:String = '0';
 
+    /** Header label displaying "HSL" or "HSLuv" above the HSL input fields */
     var hslLabel:TextView;
 
+    /** Counter to prevent infinite update loops when synchronizing color values across UI elements */
     var updatingColor:Int = 0;
 
+    /** Lock counter to prevent HSL field updates during manual field edits */
     var hslFieldsLocked:Int = 0;
 
+    /** Button to add current color to palette or remove it if already exists */
     var paletteAddButton:Button;
 
+    /** Button to switch between HSL and HSLuv color space modes */
     var colorModeButton:Button;
 
+    /** Index where the last palette color drag operation should drop the color */
     var lastDraggingColorDropIndex:Int = -1;
 
+    /** Reference to the palette color view that was last being dragged */
     var lastDraggingColorPreview:ColorPickerPaletteColorView = null;
 
+    /** Array of visual previews for each color in the user's saved palette */
     @observe var paletteColorPreviews:Array<ColorPickerPaletteColorView> = [];
 
+    /** Associated color field view that this picker is editing (optional) */
     public var colorFieldView(default, null):ColorFieldView;
 
 /// Lifecycle

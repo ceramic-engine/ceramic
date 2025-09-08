@@ -289,6 +289,10 @@ class IntMap<V> {
 
 }
 
+/**
+ * Iterator implementation for IntMap values.
+ * Allows iterating over values in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntMap)
 class IntMapIterator<V> {
 
@@ -321,6 +325,10 @@ class IntMapIterator<V> {
 
 }
 
+/**
+ * Iterator implementation for IntMap keys.
+ * Allows iterating over keys in the map when it was created with iterable=true.
+ */
 @:allow(ceramic.IntMap)
 class IntMapKeyIterator<V> {
 

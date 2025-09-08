@@ -54,6 +54,17 @@ class StateMachine<T> extends StateMachineImpl<T> {
 
 #else
 
+/**
+ * Generic state machine implementation for managing state transitions.
+ * 
+ * StateMachine provides a clean way to manage complex state logic with
+ * support for enter/exit callbacks and state change events. The generic
+ * type parameter T represents the state type (typically an enum).
+ * 
+ * @param T The type representing states (typically an enum)
+ * @see StateMachineImpl
+ * @see State
+ */
 #if !macro
 @:genericBuild(ceramic.macros.StateMachineMacro.buildGeneric())
 #end

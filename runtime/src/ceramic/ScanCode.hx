@@ -461,51 +461,97 @@ enum abstract ScanCode(Int) from Int to Int {
     /** ExSel key */
     var EXSEL:ScanCode              = 164;
 
+    /** Keypad double zero (00) */
     var KP_00:ScanCode              = 176;
+    /** Keypad triple zero (000) */
     var KP_000:ScanCode             = 177;
+    /** Thousands separator key (typically comma or period depending on locale) */
     var THOUSANDSSEPARATOR:ScanCode = 178;
+    /** Decimal separator key (typically period or comma depending on locale) */
     var DECIMALSEPARATOR:ScanCode   = 179;
+    /** Currency unit key (primary currency symbol like $ or €) */
     var CURRENCYUNIT:ScanCode       = 180;
+    /** Currency sub-unit key (secondary currency symbol like ¢) */
     var CURRENCYSUBUNIT:ScanCode    = 181;
+    /** Keypad left parenthesis (() */
     var KP_LEFTPAREN:ScanCode       = 182;
+    /** Keypad right parenthesis ()) */
     var KP_RIGHTPAREN:ScanCode      = 183;
+    /** Keypad left brace ({) */
     var KP_LEFTBRACE:ScanCode       = 184;
+    /** Keypad right brace (}) */
     var KP_RIGHTBRACE:ScanCode      = 185;
+    /** Keypad tab key */
     var KP_TAB:ScanCode             = 186;
+    /** Keypad backspace key */
     var KP_BACKSPACE:ScanCode       = 187;
+    /** Keypad A key (for hexadecimal input) */
     var KP_A:ScanCode               = 188;
+    /** Keypad B key (for hexadecimal input) */
     var KP_B:ScanCode               = 189;
+    /** Keypad C key (for hexadecimal input) */
     var KP_C:ScanCode               = 190;
+    /** Keypad D key (for hexadecimal input) */
     var KP_D:ScanCode               = 191;
+    /** Keypad E key (for hexadecimal input) */
     var KP_E:ScanCode               = 192;
+    /** Keypad F key (for hexadecimal input) */
     var KP_F:ScanCode               = 193;
+    /** Keypad XOR (exclusive or) operator */
     var KP_XOR:ScanCode             = 194;
+    /** Keypad power/exponent (^) operator */
     var KP_POWER:ScanCode           = 195;
+    /** Keypad percent (%) operator */
     var KP_PERCENT:ScanCode         = 196;
+    /** Keypad less-than (<) operator */
     var KP_LESS:ScanCode            = 197;
+    /** Keypad greater-than (>) operator */
     var KP_GREATER:ScanCode         = 198;
+    /** Keypad ampersand (&) operator */
     var KP_AMPERSAND:ScanCode       = 199;
+    /** Keypad double ampersand (&&) logical AND operator */
     var KP_DBLAMPERSAND:ScanCode    = 200;
+    /** Keypad vertical bar (|) operator */
     var KP_VERTICALBAR:ScanCode     = 201;
+    /** Keypad double vertical bar (||) logical OR operator */
     var KP_DBLVERTICALBAR:ScanCode  = 202;
+    /** Keypad colon (:) */
     var KP_COLON:ScanCode           = 203;
+    /** Keypad hash (#) symbol */
     var KP_HASH:ScanCode            = 204;
+    /** Keypad space key */
     var KP_SPACE:ScanCode           = 205;
+    /** Keypad at (@) symbol */
     var KP_AT:ScanCode              = 206;
+    /** Keypad exclamation mark (!) */
     var KP_EXCLAM:ScanCode          = 207;
+    /** Keypad memory store function */
     var KP_MEMSTORE:ScanCode        = 208;
+    /** Keypad memory recall function */
     var KP_MEMRECALL:ScanCode       = 209;
+    /** Keypad memory clear function */
     var KP_MEMCLEAR:ScanCode        = 210;
+    /** Keypad memory add (M+) function */
     var KP_MEMADD:ScanCode          = 211;
+    /** Keypad memory subtract (M-) function */
     var KP_MEMSUBTRACT:ScanCode     = 212;
+    /** Keypad memory multiply (M*) function */
     var KP_MEMMULTIPLY:ScanCode     = 213;
+    /** Keypad memory divide (M/) function */
     var KP_MEMDIVIDE:ScanCode       = 214;
+    /** Keypad plus/minus (+/-) toggle key */
     var KP_PLUSMINUS:ScanCode       = 215;
+    /** Keypad clear key */
     var KP_CLEAR:ScanCode           = 216;
+    /** Keypad clear entry key */
     var KP_CLEARENTRY:ScanCode      = 217;
+    /** Keypad binary mode key */
     var KP_BINARY:ScanCode          = 218;
+    /** Keypad octal mode key */
     var KP_OCTAL:ScanCode           = 219;
+    /** Keypad decimal mode key */
     var KP_DECIMAL:ScanCode         = 220;
+    /** Keypad hexadecimal mode key */
     var KP_HEXADECIMAL:ScanCode     = 221;
 
     /** Left Control key */

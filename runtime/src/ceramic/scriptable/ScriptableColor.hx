@@ -50,22 +50,37 @@ package ceramic.scriptable;
  */
 class ScriptableColor {
 
+    /** Special value representing no color or transparent/invalid color */
     public static final NONE:Color =        -1;
 
+    /** Pure white color (RGB: 255, 255, 255) */
     public static final WHITE:Color =       0xFFFFFF;
+    /** Medium gray color (RGB: 128, 128, 128) */
     public static final GRAY:Color =        0x808080;
+    /** Pure black color (RGB: 0, 0, 0) */
     public static final BLACK:Color =       0x000000;
 
+    /** Standard green color (RGB: 0, 128, 0) */
     public static final GREEN:Color =       0x008000;
+    /** Bright lime green color (RGB: 0, 255, 0) */
     public static final LIME:Color =        0x00FF00;
+    /** Pure yellow color (RGB: 255, 255, 0) */
     public static final YELLOW:Color =      0xFFFF00;
+    /** Orange color (RGB: 255, 165, 0) */
     public static final ORANGE:Color =      0xFFA500;
+    /** Pure red color (RGB: 255, 0, 0) */
     public static final RED:Color =         0xFF0000;
+    /** Standard purple color (RGB: 128, 0, 128) */
     public static final PURPLE:Color =      0x800080;
+    /** Pure blue color (RGB: 0, 0, 255) */
     public static final BLUE:Color =        0x0000FF;
+    /** Brown color (RGB: 139, 69, 19) */
     public static final BROWN:Color =       0x8B4513;
+    /** Pink color (RGB: 255, 192, 203) */
     public static final PINK:Color =        0xFFC0CB;
+    /** Magenta color (RGB: 255, 0, 255) */
     public static final MAGENTA:Color =     0xFF00FF;
+    /** Cyan color (RGB: 0, 255, 255) */
     public static final CYAN:Color =        0x00FFFF;
 
     /**
@@ -328,31 +343,67 @@ class ScriptableColor {
         return color.lightness;
     }
 
+    /**
+     * Get the red channel value of the color as an integer (0-255)
+     *
+     * @param color The color to extract the red channel from
+     * @return The red channel value as an integer from 0 to 255
+     */
     public static function red(color:Color):Int
     {
         return color.red;
     }
 
+    /**
+     * Get the green channel value of the color as an integer (0-255)
+     *
+     * @param color The color to extract the green channel from
+     * @return The green channel value as an integer from 0 to 255
+     */
     public static function green(color:Color):Int
     {
         return color.green;
     }
 
+    /**
+     * Get the blue channel value of the color as an integer (0-255)
+     *
+     * @param color The color to extract the blue channel from
+     * @return The blue channel value as an integer from 0 to 255
+     */
     public static function blue(color:Color):Int
     {
         return color.blue;
     }
 
+    /**
+     * Get the red channel value of the color as a float (0.0-1.0)
+     *
+     * @param color The color to extract the red channel from
+     * @return The red channel value as a float from 0.0 to 1.0
+     */
     public static function redFloat(color:Color):Float
     {
         return color.redFloat;
     }
 
+    /**
+     * Get the green channel value of the color as a float (0.0-1.0)
+     *
+     * @param color The color to extract the green channel from
+     * @return The green channel value as a float from 0.0 to 1.0
+     */
     public static function greenFloat(color:Color):Float
     {
         return color.greenFloat;
     }
 
+    /**
+     * Get the blue channel value of the color as a float (0.0-1.0)
+     *
+     * @param color The color to extract the blue channel from
+     * @return The blue channel value as a float from 0.0 to 1.0
+     */
     public static function blueFloat(color:Color):Float
     {
         return color.blueFloat;

@@ -1,5 +1,16 @@
 package ceramic;
 
+/**
+ * Information about a touch or mouse input event.
+ * 
+ * TouchInfo encapsulates details about touch and mouse input events,
+ * including position, button/touch index, and delta movements. This class
+ * is used throughout the input system to provide unified information for
+ * both touch and mouse inputs.
+ * 
+ * @see Visual
+ * @see Screen
+ */
 @:structInit
 class TouchInfo {
 
