@@ -284,20 +284,18 @@ class TilemapLayer extends Visual {
     }
 
     /**
-     * When true, uses a single Mesh object to render all tiles instead of individual quads.
-     * This improves memory usage and performance for large tilemaps.
-     * Default is false for compatibility.
+     * Set this tilemap's render type (`QUAD` (default), `MESH` or `NONE`)
      */
-    public var useMesh(default,set):Bool = false;
-    function set_useMesh(useMesh:Bool):Bool {
-        if (this.useMesh == useMesh) return useMesh;
-        this.useMesh = useMesh;
+    public var renderType(default,set):TilemapRenderType = QUAD;
+    function set_renderType(renderType:TilemapRenderType):TilemapRenderType {
+        if (this.renderType == renderType) return renderType;
+        this.renderType = renderType;
         contentDirty = true;
-        return useMesh;
+        return renderType;
     }
 
     /**
-     * Array of Mesh instances (one per texture) used to render tiles when useMesh is true.
+     * Array of Mesh instances (one per texture) used to render tiles when renderType is MESH.
      * These are reused across re-renders to avoid allocation overhead.
      * Read-only access from outside the class.
      */
@@ -350,14 +348,43 @@ class TilemapLayer extends Visual {
 
         computePosAndSize();
 
-        if (useMesh) {
-            computeTileMeshes(tilemap, tilemapData);
-        }
-        else {
-            computeTileQuads(tilemap, tilemapData);
+        trace('COMPUTE CONTENT name=${layerData.name} renderType=$renderType');
+
+        switch renderType {
+            case MESH:
+                clearQuads();
+                computeTileMeshes(tilemap, tilemapData);
+            case QUAD:
+                clearMeshes();
+                computeTileQuads(tilemap, tilemapData);
+            case NONE:
+                clearQuads();
+                clearMeshes();
         }
 
         contentDirty = false;
+
+    }
+
+    inline function clearQuads() {
+
+        // Clear existing tile quads if any
+        while (tileQuads.length > 0) {
+            var quad = tileQuads.pop();
+            quad.recycle();
+        }
+
+    }
+
+    inline function clearMeshes() {
+
+        // Clear existing tile meshes if any
+        if (tileMeshes != null) {
+            for (i in 0...tileMeshes.length) {
+                final mesh = tileMeshes.pop();
+                mesh.recycle();
+            }
+        }
 
     }
 
@@ -388,14 +415,6 @@ class TilemapLayer extends Visual {
      * @param tilemapData The tilemap data containing tileset information
      */
     function computeTileQuads(tilemap:Tilemap, tilemapData:TilemapData) {
-
-        // Clear meshes when switching to quads mode
-        if (tileMeshes != null) {
-            for (i in 0...tileMeshes.length) {
-                final mesh = tileMeshes.pop();
-                mesh.recycle();
-            }
-        }
 
         var usedQuads = 0;
         var roundTilesTranslation = tilemap.roundTilesTranslation;
@@ -650,12 +669,6 @@ class TilemapLayer extends Visual {
     function computeTileMeshes(tilemap:Tilemap, tilemapData:TilemapData) {
 
         var layerData = this.layerData;
-
-        // Clear existing tile quads when switching to mesh mode
-        while (tileQuads.length > 0) {
-            var quad = tileQuads.pop();
-            quad.recycle();
-        }
 
         // Initialize tile meshes if needed
         if (tileMeshes == null) {
