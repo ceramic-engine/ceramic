@@ -10,17 +10,17 @@ using ceramic.Extensions;
 
 /**
  * Parser that converts LDtk level data into Ceramic tilemap data structures.
- * 
+ *
  * This class handles:
  * - Parsing raw LDtk JSON data
  * - Converting LDtk tilesets to Ceramic tilesets with proper GID mapping
  * - Converting LDtk layers (Tiles, IntGrid, AutoLayer, Entities) to tilemap layers
  * - Loading external level data for multi-file projects
  * - Optimizing tile stacking for rendering performance
- * 
+ *
  * The parser maintains compatibility between LDtk's tile ID system and
  * Ceramic's global tile ID (GID) system.
- * 
+ *
  * @see LdtkData
  * @see Tilemap
  */
@@ -59,12 +59,12 @@ class TilemapLdtkParser {
 
     /**
      * Loads and converts all tilesets and tilemaps from LDtk data.
-     * 
+     *
      * This method:
      * - Converts LDtk tilesets to Ceramic tilesets with proper GID assignment
      * - Loads tileset textures through the provided callback
      * - Creates tilemap data for all levels (if not using external levels)
-     * 
+     *
      * @param ldtkData The parsed LDtk data
      * @param loadTexture Optional callback to load tileset textures
      * @param skip Array of texture paths to skip loading
@@ -158,15 +158,15 @@ class TilemapLdtkParser {
 
     /**
      * Converts an LDtk level into Ceramic tilemap data.
-     * 
+     *
      * This method:
      * - Creates TilemapData with level properties
      * - Converts each layer instance to TilemapLayerData
      * - Handles different layer types (Tiles, IntGrid, AutoLayer, Entities)
      * - Optimizes tile stacking and alpha blending
-     * 
+     *
      * The resulting tilemap data is stored in level.ceramicTilemap.
-     * 
+     *
      * @param level The LDtk level to convert
      */
     public function loadLdtkLevelTilemap(level:LdtkLevel):Void {
@@ -244,6 +244,7 @@ class TilemapLdtkParser {
                     var tilesOffsetX:Array<Int> = [];
                     var tilesOffsetY:Array<Int> = [];
                     tilemapLayerData.computedTiles = convertLdtkTiles(layerInstance.autoLayerTiles, layerInstance.tileset, layerInstance.cWid, layerInstance.cHei, layerInstance.def.gridSize, tilesAlpha, tilesOffsetX, tilesOffsetY);
+                    tilemapLayerData.shouldRenderTiles = (tilemapLayerData.computedTiles != null);
                     if (!allEqual(tilesAlpha, 1.0)) {
                         tilemapLayerData.computedTilesAlpha = tilesAlpha;
                     }
@@ -279,15 +280,15 @@ class TilemapLdtkParser {
 
     /**
      * Converts LDtk tile data to Ceramic tilemap tiles.
-     * 
+     *
      * LDtk stores tiles as flat arrays with [tileId, flipBits, x, y, srcX, srcY, alpha]
      * for each tile. This method converts that to Ceramic's TilemapTile format.
-     * 
+     *
      * Special handling:
      * - Stacks multiple tiles at the same position
      * - Optimizes opaque tiles by removing hidden tiles beneath
      * - Preserves tile offsets and alpha values
-     * 
+     *
      * @param ldtkTiles Raw tile data from LDtk (7 integers per tile)
      * @param tileset The tileset definition for GID mapping
      * @param cols Number of columns in the layer
