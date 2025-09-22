@@ -146,7 +146,9 @@ class FontAsset extends Asset {
             if (text != null) {
 
                 try {
-                    fontData = BitmapFontParser.parse(text);
+                    // Parse the font data - for Construct 3 fonts, we'll re-parse after loading images
+                    var imagePath = Path.withoutExtension(Path.withoutDirectory(actualPath)) + '.png';
+                    fontData = BitmapFontParser.parse(text, imagePath);
                     fontData.path = relativeFontPath;
 
                     // Load pages
@@ -176,6 +178,25 @@ class FontAsset extends Asset {
                     assets.onceComplete(this, function(success) {
 
                         if (success) {
+                            // Check if we need to re-parse for Construct 3 fonts
+                            if (fontData.needsReparsing && fontData.rawFontData != null && assetList.length > 0) {
+                                // Get the width of the first image
+                                var firstTexture = assetList[0].texture;
+                                if (firstTexture != null) {
+                                    // Re-parse with the actual image width
+                                    var imageWidth = Math.round(firstTexture.width);
+                                    var imagePath = Path.withoutExtension(Path.withoutDirectory(actualPath)) + '.png';
+                                    
+                                    try {
+                                        fontData = BitmapFontParser.parse(fontData.rawFontData, imagePath, imageWidth);
+                                        fontData.path = relativeFontPath;
+                                    }
+                                    catch (e:Dynamic) {
+                                        log.error('Failed to re-parse Construct 3 font with image width: ' + e);
+                                    }
+                                }
+                            }
+                            
                             // Fill pages mapping
                             for (asset in assetList) {
                                 pages.set(asset.path, asset.texture);

@@ -8,17 +8,17 @@ using StringTools;
 
 /**
  * Base class for all asset types in Ceramic.
- * 
+ *
  * Assets represent loadable resources like images, fonts, sounds, etc.
  * This class provides common functionality including:
  * - Path resolution based on density and variants
  * - Reference counting for memory management
  * - Hot reload support
  * - Asset lifecycle management
- * 
+ *
  * Asset subclasses should override the `load()` method to implement
  * specific loading logic for their asset type.
- * 
+ *
  * @see Assets
  */
 @:allow(ceramic.Assets)
@@ -108,7 +108,7 @@ class Asset extends Entity implements Observable {
      * - Call `retain()` to increase (claim ownership)
      * - Call `release()` to decrease (release ownership)
      * - Asset can be safely destroyed when refCount reaches 0
-     * 
+     *
      * ```haxe
      * var texture = assets.texture('hero');
      * texture.retain(); // refCount = 1
@@ -122,7 +122,7 @@ class Asset extends Entity implements Observable {
      * Current loading status of the asset.
      * Observable property that triggers updates when status changes.
      * - NONE: Not loaded
-     * - LOADING: Currently loading  
+     * - LOADING: Currently loading
      * - READY: Successfully loaded
      * - BROKEN: Failed to load
      */
@@ -195,7 +195,7 @@ class Asset extends Entity implements Observable {
     /**
      * Compute the best file path for this asset based on available files and screen density.
      * Automatically called during initialization and when properties change.
-     * 
+     *
      * @param extensions File extensions to look for (auto-detected if not provided)
      * @param dir Whether to look for directories instead of files
      * @param runtimeAssets Runtime assets configuration to use
@@ -474,7 +474,7 @@ class Asset extends Entity implements Observable {
      * Increase the reference count by 1.
      * Call this when you start using an asset to prevent it from being destroyed.
      * Must be balanced with a corresponding `release()` call.
-     * 
+     *
      * @see release
      */
     public function retain():Void {
@@ -491,9 +491,9 @@ class Asset extends Entity implements Observable {
      * Decrease the reference count by 1.
      * Call this when you're done using an asset.
      * When refCount reaches 0, the asset can be safely destroyed.
-     * 
+     *
      * Warning: Calling release() when refCount is already 0 will log a warning.
-     * 
+     *
      * @see retain
      */
     public function release():Void {

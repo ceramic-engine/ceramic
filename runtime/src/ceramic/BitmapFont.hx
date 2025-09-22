@@ -178,6 +178,11 @@ class BitmapFont extends Entity {
             if (texture == null) {
                 throw 'BitmapFont: missing texture for file ' + pageInfo.file;
             }
+            
+            // Set texture filter based on font's smooth setting or distance field
+            // Distance field fonts always need LINEAR filtering to render correctly
+            texture.filter = (fontData.smooth || fontData.distanceField != null) ? LINEAR : NEAREST;
+            
             this.pages.set(pageInfo.id, texture);
 
             if (fontData.distanceField != null) {

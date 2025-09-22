@@ -113,6 +113,35 @@ class BitmapFontData {
      * ```
      */
     public var kernings:IntMap<IntFloatMap>;
+
+    /**
+     * Whether the font uses smoothing (bilinear filtering).
+     * When true, the font texture uses smooth interpolation for scaling.
+     * When false, uses nearest neighbor filtering for pixel-perfect rendering.
+     * Defaults to true for XML/BMFont formats, false for Construct 3 format.
+     */
+    public var smooth:Bool = true;
+
+    /**
+     * Whether the font uses anti-aliasing.
+     * When true, the font glyphs were rendered with anti-aliasing.
+     * When false, the font has hard pixel edges.
+     * Defaults to true for XML/BMFont formats, false for Construct 3 format.
+     */
+    public var aa:Bool = true;
+
+    /**
+     * Internal flag for Construct 3 fonts that need re-parsing after image loading.
+     * When true, the font data needs to be re-parsed with actual image dimensions.
+     * This is used for two-stage parsing of Construct 3 fonts.
+     */
+    public var needsReparsing:Bool = false;
+
+    /**
+     * Stores the raw font data text for re-parsing.
+     * Only populated for fonts that need re-parsing (e.g., Construct 3 fonts).
+     */
+    public var rawFontData:String = null;
 }
 
 /**
