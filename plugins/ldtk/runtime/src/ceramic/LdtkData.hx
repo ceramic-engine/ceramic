@@ -3,14 +3,14 @@ package ceramic;
 /**
  * This is a hierarchy of classes following LDtk project JSON structure slightly adapted for Ceramic
  * and optimized to reduce memory footprint and dynamic access costs.
- * 
+ *
  * It resolves entity, layer and field instances from data referencing Uids.
  * Used internally but also accessible to user code.
- * 
+ *
  * Its usage is preferred over directly using ldtk.Json.ProjectJson, especially on static targets
  * like C# or C++ because the memory footprint of this LdtkData class is much lower than a plain
  * JSON hierarchy (static access instead of dynamic access, much fewer allocated strings etc...).
- * 
+ *
  * That said, you can also use ldtk-haxe-api to read fully statically typed project data:
  * https://ldtk.io/docs/game-dev/haxe-in-game-api/usage/,
  * although it is completely optional and not needed by Ceramic itself.
@@ -24,13 +24,13 @@ using StringTools;
 
 /**
  * Root class representing an LDtk project data structure.
- * 
+ *
  * This is the main entry point for working with LDtk level data in Ceramic.
  * It contains all the project definitions, worlds, and levels from an LDtk file.
- * 
+ *
  * The data structure is optimized for performance on static targets and provides
  * easy access to all LDtk entities, layers, and tilesets.
- * 
+ *
  * @see https://ldtk.io/ for more information about LDtk
  */
 class LdtkData extends Entity {
@@ -711,10 +711,10 @@ class LdtkTocInstanceData {
 
 /**
  * Represents a world in an LDtk project.
- * 
+ *
  * A world contains multiple levels arranged according to a specific layout
  * (Free, GridVania, LinearHorizontal, or LinearVertical).
- * 
+ *
  * In multi-world projects, each world acts as a separate game area or chapter.
  * Single-world projects will have one default world containing all levels.
  */
@@ -888,13 +888,13 @@ enum abstract LdtkWorldLayout(Int) from Int to Int {
  */
 /**
  * Contains all the definitions used in an LDtk project.
- * 
+ *
  * This includes:
  * - Entity definitions
- * - Layer definitions  
+ * - Layer definitions
  * - Tileset definitions
  * - Enum definitions
- * 
+ *
  * These definitions describe the structure and rules that levels follow.
  */
 class LdtkDefinitions {
@@ -1091,7 +1091,7 @@ class LdtkDefinitions {
  */
 /**
  * Defines an entity type that can be placed in levels.
- * 
+ *
  * Entities are game objects like players, enemies, items, triggers, etc.
  * This definition describes the entity's appearance, fields, and behavior rules.
  */
@@ -1672,7 +1672,7 @@ enum abstract LdtkLayerType(Int) from Int to Int {
 
 /**
  * Defines a layer type that can be used in levels.
- * 
+ *
  * Layers can be:
  * - IntGrid: Integer grid for collision maps, zones, etc.
  * - Entities: Container for entity instances
@@ -2593,10 +2593,10 @@ class LdtkIntGridValue {
 
 /**
  * Represents a single level in an LDtk world.
- * 
+ *
  * Contains all the layer instances, entities, and properties for one game level.
  * Levels can reference external data files in multi-file projects.
- * 
+ *
  * Each level has:
  * - Position in world coordinates
  * - Background settings
@@ -2855,13 +2855,6 @@ class LdtkLevel {
     private function _mapEntities(identifier:String, callback:(entity:LdtkEntityInstance)->Void) {
 
         for (layer in this.layerInstances) {
-            var depth:Float = 0;
-            if (layer.autoLayerTiles != null) {
-                depth = Math.max(depth, layer.autoLayerTiles.length / 7);
-            }
-            if (layer.gridTiles != null) {
-                depth = Math.max(depth, layer.gridTiles.length / 7);
-            }
             if (layer.entityInstances != null) {
                 for (entity in layer.entityInstances) {
                     if (identifier == null || entity.def.identifier == identifier) {
@@ -3161,7 +3154,7 @@ enum abstract LdtkLevelLocation(Int) from Int to Int {
 
 /**
  * An instance of a custom field value.
- * 
+ *
  * Represents the actual value of a custom field for an entity or level instance.
  * The value can be of various types: Int, Float, String, Bool, Color, Enum, etc.
  */
@@ -3269,7 +3262,7 @@ class LdtkFieldInstance {
 
 /**
  * An instance of a layer in a level.
- * 
+ *
  * Contains the actual tile data, entity instances, and int grid values
  * for this specific layer in this specific level.
  */
@@ -3531,7 +3524,7 @@ class LdtkLayerInstance {
 
 /**
  * An instance of an entity placed in a level.
- * 
+ *
  * Contains the entity's position, size, field values, and tile information.
  * This is the actual game object data as opposed to the entity definition.
  */
@@ -3716,7 +3709,7 @@ class LdtkEntityInstance {
 @:noCompletion
 /**
  * Helper utilities for LDtk data manipulation.
- * 
+ *
  * Provides methods for:
  * - Converting colors between formats
  * - Managing circular reference detection in toString methods
