@@ -8,14 +8,14 @@ using StringTools;
 
 /**
  * Asset class for loading and managing Loreline script files.
- * 
+ *
  * Loreline is a scripting language for narrative content, dialogue trees,
  * and interactive storytelling. This asset type handles:
  * - Loading Loreline script files (.lor, .loreline)
  * - Parsing scripts with import resolution
  * - Hot-reloading when script files change
  * - Managing script dependencies
- * 
+ *
  * Example usage:
  * ```haxe
  * assets.add('loreline:dialogue/intro');
@@ -24,7 +24,7 @@ using StringTools;
  *     // Use the parsed Loreline script
  * });
  * ```
- * 
+ *
  * @see loreline.Loreline
  */
 class LorelineAsset extends Asset {
@@ -93,8 +93,12 @@ class LorelineAsset extends Asset {
 
         var asset = new TextAsset(name);
         asset.handleTexturesDensityChange = false;
-        asset.path = actualPath;
         assets.addAsset(asset);
+
+        // Must be assigned after addAsset(), otherwise
+        // it will fail when hot reload/runtime assets is used
+        asset.path = actualPath;
+
         assets.onceComplete(this, function(success) {
 
             var text = asset.text;
