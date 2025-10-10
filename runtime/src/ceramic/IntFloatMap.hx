@@ -34,7 +34,8 @@ class IntFloatMap {
 
     inline static var NO_VALUE = 0;
 
-    inline static var FREE_VALUE = 2147483647.0; // We may use a better value later?
+    // Use a very specific unlikely float value as a marker
+    inline static var FREE_VALUE = -3.4028234e38; // Near negative Float max
 
     inline static var RESERVED_GAP = 1;
 
@@ -72,8 +73,9 @@ class IntFloatMap {
 
         _keys = new IntIntMap(size, fillFactor, false);
         values = [];
-        for (i in 0...16) {
-            values.push(0);
+        // Use the provided initial size, not hardcoded 16
+        for (i in 0...initialSize) {
+            values.push(FREE_VALUE);
         }
 
         if (iterable) {
@@ -91,7 +93,9 @@ class IntFloatMap {
     inline public function getInline(key:Int):Float {
 
         var index = _keys.getInline(key);
-        return if (index > RESERVED_GAP) {
+        // When we store at position 0, _keys stores (0 + RESERVED_GAP) = 1
+        // We need 1 >= 1 to be true to retrieve values[0]
+        return if (index >= RESERVED_GAP) {
             var indexOffset = index - RESERVED_GAP;
             values.unsafeGet(indexOffset);
         }
@@ -106,7 +110,7 @@ class IntFloatMap {
         _keys.clear();
         values.setArrayLength(initialSize);
         for (i in 0...initialSize) {
-            values[i] = 0;
+            values[i] = FREE_VALUE;
         }
         nextFreeIndex = 0;
 
@@ -140,6 +144,8 @@ class IntFloatMap {
             var valuesLen = values.length;
             if (nextFreeIndex >= valuesLen) {
                 resizeValues(valuesLen * 2);
+                // Update length after resize
+                valuesLen = values.length;
             }
             values.unsafeSet(nextFreeIndex, value);
             _keys.set(key, nextFreeIndex + RESERVED_GAP);
@@ -148,8 +154,8 @@ class IntFloatMap {
                 iterableKeys.push(key);
             }
 
+            // Find next free index - advance past the slot we just used
             do {
-                // Move free index to next location
                 nextFreeIndex++;
             }
             while (nextFreeIndex < valuesLen && values.unsafeGet(nextFreeIndex) != FREE_VALUE);
@@ -160,6 +166,7 @@ class IntFloatMap {
     public function remove(key:Int) {
 
         var index = _keys.get(key);
+        // Check if key exists (index will be 0 if not found, >= RESERVED_GAP if found)
         if (index != NO_VALUE) {
             index -= RESERVED_GAP;
 
@@ -174,9 +181,12 @@ class IntFloatMap {
             // Remove key
             _keys.remove(key);
 
-            // Update iterable keys
+            // Update iterable keys (with safety check for indexOf returning -1)
             if (iterableKeys != null) {
-                iterableKeys.splice(iterableKeys.indexOf(key), 1);
+                var keyIndex = iterableKeys.indexOf(key);
+                if (keyIndex >= 0) {
+                    iterableKeys.splice(keyIndex, 1);
+                }
             }
         }
 
@@ -184,10 +194,8 @@ class IntFloatMap {
 
     public function copy():IntFloatMap {
 
-        var map = new IntFloatMap();
+        var map = new IntFloatMap(initialSize, initialFillFactor, iterableKeys != null);
 
-        map.initialSize = initialSize;
-        map.initialFillFactor = initialFillFactor;
         map._keys = _keys.copy();
         map.nextFreeIndex = nextFreeIndex;
         map.iterableKeys = iterableKeys != null ? iterableKeys.copy() : null;
@@ -203,7 +211,7 @@ class IntFloatMap {
 
         var prevLength = values.length;
         for (i in prevLength...targetSize) {
-            values[i] = FREE_VALUE;
+            values.push(FREE_VALUE);
         }
 
     }
@@ -398,7 +406,7 @@ class IntFloatMapKeyIterator {
         return i < len;
     }
 
-    inline public function next():Float {
+    inline public function next():Int {
 
         var n = i++;
         return iterableKeys.unsafeGet(n);
