@@ -7,21 +7,21 @@ using ceramic.Extensions;
 
 /**
  * Implementation class for the InputMap system.
- * 
+ *
  * This class provides the actual functionality for mapping physical inputs
  * (keyboard, mouse, gamepad) to logical game actions. It supports complex
  * input scenarios including:
- * 
+ *
  * - Multiple inputs bound to a single action
  * - Digital-to-analog conversion (e.g., WASD to movement axis)
  * - Analog-to-digital conversion (e.g., trigger press threshold)
  * - Input state tracking (pressed, just pressed, just released)
  * - Gamepad-specific targeting
  * - UI focus integration
- * 
+ *
  * The implementation uses an efficient index-based system to track bindings
  * and input states, minimizing overhead during runtime input processing.
- * 
+ *
  * @param T The type representing game actions (typically an enum)
  * @see InputMap
  */
@@ -1660,9 +1660,9 @@ enum abstract InputMapKeyKind(Int) from Int to Int {
 
 /**
  * Helper class for converting digital button inputs to analog axis values.
- * 
+ *
  * Used internally by InputMap to simulate analog input from digital buttons,
- * such as using arrow keys to simulate a joystick. Stores the target axis 
+ * such as using arrow keys to simulate a joystick. Stores the target axis
  * index and the value to apply when activated.
  */
 @:structInit
