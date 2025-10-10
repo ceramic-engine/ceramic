@@ -442,15 +442,15 @@ class Text extends Visual {
         var usePrerenderedSize = scaledPreRenderedSize > 0 && font.msdf && !font.needsToPreRenderAtSize(scaledPreRenderedSize);
 
         var content = this.content;
-        if (content == '' || (content.length > 0 && content.charAt(content.length - 1) == "\n")) {
+        if (content == '' || (content.length > 0 && content.charCodeAt(content.length - 1) == "\n".code)) {
             addTrailingSpace = true;
             content += ' ';
         }
         if (glyphCode != null) {
             var newContent = new StringBuf();
-            for (i in 0...content.length) {
-                final code = content.charCodeAt(i);
-                newContent.addChar(glyphCode(code, i));
+            for (j in 0...content.length) {
+                final code = content.charCodeAt(j);
+                newContent.addChar(glyphCode(code, j));
             }
             content = newContent.toString();
         }
