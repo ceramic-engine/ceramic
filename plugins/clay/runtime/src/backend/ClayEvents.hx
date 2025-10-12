@@ -614,9 +614,6 @@ class ClayEvents extends clay.Events {
             gamepadAxisValues.set(id * GAMEPAD_STORAGE_SIZE + axisId, newValue);
             backend.input.emitGamepadAxis(id, axisId, newValue);
         }
-        else {
-            trace('SKIP newValue=$newValue prevValue=$prevValue diff=${Math.abs(prevValue - newValue)}');
-        }
         #else
         backend.input.emitGamepadAxis(id, axisId, value);
         #end
