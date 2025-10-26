@@ -144,6 +144,12 @@ class LdtkData extends Entity {
                 }
             }
 
+            for (entityInstance in _entityInstances) {
+                if (entityInstance.layerInstance == null) {
+                    log.warning('Failed to resolve layer instance for entity ${entityInstance.iid}');
+                }
+            }
+
             _rootJson = null;
             _entityInstances = null;
         }
@@ -377,8 +383,9 @@ class LdtkData extends Entity {
                 iid = json.get('entityIid');
                 for (i in 0..._entityInstances.length) {
                     if (_entityInstances[i].iid == iid) {
-                        if (ldtkLayerInstance != null)
+                        if (ldtkLayerInstance != null) {
                             _entityInstances[i].layerInstance = ldtkLayerInstance;
+                        }
                         return _entityInstances[i];
                     }
                 }
@@ -408,6 +415,8 @@ class LdtkData extends Entity {
                                 var entityInstance = new LdtkEntityInstance(this, ldtkWorld, entityInstanceJson, _registerEntity);
                                 if (ldtkLayerInstance != null)
                                     entityInstance.layerInstance = ldtkLayerInstance;
+                                else if (json.exists('layerIid'))
+                                    entityInstance.layerIid = json.get('layerIid');
                                 return entityInstance;
                             }
                         }
@@ -422,6 +431,8 @@ class LdtkData extends Entity {
 
     @:allow(ceramic.LdtkLevel)
     private function _cleanUnusedEntityInstances():Void {
+
+        // TODO: not sure this code is needed at all anymore
 
         if (_entityInstances != null && _entityInstances.length > 0) {
 
@@ -529,6 +540,39 @@ class LdtkData extends Entity {
 
         _entityInstances.push(entityInstance);
 
+    }
+
+    /**
+     * Find a layer instance by its iid across all worlds and levels
+     * @param iid The unique instance identifier of the layer
+     * @return The layer instance if found, null otherwise
+     */
+    public function findLayerInstance(iid:String):LdtkLayerInstance {
+        if (iid == null) {
+            return null;
+        }
+
+        // Check all worlds
+        if (worlds != null) {
+            for (i in 0...worlds.length) {
+                final world = worlds[i];
+                if (world.levels != null) {
+                    for (j in 0...world.levels.length) {
+                        final level = world.levels[j];
+                        if (level.layerInstances != null) {
+                            for (k in 0...level.layerInstances.length) {
+                                final layerInstance = level.layerInstances[k];
+                                if (layerInstance.iid == iid) {
+                                    return layerInstance;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     override function toString() {
@@ -3419,7 +3463,16 @@ class LdtkLayerInstance {
         if (json != null) {
 
             if (level != null)
-                this.level = null;
+                this.level = level;
+
+            iid = json.get('iid');
+            intGrid = json.get('intGridCsv') != null ? LdtkDataHelpers.toIntArray(json.get('intGridCsv')) : null;
+            levelId = Std.int(json.get('levelId'));
+            pxOffsetX = Std.int(json.get('pxOffsetX'));
+            pxOffsetY = Std.int(json.get('pxOffsetY'));
+            visible = json.get('visible');
+            optionalRules = json.get('optionalRules') != null ? LdtkDataHelpers.toIntArray(json.get('optionalRules')) : null;
+            seed = Std.int(json.get('seed'));
 
             var uid:Int = Std.int(json.get('layerDefUid'));
             var tilesetDefUid:Int = json.get('__tilesetDefUid') != null ? Std.int(json.get('__tilesetDefUid')) : -1;
@@ -3478,15 +3531,6 @@ class LdtkLayerInstance {
             else {
                 gridTiles = null;
             }
-
-            iid = json.get('iid');
-            intGrid = json.get('intGridCsv') != null ? LdtkDataHelpers.toIntArray(json.get('intGridCsv')) : null;
-            levelId = Std.int(json.get('levelId'));
-            pxOffsetX = Std.int(json.get('pxOffsetX'));
-            pxOffsetY = Std.int(json.get('pxOffsetY'));
-            visible = json.get('visible');
-            optionalRules = json.get('optionalRules') != null ? LdtkDataHelpers.toIntArray(json.get('optionalRules')) : null;
-            seed = Std.int(json.get('seed'));
         }
 
     }
@@ -3536,9 +3580,35 @@ class LdtkEntityInstance {
     public var def:LdtkEntityDefinition = null;
 
     /**
+     * The `LdtkData` object this entity instance belongs to
+     */
+    public var ldtkData:LdtkData = null;
+
+    /**
      * The layer instance this entity instance belongs to
      */
-    public var layerInstance:LdtkLayerInstance = null;
+    var _layerInstance:LdtkLayerInstance = null;
+    public var layerInstance(get, set):LdtkLayerInstance;
+    function get_layerInstance():LdtkLayerInstance {
+        if (_layerInstance == null && ldtkData != null && layerIid != null) {
+            _layerInstance = ldtkData.findLayerInstance(layerIid);
+        }
+        return _layerInstance;
+    }
+    function set_layerInstance(layerInstance:LdtkLayerInstance):LdtkLayerInstance {
+        _layerInstance = layerInstance;
+        if (_layerInstance != null && _layerInstance.iid != null) {
+            layerIid = _layerInstance.iid;
+        }
+        return _layerInstance;
+    }
+
+    /**
+     * The layer instance id of this entity instance.
+     * When the whole world is not loaded entirely, it's
+     * possible that this is defined but `layerInstance` isn't.
+     */
+    public var layerIid:String = null;
 
     /**
      * Grid-based X coordinate
@@ -3581,6 +3651,8 @@ class LdtkEntityInstance {
     public var iid:String;
 
     public function new(?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>, ?register:(entity:LdtkEntityInstance, json:DynamicAccess<Dynamic>)->Void) {
+
+        this.ldtkData = ldtkData;
 
         if (register != null) {
             register(this, json);
