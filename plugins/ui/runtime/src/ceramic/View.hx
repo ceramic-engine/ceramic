@@ -7,25 +7,25 @@ using ceramic.Extensions;
 
 /**
  * The base view class for building UI layouts in Ceramic.
- * 
+ *
  * View extends Layer and adds sophisticated layout capabilities:
  * - Flexible sizing with fixed, percentage, fill, and auto modes
  * - Padding and offset support
  * - Border rendering with customizable colors and sizes
  * - Automatic layout computation and propagation
  * - Integration with the view layout system
- * 
+ *
  * Views can be composed hierarchically to create complex UI layouts.
  * The layout system automatically computes sizes based on constraints
  * and propagates changes through the view tree.
- * 
+ *
  * Key concepts:
  * - viewWidth/viewHeight: Define how the view should be sized
  * - computedSize: The actual size after layout computation
  * - padding: Inner spacing that affects content placement
  * - offset: Position adjustment relative to default layout position
  * - flex: Relative sizing weight for flexible layouts
- * 
+ *
  * ```haxe
  * var container = new View();
  * container.viewSize(ViewSize.fill(), 200); // Full width, 200px height
@@ -33,7 +33,7 @@ using ceramic.Extensions;
  * container.borderSize = 2;
  * container.borderColor = Color.WHITE;
  * ```
- * 
+ *
  * @see LinearLayout For arranging views in rows/columns
  * @see LayersLayout For stacking views
  * @see ViewSize For sizing options
@@ -111,15 +111,15 @@ class View extends Layer {
     /**
      * Set padding using CSS-style shorthand.
      * Padding creates space inside the view between its edges and content.
-     * 
+     *
      * @param top Top padding (or all sides if only parameter)
      * @param right Right padding (or horizontal if 2 params)
      * @param bottom Bottom padding (or bottom if 3+ params)
      * @param left Left padding
-     * 
+     *
      * ```haxe
      * padding(10);          // All sides: 10px
-     * padding(10, 20);      // Vertical: 10px, Horizontal: 20px  
+     * padding(10, 20);      // Vertical: 10px, Horizontal: 20px
      * padding(10, 20, 30);  // Top: 10px, Horizontal: 20px, Bottom: 30px
      * padding(10, 20, 30, 40); // Top: 10px, Right: 20px, Bottom: 30px, Left: 40px
      * ```
@@ -243,11 +243,11 @@ class View extends Layer {
      * Flex weight for flexible layouts.
      * Determines how much space this view should take relative to siblings.
      * Only used in layouts that support flex distribution (e.g., LinearLayout).
-     * 
+     *
      * ```haxe
      * // Three views in a horizontal layout:
      * view1.flex = 1; // Takes 1/6 of space
-     * view2.flex = 2; // Takes 2/6 of space  
+     * view2.flex = 2; // Takes 2/6 of space
      * view3.flex = 3; // Takes 3/6 of space
      * ```
      * Default: 1
@@ -730,6 +730,63 @@ class View extends Layer {
         layoutDirty = true;
     }
 
+    override function addBefore(visual:Visual, referenceVisual:Visual):Void {
+        super.addBefore(visual, referenceVisual);
+        if (Std.isOfType(visual, View)) {
+            var view:View = cast visual;
+            if (subviews == null) {
+                subviews = [];
+            }
+            // Find the correct position in subviews array based on children array ordering
+            var refIndex = children.indexOf(referenceVisual);
+            var insertIndex = 0;
+
+            // Find where to insert in subviews by checking existing View children
+            for (i in 0...subviews.length) {
+                var subview = subviews.unsafeGet(i);
+                var subviewIndex = children.indexOf(subview);
+                if (subviewIndex >= refIndex) {
+                    // This subview comes at or after the reference, insert before it
+                    insertIndex = i;
+                    break;
+                }
+                insertIndex = i + 1;
+            }
+
+            @:privateAccess subviews.original.insert(insertIndex, view);
+            view.layoutDirty = true;
+        }
+        layoutDirty = true;
+    }
+
+    override function addAfter(visual:Visual, referenceVisual:Visual):Void {
+        super.addAfter(visual, referenceVisual);
+        if (Std.isOfType(visual, View)) {
+            var view:View = cast visual;
+            if (subviews == null) {
+                subviews = [];
+            }
+            // Find the correct position in subviews array based on children array ordering
+            var refIndex = children.indexOf(referenceVisual);
+            var insertIndex = subviews.length;
+
+            // Find where to insert in subviews by checking existing View children
+            for (i in 0...subviews.length) {
+                var subview = subviews.unsafeGet(i);
+                var subviewIndex = children.indexOf(subview);
+                if (subviewIndex > refIndex) {
+                    // This subview comes after the reference, insert before it
+                    insertIndex = i;
+                    break;
+                }
+            }
+
+            @:privateAccess subviews.original.insert(insertIndex, view);
+            view.layoutDirty = true;
+        }
+        layoutDirty = true;
+    }
+
     override function remove(visual:Visual):Void {
         super.remove(visual);
         if (Std.isOfType(visual,View)) {
@@ -814,6 +871,10 @@ class View extends Layer {
 
 /// Lifecycle
 
+    static var nextVIndex:Int = 1;
+
+    var vIndex:Int = 0;
+
     /**
      * Create a new View.
      * Initializes the view with sensible defaults and registers it with the ViewSystem.
@@ -822,6 +883,8 @@ class View extends Layer {
     public function new(#if ceramic_debug_entity_allocs ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
+
+        vIndex = nextVIndex++;
 
         depthRange = 1;
         canLayout = false;
@@ -904,7 +967,7 @@ class View extends Layer {
      * Compute the view's size based on its sizing modes and constraints.
      * This forces a size computation even if the view is not dirty.
      * @param applyComputedSize if `true`, immediately apply the computed size using size()
-     * 
+     *
      * ```haxe
      * view.viewSize(ViewSize.auto(), ViewSize.fill());
      * view.autoComputeSize(true); // Computes and applies size
@@ -945,7 +1008,7 @@ class View extends Layer {
     /**
      * Compute size while maintaining aspect ratio of intrinsic bounds.
      * Useful for images, videos, or any content with a natural aspect ratio.
-     * 
+     *
      * @param parentWidth Available width from parent
      * @param parentHeight Available height from parent
      * @param layoutMask Constraints on how the view can be sized
@@ -1093,9 +1156,9 @@ class View extends Layer {
     /**
      * Core size computation method.
      * Calculates the view's dimensions based on its sizing mode and parent constraints.
-     * 
+     *
      * @param parentWidth Available width from parent container
-     * @param parentHeight Available height from parent container  
+     * @param parentHeight Available height from parent container
      * @param layoutMask Constraints defining how the view can grow/shrink
      * @param persist Whether to cache the result for the given context
      */
@@ -1183,7 +1246,7 @@ class View extends Layer {
      * Perform layout operations for this view.
      * Override this method in subclasses to implement custom layout logic.
      * Called after size computation and before the layout event is emitted.
-     * 
+     *
      * Common operations in layout():
      * - Position child views
      * - Update visual components
@@ -1201,7 +1264,7 @@ class View extends Layer {
      * Request a layout update for all views in the next frame.
      * This is called automatically when view properties change.
      * Multiple calls are batched into a single layout pass.
-     * 
+     *
      * ```haxe
      * view.width = 200; // Automatically calls requestLayout()
      * View.requestLayout(); // Manual call if needed
@@ -1332,7 +1395,7 @@ class View extends Layer {
      * Bind this view's size to the screen dimensions.
      * The view will automatically resize when the screen size changes.
      * @param factor Scale factor to apply to screen dimensions (default: 1.0)
-     * 
+     *
      * ```haxe
      * view.bindToScreenSize(); // Full screen size
      * view.bindToScreenSize(0.5); // Half screen size

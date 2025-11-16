@@ -2961,6 +2961,118 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     }
 
+    public function addBefore(visual:Visual, referenceVisual:Visual):Void {
+
+        if (visual == this) {
+            throw 'A visual cannot add itself as child!';
+        }
+
+        if (visual == null) {
+            throw 'A visual cannot add a null child!';
+        }
+
+        if (visual.destroyed) {
+            throw 'A visual cannot add an already destroyed child!';
+        }
+
+        if (referenceVisual == null) {
+            throw 'Reference visual cannot be null!';
+        }
+
+        if (referenceVisual.parent != this) {
+            throw 'Reference visual must be a child of this visual!';
+        }
+
+        App.app.hierarchyDirty = true;
+
+        if (visual.parent == this) {
+            // Visual is already a child, just reposition it
+            var currentIndex = @:privateAccess children.original.indexOf(visual);
+            if (currentIndex != -1) {
+                @:privateAccess children.original.splice(currentIndex, 1);
+            }
+        } else {
+            // Visual has a different parent or no parent
+            if (visual.parent != null) {
+                visual.parent.remove(visual);
+            }
+
+            visual.parent = this;
+            visual.visibilityDirty = true;
+            visual.matrixDirty = true;
+            visual.renderTargetDirty = true;
+        }
+
+        if (children == null) {
+            children = [];
+        }
+
+        var index = @:privateAccess children.original.indexOf(referenceVisual);
+        if (index != -1) {
+            @:privateAccess children.original.insert(index, visual);
+        } else {
+            @:privateAccess children.original.push(visual);
+        }
+        clipDirty = true;
+
+    }
+
+    public function addAfter(visual:Visual, referenceVisual:Visual):Void {
+
+        if (visual == this) {
+            throw 'A visual cannot add itself as child!';
+        }
+
+        if (visual == null) {
+            throw 'A visual cannot add a null child!';
+        }
+
+        if (visual.destroyed) {
+            throw 'A visual cannot add an already destroyed child!';
+        }
+
+        if (referenceVisual == null) {
+            throw 'Reference visual cannot be null!';
+        }
+
+        if (referenceVisual.parent != this) {
+            throw 'Reference visual must be a child of this visual!';
+        }
+
+        App.app.hierarchyDirty = true;
+
+        if (visual.parent == this) {
+            // Visual is already a child, just reposition it
+            var currentIndex = @:privateAccess children.original.indexOf(visual);
+            if (currentIndex != -1) {
+                @:privateAccess children.original.splice(currentIndex, 1);
+            }
+        } else {
+            // Visual has a different parent or no parent
+            if (visual.parent != null) {
+                visual.parent.remove(visual);
+            }
+
+            visual.parent = this;
+            visual.visibilityDirty = true;
+            visual.matrixDirty = true;
+            visual.renderTargetDirty = true;
+        }
+
+        if (children == null) {
+            children = [];
+        }
+
+        var index = @:privateAccess children.original.indexOf(referenceVisual);
+        if (index != -1) {
+            @:privateAccess children.original.insert(index + 1, visual);
+        } else {
+            @:privateAccess children.original.push(visual);
+        }
+        clipDirty = true;
+
+    }
+
     /**
      * Remove the child from current visual.
      * @param visual The child to remove
