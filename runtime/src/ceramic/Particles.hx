@@ -4,21 +4,21 @@ import ceramic.Shortcuts.*;
 
 /**
  * A visual container that manages a particle emitter with convenient automatic emission modes.
- * 
+ *
  * Particles extends Visual to provide a high-level wrapper around ParticleEmitter,
  * adding features like automatic continuous emission and timed burst intervals.
  * This makes it easier to create self-contained particle effects that can be
  * added to the scene and configured with minimal code.
- * 
+ *
  * The class is generic, allowing use of custom ParticleEmitter subclasses for
  * specialized particle behaviors.
- * 
+ *
  * Key features:
  * - Automatic continuous emission with `autoEmit`
  * - Automatic burst intervals with `autoExplodeInterval`
  * - Forwards all emitter properties with `emitter*` prefix
  * - Lifecycle management - destroying particles destroys the emitter
- * 
+ *
  * ```haxe
  * // Create auto-emitting smoke
  * var smoke = new Particles();
@@ -28,18 +28,18 @@ import ceramic.Shortcuts.*;
  * smoke.emitterSpeedStart(50, 100);
  * smoke.emitterAlphaEnd(0);
  * scene.add(smoke);
- * 
+ *
  * // Create periodic explosions
  * var explosions = new Particles();
  * explosions.autoExplodeInterval = 2.0; // Every 2 seconds
  * explosions.autoExplodeQuantity = 50;
  * explosions.emitterSpeedStart(100, 300);
  * scene.add(explosions);
- * 
+ *
  * // Use custom emitter
  * var custom = new Particles(new MyCustomEmitter());
  * ```
- * 
+ *
  * @see ParticleEmitter The underlying emitter being managed
  * @see ParticleItem Individual particle data
  */
@@ -47,7 +47,7 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * The particle emitter managed by this visual.
-     * 
+     *
      * Can be accessed directly for advanced configuration or
      * to call methods like `explode()` and `emitParticle()`.
      * Most common properties are also exposed with `emitter*` prefix.
@@ -56,7 +56,7 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Creates a new Particles visual with an optional custom emitter.
-     * 
+     *
      * @param emitter Optional custom ParticleEmitter instance or subclass.
      *                If not provided, creates a standard ParticleEmitter.
      */
@@ -77,7 +77,7 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Initializes the particles system.
-     * 
+     *
      * Sets up lifecycle binding so that destroying the emitter
      * also destroys this visual container.
      */
@@ -92,12 +92,12 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Whether to automatically emit particles continuously.
-     * 
+     *
      * When set to true, starts continuous emission using `emitterInterval`.
      * When set to false, stops emission (existing particles continue).
-     * 
+     *
      * Default: false
-     * 
+     *
      * ```haxe
      * particles.emitterInterval = 0.1; // Configure interval first
      * particles.autoEmit = true; // Start emitting
@@ -124,13 +124,13 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Interval in seconds between automatic burst emissions.
-     * 
+     *
      * When set to a positive value, triggers burst emissions of
      * `autoExplodeQuantity` particles at regular intervals.
      * Set to -1 to disable automatic bursts.
-     * 
+     *
      * Default: -1 (disabled)
-     * 
+     *
      * ```haxe
      * // Burst 30 particles every 1.5 seconds
      * particles.autoExplodeQuantity = 30;
@@ -148,12 +148,12 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Number of particles to emit in each automatic burst.
-     * 
+     *
      * Used with `autoExplodeInterval` to create periodic bursts.
      * Only takes effect when `autoExplodeInterval` is positive.
-     * 
+     *
      * Default: 64
-     * 
+     *
      * @see autoExplodeInterval
      */
     public var autoExplodeQuantity(default,set):Int = 64;
@@ -167,7 +167,7 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Updates the automatic explosion timer based on current settings.
-     * 
+     *
      * Clears any existing timer and creates a new one if both
      * interval and quantity are positive.
      */
@@ -186,7 +186,7 @@ class Particles<T:ParticleEmitter> extends Visual {
 
     /**
      * Executes an automatic burst emission.
-     * 
+     *
      * Called by the interval timer to emit the configured
      * quantity of particles.
      */
@@ -226,18 +226,18 @@ class Particles<T:ParticleEmitter> extends Visual {
     inline function set_emitterLaunchMode(launchMode:ParticlesLaunchMode):ParticlesLaunchMode return #if cs (cast emitter:ParticleEmitter) #else emitter #end.launchMode = launchMode;
 
     /**
-     * Apply particle scale to underlying visual or not.
-     */
-    public var emitterVisualScaleActive(get,set):Bool;
-    inline function get_emitterVisualScaleActive():Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.visualScaleActive;
-    inline function set_emitterVisualScaleActive(visualScaleActive:Bool):Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.visualScaleActive = visualScaleActive;
-
-    /**
      * Keep the scale ratio of the particle. Uses the `scaleX` value for reference.
      */
     public var emitterKeepScaleRatio(get,set):Bool;
     inline function get_emitterKeepScaleRatio():Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.keepScaleRatio;
     inline function set_emitterKeepScaleRatio(keepScaleRatio:Bool):Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.keepScaleRatio = keepScaleRatio;
+
+    /**
+     * Apply particle scale to underlying visual or not.
+     */
+    public var emitterVisualScaleActive(get,set):Bool;
+    inline function get_emitterVisualScaleActive():Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.visualScaleActive;
+    inline function set_emitterVisualScaleActive(visualScaleActive:Bool):Bool return #if cs (cast emitter:ParticleEmitter) #else emitter #end.visualScaleActive = visualScaleActive;
 
     /**
      * Apply particle color to underlying visual or not.
