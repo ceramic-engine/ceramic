@@ -57,8 +57,17 @@ class ScrollView extends View {
         if (this.contentView != null) {
             this.contentView.customParentView = this;
         }
+        if (scroller != null && scroller.content != contentView) {
+            scroller.destroy();
+            scroller = null;
+        }
+        if (scroller == null) {
+            initScroller();
+        }
         return contentView;
     }
+
+    public var autoComputeContentSize:Bool = false;
 
     /**
      * The size of the scrollable content in the scroll direction.
@@ -197,10 +206,21 @@ class ScrollView extends View {
         scroller.size(width, height);
 
         if (direction == VERTICAL) {
+            if (autoComputeContentSize) {
+                contentView.computeSizeIfNeeded(width, height, ViewLayoutMask.INCREASE_HEIGHT, true);
+                contentView.applyComputedSize();
+                contentSize = contentView.height;
+            }
             contentView.height = Math.max(height, contentSize);
         } else {
+            if (autoComputeContentSize) {
+                contentView.computeSizeIfNeeded(width, height, ViewLayoutMask.INCREASE_WIDTH, true);
+                contentView.applyComputedSize();
+            }
             contentView.width = Math.max(width, contentSize);
         }
+
+        trace('-> contentSize=$contentSize');
 
     }
 
