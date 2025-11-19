@@ -1204,9 +1204,53 @@ class Renderer extends Entity {
      */
     #if (!ceramic_debug_draw && !ceramic_soft_inline) inline #end function drawMesh(draw:backend.Draw, mesh:ceramic.Mesh):Void {
 
+        // This is done this way to let haxe properly
+        // inline different versions of the method
+        // depending on the given arguments
+        if (mesh.vertices32 != null) {
+            if (mesh.floatColors != null) {
+                drawMeshWithVertices32AndFloatColors(draw, mesh);
+            }
+            else {
+                drawMeshWithVertices32(draw, mesh);
+            }
+        }
+        else {
+            if (mesh.floatColors != null) {
+                drawMeshWithVerticesAndFloatColors(draw, mesh);
+            }
+            else {
+                drawMeshWithVertices(draw, mesh);
+            }
+        }
+    }
+
+    function drawMeshWithVertices32(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+        _drawMesh(draw, mesh, null, mesh.vertices32, mesh.colors, null);
+    }
+
+    function drawMeshWithVertices32AndFloatColors(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+        _drawMesh(draw, mesh, null, mesh.vertices32, null, mesh.floatColors);
+    }
+
+    function drawMeshWithVertices(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+        _drawMesh(draw, mesh, mesh.vertices, null, mesh.colors, null);
+    }
+
+    function drawMeshWithVerticesAndFloatColors(draw:backend.Draw, mesh:ceramic.Mesh):Void {
+        _drawMesh(draw, mesh, mesh.vertices, null, null, mesh.floatColors);
+    }
+
+    inline function _drawMesh(draw:backend.Draw, mesh:ceramic.Mesh, meshVertices:Array<Float>, meshVertices32:Float32Array, meshColors:Array<AlphaColor>, meshFloatColors:Float32Array):Void {
+
     #if ceramic_debug_draw
         drawnMeshes++;
     #end
+
+        inline function verticesGet(index:Int):Float32 {
+            return meshVertices32 != null ? meshVertices32[index] : meshVertices.unsafeGet(index);
+        }
+
         // The following code is doing pretty much the same thing as quads, but for meshes.
         // We could try to refactor to prevent redundancy but this is not required as our
         // main concern here is raw performance and anyway this code won't be updated often.
@@ -1366,14 +1410,11 @@ class Renderer extends Entity {
     #end
 
         // Color
-        var meshColors = mesh.colors;
-        var meshFloatColors = mesh.floatColors;
         var meshSingleColor = stencilClip || mesh.colorMapping == MESH;
         var meshIndicesColor = !stencilClip && mesh.colorMapping == INDICES;
 
         // Data
         var meshUvs = mesh.uvs;
-        var meshVertices = mesh.vertices;
         var meshIndices = mesh.indices;
 
         // Let backend know we will start sending mesh data
@@ -1558,6 +1599,8 @@ class Renderer extends Entity {
 
                 var i = startVertices;
                 var numPos = draw.getNumPos();
+
+                // Unified path using inline verticesGet() to avoid code duplication
                 while (i < endVertices) {
 
                     var j = meshIndices.unsafeGet(i);
@@ -1566,8 +1609,8 @@ class Renderer extends Entity {
 
                     // Position
                     //
-                    var x = meshVertices.unsafeGet(l++);
-                    var y = meshVertices.unsafeGet(l++);
+                    var x = verticesGet(l++);
+                    var y = verticesGet(l++);
 
                     draw.putIndice(numPos);
                     numPos++;
@@ -1587,8 +1630,6 @@ class Renderer extends Entity {
                             z
                         );
                     }
-
-                    //draw.putInPosList(posList, posFloats, 0);
 
                     // Color
                     //
@@ -1649,7 +1690,7 @@ class Renderer extends Entity {
                         draw.beginFloatAttributes();
                         for (n in 0...customFloatAttributesSize) {
                             if (n < meshCustomFloatAttributesSize) {
-                                draw.putFloatAttribute(n, meshVertices.unsafeGet(l++));
+                                draw.putFloatAttribute(n, verticesGet(l++));
                             }
                             else {
                                 draw.putFloatAttribute(n, 0.0);

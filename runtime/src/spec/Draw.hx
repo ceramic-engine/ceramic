@@ -1,18 +1,19 @@
 package spec;
 
 import backend.VisualItem;
+import ceramic.Float32;
 
 /**
  * Backend interface for all graphics rendering operations.
- * 
+ *
  * This is the core rendering interface that backends must implement to draw Ceramic visuals.
  * It provides low-level GPU operations including vertex/index buffer management, texture binding,
  * shader usage, blending modes, and render state management.
- * 
+ *
  * The interface follows a stateful design where rendering state (textures, shaders, blend modes)
  * is set before drawing operations. Vertex data is accumulated in buffers and flushed to the GPU
  * when necessary.
- * 
+ *
  * Drawing flow:
  * 1. beginRender() - Start a frame
  * 2. Set states (shader, texture, blend mode)
@@ -218,7 +219,7 @@ interface Draw {
      * @param y The Y coordinate
      * @param z The Z coordinate (depth)
      */
-    function putPos(x:Float, y:Float, z:Float):Void;
+    function putPos(x:Float32, y:Float32, z:Float32):Void;
 
     /**
      * Adds a vertex position with texture slot to the vertex buffer.
@@ -228,7 +229,7 @@ interface Draw {
      * @param z The Z coordinate (depth)
      * @param textureSlot The texture slot index for this vertex
      */
-    function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void;
+    function putPosAndTextureSlot(x:Float32, y:Float32, z:Float32, textureSlot:Float32):Void;
 
     /**
      * Adds an index to the index buffer.

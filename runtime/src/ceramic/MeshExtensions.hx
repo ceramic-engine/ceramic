@@ -84,43 +84,75 @@ class MeshExtensions {
             indices.setArrayLength(6);
         }
 
-        var vertices = mesh.vertices;
-        vertices[floatsPerVertex * 4] = 0;
-        var n = 0;
-        vertices.unsafeSet(n, 0);
-        n++;
-        vertices.unsafeSet(n, 0);
-        n++;
-        for (i in 2...floatsPerVertex) {
+        // Use vertices32 if available
+        if (mesh.vertices32 != null) {
+            var vertices32 = mesh.vertices32;
+            var totalFloats = floatsPerVertex * 4;
+            if (vertices32.length != totalFloats) {
+                vertices32 = new Float32Array(totalFloats);
+                mesh.vertices32 = vertices32;
+            }
+            var n = 0;
+            vertices32[n++] = 0;
+            vertices32[n++] = 0;
+            for (i in 2...floatsPerVertex) {
+                vertices32[n++] = 0;
+            }
+            vertices32[n++] = width;
+            vertices32[n++] = 0;
+            for (i in 2...floatsPerVertex) {
+                vertices32[n++] = 0;
+            }
+            vertices32[n++] = width;
+            vertices32[n++] = height;
+            for (i in 2...floatsPerVertex) {
+                vertices32[n++] = 0;
+            }
+            vertices32[n++] = 0;
+            vertices32[n++] = height;
+            for (i in 2...floatsPerVertex) {
+                vertices32[n++] = 0;
+            }
+        }
+        else {
+            var vertices = mesh.vertices;
+            vertices[floatsPerVertex * 4] = 0;
+            var n = 0;
             vertices.unsafeSet(n, 0);
             n++;
-        }
-        vertices.unsafeSet(n, width);
-        n++;
-        vertices.unsafeSet(n, 0);
-        n++;
-        for (i in 2...floatsPerVertex) {
             vertices.unsafeSet(n, 0);
             n++;
-        }
-        vertices.unsafeSet(n, width);
-        n++;
-        vertices.unsafeSet(n, height);
-        n++;
-        for (i in 2...floatsPerVertex) {
+            for (i in 2...floatsPerVertex) {
+                vertices.unsafeSet(n, 0);
+                n++;
+            }
+            vertices.unsafeSet(n, width);
+            n++;
             vertices.unsafeSet(n, 0);
             n++;
-        }
-        vertices.unsafeSet(n, 0);
-        n++;
-        vertices.unsafeSet(n, height);
-        n++;
-        for (i in 2...floatsPerVertex) {
+            for (i in 2...floatsPerVertex) {
+                vertices.unsafeSet(n, 0);
+                n++;
+            }
+            vertices.unsafeSet(n, width);
+            n++;
+            vertices.unsafeSet(n, height);
+            n++;
+            for (i in 2...floatsPerVertex) {
+                vertices.unsafeSet(n, 0);
+                n++;
+            }
             vertices.unsafeSet(n, 0);
             n++;
-        }
-        if (vertices.length > n) {
-            vertices.setArrayLength(n);
+            vertices.unsafeSet(n, height);
+            n++;
+            for (i in 2...floatsPerVertex) {
+                vertices.unsafeSet(n, 0);
+                n++;
+            }
+            if (vertices.length > n) {
+                vertices.setArrayLength(n);
+            }
         }
 
         mesh.width = width;
@@ -152,22 +184,41 @@ class MeshExtensions {
      */
     public static function setDarkColor(mesh:Mesh, darkColor:Color):Void {
 
-        var vertices = mesh.vertices;
-        var len = Math.floor(vertices.length / 6) * 6;
-        var i = 0;
         var r = darkColor.redFloat;
         var g = darkColor.greenFloat;
         var b = darkColor.blueFloat;
-        while (i < len) {
-            i += 2;
-            vertices.unsafeSet(i, r);
-            i++;
-            vertices.unsafeSet(i, g);
-            i++;
-            vertices.unsafeSet(i, b);
-            i++;
-            vertices.unsafeSet(i, 1);
-            i++;
+        var i = 0;
+
+        // Use vertices32 if available
+        if (mesh.vertices32 != null) {
+            var vertices32 = mesh.vertices32;
+            var len = Math.floor(vertices32.length / 6) * 6;
+            while (i < len) {
+                i += 2;
+                vertices32[i] = r;
+                i++;
+                vertices32[i] = g;
+                i++;
+                vertices32[i] = b;
+                i++;
+                vertices32[i] = 1;
+                i++;
+            }
+        }
+        else {
+            var vertices = mesh.vertices;
+            var len = Math.floor(vertices.length / 6) * 6;
+            while (i < len) {
+                i += 2;
+                vertices.unsafeSet(i, r);
+                i++;
+                vertices.unsafeSet(i, g);
+                i++;
+                vertices.unsafeSet(i, b);
+                i++;
+                vertices.unsafeSet(i, 1);
+                i++;
+            }
         }
 
     }
@@ -195,23 +246,42 @@ class MeshExtensions {
      */
     public static function setDarkAlphaColor(mesh:Mesh, darkAlphaColor:AlphaColor):Void {
 
-        var vertices = mesh.vertices;
-        var len = Math.floor(vertices.length / 6) * 6;
-        var i = 0;
         var r = darkAlphaColor.redFloat;
         var g = darkAlphaColor.greenFloat;
         var b = darkAlphaColor.blueFloat;
         var a = darkAlphaColor.alphaFloat;
-        while (i < len) {
-            i += 2;
-            vertices.unsafeSet(i, r);
-            i++;
-            vertices.unsafeSet(i, g);
-            i++;
-            vertices.unsafeSet(i, b);
-            i++;
-            vertices.unsafeSet(i, a);
-            i++;
+        var i = 0;
+
+        // Use vertices32 if available
+        if (mesh.vertices32 != null) {
+            var vertices32 = mesh.vertices32;
+            var len = Math.floor(vertices32.length / 6) * 6;
+            while (i < len) {
+                i += 2;
+                vertices32[i] = r;
+                i++;
+                vertices32[i] = g;
+                i++;
+                vertices32[i] = b;
+                i++;
+                vertices32[i] = a;
+                i++;
+            }
+        }
+        else {
+            var vertices = mesh.vertices;
+            var len = Math.floor(vertices.length / 6) * 6;
+            while (i < len) {
+                i += 2;
+                vertices.unsafeSet(i, r);
+                i++;
+                vertices.unsafeSet(i, g);
+                i++;
+                vertices.unsafeSet(i, b);
+                i++;
+                vertices.unsafeSet(i, a);
+                i++;
+            }
         }
 
     }
@@ -253,10 +323,7 @@ class MeshExtensions {
 
         var count:Int = Math.ceil(sides * angle / 360);
 
-        var vertices = mesh.vertices;
         var indices = mesh.indices;
-
-        vertices.setArrayLength(0);
         indices.setArrayLength(0);
 
         var _x:Float;
@@ -276,33 +343,77 @@ class MeshExtensions {
             case MIDDLE: thickness * 0.5;
         }
 
-        for (i in 0...count+(angle != 360 ? 1 : 0)) {
-
-            var rawX = Math.cos(angleOffset + sidesOverTwoPi * i);
-            var rawY = Math.sin(angleOffset + sidesOverTwoPi * i);
-
-            _x = (radius + borderStart) * rawX;
-            _y = (radius + borderStart) * rawY;
-
-            vertices.push(radius + _x);
-            vertices.push(radius + _y);
-
-            _x = (radius + borderEnd) * rawX;
-            _y = (radius + borderEnd) * rawY;
-
-            vertices.push(radius + _x);
-            vertices.push(radius + _y);
-
-            if (i > 0) {
-                var n = (i - 1) * 2;
-                indices.push(n);
-                indices.push(n + 1);
-                indices.push(n + 2);
-                indices.push(n + 1);
-                indices.push(n + 2);
-                indices.push(n + 3);
+        // Use vertices32 if available
+        if (mesh.vertices32 != null) {
+            var vertices32 = mesh.vertices32;
+            var totalVerts = (count + (angle != 360 ? 1 : 0)) * 4;
+            if (vertices32.length != totalVerts) {
+                vertices32 = new Float32Array(totalVerts);
+                mesh.vertices32 = vertices32;
             }
 
+            var index = 0;
+            for (i in 0...count+(angle != 360 ? 1 : 0)) {
+
+                var rawX = Math.cos(angleOffset + sidesOverTwoPi * i);
+                var rawY = Math.sin(angleOffset + sidesOverTwoPi * i);
+
+                _x = (radius + borderStart) * rawX;
+                _y = (radius + borderStart) * rawY;
+
+                vertices32[index++] = radius + _x;
+                vertices32[index++] = radius + _y;
+
+                _x = (radius + borderEnd) * rawX;
+                _y = (radius + borderEnd) * rawY;
+
+                vertices32[index++] = radius + _x;
+                vertices32[index++] = radius + _y;
+
+                if (i > 0) {
+                    var n = (i - 1) * 2;
+                    indices.push(n);
+                    indices.push(n + 1);
+                    indices.push(n + 2);
+                    indices.push(n + 1);
+                    indices.push(n + 2);
+                    indices.push(n + 3);
+                }
+
+            }
+        }
+        else {
+            var vertices = mesh.vertices;
+            vertices.setArrayLength(0);
+
+            for (i in 0...count+(angle != 360 ? 1 : 0)) {
+
+                var rawX = Math.cos(angleOffset + sidesOverTwoPi * i);
+                var rawY = Math.sin(angleOffset + sidesOverTwoPi * i);
+
+                _x = (radius + borderStart) * rawX;
+                _y = (radius + borderStart) * rawY;
+
+                vertices.push(radius + _x);
+                vertices.push(radius + _y);
+
+                _x = (radius + borderEnd) * rawX;
+                _y = (radius + borderEnd) * rawY;
+
+                vertices.push(radius + _x);
+                vertices.push(radius + _y);
+
+                if (i > 0) {
+                    var n = (i - 1) * 2;
+                    indices.push(n);
+                    indices.push(n + 1);
+                    indices.push(n + 2);
+                    indices.push(n + 1);
+                    indices.push(n + 2);
+                    indices.push(n + 3);
+                }
+
+            }
         }
 
         if (angle == 360) {
@@ -327,6 +438,7 @@ class MeshExtensions {
      * - Tilemap rendering
      *
      * Vertices are arranged in row-major order (left to right, top to bottom).
+     * Automatically uses Float32Array if mesh.vertices32 is set, otherwise uses Array<Float>.
      *
      * @param mesh The mesh to populate with grid vertices
      * @param columns Number of columns (vertices per row)
@@ -350,10 +462,16 @@ class MeshExtensions {
      *
      * @see createIndicesGrid To create matching triangle indices
      * @see createUVsGrid To create matching UV coordinates
-     * @see MeshUtils.createVerticesGrid The underlying implementation
+     * @see MeshUtils.createVerticesGrid The underlying implementation (Array<Float>)
+     * @see MeshUtils.createVertices32Grid The underlying implementation (Float32Array)
      */
     public static function createVerticesGrid(mesh:Mesh, columns:Int, rows:Int, width:Float, height:Float, staggerX:Float = 0, staggerY:Float = 0, attrLength:Int = 0, ?attrValues:Array<Float>):Void {
-        mesh.vertices = MeshUtils.createVerticesGrid(mesh.vertices, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
+        if (mesh.vertices32 != null) {
+            mesh.vertices32 = MeshUtils.createVertices32Grid(mesh.vertices32, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
+        }
+        else {
+            mesh.vertices = MeshUtils.createVerticesGrid(mesh.vertices, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
+        }
     }
 
     /**

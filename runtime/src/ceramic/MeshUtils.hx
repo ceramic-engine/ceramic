@@ -44,6 +44,101 @@ using ceramic.Extensions;
 class MeshUtils {
 
     /**
+     * Internal unified implementation for creating grid vertices.
+     * Uses inline verticesSet() to support both Array<Float> and Float32Array.
+     */
+    inline static function _createVerticesGrid(vertices:Array<Float>, vertices32:Float32Array, columns:Int, rows:Int, width:Float, height:Float, staggerX:Float, staggerY:Float, attrLength:Int, attrValues:Array<Float>):Void {
+
+        inline function verticesSet(index:Int, value:Float):Void {
+            if (vertices32 != null)
+                vertices32[index] = value;
+            else
+                vertices[index] = value;
+        }
+
+        var columnWidth:Float = width / columns;
+        var rowHeight:Float = height / rows;
+
+        var index:Int = 0;
+        var attrIndex:Int = 0;
+        if (attrLength > 0 && attrValues == null) {
+            if (staggerX == 0 && staggerY == 0) {
+                for (y in 0...(rows + 1)) {
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        verticesSet(index++, xPos);
+                        verticesSet(index++, yPos);
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            verticesSet(index++, 0);
+                        }
+                    }
+                }
+            }
+            else {
+                for (y in 0...(rows + 1)) {
+                    var modY = (y % 2);
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        verticesSet(index++, xPos + staggerX * modY);
+                        verticesSet(index++, yPos + staggerY * (x % 2));
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            verticesSet(index++, 0);
+                        }
+                    }
+                }
+            }
+        }
+        else {
+            if (staggerX == 0 && staggerY == 0) {
+                for (y in 0...(rows + 1)) {
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        verticesSet(index++, xPos);
+                        verticesSet(index++, yPos);
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            verticesSet(index++, attrValues[attrIndex++]);
+                        }
+                    }
+                }
+            }
+            else {
+                for (y in 0...(rows + 1)) {
+                    var modY = (y % 2);
+                    for (x in 0...(columns + 1)) {
+
+                        var xPos:Float = x * columnWidth;
+                        var yPos:Float = y * rowHeight;
+
+                        verticesSet(index++, xPos + staggerX * modY);
+                        verticesSet(index++, yPos + staggerY * (x % 2));
+
+                        // Custom attributes
+                        for (i in 0...attrLength) {
+                            verticesSet(index++, attrValues[attrIndex++]);
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+    /**
      * Creates a grid of vertices with optional staggering and custom attributes.
      *
      * Generates vertices arranged in a rectangular grid pattern. Each vertex consists
@@ -101,91 +196,48 @@ class MeshUtils {
         if (vertices == null) {
             vertices = [];
         }
-        if (vertices.length > vertexCount * 2) {
-            vertices.setArrayLength(vertexCount * 2);
+        if (vertices.length > vertexCount * (2 + attrLength)) {
+            vertices.setArrayLength(vertexCount * (2 + attrLength));
         }
 
-        var columnWidth:Float = width / columns;
-        var rowHeight:Float = height / rows;
-
-        var index:Int = 0;
-        var attrIndex:Int = 0;
-        if (attrLength > 0 && attrValues == null) {
-            if (staggerX == 0 && staggerY == 0) {
-                for (y in 0...(rows + 1)) {
-                    for (x in 0...(columns + 1)) {
-
-                        var xPos:Float = x * columnWidth;
-                        var yPos:Float = y * rowHeight;
-
-                        vertices[index++] = xPos;
-                        vertices[index++] = yPos;
-
-                        // Custom attributes
-                        for (i in 0...attrLength) {
-                            vertices[index++] = 0;
-                        }
-                    }
-                }
-            }
-            else {
-                for (y in 0...(rows + 1)) {
-                    var modY = (y % 2);
-                    for (x in 0...(columns + 1)) {
-
-                        var xPos:Float = x * columnWidth;
-                        var yPos:Float = y * rowHeight;
-
-                        vertices[index++] = xPos + staggerX * modY;
-                        vertices[index++] = yPos + staggerY * (x % 2);
-
-                        // Custom attributes
-                        for (i in 0...attrLength) {
-                            vertices[index++] = 0;
-                        }
-                    }
-                }
-            }
-        }
-        else {
-            if (staggerX == 0 && staggerY == 0) {
-                for (y in 0...(rows + 1)) {
-                    for (x in 0...(columns + 1)) {
-
-                        var xPos:Float = x * columnWidth;
-                        var yPos:Float = y * rowHeight;
-
-                        vertices[index++] = xPos;
-                        vertices[index++] = yPos;
-
-                        // Custom attributes
-                        for (i in 0...attrLength) {
-                            vertices[index++] = attrValues[attrIndex++];
-                        }
-                    }
-                }
-            }
-            else {
-                for (y in 0...(rows + 1)) {
-                    var modY = (y % 2);
-                    for (x in 0...(columns + 1)) {
-
-                        var xPos:Float = x * columnWidth;
-                        var yPos:Float = y * rowHeight;
-
-                        vertices[index++] = xPos + staggerX * modY;
-                        vertices[index++] = yPos + staggerY * (x % 2);
-
-                        // Custom attributes
-                        for (i in 0...attrLength) {
-                            vertices[index++] = attrValues[attrIndex++];
-                        }
-                    }
-                }
-            }
-        }
+        _createVerticesGrid(vertices, null, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
 
         return vertices;
+
+    }
+
+    /**
+     * Creates a grid of vertices with optional staggering and custom attributes (Float32Array version).
+     *
+     * Identical to createVerticesGrid() but operates on Float32Array.
+     * Generates vertices arranged in a rectangular grid pattern.
+     *
+     * @param vertices32 Existing Float32Array to reuse, or null to create new array.
+     * @param columns Number of columns in the grid (cells, not vertices)
+     * @param rows Number of rows in the grid (cells, not vertices)
+     * @param width Total width of the grid in pixels
+     * @param height Total height of the grid in pixels
+     * @param staggerX Horizontal offset applied to odd-numbered rows.
+     * @param staggerY Vertical offset applied to odd-numbered columns.
+     * @param attrLength Number of custom float attributes per vertex.
+     * @param attrValues Array of attribute values to assign.
+     * @return Float32Array of vertex data with length (columns+1)×(rows+1)×(2+attrLength)
+     *
+     * ```haxe
+     * // Simple 10x10 grid with Float32Array
+     * var vertices32 = MeshUtils.createVertices32Grid(null, 10, 10, 400, 400);
+     * ```
+     */
+    public static function createVertices32Grid(?vertices32:Float32Array, columns:Int, rows:Int, width:Float, height:Float, staggerX:Float = 0, staggerY:Float = 0, attrLength:Int = 0, ?attrValues:Array<Float>):Float32Array {
+
+        var vertexCount:Int = (columns + 1) * (rows + 1);
+        if (vertices32 == null) {
+            vertices32 = new Float32Array(vertexCount * (2 + attrLength));
+        }
+
+        _createVerticesGrid(null, vertices32, columns, rows, width, height, staggerX, staggerY, attrLength, attrValues);
+
+        return vertices32;
 
     }
 

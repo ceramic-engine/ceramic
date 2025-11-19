@@ -171,6 +171,13 @@ class Mesh extends Visual {
     public var vertices:Array<Float> = [];
 
     /**
+     * Alternative way of storing vertices, which is using twice less
+     * memory than `vertices`, at the cost of less precision and needing a fixed size.
+     * If set, this is used instead of the `vertices` array.
+     */
+    public var vertices32:Float32Array = null;
+
+    /**
      * An array of vertex indices defining triangles.
      * Every 3 consecutive indices form one triangle.
      * Indices refer to positions in the vertices array (0-based).
@@ -310,39 +317,79 @@ class Mesh extends Visual {
             var by:Float;
             var cx:Float;
             var cy:Float;
-            while (i < numTriangles) {
 
-                na = indices.unsafeGet(j);
-                j++;
-                nb = indices.unsafeGet(j);
-                j++;
-                nc = indices.unsafeGet(j);
-                j++;
+            // Use vertices32 if available for better performance
+            if (vertices32 != null) {
+                while (i < numTriangles) {
 
-                k = na * floatsPerVertex;
-                ax = vertices.unsafeGet(k);
-                k++;
-                ay = vertices.unsafeGet(k);
+                    na = indices.unsafeGet(j);
+                    j++;
+                    nb = indices.unsafeGet(j);
+                    j++;
+                    nc = indices.unsafeGet(j);
+                    j++;
 
-                k = nb * floatsPerVertex;
-                bx = vertices.unsafeGet(k);
-                k++;
-                by = vertices.unsafeGet(k);
+                    k = na * floatsPerVertex;
+                    ax = vertices32[k];
+                    k++;
+                    ay = vertices32[k];
 
-                k = nc * floatsPerVertex;
-                cx = vertices.unsafeGet(k);
-                k++;
-                cy = vertices.unsafeGet(k);
+                    k = nb * floatsPerVertex;
+                    bx = vertices32[k];
+                    k++;
+                    by = vertices32[k];
 
-                if (inline GeometryUtils.pointInTriangle(
-                    testX, testY,
-                    ax, ay, bx, by, cx, cy
-                )) {
-                    // Yes, it does!
-                    return true;
+                    k = nc * floatsPerVertex;
+                    cx = vertices32[k];
+                    k++;
+                    cy = vertices32[k];
+
+                    if (inline GeometryUtils.pointInTriangle(
+                        testX, testY,
+                        ax, ay, bx, by, cx, cy
+                    )) {
+                        // Yes, it does!
+                        return true;
+                    }
+
+                    i++;
                 }
+            }
+            else {
+                while (i < numTriangles) {
 
-                i++;
+                    na = indices.unsafeGet(j);
+                    j++;
+                    nb = indices.unsafeGet(j);
+                    j++;
+                    nc = indices.unsafeGet(j);
+                    j++;
+
+                    k = na * floatsPerVertex;
+                    ax = vertices.unsafeGet(k);
+                    k++;
+                    ay = vertices.unsafeGet(k);
+
+                    k = nb * floatsPerVertex;
+                    bx = vertices.unsafeGet(k);
+                    k++;
+                    by = vertices.unsafeGet(k);
+
+                    k = nc * floatsPerVertex;
+                    cx = vertices.unsafeGet(k);
+                    k++;
+                    cy = vertices.unsafeGet(k);
+
+                    if (inline GeometryUtils.pointInTriangle(
+                        testX, testY,
+                        ax, ay, bx, by, cx, cy
+                    )) {
+                        // Yes, it does!
+                        return true;
+                    }
+
+                    i++;
+                }
             }
 
             return false;
@@ -370,7 +417,42 @@ class Mesh extends Visual {
      */
     public function computeSize() {
 
-        if (vertices != null && vertices.length >= 2) {
+        // Use vertices32 if available, otherwise fall back to vertices
+        if (vertices32 != null && vertices32.length >= 2) {
+            var maxX:ceramic.Float32 = 0;
+            var maxY:ceramic.Float32 = 0;
+            var i = 0;
+            var lenMinus1 = vertices32.length - 1;
+            if (customFloatAttributesSize > 0) {
+                while (i < lenMinus1) {
+                    var x = vertices32[i];
+                    if (x > maxX)
+                        maxX = x;
+                    i++;
+                    var y = vertices32[i];
+                    if (y > maxY)
+                        maxY = y;
+                    i += 1 + customFloatAttributesSize;
+                }
+            }
+            else {
+                while (i < lenMinus1) {
+                    var x = vertices32[i];
+                    if (x > maxX)
+                        maxX = x;
+                    i++;
+                    var y = vertices32[i];
+                    if (y > maxY)
+                        maxY = y;
+                    i++;
+                }
+            }
+            size(
+                Math.round(maxX * 1000) / 1000,
+                Math.round(maxY * 1000) / 1000
+            );
+        }
+        else if (vertices != null && vertices.length >= 2) {
             var maxX:Float = 0;
             var maxY:Float = 0;
             var i = 0;

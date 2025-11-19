@@ -3152,23 +3152,42 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                     // We might move this into Mesh class later.
                     if (child.asMesh != null) {
                         var mesh:Mesh = child.asMesh;
-                        var vertices = mesh.vertices;
                         var i = 0;
-                        var len = vertices.length;
                         var x = 0.0;
                         var y = 0.0;
 
-                        while (i < len) {
-                            x = vertices[i];
-                            y = vertices[i + 1];
+                        // Use vertices32 if available, otherwise fall back to vertices
+                        if (mesh.vertices32 != null) {
+                            var vertices32 = mesh.vertices32;
+                            var len = vertices32.length;
+                            while (i < len) {
+                                x = vertices32[i];
+                                y = vertices32[i + 1];
 
-                            child.visualToScreen(x, y, point, false);
-                            if (point.x > maxX) maxX = point.x;
-                            if (point.y > maxY) maxY = point.y;
-                            if (point.x < minX) minX = point.x;
-                            if (point.y < minY) minY = point.y;
+                                child.visualToScreen(x, y, point, false);
+                                if (point.x > maxX) maxX = point.x;
+                                if (point.y > maxY) maxY = point.y;
+                                if (point.x < minX) minX = point.x;
+                                if (point.y < minY) minY = point.y;
 
-                            i += 2;
+                                i += 2;
+                            }
+                        }
+                        else {
+                            var vertices = mesh.vertices;
+                            var len = vertices.length;
+                            while (i < len) {
+                                x = vertices[i];
+                                y = vertices[i + 1];
+
+                                child.visualToScreen(x, y, point, false);
+                                if (point.x > maxX) maxX = point.x;
+                                if (point.y > maxY) maxY = point.y;
+                                if (point.x < minX) minX = point.x;
+                                if (point.y < minY) minY = point.y;
+
+                                i += 2;
+                            }
                         }
 
                     }

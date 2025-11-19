@@ -1,20 +1,22 @@
 package backend;
 
+import ceramic.Float32;
+
 using ceramic.Extensions;
 
 #if !no_backend_docs
 /**
  * Drawing and rendering implementation for the headless backend.
- * 
+ *
  * This class implements the Ceramic drawing specification but performs
  * no actual rendering operations since headless mode doesn't require
  * visual output. All drawing methods are implemented as no-ops while
  * maintaining the same interface and state tracking as other backends.
- * 
+ *
  * The class maintains vertex buffers, shader state, and rendering
  * statistics for API compatibility, but doesn't perform any GPU
  * operations or produce visual output.
- * 
+ *
  * This is suitable for:
  * - Automated testing of rendering logic
  * - Server-side applications that process scenes without display
@@ -102,12 +104,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the visual item type for a given visual object.
-     * 
+     *
      * The backend determines how each visual should be drawn by
      * categorizing it into a VisualItem type. This allows the
      * backend to optimize drawing by avoiding type checks during
      * each draw iteration.
-     * 
+     *
      * @param visual The visual object to categorize
      * @return The visual item type (QUAD, MESH, or NONE)
      */
@@ -135,9 +137,9 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Draws an array of visual objects.
-     * 
+     *
      * In headless mode, this is a no-op since no visual output is required.
-     * 
+     *
      * @param visuals Array of visual objects to draw
      */
     #end
@@ -150,7 +152,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Swaps the front and back buffers to display rendered content.
-     * 
+     *
      * In headless mode, this is a no-op since there are no buffers to swap.
      */
     #end
@@ -165,7 +167,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Initializes vertex and index buffers for rendering.
-     * 
+     *
      * In headless mode, this is a no-op since no GPU buffers are allocated.
      */
     #end
@@ -178,7 +180,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins a new rendering pass.
-     * 
+     *
      * In headless mode, this is a no-op since no rendering occurs.
      */
     #end
@@ -191,7 +193,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the current render target.
-     * 
+     *
      * @param renderTarget The texture to render to (null for screen)
      * @param force Whether to force the render target change
      */
@@ -205,10 +207,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the current shader for rendering.
-     * 
+     *
      * This updates vertex buffer calculations and resets buffer indices
      * to accommodate the shader's attribute requirements.
-     * 
+     *
      * @param shader The shader implementation to use
      */
     #end
@@ -232,7 +234,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Clears the current render target.
-     * 
+     *
      * In headless mode, this is a no-op since no rendering surface exists.
      */
     #end
@@ -245,7 +247,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Enables alpha blending for subsequent draw calls.
-     * 
+     *
      * In headless mode, this is a no-op since no rendering occurs.
      */
     #end
@@ -258,7 +260,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Disables alpha blending for subsequent draw calls.
-     * 
+     *
      * In headless mode, this is a no-op since no rendering occurs.
      */
     #end
@@ -271,7 +273,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the blend function for RGB and alpha channels separately.
-     * 
+     *
      * @param srcRgb Source blend mode for RGB channels
      * @param dstRgb Destination blend mode for RGB channels
      * @param srcAlpha Source blend mode for alpha channel
@@ -287,7 +289,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the currently active texture slot.
-     * 
+     *
      * @return The active texture slot index
      */
     #end
@@ -300,7 +302,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the active texture slot for subsequent operations.
-     * 
+     *
      * @param slot The texture slot index to activate
      */
     #end
@@ -430,14 +432,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-    inline public function putPos(x:Float, y:Float, z:Float):Void {
+    inline public function putPos(x:Float32, y:Float32, z:Float32):Void {
 
         _posIndex += _vertexSize;
         _numPos++;
 
     }
 
-    inline public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
+    inline public function putPosAndTextureSlot(x:Float32, y:Float32, z:Float32, textureSlot:Float32):Void {
 
         _posIndex += _vertexSize;
         _numPos++;
@@ -491,7 +493,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Determines if the vertex buffer should be flushed before adding more data.
-     * 
+     *
      * @param numVerticesAfter Number of vertices that will be added
      * @param numIndicesAfter Number of indices that will be added
      * @param customFloatAttributesSize Size of custom attributes
@@ -507,7 +509,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the number of vertices that can still fit in the buffer.
-     * 
+     *
      * @return Number of remaining vertex slots
      */
     #end
@@ -520,7 +522,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the number of indices that can still fit in the buffer.
-     * 
+     *
      * @return Number of remaining index slots
      */
     #end
@@ -533,7 +535,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Checks if there is any buffered geometry to flush.
-     * 
+     *
      * @return True if there are vertices to render
      */
     #end
@@ -546,7 +548,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Flushes all buffered geometry and resets buffer indices.
-     * 
+     *
      * In headless mode, this just resets the buffer state.
      */
     #end
@@ -559,7 +561,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Resets all buffer indices to their initial state.
-     * 
+     *
      * This configures the buffer layout based on whether the current
      * shader supports multiple textures per batch.
      */

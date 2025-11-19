@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.Float32;
 import ceramic.Transform;
 import cs.NativeArray;
 import cs.StdTypes.Int16;
@@ -35,12 +36,12 @@ import unityengine.rendering.universal.ScriptableRenderer;
 #if !no_backend_docs
 /**
  * Unity implementation of the Draw backend interface.
- * 
+ *
  * This class handles all 2D rendering operations for Ceramic in Unity,
  * providing optimized mesh generation and GPU command batching. It bridges
  * Ceramic's rendering system with Unity's graphics pipeline, supporting
  * both the built-in render pipeline and Universal Render Pipeline (URP).
- * 
+ *
  * Key features:
  * - Efficient mesh batching to minimize draw calls
  * - Dynamic vertex and index buffer management
@@ -48,10 +49,10 @@ import unityengine.rendering.universal.ScriptableRenderer;
  * - Support for multiple rendering modes (quads, meshes)
  * - Integration with Unity's material and shader system
  * - Render state management (blend modes, stencil, etc.)
- * 
+ *
  * The implementation uses Unity's Mesh API with direct native array access
  * for maximum performance, avoiding managed memory allocations during rendering.
- * 
+ *
  * @see spec.Draw The interface this class implements
  * @see ceramic.Renderer The high-level renderer this backend drives
  * @see backend.Textures Works closely with texture management
@@ -84,11 +85,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Determines the rendering type for a visual.
-     * 
+     *
      * This method is called when a visual is created to determine
      * how it should be rendered. The returned VisualItem is cached
      * and used throughout the visual's lifetime to optimize rendering.
-     * 
+     *
      * @param visual The visual to categorize
      * @return QUAD for Quad-based visuals, MESH for Mesh-based, NONE otherwise
      */
@@ -116,11 +117,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Main draw method that renders all visuals.
-     * 
+     *
      * In the Unity editor, rendering is wrapped in a try-catch to prevent
      * crashes during hot reload or when Unity's state is inconsistent.
      * In builds, rendering runs without the safety wrapper for performance.
-     * 
+     *
      * @param visuals Array of visuals to render in order
      */
     #end
@@ -142,10 +143,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Internal draw implementation.
-     * 
+     *
      * Captures screen dimensions for URP and delegates to the Ceramic
      * renderer for visual processing. For URP, also manages render passes.
-     * 
+     *
      * @param visuals Array of visuals to render
      */
     #end
@@ -172,7 +173,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Swap buffers (no-op in Unity).
-     * 
+     *
      * Unity handles buffer swapping automatically through its rendering
      * pipeline, so this method is not needed and remains empty.
      */
@@ -193,7 +194,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #end
     #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
-    
+
     #if !no_backend_docs
     /**
      * Maximum number of indices per mesh.
@@ -271,9 +272,9 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the current number of positions in the vertex buffer.
-     * 
+     *
      * Used by the renderer to track vertex count for the current batch.
-     * 
+     *
      * @return The number of vertex positions added since the last flush
      */
     #end
@@ -286,17 +287,17 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds a vertex position to the current batch.
-     * 
+     *
      * Positions are stored in the vertex buffer with proper stride
      * based on the current vertex format. The z coordinate is used
      * for depth sorting within the same visual.
-     * 
+     *
      * @param x The x coordinate in screen space
      * @param y The y coordinate in screen space
      * @param z The z coordinate for depth (usually 0 or 1)
      */
     #end
-    #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float, y:Float, z:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float32, y:Float32, z:Float32):Void {
 
         _meshVertices[_posIndex] = x;
         _meshVertices[_posIndex+1] = y;
@@ -309,19 +310,19 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds a vertex position with texture slot for multi-texture batching.
-     * 
+     *
      * When the shader supports multiple textures in a single draw call,
      * this method stores which texture slot (0-7) this vertex should
      * sample from. This enables efficient batching of visuals with
      * different textures.
-     * 
+     *
      * @param x The x coordinate in screen space
      * @param y The y coordinate in screen space
      * @param z The z coordinate for depth
      * @param textureSlot The texture slot index (0-7)
      */
     #end
-    #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float, y:Float, z:Float, textureSlot:Float):Void {
+    #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float32, y:Float32, z:Float32, textureSlot:Float32):Void {
 
         _meshVertices[_posIndex] = x;
         _meshVertices[_posIndex+1] = y;
@@ -335,11 +336,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds an index to the index buffer.
-     * 
+     *
      * Indices define the order in which vertices are connected to form
      * triangles or lines. Unity uses 16-bit indices, limiting meshes
      * to 65535 vertices.
-     * 
+     *
      * @param i The vertex index to add (0-based)
      */
     #end
@@ -353,11 +354,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds texture coordinates to the vertex buffer.
-     * 
+     *
      * UV coordinates map vertices to texture pixels. The Y coordinate
      * is flipped (1.0 - uvY) because Unity's texture coordinate system
      * has Y=0 at the bottom, while Ceramic uses Y=0 at the top.
-     * 
+     *
      * @param uvX The horizontal texture coordinate (0-1)
      * @param uvY The vertical texture coordinate (0-1, flipped internally)
      */
@@ -374,11 +375,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds vertex color to the vertex buffer.
-     * 
+     *
      * Colors are stored as RGBA values in the 0-1 range and are
      * multiplied with texture colors in the shader. This enables
      * tinting and fading effects.
-     * 
+     *
      * @param r Red component (0-1)
      * @param g Green component (0-1)
      * @param b Blue component (0-1)
@@ -399,7 +400,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins adding custom float attributes for the current vertex.
-     * 
+     *
      * Called before putFloatAttribute() to prepare for custom shader
      * attributes. This is a no-op in Unity as attributes are written
      * directly to the vertex buffer.
@@ -414,11 +415,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Adds a custom float attribute value for the current vertex.
-     * 
+     *
      * Custom attributes allow shaders to receive additional per-vertex
      * data beyond position, color, and UVs. The attribute count and
      * meaning are defined by the active shader.
-     * 
+     *
      * @param index The attribute index (0-based)
      * @param value The float value to store
      */
@@ -432,7 +433,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Completes custom float attributes for the current vertex.
-     * 
+     *
      * Advances the attribute pointer to the next vertex position
      * in the buffer, preparing for the next vertex's attributes.
      */
@@ -446,7 +447,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Initializes rendering buffers and state for a new frame.
-     * 
+     *
      * Creates mesh pools if needed, resets texture slots, and loads
      * the stencil shader. This method is called at the beginning of
      * each frame before any drawing operations.
@@ -478,7 +479,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Prepares the next mesh for rendering.
-     * 
+     *
      * Advances to the next mesh in the pool, creating a new one if needed.
      * Mesh pooling avoids garbage collection by reusing Unity Mesh objects
      * and their associated vertex/index buffers across frames.
@@ -505,7 +506,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Resets vertex buffer indices for a new batch.
-     * 
+     *
      * Clears counters and sets up proper offsets based on whether
      * the current shader supports multi-texture batching. Multi-texture
      * shaders need an extra float per vertex for the texture slot.
@@ -542,7 +543,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins a new rendering frame.
-     * 
+     *
      * Clears command buffers, sets up the camera for pixel-perfect 2D
      * rendering, and initializes transformation matrices. The camera's
      * orthographic size is set to half the pixel height for 1:1 pixel mapping.
@@ -575,7 +576,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Clears the screen and applies the background color.
-     * 
+     *
      * Uses the background color from app settings to clear both
      * color and depth buffers. The alpha is always set to 1.0
      * for the background.
@@ -596,12 +597,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the current render target for off-screen rendering.
-     * 
+     *
      * When a render target is set, all subsequent draw calls render
      * to the texture instead of the screen. The method handles viewport
      * transformation, density scaling, and proper matrix setup for the
      * render target's dimensions.
-     * 
+     *
      * @param renderTarget The texture to render to, or null for screen
      * @param force Force update even if target hasn't changed
      */
@@ -714,11 +715,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Updates the projection matrix for 2D orthographic rendering.
-     * 
+     *
      * Creates a projection matrix that maps screen coordinates directly
      * to clip space, with Y-axis flipped to match Ceramic's coordinate
      * system (Y=0 at top).
-     * 
+     *
      * @param width The viewport width in pixels
      * @param height The viewport height in pixels
      */
@@ -741,11 +742,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Updates the view matrix with camera transformation.
-     * 
+     *
      * Applies density scaling and optional transformations to the view.
      * Can flip the view horizontally or vertically, which is used when
      * rendering to textures.
-     * 
+     *
      * @param density The pixel density multiplier
      * @param width The viewport width
      * @param height The viewport height
@@ -791,7 +792,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Updates the combined projection-view matrix.
-     * 
+     *
      * Multiplies the projection and model-view matrices to create
      * the final transformation matrix used for rendering.
      */
@@ -807,11 +808,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Converts a Ceramic Transform to a Unity Matrix4x4.
-     * 
+     *
      * Maps the 2D affine transformation (a,b,c,d,tx,ty) to a 4x4 matrix
      * suitable for Unity's rendering pipeline. The Z components are set
      * for identity transformation in the Z axis.
-     * 
+     *
      * @param transform The 2D transform to convert
      * @return A Unity Matrix4x4 representing the transformation
      */
@@ -834,11 +835,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the active shader for subsequent draw operations.
-     * 
+     *
      * Configures vertex layout based on shader requirements, including
      * custom attributes and multi-texture support. When stencil writing
      * is active, overrides with the stencil shader.
-     * 
+     *
      * @param shader The shader implementation to use
      */
     #end
@@ -862,7 +863,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Clears the current render target.
-     * 
+     *
      * Clears both color (to transparent white) and depth buffers.
      * Used when starting to render to a new target or clearing
      * specific regions.
@@ -882,7 +883,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Enables alpha blending (no-op in Unity).
-     * 
+     *
      * Unity always has blending enabled for transparent materials,
      * so this method is empty. Blend modes are controlled through
      * setBlendFuncSeparate() instead.
@@ -897,7 +898,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Disables alpha blending (no-op in Unity).
-     * 
+     *
      * Unity requires blending for proper 2D rendering with transparency,
      * so this method is empty. The framework always uses blended materials.
      */
@@ -911,11 +912,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the blend function for color and alpha channels separately.
-     * 
+     *
      * Configures how source pixels are blended with destination pixels.
      * These settings are applied when getting or creating materials,
      * allowing different blend modes for different draw calls.
-     * 
+     *
      * @param srcRgb Source blend factor for RGB channels
      * @param dstRgb Destination blend factor for RGB channels
      * @param srcAlpha Source blend factor for alpha channel
@@ -934,10 +935,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the currently active texture slot.
-     * 
+     *
      * Unity supports up to 8 texture slots (0-7) for multi-texture
      * batching in custom shaders.
-     * 
+     *
      * @return The active texture slot index (0-7)
      */
     #end
@@ -950,10 +951,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the active texture slot for subsequent texture bindings.
-     * 
+     *
      * When binding textures, they are assigned to the currently active
      * slot. This enables multi-texture rendering with custom shaders.
-     * 
+     *
      * @param slot The texture slot to activate (0-7)
      */
     #end
@@ -966,10 +967,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Checks if a texture backend item matches a given texture ID.
-     * 
+     *
      * Used to verify texture identity without comparing object references,
      * which is important for texture caching and batching decisions.
-     * 
+     *
      * @param backendItem The texture to check
      * @param textureId The ID to compare against
      * @return True if the texture has the specified ID
@@ -984,10 +985,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the unique identifier for a texture.
-     * 
+     *
      * Each texture has a unique ID used for comparison and caching.
      * This avoids object reference comparisons which can be unreliable.
-     * 
+     *
      * @param backendItem The texture to get the ID from
      * @return The texture's unique identifier
      */
@@ -1001,10 +1002,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the width of a texture in pixels.
-     * 
+     *
      * Returns the logical width, which may differ from the actual
      * GPU texture width if the texture uses power-of-two padding.
-     * 
+     *
      * @param texture The texture to query
      * @return The texture width in pixels
      */
@@ -1018,10 +1019,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the height of a texture in pixels.
-     * 
+     *
      * Returns the logical height, which may differ from the actual
      * GPU texture height if the texture uses power-of-two padding.
-     * 
+     *
      * @param texture The texture to query
      * @return The texture height in pixels
      */
@@ -1035,10 +1036,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the actual GPU width of a texture.
-     * 
+     *
      * In Unity, textures don't require power-of-two dimensions,
      * so this returns the same value as getTextureWidth().
-     * 
+     *
      * @param texture The texture to query
      * @return The actual texture width on GPU
      */
@@ -1052,10 +1053,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the actual GPU height of a texture.
-     * 
+     *
      * In Unity, textures don't require power-of-two dimensions,
      * so this returns the same value as getTextureHeight().
-     * 
+     *
      * @param texture The texture to query
      * @return The actual texture height on GPU
      */
@@ -1069,11 +1070,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Binds a texture to the current active texture slot.
-     * 
+     *
      * The texture will be used in the active slot for subsequent
      * draw operations. Multiple textures can be bound to different
      * slots for multi-texture rendering.
-     * 
+     *
      * @param backendItem The texture to bind
      */
     #end
@@ -1086,7 +1087,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Unbinds the texture from the current active slot.
-     * 
+     *
      * Sets the active texture slot to null, which will cause
      * the shader to use a default white texture or skip
      * texture sampling for that slot.
@@ -1101,10 +1102,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Sets the primitive type for subsequent geometry.
-     * 
+     *
      * Determines whether vertices will be connected as triangles
      * (for filled shapes) or lines (for stroked shapes).
-     * 
+     *
      * @param primitiveType The primitive type (TRIANGLE or LINE)
      */
     #end
@@ -1120,10 +1121,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins drawing a Quad visual (no-op).
-     * 
+     *
      * Called before rendering a Quad's vertices. Currently empty
      * as no special setup is needed for quads in Unity.
-     * 
+     *
      * @param quad The quad being drawn
      */
     #end
@@ -1134,7 +1135,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Ends drawing a Quad visual (no-op).
-     * 
+     *
      * Called after rendering a Quad's vertices. Currently empty
      * as no special cleanup is needed for quads in Unity.
      */
@@ -1146,10 +1147,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins drawing a Mesh visual (no-op).
-     * 
+     *
      * Called before rendering a Mesh's vertices. Currently empty
      * as no special setup is needed for meshes in Unity.
-     * 
+     *
      * @param mesh The mesh being drawn
      */
     #end
@@ -1160,7 +1161,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Ends drawing a Mesh visual (no-op).
-     * 
+     *
      * Called after rendering a Mesh's vertices. Currently empty
      * as no special cleanup is needed for meshes in Unity.
      */
@@ -1172,11 +1173,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Enables scissor testing to clip rendering to a rectangle.
-     * 
+     *
      * Only pixels within the scissor rectangle will be rendered.
      * The rectangle is transformed by the current view matrix and
      * adjusted for pixel density. Coordinates are in screen space.
-     * 
+     *
      * @param x The left edge of the scissor rectangle
      * @param y The top edge of the scissor rectangle
      * @param width The width of the scissor rectangle
@@ -1221,7 +1222,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Disables scissor testing.
-     * 
+     *
      * Restores full viewport rendering without clipping.
      * Should be called after scissor-clipped rendering is complete.
      */
@@ -1240,7 +1241,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Begins drawing to the stencil buffer.
-     * 
+     *
      * Flushes any pending geometry, then clears the stencil buffer
      * if it's dirty by drawing a fullscreen quad. Subsequent draw
      * calls will write to the stencil buffer instead of color.
@@ -1292,7 +1293,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Ends drawing to the stencil buffer.
-     * 
+     *
      * Stops writing to the stencil buffer. Subsequent draw calls
      * will render to the color buffer again.
      */
@@ -1306,7 +1307,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Enables stencil testing for subsequent draws.
-     * 
+     *
      * When enabled, pixels will only be drawn where the stencil
      * buffer has been written to. Used for masking effects.
      */
@@ -1320,7 +1321,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Disables stencil testing for subsequent draws.
-     * 
+     *
      * When disabled, pixels are drawn regardless of stencil buffer
      * contents. This is the default rendering mode.
      */
@@ -1334,11 +1335,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Checks if the current batch should be flushed before adding more geometry.
-     * 
+     *
      * Returns true if adding the specified vertices/indices would exceed
      * buffer limits. The renderer uses this to decide when to submit
      * the current batch and start a new one.
-     * 
+     *
      * @param numVerticesAfter Number of vertices to be added
      * @param numIndicesAfter Number of indices to be added
      * @param customFloatAttributesSize Size of custom attributes (unused)
@@ -1354,10 +1355,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the number of vertices that can be added before flush.
-     * 
+     *
      * Used by the renderer to optimize batching by filling buffers
      * as much as possible before submitting draw calls.
-     * 
+     *
      * @return Number of vertices that can still be added
      */
     #end
@@ -1370,10 +1371,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Gets the number of indices that can be added before flush.
-     * 
+     *
      * Used by the renderer to optimize batching by filling index
      * buffers as much as possible before submitting draw calls.
-     * 
+     *
      * @return Number of indices that can still be added
      */
     #end
@@ -1386,10 +1387,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Checks if there's any geometry waiting to be rendered.
-     * 
+     *
      * Returns true if any vertices have been added since the last
      * flush. Used to avoid empty draw calls.
-     * 
+     *
      * @return True if there are vertices to render
      */
     #end
@@ -1402,13 +1403,13 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Submits the current batch of geometry to the GPU.
-     * 
+     *
      * This is the core rendering method that:
      * 1. Uploads vertex and index data to the current Unity Mesh
      * 2. Gets or creates a Material with the current render state
      * 3. Issues a draw command through the command buffer
      * 4. Resets buffers and prepares for the next batch
-     * 
+     *
      * The method handles stencil states, multiple textures, custom
      * shaders, and blend modes through the material system.
      */
@@ -1553,7 +1554,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Clears the lists of pending command buffers and render targets.
-     * 
+     *
      * Called at the beginning of each frame to reset URP state.
      */
     #end
@@ -1567,10 +1568,10 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Allocates a new command buffer for the next batch of draw commands.
-     * 
+     *
      * Gets a buffer from Unity's pool and tracks it along with its
      * target for later assignment to render passes.
-     * 
+     *
      * @param renderTarget The target texture, or null for screen
      */
     #end
@@ -1585,12 +1586,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Creates and enqueues render passes for all pending command buffers.
-     * 
+     *
      * This method is called by URP to add Ceramic's render passes to the
      * frame. It creates or reuses CeramicRenderPass instances for each
      * command buffer, configures their render targets, and enqueues them
      * with the scriptable renderer.
-     * 
+     *
      * @param renderer The URP scriptable renderer
      * @param renderingData Current frame's rendering data
      */
@@ -1676,11 +1677,11 @@ class Draw #if !completion implements spec.Draw #end {
     #if !no_backend_docs
     /**
      * Entry point called by CeramicRenderFeature in URP.
-     * 
+     *
      * This static method is invoked through reflection from the Unity
      * render feature. It stores the renderer and rendering data, then
      * triggers a render pass update to process Ceramic's visuals.
-     * 
+     *
      * @param renderer The URP scriptable renderer
      * @param renderingData Current frame's rendering data
      */
