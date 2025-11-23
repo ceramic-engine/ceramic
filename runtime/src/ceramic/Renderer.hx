@@ -1241,11 +1241,13 @@ class Renderer extends Entity {
         _drawMesh(draw, mesh, mesh.vertices, null, null, mesh.floatColors);
     }
 
-    inline function _drawMesh(draw:backend.Draw, mesh:ceramic.Mesh, meshVertices:Array<Float>, meshVertices32:Float32Array, meshColors:Array<AlphaColor>, meshFloatColors:Float32Array):Void {
+    #if !debug inline #end function _drawMesh(draw:backend.Draw, mesh:ceramic.Mesh, meshVertices:Array<Float>, meshVertices32:Float32Array, meshColors:Array<AlphaColor>, meshFloatColors:Float32Array):Void {
 
     #if ceramic_debug_draw
         drawnMeshes++;
     #end
+
+        final meshVerticesLength = meshVertices32 != null ? meshVertices32.length : meshVertices.length;
 
         inline function verticesGet(index:Int):Float32 {
             return meshVertices32 != null ? meshVertices32[index] : meshVertices.unsafeGet(index);
@@ -1428,8 +1430,8 @@ class Renderer extends Entity {
             else if (meshIndicesColor && meshFloatColors.length < meshIndices.length * 4) {
                 log.error('Trying to draw mesh $mesh with indices colors but floatColors array is too short. It must have at least ${meshIndices.length * 4} elements, current is ${meshFloatColors.length} (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
             }
-            else if (!meshSingleColor && !meshIndicesColor && meshFloatColors.length < Math.round(meshVertices.length / (2 + customFloatAttributesSize))) {
-                log.error('Trying to draw mesh $mesh with vertices colors but floatColors array is too short. It must have at least ${Math.round(meshVertices.length / (2 + customFloatAttributesSize))} elements, current is ${meshFloatColors.length} (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            else if (!meshSingleColor && !meshIndicesColor && Math.round(meshFloatColors.length / 4) < Math.round(meshVerticesLength / (2 + customFloatAttributesSize))) {
+                log.error('Trying to draw mesh $mesh with vertices colors but floatColors array is too short. It must have at least ${Math.round(meshVerticesLength / (2 + customFloatAttributesSize))} elements, current is ${meshFloatColors.length} (RGBA)' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
             }
         }
         else if (meshColors != null) {
@@ -1439,8 +1441,8 @@ class Renderer extends Entity {
             else if (meshIndicesColor && meshColors.length < meshIndices.length) {
                 log.error('Trying to draw mesh $mesh with indices colors but colors array is too short. It must have at least ${meshIndices.length} elements' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
             }
-            else if (!meshSingleColor && !meshIndicesColor && meshColors.length < Math.round(meshVertices.length / (2 + customFloatAttributesSize))) {
-                log.error('Trying to draw mesh $mesh with vertices colors but colors array is too short. It must have at least ${Math.round(meshVertices.length / (2 + customFloatAttributesSize))} elements' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
+            else if (!meshSingleColor && !meshIndicesColor && meshColors.length < Math.round(meshVerticesLength / (2 + customFloatAttributesSize))) {
+                log.error('Trying to draw mesh $mesh with vertices colors but colors array is too short. It must have at least ${Math.round(meshVerticesLength / (2 + customFloatAttributesSize))} elements' #if ceramic_debug_entity_allocs , @:privateAccess mesh.posInfos #end);
             }
         }
         else {
