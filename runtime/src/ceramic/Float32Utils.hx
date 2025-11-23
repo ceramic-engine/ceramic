@@ -50,6 +50,18 @@ class Float32Utils {
         #end
     }
 
+    /**
+     * Linear interpolation between two values.
+     *
+     * @param a Start value (returned when t=0)
+     * @param b End value (returned when t=1)
+     * @param t Interpolation factor (0 to 1)
+     * @return The interpolated value
+     */
+    public inline static function lerp32(a:Float32, b:Float32, t:Float32):Float32 {
+        return a + (b - a) * t;
+    }
+
     #end
 
     macro public static function f32(expr:Expr):ExprOf<Float32> {
