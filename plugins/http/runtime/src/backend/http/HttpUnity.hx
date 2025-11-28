@@ -118,7 +118,7 @@ class HttpUnity {
             });
 
             var monoBehaviour = Main.monoBehaviour;
-            untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+            untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, http, requestId, webRequest);
 
         } catch (e:Dynamic) {
             if (webRequest != null) {
@@ -163,7 +163,7 @@ class HttpUnity {
         });
 
         var monoBehaviour = Main.monoBehaviour;
-        untyped __cs__('{0}.StartCoroutine(unityRunWebRequest({1}, {2}))', monoBehaviour, requestId, webRequest);
+        untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, http, requestId, webRequest);
 
     }
 

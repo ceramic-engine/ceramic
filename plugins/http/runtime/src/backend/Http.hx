@@ -43,7 +43,7 @@ import sys.FileSystem;
  */
 #if (cs && unity)
 @:classCode('
-System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
+public System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
     yield return request.SendWebRequest();
     unityHandleWebRequestResponse(id, request.downloadHandler);
 }
