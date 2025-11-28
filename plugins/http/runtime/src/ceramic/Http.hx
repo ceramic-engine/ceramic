@@ -7,10 +7,10 @@ using StringTools;
 /**
  * A cross-platform and high level HTTP request utility that provides a unified interface
  * for making HTTP requests across all supported Ceramic platforms.
- * 
+ *
  * This class serves as the main entry point for HTTP networking in Ceramic applications,
  * providing automatic header formatting, parameter encoding, and response processing.
- * 
+ *
  * Features:
  * - Cross-platform HTTP requests (web, mobile, desktop, Unity)
  * - Automatic parameter encoding for GET and POST requests
@@ -18,7 +18,8 @@ using StringTools;
  * - Support for both text and binary responses
  * - Timeout handling
  * - Content-Length automatic calculation
- * 
+ * - Support for multiple headers with the same key via HttpHeaders
+ *
  * Example usage:
  * ```haxe
  * Http.request({
@@ -40,46 +41,65 @@ class Http {
 
     /**
      * Performs an HTTP request with the specified options.
-     * 
+     *
      * This method handles the complete HTTP request lifecycle including:
      * - Header formatting and normalization
      * - Parameter encoding for GET/POST requests
      * - Content-Length calculation
      * - Response processing and cleanup
-     * 
+     *
      * @param options The HTTP request configuration including URL, method, headers, parameters, and timeout
      * @param done Callback function that receives the HTTP response when the request completes
      */
-    public static function request(
-        options:ceramic.HttpRequestOptions,
-        done:ceramic.HttpResponse->Void):Void {
+    public static function request(options:ceramic.HttpRequestOptions, done:ceramic.HttpResponse->Void):Void {
 
         /**
          * Formats header keys to proper HTTP header case (e.g., "content-type" -> "Content-Type").
-         * 
+         *
          * @param key The header key to format
          * @return The formatted header key with proper capitalization
          */
         inline function formatHeaderKey(key:String) {
-
             var formatKey = [];
             for (part in key.split('-')) {
                 formatKey.push(part.charAt(0).toUpperCase() + part.substring(1));
             }
             return formatKey.join('-');
-
         }
 
-        // Compute headers
-        var headers = new Map<String,String>();
+        // Normalize headers to Array<String> format [key, value, key, value, ...]
+        var headersArray:Array<String> = [];
+        var hasContentType = false;
+
         if (options.headers != null) {
-            for (key in options.headers.keys()) {
-                headers.set(formatHeaderKey(key), options.headers.get(key));
+            if (Std.isOfType(options.headers, haxe.ds.StringMap)) {
+                // Legacy Map<String, String> support
+                var map:Map<String, String> = cast options.headers;
+                for (key in map.keys()) {
+                    var formattedKey = formatHeaderKey(key);
+                    if (formattedKey == 'Content-Type')
+                        hasContentType = true;
+                    headersArray.push(formattedKey);
+                    headersArray.push(map.get(key));
+                }
+            } else if (Std.isOfType(options.headers, Array)) {
+                // HttpHeaders (abstract over Array<String>)
+                var arr:Array<String> = cast options.headers;
+                var i = 0;
+                while (i < arr.length) {
+                    var formattedKey = formatHeaderKey(arr[i]);
+                    if (formattedKey == 'Content-Type')
+                        hasContentType = true;
+                    headersArray.push(formattedKey);
+                    headersArray.push(arr[i + 1]);
+                    i += 2;
+                }
             }
         }
 
-        if (!headers.exists('Content-Type')) {
-            headers.set('Content-Type', 'application/x-www-form-urlencoded');
+        if (!hasContentType) {
+            headersArray.push('Content-Type');
+            headersArray.push('application/x-www-form-urlencoded');
         }
 
         // Compute method
@@ -100,7 +120,8 @@ class Http {
             var i = 0;
             for (key in options.params.keys()) {
                 var val = options.params.get(key);
-                if (i > 0) buff.add('&');
+                if (i > 0)
+                    buff.add('&');
                 buff.add(key.urlEncode());
                 buff.add('=');
                 buff.add(val.urlEncode());
@@ -115,34 +136,35 @@ class Http {
                 } else {
                     url = url + '?' + encoded;
                 }
-            }
-            else if (method == POST) {
+            } else if (method == POST) {
                 content = encoded;
-            }
-            else {
+            } else {
                 log.warning('HTTP request params were ignored with method: $method');
             }
         }
 
         // Content length
         if (content != null) {
-            headers.set('Content-Length', '' + content.length);
+            headersArray.push('Content-Length');
+            headersArray.push('' + content.length);
         }
 
         // Perform request
         var backendOptions:backend.HttpRequestOptions = {
             url: url,
             method: method,
-            headers: headers,
+            headers: headersArray,
             content: content,
             timeout: timeout
         };
 
         app.backend.http.request(backendOptions, function(backendResponse) {
-            var resHeaders = new Map<String,String>();
+            var resHeaders = new Map<String, String>();
             if (backendResponse.headers != null) {
-                for (key in backendResponse.headers.keys()) {
-                    resHeaders.set(formatHeaderKey(key), backendResponse.headers.get(key));
+                var i = 0;
+                while (i < backendResponse.headers.length) {
+                    resHeaders.set(formatHeaderKey(backendResponse.headers[i]), backendResponse.headers[i + 1]);
+                    i += 2;
                 }
             }
 
@@ -162,7 +184,6 @@ class Http {
                 headers: resHeaders
             });
         });
-
     }
 
 }

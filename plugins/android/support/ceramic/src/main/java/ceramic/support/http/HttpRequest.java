@@ -12,7 +12,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,7 +26,7 @@ import bind.Support;
 public class HttpRequest {
 
     public interface Listener {
-        void onComplete(int statusCode, String statusMessage, String content, byte[] binaryContent, String downloadPath, Map<String,String> headers);
+        void onComplete(int statusCode, String statusMessage, String content, byte[] binaryContent, String downloadPath, List<String> headers);
     }
 
     private final Map<String,Object> mParams;
@@ -37,7 +38,7 @@ public class HttpRequest {
     private byte[] mBinaryContent;
     private String mTargetDownloadPath;
     private String mFinalDownloadPath;
-    private Map<String,String> mHeaders;
+    private List<String> mHeaders;
     private boolean mExecuting = false;
 
     private static ExecutorService sExecutor = null;
@@ -131,12 +132,13 @@ public class HttpRequest {
                     }
                 }
 
-                // Headers
+                // Headers (comes as List<String>: [key, value, key, value, ...])
                 if (params.get("headers") != null) {
-                    Map<String,String> headers = (Map<String,String>) params.get("headers");
-                    for (String key : headers.keySet()) {
-                        if (headers.get(key) != null) {
-                            String val = "" + headers.get(key);
+                    List<String> headers = (List<String>) params.get("headers");
+                    for (int i = 0; i < headers.size(); i += 2) {
+                        String key = headers.get(i);
+                        String val = headers.get(i + 1);
+                        if (val != null) {
                             connection.setRequestProperty(key, val);
                         }
                     }
@@ -159,14 +161,19 @@ public class HttpRequest {
 
                 mStatusCode = connection.getResponseCode();
                 mStatusMessage = connection.getResponseMessage();
-                mHeaders = new HashMap<>();
+                mHeaders = new ArrayList<>();
 
                 String contentType = null;
-                for (String name : connection.getHeaderFields().keySet()) {
+                // Iterate through all header fields to capture multiple values for same key (e.g., Set-Cookie)
+                for (Map.Entry<String, List<String>> entry : connection.getHeaderFields().entrySet()) {
+                    String name = entry.getKey();
                     if (name != null) {
-                        mHeaders.put(name, connection.getHeaderField(name));
-                        if (contentType == null && name.toLowerCase().equals("content-type")) {
-                            contentType = connection.getHeaderField(name).trim();
+                        for (String value : entry.getValue()) {
+                            mHeaders.add(name);
+                            mHeaders.add(value);
+                            if (contentType == null && name.toLowerCase().equals("content-type")) {
+                                contentType = value.trim();
+                            }
                         }
                     }
                 }
@@ -263,7 +270,7 @@ public class HttpRequest {
                 mStatusMessage = e.getClass().getSimpleName() + " " + e.getMessage();
                 mContent = null;
                 mBinaryContent = null;
-                mHeaders = new HashMap<>();
+                mHeaders = new ArrayList<>();
 
             } finally {
                 if (connection != null) connection.disconnect();
@@ -276,7 +283,7 @@ public class HttpRequest {
             mStatusMessage = e.getClass().getSimpleName() + " " + e.getMessage();
             mContent = null;
             mBinaryContent = null;
-            mHeaders = new HashMap<>();
+            mHeaders = new ArrayList<>();
         }
 
         // Provide result

@@ -36,8 +36,11 @@ typedef HttpRequestOptions = {
     /** The HTTP method to use (GET, POST, PUT, DELETE). Defaults to GET if not specified. */
     @:optional var method:ceramic.HttpMethod;
 
-    /** Map of HTTP headers to include in the request. Header names should be properly formatted. */
-    @:optional var headers:Map<String,String>;
+    /**
+     * HTTP headers as a flat array: [key1, value1, key2, value2, ...].
+     * This format allows multiple headers with the same name.
+     */
+    @:optional var headers:Array<String>;
 
     /** Raw string content to send in the request body. Used for POST/PUT requests. */
     @:optional var content:String;

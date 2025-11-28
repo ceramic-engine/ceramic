@@ -46,11 +46,12 @@ class HttpResponse {
      */
     public var error:String = null;
 
-    /** 
-     * Map of raw HTTP response headers as received from the server.
+    /**
+     * HTTP response headers as a flat array: [key1, value1, key2, value2, ...].
+     * This format allows multiple headers with the same name.
      * Header names may not be normalized at this level.
      */
-    public var headers:Map<String,String>;
+    public var headers:Array<String>;
 
     /**
      * Returns a string representation of this backend HTTP response for debugging.

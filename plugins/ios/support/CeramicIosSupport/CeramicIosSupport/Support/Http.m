@@ -42,7 +42,7 @@
                @"status": @(408),
                @"content": [NSNull null],
                @"error": statusMessage ? statusMessage : [NSNull null],
-               @"headers": [NSNull null]
+               @"headers": @[]
             });
         });
     }
@@ -109,8 +109,13 @@
                     content = [NSNull null];
 
 
-                // Headers
-                headers = [httpResponse allHeaderFields];
+                // Headers (convert to array: [key, value, key, value, ...])
+                NSMutableArray *headersArray = [NSMutableArray array];
+                [[httpResponse allHeaderFields] enumerateKeysAndObjectsUsingBlock:^(id _Nonnull key, id _Nonnull obj, BOOL * _Nonnull stop) {
+                    [headersArray addObject:key];
+                    [headersArray addObject:obj];
+                }];
+                headers = headersArray;
             }
             else if (error) {
 
@@ -118,7 +123,7 @@
                 statusMessage = [error localizedDescription];
                 content = [NSNull null];
                 binaryContent = [NSNull null];
-                headers = [NSNull null];
+                headers = @[];
 
             }
             else {
@@ -127,7 +132,7 @@
                 statusMessage = @"Unknown response";
                 content = [NSNull null];
                 binaryContent = [NSNull null];
-                headers = [NSNull null];
+                headers = @[];
             }
 
             // Reply
@@ -316,11 +321,14 @@
         request.HTTPBody = [params[@"content"] dataUsingEncoding:NSUTF8StringEncoding];
     }
 
-    // HTTP headers
-    if ([params[@"headers"] isKindOfClass:[NSDictionary class]]) {
-        [params[@"headers"] enumerateKeysAndObjectsUsingBlock:^(id _Nonnull key, id _Nonnull obj, BOOL * _Nonnull stop) {
-            [request addValue:obj forHTTPHeaderField:key];
-        }];
+    // HTTP headers (comes as NSArray: [key, value, key, value, ...])
+    if ([params[@"headers"] isKindOfClass:[NSArray class]]) {
+        NSArray *headers = params[@"headers"];
+        for (NSUInteger i = 0; i < headers.count; i += 2) {
+            NSString *key = headers[i];
+            NSString *value = headers[i + 1];
+            [request addValue:value forHTTPHeaderField:key];
+        }
     }
 
     // HTTP timeout
