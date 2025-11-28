@@ -61,19 +61,37 @@ enum abstract Blending(Int) from Int to Int {
     var ADD = 2;
 
     /**
-     * Set blending (replace mode).
-     * 
-     * Completely replaces destination pixels with source pixels,
-     * ignoring what was previously drawn. No transparency or blending.
-     * 
+     * Set blending.
+     *
+     * Writes source pixels to destination, respecting source alpha.
+     * Similar to premultiplied alpha but treats RGB and alpha independently.
+     *
      * Use cases:
-     * - Clearing areas to specific colors
-     * - Masks and stencil-like effects
-     * - Overwriting render texture contents
-     * 
-     * Formula: result = source
+     * - Drawing with alpha masking
+     * - Specific compositing scenarios
+     *
+     * Formula: result.rgb = source.rgb + dest.rgb * (1 - source.alpha)
+     *          result.alpha = source.alpha + dest.alpha * (1 - source.alpha)
      */
     var SET = 4;
+
+    /**
+     * Replace blending (complete overwrite).
+     *
+     * Completely replaces destination pixels with source pixels,
+     * ignoring what was previously drawn. All channels (RGB and alpha)
+     * are written directly without any blending.
+     *
+     * Use cases:
+     * - Clearing areas to exact pixel values
+     * - Direct framebuffer writes
+     * - Copy operations without compositing
+     * - Storing non-visual data in render textures (positions, normals, etc.)
+     * - Using RGBA channels as independent data storage without alpha affecting RGB
+     *
+     * Formula: result = source
+     */
+    var REPLACE = 7;
 
     /**
      * Special blending mode for render-to-texture operations.

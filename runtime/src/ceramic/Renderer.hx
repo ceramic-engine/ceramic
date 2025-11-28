@@ -1954,6 +1954,13 @@ class Renderer extends Entity {
                     backend.BlendMode.ONE,
                     backend.BlendMode.SRC_ALPHA
                 );
+            case REPLACE:
+                draw.setBlendFuncSeparate(
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ZERO,
+                    backend.BlendMode.ONE,
+                    backend.BlendMode.ZERO
+                );
             case RENDER_TO_TEXTURE:
                 draw.setBlendFuncSeparate(
                     backend.BlendMode.ONE,
