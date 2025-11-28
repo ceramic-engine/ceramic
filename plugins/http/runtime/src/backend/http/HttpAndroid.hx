@@ -3,6 +3,7 @@ package backend.http;
 #if android
 
 import android.Http as AndroidHttp;
+import ceramic.Shortcuts.*;
 import haxe.crypto.Base64;
 import haxe.io.Bytes;
 

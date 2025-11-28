@@ -3,6 +3,7 @@ package backend.http;
 #if (cpp || sys)
 
 import ceramic.Runner;
+import ceramic.Shortcuts.*;
 import sys.FileSystem;
 
 class HttpNative {

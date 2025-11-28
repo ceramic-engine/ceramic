@@ -111,7 +111,13 @@ class Http implements spec.Http {
             });
         };
 
-        #if (nodejs || hxnodejs || node)
+        #if ceramic_http_custom
+
+        // This allows a different plugin to provide an alternative implementation
+        // of HTTP that isn't available directly from the http plugin.
+        backend.http.HttpCustom.request(options, done);
+
+        #elseif (nodejs || hxnodejs || node)
         backend.http.HttpNodejs.request(options, done);
         #elseif android
         backend.http.HttpAndroid.request(options, done);

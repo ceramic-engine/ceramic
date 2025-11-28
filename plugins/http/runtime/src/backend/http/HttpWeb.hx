@@ -5,6 +5,8 @@ package backend.http;
 import haxe.io.Bytes;
 import js.html.XMLHttpRequest;
 
+import ceramic.Shortcuts.*;
+
 using StringTools;
 
 class HttpWeb {

@@ -2,6 +2,7 @@ package backend.http;
 
 #if (cs && unity)
 
+import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import sys.FileSystem;
 import unityengine.networking.DownloadHandler;

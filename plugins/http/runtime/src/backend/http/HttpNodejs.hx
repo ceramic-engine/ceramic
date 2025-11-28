@@ -2,6 +2,7 @@ package backend.http;
 
 #if (nodejs || hxnodejs || node)
 
+import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import sys.FileSystem;
 

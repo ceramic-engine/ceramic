@@ -4,6 +4,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import bind.Support.*;
@@ -17,7 +18,7 @@ public class Http {
         new HttpRequest(params, null, new HttpRequest.Listener() {
 
             @Override
-            public void onComplete(final int statusCode, final String statusMessage, final String content, final byte[] binaryContent, final String downloadPath, final Map<String,String> headers) {
+            public void onComplete(final int statusCode, final String statusMessage, final String content, final byte[] binaryContent, final String downloadPath, final List<String> headers) {
                 Map<String,Object> result = new HashMap<>();
                 result.put("status", statusCode);
                 if (statusCode >= 400) {
@@ -43,7 +44,7 @@ public class Http {
         new HttpRequest(params, targetPath, new HttpRequest.Listener() {
 
             @Override
-            public void onComplete(final int statusCode, final String statusMessage, final String content, final byte[] binaryContent, final String downloadPath, final Map<String,String> headers) {
+            public void onComplete(final int statusCode, final String statusMessage, final String content, final byte[] binaryContent, final String downloadPath, final List<String> headers) {
 
                 if (statusCode >= 400) {
                     Log.e("CERAMIC", statusCode + " / " + statusMessage);

@@ -2,6 +2,7 @@ package backend.http;
 
 #if ios
 
+import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import ios.Http as IosHttp;
 
