@@ -213,29 +213,127 @@ class Helpers {
 
     }
 
-    public static function computePlugins() {
+    /**
+     * Load plugins from a directory (handles both regular directories and .plugin files)
+     * @param pluginsPath Directory to scan for plugins
+     * @param source Source identifier for logging ('global' or 'project')
+     */
+    static function loadPluginsFromDirectory(pluginsPath:String, source:String):Void {
 
-        context.plugins = new Map();
+        for (entry in FileSystem.readDirectory(pluginsPath)) {
+            final entryPath = Path.join([pluginsPath, entry]);
 
-        // User-defined plugins in project
-        final projectPluginIds:Array<String> = [];
-        final projectPluginData:Array<Dynamic> = [];
-        final projectPluginsPath = Path.normalize(Path.join([context.cwd, 'plugins']));
+            if (FileSystem.isDirectory(entryPath)) {
+                // Regular plugin directory
+                var pluginId = Path.withoutDirectory(entryPath);
 
-        // Make sure cwd isn't ceramic path itself!
-        if (Path.normalize(Path.join([context.ceramicRootPath, 'plugins'])) != projectPluginsPath) {
+                // Skip if already loaded (precedence)
+                if (!context.plugins.exists(pluginId)) {
+                    loadCustomPlugin(entryPath, null);
+                }
+            }
+            else if (entry.endsWith('.plugin')) {
+                // Plugin path reference file
+                var pluginId = entry.substring(0, entry.length - '.plugin'.length);
 
-            if (FileSystem.exists(projectPluginsPath) && FileSystem.isDirectory(projectPluginsPath)) {
-                for (dir in FileSystem.readDirectory(projectPluginsPath)) {
-                    final pluginPath = Path.join([projectPluginsPath, dir]);
-                    if (FileSystem.exists(pluginPath) && FileSystem.isDirectory(pluginPath)) {
-                        loadCustomPlugin(pluginPath);
+                // Skip if already loaded (precedence)
+                if (!context.plugins.exists(pluginId)) {
+                    var referencedPath = loadPluginReference(entryPath, pluginId, source);
+                    if (referencedPath != null) {
+                        loadCustomPlugin(referencedPath, pluginId);
                     }
                 }
             }
         }
 
-        // Default plugins
+    }
+
+    /**
+     * Loads a plugin path from a .plugin reference file
+     * @param referenceFilePath Path to the .plugin file
+     * @param pluginId Plugin identifier (for error messages)
+     * @param source Source type: 'global' or 'project' (for path resolution)
+     * @return Resolved absolute path, or null if invalid
+     */
+    public static function loadPluginReference(referenceFilePath:String, pluginId:String, source:String):String {
+
+        try {
+            // Read the reference file (single line containing path)
+            var content = File.getContent(referenceFilePath).trim();
+
+            if (content == '') {
+                warning('Plugin reference file is empty: $referenceFilePath');
+                return null;
+            }
+
+            // Resolve path
+            var pluginPath:String;
+            if (Path.isAbsolute(content)) {
+                // Absolute paths used as-is
+                pluginPath = Path.normalize(content);
+            } else {
+                // Relative paths resolved based on source
+                if (source == 'global') {
+                    // Global plugins: resolve relative to home directory
+                    var homeDir = homedir();
+                    pluginPath = Path.normalize(Path.join([homeDir, content]));
+                } else {
+                    // Project plugins: resolve relative to project root
+                    pluginPath = Path.normalize(Path.join([context.cwd, content]));
+                }
+            }
+
+            // Validate path exists
+            if (!FileSystem.exists(pluginPath)) {
+                warning('Plugin reference path does not exist: $pluginPath (from $referenceFilePath)');
+                return null;
+            }
+
+            if (!FileSystem.isDirectory(pluginPath)) {
+                warning('Plugin reference path is not a directory: $pluginPath (from $referenceFilePath)');
+                return null;
+            }
+
+            // Validate ceramic.yml exists
+            var ceramicYmlPath = Path.join([pluginPath, 'ceramic.yml']);
+            if (!FileSystem.exists(ceramicYmlPath)) {
+                warning('Plugin directory missing ceramic.yml: $pluginPath (for plugin: $pluginId)');
+                return null;
+            }
+
+            return pluginPath;
+        }
+        catch (e:Dynamic) {
+            warning('Error reading plugin reference file $referenceFilePath: $e');
+            return null;
+        }
+
+    }
+
+    public static function computePlugins() {
+
+        context.plugins = new Map();
+
+        // 1. Load global user plugins from ~/.ceramic/plugins/
+        var homeDir = homedir();
+        if (homeDir != null) {
+            final globalPluginsPath = Path.normalize(Path.join([homeDir, '.ceramic', 'plugins']));
+            if (FileSystem.exists(globalPluginsPath) && FileSystem.isDirectory(globalPluginsPath)) {
+                loadPluginsFromDirectory(globalPluginsPath, 'global');
+            }
+        }
+
+        // 2. Load project-specific plugins from {project}/plugins/
+        final projectPluginsPath = Path.normalize(Path.join([context.cwd, 'plugins']));
+
+        // Make sure cwd isn't ceramic path itself!
+        if (Path.normalize(Path.join([context.ceramicRootPath, 'plugins'])) != projectPluginsPath) {
+            if (FileSystem.exists(projectPluginsPath) && FileSystem.isDirectory(projectPluginsPath)) {
+                loadPluginsFromDirectory(projectPluginsPath, 'project');
+            }
+        }
+
+        // 3. Load default/built-in plugins (compile-time macro data)
         final defaultPlugins:Array<Dynamic> = ToolsMacros.pluginDefaults();
         final pluginConstructs:Dynamic = ToolsMacros.pluginConstructs();
         final pluginsPath = Path.join([context.ceramicRootPath, 'plugins']);
@@ -258,7 +356,7 @@ class Helpers {
 
     }
 
-    public static function loadCustomPlugin(pluginPath:String) {
+    public static function loadCustomPlugin(pluginPath:String, ?overrideId:String) {
 
         #if windows
         final ceramicBinPath = Path.join([context.ceramicToolsPath, 'ceramic.exe']);
@@ -267,7 +365,7 @@ class Helpers {
         #end
 
         final pluginYmlPath = Path.join([pluginPath, 'ceramic.yml']);
-        final pluginBaseName = Path.withoutDirectory(pluginPath);
+        final pluginBaseName = overrideId != null ? overrideId : Path.withoutDirectory(pluginPath);
         if (FileSystem.exists(pluginYmlPath) && !FileSystem.isDirectory(pluginYmlPath)) {
             final info:Dynamic = Yaml.parse(File.getContent(pluginYmlPath));
             info.plugin.id = pluginBaseName;
