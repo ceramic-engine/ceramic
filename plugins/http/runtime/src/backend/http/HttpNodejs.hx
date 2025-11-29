@@ -2,6 +2,7 @@ package backend.http;
 
 #if (nodejs || hxnodejs || node)
 
+import ceramic.Path;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import sys.FileSystem;
@@ -150,7 +151,28 @@ class HttpNodejs {
 
     }
 
-    public static function download(url:String, tmpTargetPath:String, targetPath:String, done:String->Void):Void {
+    public static function download(url:String, targetPath:String, done:String->Void):Void {
+
+        var tmpTargetPath = targetPath + '.tmpdl';
+
+        // Ensure we can write the file at the desired location
+        if (FileSystem.exists(tmpTargetPath)) {
+            if (FileSystem.isDirectory(tmpTargetPath)) {
+                log.error('Cannot overwrite directory named $tmpTargetPath');
+                done(null);
+                return;
+            }
+            FileSystem.deleteFile(tmpTargetPath);
+        }
+        var dir = Path.directory(tmpTargetPath);
+        if (!FileSystem.exists(dir)) {
+            FileSystem.createDirectory(dir);
+        }
+        else if (!FileSystem.isDirectory(dir)) {
+            log.error('Target directory $dir should be a directory, but it is a file');
+            done(null);
+            return;
+        }
 
         var isSSL = url.startsWith('https');
         var http = isSSL ? js.Node.require('https') : js.Node.require('http');

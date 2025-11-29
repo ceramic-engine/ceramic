@@ -3,14 +3,6 @@ package backend;
 import ceramic.Path;
 import ceramic.Shortcuts.*;
 
-#if (cs && unity)
-import unityengine.networking.DownloadHandler;
-#end
-
-#if (cpp || cs || sys || nodejs || hxnodejs || node)
-import sys.FileSystem;
-#end
-
 /**
  * Platform-specific HTTP implementation providing cross-platform HTTP request functionality.
  *
@@ -41,43 +33,7 @@ import sys.FileSystem;
  * Note: This class should not be used directly by application code. Use the
  * high-level ceramic.Http class instead.
  */
-#if (cs && unity)
-@:classCode('
-public System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
-    yield return request.SendWebRequest();
-    unityHandleWebRequestResponse(id, request.downloadHandler);
-}
-')
-#end
 class Http implements spec.Http {
-
-    #if (cs && unity)
-    /** Unity-specific: Counter for generating unique request IDs */
-    public var nextRequestId:Int = 1;
-
-    /** Unity-specific: Map of request IDs to their completion callbacks */
-    public var requestCallbacks:Map<Int, DownloadHandler->Void> = new Map();
-
-    /**
-     * Unity-specific callback handler for completed web requests.
-     *
-     * This method is called from the Unity coroutine when a web request completes.
-     * It retrieves and executes the appropriate callback for the request.
-     *
-     * @param requestId The unique ID of the completed request
-     * @param downloadHandler The Unity download handler containing the response data
-     */
-    @:keep function unityHandleWebRequestResponse(requestId:Int, downloadHandler:DownloadHandler):Void {
-
-        var callback:DownloadHandler->Void = requestCallbacks.get(requestId);
-        if (callback != null) {
-            requestCallbacks.remove(requestId);
-            callback(downloadHandler);
-            callback = null;
-        }
-
-    }
-    #end
 
     /** Creates a new HTTP backend instance */
     public function new() {}
@@ -126,7 +82,7 @@ class Http implements spec.Http {
         #elseif js
         backend.http.HttpWeb.request(options, done);
         #elseif (cs && unity)
-        backend.http.HttpUnity.request(options, done, this);
+        backend.http.HttpUnity.request(options, done);
         #elseif ceramic_http_tink
         backend.http.HttpTink.request(options, done);
         #elseif akifox_asynchttp
@@ -184,91 +140,21 @@ class Http implements spec.Http {
             targetPath = Path.join([basePath, targetPath]);
         }
 
-        var tmpTargetPath = targetPath + '.tmpdl';
-
-        #if ios
-
+        #if ceramic_http_custom
+        backend.http.HttpCustom.download(url, targetPath, done);
+        #elseif ios
         backend.http.HttpIos.download(url, targetPath, done);
-
         #elseif android
-
         backend.http.HttpAndroid.download(url, targetPath, done);
-
         #elseif (nodejs || hxnodejs || node)
-
-        // Ensure we can write the file at the desired location
-        if (FileSystem.exists(tmpTargetPath)) {
-            if (FileSystem.isDirectory(tmpTargetPath)) {
-                log.error('Cannot overwrite directory named $tmpTargetPath');
-                done(null);
-                return;
-            }
-            FileSystem.deleteFile(tmpTargetPath);
-        }
-        var dir = Path.directory(tmpTargetPath);
-        if (!FileSystem.exists(dir)) {
-            FileSystem.createDirectory(dir);
-        }
-        else if (!FileSystem.isDirectory(dir)) {
-            log.error('Target directory $dir should be a directory, but it is a file');
-            done(null);
-            return;
-        }
-
-        backend.http.HttpNodejs.download(url, tmpTargetPath, targetPath, done);
-
+        backend.http.HttpNodejs.download(url, targetPath, done);
         #elseif (cs && unity)
-
-        // Ensure we can write the file at the desired location
-        if (FileSystem.exists(tmpTargetPath)) {
-            if (FileSystem.isDirectory(tmpTargetPath)) {
-                log.error('Cannot overwrite directory named $tmpTargetPath');
-                done(null);
-                return;
-            }
-            FileSystem.deleteFile(tmpTargetPath);
-        }
-        var dir = Path.directory(tmpTargetPath);
-        if (!FileSystem.exists(dir)) {
-            FileSystem.createDirectory(dir);
-        }
-        else if (!FileSystem.isDirectory(dir)) {
-            log.error('Target directory $dir should be a directory, but it is a file');
-            done(null);
-            return;
-        }
-
-        backend.http.HttpUnity.download(url, tmpTargetPath, targetPath, done, this);
-
+        backend.http.HttpUnity.download(url, targetPath, done);
         #elseif (cpp || sys)
-
-        // Ensure we can write the file at the desired location
-        if (FileSystem.exists(tmpTargetPath)) {
-            if (FileSystem.isDirectory(tmpTargetPath)) {
-                log.error('Cannot overwrite directory named $tmpTargetPath');
-                done(null);
-                return;
-            }
-            FileSystem.deleteFile(tmpTargetPath);
-        }
-        var dir = Path.directory(tmpTargetPath);
-        if (!FileSystem.exists(dir)) {
-            FileSystem.createDirectory(dir);
-        }
-        else if (!FileSystem.isDirectory(dir)) {
-            log.error('Target directory $dir should be a directory, but it is a file');
-            done(null);
-            return;
-        }
-
-        backend.http.HttpNative.download(url, tmpTargetPath, targetPath, done);
-
+        backend.http.HttpNative.download(url, targetPath, done);
         #else
-
-        // Too bad
         log.error('Cannot download $url at path $targetPath because download is not supported on this target');
         done(null);
-
         #end
 
     }

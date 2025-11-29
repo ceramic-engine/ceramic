@@ -2,41 +2,78 @@ package backend.http;
 
 #if (cpp || sys)
 
+import ceramic.Path;
 import ceramic.Runner;
 import ceramic.Shortcuts.*;
 import sys.FileSystem;
+import sys.io.File;
 
 class HttpNative {
 
-    public static function download(url:String, tmpTargetPath:String, targetPath:String, done:String->Void):Void {
+    public static function download(url:String, targetPath:String, done:String->Void):Void {
 
-        #if (mac || linux)
+        var tmpTargetPath = targetPath + '.tmpdl';
 
-        // Use built-in curl on mac & linux, that's the easiest!
-        Runner.runInBackground(function() {
-            Sys.command('curl', ['-sS', '-L', url, '--output', tmpTargetPath]);
-            Runner.runInMain(function() {
-                finishDownload(tmpTargetPath, targetPath, url, done);
-            });
-        });
-
-        #elseif windows
-
-        // Use curl through powershell on windows
-        Runner.runInBackground(function() {
-            var escapedArgs = [];
-            for (arg in ['-sS', '-L' , url, '--output', tmpTargetPath]) {
-                escapedArgs.push(haxe.SysTools.quoteWinArg(arg, true));
+        // Ensure we can write the file at the desired location
+        if (FileSystem.exists(tmpTargetPath)) {
+            if (FileSystem.isDirectory(tmpTargetPath)) {
+                log.error('Cannot overwrite directory named $tmpTargetPath');
+                done(null);
+                return;
             }
+            FileSystem.deleteFile(tmpTargetPath);
+        }
+        var dir = Path.directory(tmpTargetPath);
+        if (!FileSystem.exists(dir)) {
+            FileSystem.createDirectory(dir);
+        }
+        else if (!FileSystem.isDirectory(dir)) {
+            log.error('Target directory $dir should be a directory, but it is a file');
+            done(null);
+            return;
+        }
 
-            Sys.command('powershell', ['-command', escapedArgs.join(' ')]);
+        Runner.runInBackground(function() {
+            var success = downloadToFile(url, tmpTargetPath);
             Runner.runInMain(function() {
-                finishDownload(tmpTargetPath, targetPath, url, done);
+                if (success) {
+                    finishDownload(tmpTargetPath, targetPath, url, done);
+                } else {
+                    log.error('Failed to download $url');
+                    done(null);
+                }
             });
         });
 
-        #end
+    }
 
+    static function downloadToFile(url:String, localPath:String, followingLocation:Bool = false):Bool {
+        var out = File.write(localPath, true);
+        var h = new haxe.Http(url);
+        h.cnxTimeout = 30;
+
+        var success = true;
+        h.onError = function(e) {
+            out.close();
+            if (FileSystem.exists(localPath)) {
+                FileSystem.deleteFile(localPath);
+            }
+            success = false;
+        };
+
+        h.customRequest(false, out);
+        out.close();
+
+        // Handle redirects
+        if (success && h.responseHeaders != null) {
+            var location = h.responseHeaders.get("Location");
+            if (location == null) location = h.responseHeaders.get("location");
+            if (location != null && location != url) {
+                return downloadToFile(location, localPath, true);
+            }
+        }
+
+        return success;
     }
 
     static function finishDownload(tmpTargetPath:String, targetPath:String, url:String, done:String->Void):Void {

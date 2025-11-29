@@ -2,18 +2,39 @@ package backend.http;
 
 #if (cs && unity)
 
+import ceramic.Path;
 import ceramic.Shortcuts.*;
 import haxe.io.Bytes;
 import sys.FileSystem;
 import unityengine.networking.DownloadHandler;
 import unityengine.networking.UnityWebRequest;
 
+@:classCode('
+public System.Collections.IEnumerator unityRunWebRequest(int id, UnityEngine.Networking.UnityWebRequest request) {
+    yield return request.SendWebRequest();
+    unityHandleWebRequestResponse(id, request.downloadHandler);
+}
+')
 class HttpUnity {
 
-    public static function request(options:HttpRequestOptions, done:HttpResponse->Void, http:backend.Http):Void {
+    static var nextRequestId:Int = 1;
+    static var requestCallbacks:Map<Int, DownloadHandler->Void> = new Map();
 
-        var requestId = http.nextRequestId;
-        http.nextRequestId = (http.nextRequestId + 1) % 999999999;
+    public function new() {}
+
+    @:keep static function unityHandleWebRequestResponse(requestId:Int, downloadHandler:DownloadHandler):Void {
+        var callback:DownloadHandler->Void = requestCallbacks.get(requestId);
+        if (callback != null) {
+            requestCallbacks.remove(requestId);
+            callback(downloadHandler);
+            callback = null;
+        }
+    }
+
+    public static function request(options:HttpRequestOptions, done:HttpResponse->Void):Void {
+
+        var requestId = nextRequestId;
+        nextRequestId = (nextRequestId + 1) % 999999999;
 
         var content:String = null;
         if (options.content != null)
@@ -56,7 +77,7 @@ class HttpUnity {
                 }
             }
 
-            http.requestCallbacks.set(requestId, function(downloadHandler) {
+            requestCallbacks.set(requestId, function(downloadHandler) {
 
                 var resStatus = Std.int(webRequest.responseCode);
                 var resHeaders:Array<String> = [];
@@ -118,7 +139,8 @@ class HttpUnity {
             });
 
             var monoBehaviour = Main.monoBehaviour;
-            untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, http, requestId, webRequest);
+            var httpUnity = new HttpUnity();
+            untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, httpUnity, requestId, webRequest);
 
         } catch (e:Dynamic) {
             if (webRequest != null) {
@@ -140,10 +162,31 @@ class HttpUnity {
 
     }
 
-    public static function download(url:String, tmpTargetPath:String, targetPath:String, done:String->Void, http:backend.Http):Void {
+    public static function download(url:String, targetPath:String, done:String->Void):Void {
 
-        var requestId = http.nextRequestId;
-        http.nextRequestId = (http.nextRequestId + 1) % 999999999;
+        var tmpTargetPath = targetPath + '.tmpdl';
+
+        // Ensure we can write the file at the desired location
+        if (FileSystem.exists(tmpTargetPath)) {
+            if (FileSystem.isDirectory(tmpTargetPath)) {
+                log.error('Cannot overwrite directory named $tmpTargetPath');
+                done(null);
+                return;
+            }
+            FileSystem.deleteFile(tmpTargetPath);
+        }
+        var dir = Path.directory(tmpTargetPath);
+        if (!FileSystem.exists(dir)) {
+            FileSystem.createDirectory(dir);
+        }
+        else if (!FileSystem.isDirectory(dir)) {
+            log.error('Target directory $dir should be a directory, but it is a file');
+            done(null);
+            return;
+        }
+
+        var requestId = nextRequestId;
+        nextRequestId = (nextRequestId + 1) % 999999999;
 
         var webRequest = new UnityWebRequest();
         webRequest.url = url;
@@ -151,7 +194,7 @@ class HttpUnity {
         webRequest.downloadHandler = untyped __cs__('new UnityEngine.Networking.DownloadHandlerFile({0})', tmpTargetPath);
         webRequest.disposeDownloadHandlerOnDispose = true;
 
-        http.requestCallbacks.set(requestId, function(downloadHandler) {
+        requestCallbacks.set(requestId, function(downloadHandler) {
 
             if (webRequest != null)
                 webRequest.Dispose();
@@ -163,7 +206,8 @@ class HttpUnity {
         });
 
         var monoBehaviour = Main.monoBehaviour;
-        untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, http, requestId, webRequest);
+        var httpUnity = new HttpUnity();
+        untyped __cs__('{0}.StartCoroutine({1}.unityRunWebRequest({2}, {3}))', monoBehaviour, httpUnity, requestId, webRequest);
 
     }
 
