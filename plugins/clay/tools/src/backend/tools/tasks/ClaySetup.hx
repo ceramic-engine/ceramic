@@ -62,6 +62,8 @@ class ClaySetup extends tools.Task {
         var runtimePathRelative = getRelativePath(runtimePath, targetPath);
         var backendRuntimePath = Path.normalize(Path.join([context.plugin.path, 'runtime']));
         var backendRuntimePathRelative = getRelativePath(backendRuntimePath, targetPath);
+        var clayOpenGLPath = Path.normalize(Path.join([ceramicPath, '../git/clay/src-opengl']));
+        var clayOpenGLPathRelative = getRelativePath(clayOpenGLPath, targetPath);
 
         // If ceramic.yml has changed, force setup update
         //if (!force && updateProject && !Files.haveSameLastModified(projectPath, hxmlPath)) {
@@ -235,6 +237,7 @@ $targetFlags
 -cp ' + '../../../src' + '${sharedHxml != null && sharedHxml.length > 0 ? '\n' + sharedHxml.join('\n') : ''}
 ${libsHxml.join('\n')}
 -lib clay
+-cp ' + clayOpenGLPathRelative + '
 -D clay_app_id=' + Json.stringify(project.app.name) + '
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
