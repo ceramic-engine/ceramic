@@ -5,6 +5,7 @@ import backend.ElectronRunner;
 import ceramic.Path;
 import ceramic.ScreenOrientation;
 import clay.Clay;
+import clay.graphics.Graphics;
 import haxe.ValueException;
 
 using StringTools;
@@ -487,8 +488,8 @@ class Main {
         _displayReady = false;
         app.loaders.push(_appLoaderCheckDisplayReady);
 
-        var ext;
-        ext = clay.opengl.GL.gl.getExtension('OES_standard_derivatives');
+        // Load platform-specific graphics extensions (e.g., OES_standard_derivatives on WebGL)
+        Graphics.loadExtensions();
 
         if (ElectronRunner.electronRunner != null) {
             ElectronRunner.electronRunner.ceramicReady();

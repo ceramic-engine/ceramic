@@ -2,10 +2,8 @@ package backend;
 
 import ceramic.Float32;
 import clay.Clay;
-import clay.CommandBuffer;
+import clay.GraphicsBatcher;
 import clay.graphics.Graphics;
-import clay.opengl.GL;
-import clay.opengl.GLCommandBuffer;
 
 using ceramic.Extensions;
 
@@ -28,7 +26,7 @@ using ceramic.Extensions;
  * - Blend mode management
  * - Matrix transformations and projections
  *
- * The class uses CommandBuffer for low-level batching operations and provides
+ * The class uses GraphicsBatcher for low-level batching operations and provides
  * platform-specific optimizations for different targets (web, desktop, mobile).
  */
 class Draw #if !completion implements spec.Draw #end {
@@ -39,9 +37,9 @@ class Draw #if !completion implements spec.Draw #end {
     var renderer:ceramic.Renderer = new ceramic.Renderer();
 
     /**
-     * The command buffer instance for batched rendering operations.
+     * The graphics batcher instance for batched rendering operations.
      */
-    var cmd:GLCommandBuffer = new GLCommandBuffer();
+    var batcher:GraphicsBatcher = new GraphicsBatcher();
 
 /// Public API
 
@@ -52,7 +50,7 @@ class Draw #if !completion implements spec.Draw #end {
     public function new() {
 
         renderer = new ceramic.Renderer();
-        cmd = new GLCommandBuffer();
+        batcher = new GraphicsBatcher();
 
     }
 
@@ -156,12 +154,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         _activeTextureSlot = 0;
-        cmd.initBuffers();
+        batcher.initBuffers();
 
         // Set up default texture for web targets
         #if web
         var backendItem = ceramic.App.app.defaultWhiteTexture.backendItem;
-        GLCommandBuffer.defaultTextureId = (backendItem:clay.graphics.Texture).textureId;
+        GraphicsBatcher.defaultTextureId = (backendItem:clay.graphics.Texture).textureId;
         #end
 
     }
@@ -178,7 +176,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
-        cmd.beginRender();
+        batcher.beginRender();
 
     }
 
@@ -189,7 +187,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function endRender():Void {
 
-        cmd.endRender();
+        batcher.endRender();
 
     }
 
@@ -201,7 +199,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
-        cmd.clear(
+        batcher.clear(
             _whiteTransparentColor.redFloat,
             _whiteTransparentColor.greenFloat,
             _whiteTransparentColor.blueFloat,
@@ -225,7 +223,7 @@ class Draw #if !completion implements spec.Draw #end {
 
         var background = ceramic.App.app.settings.background;
 
-        cmd.clear(
+        batcher.clear(
             background.redFloat,
             background.greenFloat,
             background.blueFloat,
@@ -248,7 +246,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function enableBlending():Void {
 
-        cmd.enableBlending();
+        batcher.enableBlending();
 
     }
 
@@ -260,7 +258,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function disableBlending():Void {
 
-        cmd.disableBlending();
+        batcher.disableBlending();
 
     }
 
@@ -276,7 +274,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
-        cmd.setActiveTexture(slot);
+        batcher.setActiveTexture(slot);
 
     }
 
@@ -291,7 +289,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
-        cmd.setPrimitiveType(switch primitiveType {
+        batcher.setPrimitiveType(switch primitiveType {
             case LINE: 1;
             case _: 0;
         });
@@ -331,7 +329,7 @@ class Draw #if !completion implements spec.Draw #end {
             if (_currentRenderTarget != null && _currentRenderTarget != renderTarget && _didUpdateCurrentRenderTarget) {
                 var clayRenderTexture:clay.graphics.RenderTexture = cast _currentRenderTarget.backendItem;
                 if (clayRenderTexture.antialiasing > 1) {
-                    cmd.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
+                    batcher.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
                 }
             }
 
@@ -341,7 +339,7 @@ class Draw #if !completion implements spec.Draw #end {
             if (renderTarget != null) {
                 var renderTexture:clay.graphics.RenderTexture = cast renderTarget.backendItem;
 
-                cmd.setRenderTarget(renderTexture.renderTarget);
+                batcher.setRenderTarget(renderTexture.renderTarget);
 
                 updateProjectionMatrix(
                     renderTarget.width,
@@ -362,14 +360,14 @@ class Draw #if !completion implements spec.Draw #end {
                 _viewportDensity = renderTarget.density;
                 _viewportWidth = renderTarget.width * _viewportDensity;
                 _viewportHeight = renderTarget.height * _viewportDensity;
-                cmd.setViewport(
+                batcher.setViewport(
                     0, 0,
                     Std.int(renderTarget.width * renderTarget.density),
                     Std.int(renderTarget.height * renderTarget.density)
                 );
 
                 if (renderTarget.clearOnRender) {
-                    cmd.clear(
+                    batcher.clear(
                         _blackTransparentColor.redFloat,
                         _blackTransparentColor.greenFloat,
                         _blackTransparentColor.blueFloat,
@@ -382,7 +380,7 @@ class Draw #if !completion implements spec.Draw #end {
 
             } else {
 
-                cmd.setRenderTarget(null);
+                batcher.setRenderTarget(null);
 
                 updateProjectionMatrix(
                     ceramic.App.app.backend.screen.getWidth(),
@@ -397,7 +395,7 @@ class Draw #if !completion implements spec.Draw #end {
                 _viewportDensity = ceramic.App.app.backend.screen.getDensity();
                 _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
                 _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
-                cmd.setViewport(
+                batcher.setViewport(
                     0, 0,
                     Std.int(_viewportWidth),
                     Std.int(_viewportHeight)
@@ -436,8 +434,8 @@ class Draw #if !completion implements spec.Draw #end {
         var floatAttributesSize = shadersBackend.customFloatAttributesSize(_activeShader);
         var batchMultiTexture = shadersBackend.canBatchWithMultipleTextures(_activeShader);
 
-        cmd.setCustomAttributes(_activeShader != null ? _activeShader.customAttributes : null);
-        cmd.setVertexLayout(batchMultiTexture, floatAttributesSize);
+        batcher.setCustomAttributes(_activeShader != null ? _activeShader.customAttributes : null);
+        batcher.setVertexLayout(batchMultiTexture, floatAttributesSize);
 
         (shader:ShaderImpl).activate();
 
@@ -462,7 +460,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
-        cmd.setBlendFuncSeparate(
+        batcher.setBlendFuncSeparate(
             srcRgb,
             dstRgb,
             srcAlpha,
@@ -523,10 +521,10 @@ class Draw #if !completion implements spec.Draw #end {
         var bottom = _modelViewTransform.transformY(x + width, y + height) * density;
 
         if (_currentRenderTarget != null) {
-            cmd.enableScissor(left, _viewportHeight - top, right - left, top - bottom);
+            batcher.enableScissor(left, _viewportHeight - top, right - left, top - bottom);
         }
         else {
-            cmd.enableScissor(left, _viewportHeight - bottom, right - left, bottom - top);
+            batcher.enableScissor(left, _viewportHeight - bottom, right - left, bottom - top);
         }
 
     }
@@ -538,7 +536,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
 
-        cmd.disableScissor();
+        batcher.disableScissor();
 
     }
 
@@ -556,7 +554,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
-        cmd.enableStencilTest();
+        batcher.enableStencilTest();
 
     }
 
@@ -573,7 +571,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
-        cmd.disableStencilTest();
+        batcher.disableStencilTest();
 
     }
 
@@ -593,14 +591,14 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function beginDrawingInStencilBuffer():Void {
 
         _drawingInStencilBuffer = true;
-        cmd.beginStencilWrite();
+        batcher.beginStencilWrite();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
 
         _drawingInStencilBuffer = false;
-        cmd.endStencilWrite();
+        batcher.endStencilWrite();
 
     }
 
@@ -614,7 +612,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
-        cmd.bindTexture((backendItem:clay.graphics.Texture).textureId);
+        batcher.bindTexture((backendItem:clay.graphics.Texture).textureId);
 
     }
 
@@ -628,7 +626,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
 
-        cmd.bindNoTexture();
+        batcher.bindNoTexture();
 
     }
 
@@ -783,7 +781,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
-        return cmd.getNumVertices();
+        return batcher.getNumVertices();
 
     }
 
@@ -799,13 +797,13 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float32, y:Float32, z:Float32):Void {
 
-        cmd.putVertex(x, y, z);
+        batcher.putVertex(x, y, z);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float32, y:Float32, z:Float32, textureSlot:Float32):Void {
 
-        cmd.putVertexWithTextureSlot(x, y, z, textureSlot);
+        batcher.putVertexWithTextureSlot(x, y, z, textureSlot);
 
     }
 
@@ -817,25 +815,25 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function putFloatAttribute(index:Int, value:Float):Void {
 
-        cmd.putFloatAttribute(index, value);
+        batcher.putFloatAttribute(index, value);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endFloatAttributes():Void {
 
-        cmd.endFloatAttributes();
+        batcher.endFloatAttributes();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putIndice(i:Int):Void {
 
-        cmd.putIndex(i);
+        batcher.putIndex(i);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
-        cmd.putUVs(uvX, uvY);
+        batcher.putUVs(uvX, uvY);
 
     }
 
@@ -852,13 +850,13 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
-        cmd.putColor(r, g, b, a);
+        batcher.putColor(r, g, b, a);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function hasAnythingToFlush():Bool {
 
-        return cmd.hasAnythingToFlush();
+        return batcher.hasAnythingToFlush();
 
     }
 
@@ -876,19 +874,19 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
 
-        return cmd.shouldFlush(numVerticesAfter, numIndicesAfter);
+        return batcher.shouldFlush(numVerticesAfter, numIndicesAfter);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
 
-        return cmd.remainingVertices();
+        return batcher.remainingVertices();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
 
-        return cmd.remainingIndices();
+        return batcher.remainingIndices();
 
     }
 
@@ -910,7 +908,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function flush():Void {
 
-        cmd.flush();
+        batcher.flush();
 
         if (_currentRenderTarget != null) {
             _didUpdateCurrentRenderTarget = true;

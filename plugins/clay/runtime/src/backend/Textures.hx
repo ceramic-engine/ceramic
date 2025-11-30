@@ -6,15 +6,10 @@ import ceramic.Path;
 import ceramic.Utils;
 import clay.Clay;
 import clay.Immediate;
+import clay.graphics.Graphics;
 import haxe.io.Bytes;
 
 using StringTools;
-
-#if cpp
-import opengl.GL;
-#else
-import clay.opengl.GL;
-#end
 
 /**
  * Clay backend implementation of texture management.
@@ -533,69 +528,38 @@ class Textures implements spec.Textures {
 
     }
 
+    /** Cached maximum texture size */
+    static var _maxTextureSize:Int = -1;
+
     /** Cached maximum textures per batch */
     static var _maxTexturesByBatch:Int = -1;
-
-    #if cpp
-
-    /** Cached maximum texture width */
-    static var _maxTextureWidth:Int = -1;
-    /** Cached maximum texture height */
-    static var _maxTextureHeight:Int = -1;
-
-    /**
-     * Dummy method to force OpenGL headers to be imported in generated C++ file.
-     * @private
-     */
-    @:noCompletion @:keep function importGlHeaders():Void {
-        GL.glClear(0);
-    }
 
     /**
      * Queries GPU for maximum texture size if not already cached.
      * @private
      */
     inline static function computeMaxTextureSizeIfNeeded() {
-
-        if (_maxTextureWidth == -1) {
-            var maxSize:Array<Int> = [0];
-            GL.glGetIntegerv(GL.GL_MAX_TEXTURE_SIZE, maxSize);
-            _maxTextureWidth = maxSize[0];
-            _maxTextureHeight = maxSize[0];
+        if (_maxTextureSize == -1) {
+            _maxTextureSize = Graphics.getMaxTextureSize();
         }
-
     }
-
-    #end
 
     /**
      * Returns the maximum texture width supported by the GPU.
-     * @return Maximum width in pixels (2048 on web, GPU-specific on native)
+     * @return Maximum width in pixels
      */
     public function maxTextureWidth():Int {
-
-        #if cpp
         computeMaxTextureSizeIfNeeded();
-        return _maxTextureWidth;
-        #else
-        return 2048;
-        #end
-
+        return _maxTextureSize;
     }
 
     /**
      * Returns the maximum texture height supported by the GPU.
-     * @return Maximum height in pixels (2048 on web, GPU-specific on native)
+     * @return Maximum height in pixels
      */
     public function maxTextureHeight():Int {
-
-        #if cpp
         computeMaxTextureSizeIfNeeded();
-        return _maxTextureHeight;
-        #else
-        return 2048;
-        #end
-
+        return _maxTextureSize;
     }
 
     /**
@@ -603,31 +567,20 @@ class Textures implements spec.Textures {
      * @private
      */
     inline static function computeMaxTexturesByBatchIfNeeded() {
-
         if (_maxTexturesByBatch == -1) {
-            #if cpp
-            var maxUnits:Array<Int> = [0];
-            GL.glGetIntegerv(GL.GL_MAX_TEXTURE_IMAGE_UNITS, maxUnits);
-            _maxTexturesByBatch = Std.int(Math.min(32, maxUnits[0]));
-
-            #else
-            _maxTexturesByBatch = Std.int(Math.min(32, GL.getParameter(GL.MAX_TEXTURE_IMAGE_UNITS)));
-            #end
+            _maxTexturesByBatch = Graphics.getMaxTextureUnits();
         }
-
     }
 
     /**
      * Returns the maximum number of textures that can be used in a single batch.
      * Values above 1 indicate multi-texture batching support for improved performance.
-     * 
+     *
      * @return Maximum texture units (capped at 32)
      */
     public function maxTexturesByBatch():Int {
-
         computeMaxTexturesByBatchIfNeeded();
         return _maxTexturesByBatch;
-
     }
 
     #if cpp

@@ -4,13 +4,8 @@ import ceramic.Files;
 import ceramic.Point;
 import ceramic.Utils;
 import clay.Clay;
+import clay.graphics.Graphics;
 import haxe.io.Bytes;
-
-#if cpp
-import opengl.GL;
-#else
-import clay.opengl.GL;
-#end
 
 #if clay_sdl
 import clay.sdl.SDL;
@@ -290,82 +285,41 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     #elseif clay_sdl
 
-    // Just a dummy method to force opengl headers to be imported
-    // in our generated c++ file
-    @:noCompletion @:keep function importGlHeaders():Void {
-        GL.glClear(0);
-    }
-
     static var _point = new Point(0, 0);
 
     function _sdlScreenshot(point:Point):ceramic.UInt8Array {
         var width = Clay.app.runtime.windowWidth();
         var height = Clay.app.runtime.windowHeight();
-        var pixels = new clay.buffers.Uint32Array(width * height);
+        var pixels = new clay.buffers.Uint8Array(width * height * 4);
         for (i in 0...pixels.length) {
             pixels[i] = 0;
         }
 
-        var rmask:Int;
-        var gmask:Int;
-        var bmask:Int;
-        var amask:Int;
-        if (SDL.byteOrderIsBigEndian()) {
-            rmask = 0xff000000;
-            gmask = 0x00ff0000;
-            bmask = 0x0000ff00;
-            amask = 0x000000ff;
-        }
-        else {
-            rmask = 0x000000ff;
-            gmask = 0x0000ff00;
-            bmask = 0x00ff0000;
-            amask = 0xff000000;
-        }
-
-        var depth:Int = 32;
-        var pitch:Int = 4 * width;
-        var bytes = pixels.toBytes();
-
-        var surface = SDL.createRGBSurfaceFrom(
-            untyped pixels.toBytes().getData(),
-            width, height, depth, pitch,
-            rmask, gmask, bmask, amask
-        );
-
-        // Actual screenshot
-        clay.opengl.GL.readPixels(
-            0, 0, width, height,
-            clay.opengl.GL.RGBA,
-            clay.opengl.GL.UNSIGNED_BYTE,
-            pixels
-        );
+        // Actual screenshot using cross-platform Graphics API
+        Graphics.readPixels(0, 0, width, height, pixels);
 
         _sdlSurfacePixelsToRgbaPixels(pixels, width, height);
-        SDL.freeSurface(surface);
 
         _point.x = width;
         _point.y = height;
 
-        return ceramic.UInt8Array.fromBytes(bytes);
+        return ceramic.UInt8Array.fromBuffer(pixels.buffer, 0, pixels.length);
     }
 
-    function _sdlSurfacePixelsToRgbaPixels(pixels:clay.buffers.Uint32Array, width:Int, height:Int):Void {
-
-        var halfHeight = Math.floor(height / 2);
-        var px:Int = 0;
-        var i:Int = 0;
-        var i2:Int = 0;
+    function _sdlSurfacePixelsToRgbaPixels(pixels:clay.buffers.Uint8Array, width:Int, height:Int):Void {
+        // Flip the image vertically (OpenGL reads bottom-to-top)
+        var halfHeight = Std.int(Math.floor(height / 2));
+        var rowSize = width * 4;
+        var temp:Int;
         for (y in 0...halfHeight) {
-            for (x in 0...width) {
-                i = y * width + x;
-                i2 = (height - y - 1) * width + x;
-                px = pixels[i];
+            for (x in 0...rowSize) {
+                var i = y * rowSize + x;
+                var i2 = (height - y - 1) * rowSize + x;
+                temp = pixels[i];
                 pixels[i] = pixels[i2];
-                pixels[i2] = px;
+                pixels[i2] = temp;
             }
         }
-
     }
 
     public function screenshotToTexture(done:(texture:Texture)->Void):Void {

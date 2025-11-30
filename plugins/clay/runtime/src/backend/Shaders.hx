@@ -2,7 +2,7 @@ package backend;
 
 import ceramic.Path;
 import ceramic.ReadOnlyArray;
-import clay.opengl.GL;
+import clay.graphics.Graphics;
 
 using StringTools;
 
@@ -550,96 +550,23 @@ class Shaders implements spec.Shaders {
 
     /**
      * Determines the maximum number of if-statements supported by the GPU's fragment shader.
-     * Tests by compiling shaders with varying numbers of conditionals.
-     * 
-     * @param maxIfs Starting maximum to test (halves on failure)
+     * Uses Graphics.testShaderCompilationLimit() to test shader compilation.
      */
-    inline static function computeMaxIfStatementsByFragmentShaderIfNeeded(maxIfs:Int = 32):Void {
-
+    inline static function computeMaxIfStatementsByFragmentShaderIfNeeded():Void {
         if (_maxIfStatementsByFragmentShader == -1) {
-            var fragTpl = "
-#ifdef GL_ES
-precision mediump float;
-#else
-#define mediump
-#endif
-varying float test;
-void main() {
-    {{CONDITIONS}}
-    gl_FragColor = vec4(0.0);
-}
-".trim();
-            var shader = GL.createShader(GL.FRAGMENT_SHADER);
-
-            while (maxIfs > 0) {
-                var frag = fragTpl.replace('{{CONDITIONS}}', generateIfStatements(maxIfs));
-
-                #if ceramic_debug_shader_if_statements
-                trace('COMPILE:');
-                trace(frag);
-                #end
-
-                GL.shaderSource(shader, frag);
-                GL.compileShader(shader);
-
-                #if ceramic_debug_shader_if_statements
-                trace('LOGS:');
-                var logs = GL.getShaderInfoLog(shader);
-                trace(logs);
-                #end
-
-                if (GL.getShaderParameter(shader, GL.COMPILE_STATUS) == 0) {
-                    // That's too many ifs apparently
-                    maxIfs = Std.int(maxIfs / 2);
-                }
-                else {
-                    // It works!
-                    _maxIfStatementsByFragmentShader = maxIfs;
-                    break;
-                }
-            }
-
-            GL.deleteShader(shader);
+            _maxIfStatementsByFragmentShader = Graphics.testShaderCompilationLimit(32);
         }
-
-    }
-
-    /**
-     * Generates a series of if-else statements for shader compilation testing.
-     * Used to determine GPU conditional complexity limits.
-     * 
-     * @param maxIfs Number of if-statements to generate
-     * @return GLSL code with chained if-else statements
-     */
-    static function generateIfStatements(maxIfs:Int):String {
-
-        var result = new StringBuf();
-
-        for (i in 0...maxIfs) {
-            if (i > 0) {
-                result.add('\nelse ');
-            }
-
-            if (i < maxIfs - 1) {
-                result.add('if (test == ${i}.0) {}');
-            }
-        }
-
-        return result.toString();
-
     }
 
     /**
      * Returns the maximum number of if-statements supported by fragment shaders.
      * Caches the result after first computation.
-     * 
+     *
      * @return Maximum if-statements supported
      */
     public function maxIfStatementsByFragmentShader():Int {
-
         computeMaxIfStatementsByFragmentShaderIfNeeded();
         return _maxIfStatementsByFragmentShader;
-
     }
 
     /**
