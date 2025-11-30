@@ -177,6 +177,7 @@ class ClaySetup extends tools.Task {
             targetFlags += '\n' + '-D clay_web';
             targetFlags += '\n' + '-D ceramic_soft_inline';
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
+            targetFlags += '\n' + '-D clay_shader_from_source';
             targetFlags += '\n' + '-D ceramic_auto_block_default_scroll';
             targetFlags += '\n' + '-D clay_webgl_unpack_premultiply_alpha';
         }
@@ -225,6 +226,7 @@ class ClaySetup extends tools.Task {
                 }
             }
             targetFlags += '\n' + '-D ceramic_shader_vert_frag';
+            targetFlags += '\n' + '-D clay_shader_from_source';
         }
 
         var hxmlFileContent = ('

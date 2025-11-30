@@ -6,7 +6,6 @@ import ceramic.Path;
 import ceramic.Utils;
 import clay.Clay;
 import clay.Immediate;
-import clay.graphics.Graphics;
 import haxe.io.Bytes;
 
 using StringTools;
@@ -540,7 +539,7 @@ class Textures implements spec.Textures {
      */
     inline static function computeMaxTextureSizeIfNeeded() {
         if (_maxTextureSize == -1) {
-            _maxTextureSize = Graphics.getMaxTextureSize();
+            _maxTextureSize = Clay.app.graphics.getMaxTextureSize();
         }
     }
 
@@ -568,7 +567,7 @@ class Textures implements spec.Textures {
      */
     inline static function computeMaxTexturesByBatchIfNeeded() {
         if (_maxTexturesByBatch == -1) {
-            _maxTexturesByBatch = Graphics.getMaxTextureUnits();
+            _maxTexturesByBatch = Clay.app.graphics.getMaxTextureUnits();
         }
     }
 

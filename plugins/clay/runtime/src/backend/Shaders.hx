@@ -2,7 +2,7 @@ package backend;
 
 import ceramic.Path;
 import ceramic.ReadOnlyArray;
-import clay.graphics.Graphics;
+import clay.Clay;
 
 using StringTools;
 
@@ -550,11 +550,11 @@ class Shaders implements spec.Shaders {
 
     /**
      * Determines the maximum number of if-statements supported by the GPU's fragment shader.
-     * Uses Graphics.testShaderCompilationLimit() to test shader compilation.
+     * Uses Clay.app.graphics.testShaderCompilationLimit() to test shader compilation.
      */
     inline static function computeMaxIfStatementsByFragmentShaderIfNeeded():Void {
         if (_maxIfStatementsByFragmentShader == -1) {
-            _maxIfStatementsByFragmentShader = Graphics.testShaderCompilationLimit(32);
+            _maxIfStatementsByFragmentShader = Clay.app.graphics.testShaderCompilationLimit(32);
         }
     }
 

@@ -4,7 +4,6 @@ import ceramic.Files;
 import ceramic.Point;
 import ceramic.Utils;
 import clay.Clay;
-import clay.graphics.Graphics;
 import haxe.io.Bytes;
 
 #if clay_sdl
@@ -296,7 +295,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         }
 
         // Actual screenshot using cross-platform Graphics API
-        Graphics.readPixels(0, 0, width, height, pixels);
+        Clay.app.graphics.readPixels(0, 0, width, height, pixels);
 
         _sdlSurfacePixelsToRgbaPixels(pixels, width, height);
 

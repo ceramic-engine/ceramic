@@ -5,15 +5,15 @@ import backend.Texture;
 
 /**
  * Backend interface for GPU shader program management.
- * 
+ *
  * This interface handles loading, compiling, and managing shader programs
  * that run on the GPU. Shaders control how vertices are transformed and
  * how pixels are colored during rendering.
- * 
+ *
  * Ceramic supports two shader models:
  * - Combined shader files (default): Single file with both vertex and fragment shaders
  * - Separate vert/frag files: When ceramic_shader_vert_frag flag is enabled
- * 
+ *
  * Shaders can have uniform parameters (shared across all vertices/pixels) and
  * custom vertex attributes (per-vertex data). The interface provides methods
  * to set various types of uniform values.
@@ -39,8 +39,8 @@ interface Shaders {
     function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader;
 #else
     /**
-     * Loads and compiles a shader from a file.
-     * The file format depends on the backend (typically GLSL).
+     * Loads a shader from a file (can be precompiled or be compiled on the fly).
+     * The file format depends on the backend.
      * @param path Path to the shader file (relative to assets)
      * @param customAttributes Optional array of custom vertex attributes
      * @param options Optional loading configuration

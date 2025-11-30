@@ -3,7 +3,6 @@ package backend;
 import ceramic.Float32;
 import clay.Clay;
 import clay.GraphicsBatcher;
-import clay.graphics.Graphics;
 
 using ceramic.Extensions;
 
@@ -38,8 +37,16 @@ class Draw #if !completion implements spec.Draw #end {
 
     /**
      * The graphics batcher instance for batched rendering operations.
+     * Stored in a static field for performance, since there's only one Draw instance.
      */
-    var batcher:GraphicsBatcher = new GraphicsBatcher();
+    public var batcher(get, set):GraphicsBatcher;
+    static var _batcher:GraphicsBatcher = null;
+    inline function get_batcher():GraphicsBatcher {
+        return _batcher;
+    }
+    inline function set_batcher(batcher:GraphicsBatcher):GraphicsBatcher {
+        return _batcher = batcher;
+    }
 
 /// Public API
 
