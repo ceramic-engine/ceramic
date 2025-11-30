@@ -539,12 +539,12 @@ class TilemapLayer extends Visual {
                                 var row = Math.floor(t / layerColumns);
                                 var depthExtra = 0.0;
                                 var color = Color.multiply(layerData.color, tilesColor);
+                                var shader = layerData.shader;
                                 var alpha = layerData.opacity;
                                 var blending = layerData.blending;
                                 if (row >= layerRows) {
                                     row -= layerRows;
                                     depthExtra += 0.1;
-                                    blending = layerData.extraBlending;
                                     alpha = layerData.extraOpacity;
                                 }
                                 while (row >= layerRows) {
@@ -605,6 +605,7 @@ class TilemapLayer extends Visual {
                                 quad.depth = startDepthX + column * depthXStep + startDepthY + row * depthYStep + depthExtra;
                                 quad.x = tileWidth * 0.5 + tileLeft - filterX;
                                 quad.y = tileHeight * 0.5 + tileTop - filterY;
+                                quad.shader = shader;
 
                                 if (tile.diagonalFlip) {
 
@@ -775,12 +776,13 @@ class TilemapLayer extends Visual {
                                             var layerIndex = 0;
                                             var depthExtra = 0.0;
                                             var blending = layerData.blending;
+                                            var color = layerColor;
+                                            var shader = layerData.shader;
 
                                             if (row >= layerRows) {
                                                 layerIndex = Math.floor(row / layerRows);
                                                 row -= layerRows * layerIndex;
                                                 depthExtra = layerIndex * 0.1;
-                                                blending = layerData.extraBlending;
                                                 alpha = layerData.extraOpacity;
                                             }
                                             while (row >= layerRows) {
@@ -829,6 +831,7 @@ class TilemapLayer extends Visual {
                                                     mesh.active = true;
                                                     mesh.roundTranslation = roundTilesTranslation;
                                                     mesh.blending = blending;
+                                                    mesh.shader = shader;
                                                     mesh.depth = depthExtra;
                                                     mesh.layerIndex = layerIndex;
                                                     mesh.textureIndex = textureIndex;
@@ -1043,7 +1046,7 @@ class TilemapLayer extends Visual {
                                             indices[indexIndex + 5] = baseVertex + 3;
 
                                             // Set colors for all 4 vertices
-                                            var alphaColor = new AlphaColor(layerColor, Math.round(alpha * 255));
+                                            var alphaColor = new AlphaColor(color, Math.round(alpha * 255));
                                             colors[colorIndex] = alphaColor;
                                             colors[colorIndex + 1] = alphaColor;
                                             colors[colorIndex + 2] = alphaColor;

@@ -10,40 +10,40 @@ import ceramic.LdtkData;
 
 /**
  * Data model representing a single layer within a tilemap.
- * 
+ *
  * TilemapLayerData holds all the information needed to render and interact with a tilemap layer,
  * including tile indices, dimensions, positioning, and visual properties. This is a reactive Model
  * that notifies observers when properties change, allowing TilemapLayer visuals to update automatically.
- * 
+ *
  * ## Features
- * 
+ *
  * - **Tile Storage**: Holds tile indices referencing tilesets via global IDs (GIDs)
  * - **Auto-tiling Support**: Can store both original and computed tiles after auto-tiling
  * - **Per-tile Properties**: Supports per-tile alpha and offset values
  * - **Layer Properties**: Position, size, visibility, opacity, and blending modes
  * - **Reactive Updates**: Extends Model for automatic change notifications
- * 
+ *
  * ## Usage Example
- * 
+ *
  * ```haxe
  * // Create a new layer data
  * var layer = new TilemapLayerData();
  * layer.name = 'collision';
  * layer.grid(20, 15); // 20x15 tiles
  * layer.tileSize(32, 32); // 32x32 pixel tiles
- * 
+ *
  * // Set tiles (array of TilemapTile values)
  * var tiles = [];
  * for (i in 0...300) {
  *     tiles.push(i == 150 ? 1 : 0); // Single tile in center
  * }
  * layer.tiles = tiles;
- * 
+ *
  * // Configure visual properties
  * layer.opacity = 0.8;
  * layer.color = Color.RED;
  * ```
- * 
+ *
  * @see TilemapData
  * @see TilemapLayer
  * @see TilemapTile
@@ -122,9 +122,9 @@ class TilemapLayerData extends Model {
     @serialize public var color:Color = Color.WHITE;
 
     /**
-     * Extra tile default blending
+     * Tile default shader
      */
-    @serialize public var extraBlending:Blending = AUTO;
+    @serialize public var shader:Shader = null;
 
     /**
      * Extra tile default alpha
