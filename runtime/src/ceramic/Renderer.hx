@@ -463,6 +463,9 @@ class Renderer extends Entity {
         }
     #end
 
+        // End rendering frame
+        draw.endRender();
+
         // Mark all textures as rendered (renderDirty = false)
         var allRenderTextures = ceramic.App.app.renderTextures;
         for (ii in 0...allRenderTextures.length) {

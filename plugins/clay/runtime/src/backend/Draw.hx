@@ -2,11 +2,10 @@ package backend;
 
 import ceramic.Float32;
 import clay.Clay;
-import clay.buffers.ArrayBufferView;
-import clay.buffers.Float32Array;
-import clay.buffers.Uint16Array;
+import clay.CommandBuffer;
 import clay.graphics.Graphics;
 import clay.opengl.GL;
+import clay.opengl.GLCommandBuffer;
 
 using ceramic.Extensions;
 
@@ -29,7 +28,7 @@ using ceramic.Extensions;
  * - Blend mode management
  * - Matrix transformations and projections
  *
- * The class uses a buffer cycling system to avoid GPU stalls and provides
+ * The class uses CommandBuffer for low-level batching operations and provides
  * platform-specific optimizations for different targets (web, desktop, mobile).
  */
 class Draw #if !completion implements spec.Draw #end {
@@ -38,6 +37,11 @@ class Draw #if !completion implements spec.Draw #end {
      * The Ceramic renderer instance used for high-level rendering operations.
      */
     var renderer:ceramic.Renderer = new ceramic.Renderer();
+
+    /**
+     * The command buffer instance for batched rendering operations.
+     */
+    var cmd:GLCommandBuffer = new GLCommandBuffer();
 
 /// Public API
 
@@ -48,6 +52,7 @@ class Draw #if !completion implements spec.Draw #end {
     public function new() {
 
         renderer = new ceramic.Renderer();
+        cmd = new GLCommandBuffer();
 
     }
 
@@ -104,73 +109,7 @@ class Draw #if !completion implements spec.Draw #end {
 
 /// Rendering
 
-    /**
-     * Maximum number of vertices that can be stored in a single buffer.
-     */
-    #if !ceramic_debug_draw_backend inline #end static var MAX_VERTS_SIZE:Int = 65536;
-
-    /**
-     * Maximum number of indices that can be stored in a single buffer.
-     */
-    #if !ceramic_debug_draw_backend inline #end static var MAX_INDICES:Int = 16384;
-
-    /**
-     * Maximum number of buffer sets to cycle through.
-     * Buffer cycling prevents GPU stalls by using multiple buffer sets.
-     */
-    #if !ceramic_debug_draw_backend inline #end static var MAX_BUFFERS:Int = 64;
-
-    /**
-     * Vertex attribute location for position data (x, y, z).
-     */
-    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_POS:Int = 0;
-
-    /**
-     * Vertex attribute location for texture coordinate data (u, v).
-     */
-    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_UV:Int = 1;
-
-    /**
-     * Vertex attribute location for color data (r, g, b, a).
-     */
-    #if !ceramic_debug_draw_backend inline #end static var ATTRIBUTE_COLOR:Int = 2;
-
-    #if cpp
-    static var _viewPosBufferViewArray:Array<ArrayBufferView> = [];
-    static var _viewUvsBufferViewArray:Array<ArrayBufferView> = [];
-    static var _viewColorsBufferViewArray:Array<ArrayBufferView> = [];
-    static var _viewIndicesBufferViewArray:Array<ArrayBufferView> = [];
-
-    static var _viewPosBufferView:ArrayBufferView;
-    static var _viewUvsBufferView:ArrayBufferView;
-    static var _viewColorsBufferView:ArrayBufferView;
-    static var _viewIndicesBufferView:ArrayBufferView;
-    #end
-
-    static var _buffersIndex:Int;
-
-    static var _posListArray:Array<Float32Array> = [];
-    static var _indiceListArray:Array<Uint16Array> = [];
-    static var _uvListArray:Array<Float32Array> = [];
-    static var _colorListArray:Array<Float32Array> = [];
-
-    static var _posList:Float32Array;
-    static var _indiceList:Uint16Array;
-    static var _uvList:Float32Array;
-    static var _colorList:Float32Array;
-
-    #if cpp
-    static var _posBuffer:clay.buffers.ArrayBuffer;
-    static var _indiceBuffer:clay.buffers.ArrayBuffer;
-    static var _uvBuffer:clay.buffers.ArrayBuffer;
-    static var _colorBuffer:clay.buffers.ArrayBuffer;
-    #end
-
     static var _activeTextureSlot:Int = 0;
-
-    static var _batchMultiTexture:Bool = false;
-    static var _posSize:Int = 0;
-    static var _customGLBuffers:Array<GLBuffer> = [];
 
     static var _activeShader:ShaderImpl;
 
@@ -205,24 +144,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     static var _whiteTransparentColor = new ceramic.AlphaColor(ceramic.Color.WHITE, 0);
 
-    static var _maxVerts:Int = 0;
-
-    static var _vertexSize:Int = 0;
-    static var _numIndices:Int = 0;
-
-    static var _numPos:Int = 0;
-    static var _posIndex:Int = 0;
-    static var _floatAttributesSize:Int = 0;
-
-    static var _numUVs:Int = 0;
-    static var _uvIndex:Int = 0;
-
-    static var _numColors:Int = 0;
-    static var _colorIndex:Int = 0;
-
     static var _drawingInStencilBuffer:Bool = false;
-
-    static var _primitiveType:Int = GL.TRIANGLES;
 
     /**
      * Initializes the vertex and index buffers for rendering.
@@ -234,65 +156,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function initBuffers():Void {
 
         _activeTextureSlot = 0;
-        _buffersIndex = -1;
+        cmd.initBuffers();
 
-        prepareNextBuffers();
-
-    }
-
-    /**
-     * Prepares the next set of vertex buffers for use.
-     *
-     * This implements a buffer cycling system to avoid GPU stalls. Instead of
-     * reusing the same buffer immediately (which could cause the GPU to wait),
-     * it cycles through multiple buffer sets.
-     *
-     * Buffer allocation:
-     * - Position buffer: Full vertex capacity (MAX_VERTS_SIZE)
-     * - UV buffer: 2/3 of vertex capacity (optimized for quads)
-     * - Color buffer: Full vertex capacity (4 floats per vertex)
-     * - Index buffer: MAX_INDICES * 2 capacity
-     *
-     * On C++ targets, additional ArrayBufferView objects are created for
-     * efficient memory access without copying.
-     */
-    function prepareNextBuffers():Void {
-
-        _buffersIndex++;
-        if (_buffersIndex > MAX_BUFFERS) {
-            _buffersIndex = 0;
-        }
-        if (_posListArray.length <= _buffersIndex) {
-
-            _posListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
-             // For uvs, we'll never need more than two thirds of vertex buffer size
-            _uvListArray[_buffersIndex] = new Float32Array(Std.int(Math.ceil(MAX_VERTS_SIZE * 2.0 / 3.0)));
-            _colorListArray[_buffersIndex] = new Float32Array(MAX_VERTS_SIZE);
-            _indiceListArray[_buffersIndex] = new Uint16Array(MAX_INDICES * 2);
-
-            #if cpp
-            _viewPosBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
-            _viewUvsBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
-            _viewColorsBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Float32);
-            _viewIndicesBufferViewArray[_buffersIndex] = @:privateAccess new clay.buffers.ArrayBufferView(Uint8);
-            #end
-        }
-
-        _posList = _posListArray.unsafeGet(_buffersIndex);
-        _uvList = _uvListArray.unsafeGet(_buffersIndex);
-        _colorList = _colorListArray.unsafeGet(_buffersIndex);
-        _indiceList = _indiceListArray.unsafeGet(_buffersIndex);
-
-        #if cpp
-        _viewPosBufferView = _viewPosBufferViewArray.unsafeGet(_buffersIndex);
-        _viewUvsBufferView = _viewUvsBufferViewArray.unsafeGet(_buffersIndex);
-        _viewColorsBufferView = _viewColorsBufferViewArray.unsafeGet(_buffersIndex);
-        _viewIndicesBufferView = _viewIndicesBufferViewArray.unsafeGet(_buffersIndex);
-
-        _posBuffer = (_posList:clay.buffers.ArrayBufferView).buffer;
-        _uvBuffer = (_uvList:clay.buffers.ArrayBufferView).buffer;
-        _colorBuffer = (_colorList:clay.buffers.ArrayBufferView).buffer;
-        _indiceBuffer = (_indiceList:clay.buffers.ArrayBufferView).buffer;
+        // Set up default texture for web targets
+        #if web
+        var backendItem = ceramic.App.app.defaultWhiteTexture.backendItem;
+        GLCommandBuffer.defaultTextureId = (backendItem:clay.graphics.Texture).textureId;
         #end
 
     }
@@ -309,9 +178,18 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
-        GL.enableVertexAttribArray(ATTRIBUTE_POS);
-        GL.enableVertexAttribArray(ATTRIBUTE_UV);
-        GL.enableVertexAttribArray(ATTRIBUTE_COLOR);
+        cmd.beginRender();
+
+    }
+
+    /**
+     * Ends the current rendering frame.
+     *
+     * Performs any cleanup or finalization needed after all draw operations.
+     */
+    #if !ceramic_debug_draw_backend inline #end public function endRender():Void {
+
+        cmd.endRender();
 
     }
 
@@ -323,11 +201,12 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function clear():Void {
 
-        #if !ceramic_debug_draw_backend inline #end Graphics.clear(
+        cmd.clear(
             _whiteTransparentColor.redFloat,
             _whiteTransparentColor.greenFloat,
             _whiteTransparentColor.blueFloat,
-            _whiteTransparentColor.alpha
+            _whiteTransparentColor.alpha,
+            false
         );
 
         if (_currentRenderTarget != null) {
@@ -346,11 +225,12 @@ class Draw #if !completion implements spec.Draw #end {
 
         var background = ceramic.App.app.settings.background;
 
-        #if !ceramic_debug_draw_backend inline #end Graphics.clear(
+        cmd.clear(
             background.redFloat,
             background.greenFloat,
             background.blueFloat,
-            1
+            1,
+            false
         );
 
         if (_currentRenderTarget != null) {
@@ -368,7 +248,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function enableBlending():Void {
 
-        Graphics.enableBlending();
+        cmd.enableBlending();
 
     }
 
@@ -380,7 +260,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function disableBlending():Void {
 
-        Graphics.disableBlending();
+        cmd.disableBlending();
 
     }
 
@@ -396,7 +276,7 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function setActiveTexture(slot:Int):Void {
 
         _activeTextureSlot = slot;
-        Graphics.setActiveTexture(slot);
+        cmd.setActiveTexture(slot);
 
     }
 
@@ -411,10 +291,10 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function setPrimitiveType(primitiveType:ceramic.RenderPrimitiveType):Void {
 
-        _primitiveType = switch primitiveType {
-            case LINE: GL.LINES;
-            case _: GL.TRIANGLES;
-        }
+        cmd.setPrimitiveType(switch primitiveType {
+            case LINE: 1;
+            case _: 0;
+        });
 
     }
 
@@ -451,7 +331,7 @@ class Draw #if !completion implements spec.Draw #end {
             if (_currentRenderTarget != null && _currentRenderTarget != renderTarget && _didUpdateCurrentRenderTarget) {
                 var clayRenderTexture:clay.graphics.RenderTexture = cast _currentRenderTarget.backendItem;
                 if (clayRenderTexture.antialiasing > 1) {
-                    Graphics.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
+                    cmd.blitRenderTargetBuffers(clayRenderTexture.renderTarget, clayRenderTexture.width, clayRenderTexture.height);
                 }
             }
 
@@ -461,7 +341,7 @@ class Draw #if !completion implements spec.Draw #end {
             if (renderTarget != null) {
                 var renderTexture:clay.graphics.RenderTexture = cast renderTarget.backendItem;
 
-                Graphics.setRenderTarget(renderTexture.renderTarget);
+                cmd.setRenderTarget(renderTexture.renderTarget);
 
                 updateProjectionMatrix(
                     renderTarget.width,
@@ -482,18 +362,19 @@ class Draw #if !completion implements spec.Draw #end {
                 _viewportDensity = renderTarget.density;
                 _viewportWidth = renderTarget.width * _viewportDensity;
                 _viewportHeight = renderTarget.height * _viewportDensity;
-                Graphics.setViewport(
+                cmd.setViewport(
                     0, 0,
                     Std.int(renderTarget.width * renderTarget.density),
                     Std.int(renderTarget.height * renderTarget.density)
                 );
 
                 if (renderTarget.clearOnRender) {
-                    Graphics.clear(
+                    cmd.clear(
                         _blackTransparentColor.redFloat,
                         _blackTransparentColor.greenFloat,
                         _blackTransparentColor.blueFloat,
-                        _blackTransparentColor.alphaFloat
+                        _blackTransparentColor.alphaFloat,
+                        false
                     );
 
                     _didUpdateCurrentRenderTarget = true;
@@ -501,7 +382,7 @@ class Draw #if !completion implements spec.Draw #end {
 
             } else {
 
-                Graphics.setRenderTarget(null);
+                cmd.setRenderTarget(null);
 
                 updateProjectionMatrix(
                     ceramic.App.app.backend.screen.getWidth(),
@@ -516,7 +397,7 @@ class Draw #if !completion implements spec.Draw #end {
                 _viewportDensity = ceramic.App.app.backend.screen.getDensity();
                 _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
                 _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
-                Graphics.setViewport(
+                cmd.setViewport(
                     0, 0,
                     Std.int(_viewportWidth),
                     Std.int(_viewportHeight)
@@ -552,40 +433,13 @@ class Draw #if !completion implements spec.Draw #end {
 
         var shadersBackend = ceramic.App.app.backend.shaders;
 
-        _floatAttributesSize = shadersBackend.customFloatAttributesSize(_activeShader);
+        var floatAttributesSize = shadersBackend.customFloatAttributesSize(_activeShader);
+        var batchMultiTexture = shadersBackend.canBatchWithMultipleTextures(_activeShader);
 
-        _batchMultiTexture = shadersBackend.canBatchWithMultipleTextures(_activeShader);
-        _vertexSize = 3 + _floatAttributesSize + (_batchMultiTexture ? 1 : 0);
-        _posSize = _vertexSize;
-        if (_vertexSize < 4)
-            _vertexSize = 4;
-
-        _maxVerts = Std.int(Math.floor(MAX_VERTS_SIZE / _vertexSize));
+        cmd.setCustomAttributes(_activeShader != null ? _activeShader.customAttributes : null);
+        cmd.setVertexLayout(batchMultiTexture, floatAttributesSize);
 
         (shader:ShaderImpl).activate();
-
-        if (_numPos == 0) {
-            resetIndexes();
-        }
-
-    }
-
-    /**
-     * Resets all vertex buffer indexes to zero.
-     *
-     * This prepares the buffers for a new batch of vertices.
-     * Called when starting a new draw batch or after flushing.
-     */
-    #if !ceramic_debug_draw_backend inline #end function resetIndexes():Void {
-
-        _numIndices = 0;
-        _numPos = 0;
-        _numUVs = 0;
-        _numColors = 0;
-
-        _posIndex = 0;
-        _uvIndex = 0;
-        _colorIndex = 0;
 
     }
 
@@ -608,7 +462,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function setBlendFuncSeparate(srcRgb:backend.BlendMode, dstRgb:backend.BlendMode, srcAlpha:backend.BlendMode, dstAlpha:backend.BlendMode):Void {
 
-        Graphics.setBlendFuncSeparate(
+        cmd.setBlendFuncSeparate(
             srcRgb,
             dstRgb,
             srcAlpha,
@@ -662,8 +516,6 @@ class Draw #if !completion implements spec.Draw #end {
      */
     public function enableScissor(x:Float, y:Float, width:Float, height:Float):Void {
 
-        GL.enable(GL.SCISSOR_TEST);
-
         var density = _viewportDensity;
         var left = _modelViewTransform.transformX(x, y) * density;
         var top = _modelViewTransform.transformY(x, y) * density;
@@ -671,10 +523,10 @@ class Draw #if !completion implements spec.Draw #end {
         var bottom = _modelViewTransform.transformY(x + width, y + height) * density;
 
         if (_currentRenderTarget != null) {
-            GL.scissor(Math.round(left), Math.round(_viewportHeight - top), Math.round(right - left), Math.round(top - bottom));
+            cmd.enableScissor(left, _viewportHeight - top, right - left, top - bottom);
         }
         else {
-            GL.scissor(Math.round(left), Math.round(_viewportHeight - bottom), Math.round(right - left), Math.round(bottom - top));
+            cmd.enableScissor(left, _viewportHeight - bottom, right - left, bottom - top);
         }
 
     }
@@ -686,7 +538,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function disableScissor():Void {
 
-        GL.disable(GL.SCISSOR_TEST);
+        cmd.disableScissor();
 
     }
 
@@ -704,14 +556,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function drawWithStencilTest():Void {
 
-        // This part is not provided by clay because too specific for now
-        // Might change later if clay handles it
-
-        GL.stencilFunc(GL.EQUAL, 1, 0xFF);
-        GL.stencilMask(0x00);
-        GL.colorMask(true, true, true, true);
-
-        GL.enable(GL.STENCIL_TEST);
+        cmd.enableStencilTest();
 
     }
 
@@ -728,14 +573,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function drawWithoutStencilTest():Void {
 
-        // This part is not provided by clay because too specific for now
-        // Might change later if clay handles it
-
-        GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
-        GL.stencilMask(0xFF);
-        GL.colorMask(true, true, true, true);
-
-        GL.disable(GL.STENCIL_TEST);
+        cmd.disableStencilTest();
 
     }
 
@@ -755,26 +593,14 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function beginDrawingInStencilBuffer():Void {
 
         _drawingInStencilBuffer = true;
-
-        // This part is not provided by clay because too specific for now
-        // Might change later if clay handles it
-
-        GL.stencilMask(0xFF);
-        GL.clearStencil(0xFF);
-        GL.clear(GL.STENCIL_BUFFER_BIT);
-        GL.enable(GL.STENCIL_TEST);
-
-        GL.stencilOp(GL.KEEP, GL.KEEP, GL.REPLACE);
-
-        GL.stencilFunc(GL.ALWAYS, 1, 0xFF);
-        GL.stencilMask(0xFF);
-        GL.colorMask(false, false, false, false);
+        cmd.beginStencilWrite();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endDrawingInStencilBuffer():Void {
 
         _drawingInStencilBuffer = false;
+        cmd.endStencilWrite();
 
     }
 
@@ -788,7 +614,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function bindTexture(backendItem:backend.Texture):Void {
 
-        Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
+        cmd.bindTexture((backendItem:clay.graphics.Texture).textureId);
 
     }
 
@@ -802,12 +628,7 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function bindNoTexture():Void {
 
-        #if web
-        var backendItem = ceramic.App.app.defaultWhiteTexture.backendItem;
-        Graphics.bindTexture2d((backendItem:clay.graphics.Texture).textureId);
-        #else
-        Graphics.bindTexture2d(Graphics.NO_TEXTURE);
-        #end
+        cmd.bindNoTexture();
 
     }
 
@@ -962,7 +783,7 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function getNumPos():Int {
 
-        return _numPos;
+        return cmd.getNumVertices();
 
     }
 
@@ -978,35 +799,13 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function putPos(x:Float32, y:Float32, z:Float32):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, _posIndex * Float32Array.BYTES_PER_ELEMENT, x);
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + 1) * Float32Array.BYTES_PER_ELEMENT, y);
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + 2) * Float32Array.BYTES_PER_ELEMENT, z);
-        #else
-        _posList[_posIndex] = x;
-        _posList[_posIndex + 1] = y;
-        _posList[_posIndex + 2] = z;
-        #end
-        _posIndex += 3;
-        _numPos++;
+        cmd.putVertex(x, y, z);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putPosAndTextureSlot(x:Float32, y:Float32, z:Float32, textureSlot:Float32):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, _posIndex * Float32Array.BYTES_PER_ELEMENT, x);
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + 1) * Float32Array.BYTES_PER_ELEMENT, y);
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + 2) * Float32Array.BYTES_PER_ELEMENT, z);
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + 3) * Float32Array.BYTES_PER_ELEMENT, textureSlot);
-        #else
-        _posList[_posIndex] = x;
-        _posList[_posIndex + 1] = y;
-        _posList[_posIndex + 2] = z;
-        _posList[_posIndex + 3] = textureSlot;
-        #end
-        _posIndex += 4;
-        _numPos++;
+        cmd.putVertexWithTextureSlot(x, y, z, textureSlot);
 
     }
 
@@ -1018,42 +817,25 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !ceramic_debug_draw_backend inline #end public function putFloatAttribute(index:Int, value:Float):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setFloat32(_posBuffer, (_posIndex + index) * Float32Array.BYTES_PER_ELEMENT, value);
-        #else
-        _posList[_posIndex + index] = value;
-        #end
+        cmd.putFloatAttribute(index, value);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function endFloatAttributes():Void {
 
-        _posIndex += _floatAttributesSize;
+        cmd.endFloatAttributes();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putIndice(i:Int):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setUint16(_indiceBuffer, _numIndices * Uint16Array.BYTES_PER_ELEMENT, i);
-        #else
-        _indiceList[_numIndices] = i;
-        #end
-        _numIndices++;
+        cmd.putIndex(i);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setFloat32(_uvBuffer, _uvIndex * Float32Array.BYTES_PER_ELEMENT, uvX);
-        clay.buffers.ArrayBufferIO.setFloat32(_uvBuffer, (_uvIndex + 1) * Float32Array.BYTES_PER_ELEMENT, uvY);
-        #else
-        _uvList[_uvIndex] = uvX;
-        _uvList[_uvIndex + 1] = uvY;
-        #end
-        _uvIndex += 2;
-        _numUVs++;
+        cmd.putUVs(uvX, uvY);
 
     }
 
@@ -1070,25 +852,13 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function putColor(r:Float, g:Float, b:Float, a:Float):Void {
 
-        #if cpp
-        clay.buffers.ArrayBufferIO.setFloat32(_colorBuffer, _colorIndex * Float32Array.BYTES_PER_ELEMENT, r);
-        clay.buffers.ArrayBufferIO.setFloat32(_colorBuffer, (_colorIndex + 1) * Float32Array.BYTES_PER_ELEMENT, g);
-        clay.buffers.ArrayBufferIO.setFloat32(_colorBuffer, (_colorIndex + 2) * Float32Array.BYTES_PER_ELEMENT, b);
-        clay.buffers.ArrayBufferIO.setFloat32(_colorBuffer, (_colorIndex + 3) * Float32Array.BYTES_PER_ELEMENT, a);
-        #else
-        _colorList[_colorIndex] = r;
-        _colorList[_colorIndex + 1] = g;
-        _colorList[_colorIndex + 2] = b;
-        _colorList[_colorIndex + 3] = a;
-        #end
-        _colorIndex += 4;
-        _numColors++;
+        cmd.putColor(r, g, b, a);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function hasAnythingToFlush():Bool {
 
-        return _numPos > 0;
+        return cmd.hasAnythingToFlush();
 
     }
 
@@ -1106,23 +876,21 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function shouldFlush(numVerticesAfter:Int, numIndicesAfter:Int, customFloatAttributesSize:Int):Bool {
 
-        return (_numPos + numVerticesAfter > _maxVerts || _numIndices + numIndicesAfter > MAX_INDICES);
+        return cmd.shouldFlush(numVerticesAfter, numIndicesAfter);
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingVertices():Int {
 
-        return _maxVerts - _numPos;
+        return cmd.remainingVertices();
 
     }
 
     #if !ceramic_debug_draw_backend inline #end public function remainingIndices():Int {
 
-        return MAX_INDICES - _numIndices;
+        return cmd.remainingIndices();
 
     }
-
-    static var debugShader:clay.graphics.Shader = null;
 
     /**
      * Flushes the current batch of vertices to the GPU.
@@ -1142,146 +910,11 @@ class Draw #if !completion implements spec.Draw #end {
      */
     #if !ceramic_debug_draw_backend inline #end public function flush():Void {
 
-        var batchMultiTexture = _batchMultiTexture;
-
-        // fromBuffer takes byte length, so floats * 4
-        #if cpp
-        var pos = Float32Array.fromBuffer(_posBuffer, 0, _posIndex * 4, _viewPosBufferView);
-        var uvs = Float32Array.fromBuffer(_uvBuffer, 0, _uvIndex * 4, _viewUvsBufferView);
-        var colors = Float32Array.fromBuffer(_colorBuffer, 0, _colorIndex * 4, _viewColorsBufferView);
-        var indices = Uint16Array.fromBuffer(_indiceBuffer, 0, _numIndices * 2, _viewIndicesBufferView);
-        #else
-        var pos = Float32Array.fromBuffer(_posList.buffer, 0, _posIndex * 4);
-        var uvs = Float32Array.fromBuffer(_uvList.buffer, 0, _uvIndex * 4);
-        var colors = Float32Array.fromBuffer(_colorList.buffer, 0, _colorIndex * 4);
-        var indices = Uint16Array.fromBuffer(_indiceList.buffer, 0, _numIndices * 2);
-        #end
-
-        // var posArray = [];
-        // for (i in 0..._posIndex) {
-        //     posArray.push(pos[i]);
-        // }
-        // trace('pos: $posArray');
-        // var uvArray = [];
-        // for (i in 0..._uvIndex) {
-        //     uvArray.push(uvs[i]);
-        // }
-        // trace('uv: $uvArray');
-        // var colorArray = [];
-        // for (i in 0..._colorIndex) {
-        //     colorArray.push(colors[i]);
-        // }
-        // trace('color: $colorArray');
-        // var indiceArray = [];
-        // for (i in 0..._numIndices) {
-        //     indiceArray.push(indices[i]);
-        // }
-        // trace('indice: $indiceArray');
-
-        // Begin submit
-
-        var pb = GL.createBuffer();
-        var cb = GL.createBuffer();
-        var tb = GL.createBuffer();
-        var ib = GL.createBuffer();
-
-        GL.enableVertexAttribArray(0);
-        GL.enableVertexAttribArray(1);
-        GL.enableVertexAttribArray(2);
-
-        GL.bindBuffer(GL.ARRAY_BUFFER, pb);
-        GL.vertexAttribPointer(ATTRIBUTE_POS, 3, GL.FLOAT, false, _posSize * 4, 0);
-        GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
-
-        GL.bindBuffer(GL.ARRAY_BUFFER, tb);
-        GL.vertexAttribPointer(ATTRIBUTE_UV, 2, GL.FLOAT, false, 0, 0);
-        GL.bufferData(GL.ARRAY_BUFFER, uvs, GL.STREAM_DRAW);
-
-        GL.bindBuffer(GL.ARRAY_BUFFER, cb);
-        GL.vertexAttribPointer(ATTRIBUTE_COLOR, 4, GL.FLOAT, false, 0, 0);
-        GL.bufferData(GL.ARRAY_BUFFER, colors, GL.STREAM_DRAW);
-
-        var offset = 3;
-        var n = ATTRIBUTE_COLOR + 1;
-        var customGLBuffersLen:Int = 0;
-
-        if (batchMultiTexture) {
-
-            var b = GL.createBuffer();
-            _customGLBuffers[customGLBuffersLen++] = b;
-
-            GL.enableVertexAttribArray(n);
-            GL.bindBuffer(GL.ARRAY_BUFFER, b);
-            GL.vertexAttribPointer(n, 1, GL.FLOAT, false, _posSize * 4, offset * 4);
-            GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
-
-            n++;
-            offset++;
-
-        }
-
-        if (_activeShader != null && _activeShader.customAttributes != null) {
-
-            var allAttrs = _activeShader.customAttributes;
-            var start = customGLBuffersLen;
-            var end = start + allAttrs.length;
-            customGLBuffersLen += allAttrs.length;
-            for (ii in start...end) {
-
-                var attrIndex = ii - start;
-                var attr = allAttrs.unsafeGet(attrIndex);
-
-                var b = GL.createBuffer();
-                _customGLBuffers[ii] = b;
-
-                GL.enableVertexAttribArray(n);
-                GL.bindBuffer(GL.ARRAY_BUFFER, b);
-                GL.vertexAttribPointer(n, attr.size, GL.FLOAT, false, _posSize * 4, offset * 4);
-                GL.bufferData(GL.ARRAY_BUFFER, pos, GL.STREAM_DRAW);
-
-                n++;
-                offset += attr.size;
-
-            }
-        }
-
-        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, ib);
-        GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, indices, GL.STREAM_DRAW);
-
-        // Draw
-        GL.drawElements(_primitiveType, _numIndices, GL.UNSIGNED_SHORT, 0);
-
-        GL.deleteBuffer(pb);
-        GL.deleteBuffer(cb);
-        GL.deleteBuffer(tb);
-
-        if (customGLBuffersLen > 0) {
-            var n = ATTRIBUTE_COLOR + 1;
-            for (ii in 0...customGLBuffersLen) {
-                var b = _customGLBuffers.unsafeGet(ii);
-                GL.deleteBuffer(b);
-                GL.disableVertexAttribArray(n);
-                n++;
-            }
-        }
-
-        GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, Graphics.NO_BUFFER);
-        GL.deleteBuffer(ib);
-
-        // End submit
+        cmd.flush();
 
         if (_currentRenderTarget != null) {
             _didUpdateCurrentRenderTarget = true;
         }
-
-        pos = null;
-        uvs = null;
-        colors = null;
-        indices = null;
-
-        resetIndexes();
-
-        prepareNextBuffers();
 
     }
 

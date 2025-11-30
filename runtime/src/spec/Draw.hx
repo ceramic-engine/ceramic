@@ -50,6 +50,12 @@ interface Draw {
     function beginRender():Void;
 
     /**
+     * Ends the current rendering frame.
+     * Performs any cleanup or finalization needed after all draw operations.
+     */
+    function endRender():Void;
+
+    /**
      * Sets the current render target for subsequent draw operations.
      * Pass null to render to the main framebuffer.
      * @param renderTarget The RenderTexture to draw into, or null for the main framebuffer
