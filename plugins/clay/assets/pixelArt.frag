@@ -45,7 +45,7 @@ vec4 sampleSharpened(sampler2D tex, vec2 coord) {
     ));
 }
 
-float grid(float lineWidth, float gap, vec2 uv) {
+float grid(float gap, vec2 uv) {
     // compute distance to closest horizontal and vertical line
     vec2 dist = mod(vec2(uv.x + 0.5, uv.y + 0.5), gap) - 0.5 * gap;
 
@@ -79,7 +79,7 @@ void main() {
         float gap = 1.0;
 
         // compute antialiased grid pattern
-        float line = grid(gridThickness, gap, uv);
+        float line = grid(gap, uv);
         float aa = smoothstep(0.0, 0.5, gridThickness - line); // adjust the "1.5" for different antialiasing sharpness
 
         aa *= gridAlpha;

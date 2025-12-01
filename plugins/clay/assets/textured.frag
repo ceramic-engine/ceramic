@@ -14,7 +14,7 @@ varying vec4 color;
 // ceramic: multiTexture/textureId
 
 void main() {
-    vec4 texColor;
+    vec4 texColor = vec4(0.0);
     // ceramic: multiTexture/if
     texColor = texture2D(tex0, tcoord);
     // ceramic: multiTexture/endif
