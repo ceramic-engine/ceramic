@@ -16,6 +16,7 @@ function argumentFlag(argName) {
 
 const debug = argumentFlag('debug');
 const forceRebuild = argumentFlag('force-rebuild');
+const noDownload = argumentFlag('no-download');
 
 var localFlags = [];
 if (argumentFlag('ceramic-release')) {
@@ -268,9 +269,11 @@ async function install() {
 
     // Also download binaries that come with that ceramic build
     var ceramic = process.platform == 'win32' ? 'ceramic.cmd' : './ceramic';
-    await command(ceramic, ['sdl', 'download'], { cwd: __dirname });
-    await command(ceramic, ['angle', 'download'], { cwd: __dirname });
-    await command(ceramic, ['android', 'update', 'template'], { cwd: __dirname });
+    if (!noDownload) {
+        await command(ceramic, ['sdl', 'download'], { cwd: __dirname });
+        await command(ceramic, ['angle', 'download'], { cwd: __dirname });
+        await command(ceramic, ['android', 'update', 'template'], { cwd: __dirname });
+    }
 }
 
 (async () => {
