@@ -64,6 +64,8 @@ class ClaySetup extends tools.Task {
         var backendRuntimePathRelative = getRelativePath(backendRuntimePath, targetPath);
         var clayOpenGLPath = Path.normalize(Path.join([ceramicPath, '../git/clay/src-opengl']));
         var clayOpenGLPathRelative = getRelativePath(clayOpenGLPath, targetPath);
+        var clayMiniaudioPath = Path.normalize(Path.join([ceramicPath, '../git/clay/src-miniaudio']));
+        var clayMiniaudioPathRelative = getRelativePath(clayMiniaudioPath, targetPath);
 
         // If ceramic.yml has changed, force setup update
         //if (!force && updateProject && !Files.haveSameLastModified(projectPath, hxmlPath)) {
@@ -240,6 +242,7 @@ $targetFlags
 ${libsHxml.join('\n')}
 -lib clay
 -cp ' + clayOpenGLPathRelative + '
+-cp ' + clayMiniaudioPathRelative + '
 -D clay_app_id=' + Json.stringify(project.app.name) + '
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
