@@ -199,6 +199,14 @@ class Backend implements tracker.Events implements spec.Backend {
 
 /// Internal flags
 
+    @:allow(backend.Draw) inline function canRender():Bool {
+        #if ios
+        return mobileInBacgkround.load();
+        #else
+        return true;
+        #end
+    }
+
 #if (ios || tvos || android)
     /**
      * Thread-safe flag indicating if the mobile app is currently in background.
