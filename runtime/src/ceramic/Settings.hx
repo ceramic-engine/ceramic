@@ -74,13 +74,25 @@ class Settings implements Observable {
      * Target window width at startup
      * Uses `targetWidth` as fallback if set to 0 (default)
      */
+    #if ceramic_4k_window
+    @observe public var windowWidth(default,null):Int = 3840;
+    #elseif ceramic_hd_window
+    @observe public var windowWidth(default,null):Int = 1920;
+    #else
     @observe public var windowWidth(default,null):Int = 0;
+    #end
 
     /**
      * Target window height at startup
      * Uses `targetHeight` as fallback if set to 0 (default)
      */
+    #if ceramic_4k_window
+    @observe public var windowHeight(default,null):Int = 2160;
+    #elseif ceramic_hd_window
+    @observe public var windowHeight(default,null):Int = 1080;
+    #else
     @observe public var windowHeight(default,null):Int = 0;
+    #end
 
     /**
      * Target density. Affects the quality of textures
