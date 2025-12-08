@@ -2,6 +2,11 @@ plugin:
     name: Shade
 
     runtime:
+
+        # Enabled by default
+        +plugins:
+            - shade
+
         if plugin_shade:
             +paths:
                 - '{plugin:cwd}/runtime/src'
