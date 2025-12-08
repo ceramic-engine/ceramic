@@ -106,7 +106,6 @@ class Tools {
 
         context.addTask('sdl', new tools.tasks.SDL());
         context.addTask('angle', new tools.tasks.Angle());
-        context.addTask('shader tools', new tools.tasks.ShaderTools());
 
         //#end
 
