@@ -300,7 +300,7 @@ class ProjectLoader {
             }
 
             // Extract enabled plugins
-            var enabledPlugins = extractEnabledPlugins(app, defines);
+            var enabledPlugins = extractEnabledPlugins(app, defines, plugins);
 
             // Create `plugin_{plugin}` define from every plugin entry explicitly put in project file
             if (enabledPlugins != null && enabledPlugins.length > 0) {
@@ -524,7 +524,7 @@ class ProjectLoader {
 
 /// Internal
 
-    static function extractEnabledPlugins(data:Dynamic, defines:Map<String,String>):Array<String> {
+    static function extractEnabledPlugins(data:Dynamic, defines:Map<String,String>, plugins:Map<String, tools.spec.ToolsPlugin>):Array<String> {
 
         var result = [];
         data = Json.parse(Json.stringify(data));
@@ -532,10 +532,31 @@ class ProjectLoader {
 
         evaluateConditionals(data, defines, true);
 
+        if (plugins != null) {
+            for (plugin in plugins) {
+                if (plugin.runtime != null) {
+                    var pluginRuntime:Dynamic = Json.parse(Json.stringify(plugin.runtime));
+                    var mergedPluginRuntime:Dynamic = { };
+                    var pluginDefines = defines.copy();
+                    mergeConfigs(mergedPluginRuntime, pluginRuntime, pluginDefines, true);
+                    if (mergedPluginRuntime.plugins != null) {
+                        var pluginList:Array<String> = mergedPluginRuntime.plugins;
+                        for (pluginName in pluginList) {
+                            if (!result.contains(pluginName)) {
+                                result.push(pluginName);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         if (data.plugins != null && Std.isOfType(data.plugins, Array)) {
             var pluginList:Array<String> = data.plugins;
             for (pluginName in pluginList) {
-                result.push(pluginName);
+                if (!result.contains(pluginName)) {
+                    result.push(pluginName);
+                }
             }
         }
 
