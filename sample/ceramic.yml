@@ -57,6 +57,9 @@ app:
         # Add entity runtime scripting support: entity.scriptContent = ...
         - script
 
+        # Add support of cross-platform shaders written with haxe
+        - shade
+
     libs:
         #- somelib
         #- somelib: someversion

@@ -1,0 +1,7 @@
+plugin:
+    name: Shade
+
+    runtime:
+        if plugin_shade:
+            +paths:
+                - '{plugin:cwd}/runtime/src'

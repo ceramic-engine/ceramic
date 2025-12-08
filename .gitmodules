@@ -110,3 +110,12 @@
 [submodule "git/build-sdl3"]
 	path = git/build-sdl3
 	url = https://github.com/jeremyfa/build-sdl3.git
+[submodule "git/reflaxe.CPP"]
+	path = git/reflaxe.CPP
+	url = https://github.com/SomeRanDev/reflaxe.CPP.git
+[submodule "git/reflaxe"]
+	path = git/reflaxe
+	url = https://github.com/SomeRanDev/reflaxe.git
+[submodule "git/shade"]
+	path = git/shade
+	url = https://github.com/ceramic-engine/shade.git
