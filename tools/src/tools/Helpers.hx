@@ -859,6 +859,7 @@ class Helpers {
         ensureHaxelibDevToCeramicGit('linc_dialogs', cwd);
         ensureHaxelibDevToCeramicGit('linc_rtmidi', cwd);
         ensureHaxelibDevToCeramicGit('fuzzaldrin', cwd);
+        ensureHaxelibDevToCeramicGit('shade', cwd);
 
     }
 

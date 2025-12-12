@@ -8,5 +8,11 @@ plugin:
             - shade
 
         if plugin_shade:
+            +libs:
+                - shade
             +paths:
                 - '{plugin:cwd}/runtime/src'
+            +defines:
+                - shade_for_haxe
+                - shade_base_shader
+                - shade_base_sampler2d

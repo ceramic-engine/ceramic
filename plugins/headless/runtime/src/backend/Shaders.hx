@@ -106,12 +106,6 @@ class Shaders implements spec.Shaders {
 
     }
 
-    inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
-
-        //
-
-    }
-
     inline public function setVec2(shader:Shader, name:String, x:Float, y:Float):Void {
 
         //
@@ -142,7 +136,19 @@ class Shaders implements spec.Shaders {
 
     }
 
-    inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
+    inline public function setMat2(shader:Shader, name:String, m00:Float, m10:Float, m01:Float, m11:Float):Void {
+
+        //
+
+    }
+
+    inline public function setMat3(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m01:Float, m11:Float, m21:Float, m02:Float, m12:Float, m22:Float):Void {
+
+        //
+
+    }
+
+    inline public function setMat4(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m30:Float, m01:Float, m11:Float, m21:Float, m31:Float, m02:Float, m12:Float, m22:Float, m32:Float, m03:Float, m13:Float, m23:Float, m33:Float):Void {
 
         //
 

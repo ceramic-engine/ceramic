@@ -151,23 +151,6 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
-     * Sets a color uniform on the shader.
-     * @param shader Target shader
-     * @param name Uniform name
-     * @param r Red component (0-1)
-     * @param g Green component (0-1)
-     * @param b Blue component (0-1)
-     * @param a Alpha component (0-1)
-     */
-    #end
-    inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
-
-        (shader:ShaderImpl).setColor(name, r, g, b, a);
-
-    }
-
-    #if !no_backend_docs
-    /**
      * Sets a 2D vector uniform on the shader.
      * @param shader Target shader
      * @param name Uniform name
@@ -245,15 +228,69 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
-     * Sets a 4x4 matrix uniform from a 2D transform.
+     * Sets a 2x2 matrix uniform value in the shader (column-major order).
      * @param shader Target shader
      * @param name Uniform name
-     * @param transform 2D transform to convert
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
      */
     #end
-    inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
+    inline public function setMat2(shader:Shader, name:String, m00:Float, m10:Float, m01:Float, m11:Float):Void {
 
-        (shader:ShaderImpl).setMat4FromTransform(name, transform);
+        (shader:ShaderImpl).setMat2(name, m00, m10, m01, m11);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Sets a 3x3 matrix uniform value in the shader (column-major order).
+     * @param shader Target shader
+     * @param name Uniform name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     */
+    #end
+    inline public function setMat3(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m01:Float, m11:Float, m21:Float, m02:Float, m12:Float, m22:Float):Void {
+
+        (shader:ShaderImpl).setMat3(name, m00, m10, m20, m01, m11, m21, m02, m12, m22);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Sets a 4x4 matrix uniform value in the shader (column-major order).
+     * @param shader Target shader
+     * @param name Uniform name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m30 Column 0, row 3
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m31 Column 1, row 3
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     * @param m32 Column 2, row 3
+     * @param m03 Column 3, row 0
+     * @param m13 Column 3, row 1
+     * @param m23 Column 3, row 2
+     * @param m33 Column 3, row 3
+     */
+    #end
+    inline public function setMat4(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m30:Float, m01:Float, m11:Float, m21:Float, m31:Float, m02:Float, m12:Float, m22:Float, m32:Float, m03:Float, m13:Float, m23:Float, m33:Float):Void {
+
+        (shader:ShaderImpl).setMat4(name, m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33);
 
     }
 

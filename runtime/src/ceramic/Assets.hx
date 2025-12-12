@@ -246,7 +246,25 @@ class Assets extends Entity {
     //     _add(id, null, options #if ceramic_debug_entity_allocs , pos #end);
     // }
 
-    public function add(id:AssetId<Dynamic>, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+    #if plugin_shade
+
+    public extern inline overload function add(shader:Class<shade.Shader>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+        var className = Type.getClassName(shader);
+        var dotIndex = className.lastIndexOf('.');
+        if (dotIndex != -1) {
+            className = className.substr(dotIndex + 1);
+        }
+        final id = 'shader:' + className.charAt(0).toLowerCase() + className.substr(1);
+        return _add(id, null, options #if ceramic_debug_entity_allocs , pos #end);
+    }
+
+    #end
+
+    public extern inline overload function add(id:AssetId<Dynamic>, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
+        return _add(id, variant, options #if ceramic_debug_entity_allocs , pos #end);
+    }
+
+    function _add(id:AssetId<Dynamic>, ?variant:String, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
 
         var value:String = Std.isOfType(id, String) ? cast id : cast Reflect.field(id, '_id');
         var colonIndex = value.indexOf(':');

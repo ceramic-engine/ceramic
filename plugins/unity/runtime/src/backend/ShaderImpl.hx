@@ -22,6 +22,54 @@ class ShaderImpl {
 
     #if !no_backend_docs
     /**
+     * Cache for suffixed uniform names (name -> name_).
+     * Avoids string allocation on every setter call.
+     */
+    #end
+    static var suffixCache:Map<String, String> = new Map();
+
+    #if !no_backend_docs
+    /**
+     * Cache for array-suffixed uniform names (name -> name_arr_).
+     * Used for mat2/mat3 uniforms which are sent as float arrays.
+     */
+    #end
+    static var arrSuffixCache:Map<String, String> = new Map();
+
+    #if !no_backend_docs
+    /**
+     * Gets the suffixed name from cache, or creates and caches it.
+     * @param name Original uniform name
+     * @return Suffixed name (name_)
+     */
+    #end
+    static function getSuffixedName(name:String):String {
+        var cached = suffixCache.get(name);
+        if (cached == null) {
+            cached = name + "_";
+            suffixCache.set(name, cached);
+        }
+        return cached;
+    }
+
+    #if !no_backend_docs
+    /**
+     * Gets the array-suffixed name from cache, or creates and caches it.
+     * @param name Original uniform name
+     * @return Array-suffixed name (name_arr_)
+     */
+    #end
+    static function getArrSuffixedName(name:String):String {
+        var cached = arrSuffixCache.get(name);
+        if (cached == null) {
+            cached = name + "_arr_";
+            arrSuffixCache.set(name, cached);
+        }
+        return cached;
+    }
+
+    #if !no_backend_docs
+    /**
      * Path to the shader resource file.
      */
     #end
@@ -73,13 +121,6 @@ class ShaderImpl {
 
     #if !no_backend_docs
     /**
-     * Color uniform parameters (RGBA).
-     */
-    #end
-    var colorParams:Map<String,unityengine.Color> = null;
-
-    #if !no_backend_docs
-    /**
      * 2D vector uniform parameters.
      */
     #end
@@ -120,6 +161,20 @@ class ShaderImpl {
      */
     #end
     var textureSlots:Array<backend.Texture> = null;
+
+    #if !no_backend_docs
+    /**
+     * 2x2 matrix uniform parameters (stored as float arrays).
+     */
+    #end
+    var mat2Params:Map<String,cs.NativeArray<Single>> = null;
+
+    #if !no_backend_docs
+    /**
+     * 3x3 matrix uniform parameters (stored as float arrays).
+     */
+    #end
+    var mat3Params:Map<String,cs.NativeArray<Single>> = null;
 
     #if !no_backend_docs
     /**
@@ -172,7 +227,7 @@ class ShaderImpl {
         if (intParams == null)
             intParams = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         if (!intParams.exists(name) || intParams.get(name) != value) {
             intParams.set(name, value);
@@ -195,37 +250,10 @@ class ShaderImpl {
         if (floatParams == null)
             floatParams = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         if (!floatParams.exists(name) || floatParams.get(name) != value) {
             floatParams.set(name, value);
-            paramsVersion++;
-            if (paramsVersion > MAX_PARAMS_DIRTY)
-                paramsVersion = 1;
-        }
-
-    }
-
-    #if !no_backend_docs
-    /**
-     * Sets a color uniform parameter.
-     * @param name Uniform name in the shader
-     * @param r Red component (0-1)
-     * @param g Green component (0-1)
-     * @param b Blue component (0-1)
-     * @param a Alpha component (0-1)
-     */
-    #end
-    public function setColor(name:String, r:Float, g:Float, b:Float, a:Float):Void {
-
-        if (colorParams == null)
-            colorParams = new Map();
-
-        name = sanitizeUniformName(name);
-
-        var unityColor = new unityengine.Color(r, g, b, a);
-        if (!colorParams.exists(name) || colorParams.get(name) != unityColor) {
-            colorParams.set(name, unityColor);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
@@ -246,7 +274,7 @@ class ShaderImpl {
         if (vec2Params == null)
             vec2Params = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         var unityVec2 = new unityengine.Vector2(x, y);
         if (!vec2Params.exists(name) || vec2Params.get(name) != unityVec2) {
@@ -272,7 +300,7 @@ class ShaderImpl {
         if (vec3Params == null)
             vec3Params = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         var unityVec3 = new unityengine.Vector3(x, y, z);
         if (!vec3Params.exists(name) || vec3Params.get(name) != unityVec3) {
@@ -299,7 +327,7 @@ class ShaderImpl {
         if (vec4Params == null)
             vec4Params = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         var unityVec4 = new unityengine.Vector4(x, y, z, w);
         if (!vec4Params.exists(name) || vec4Params.get(name) != unityVec4) {
@@ -323,7 +351,7 @@ class ShaderImpl {
         if (floatArrayParams == null)
             floatArrayParams = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         var nativeArray = new cs.NativeArray<Single>(array.length);
         for (i in 0...array.length) {
@@ -353,7 +381,7 @@ class ShaderImpl {
         if (textureSlots == null)
             textureSlots = [];
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         if (!textureParams.exists(name) || textureParams.get(name) != texture) {
             textureParams.set(name, texture);
@@ -367,27 +395,119 @@ class ShaderImpl {
 
     #if !no_backend_docs
     /**
-     * Sets a 4x4 matrix uniform from a 2D transform.
-     * Converts the 2D affine transform to a 4x4 matrix.
+     * Sets a 2x2 matrix uniform value (column-major order).
      * @param name Uniform name in the shader
-     * @param transform 2D transform to convert
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
      */
     #end
-    public function setMat4FromTransform(name:String, transform:ceramic.Transform):Void {
+    public function setMat2(name:String, m00:Float, m10:Float, m01:Float, m11:Float):Void {
+
+        if (mat2Params == null)
+            mat2Params = new Map();
+
+        name = getArrSuffixedName(name);
+
+        var arr:cs.NativeArray<Single> = mat2Params.get(name);
+        if (arr == null) {
+            arr = new cs.NativeArray<Single>(4);
+            mat2Params.set(name, arr);
+        }
+
+        arr[0] = m00;
+        arr[1] = m10;
+        arr[2] = m01;
+        arr[3] = m11;
+
+        paramsVersion++;
+        if (paramsVersion > MAX_PARAMS_DIRTY)
+            paramsVersion = 1;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Sets a 3x3 matrix uniform value (column-major order).
+     * @param name Uniform name in the shader
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     */
+    #end
+    public function setMat3(name:String, m00:Float, m10:Float, m20:Float, m01:Float, m11:Float, m21:Float, m02:Float, m12:Float, m22:Float):Void {
+
+        if (mat3Params == null)
+            mat3Params = new Map();
+
+        name = getArrSuffixedName(name);
+
+        var arr:cs.NativeArray<Single> = mat3Params.get(name);
+        if (arr == null) {
+            arr = new cs.NativeArray<Single>(9);
+            mat3Params.set(name, arr);
+        }
+
+        arr[0] = m00;
+        arr[1] = m10;
+        arr[2] = m20;
+        arr[3] = m01;
+        arr[4] = m11;
+        arr[5] = m21;
+        arr[6] = m02;
+        arr[7] = m12;
+        arr[8] = m22;
+
+        paramsVersion++;
+        if (paramsVersion > MAX_PARAMS_DIRTY)
+            paramsVersion = 1;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Sets a 4x4 matrix uniform value (column-major order).
+     * @param name Uniform name in the shader
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m30 Column 0, row 3
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m31 Column 1, row 3
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     * @param m32 Column 2, row 3
+     * @param m03 Column 3, row 0
+     * @param m13 Column 3, row 1
+     * @param m23 Column 3, row 2
+     * @param m33 Column 3, row 3
+     */
+    #end
+    public function setMat4(name:String, m00:Float, m10:Float, m20:Float, m30:Float, m01:Float, m11:Float, m21:Float, m31:Float, m02:Float, m12:Float, m22:Float, m32:Float, m03:Float, m13:Float, m23:Float, m33:Float):Void {
 
         if (mat4Params == null)
             mat4Params = new Map();
 
-        name = sanitizeUniformName(name);
+        name = getSuffixedName(name);
 
         untyped __cs__('UnityEngine.Matrix4x4 m = UnityEngine.Matrix4x4.identity');
 
         untyped __cs__('
-        m[0] = (float){0}; m[4] = (float){1}; m[8] = 0f;  m[12] = (float){2};
-        m[1] = (float){3}; m[5] = (float){4}; m[9] = 0f;  m[13] = (float){5};
-        m[2] = 0f;  m[6] = 0f;  m[10] = 1f; m[14] = 0f;
-        m[3] = 0f;  m[7] = 0f;  m[11] = 0f; m[15] = 1f;
-        ', transform.a, transform.c, transform.tx, transform.b, transform.d, transform.ty);
+        m[0] = (float){0};  m[4] = (float){4};  m[8] = (float){8};   m[12] = (float){12};
+        m[1] = (float){1};  m[5] = (float){5};  m[9] = (float){9};   m[13] = (float){13};
+        m[2] = (float){2};  m[6] = (float){6};  m[10] = (float){10}; m[14] = (float){14};
+        m[3] = (float){3};  m[7] = (float){7};  m[11] = (float){11}; m[15] = (float){15};
+        ', m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33);
 
         var unityMat4:unityengine.Matrix4x4 = untyped __cs__('m');
 
@@ -397,25 +517,6 @@ class ShaderImpl {
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
         }
-
-    }
-
-    #if !no_backend_docs
-    /**
-     * Sanitizes uniform names to avoid shader keyword conflicts.
-     * Appends underscore to reserved words.
-     * @param name Original uniform name
-     * @return Sanitized name safe for shader use
-     */
-    #end
-    function sanitizeUniformName(name:String):String {
-
-        // That keyword is reserved
-        // TODO: more exhaustive list of keywords? (and without allocations)
-        if (name == 'offset' || name == 'lighten' || name == 'overlay')
-            return name + '_';
-
-        return name;
 
     }
 

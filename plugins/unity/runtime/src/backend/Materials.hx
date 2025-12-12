@@ -148,14 +148,11 @@ class Materials {
                 untyped __cs__('material.SetInt("_StencilWriteMask", (int){0})', 0xFF);
         }
 
-        var backendShaders = ceramic.App.app.backend.shaders;
+        var canBatchMultipleTextures = ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(shader);
 
-        var attributesSize = backendShaders.customFloatAttributesSize(shader);
-        var attributesEntries = Std.int(Math.ceil(attributesSize / 2));
+        var numCustomAttributes = shaderImpl.customAttributes != null ? shaderImpl.customAttributes.length : 0;
 
-        var canBatchMultipleTextures = backendShaders.canBatchWithMultipleTextures(shader);
-
-        var vertexBufferAttributes:NativeArray<VertexAttributeDescriptor> = new NativeArray(3 + attributesEntries);
+        var vertexBufferAttributes:NativeArray<VertexAttributeDescriptor> = new NativeArray(3 + numCustomAttributes);
         if (canBatchMultipleTextures) {
             vertexBufferAttributes[0] = new VertexAttributeDescriptor(
                 VertexAttribute.Position, VertexAttributeFormat.Float32, 4, 0
@@ -172,38 +169,23 @@ class Materials {
         vertexBufferAttributes[2] = new VertexAttributeDescriptor(
             VertexAttribute.TexCoord0, VertexAttributeFormat.Float32, 2, 0
         );
-        for (i in 0...attributesEntries) {
-            switch i {
-                case 0:
-                    vertexBufferAttributes[3] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord1, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 1:
-                    vertexBufferAttributes[4] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord2, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 2:
-                    vertexBufferAttributes[5] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord3, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 3:
-                    vertexBufferAttributes[6] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord4, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 4:
-                    vertexBufferAttributes[4] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord5, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 5:
-                    vertexBufferAttributes[5] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord6, VertexAttributeFormat.Float32, 2, 0
-                    );
-                case 6:
-                    vertexBufferAttributes[6] = new VertexAttributeDescriptor(
-                        VertexAttribute.TexCoord7, VertexAttributeFormat.Float32, 2, 0
-                    );
-                default:
-                    throw 'Too many custom float attributes in shader: $shader';
+
+        if (shaderImpl.customAttributes != null) {
+            for (i in 0...shaderImpl.customAttributes.length) {
+                var attr = shaderImpl.customAttributes[i];
+                var texCoord = switch i {
+                    case 0: VertexAttribute.TexCoord1;
+                    case 1: VertexAttribute.TexCoord2;
+                    case 2: VertexAttribute.TexCoord3;
+                    case 3: VertexAttribute.TexCoord4;
+                    case 4: VertexAttribute.TexCoord5;
+                    case 5: VertexAttribute.TexCoord6;
+                    case 6: VertexAttribute.TexCoord7;
+                    default: throw 'Too many custom attributes in shader: $shader (max 7)';
+                };
+                vertexBufferAttributes[3 + i] = new VertexAttributeDescriptor(
+                    texCoord, VertexAttributeFormat.Float32, attr.size, 0
+                );
             }
         }
         materialData.vertexBufferAttributes = vertexBufferAttributes;

@@ -203,12 +203,6 @@ class MaterialData {
                 }
             }
 
-            if (shaderImpl.colorParams != null) {
-                for (name => val in shaderImpl.colorParams) {
-                    untyped __cs__('m.SetColor({0}, {1})', name, val);
-                }
-            }
-
             if (shaderImpl.vec2Params != null) {
                 for (name => val in shaderImpl.vec2Params) {
                     untyped __cs__('m.SetVector({0}, {1})', name, val);
@@ -242,6 +236,18 @@ class MaterialData {
                     else if (texture.unityRenderTexture != null) {
                         untyped __cs__('m.SetTexture({0}, (UnityEngine.RenderTexture){1})', textureName, texture.unityRenderTexture);
                     }
+                }
+            }
+
+            if (shaderImpl.mat2Params != null) {
+                for (name => val in shaderImpl.mat2Params) {
+                    untyped __cs__('m.SetFloatArray({0}, {1})', name, val);
+                }
+            }
+
+            if (shaderImpl.mat3Params != null) {
+                for (name => val in shaderImpl.mat3Params) {
+                    untyped __cs__('m.SetFloatArray({0}, {1})', name, val);
                 }
             }
 

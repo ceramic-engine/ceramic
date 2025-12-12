@@ -422,21 +422,6 @@ class Shaders implements spec.Shaders {
     }
 
     /**
-     * Sets a color uniform value (vec4) in the shader.
-     * @param shader Target shader program
-     * @param name Uniform variable name
-     * @param r Red component (0-1)
-     * @param g Green component (0-1)
-     * @param b Blue component (0-1)
-     * @param a Alpha component (0-1)
-     */
-    inline public function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void {
-
-        (shader:ShaderImpl).uniforms.setColor(name, r, g, b, a);
-
-    }
-
-    /**
      * Sets a 2D vector uniform value in the shader.
      * @param shader Target shader program
      * @param name Uniform variable name
@@ -504,21 +489,64 @@ class Shaders implements spec.Shaders {
     }
 
     /**
-     * Sets a 4x4 matrix uniform from a 2D transform.
-     * Converts the 2D transform to a 4x4 matrix suitable for GPU usage.
-     * 
+     * Sets a 2x2 matrix uniform value in the shader (column-major order).
      * @param shader Target shader program
      * @param name Uniform variable name
-     * @param transform 2D transformation to convert
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
      */
-    inline public function setMat4FromTransform(shader:Shader, name:String, transform:ceramic.Transform):Void {
+    inline public function setMat2(shader:Shader, name:String, m00:Float, m10:Float, m01:Float, m11:Float):Void {
 
-        (shader:ShaderImpl).uniforms.setMatrix4(name, ceramic.Float32Array.fromArray([
-            transform.a, transform.b, 0, 0,
-            transform.c, transform.d, 0, 0,
-            0, 0, 1, 0,
-            transform.tx, transform.ty, 0, 1
-        ]));
+        (shader:ShaderImpl).uniforms.setMatrix2(name, Float32Array.fromArray([m00, m10, m01, m11]));
+
+    }
+
+    /**
+     * Sets a 3x3 matrix uniform value in the shader (column-major order).
+     * @param shader Target shader program
+     * @param name Uniform variable name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     */
+    inline public function setMat3(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m01:Float, m11:Float, m21:Float, m02:Float, m12:Float, m22:Float):Void {
+
+        (shader:ShaderImpl).uniforms.setMatrix3(name, Float32Array.fromArray([m00, m10, m20, m01, m11, m21, m02, m12, m22]));
+
+    }
+
+    /**
+     * Sets a 4x4 matrix uniform value in the shader (column-major order).
+     * @param shader Target shader program
+     * @param name Uniform variable name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m30 Column 0, row 3
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m31 Column 1, row 3
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     * @param m32 Column 2, row 3
+     * @param m03 Column 3, row 0
+     * @param m13 Column 3, row 1
+     * @param m23 Column 3, row 2
+     * @param m33 Column 3, row 3
+     */
+    inline public function setMat4(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m30:Float, m01:Float, m11:Float, m21:Float, m31:Float, m02:Float, m12:Float, m22:Float, m32:Float, m03:Float, m13:Float, m23:Float, m33:Float):Void {
+
+        (shader:ShaderImpl).uniforms.setMatrix4(name, Float32Array.fromArray([m00, m10, m20, m30, m01, m11, m21, m31, m02, m12, m22, m32, m03, m13, m23, m33]));
 
     }
 

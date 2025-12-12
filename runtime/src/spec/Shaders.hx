@@ -76,17 +76,6 @@ interface Shaders {
     function setFloat(shader:Shader, name:String, value:Float):Void;
 
     /**
-     * Sets a color uniform value in the shader (as vec4).
-     * @param shader The shader to modify
-     * @param name The uniform variable name
-     * @param r Red component (0.0 to 1.0)
-     * @param g Green component (0.0 to 1.0)
-     * @param b Blue component (0.0 to 1.0)
-     * @param a Alpha component (0.0 to 1.0)
-     */
-    function setColor(shader:Shader, name:String, r:Float, g:Float, b:Float, a:Float):Void;
-
-    /**
      * Sets a 2D vector uniform value in the shader.
      * @param shader The shader to modify
      * @param name The uniform variable name
@@ -133,6 +122,56 @@ interface Shaders {
      * @param texture The texture to bind
      */
     function setTexture(shader:Shader, name:String, slot:Int, texture:Texture):Void;
+
+    /**
+     * Sets a 2x2 matrix uniform value in the shader (column-major order).
+     * @param shader The shader to modify
+     * @param name The uniform variable name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     */
+    function setMat2(shader:Shader, name:String, m00:Float, m10:Float, m01:Float, m11:Float):Void;
+
+    /**
+     * Sets a 3x3 matrix uniform value in the shader (column-major order).
+     * @param shader The shader to modify
+     * @param name The uniform variable name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     */
+    function setMat3(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m01:Float, m11:Float, m21:Float, m02:Float, m12:Float, m22:Float):Void;
+
+    /**
+     * Sets a 4x4 matrix uniform value in the shader (column-major order).
+     * @param shader The shader to modify
+     * @param name The uniform variable name
+     * @param m00 Column 0, row 0
+     * @param m10 Column 0, row 1
+     * @param m20 Column 0, row 2
+     * @param m30 Column 0, row 3
+     * @param m01 Column 1, row 0
+     * @param m11 Column 1, row 1
+     * @param m21 Column 1, row 2
+     * @param m31 Column 1, row 3
+     * @param m02 Column 2, row 0
+     * @param m12 Column 2, row 1
+     * @param m22 Column 2, row 2
+     * @param m32 Column 2, row 3
+     * @param m03 Column 3, row 0
+     * @param m13 Column 3, row 1
+     * @param m23 Column 3, row 2
+     * @param m33 Column 3, row 3
+     */
+    function setMat4(shader:Shader, name:String, m00:Float, m10:Float, m20:Float, m30:Float, m01:Float, m11:Float, m21:Float, m31:Float, m02:Float, m12:Float, m22:Float, m32:Float, m03:Float, m13:Float, m23:Float, m33:Float):Void;
 
     /**
      * Gets the total size of custom float attributes per vertex.
