@@ -1,5 +1,6 @@
 plugin:
     name: Shade
+    tools: tools.ShadePlugin
 
     runtime:
 
