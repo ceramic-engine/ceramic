@@ -150,6 +150,9 @@ class Shade extends Task {
                 File.copy(srcPath, dstPath);
             }
         }
+
+        // Step 8: Clean up temporary directory
+        Files.deleteRecursive(tempDir);
     }
 
     /**
