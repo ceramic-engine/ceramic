@@ -356,17 +356,17 @@ class Draw #if !completion implements spec.Draw #end {
      * Adds texture coordinates to the vertex buffer.
      *
      * UV coordinates map vertices to texture pixels. The Y coordinate
-     * is flipped (1.0 - uvY) because Unity's texture coordinate system
-     * has Y=0 at the bottom, while Ceramic uses Y=0 at the top.
+     * flip for Unity's coordinate system is handled in the shader's
+     * texture sampling helper (shade_texture), not here.
      *
      * @param uvX The horizontal texture coordinate (0-1)
-     * @param uvY The vertical texture coordinate (0-1, flipped internally)
+     * @param uvY The vertical texture coordinate (0-1)
      */
     #end
     #if !ceramic_debug_draw_backend inline #end public function putUVs(uvX:Float, uvY:Float):Void {
 
         _meshVertices[_uvIndex] = uvX;
-        _meshVertices[_uvIndex+1] = (1.0 - uvY);
+        _meshVertices[_uvIndex+1] = uvY;
         _numUVs++;
         _uvIndex += _vertexSize;
 
@@ -570,6 +570,20 @@ class Draw #if !completion implements spec.Draw #end {
         if (_modelViewMatrix == null) {
             _modelViewMatrix = untyped __cs__('UnityEngine.Matrix4x4.identity');
         }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Ends the current rendering frame.
+     *
+     * In Unity, frame finalization is handled automatically by the
+     * rendering pipeline, so this method is empty.
+     */
+    #end
+    #if !ceramic_debug_draw_backend inline #end public function endRender():Void {
+
+        // Unity handles frame finalization automatically
 
     }
 

@@ -173,16 +173,16 @@ class Materials {
         if (shaderImpl.customAttributes != null) {
             for (i in 0...shaderImpl.customAttributes.length) {
                 var attr = shaderImpl.customAttributes[i];
-                var texCoord = switch i {
-                    case 0: VertexAttribute.TexCoord1;
-                    case 1: VertexAttribute.TexCoord2;
-                    case 2: VertexAttribute.TexCoord3;
-                    case 3: VertexAttribute.TexCoord4;
-                    case 4: VertexAttribute.TexCoord5;
-                    case 5: VertexAttribute.TexCoord6;
-                    case 6: VertexAttribute.TexCoord7;
-                    default: throw 'Too many custom attributes in shader: $shader (max 7)';
-                };
+                if (i > 6) {
+                    throw 'Too many custom attributes in shader: $shader (max 7)';
+                }
+                var texCoord:VertexAttribute = VertexAttribute.TexCoord1;
+                if (i == 1) texCoord = VertexAttribute.TexCoord2;
+                else if (i == 2) texCoord = VertexAttribute.TexCoord3;
+                else if (i == 3) texCoord = VertexAttribute.TexCoord4;
+                else if (i == 4) texCoord = VertexAttribute.TexCoord5;
+                else if (i == 5) texCoord = VertexAttribute.TexCoord6;
+                else if (i == 6) texCoord = VertexAttribute.TexCoord7;
                 vertexBufferAttributes[3 + i] = new VertexAttributeDescriptor(
                     texCoord, VertexAttributeFormat.Float32, attr.size, 0
                 );

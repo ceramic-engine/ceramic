@@ -1,7 +1,11 @@
 package backend.tools.tasks;
 
+import haxe.Json;
 import haxe.io.Path;
 import sys.FileSystem;
+import sys.io.File;
+import tools.Equal;
+import tools.Files;
 import tools.Helpers.*;
 import tools.InstanceManager;
 
@@ -93,6 +97,10 @@ class UnityBuild extends tools.Task {
             cmdArgs.push('haxe_server=$haxeServerPort');
         }
 
+        // Haxe shaders detection
+        cmdArgs.push('--macro');
+        cmdArgs.push('shade.macros.ShadeMacro.initRegister(' + Json.stringify(hxmlProjectPath) + ')');
+
         if (haxeServerPort != -1) {
             print('Run haxe compiler (server on port $haxeServerPort)');
         }
@@ -109,6 +117,76 @@ class UnityBuild extends tools.Task {
         }
         else {
             if (action == 'run' || action == 'build') {
+                // Compile Unity shaders from Haxe shaders
+                final shadersJsonPath = Path.join([hxmlProjectPath, 'shade', 'info.json']);
+                final prevShadersJsonPath = Path.join([hxmlProjectPath, 'shade', 'prev-info.json']);
+
+                if (FileSystem.exists(shadersJsonPath)) {
+                    var shaders:Dynamic = Json.parse(File.getContent(shadersJsonPath));
+
+                    // Read previous shade/info.json for comparison
+                    var prevShaders:Dynamic = null;
+                    if (FileSystem.exists(prevShadersJsonPath)) {
+                        prevShaders = Json.parse(File.getContent(prevShadersJsonPath));
+                    }
+
+                    if (shaders != null && shaders.shaders != null) {
+                        final shaderReferences:Array<{
+                            pack:Array<String>,
+                            name:String,
+                            filePath:String,
+                            hash:String
+                        }> = shaders.shaders;
+
+                        if (shaderReferences.length > 0) {
+                            // Check if shaders changed (skip if identical)
+                            var shouldSkipShaderCompilation = false;
+                            if (prevShaders != null && Equal.equal(prevShaders, shaders)) {
+                                shouldSkipShaderCompilation = true;
+                            }
+
+                            if (!shouldSkipShaderCompilation) {
+                                // Collect unique shader files (by hash to avoid duplicates)
+                                var uniqueShaders:Map<String, String> = new Map();
+                                for (ref in shaderReferences) {
+                                    if (!uniqueShaders.exists(ref.hash)) {
+                                        uniqueShaders.set(ref.hash, ref.filePath);
+                                    }
+                                }
+
+                                // Build shade task arguments for Unity target
+                                var unityOutputPath = Path.join([hxmlProjectPath, 'shade', 'unity']);
+
+                                // Delete existing unity shader folder if any
+                                if (FileSystem.exists(unityOutputPath)) {
+                                    Files.deleteRecursive(unityOutputPath);
+                                }
+
+                                // Build args for shade task
+                                var shadeArgs:Array<String> = [];
+                                for (filePath in uniqueShaders) {
+                                    shadeArgs.push('--in');
+                                    shadeArgs.push(filePath);
+                                }
+                                shadeArgs.push('--target');
+                                shadeArgs.push('unity');
+                                shadeArgs.push('--out');
+                                shadeArgs.push(unityOutputPath);
+
+                                // Run shade task
+                                print('Transpile shaders to Unity ShaderLab');
+                                runTask('shade', shadeArgs);
+
+                                // Copy shaders to Unity project
+                                copyGeneratedShadersToUnity(cwd, unityOutputPath, project);
+
+                                // Save current info for next comparison
+                                File.saveContent(prevShadersJsonPath, File.getContent(shadersJsonPath));
+                            }
+                        }
+                    }
+                }
+
                 runHooks(cwd, args, project.app.hooks, 'end build');
             }
             else if (action == 'clean') {
@@ -123,6 +201,34 @@ class UnityBuild extends tools.Task {
         // Update unity project
         runTask('unity project', action == 'run' ? ['--run'] : []);
 
+    }
+
+    /**
+     * Copies generated Unity ShaderLab files to the Unity project assets folder.
+     * @param cwd Current working directory
+     * @param sourcePath Path to generated shader files
+     * @param project Ceramic project configuration
+     */
+    function copyGeneratedShadersToUnity(cwd:String, sourcePath:String, project:tools.Project):Void {
+        if (!FileSystem.exists(sourcePath)) return;
+
+        // Unity shaders go to same assets folder as other ceramic assets
+        var dstAssetsPath = Path.join([cwd, 'project', 'unity', project.app.name, 'Assets', 'Ceramic', 'Resources', 'assets']);
+
+        // Ensure assets directory exists
+        if (!FileSystem.exists(dstAssetsPath)) {
+            FileSystem.createDirectory(dstAssetsPath);
+        }
+
+        // Copy all .shader files
+        for (file in FileSystem.readDirectory(sourcePath)) {
+            if (file.endsWith('.shader')) {
+                File.copy(
+                    Path.join([sourcePath, file]),
+                    Path.join([dstAssetsPath, file])
+                );
+            }
+        }
     }
 
 }
