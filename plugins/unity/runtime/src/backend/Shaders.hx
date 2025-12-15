@@ -25,12 +25,13 @@ class Shaders implements spec.Shaders {
      * Loads a shader from the Unity Resources system.
      * First attempts to load a multi-texture variant (path + '_mt8'), then falls back to the standard shader.
      * @param path Shader resource path (without extension)
-     * @param customAttributes Optional custom vertex attributes
-     * @param options Loading options (currently unused)
+     * @param baseAttributes Base vertex attributes (position, texCoord, color)
+     * @param customAttributes Custom vertex attributes beyond base ones (can be null)
+     * @param textureIdAttribute Texture slot attribute for multi-texture batching (can be null)
      * @param _done Callback with loaded shader (null on failure)
      */
     #end
-    public function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, ?options:LoadShaderOptions, _done:(shader:backend.Shader)->Void):Void {
+    public function load(path:String, baseAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, textureIdAttribute:ceramic.ShaderAttribute, _done:(shader:backend.Shader)->Void):Void {
 
         var done = function(shader:Shader) {
             ceramic.App.app.onceImmediate(function() {

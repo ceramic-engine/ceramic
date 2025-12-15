@@ -164,7 +164,6 @@ class HeadlessSetup extends tools.Task {
         finalHxml.push('-cp ../../../src');
         finalHxml.push('-cp ' + Path.join([runtimePathRelative, 'src']));
         finalHxml.push('-cp ' + Path.join([backendRuntimePathRelative, 'src']));
-        finalHxml.push('-D ceramic_shader_vert_frag');
         finalHxml = finalHxml.concat(classPaths);
         finalHxml = finalHxml.concat(libs);
 

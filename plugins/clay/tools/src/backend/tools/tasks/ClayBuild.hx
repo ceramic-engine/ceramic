@@ -187,6 +187,10 @@ class ClayBuild extends tools.Task {
                 }
             }
 
+            // Haxe shaders detection
+            cmdArgs.push('--macro');
+            cmdArgs.push('shade.macros.ShadeMacro.initRegister(' + Json.stringify(outTargetPath) + ')');
+
             // Audio filters on the web
             if (target.name == 'web') {
                 cmdArgs.push('--macro');
@@ -358,6 +362,104 @@ $workletResolveClassCases
                     }
                     if (FileSystem.exists(workletsJsMinifiedFilePath)) {
                         FileSystem.deleteFile(workletsJsMinifiedFilePath);
+                    }
+                }
+
+                // Compile GLSL shaders from Haxe shaders
+                final shadersJsonPath = Path.join([outTargetPath, 'shade', 'info.json']);
+                final prevShadersJsonPath = Path.join([outTargetPath, 'shade', 'prev-info.json']);
+
+                if (FileSystem.exists(shadersJsonPath)) {
+                    var shaders:Dynamic = Json.parse(File.getContent(shadersJsonPath));
+
+                    // Read previous shade/info.json for comparison
+                    var prevShaders:Dynamic = null;
+                    if (FileSystem.exists(prevShadersJsonPath)) {
+                        prevShaders = Json.parse(File.getContent(prevShadersJsonPath));
+                    }
+
+                    if (shaders != null && shaders.shaders != null) {
+                        final shaderReferences:Array<{
+                            pack:Array<String>,
+                            name:String,
+                            filePath:String,
+                            hash:String
+                        }> = shaders.shaders;
+
+                        if (shaderReferences.length > 0) {
+                            // Check if shaders changed (skip if identical)
+                            var shouldSkipShaderCompilation = false;
+                            if (prevShaders != null && Equal.equal(prevShaders, shaders)) {
+                                shouldSkipShaderCompilation = true;
+                            }
+
+                            if (!shouldSkipShaderCompilation) {
+                                // Collect unique shader files (by hash to avoid duplicates)
+                                var uniqueShaders:Map<String, String> = new Map();
+                                for (ref in shaderReferences) {
+                                    if (!uniqueShaders.exists(ref.hash)) {
+                                        uniqueShaders.set(ref.hash, ref.filePath);
+                                    }
+                                }
+
+                                // Build shade task arguments
+                                var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
+
+                                // Delete existing glsl folder if any
+                                if (FileSystem.exists(glslOutputPath)) {
+                                    Files.deleteRecursive(glslOutputPath);
+                                }
+
+                                // Build args for shade task
+                                var shadeArgs:Array<String> = [];
+                                for (filePath in uniqueShaders) {
+                                    shadeArgs.push('--in');
+                                    shadeArgs.push(filePath);
+                                }
+                                shadeArgs.push('--target');
+                                shadeArgs.push('glsl');
+                                shadeArgs.push('--out');
+                                shadeArgs.push(glslOutputPath);
+
+                                // Run shade task
+                                print('Transpile shaders to GLSL');
+                                runTask('shade', shadeArgs);
+
+                                // Copy shaders to platform assets (directly in assets folder, no subfolder)
+                                if (FileSystem.exists(glslOutputPath)) {
+                                    var dstAssetsPath:String = switch (target.name) {
+                                        case 'mac':
+                                            Path.join([cwd, 'project', 'mac', project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+                                        case 'ios':
+                                            Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
+                                        case 'android':
+                                            Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
+                                        case 'windows' | 'linux' | 'web':
+                                            Path.join([cwd, 'project', target.name, 'assets']);
+                                        default:
+                                            null;
+                                    };
+
+                                    if (dstAssetsPath != null) {
+                                        // Ensure assets directory exists
+                                        if (!FileSystem.exists(dstAssetsPath)) {
+                                            FileSystem.createDirectory(dstAssetsPath);
+                                        }
+
+                                        // Copy all generated shader files directly to assets folder
+                                        for (file in FileSystem.readDirectory(glslOutputPath)) {
+                                            File.copy(
+                                                Path.join([glslOutputPath, file]),
+                                                Path.join([dstAssetsPath, file])
+                                            );
+                                        }
+                                    }
+                                }
+
+                                // Save current info for next comparison
+                                File.saveContent(prevShadersJsonPath, File.getContent(shadersJsonPath));
+                            }
+                        }
                     }
                 }
 

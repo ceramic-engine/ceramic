@@ -254,8 +254,10 @@ class Assets extends Entity {
         if (dotIndex != -1) {
             className = className.substr(dotIndex + 1);
         }
-        final id = 'shader:' + className.charAt(0).toLowerCase() + className.substr(1);
-        return _add(id, null, options #if ceramic_debug_entity_allocs , pos #end);
+        final name = className.charAt(0).toLowerCase() + className.substr(1);
+        var shaderAsset = new ShaderAsset(name, null, options #if ceramic_debug_entity_allocs , pos #end);
+        shaderAsset.shaderClass = shader;
+        addAsset(shaderAsset);
     }
 
     #end
@@ -1114,11 +1116,30 @@ class Assets extends Entity {
 
     /**
      * Get a loaded shader by name.
+     * @param shader The shade class of the shader
+     * @return The shader, or null if not found
+     */
+    public extern inline overload function shader(shader:Class<shade.Shader>):Shader {
+        var className = Type.getClassName(shader);
+        var dotIndex = className.lastIndexOf('.');
+        if (dotIndex != -1) {
+            className = className.substr(dotIndex + 1);
+        }
+        final id = 'shader:' + className.charAt(0).toLowerCase() + className.substr(1);
+        return _shader(id, null);
+    }
+
+    /**
+     * Get a loaded shader by name.
      * @param name The shader name or asset ID
      * @param variant Optional variant suffix
      * @return The shader, or null if not found
      */
-    public function shader(name:Either<String,AssetId<String>>, ?variant:String):Shader {
+    public extern inline overload function shader(name:Either<String,AssetId<String>>, ?variant:String):Shader {
+        return _shader(name, variant);
+    }
+
+    function _shader(name:Either<String,AssetId<String>>, ?variant:String):Shader {
 
         var realName:String = cast name;
         if (realName.startsWith('shader:')) realName = realName.substr(7);

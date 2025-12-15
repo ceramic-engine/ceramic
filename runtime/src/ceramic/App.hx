@@ -892,7 +892,7 @@ class App extends Entity {
 
         // Default shaders (need to load these first because font loading needs MSDF shader)
         assets.add(settings.defaultShader);
-        assets.add('shader:msdf');
+        assets.add(shaders.Msdf);
 
 #if unity
         assets.add('shader:stencil');
@@ -900,7 +900,7 @@ class App extends Entity {
 
 #if !ceramic_no_pixel_art_shader
         // Pixel art shader
-        assets.add('shader:pixelArt');
+        assets.add(shaders.PixelArt);
 #end
 
         assets.onceComplete(this, function(success) {

@@ -28,20 +28,23 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
-     * Creates a shader from vertex and fragment source code.
-     * 
+     * Loads a shader from a file path.
+     *
      * In headless mode, this creates a mock shader object without
-     * actually compiling the shader source.
-     * 
-     * @param vertSource Vertex shader source code (ignored)
-     * @param fragSource Fragment shader source code (ignored)
-     * @param customAttributes Optional custom vertex attributes
-     * @return A mock shader implementation
+     * actually loading any files or compiling shader source.
+     *
+     * @param path Path to the shader file (ignored in headless mode)
+     * @param baseAttributes Base vertex attributes (position, texCoord, color)
+     * @param customAttributes Custom vertex attributes beyond base ones (can be null)
+     * @param textureIdAttribute Texture slot attribute for multi-texture batching (can be null)
+     * @param done Callback with loaded shader
      */
     #end
-    inline public function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader {
+    public function load(path:String, baseAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, textureIdAttribute:ceramic.ShaderAttribute, done:(shader:backend.Shader)->Void):Void {
 
-        return new ShaderImpl(customAttributes);
+        ceramic.App.app.onceImmediate(function() {
+            done(new ShaderImpl(customAttributes));
+        });
 
     }
 

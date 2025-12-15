@@ -10,17 +10,17 @@ import haxe.macro.TypeTools;
  * Build macro for audio filters and worklets that generates parameter bindings and Web Audio API integration.
  * This macro handles the complex translation between Ceramic's audio filter system and the underlying
  * Web Audio API worklet architecture.
- * 
+ *
  * For filters:
  * - Generates getter/setter properties for @param annotated fields
  * - Links filter parameters to worklet parameters
  * - Creates initialization code for default values
- * 
+ *
  * For worklets:
  * - Processes @param metadata for Web Audio API parameter descriptors
  * - Generates optimized parameter accessors
  * - Handles platform-specific code generation
- * 
+ *
  * On web platforms, this macro also tracks all filter and worklet references
  * for bundling and deployment.
  */
@@ -30,7 +30,7 @@ class AudioFiltersMacro {
     /**
      * Collects all audio filter class references for web deployment.
      */
-    static var filterReferences:Array<{
+    @:persistent static var filterReferences:Array<{
         pack: Array<String>,
         name: String,
         filePath: String,
@@ -38,11 +38,11 @@ class AudioFiltersMacro {
         min: Int,
         max: Int
     }> = [];
-    
+
     /**
      * Collects all audio worklet class references for web deployment.
      */
-    static var workletReferences:Array<{
+    @:persistent static var workletReferences:Array<{
         pack: Array<String>,
         name: String,
         filePath: String,
@@ -50,11 +50,11 @@ class AudioFiltersMacro {
         min: Int,
         max: Int
     }> = [];
-    
+
     /**
      * Cache of file content hashes to avoid redundant file reads.
      */
-    static var fileHashes:Map<String,String> = new Map();
+    @:persistent static var fileHashes:Map<String,String> = new Map();
 
     /**
      * Computes or retrieves cached MD5 hash of a file's content.
@@ -68,6 +68,71 @@ class AudioFiltersMacro {
             fileHashes.set(filePath, hash);
         }
         return hash;
+    }
+
+    /**
+     * Registers a filter reference if not already present.
+     * Checks for existing entry with same pack and name to avoid duplicates.
+     */
+    static function addFilterReference(ref:{
+        pack: Array<String>,
+        name: String,
+        filePath: String,
+        hash: String,
+        min: Int,
+        max: Int
+    }):Void {
+        for (existing in filterReferences) {
+            if (existing.name == ref.name && arraysEqual(existing.pack, ref.pack)) {
+                if (existing.hash != ref.hash) {
+                    existing.filePath = ref.filePath;
+                    existing.hash = ref.hash;
+                    existing.min = ref.min;
+                    existing.max = ref.max;
+                }
+                return;
+            }
+        }
+        filterReferences.push(ref);
+    }
+
+    /**
+     * Registers a worklet reference if not already present.
+     * Checks for existing entry with same pack and name to avoid duplicates.
+     */
+    static function addWorkletReference(ref:{
+        pack: Array<String>,
+        name: String,
+        filePath: String,
+        hash: String,
+        min: Int,
+        max: Int
+    }):Void {
+        for (existing in workletReferences) {
+            if (existing.name == ref.name && arraysEqual(existing.pack, ref.pack)) {
+                if (existing.hash != ref.hash) {
+                    existing.filePath = ref.filePath;
+                    existing.hash = ref.hash;
+                    existing.min = ref.min;
+                    existing.max = ref.max;
+                }
+                return;
+            }
+        }
+        workletReferences.push(ref);
+    }
+
+    /**
+     * Compares two string arrays for equality.
+     */
+    static function arraysEqual(a:Array<String>, b:Array<String>):Bool {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        if (a.length != b.length) return false;
+        for (i in 0...a.length) {
+            if (a[i] != b[i]) return false;
+        }
+        return true;
     }
     #end
 
@@ -116,7 +181,7 @@ class AudioFiltersMacro {
      * Build macro for AudioFilter subclasses.
      * Generates parameter accessors and links to the associated worklet class.
      * On web platforms, also tracks the filter for deployment.
-     * 
+     *
      * @return Modified fields with parameter properties and initialization
      */
     macro static public function buildFilter():Array<Field> {
@@ -127,7 +192,7 @@ class AudioFiltersMacro {
         final classRef = Context.getLocalClass().get();
         final classPos = Context.getPosInfos(classRef.pos);
         final filePath = Path.join([Sys.getCwd(), Context.getPosInfos(Context.currentPos()).file]);
-        filterReferences.push({
+        addFilterReference({
             pack: [].concat(classRef.pack ?? []),
             name: classRef.name,
             filePath: filePath,
@@ -146,7 +211,7 @@ class AudioFiltersMacro {
      * Build macro for AudioFilterWorklet subclasses.
      * Processes @param annotated fields to generate Web Audio API parameter descriptors.
      * On web platforms, modifies the process() method for platform-specific behavior.
-     * 
+     *
      * @return Modified fields with parameter getters and metadata
      */
     macro static public function buildWorklet():Array<Field> {
@@ -192,7 +257,7 @@ class AudioFiltersMacro {
         final classRef = Context.getLocalClass().get();
         final classPos = Context.getPosInfos(classRef.pos);
         final filePath = Path.join([Sys.getCwd(), Context.getPosInfos(Context.currentPos()).file]);
-        workletReferences.push({
+        addWorkletReference({
             pack: [].concat(classRef.pack ?? []),
             name: classRef.name,
             filePath: filePath,
@@ -211,7 +276,7 @@ class AudioFiltersMacro {
      * Processes filter class fields to generate parameter bindings.
      * Analyzes the workletClass() method to extract worklet parameters
      * and generates corresponding properties on the filter.
-     * 
+     *
      * @param fields Original class fields
      * @return Modified fields with parameter properties and initialization
      */
@@ -380,7 +445,7 @@ class AudioFiltersMacro {
      * Processes worklet class fields to generate parameter accessors.
      * Converts @param annotated fields into getter properties that
      * read from the Web Audio API parameter arrays.
-     * 
+     *
      * @param fields Original class fields
      * @return Modified fields with parameter getters
      */
@@ -448,7 +513,7 @@ class AudioFiltersMacro {
     /**
      * Converts an expression to a ComplexType for type resolution.
      * Used to parse the return value of workletClass() methods.
-     * 
+     *
      * @param e Expression to convert
      * @return ComplexType representation
      */
@@ -468,7 +533,7 @@ class AudioFiltersMacro {
     /**
      * Checks if a field has the @param metadata annotation.
      * Fields with this annotation are exposed as audio parameters.
-     * 
+     *
      * @param field Field to check
      * @return True if field has @param metadata
      */

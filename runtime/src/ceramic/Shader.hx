@@ -41,14 +41,6 @@ using StringTools;
  * shader.setVec2('resolution', screen.width, screen.height);
  * myVisual.shader = shader;
  *
- * // Create shader from source (if supported)
- * #if ceramic_shader_vert_frag
- * var customShader = Shader.fromSource(
- *     vertexShaderCode,
- *     fragmentShaderCode
- * );
- * #end
- *
  * // Animate shader uniforms
  * app.onUpdate(this, delta -> {
  *     shader.setFloat('time', Timer.now);
@@ -64,41 +56,20 @@ using StringTools;
  */
 class Shader extends Entity {
 
-/// Static helpers
-
-#if ceramic_shader_vert_frag
-    /**
-     * Creates a shader from vertex and fragment shader source code.
-     *
-     * The expected shading language depends on the backend:
-     * - Clay/Web backends: GLSL ES
-     * - Unity backend: Unity shader language
-     * - Future backends may support different languages
-     *
-     * This method is only available when the backend supports
-     * runtime shader compilation (ceramic_shader_vert_frag flag).
-     *
-     * @param vertSource Vertex shader source code
-     * @param fragSource Fragment shader source code
-     * @return New shader instance, or null if compilation fails
-     */
-    public static function fromSource(vertSource:String, fragSource:String):Shader {
-
-        var backendItem = app.backend.shaders.fromSource(vertSource, fragSource);
-        if (backendItem == null) return null;
-
-        return new Shader(backendItem);
-
-    }
-#end
-
 /// Properties
 
     /**
      * The backend-specific shader implementation.
      * Used internally by the rendering system.
      */
-    public var backendItem:backend.Shader;
+    public var backendItem(default, set):backend.Shader = null;
+    function set_backendItem(backendItem:backend.Shader):backend.Shader {
+        if (this.backendItem != backendItem) {
+            this.backendItem = backendItem;
+            this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
+        }
+        return backendItem;
+    }
 
     /**
      * The shader asset this shader was loaded from.
@@ -107,17 +78,28 @@ class Shader extends Entity {
     public var asset:ShaderAsset;
 
     /**
-     * All vertex attributes used by this shader.
+     * All vertex attributes used by this shader (except texture slot attribute)
      * Includes standard attributes (position, texCoord, color)
      * plus any custom attributes.
      */
     public var attributes:ReadOnlyArray<ShaderAttribute>;
 
     /**
+     * Base standard vertex attributes (position, texCoord, color),
+     * without any custom attribute.
+     */
+    public var baseAttributes:ReadOnlyArray<ShaderAttribute>;
+
+    /**
      * Custom vertex attributes beyond the standard ones.
      * Used for passing additional per-vertex data to shaders.
      */
     public var customAttributes:ReadOnlyArray<ShaderAttribute>;
+
+    /**
+     * Vertex attribute used to store texture slot (if the shader is a multi-texture shader).
+     */
+    public var textureIdAttribute:ShaderAttribute;
 
     /**
      * Total size of custom float attributes in the vertex buffer.
@@ -143,17 +125,17 @@ class Shader extends Entity {
      * @param backendItem Backend-specific shader implementation
      * @param customAttributes Optional additional vertex attributes
      */
-    public function new(backendItem:backend.Shader, ?customAttributes:ReadOnlyArray<ShaderAttribute>, ?baseAttributes:ReadOnlyArray<ShaderAttribute>) {
+    public function new(customAttributes:ReadOnlyArray<ShaderAttribute>, baseAttributes:ReadOnlyArray<ShaderAttribute>, textureIdAttribute:ShaderAttribute) {
 
         super();
-
-        this.backendItem = backendItem;
 
         var attributes:Array<ShaderAttribute> = baseAttributes ?? [
             { size: 3, name: 'vertexPosition' },
             { size: 2, name: 'vertexTCoord' },
             { size: 4, name: 'vertexColor' }
         ];
+
+        this.baseAttributes = [].concat(attributes);
 
         if (customAttributes != null) {
             for (i in 0...customAttributes.length) {
@@ -164,8 +146,7 @@ class Shader extends Entity {
 
         this.attributes = attributes;
         this.customAttributes = customAttributes;
-
-        this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
+        this.textureIdAttribute = textureIdAttribute;
 
     }
 
@@ -192,7 +173,9 @@ class Shader extends Entity {
     public function clone():Shader {
 
         var clonedBackendItem = app.backend.shaders.clone(backendItem);
-        var cloned = new Shader(clonedBackendItem, customAttributes);
+
+        var cloned = new Shader(customAttributes, baseAttributes, textureIdAttribute);
+        cloned.backendItem = clonedBackendItem;
 
         return cloned;
 

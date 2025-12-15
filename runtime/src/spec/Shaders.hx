@@ -10,10 +10,6 @@ import backend.Texture;
  * that run on the GPU. Shaders control how vertices are transformed and
  * how pixels are colored during rendering.
  *
- * Ceramic supports two shader models:
- * - Combined shader files (default): Single file with both vertex and fragment shaders
- * - Separate vert/frag files: When ceramic_shader_vert_frag flag is enabled
- *
  * Shaders can have uniform parameters (shared across all vertices/pixels) and
  * custom vertex attributes (per-vertex data). The interface provides methods
  * to set various types of uniform values.
@@ -27,27 +23,16 @@ interface Shaders {
      */
     function destroy(shader:Shader):Void;
 
-#if ceramic_shader_vert_frag
-    /**
-     * Creates a shader from vertex and fragment shader source code.
-     * Available when ceramic_shader_vert_frag compilation flag is set.
-     * @param vertSource GLSL source code for the vertex shader
-     * @param fragSource GLSL source code for the fragment shader
-     * @param customAttributes Optional array of custom vertex attributes
-     * @return The compiled shader program, or null on compilation failure
-     */
-    function fromSource(vertSource:String, fragSource:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>):Shader;
-#else
     /**
      * Loads a shader from a file (can be precompiled or be compiled on the fly).
      * The file format depends on the backend.
      * @param path Path to the shader file (relative to assets)
-     * @param customAttributes Optional array of custom vertex attributes
-     * @param options Optional loading configuration
+     * @param baseAttributes Base vertex attributes (position, texCoord, color)
+     * @param customAttributes Custom vertex attributes beyond base ones (can be null)
+     * @param textureIdAttribute Texture slot attribute for multi-texture batching (can be null)
      * @param done Callback invoked with the compiled shader or null on failure
      */
-    function load(path:String, ?customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, ?options:backend.LoadShaderOptions, done:(shader:backend.Shader)->Void):Void;
-#end
+    function load(path:String, baseAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, customAttributes:ceramic.ReadOnlyArray<ceramic.ShaderAttribute>, textureIdAttribute:ceramic.ShaderAttribute, done:(shader:backend.Shader)->Void):Void;
 
     /**
      * Creates a copy of a shader with its own uniform values.

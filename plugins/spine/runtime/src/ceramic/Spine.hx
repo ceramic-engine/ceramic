@@ -26,7 +26,7 @@ using ceramic.SpinePlugin;
 
 /**
  * Spine animation runtime for Ceramic engine.
- * 
+ *
  * This class provides full support for Spine 2D skeletal animations, including:
  * - Animation playback with mixing and blending
  * - Skin switching at runtime
@@ -36,9 +36,9 @@ using ceramic.SpinePlugin;
  * - Event handling and animation completion callbacks
  * - Tint black support for advanced coloring
  * - Bounding box hit testing
- * 
+ *
  * ## Basic Usage
- * 
+ *
  * ```haxe
  * var spine = new Spine();
  * spine.spineData = assets.spine('hero');
@@ -46,14 +46,14 @@ using ceramic.SpinePlugin;
  * spine.loop = true;
  * add(spine);
  * ```
- * 
+ *
  * ## Advanced Features
- * 
+ *
  * - **Slot Control**: Hide/show specific slots, or use slot whitelists
  * - **Spine Binding**: Attach child Spine animations to parent slots
  * - **Custom Rendering**: Hook into slot update events for custom drawing
  * - **Performance**: Automatic freezing when animations complete
- * 
+ *
  * @see SpineData
  * @see SpineAsset
  * @see SpineSystem
@@ -215,7 +215,7 @@ class Spine extends Visual {
      * Emitted for each slot that is about to be rendered.
      * This includes both visible and invisible slots.
      * Modify the `info` parameter to customize slot rendering.
-     * 
+     *
      * @param info Contains slot data and transform information
      */
     @event function updateSlot(info:SlotInfo);
@@ -223,7 +223,7 @@ class Spine extends Visual {
     /**
      * Emitted only for visible slots that will be rendered.
      * This is a filtered version of `updateSlot` that excludes hidden slots.
-     * 
+     *
      * @param info Contains slot data and transform information
      */
     @event function updateVisibleSlot(info:SlotInfo);
@@ -250,7 +250,7 @@ class Spine extends Visual {
     /**
      * Emitted when an animation from `nextAnimations` is applied.
      * This allows tracking of animation transitions in a chain.
-     * 
+     *
      * @param animation The name of the animation being applied
      */
     @event function applyNextAnimation(animation:String);
@@ -258,7 +258,7 @@ class Spine extends Visual {
     /**
      * Emitted when a Spine event keyframe is triggered during animation.
      * Spine events are defined in the Spine editor and triggered at specific times.
-     * 
+     *
      * @param entry The track entry that triggered the event
      * @param event The Spine event data
      */
@@ -361,7 +361,7 @@ class Spine extends Visual {
     /**
      * Sets the skeleton's origin point for positioning.
      * Values are normalized (0-1) where 0.5 is center.
-     * 
+     *
      * @param skeletonOriginX Horizontal origin (0=left, 0.5=center, 1=right)
      * @param skeletonOriginY Vertical origin (0=top, 0.5=center, 1=bottom)
      */
@@ -822,7 +822,7 @@ class Spine extends Visual {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader('shader:tintBlack');
+        if (_tintBlackShader == null) _tintBlackShader = ceramic.App.app.assets.shader(shaders.TintBlack);
 
         SpineSystem.shared.spines.push(this);
 
@@ -1037,10 +1037,10 @@ class Spine extends Visual {
 
     /**
      * Starts playing an animation on the specified track.
-     * 
+     *
      * This is the main method for controlling animation playback. Animations can be
      * played on multiple tracks for layering effects (e.g., walk + shoot).
-     * 
+     *
      * @param animationName Name of the animation to play, or null for empty animation
      * @param loop Whether the animation should repeat continuously
      * @param trackIndex The track to play the animation on (default 0)
@@ -1094,10 +1094,10 @@ class Spine extends Visual {
 
     /**
      * Forces an immediate render of the current animation state.
-     * 
+     *
      * This bypasses normal update cycles and renders the skeleton immediately.
      * Useful for capturing specific animation frames or ensuring visual updates.
-     * 
+     *
      * @param muteEvents Whether to suppress animation events during rendering
      */
     public function forceRender(muteEvents:Bool = true):Void {
@@ -1149,7 +1149,7 @@ class Spine extends Visual {
 
     /**
      * Resets the skeleton to its setup pose.
-     * 
+     *
      * This clears all animation data and returns bones and slots to their
      * default positions and values as defined in the Spine project.
      */
@@ -1203,11 +1203,11 @@ class Spine extends Visual {
 
     /**
      * Updates the Spine animation by the given delta time.
-     * 
+     *
      * This method is called automatically each frame if `autoUpdate` is true.
      * It updates the animation state, applies it to the skeleton, and renders
      * the result. Child Spine instances are updated by their parent.
-     * 
+     *
      * @param delta Time elapsed since last update in seconds
      */
     public function update(delta:Float):Void {
@@ -1237,10 +1237,10 @@ class Spine extends Visual {
 
     /**
      * Checks if the animation can be frozen for performance optimization.
-     * 
+     *
      * An animation can freeze when all tracks have completed their non-looping
      * animations. Frozen animations stop updating until a new animation is set.
-     * 
+     *
      * @return True if the animation has no active tracks that need updating
      */
     inline public function canFreeze():Bool {
@@ -2001,10 +2001,10 @@ class Spine extends Visual {
 
     /**
      * Registers a handler for updates to a specific slot by name.
-     * 
+     *
      * This is more efficient than the general `updateSlot` event as it only
      * fires for the specified slot, reducing overhead for complex skeletons.
-     * 
+     *
      * @param owner Optional owner entity for automatic cleanup
      * @param slotName Name of the slot to monitor
      * @param handleInfo Handler function called when the slot updates
@@ -2017,10 +2017,10 @@ class Spine extends Visual {
 
     /**
      * Registers a handler for updates to a specific slot by global index.
-     * 
+     *
      * This is the most efficient way to monitor specific slots, using
      * pre-computed global indices for direct lookup.
-     * 
+     *
      * @param owner Optional owner entity for automatic cleanup
      * @param index Global slot index (use `globalSlotIndexForName()`)
      * @param handleInfo Handler function called when the slot updates
@@ -2161,13 +2161,13 @@ class Spine extends Visual {
 
     /**
      * Binds a parent Spine slot to this child Spine instance.
-     * 
+     *
      * This enables Spine-in-Spine composition, where child animations follow
      * parent slot transformations. Common uses include:
      * - Weapons attached to hands
      * - Armor pieces following body parts
      * - Modular character systems
-     * 
+     *
      * @param parentSlot Name of the parent slot to bind to
      * @param options Optional binding configuration (local slot, flipping)
      */
@@ -2212,9 +2212,9 @@ class Spine extends Visual {
 
     /**
      * Removes a parent slot binding.
-     * 
+     *
      * This disconnects the child Spine from following the specified parent slot.
-     * 
+     *
      * @param parentSlot Name of the parent slot to unbind from
      */
     public function unbindParentSlot(parentSlot:String) {
@@ -2337,14 +2337,14 @@ class Spine extends Visual {
 
     /**
      * Gets a globally unique slot index for the given slot name.
-     * 
+     *
      * Global slot indices are consistent across all skeletons, unlike regular
      * slot indices which vary by skeleton structure. This enables efficient
      * slot operations across different Spine instances.
-     * 
+     *
      * The same slot name always returns the same global index, making it
      * ideal for slot blacklists, whitelists, and cross-skeleton references.
-     * 
+     *
      * @param slotName The name of the slot
      * @return A unique global index for this slot name
      */
@@ -2362,7 +2362,7 @@ class Spine extends Visual {
 
 /**
  * Internal listener for Spine animation state events.
- * 
+ *
  * This class implements the AnimationStateListener interface and forwards
  * events to dynamic function properties for flexible event handling.
  */
@@ -2431,7 +2431,7 @@ class SpineListener implements AnimationStateListener {
 
 /**
  * Configuration options for binding Spine slots together.
- * 
+ *
  * Used with `bindParentSlot()` to control how child slots follow parent slots.
  */
 typedef BindSlotOptions = {
@@ -2524,19 +2524,19 @@ private class BindSlot {
 
 /**
  * Information about a slot being updated during rendering.
- * 
+ *
  * This class is passed to slot update handlers and contains all the data
  * needed to customize or override slot rendering. You can modify properties
  * to affect how the slot is drawn.
- * 
+ *
  * ## Usage Example
- * 
+ *
  * ```haxe
  * spine.onUpdateSlotWithName(this, "weapon", function(info) {
  *     // Apply custom transform to weapon slot
  *     info.customTransform = new Transform();
  *     info.customTransform.rotate(Math.PI * 0.25);
- *     
+ *
  *     // Or disable rendering
  *     info.drawDefault = false;
  * });

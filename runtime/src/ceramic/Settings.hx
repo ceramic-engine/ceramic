@@ -309,6 +309,6 @@ class Settings implements Observable {
      *
      * Default: 'shader:textured' (standard textured shader)
      */
-    public var defaultShader(default,null):AssetId<String> = 'shader:textured';
+    public var defaultShader(default,null):Class<shade.Shader> = shaders.Textured;
 
 }

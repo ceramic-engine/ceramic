@@ -3,16 +3,16 @@ package ceramic;
 /**
  * Same as Settings, but for app startup (inside Project.new(settings)).
  * Read-only values can still be edited at that stage.
- * 
+ *
  * InitSettings provides write access to all application settings during
  * the initialization phase. This includes settings that are normally
  * read-only after startup, such as window dimensions, antialiasing,
  * and backend configuration.
- * 
+ *
  * This class wraps the Settings instance and provides setters for
  * properties that are immutable after initialization. It's only
  * available in the Project constructor.
- * 
+ *
  * Example usage:
  * ```haxe
  * class Project extends App {
@@ -23,12 +23,12 @@ package ceramic;
  *         settings.windowHeight = 720;
  *         settings.antialiasing = 4;
  *         settings.title = "My Game";
- *         
+ *
  *         super();
  *     }
  * }
  * ```
- * 
+ *
  * @see Settings
  * @see App
  */
@@ -337,11 +337,11 @@ class InitSettings {
     /**
      * Default shader asset
      */
-    public var defaultShader(get,set):AssetId<String>;
-    inline function get_defaultShader():AssetId<String> {
+    public var defaultShader(get,set):Class<shade.Shader>;
+    inline function get_defaultShader():Class<shade.Shader> {
         return settings.defaultShader;
     }
-    inline function set_defaultShader(defaultShader:AssetId<String>):AssetId<String> {
+    inline function set_defaultShader(defaultShader:Class<shade.Shader>):Class<shade.Shader> {
         return @:privateAccess settings.defaultShader = defaultShader;
     }
 

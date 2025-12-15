@@ -105,6 +105,11 @@ class Shade extends Task {
         hxmlContent.add('-cp $shadePath\n');
         hxmlContent.add('-D shade\n');
 
+        // Required haxe compiler settings for reflaxe/shade
+        hxmlContent.add('--dce no\n');
+        hxmlContent.add('-D analyzer-no-module\n');
+        hxmlContent.add('-D retain-untyped-meta\n');
+
         // Shade compiler initialization
         hxmlContent.add('--macro shade.compiler.CompilerInit.Start()\n');
 

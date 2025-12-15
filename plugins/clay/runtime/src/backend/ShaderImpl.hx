@@ -43,15 +43,15 @@ class ShaderImpl extends clay.graphics.Shader {
 
     /**
      * Creates a deep copy of this shader.
-     * 
+     *
      * The cloned shader will have the same source code, attributes,
      * and settings but will be a separate GPU resource. This is useful
      * for creating shader variations or when multiple materials need
      * similar but independent shaders.
-     * 
+     *
      * Note: Currently recompiles the shader source. Future optimization
      * could share compiled shader programs between clones.
-     * 
+     *
      * @return A new ShaderImpl instance with the same configuration
      */
     public function clone():ShaderImpl {
