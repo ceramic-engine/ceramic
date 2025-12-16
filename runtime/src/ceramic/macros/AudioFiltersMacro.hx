@@ -191,7 +191,10 @@ class AudioFiltersMacro {
         #elseif (web && !completion && !display)
         final classRef = Context.getLocalClass().get();
         final classPos = Context.getPosInfos(classRef.pos);
-        final filePath = Path.join([Sys.getCwd(), Context.getPosInfos(Context.currentPos()).file]);
+        var filePath = Context.getPosInfos(Context.currentPos()).file;
+        if (!Path.isAbsolute(filePath)) {
+            filePath = Path.join([Sys.getCwd(), filePath]);
+        }
         addFilterReference({
             pack: [].concat(classRef.pack ?? []),
             name: classRef.name,
@@ -256,7 +259,10 @@ class AudioFiltersMacro {
         }
         final classRef = Context.getLocalClass().get();
         final classPos = Context.getPosInfos(classRef.pos);
-        final filePath = Path.join([Sys.getCwd(), Context.getPosInfos(Context.currentPos()).file]);
+        var filePath = Context.getPosInfos(Context.currentPos()).file;
+        if (!Path.isAbsolute(filePath)) {
+            filePath = Path.join([Sys.getCwd(), filePath]);
+        }
         addWorkletReference({
             pack: [].concat(classRef.pack ?? []),
             name: classRef.name,
