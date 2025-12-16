@@ -250,11 +250,12 @@ class Assets extends Entity {
 
     public extern inline overload function add(shader:Class<shade.Shader>, ?options:AssetOptions #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Void {
         var className = Type.getClassName(shader);
-        var dotIndex = className.lastIndexOf('.');
-        if (dotIndex != -1) {
-            className = className.substr(dotIndex + 1);
-        }
-        final name = className.charAt(0).toLowerCase() + className.substr(1);
+        // Convert package dots to underscores and lowercase the class name's first char
+        // e.g., "shaders.MyShader" → "shaders_myShader"
+        var parts = className.split('.');
+        var baseName = parts.pop();
+        baseName = baseName.charAt(0).toLowerCase() + baseName.substr(1);
+        final name = parts.length > 0 ? parts.join('_') + '_' + baseName : baseName;
         var shaderAsset = new ShaderAsset(name, null, options #if ceramic_debug_entity_allocs , pos #end);
         shaderAsset.shaderClass = shader;
         addAsset(shaderAsset);
@@ -605,7 +606,20 @@ class Assets extends Entity {
         return cast asset(name, 'fragments', variant);
     }
 
-    public function shaderAsset(name:Either<String,AssetId<String>>, ?variant:String):ShaderAsset {
+    #if plugin_shade
+
+    public extern inline overload function shaderAsset(shader:Class<shade.Shader>):ShaderAsset {
+        var className = Type.getClassName(shader);
+        var parts = className.split('.');
+        var baseName = parts.pop();
+        baseName = baseName.charAt(0).toLowerCase() + baseName.substr(1);
+        final name = parts.length > 0 ? parts.join('_') + '_' + baseName : baseName;
+        return cast asset('shader:' + name, 'shader', null);
+    }
+
+    #end
+
+    public extern inline overload function shaderAsset(name:Either<String,AssetId<String>>, ?variant:String):ShaderAsset {
         return cast asset(name, 'shader', variant);
     }
 
@@ -994,14 +1008,28 @@ class Assets extends Entity {
 
     }
 
-    public function ensureShader(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:ShaderAsset->Void):Void {
+    #if plugin_shade
 
+    public extern inline overload function ensureShader(shader:Class<shade.Shader>, ?options:AssetOptions, done:ShaderAsset->Void):Void {
+        var className = Type.getClassName(shader);
+        var parts = className.split('.');
+        var baseName = parts.pop();
+        baseName = baseName.charAt(0).toLowerCase() + baseName.substr(1);
+        final name = parts.length > 0 ? parts.join('_') + '_' + baseName : baseName;
+        final _name = 'shader:' + name;
+        ensure(_name, null, options, function(asset) {
+            done(Std.isOfType(asset, ShaderAsset) ? cast asset : null);
+        });
+    }
+
+    #end
+
+    public extern inline overload function ensureShader(name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:ShaderAsset->Void):Void {
         var _name:String = cast name;
         if (!StringTools.startsWith(_name, 'shader:')) _name = 'shader:' + _name;
         ensure(_name, variant, options, function(asset) {
             done(Std.isOfType(asset, ShaderAsset) ? cast asset : null);
         });
-
     }
 
 /// Get
@@ -1119,14 +1147,20 @@ class Assets extends Entity {
      * @param shader The shade class of the shader
      * @return The shader, or null if not found
      */
-    public extern inline overload function shader(shader:Class<shade.Shader>):Shader {
+    public extern inline overload function shader<T:Shader>(shader:Class<T>):T {
+        return _shaderFromClass(shader);
+    }
+
+    function _shaderFromClass<T:Shader>(shader:Class<T>):T {
         var className = Type.getClassName(shader);
-        var dotIndex = className.lastIndexOf('.');
-        if (dotIndex != -1) {
-            className = className.substr(dotIndex + 1);
-        }
-        final id = 'shader:' + className.charAt(0).toLowerCase() + className.substr(1);
-        return _shader(id, null);
+        // Convert package dots to underscores and lowercase the class name's first char
+        // e.g., "shaders.MyShader" → "shaders_myShader"
+        var parts = className.split('.');
+        var baseName = parts.pop();
+        baseName = baseName.charAt(0).toLowerCase() + baseName.substr(1);
+        final name = parts.length > 0 ? parts.join('_') + '_' + baseName : baseName;
+        final id = 'shader:' + name;
+        return cast _shader(id, null);
     }
 
     /**

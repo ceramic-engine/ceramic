@@ -129,6 +129,17 @@ class ShaderAsset extends Asset {
             textureIdAttribute = shader.textureIdAttribute;
         }
 
+        var logName = path;
+        if (logName.startsWith('shaders_')) {
+            logName = logName.substr('shaders_'.length);
+        }
+        if (textureIdAttribute != null) {
+            log.info('Load shader $logName (multi-texture)');
+        }
+        else {
+            log.info('Load shader $logName');
+        }
+
         app.backend.shaders.load(Assets.realAssetPath(path, runtimeAssets), baseAttributes, customAttributes, textureIdAttribute, function(backendItem) {
 
             if (backendItem == null) {

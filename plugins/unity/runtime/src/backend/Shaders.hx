@@ -41,15 +41,17 @@ class Shaders implements spec.Shaders {
         };
 
         var unityPath = Path.withoutExtension(path);
-        var unityPathMultiTexture = unityPath + '_mt8';
         var unityShader:Dynamic = null;
         #if !ceramic_no_multitexture
-        try {
-            unityShader = untyped __cs__('UnityEngine.Shader.Find({0})', unityPathMultiTexture);
-        }
-        catch (e:Dynamic) {
-            // No valid multi texture shader
-            trace('Failed to load multi texture shader: $unityPathMultiTexture');
+        if (textureIdAttribute != null) {
+            var unityPathMultiTexture = unityPath + '_mt8';
+            try {
+                unityShader = untyped __cs__('UnityEngine.Shader.Find({0})', unityPathMultiTexture);
+            }
+            catch (e:Dynamic) {
+                // No valid multi texture shader
+                trace('Failed to load multi texture shader: $unityPathMultiTexture');
+            }
         }
         #end
         var isBatchingMultiTexture = (unityShader != null);

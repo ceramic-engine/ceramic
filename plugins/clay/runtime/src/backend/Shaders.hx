@@ -44,22 +44,32 @@ class Shaders implements spec.Shaders {
         var basePath = Path.withoutExtension(path);
 
         #if !ceramic_no_multitexture
-        // Try multi-texture variant first
-        var pathMt8 = basePath + '_mt8';
-        tryLoadShader(pathMt8, baseAttributes, customAttributes, textureIdAttribute, true, function(shader) {
-            if (shader != null) {
-                shader.isBatchingMultiTexture = true;
-                done(shader);
-            } else {
-                // Fallback to regular shader
-                tryLoadShader(basePath, baseAttributes, customAttributes, textureIdAttribute, false, function(shader) {
-                    if (shader != null) {
-                        shader.isBatchingMultiTexture = false;
-                    }
+        if (textureIdAttribute != null) {
+            // Try multi-texture variant first
+            var pathMt8 = basePath + '_mt8';
+            tryLoadShader(pathMt8, baseAttributes, customAttributes, textureIdAttribute, true, function(shader) {
+                if (shader != null) {
+                    shader.isBatchingMultiTexture = true;
                     done(shader);
-                });
-            }
-        });
+                } else {
+                    // Fallback to regular shader
+                    tryLoadShader(basePath, baseAttributes, customAttributes, textureIdAttribute, false, function(shader) {
+                        if (shader != null) {
+                            shader.isBatchingMultiTexture = false;
+                        }
+                        done(shader);
+                    });
+                }
+            });
+        } else {
+            // No texture ID attribute, skip multi-texture variant
+            tryLoadShader(basePath, baseAttributes, customAttributes, textureIdAttribute, false, function(shader) {
+                if (shader != null) {
+                    shader.isBatchingMultiTexture = false;
+                }
+                done(shader);
+            });
+        }
         #else
         tryLoadShader(basePath, baseAttributes, customAttributes, textureIdAttribute, false, function(shader) {
             if (shader != null) {
