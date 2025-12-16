@@ -4,7 +4,7 @@ package backend;
 import ceramic.SqliteKeyValue;
 #end
 
-#if sys
+#if (sys && !no_filesystem)
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -194,7 +194,7 @@ class IO implements spec.IO {
 
     }
 
-#elseif sys
+#elseif (sys && !no_filesystem)
 
     /**
      * File-based implementation of saveString for sys targets without SQLite.
