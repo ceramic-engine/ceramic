@@ -47,7 +47,7 @@ class Compile extends tools.Task {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
 
-            hxcppArgs.push('-DHXCPP_CPP11');
+            hxcppArgs.push('-DHXCPP_CPP17');
             hxcppArgs.push('-DHXCPP_CLANG');
 
             switch (arch) {

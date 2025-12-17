@@ -428,7 +428,7 @@ class Helpers {
                             '-D', 'HXCPP_STACK_LINE',
                             '-D', 'HXCPP_STACK_TRACE',
                             '-D', 'HXCPP_CHECK_POINTER',
-                            '-D', 'HXCPP_CPP11',
+                            '-D', 'HXCPP_CPP17',
                             '-D', 'safeMode',
                             '--macro', 'tools.macros.ToolsMacros.loadPluginClass(${Json.stringify(info.plugin.tools)})'
                         ], {

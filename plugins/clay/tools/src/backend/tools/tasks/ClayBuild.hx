@@ -508,6 +508,7 @@ $workletResolveClassCases
             if (!context.colors) {
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
+            hxcppArgs.push('-DHXCPP_CPP17');
             print('Compile C++');
 
             if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {

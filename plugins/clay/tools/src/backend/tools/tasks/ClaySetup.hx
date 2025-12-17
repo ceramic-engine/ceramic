@@ -198,6 +198,7 @@ class ClaySetup extends tools.Task {
             targetFlags += '\n' + '-D clay_soloud';
             targetFlags += '\n' + '-lib linc_soloud';
             targetFlags += '\n' + '-D hxcpp_static_std';
+            targetFlags += '\n' + '-D HXCPP_CPP17';
             targetFlags += '\n' + '-D clay_native';
             targetFlags += '\n' + '-D clay_sdl';
             if (target.name == 'ios' || target.name == 'android' || context.defines.exists('gles_angle')) {

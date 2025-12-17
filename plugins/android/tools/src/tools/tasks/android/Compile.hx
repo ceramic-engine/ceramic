@@ -45,6 +45,7 @@ class Compile extends tools.Task {
 
             // We can statically link with libc++
             hxcppArgs.push('-DHXCPP_LIBCPP_STATIC');
+            hxcppArgs.push('-DHXCPP_CPP17');
 
             switch (arch) {
                 case 'armv7':
