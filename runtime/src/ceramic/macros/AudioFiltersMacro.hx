@@ -26,7 +26,7 @@ import haxe.macro.TypeTools;
  */
 class AudioFiltersMacro {
 
-    #if (macro && web)
+    #if (macro && (web || ceramic_audio_filters_collect_info))
     /**
      * Collects all audio filter class references for web deployment.
      */
@@ -143,7 +143,7 @@ class AudioFiltersMacro {
      */
     public static function init():Void {
 
-        #if web
+        #if (web || ceramic_audio_filters_collect_info)
         var isCompletion = Context.defined('completion');
         if (!isCompletion) {
             Context.onAfterGenerate(function() {
@@ -188,7 +188,7 @@ class AudioFiltersMacro {
 
         #if (web && ceramic_build_audio_worklets && !completion && !display)
         return [];
-        #elseif (web && !completion && !display)
+        #elseif ((web || ceramic_audio_filters_collect_info) && !completion && !display)
         final classRef = Context.getLocalClass().get();
         final classPos = Context.getPosInfos(classRef.pos);
         var filePath = Context.getPosInfos(Context.currentPos()).file;
@@ -272,6 +272,22 @@ class AudioFiltersMacro {
             max: classPos.max
         });
         return fields;
+        #elseif ceramic_audio_filters_collect_info
+        final classRef = Context.getLocalClass().get();
+        final classPos = Context.getPosInfos(classRef.pos);
+        var filePath = Context.getPosInfos(Context.currentPos()).file;
+        if (!Path.isAbsolute(filePath)) {
+            filePath = Path.join([Sys.getCwd(), filePath]);
+        }
+        addWorkletReference({
+            pack: [].concat(classRef.pack ?? []),
+            name: classRef.name,
+            filePath: filePath,
+            hash: getHash(filePath),
+            min: classPos.min,
+            max: classPos.max
+        });
+        return processWorkletParams(Context.getBuildFields());
         #else
         return processWorkletParams(Context.getBuildFields());
         #end

@@ -191,11 +191,11 @@ class ClayBuild extends tools.Task {
             cmdArgs.push('--macro');
             cmdArgs.push('shade.macros.ShadeMacro.initRegister(' + Json.stringify(outTargetPath) + ')');
 
-            // Audio filters on the web
-            if (target.name == 'web') {
-                cmdArgs.push('--macro');
-                cmdArgs.push('ceramic.macros.AudioFiltersMacro.init()');
-            }
+            // Audio filters
+            cmdArgs.push('-D');
+            cmdArgs.push('ceramic_audio_filters_collect_info');
+            cmdArgs.push('--macro');
+            cmdArgs.push('ceramic.macros.AudioFiltersMacro.init()');
 
             // Read previous audio-filters.json
             var prevAudioFilters:Dynamic = null;
@@ -216,23 +216,25 @@ class ClayBuild extends tools.Task {
                 final workletsJsFilePath = Path.join([cwd, 'project', 'web', 'audio-worklets.js']);
                 final workletsJsMinifiedFilePath = Path.join([cwd, 'project', 'web', 'audio-worklets.min.js']);
 
+                final workletsCppPath = Path.join([outTargetPath, 'audio-filters', 'cpp']);
+
                 if (audioFilters != null) {
                     // Compare previous and new audio filters json hashes
                     // (and skip if identical)
                     var workletIncludes = [];
-                    var shouldSkipWebFilters = true;
+                    var shouldSkipStandaloneFilters = true;
                     if (prevAudioFilters == null) {
-                        shouldSkipWebFilters = false;
+                        shouldSkipStandaloneFilters = false;
                     }
                     else if (!Equal.equal(prevAudioFilters, audioFilters)) {
-                        shouldSkipWebFilters = false;
+                        shouldSkipStandaloneFilters = false;
                     }
 
-                    shouldSkipWebFilters = false; // TODO remove
+                    shouldSkipStandaloneFilters = false;
 
-                    // Compile web audio filters worklets
-                    if (!shouldSkipWebFilters) {
-                        var hasWebFiltersToCompile = false;
+                    // Prepare audio filters separate worklets project
+                    if (!shouldSkipStandaloneFilters) {
+                        var hasStandaloneFiltersToProcess = false;
                         final filterReferences:Array<{
                             pack: Array<String>,
                             name: String,
@@ -257,9 +259,14 @@ class ClayBuild extends tools.Task {
                         }
                         FileSystem.createDirectory(filtersHaxePath);
                         for (ref in workletReferences) {
-                            if (!hasWebFiltersToCompile) {
-                                hasWebFiltersToCompile = true;
-                                print('Compile web audio worklets');
+                            if (!hasStandaloneFiltersToProcess) {
+                                hasStandaloneFiltersToProcess = true;
+                                if (target.name == 'web') {
+                                    print('Compile web audio worklets');
+                                }
+                                else {
+                                    print('Transpile cpp audio worklets');
+                                }
                             }
 
                             var pack = [].concat(ref.pack ?? []);
@@ -293,7 +300,7 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                                 '
                             );
                         }
-                        if (hasWebFiltersToCompile) {
+                        if (hasStandaloneFiltersToProcess) {
                             if (!FileSystem.exists(Path.join([filtersHaxePath, 'ceramic']))) {
                                 FileSystem.createDirectory(Path.join([filtersHaxePath, 'ceramic']));
                             }
@@ -335,23 +342,54 @@ function main() {
 function resolveWorkletClass(className:String):Class<ceramic.AudioFilterWorklet> {
     return switch className {
 $workletResolveClassCases
-        case _: null;
+        case _: ceramic.AudioFilterWorklet;
     }
 }
                                 '
                             );
 
-                            final buildWorkletsStatus = haxeWithChecksAndLogs([
-                                '--class-path', '.',
-                                '--class-path', Path.join([context.plugins.get('clay').path, 'audio/src']),
-                                '--main', 'Main',
-                                '--js', workletsJsFilePath
-                            ], {cwd: filtersHaxePath});
+                            if (target.name == 'web') {
 
-                            if (buildWorkletsStatus != 0) {
-                                // Worklet buils failed
-                                error('Error when building web audio worklets. (status = $buildWorkletsStatus)');
-                                Sys.exit(buildWorkletsStatus);
+                                final buildWorkletsStatus = haxeWithChecksAndLogs([
+                                    '--class-path', '.',
+                                    '--class-path', Path.join([context.plugins.get('clay').path, 'audio/src-web']),
+                                    '--main', 'Main',
+                                    '--js', workletsJsFilePath
+                                ], {cwd: filtersHaxePath});
+
+                                if (buildWorkletsStatus != 0) {
+                                    // Worklet buils failed
+                                    error('Error when building web audio worklets. (status = $buildWorkletsStatus)');
+                                    Sys.exit(buildWorkletsStatus);
+                                }
+
+                            }
+                            else {
+
+                                var ceramicRoot = context.ceramicRootPath;
+                                var reflaxePath = Path.join([ceramicRoot, 'git', 'reflaxe', 'src']);
+                                var reflaxeExtraParams = Path.join([ceramicRoot, 'git', 'reflaxe', 'extraParams.hxml']);
+                                var reflaxeCppPath = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'src']);
+                                var reflaxeCppExtraParams = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'extraParams.hxml']);
+                                final transpileWorkletsStatus = haxeWithChecksAndLogs([
+                                    '--class-path', '.',
+                                    '--class-path', Path.join([context.plugins.get('clay').path, 'audio/src-cpp']),
+                                    '--main', 'Main',
+                                    '--class-path', reflaxePath,
+                                    reflaxeExtraParams,
+                                    '-D', 'reflaxe',
+                                    '--class-path', reflaxeCppPath,
+                                    reflaxeCppExtraParams,
+                                    '-D', 'reflaxe.CPP',
+                                    '-D', 'cpp-output=' + workletsCppPath
+                                ], {cwd: filtersHaxePath});
+
+                                if (transpileWorkletsStatus != 0) {
+                                    // Worklet buils failed
+                                    error('Error when transpiling cpp audio worklets. (status = $transpileWorkletsStatus)');
+                                    Sys.exit(transpileWorkletsStatus);
+                                }
+
                             }
                         }
                     }
