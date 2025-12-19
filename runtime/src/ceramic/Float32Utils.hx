@@ -72,6 +72,13 @@ class Float32Utils {
             }
             return Context.parse("(untyped __cpp__('" + exprStr + "f'):ceramic.Float32)", Context.currentPos());
         }
+        else if (Context.defined('cs')) {
+            var exprStr = new Printer().printExpr(expr);
+            if (exprStr.indexOf('.') == -1) {
+                exprStr += '.0';
+            }
+            return Context.parse("(untyped __cs__('" + exprStr + "f'):ceramic.Float32)", Context.currentPos());
+        }
         else {
             return expr;
         }
