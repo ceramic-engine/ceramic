@@ -144,8 +144,10 @@ class ShaderAsset extends Asset {
 
             if (backendItem == null) {
                 status = BROKEN;
-                shader.destroy();
-                shader = null;
+                if (shader != null) {
+                    shader.destroy();
+                    shader = null;
+                }
                 log.error('Failed to load shader at path: $path');
                 emitComplete(false);
                 return;

@@ -66,7 +66,9 @@ class Shader extends Entity {
     function set_backendItem(backendItem:backend.Shader):backend.Shader {
         if (this.backendItem != backendItem) {
             this.backendItem = backendItem;
-            this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
+            if (backendItem != null) {
+                this.customFloatAttributesSize = app.backend.shaders.customFloatAttributesSize(backendItem);
+            }
         }
         return backendItem;
     }
@@ -156,8 +158,10 @@ class Shader extends Entity {
 
         if (asset != null) asset.destroy();
 
-        app.backend.shaders.destroy(backendItem);
-        backendItem = null;
+        if (backendItem != null) {
+            app.backend.shaders.destroy(backendItem);
+            backendItem = null;
+        }
         attributes = null;
 
     }

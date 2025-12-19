@@ -40,7 +40,12 @@ class Shaders implements spec.Shaders {
             });
         };
 
-        path = Path.join([ceramic.App.app.settings.assetsPath, path]);
+
+        var isUrl:Bool = path.startsWith('http://') || path.startsWith('https://');
+        path = Path.isAbsolute(path) || isUrl ?
+            path
+        :
+            Path.join([ceramic.App.app.settings.assetsPath, path]);
         var basePath = Path.withoutExtension(path);
 
         #if !ceramic_no_multitexture
