@@ -7,11 +7,6 @@ package ceramic;
  * whether colors are applied uniformly, per-triangle, or per-vertex.
  * The choice affects both visual appearance and performance.
  *
- * Performance considerations:
- * - MESH: Fastest, uses least memory (single color)
- * - INDICES: Moderate, one color per triangle
- * - VERTICES: Slowest, most flexible (smooth gradients possible)
- *
  * ```haxe
  * var mesh = new Mesh();
  *
@@ -19,9 +14,9 @@ package ceramic;
  * mesh.colorMapping = MESH;
  * mesh.color = Color.RED;
  *
- * // Different color per triangle
+ * // Different color per index
  * mesh.colorMapping = INDICES;
- * mesh.colors = [Color.RED, Color.GREEN, Color.BLUE];
+ * mesh.colors = [Color.RED, Color.GREEN, Color.BLUE]; // one per index
  *
  * // Color per vertex (for gradients)
  * mesh.colorMapping = VERTICES;
@@ -45,11 +40,10 @@ enum abstract MeshColorMapping(Int) {
      */
     var MESH = 0;
     /**
-     * Maps a color to each triangle (set of 3 indices).
+     * Maps a color to each index in the mesh.
      *
-     * Each triangle in the mesh can have its own color. The colors array
-     * should have one color per triangle (indices.length / 3 colors).
-     * Within each triangle, all three vertices share the same color.
+     * Each index can have its own color. The colors array
+     * should have one color per index (indices.length colors).
      *
      * Use cases:
      * - Low-poly art style with flat-shaded triangles
