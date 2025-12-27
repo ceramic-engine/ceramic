@@ -2,30 +2,30 @@ package ceramic;
 
 /**
  * Central import file that includes all Ceramic API classes.
- * 
+ *
  * AllApi serves as a comprehensive import manifest for the Ceramic framework,
  * ensuring all classes are included in the compiled output. This is particularly
  * important for dynamic environments like scripting where classes need to be
  * available at runtime.
- * 
+ *
  * Features:
  * - Imports all core Ceramic classes and systems
  * - Imports all plugin classes when plugins are enabled
  * - Provides HScript configuration for scripting environments
  * - Ensures DCE (Dead Code Elimination) doesn't remove needed classes
- * 
+ *
  * The file is organized into sections:
  * - Standard Haxe imports
  * - Tracker framework imports
  * - Core Ceramic classes
  * - Plugin-specific imports (conditional compilation)
  * - HScript configuration method
- * 
+ *
  * Usage:
  * This file is typically imported by the build system or main application
  * to ensure all necessary classes are available. The @:keep metadata
  * prevents the class from being eliminated during compilation.
- * 
+ *
  * @see App
  * @see ceramic.scriptable
  */
@@ -286,6 +286,44 @@ import ceramic.Visual;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 import ceramic.WaitCallbacks;
+import ceramic.AntialiasedTriangle;
+import ceramic.AppXUpdatesHandler;
+import ceramic.AtlasAsset;
+import ceramic.CardinalSpline;
+import ceramic.CeramicLogo;
+import ceramic.ConvertColor;
+import ceramic.DynamicData;
+import ceramic.Either;
+import ceramic.EntityData;
+import ceramic.FieldMeta;
+import ceramic.Float32;
+import ceramic.Float32Utils;
+import ceramic.Graphics;
+import ceramic.Immediate;
+import ceramic.ImageType;
+import ceramic.InputMapBase;
+import ceramic.InputMapRebinder;
+import ceramic.MeshUtils;
+import ceramic.NineSlice;
+import ceramic.NineSliceRendering;
+import ceramic.ParticleEmitter;
+import ceramic.Pinch;
+import ceramic.Preloadable;
+import ceramic.PreloadStatus;
+import ceramic.Preloader;
+import ceramic.Rect;
+import ceramic.Repeat;
+import ceramic.RenderPrimitiveType;
+import ceramic.RoundedRect;
+import ceramic.SpinLock;
+import ceramic.StateMachineImpl;
+import ceramic.TextureAtlasPacker;
+import ceramic.TextureWrap;
+import ceramic.TimelineBoolKeyframe;
+import ceramic.TimelineBoolTrack;
+import ceramic.TimelineFloatArrayKeyframe;
+import ceramic.TimelineFloatArrayTrack;
+import ceramic.Zoomer;
 
 #if plugin_script
 import ceramic.Script;
@@ -296,9 +334,11 @@ import ceramic.ScriptUtils;
 
 #if plugin_http
 import ceramic.Http;
+import ceramic.HttpHeaders;
 import ceramic.HttpMethod;
 import ceramic.HttpRequestOptions;
 import ceramic.HttpResponse;
+import ceramic.MimeType;
 #end
 
 #if plugin_arcade
@@ -323,20 +363,24 @@ import ceramic.AutoTile;
 import ceramic.AutoTileKind;
 import ceramic.AutoTiler;
 import ceramic.ConvertTilemapData;
+import ceramic.TileSlope;
 import ceramic.Tilemap;
 import ceramic.TilemapAsset;
 import ceramic.TilemapData;
 import ceramic.TilemapEditor;
 import ceramic.TilemapLayer;
 import ceramic.TilemapLayerData;
+import ceramic.TilemapMesh;
 import ceramic.TilemapOrientation;
 import ceramic.TilemapParser;
 import ceramic.TilemapPlugin;
 import ceramic.TilemapQuad;
 import ceramic.TilemapRenderOrder;
+import ceramic.TilemapRenderType;
 import ceramic.TilemapStaggerAxis;
 import ceramic.TilemapStaggerIndex;
 import ceramic.TilemapTile;
+import ceramic.TilemapTmxParser;
 import ceramic.Tileset;
 import ceramic.TilesetGridOrientation;
 import ceramic.TilesetImage;
@@ -348,6 +392,7 @@ import ceramic.AsepriteJsonParser;
 import ceramic.ConvertSpriteSheet;
 import ceramic.Sprite;
 import ceramic.SpriteAsset;
+import ceramic.SpritePlugin;
 import ceramic.SpriteSheet;
 import ceramic.SpriteSheetAnimation;
 import ceramic.SpriteSheetFrame;
@@ -401,6 +446,7 @@ import ceramic.CollectionViewItemPosition;
 import ceramic.CollectionViewItemsBehavior;
 import ceramic.CollectionViewLayout;
 import ceramic.ColumnLayout;
+import ceramic.ComputedViewSize;
 import ceramic.ImageView;
 import ceramic.ImageViewScaling;
 import ceramic.LayersLayout;
@@ -409,6 +455,8 @@ import ceramic.LayoutDirection;
 import ceramic.LayoutHorizontalAlign;
 import ceramic.LayoutVerticalAlign;
 import ceramic.LinearLayout;
+import ceramic.PagerView;
+import ceramic.PagerViewDataSource;
 import ceramic.RowLayout;
 import ceramic.ScrollView;
 import ceramic.TextView;
@@ -428,10 +476,102 @@ import ceramic.GifCapture;
 #end
 
 #if plugin_elements
-import elements.Im;
+import elements.ArrayPointer;
+import elements.BaseTextFieldView;
+import elements.BiBorderedTriangle;
+import elements.BoolPointer;
+import elements.BooleanFieldView;
+import elements.Button;
+import elements.CellCollectionView;
+import elements.CellView;
+import elements.CheckStatus;
+import elements.ChoiceStatus;
+import elements.ClickableIconView;
+import elements.ColorFieldView;
+import elements.ColorPickerHSBGradientView;
+import elements.ColorPickerHSBSpectrumView;
+import elements.ColorPickerHSLuvGradientView;
+import elements.ColorPickerHSLuvSpectrumView;
+import elements.ColorPickerPaletteColorView;
+import elements.ColorPickerView;
+import elements.ConfirmStatus;
 import elements.Context;
+import elements.CrossX;
+import elements.DragDrop;
+import elements.EditTextStatus;
+import elements.Entypo;
+import elements.EntypoIconView;
+import elements.EnumAbstractInfo;
+import elements.EnumValuePointer;
+import elements.FieldSystem;
+import elements.FieldUtils;
+import elements.FieldView;
+import elements.FilePickerView;
+import elements.FloatPointer;
+import elements.FormLayout;
+import elements.Handle;
+import elements.Im;
+import elements.ImRowLayout;
+import elements.ImSystem;
+import elements.InfoStatus;
+import elements.InputStyle;
+// IntPointer is a typedef in Im.hx, not a separate module
+import elements.ItalicText;
+import elements.LabelPosition;
+import elements.LabelView;
+import elements.LabeledFieldGroupView;
+import elements.LabeledFieldView;
+import elements.LabeledView;
+import elements.ListStatus;
+import elements.ListView;
+import elements.PendingDialog;
+import elements.PromptStatus;
+import elements.RelatedToFieldView;
+import elements.Sanitize;
+import elements.SanitizeTextField;
+import elements.Scrollbar;
+import elements.ScrollbarVisibility;
+import elements.ScrollingLayout;
+import elements.SelectFieldView;
+import elements.SelectListView;
+import elements.Separator;
+import elements.SliderFieldView;
+import elements.StringPointer;
+import elements.TabFocus;
+import elements.TabFocusable;
+import elements.TabState;
+import elements.TabsLayout;
+import elements.TextFieldView;
+import elements.TextUtils;
 import elements.Theme;
+import elements.Tooltip;
+import elements.UserData;
+import elements.VisualContainerView;
+import elements.VisualContainerViewScaling;
 import elements.Window;
+import elements.WindowData;
+import elements.WindowItem;
+import elements.WindowItemKind;
+#end
+
+#if plugin_dialogs
+import ceramic.Dialogs;
+import ceramic.DialogsFileFilter;
+import ceramic.DialogsPlugin;
+#end
+
+#if plugin_midi
+import ceramic.MidiOut;
+#end
+
+#if plugin_loreline
+import ceramic.LorelineAsset;
+import ceramic.LorelinePlugin;
+#end
+
+#if plugin_shade
+import shade.BaseSampler2D;
+import shade.BaseShader;
 #end
 
 /**
@@ -456,18 +596,18 @@ class AllApi {
 
     /**
      * Configures an HScript interpreter with Ceramic API bindings.
-     * 
+     *
      * This method sets up all necessary variable bindings to make Ceramic
      * classes and utilities available within HScript environments. It's used
      * by the scripting plugin to provide full framework access to scripts.
-     * 
+     *
      * The configuration includes:
      * - Global shortcuts (app, screen, audio, etc.)
      * - Standard Haxe libraries (Std, Math, StringTools)
      * - Tracker framework classes
      * - All Ceramic core classes
      * - Plugin-specific classes when available
-     * 
+     *
      * @param interp The HScript interpreter to configure
      */
     @:plugin('script')
@@ -654,6 +794,84 @@ class AllApi {
         #end
         interp.variables.set('VisualTransition', ceramic.VisualTransition);
         interp.variables.set('WatchDirectory', ceramic.WatchDirectory);
+
+        // New core classes (non-abstract only)
+        interp.variables.set('AntialiasedTriangle', ceramic.AntialiasedTriangle);
+        interp.variables.set('AppXUpdatesHandler', ceramic.AppXUpdatesHandler);
+        interp.variables.set('AtlasAsset', ceramic.AtlasAsset);
+        interp.variables.set('CardinalSpline', ceramic.CardinalSpline);
+        interp.variables.set('CeramicLogo', ceramic.CeramicLogo);
+        interp.variables.set('ConvertColor', ceramic.ConvertColor);
+        interp.variables.set('DynamicData', ceramic.DynamicData);
+        interp.variables.set('EntityData', ceramic.EntityData);
+        interp.variables.set('FieldMeta', ceramic.FieldMeta);
+        interp.variables.set('Float32Utils', ceramic.Float32Utils);
+        interp.variables.set('Graphics', ceramic.Graphics);
+        interp.variables.set('Immediate', ceramic.Immediate);
+        interp.variables.set('InputMapBase', ceramic.InputMapBase);
+        interp.variables.set('InputMapRebinder', ceramic.InputMapRebinder);
+        interp.variables.set('MeshUtils', ceramic.MeshUtils);
+        interp.variables.set('NineSlice', ceramic.NineSlice);
+        interp.variables.set('ParticleEmitter', ceramic.ParticleEmitter);
+        interp.variables.set('Pinch', ceramic.Pinch);
+        interp.variables.set('Preloader', ceramic.Preloader);
+        interp.variables.set('Rect', ceramic.Rect);
+        interp.variables.set('Repeat', ceramic.Repeat);
+        interp.variables.set('RoundedRect', ceramic.RoundedRect);
+        interp.variables.set('TextureAtlasPacker', ceramic.TextureAtlasPacker);
+        interp.variables.set('TimelineBoolKeyframe', ceramic.TimelineBoolKeyframe);
+        interp.variables.set('TimelineBoolTrack', ceramic.TimelineBoolTrack);
+        interp.variables.set('TimelineFloatArrayKeyframe', ceramic.TimelineFloatArrayKeyframe);
+        interp.variables.set('TimelineFloatArrayTrack', ceramic.TimelineFloatArrayTrack);
+        interp.variables.set('Zoomer', ceramic.Zoomer);
+
+        #if plugin_dialogs
+        interp.variables.set('Dialogs', ceramic.Dialogs);
+        interp.variables.set('DialogsPlugin', ceramic.DialogsPlugin);
+        #end
+
+        #if plugin_midi
+        interp.variables.set('MidiOut', ceramic.MidiOut);
+        #end
+
+        #if plugin_loreline
+        interp.variables.set('LorelineAsset', ceramic.LorelineAsset);
+        interp.variables.set('LorelinePlugin', ceramic.LorelinePlugin);
+        #end
+
+        #if plugin_shade
+        interp.variables.set('Bloom', shaders.Bloom);
+        interp.variables.set('Blur', shaders.Blur);
+        interp.variables.set('Fxaa', shaders.Fxaa);
+        interp.variables.set('GaussianBlur', shaders.GaussianBlur);
+        interp.variables.set('Glow', shaders.Glow);
+        interp.variables.set('InnerLight', shaders.InnerLight);
+        interp.variables.set('Msdf', shaders.Msdf);
+        interp.variables.set('Outline', shaders.Outline);
+        interp.variables.set('PixelArtShader', shaders.PixelArt);
+        interp.variables.set('Textured', shaders.Textured);
+        interp.variables.set('TintBlack', shaders.TintBlack);
+        #end
+
+        #if plugin_http
+        interp.variables.set('MimeType', ceramic.MimeType);
+        #end
+
+        #if plugin_ui
+        interp.variables.set('ComputedViewSize', ceramic.ComputedViewSize);
+        interp.variables.set('PagerView', ceramic.PagerView);
+        interp.variables.set('PagerViewDataSource', ceramic.PagerViewDataSource);
+        #end
+
+        #if plugin_tilemap
+        interp.variables.set('TilemapMesh', ceramic.TilemapMesh);
+        interp.variables.set('TileSlope', ceramic.TileSlope);
+        interp.variables.set('TilemapTmxParser', ceramic.TilemapTmxParser);
+        #end
+
+        #if plugin_sprite
+        interp.variables.set('SpritePlugin', ceramic.SpritePlugin);
+        #end
 
     }
 
