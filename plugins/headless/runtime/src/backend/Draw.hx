@@ -192,6 +192,19 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !no_backend_docs
     /**
+     * Ends the current rendering pass.
+     *
+     * In headless mode, this is a no-op since no rendering occurs.
+     */
+    #end
+    inline public function endRender():Void {
+
+        // Unused in headless
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Sets the current render target.
      *
      * @param renderTarget The texture to render to (null for screen)
