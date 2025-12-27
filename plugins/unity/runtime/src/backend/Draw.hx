@@ -862,7 +862,6 @@ class Draw #if !completion implements spec.Draw #end {
         _materialCurrentShader = _materialStencilWrite != 0 ? _stencilShader : shader;
 
         var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(_materialCurrentShader);
-        if (attributesSize % 2 == 1) attributesSize++;
 
         _vertexSize = 9 + attributesSize + (ceramic.App.app.backend.shaders.canBatchWithMultipleTextures(_materialCurrentShader) ? 1 : 0);
 
