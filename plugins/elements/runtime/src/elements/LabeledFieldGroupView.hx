@@ -1,38 +1,43 @@
 package elements;
 
+import ceramic.LinearLayout;
+import tracker.Autorun.reobserve;
+import tracker.Autorun.unobserve;
+import tracker.Observable;
+
 using ceramic.Extensions;
 
 /**
  * A container that groups multiple labeled field views in a horizontal layout.
- * 
+ *
  * This view is designed to organize related fields together, managing their
  * layout and providing consistent label widths across the group. It's particularly
  * useful for creating forms with multiple related inputs on the same line.
- * 
+ *
  * ## Type Parameters
- * 
+ *
  * - `T`: The type of labeled field views (must extend LabeledFieldView)
  * - `U`: The underlying field view type
- * 
+ *
  * ## Features
- * 
+ *
  * - Automatic layout management for grouped fields
  * - Consistent label width distribution
  * - Disabled state synchronization
  * - Responsive width allocation
- * 
+ *
  * ## Usage Example
- * 
+ *
  * ```haxe
  * // Create a group of coordinate fields
  * var xField = new LabeledFieldView(new TextFieldView(), "X:");
  * var yField = new LabeledFieldView(new TextFieldView(), "Y:");
  * var zField = new LabeledFieldView(new TextFieldView(), "Z:");
- * 
+ *
  * var coordGroup = new LabeledFieldGroupView([xField, yField, zField]);
  * coordGroup.label = "Position";
  * ```
- * 
+ *
  * @see LabeledFieldView
  * @see FieldView
  */
