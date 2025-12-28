@@ -114,6 +114,11 @@ class Graphics extends Visual {
     var lineAlpha:Float = 1.0;
 
     /**
+     * Whether we have an active line style for stroking
+     */
+    var stroking:Bool = false;
+
+    /**
      * Current path being built
      */
     var currentPath:Array<Float> = null;
@@ -133,6 +138,13 @@ class Graphics extends Visual {
      */
     var pathSegments:Array<Array<Float>> = [];
 
+    /**
+     * Current depth value for ordering visuals.
+     * Incremented for each visual added to ensure proper render order.
+     * Strokes are given higher depth than fills to render on top.
+     */
+    var currentDepth:Float = 0;
+
     public function new() {
         super();
     }
@@ -148,6 +160,7 @@ class Graphics extends Visual {
         } else {
             mesh = MeshPool.get();
         }
+        mesh.depth = currentDepth++;
         activeMeshes.push(mesh);
         add(mesh);
         return mesh;
@@ -164,6 +177,7 @@ class Graphics extends Visual {
         } else {
             quad = new Quad();
         }
+        quad.depth = currentDepth++;
         activeQuads.push(quad);
         add(quad);
         return quad;
@@ -177,9 +191,18 @@ class Graphics extends Visual {
         if (pooledLines.length > 0) {
             line = pooledLines.pop();
             line.active = true;
+            line.contentDirty = true;
+            line.loop = false;
+            // Ensure points array exists
+            if (line.points == null) {
+                line.points = [];
+            }
         } else {
             line = new Line();
+            line.points = [];
         }
+        line.join = MITER;
+        line.depth = currentDepth++;
         activeLines.push(line);
         add(line);
         return line;
@@ -196,6 +219,7 @@ class Graphics extends Visual {
         } else {
             arc = new Arc();
         }
+        arc.depth = currentDepth++;
         activeArcs.push(arc);
         add(arc);
         return arc;
@@ -208,6 +232,7 @@ class Graphics extends Visual {
         // Recycle meshes
         for (mesh in activeMeshes) {
             mesh.active = false;
+            mesh.depth = 0;
             remove(mesh);
             // Clear mesh data
             if (mesh.vertices != null) mesh.vertices.resize(0);
@@ -221,6 +246,7 @@ class Graphics extends Visual {
         // Recycle quads
         for (quad in activeQuads) {
             quad.active = false;
+            quad.depth = 0;
             remove(quad);
             pooledQuads.push(quad);
         }
@@ -229,6 +255,7 @@ class Graphics extends Visual {
         // Recycle lines
         for (line in activeLines) {
             line.active = false;
+            line.depth = 0;
             remove(line);
             if (line.points != null) line.points.resize(0);
             pooledLines.push(line);
@@ -238,6 +265,7 @@ class Graphics extends Visual {
         // Recycle arcs
         for (arc in activeArcs) {
             arc.active = false;
+            arc.depth = 0;
             remove(arc);
             pooledArcs.push(arc);
         }
@@ -249,16 +277,34 @@ class Graphics extends Visual {
         currentX = 0;
         currentY = 0;
 
-        super.clear();
+        // Reset depth counter
+        currentDepth = 0;
+
+        // Reset all style settings to defaults (matches Flash/Pixi behavior)
+        stroking = false;
+        filling = false;
+        lineThickness = 1.0;
+        lineColor = Color.WHITE;
+        lineAlpha = 1.0;
+        fillColor = Color.WHITE;
+        fillAlpha = 1.0;
+        // Note: We don't call super.clear() because Visual.clear() destroys children,
+        // but we've already removed and pooled them above.
     }
 
     /**
-     * Set the line style for subsequent drawing operations
+     * Set the line style for subsequent drawing operations.
+     * Call with no arguments or thickness <= 0 to disable stroking.
      */
-    public function lineStyle(thickness:Float = 1.0, color:Color = null, alpha:Float = 1.0):Void {
+    public function lineStyle(thickness:Float = 0, color:Color = null, alpha:Float = 1.0):Void {
+        if (thickness <= 0) {
+            stroking = false;
+            return;
+        }
         lineThickness = thickness;
         lineColor = color != null ? color : Color.WHITE;
         lineAlpha = alpha;
+        stroking = true;
     }
 
     /**
@@ -283,25 +329,32 @@ class Graphics extends Visual {
             var vertices = mesh.vertices;
             var indices = mesh.indices;
 
-            // Simple triangulation for convex shapes
             // Copy path points as vertices
             for (i in 0...currentPath.length) {
                 vertices.push(currentPath[i]);
             }
 
-            // Create triangle fan from first vertex
-            var numPoints = Std.int(currentPath.length / 2);
-            if (numPoints >= 3) {
-                for (i in 1...numPoints - 1) {
-                    indices.push(0);
-                    indices.push(i);
-                    indices.push(i + 1);
-                }
-            }
+            // Triangulate polygon (handles both convex and concave shapes)
+            Triangulate.triangulate(vertices, indices);
 
             mesh.color = fillColor;
             mesh.alpha = fillAlpha;
             mesh.computeSize();
+
+            // If stroking is active, also draw the stroke outline
+            if (stroking && currentPath.length >= 4) {
+                var line = getLine();
+                for (i in 0...currentPath.length) {
+                    line.points.push(currentPath[i]);
+                }
+                // Close the path
+                line.points.push(currentPath[0]);
+                line.points.push(currentPath[1]);
+                line.loop = true;
+                line.thickness = lineThickness;
+                line.color = lineColor;
+                line.alpha = lineAlpha;
+            }
         }
 
         filling = false;
@@ -313,7 +366,7 @@ class Graphics extends Visual {
      */
     public function drawRect(x:Float, y:Float, width:Float, height:Float):Void {
         if (filling) {
-            // Add to current path
+            // Add rectangle points to current path for fill
             if (currentPath.length == 0) {
                 currentPath.push(x);
                 currentPath.push(y);
@@ -324,32 +377,112 @@ class Graphics extends Visual {
                 currentPath.push(x);
                 currentPath.push(y + height);
             }
-        } else {
-            // Draw immediately
-            var quad = getQuad();
-            quad.pos(x, y);
-            quad.size(width, height);
-            quad.color = lineColor;
-            quad.alpha = lineAlpha;
+            // Stroke will be handled by endFill() if stroking is active
+        } else if (stroking) {
+            // Draw stroked rectangle outline using mesh (8 vertices, 8 triangles)
+            strokeRect(x, y, width, height);
         }
+    }
+
+    /**
+     * Draw a filled rectangle using a mesh with 4 vertices.
+     */
+    function fillRect(x:Float, y:Float, width:Float, height:Float):Void {
+        var mesh = getMesh();
+        mesh.vertices.push(x); mesh.vertices.push(y);
+        mesh.vertices.push(x + width); mesh.vertices.push(y);
+        mesh.vertices.push(x + width); mesh.vertices.push(y + height);
+        mesh.vertices.push(x); mesh.vertices.push(y + height);
+        mesh.indices.push(0); mesh.indices.push(1); mesh.indices.push(2);
+        mesh.indices.push(0); mesh.indices.push(2); mesh.indices.push(3);
+        mesh.color = fillColor;
+        mesh.alpha = fillAlpha;
+        mesh.computeSize();
+    }
+
+    /**
+     * Draw a stroked rectangle outline using a mesh with 8 vertices.
+     * More efficient than using 4 Line objects.
+     */
+    function strokeRect(x:Float, y:Float, width:Float, height:Float):Void {
+        var mesh = getMesh();
+        var halfThick = lineThickness * 0.5;
+
+        // Outer rectangle corners (0,1,2,3)
+        var ox0 = x - halfThick;
+        var oy0 = y - halfThick;
+        var ox1 = x + width + halfThick;
+        var oy1 = y - halfThick;
+        var ox2 = x + width + halfThick;
+        var oy2 = y + height + halfThick;
+        var ox3 = x - halfThick;
+        var oy3 = y + height + halfThick;
+
+        // Inner rectangle corners (4,5,6,7)
+        var ix0 = x + halfThick;
+        var iy0 = y + halfThick;
+        var ix1 = x + width - halfThick;
+        var iy1 = y + halfThick;
+        var ix2 = x + width - halfThick;
+        var iy2 = y + height - halfThick;
+        var ix3 = x + halfThick;
+        var iy3 = y + height - halfThick;
+
+        // Push vertices: outer corners 0-3, inner corners 4-7
+        mesh.vertices.push(ox0); mesh.vertices.push(oy0); // 0
+        mesh.vertices.push(ox1); mesh.vertices.push(oy1); // 1
+        mesh.vertices.push(ox2); mesh.vertices.push(oy2); // 2
+        mesh.vertices.push(ox3); mesh.vertices.push(oy3); // 3
+        mesh.vertices.push(ix0); mesh.vertices.push(iy0); // 4
+        mesh.vertices.push(ix1); mesh.vertices.push(iy1); // 5
+        mesh.vertices.push(ix2); mesh.vertices.push(iy2); // 6
+        mesh.vertices.push(ix3); mesh.vertices.push(iy3); // 7
+
+        // 8 triangles forming the border
+        // Top edge: 0,1,5 and 0,5,4
+        mesh.indices.push(0); mesh.indices.push(1); mesh.indices.push(5);
+        mesh.indices.push(0); mesh.indices.push(5); mesh.indices.push(4);
+        // Right edge: 1,2,6 and 1,6,5
+        mesh.indices.push(1); mesh.indices.push(2); mesh.indices.push(6);
+        mesh.indices.push(1); mesh.indices.push(6); mesh.indices.push(5);
+        // Bottom edge: 2,3,7 and 2,7,6
+        mesh.indices.push(2); mesh.indices.push(3); mesh.indices.push(7);
+        mesh.indices.push(2); mesh.indices.push(7); mesh.indices.push(6);
+        // Left edge: 3,0,4 and 3,4,7
+        mesh.indices.push(3); mesh.indices.push(0); mesh.indices.push(4);
+        mesh.indices.push(3); mesh.indices.push(4); mesh.indices.push(7);
+
+        mesh.color = lineColor;
+        mesh.alpha = lineAlpha;
+        mesh.computeSize();
     }
 
     /**
      * Draw a circle
      */
-    public function drawCircle(x:Float, y:Float, radius:Float):Void {
-        var arc = getArc();
-        arc.pos(x, y);
-        arc.radius = radius;
-        arc.angle = 360;
-        arc.sides = Math.ceil(Math.max(16, radius)); // More sides for larger circles
+    public function drawCircle(x:Float, y:Float, radius:Float, sides:Int = -1):Void {
+
+        if (sides == -1) {
+            sides = Math.ceil(Math.max(64, radius));
+        }
 
         if (filling) {
+            var arc = getArc();
+            arc.pos(x, y);
+            arc.radius = radius;
+            arc.angle = 360;
+            arc.sides = sides;
             arc.thickness = radius;
             arc.borderPosition = INSIDE;
             arc.color = fillColor;
             arc.alpha = fillAlpha;
-        } else {
+        }
+        if (stroking) {
+            var arc = getArc();
+            arc.pos(x, y);
+            arc.radius = radius;
+            arc.angle = 360;
+            arc.sides = sides;
             arc.thickness = lineThickness;
             arc.borderPosition = MIDDLE;
             arc.color = lineColor;
@@ -360,20 +493,32 @@ class Graphics extends Visual {
     /**
      * Draw an arc
      */
-    public function drawArc(x:Float, y:Float, radius:Float, startAngle:Float, endAngle:Float):Void {
-        var arc = getArc();
-        arc.pos(x, y);
-        arc.radius = radius;
-        arc.angle = Math.abs(endAngle - startAngle);
-        arc.rotation = startAngle;
-        arc.sides = Math.ceil(Math.max(16, radius * arc.angle / 360));
+    public function drawArc(x:Float, y:Float, radius:Float, startAngle:Float, endAngle:Float, sides:Int = -1):Void {
+        var angle = Math.abs(endAngle - startAngle);
+
+        if (sides == -1) {
+            sides = Math.ceil(Math.max(64, radius));
+        }
 
         if (filling) {
+            var arc = getArc();
+            arc.pos(x, y);
+            arc.radius = radius;
+            arc.angle = angle;
+            arc.rotation = startAngle;
+            arc.sides = sides;
             arc.thickness = radius;
             arc.borderPosition = INSIDE;
             arc.color = fillColor;
             arc.alpha = fillAlpha;
-        } else {
+        }
+        if (stroking) {
+            var arc = getArc();
+            arc.pos(x, y);
+            arc.radius = radius;
+            arc.angle = angle;
+            arc.rotation = startAngle;
+            arc.sides = sides;
             arc.thickness = lineThickness;
             arc.borderPosition = MIDDLE;
             arc.color = lineColor;
@@ -388,15 +533,22 @@ class Graphics extends Visual {
         if (filling) {
             // Create filled triangle
             var mesh = getMesh();
-            mesh.vertices = [x1, y1, x2, y2, x3, y3];
-            mesh.indices = [0, 1, 2];
+            mesh.vertices.push(x1); mesh.vertices.push(y1);
+            mesh.vertices.push(x2); mesh.vertices.push(y2);
+            mesh.vertices.push(x3); mesh.vertices.push(y3);
+            mesh.indices.push(0); mesh.indices.push(1); mesh.indices.push(2);
             mesh.color = fillColor;
             mesh.alpha = fillAlpha;
             mesh.computeSize();
-        } else {
+        }
+        if (stroking) {
             // Create stroked triangle
             var line = getLine();
-            line.points = [x1, y1, x2, y2, x3, y3, x1, y1];
+            line.points.push(x1); line.points.push(y1);
+            line.points.push(x2); line.points.push(y2);
+            line.points.push(x3); line.points.push(y3);
+            line.points.push(x1); line.points.push(y1);
+            line.loop = true;
             line.thickness = lineThickness;
             line.color = lineColor;
             line.alpha = lineAlpha;
@@ -418,24 +570,24 @@ class Graphics extends Visual {
                 mesh.vertices.push(point);
             }
 
-            // Simple triangulation (works for convex polygons)
-            var numPoints = Std.int(points.length / 2);
-            for (i in 1...numPoints - 1) {
-                mesh.indices.push(0);
-                mesh.indices.push(i);
-                mesh.indices.push(i + 1);
-            }
+            // Triangulate polygon (handles both convex and concave shapes)
+            Triangulate.triangulate(mesh.vertices, mesh.indices);
 
             mesh.color = fillColor;
             mesh.alpha = fillAlpha;
             mesh.computeSize();
-        } else {
+        }
+        if (stroking) {
             // Create stroked polygon
             var line = getLine();
-            line.points = points.copy();
+            // Copy points to the existing array
+            for (point in points) {
+                line.points.push(point);
+            }
             // Close the polygon
             line.points.push(points[0]);
             line.points.push(points[1]);
+            line.loop = true;
             line.thickness = lineThickness;
             line.color = lineColor;
             line.alpha = lineAlpha;
@@ -494,7 +646,8 @@ class Graphics extends Visual {
      */
     public function drawLine(x1:Float, y1:Float, x2:Float, y2:Float):Void {
         var line = getLine();
-        line.points = [x1, y1, x2, y2];
+        line.points.push(x1); line.points.push(y1);
+        line.points.push(x2); line.points.push(y2);
         line.thickness = lineThickness;
         line.color = lineColor;
         line.alpha = lineAlpha;
@@ -507,6 +660,12 @@ class Graphics extends Visual {
         // Calculate curve points
         var points:Array<Float> = [];
         var steps = 20; // Number of segments for the curve
+
+        // Get the current path segment for adding curve points
+        var segment:Array<Float> = null;
+        if (pathSegments.length > 0) {
+            segment = pathSegments[pathSegments.length - 1];
+        }
 
         for (i in 0...steps + 1) {
             var t = i / steps;
@@ -523,12 +682,20 @@ class Graphics extends Visual {
                 currentPath.push(px);
                 currentPath.push(py);
             }
+
+            // Also add to pathSegments for drawPath() support
+            if (segment != null) {
+                segment.push(px);
+                segment.push(py);
+            }
         }
 
-        if (!filling) {
-            // Draw the curve as a line
+        if (stroking && !filling) {
+            // Draw the curve as a line immediately when not filling
             var line = getLine();
-            line.points = points;
+            for (p in points) {
+                line.points.push(p);
+            }
             line.thickness = lineThickness;
             line.color = lineColor;
             line.alpha = lineAlpha;
@@ -545,6 +712,12 @@ class Graphics extends Visual {
         // Calculate curve points
         var points:Array<Float> = [];
         var steps = 30; // Number of segments for the curve
+
+        // Get the current path segment for adding curve points
+        var segment:Array<Float> = null;
+        if (pathSegments.length > 0) {
+            segment = pathSegments[pathSegments.length - 1];
+        }
 
         for (i in 0...steps + 1) {
             var t = i / steps;
@@ -567,12 +740,20 @@ class Graphics extends Visual {
                 currentPath.push(px);
                 currentPath.push(py);
             }
+
+            // Also add to pathSegments for drawPath() support
+            if (segment != null) {
+                segment.push(px);
+                segment.push(py);
+            }
         }
 
-        if (!filling) {
-            // Draw the curve as a line
+        if (stroking && !filling) {
+            // Draw the curve as a line immediately when not filling
             var line = getLine();
-            line.points = points;
+            for (p in points) {
+                line.points.push(p);
+            }
             line.thickness = lineThickness;
             line.color = lineColor;
             line.alpha = lineAlpha;
@@ -589,10 +770,17 @@ class Graphics extends Visual {
         for (segment in pathSegments) {
             if (segment.length >= 4) {
                 var line = getLine();
-                line.points = segment.copy();
+                // Copy segment points to the line's points array
+                for (p in segment) {
+                    line.points.push(p);
+                }
                 line.thickness = lineThickness;
                 line.color = lineColor;
                 line.alpha = lineAlpha;
+
+                // Update current position to end of this segment
+                currentX = segment[segment.length - 2];
+                currentY = segment[segment.length - 1];
             }
         }
         pathSegments.resize(0);
