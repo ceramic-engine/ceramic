@@ -139,6 +139,11 @@ class Graphics extends Visual {
     var pathSegments:Array<Array<Float>> = [];
 
     /**
+     * Tracks which path segments have been closed via closePath()
+     */
+    var pathSegmentsClosed:Array<Bool> = [];
+
+    /**
      * Current depth value for ordering visuals.
      * Incremented for each visual added to ensure proper render order.
      * Strokes are given higher depth than fills to render on top.
@@ -274,6 +279,7 @@ class Graphics extends Visual {
         // Clear path data
         currentPath = null;
         pathSegments.resize(0);
+        pathSegmentsClosed.resize(0);
         currentX = 0;
         currentY = 0;
 
@@ -604,10 +610,12 @@ class Graphics extends Visual {
         // Start a new path segment
         if (pathSegments.length > 0 && pathSegments[pathSegments.length - 1].length >= 2) {
             pathSegments.push([]);
+            pathSegmentsClosed.push(false);
         }
 
         if (pathSegments.length == 0) {
             pathSegments.push([]);
+            pathSegmentsClosed.push(false);
         }
 
         var segment = pathSegments[pathSegments.length - 1];
@@ -767,7 +775,8 @@ class Graphics extends Visual {
      * Draw all accumulated path segments
      */
     public function drawPath():Void {
-        for (segment in pathSegments) {
+        for (i in 0...pathSegments.length) {
+            var segment = pathSegments[i];
             if (segment.length >= 4) {
                 var line = getLine();
                 // Copy segment points to the line's points array
@@ -777,6 +786,10 @@ class Graphics extends Visual {
                 line.thickness = lineThickness;
                 line.color = lineColor;
                 line.alpha = lineAlpha;
+                // Set loop if this segment was closed via closePath()
+                if (pathSegmentsClosed[i]) {
+                    line.loop = true;
+                }
 
                 // Update current position to end of this segment
                 currentX = segment[segment.length - 2];
@@ -784,6 +797,7 @@ class Graphics extends Visual {
             }
         }
         pathSegments.resize(0);
+        pathSegmentsClosed.resize(0);
     }
 
     /**
@@ -791,11 +805,14 @@ class Graphics extends Visual {
      */
     public function closePath():Void {
         if (pathSegments.length > 0) {
-            var segment = pathSegments[pathSegments.length - 1];
+            var segmentIndex = pathSegments.length - 1;
+            var segment = pathSegments[segmentIndex];
             if (segment.length >= 4) {
                 // Add line back to the start
                 segment.push(segment[0]);
                 segment.push(segment[1]);
+                // Mark this segment as closed for loop rendering
+                pathSegmentsClosed[segmentIndex] = true;
             }
         }
 
