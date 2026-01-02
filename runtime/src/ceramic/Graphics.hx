@@ -114,6 +114,16 @@ class Graphics extends Visual {
     var lineAlpha:Float = 1.0;
 
     /**
+     * Current line join style
+     */
+    var lineJoin:LineJoin = MITER;
+
+    /**
+     * Current line cap style
+     */
+    var lineCap:LineCap = BUTT;
+
+    /**
      * Whether we have an active line style for stroking
      */
     var stroking:Bool = false;
@@ -206,7 +216,8 @@ class Graphics extends Visual {
             line = new Line();
             line.points = [];
         }
-        line.join = MITER;
+        line.join = lineJoin;
+        line.cap = lineCap;
         line.depth = currentDepth++;
         activeLines.push(line);
         add(line);
@@ -301,8 +312,14 @@ class Graphics extends Visual {
     /**
      * Set the line style for subsequent drawing operations.
      * Call with no arguments or thickness <= 0 to disable stroking.
+     *
+     * @param thickness Line width in pixels. <= 0 disables stroking.
+     * @param color Line color. Defaults to WHITE.
+     * @param alpha Line opacity (0-1). Defaults to 1.0.
+     * @param join Corner join style (MITER, BEVEL, ROUND). Defaults to MITER.
+     * @param cap End cap style (BUTT, SQUARE, ROUND). Defaults to BUTT.
      */
-    public function lineStyle(thickness:Float = 0, color:Color = null, alpha:Float = 1.0):Void {
+    public function lineStyle(thickness:Float = 0, color:Color = null, alpha:Float = 1.0, join:LineJoin = null, cap:LineCap = null):Void {
         if (thickness <= 0) {
             stroking = false;
             return;
@@ -310,6 +327,8 @@ class Graphics extends Visual {
         lineThickness = thickness;
         lineColor = color != null ? color : Color.WHITE;
         lineAlpha = alpha;
+        lineJoin = join != null ? join : MITER;
+        lineCap = cap != null ? cap : BUTT;
         stroking = true;
     }
 

@@ -40,7 +40,7 @@ class Project {
     public static var runtimeLibraries:Array<Dynamic> = [
         'format',
         'bind',
-        'polyline',
+        'clipper',
         'tracker',
         'hsluv',
         'bin-packing'
