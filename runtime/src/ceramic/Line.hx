@@ -4,6 +4,7 @@ import clipper.Clipper;
 import clipper.ClipperCore;
 import clipper.ClipperOffset.EndType;
 import clipper.ClipperOffset.JoinType;
+import clipper.ClipperPool;
 import clipper.ClipperTriangulation.TriangulateResult;
 
 using ceramic.Extensions;
@@ -279,6 +280,9 @@ class Line extends Mesh {
             // Clear and reuse the path array
             _path.resize(0);
 
+            // Start tracking clipper objects for pooling
+            ClipperPool.trackObjects();
+
             // Convert ceramic points to Clipper2 Path64
             var i = 0;
             while (i < points.length - 1) {
@@ -321,7 +325,11 @@ class Line extends Mesh {
             var inflated = Clipper.inflatePaths(_paths, delta, joinType, endType, miterLimit, arcTolerance);
 
             // Convert inflated paths to vertices and triangulate
+            // (extracts float data from clipper objects before recycling)
             buildMeshFromInflatedPaths(inflated, loop);
+
+            // Recycle all tracked clipper objects back to pools
+            ClipperPool.recycleObjects();
         }
 
         if (autoComputeSize)

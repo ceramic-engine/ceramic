@@ -181,7 +181,10 @@ class ClaySetup extends tools.Task {
             targetFlags += '\n' + '-D clay_shader_from_source';
             targetFlags += '\n' + '-D ceramic_auto_block_default_scroll';
             targetFlags += '\n' + '-D clay_webgl_unpack_premultiply_alpha';
-            targetFlags += '\n' + '-D clipper_int64_as_float64';
+
+            if (!context.defines.exists('clipper_int64')) {
+                targetFlags += '\n' + '-D clipper_int64_as_float64';
+            }
         }
         else {
             if (target.name == 'cppia') {
