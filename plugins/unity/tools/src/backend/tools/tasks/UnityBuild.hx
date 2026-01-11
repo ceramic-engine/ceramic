@@ -141,9 +141,12 @@ class UnityBuild extends tools.Task {
                         if (shaderReferences.length > 0) {
                             // Check if shaders changed (skip if identical)
                             var shouldSkipShaderCompilation = false;
-                            if (prevShaders != null && Equal.equal(prevShaders, shaders)) {
+                            if (prevShaders != null && Equal.equal(prevShaders, shaders, true)) {
                                 shouldSkipShaderCompilation = true;
                             }
+
+                            // Build shade task arguments for Unity target
+                            var unityOutputPath = Path.join([hxmlProjectPath, 'shade', 'unity']);
 
                             if (!shouldSkipShaderCompilation) {
                                 // Collect unique shader files (by hash to avoid duplicates)
@@ -153,9 +156,6 @@ class UnityBuild extends tools.Task {
                                         uniqueShaders.set(ref.hash, ref.filePath);
                                     }
                                 }
-
-                                // Build shade task arguments for Unity target
-                                var unityOutputPath = Path.join([hxmlProjectPath, 'shade', 'unity']);
 
                                 // Delete existing unity shader folder if any
                                 if (FileSystem.exists(unityOutputPath)) {
@@ -177,12 +177,13 @@ class UnityBuild extends tools.Task {
                                 print('Transpile shaders to Unity ShaderLab');
                                 runTask('shade', shadeArgs);
 
-                                // Copy shaders to Unity project
-                                copyGeneratedShadersToUnity(cwd, unityOutputPath, project);
-
                                 // Save current info for next comparison
                                 File.saveContent(prevShadersJsonPath, File.getContent(shadersJsonPath));
                             }
+
+                            // Copy shaders to Unity project
+                            // This must happen even when skipping compilation, as assets may have been cleaned
+                            copyGeneratedShadersToUnity(cwd, unityOutputPath, project);
                         }
                     }
                 }
