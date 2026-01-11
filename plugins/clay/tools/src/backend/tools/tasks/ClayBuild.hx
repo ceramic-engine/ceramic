@@ -427,9 +427,11 @@ $workletResolveClassCases
                         if (shaderReferences.length > 0) {
                             // Check if shaders changed (skip if identical)
                             var shouldSkipShaderCompilation = false;
-                            if (prevShaders != null && Equal.equal(prevShaders, shaders)) {
+                            if (prevShaders != null && Equal.equal(prevShaders, shaders, true)) {
                                 shouldSkipShaderCompilation = true;
                             }
+
+                            var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
 
                             if (!shouldSkipShaderCompilation) {
                                 // Collect unique shader files (by hash to avoid duplicates)
@@ -439,9 +441,6 @@ $workletResolveClassCases
                                         uniqueShaders.set(ref.hash, ref.filePath);
                                     }
                                 }
-
-                                // Build shade task arguments
-                                var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
 
                                 // Delete existing glsl folder if any
                                 if (FileSystem.exists(glslOutputPath)) {
@@ -463,39 +462,40 @@ $workletResolveClassCases
                                 print('Transpile shaders to GLSL');
                                 runTask('shade', shadeArgs);
 
-                                // Copy shaders to platform assets (directly in assets folder, no subfolder)
-                                if (FileSystem.exists(glslOutputPath)) {
-                                    var dstAssetsPath:String = switch (target.name) {
-                                        case 'mac':
-                                            Path.join([cwd, 'project', 'mac', project.app.name + '.app', 'Contents', 'Resources', 'assets']);
-                                        case 'ios':
-                                            Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
-                                        case 'android':
-                                            Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
-                                        case 'windows' | 'linux' | 'web':
-                                            Path.join([cwd, 'project', target.name, 'assets']);
-                                        default:
-                                            null;
-                                    };
-
-                                    if (dstAssetsPath != null) {
-                                        // Ensure assets directory exists
-                                        if (!FileSystem.exists(dstAssetsPath)) {
-                                            FileSystem.createDirectory(dstAssetsPath);
-                                        }
-
-                                        // Copy all generated shader files directly to assets folder
-                                        for (file in FileSystem.readDirectory(glslOutputPath)) {
-                                            File.copy(
-                                                Path.join([glslOutputPath, file]),
-                                                Path.join([dstAssetsPath, file])
-                                            );
-                                        }
-                                    }
-                                }
-
                                 // Save current info for next comparison
                                 File.saveContent(prevShadersJsonPath, File.getContent(shadersJsonPath));
+                            }
+
+                            // Copy shaders to platform assets (directly in assets folder, no subfolder)
+                            // This must happen even when skipping compilation, as assets may have been cleaned
+                            if (FileSystem.exists(glslOutputPath)) {
+                                var dstAssetsPath:String = switch (target.name) {
+                                    case 'mac':
+                                        Path.join([cwd, 'project', 'mac', project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+                                    case 'ios':
+                                        Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
+                                    case 'android':
+                                        Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
+                                    case 'windows' | 'linux' | 'web':
+                                        Path.join([cwd, 'project', target.name, 'assets']);
+                                    default:
+                                        null;
+                                };
+
+                                if (dstAssetsPath != null) {
+                                    // Ensure assets directory exists
+                                    if (!FileSystem.exists(dstAssetsPath)) {
+                                        FileSystem.createDirectory(dstAssetsPath);
+                                    }
+
+                                    // Copy all generated shader files directly to assets folder
+                                    for (file in FileSystem.readDirectory(glslOutputPath)) {
+                                        Files.copyIfNeeded(
+                                            Path.join([glslOutputPath, file]),
+                                            Path.join([dstAssetsPath, file])
+                                        );
+                                    }
+                                }
                             }
                         }
                     }
