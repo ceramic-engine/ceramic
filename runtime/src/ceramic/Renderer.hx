@@ -314,6 +314,7 @@ class Renderer extends Entity {
         }
 
         draw.beginRender();
+        ceramic.App.app.emitBeginRenderVisuals();
 
         // Ensure no texture at all are bound before starting rendering
         usedTextures = maxUsableTexturesInBatch;
@@ -464,6 +465,7 @@ class Renderer extends Entity {
     #end
 
         // End rendering frame
+        ceramic.App.app.emitEndRenderVisuals();
         draw.endRender();
 
         // Mark all textures as rendered (renderDirty = false)

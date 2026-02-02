@@ -171,6 +171,19 @@ class App extends Entity {
     @event function finishDraw();
 
     /**
+     * Fired when visual rendering begins inside the Renderer.
+     * This fires after beginRender() but before visuals are processed.
+     */
+    @event function beginRenderVisuals();
+
+    /**
+     * Fired when visual rendering ends but before endRender() submits to GPU.
+     * Use this for low-level rendering that must be included in the current frame
+     * but should appear on top of all ceramic visuals.
+     */
+    @event function endRenderVisuals();
+
+    /**
      * Fired if the app is running low on memory.
      * (not be implemented by all platforms/targets).
      *
