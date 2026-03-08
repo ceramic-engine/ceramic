@@ -82,12 +82,12 @@ class Angle extends tools.Task {
                     }
                     #end
                     #if mac
-                    if (os != 'mac' && os != 'ios' && os != 'android') {
+                    if (os != 'mac' && os != 'ios' && os != 'android' && os != 'windows') {
                         continue;
                     }
                     #end
                     #if linux
-                    if (os != 'linux' && os != 'android') {
+                    if (os != 'linux' && os != 'android' && os != 'windows') {
                         continue;
                     }
                     #end

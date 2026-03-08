@@ -1,0 +1,170 @@
+<xml>
+
+<!-- WINDOWS CROSS-COMPILATION TOOLS -->
+<!-- Cross-compile to Windows from Mac/Linux using clang-cl + lld-link (MSVC ABI) -->
+<!-- External target toolchain - loaded via HXCPP_TARGET_PATHS env var or -DHXCPP_TARGET_PATHS define -->
+
+<set name="HXCPP_CPP17" value="1" unless="HXCPP_CPP11"/>
+<set name="HXCPP_MULTI_THREADED" value="1"/>
+<set name="HXCPP_M64" value="1"/>
+
+<!-- Set the windows define so all existing conditionals (linc_sdl.xml, linc_opengl.xml, etc.) work -->
+<set name="windows" value="windows"/>
+
+<!-- Disable precompiled headers for cross-compilation -->
+<set name="NO_PRECOMPILED_HEADERS" value="1"/>
+
+<!-- Windows CRT compatibility flags -->
+<set name="HXCPP_NO_TM_GMTOFF" value="1"/>
+<set name="HXCPP_LOCALTIME_S" value="1"/>
+<set name="HXCPP_PLATFORM_NAME" value="Windows"/>
+
+<!-- Subsystem configuration (same as msvc-toolchain.xml) -->
+<set name="SUBSYSTEMWINDOWS" value="1" if="no_console" unless="HXCPP_DEBUGGER" />
+<set name="SUBSYSTEMCONSOLE" value="1" unless="SUBSYSTEMWINDOWS" />
+
+<!-- xwin SDK path configuration -->
+<!-- Use XWIN_DIR env var or define, fallback to ~/.ceramic/xwin/ -->
+<set name="XWIN_DIR" value="${XWIN_DIR}" if="XWIN_DIR"/>
+<error value="XWIN_DIR is not set. Run 'ceramic windows cross setup' to install the Windows SDK, or set the XWIN_DIR environment variable." unless="XWIN_DIR"/>
+
+<!-- Tool overrides for gcc-toolchain.xml -->
+<set name="HXCPP_AR" value="llvm-lib"/>
+<set name="HXCPP_NO_RANLIB" value="1"/>
+<set name="nostrip" value="1"/>
+
+<include name="toolchain/gcc-toolchain.xml"/>
+
+<!-- Override the static linker from gcc-toolchain.xml with MSVC-compatible llvm-lib -->
+<linker id="static_link" exe="llvm-lib">
+  <fromfile value="@"/>
+  <flag value="-nologo"/>
+  <ext value="${LIBEXT}"/>
+  <outflag value="-out:"/>
+</linker>
+
+<compiler id="windows-cross" exe="clang">
+  <exe name="clang"/>
+  <flag value="--target=x86_64-pc-windows-msvc"/>
+  <flag value="-c"/>
+
+  <!-- CRT defines for static runtime linking -->
+  <cflag value="-D_MT"/>
+  <cppflag value="-D_MT"/>
+  <flag value="-DHX_WINDOWS"/>
+  <flag value="-DHXCPP_CLANG"/>
+  <flag value="-DHXCPP_M64"/>
+  <cppflag value="-std=c++17" if="HXCPP_CPP17"/>
+
+  <!-- Optimization flags -->
+  <flag value="-O0" if="debug" tag="optim-std"/>
+  <flag value="-O2" unless="debug" tag="optim-std"/>
+  <flag value="-D_DEBUG" if="debug"/>
+
+  <!-- Debug info (CodeView format for MSVC compatibility) -->
+  <flag value="-gcodeview" if="HXCPP_DEBUG_LINK"/>
+
+  <!-- Non-standard optimization tags -->
+  <flag value="-O0" tag="debug"/>
+  <flag value="-O2" tag="release"/>
+  <flag value="-Os" tag="optim-size"/>
+
+  <!-- Exception handling and security -->
+  <flag value="-fexceptions"/>
+  <flag value="-fno-stack-protector"/>
+
+  <!-- Clang builtin headers (SSE intrinsics, etc.) - must come before xwin SDK headers -->
+  <flag value="-isystem${CLANG_RESOURCE_DIR}/include" if="CLANG_RESOURCE_DIR"/>
+
+  <!-- xwin SDK include paths -->
+  <flag value="-isystem${XWIN_DIR}/crt/include"/>
+  <flag value="-isystem${XWIN_DIR}/sdk/include/ucrt"/>
+  <flag value="-isystem${XWIN_DIR}/sdk/include/um"/>
+  <flag value="-isystem${XWIN_DIR}/sdk/include/shared"/>
+
+  <!-- HXCPP include path -->
+  <flag value="-I${HXCPP}/include"/>
+
+  <include name="toolchain/common-defines.xml"/>
+
+  <!-- MSVC compatibility defines -->
+  <flag value="-D_CRT_SECURE_NO_DEPRECATE"/>
+  <flag value="-D_ALLOW_MSC_VER_MISMATCH"/>
+  <flag value="-D_ALLOW_ITERATOR_DEBUG_LEVEL_MISMATCH"/>
+
+  <!-- Windows subsystem define -->
+  <flag value="-DHX_WIN_MAIN" if="SUBSYSTEMWINDOWS" tag="main"/>
+
+  <!-- Warning suppression -->
+  <flag value="-Wno-invalid-offsetof"/>
+  <flag value="-Wno-parentheses"/>
+  <flag value="-Wno-return-type-c-linkage"/>
+  <flag value="-Wno-pragma-pack"/>
+  <flag value="-Wno-microsoft-include"/>
+  <flag value="-Wno-nonportable-include-path"/>
+  <flag value="-Wno-ignored-pragma-intrinsic"/>
+  <flag value="-Wno-unused-command-line-argument"/>
+
+  <outflag value="-o"/>
+  <ext value=".obj"/>
+  <objdir value="obj/windows-cross${OBJEXT}/"/>
+</compiler>
+
+<!-- DLL linker -->
+<linker id="dll" exe="lld-link">
+  <exe name="lld-link"/>
+  <flag value="-nologo"/>
+  <flag value="-machine:x64"/>
+  <flag value="-dll"/>
+  <flag value="-debug" if="HXCPP_DEBUG_LINK"/>
+  <!-- xwin lib paths -->
+  <flag value="-libpath:${XWIN_DIR}/crt/lib/x86_64"/>
+  <flag value="-libpath:${XWIN_DIR}/sdk/lib/ucrt/x86_64"/>
+  <flag value="-libpath:${XWIN_DIR}/sdk/lib/um/x86_64"/>
+  <lib name="${dll_import_link}" if="dll_import_link"/>
+  <ext value=".dll"/>
+  <libdir name="obj/lib"/>
+  <flag value="-libpath:lib"/>
+  <fromfile value="@"/>
+  <outflag value="-out:"/>
+  <!-- MSVC CRT and standard libraries (required since clang doesn't embed /DEFAULTLIB directives) -->
+  <flag value="libcmt.lib"/>
+  <flag value="libvcruntime.lib"/>
+  <flag value="libucrt.lib"/>
+  <flag value="libcpmt.lib"/>
+  <flag value="kernel32.lib"/>
+  <flag value="user32.lib"/>
+  <flag value="oldnames.lib"/>
+  <libpathflag value="-libpath:"/>
+</linker>
+
+<!-- Executable linker -->
+<linker id="exe" exe="lld-link">
+  <exe name="lld-link"/>
+  <fromfile value="@"/>
+  <flag value="-nologo"/>
+  <flag value="-machine:x64"/>
+  <flag value="-debug" if="HXCPP_DEBUG_LINK"/>
+  <flag value="-subsystem:windows" if="SUBSYSTEMWINDOWS"/>
+  <flag value="-subsystem:console" if="SUBSYSTEMCONSOLE"/>
+  <!-- xwin lib paths -->
+  <flag value="-libpath:${XWIN_DIR}/crt/lib/x86_64"/>
+  <flag value="-libpath:${XWIN_DIR}/sdk/lib/ucrt/x86_64"/>
+  <flag value="-libpath:${XWIN_DIR}/sdk/lib/um/x86_64"/>
+  <libpathflag value="-libpath:"/>
+  <flag value="-libpath:lib"/>
+  <!-- MSVC CRT and standard libraries (required since clang doesn't embed /DEFAULTLIB directives) -->
+  <flag value="libcmt.lib"/>
+  <flag value="libvcruntime.lib"/>
+  <flag value="libucrt.lib"/>
+  <flag value="libcpmt.lib"/>
+  <flag value="kernel32.lib"/>
+  <flag value="user32.lib"/>
+  <flag value="oldnames.lib"/>
+  <!-- Icon resource (compiled from app.ico via llvm-rc) -->
+  <lib name="${WINDOWS_ICON_RES}" if="WINDOWS_ICON_RES"/>
+  <ext value=".exe"/>
+  <outflag value="-out:"/>
+</linker>
+
+</xml>

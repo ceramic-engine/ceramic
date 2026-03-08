@@ -74,6 +74,18 @@ class ClayBackendTools implements tools.spec.BackendTools {
             });
         }
 
+        // Register Windows target for cross-compilation from Mac/Linux
+        if (os != 'Windows') {
+            targets.push({
+                name: 'windows',
+                displayName: 'Windows',
+                configs: [
+                    Build('Build Windows'),
+                    Clean('Clean Windows')
+                ]
+            });
+        }
+
         // targets.push({
         //     name: 'cppia',
         //     displayName: 'CPPIA',

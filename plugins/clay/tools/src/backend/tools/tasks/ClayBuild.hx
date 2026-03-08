@@ -530,9 +530,8 @@ $workletResolveClassCases
             runHooks(cwd, args, project.app.hooks, 'end build');
         }
 
-        // Compile c++ for host platform on default architecture (expecting 64bit)
+        // Compile c++ for Windows
         if (target.name == 'windows') {
-            // Could move that to some plugin later, maybe
             var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
             if (context.defines.exists('HXCPP_M32')) {
                 hxcppArgs.push('-DHXCPP_M32');
@@ -547,7 +546,61 @@ $workletResolveClassCases
                 hxcppArgs.push('-DHXCPP_NO_COLOR');
             }
             hxcppArgs.push('-DHXCPP_CPP17');
-            print('Compile C++');
+
+            // Cross-compilation: when building for Windows from Mac/Linux,
+            // use the clang-cl + lld-link toolchain with xwin SDK
+            var isCrossCompile = Sys.systemName() != 'Windows';
+            if (isCrossCompile) {
+                var windowsPlugin = context.plugins.get('windows');
+                if (windowsPlugin == null) {
+                    fail('Windows plugin not found. Make sure the windows plugin is enabled.');
+                }
+                var hxcppCrossPath = Path.join([windowsPlugin.path, 'resources', 'hxcpp-windows-cross']);
+                hxcppArgs.push('-DHXCPP_TARGET_PATHS=' + hxcppCrossPath);
+                hxcppArgs.push('-DHXCPP_CUSTOM_TARGET=windows-cross');
+                hxcppArgs.push('-DHXCPP_CUSTOM_BINDIR=Windows64');
+
+                // Resolve xwin SDK path
+                var xwinDir = Sys.getEnv('XWIN_DIR');
+                if (xwinDir == null || xwinDir == '') {
+                    var home = Sys.getEnv('HOME');
+                    if (home == null) home = Sys.getEnv('USERPROFILE');
+                    xwinDir = Path.join([home, '.ceramic', 'xwin']);
+                }
+                if (!FileSystem.exists(xwinDir) || !FileSystem.exists(Path.join([xwinDir, 'crt']))) {
+                    fail('Windows SDK not found at: ' + xwinDir + '\nRun \'ceramic windows cross setup\' to install the Windows SDK, or set the XWIN_DIR environment variable.');
+                }
+                hxcppArgs.push('-DXWIN_DIR=' + xwinDir);
+
+                // Resolve clang resource directory for builtin headers (SSE intrinsics, etc.)
+                var clangResourceDir = command('clang', ['--print-resource-dir'], { mute: true }).stdout;
+                if (clangResourceDir != null) {
+                    clangResourceDir = clangResourceDir.trim();
+                    if (clangResourceDir != '') {
+                        hxcppArgs.push('-DCLANG_RESOURCE_DIR=' + clangResourceDir);
+                    }
+                }
+
+                // Compile icon resource from app.ico if it exists
+                var windowsProjectPath = Path.join([cwd, 'project/windows']);
+                var appIcoPath = Path.join([windowsProjectPath, 'app.ico']);
+                if (FileSystem.exists(appIcoPath)) {
+                    var resDir = Path.join([outTargetPath, 'cpp']);
+                    var rcPath = Path.join([resDir, 'app.rc']);
+                    var resPath = Path.join([resDir, 'app.res']);
+                    File.saveContent(rcPath, '1 ICON "' + appIcoPath.replace('\\', '/') + '"\n');
+                    print('Compile icon resource');
+                    if (command('llvm-rc', ['/foapp.res', 'app.rc'], { cwd: resDir }).status != 0) {
+                        print('Warning: Failed to compile icon resource. The executable will have no icon.');
+                    } else {
+                        hxcppArgs.push('-DWINDOWS_ICON_RES=' + resPath);
+                    }
+                }
+
+                print('Cross-compile C++ for Windows');
+            } else {
+                print('Compile C++');
+            }
 
             if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {
                 fail('Failed to compile C++');

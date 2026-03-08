@@ -15,9 +15,8 @@ class WindowsPlugin {
     public function init(context:Context):Void {
 
         // Add tasks
-        #if windows
         context.addTask('windows app', new tools.tasks.windows.Windows());
-        #end
+        context.addTask('windows cross setup', new tools.tasks.windows.CrossSetup());
 
     }
 

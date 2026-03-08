@@ -86,17 +86,32 @@ class Windows extends tools.Task {
         }
 
         // Update app icon
-        if (FileSystem.exists(appIconPath)) {
-            command(Path.join([pluginPath, 'resources', 'rcedit.exe']), [
-                Path.withoutDirectory(windowsAppExe), '--set-icon', Path.withoutDirectory(appIconPath)
-            ], {
-                cwd: windowsProjectPath
-            });
-            FileSystem.deleteFile(appIconPath);
+        var isCrossCompile = Sys.systemName() != 'Windows';
+        if (!isCrossCompile) {
+            // On Windows, use rcedit.exe to embed the icon post-build
+            if (FileSystem.exists(appIconPath)) {
+                command(Path.join([pluginPath, 'resources', 'rcedit.exe']), [
+                    Path.withoutDirectory(windowsAppExe), '--set-icon', Path.withoutDirectory(appIconPath)
+                ], {
+                    cwd: windowsProjectPath
+                });
+                FileSystem.deleteFile(appIconPath);
+            }
+        } else {
+            // When cross-compiling, the icon is embedded during the link step via llvm-rc.
+            // Clean up the .ico file if it exists since it's no longer needed.
+            if (FileSystem.exists(appIconPath)) {
+                FileSystem.deleteFile(appIconPath);
+            }
         }
 
         // Stop if not running
         if (!doRun) return;
+
+        if (isCrossCompile) {
+            print('Cannot run Windows executable on this platform. Copy the project/windows/ directory to a Windows machine to run.');
+            return;
+        }
 
         // Prevent multiple instances running
         InstanceManager.makeUnique('run ~ ' + context.cwd);
