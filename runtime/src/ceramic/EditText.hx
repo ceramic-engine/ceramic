@@ -601,6 +601,38 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             emitUpdate(newText);
         });
 
+        keyBindings.bind([KEY(KeyCode.HOME)], function() {
+            // Home key
+            if (screen.focusedVisual != entity)
+                return;
+            
+            var current = textInputLineForIndex(selectText.selectionStart);
+            var pos = textInputIndexForPosInLine(current, 0);
+            
+            selectText.selectionStart = pos;
+            selectText.selectionEnd = pos;
+        });
+
+        keyBindings.bind([KEY(KeyCode.END)], function() {
+            // End key
+            if (screen.focusedVisual != entity)
+                return;
+
+            var current = textInputLineForIndex(selectText.selectionStart);
+            var total = textInputNumberOfLines();
+            
+            var pos = 0;
+            if (current == total - 1) {
+                pos = entity.content.length;
+            } else {
+                var nextLineStartIndex = textInputIndexForPosInLine(current + 1, 0);
+                pos = nextLineStartIndex - 1;
+            }
+            
+            selectText.selectionStart = pos;
+            selectText.selectionEnd = pos;
+        });
+        
         onDestroy(keyBindings, function(_) {
             keyBindings.destroy();
             keyBindings = null;
