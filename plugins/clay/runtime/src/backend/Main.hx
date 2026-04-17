@@ -29,6 +29,7 @@ import clay.sdl.SDL;
  * - Orientation handling for mobile devices
  * - Error handling and logging setup
  */
+@:access(clay.Clay)
 class Main {
 
     /**
@@ -92,6 +93,24 @@ class Main {
      * Current container pixel ratio (web only).
      */
     static var containerPixelRatio:Float = 0;
+
+    #if ceramic_web_update_in_background
+
+    /**
+     * Timestamp (from `performance.now()`) of the most recent `requestAnimationFrame` callback.
+     * Used as a heartbeat so the background worker can detect when rAF is being throttled
+     * by the browser (hidden tab, unfocused/occluded window, etc.) and drive manual frames
+     * to keep the app updating at a low rate.
+     */
+    static var lastRafTimestamp:Float = 0;
+
+    /**
+     * Inline Web Worker that posts heartbeat messages while the page is in the background
+     * (main-thread timers are themselves throttled by browsers; worker timers are not).
+     */
+    static var backgroundWorker:Dynamic = null;
+
+    #end
 
     #end
 
@@ -435,6 +454,64 @@ class Main {
 
     }
 
+    #if ceramic_web_update_in_background
+
+    /**
+     * Keeps Ceramic's update loop alive when the browser throttles or pauses
+     * `requestAnimationFrame` — tab hidden, window minimized/unfocused/occluded, etc.
+     *
+     * Detection is signal-agnostic: we stamp `lastRafTimestamp` from our own rAF callback,
+     * and a tiny inline Web Worker posts a heartbeat message at the target interval. When
+     * the heartbeat notices rAF has been quiet for longer than the stale threshold, it
+     * drives a manual tick + render. Web Worker timers are used because main-thread
+     * `setInterval` is itself throttled in background tabs.
+     *
+     * The target interval adapts to the app's configured `updateRate` so the fallback
+     * never wakes more often than the app wants. `Clay.app.shouldUpdate()` is still
+     * consulted before every manual tick as a final gate.
+     */
+    static function _setupBackgroundUpdate():Void {
+
+        var configuredRate = Clay.app.config.updateRate;
+        var intervalMs:Int = configuredRate > 0 ? Math.ceil(configuredRate * 1000) : 100;
+        if (intervalMs < 100) intervalMs = 100;
+        var staleThresholdMs:Float = intervalMs * 2 > 200 ? intervalMs * 2 : 200;
+
+        function stampRaf(_:Float) {
+            if (Clay.app.hasShutdown || Clay.app.shuttingDown) return;
+            lastRafTimestamp = js.Browser.window.performance.now();
+            js.Browser.window.requestAnimationFrame(stampRaf);
+        }
+        stampRaf(0);
+
+        function drainTick(_:Dynamic) {
+            if (Clay.app.hasShutdown || Clay.app.shuttingDown) {
+                if (backgroundWorker != null) {
+                    backgroundWorker.terminate();
+                    backgroundWorker = null;
+                }
+                return;
+            }
+            var now = js.Browser.window.performance.now();
+            if (now - lastRafTimestamp <= staleThresholdMs) return;
+
+            var timestamp = now / 1000.0;
+            if (Clay.app.shouldUpdate(timestamp)) {
+                Clay.app.emitTick(timestamp);
+            }
+            Clay.app.emitRender();
+        }
+
+        var workerSrc = 'setInterval(function(){postMessage(0);}, ' + intervalMs + ');';
+        var blob = new js.html.Blob([workerSrc], {type: 'application/javascript'});
+        var url = js.html.URL.createObjectURL(blob);
+        backgroundWorker = new js.html.Worker(url);
+        backgroundWorker.onmessage = drainTick;
+
+    }
+
+    #end
+
     #end
 
     /**
@@ -493,6 +570,10 @@ class Main {
         if (ElectronRunner.electronRunner != null) {
             ElectronRunner.electronRunner.ceramicReady();
         }
+
+        #if ceramic_web_update_in_background
+        _setupBackgroundUpdate();
+        #end
 
         // Remove "ceramic-invisible" class once we are ready to display
         var intervalId:Dynamic = null;
