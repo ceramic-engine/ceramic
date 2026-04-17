@@ -82,7 +82,7 @@ class Info #if !completion implements spec.Info #end {
      */
     #end
     inline public function soundExtensions():Array<String> {
-        return ['ogg', 'wav'];
+        return ['ogg', 'mp3', 'flac', 'wav'];
     }
 
     #if !no_backend_docs
