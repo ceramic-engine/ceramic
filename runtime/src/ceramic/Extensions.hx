@@ -163,7 +163,7 @@ class Extensions<T> {
      */
     inline public static function randomElement<T>(array:Array<T>):T {
 
-        return array[Math.floor(Math.random() * 0.99999 * array.length)];
+        return array[Math.floor(Math.random() * array.length)];
 
     }
 
@@ -250,7 +250,7 @@ class Extensions<T> {
      * trace(deck); // e.g., [3, 1, 5, 2, 4]
      * ```
      * 
-     * @see https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle
+     * @see https://en.wikipedia.org/wiki/Fisher–Yates_shuffle
      */
     public static function shuffle<T>(arr:Array<T>):Void
     {
