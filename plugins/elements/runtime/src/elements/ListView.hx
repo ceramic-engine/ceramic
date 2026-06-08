@@ -525,8 +525,16 @@ class ListViewDataSource implements CollectionViewDataSource {
                     var item:Dynamic = items != null ? items[cell.itemIndex] : null;
                     if (item == null || Std.isOfType(item, String))
                         return;
-                    var locked = (item.locked != true);
-                    item.locked = locked;
+                    var locked = (Reflect.getProperty(item, 'locked') != true);
+                    // Some items (e.g. editor list items) expose `locked` as a
+                    // read-only property and update their own state through the
+                    // lock/unlock events below. Guard the direct mutation so those
+                    // items don't trigger an "Invalid field:locked" error;
+                    // anonymous-struct items still get updated.
+                    try {
+                        Reflect.setProperty(item, 'locked', locked);
+                    }
+                    catch (e:Dynamic) {}
                     if (locked)
                         listView.emitLockItem(cell.itemIndex);
                     else
