@@ -136,13 +136,15 @@ class Glob {
 
         final regex = toEReg(pattern);
 
-        var tokenIndex:Int = Std.int(Math.min(
-            pattern.indexOf('*'),
-            Math.min(
-                pattern.indexOf('['),
-                pattern.indexOf('?')
-            )
-        ));
+        // Find the first wildcard token, ignoring tokens that are absent
+        // (indexOf returns -1 when not found, which must not win the min)
+        var tokenIndex:Int = -1;
+        for (token in ['*', '[', '?']) {
+            final i = pattern.indexOf(token);
+            if (i != -1 && (tokenIndex == -1 || i < tokenIndex)) {
+                tokenIndex = i;
+            }
+        }
 
         if (tokenIndex == -1) {
             return [pattern];
