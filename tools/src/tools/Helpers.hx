@@ -62,6 +62,9 @@ class Helpers {
         context.defines.set('HXCPP_CHECK_POINTER', '');
         context.defines.set('safeMode', '');
 
+        // Immortal statics (to prevent teardown crashes when exiting)
+        context.defines.set('HXCPP_IMMORTAL_STATICS', '');
+
         // To get absolute path in haxe log output
         // Then, we process it to make it more readable, with colors etc...
         if (context.debug) {
