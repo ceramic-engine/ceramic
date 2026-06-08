@@ -55,6 +55,13 @@ class Images {
 
         var info = StbImage.load(srcPath);
 
+        if (info == null) {
+            if (!FileSystem.exists(srcPath)) {
+                throw 'Failed to load image, file not found: $srcPath';
+            }
+            throw 'Failed to load image $srcPath: ${StbImage.failure_reason()}';
+        }
+
         width = info.w;
         height = info.h;
         channels = info.comp;
@@ -152,11 +159,21 @@ class Images {
         var outputW = Math.round(targetWidth);
         var outputH = Math.round(targetHeight);
 
+        // The pixel layout must match the actual channel count, otherwise stb
+        // reads/allocates assuming the wrong stride (here output=NULL & stride=0,
+        // so pixelLayout drives the channel count) → out of bounds → segfault
+        final pixelLayout = switch data.channels {
+            case 1: StbImageResizePixelLayout.STBIR_1CHANNEL;
+            case 2: StbImageResizePixelLayout.STBIR_2CHANNEL;
+            case 3: StbImageResizePixelLayout.STBIR_RGB;
+            case _: StbImageResizePixelLayout.STBIR_RGBA;
+        }
+
         var dstData:StbImageResizeData = StbImageResize.resize_uint8_linear(
             bytes.getData(), 0, bytes.length,
             data.width, data.height, 0,
             outputW, outputH, 0,
-            StbImageResizePixelLayout.STBIR_RGBA, data.channels
+            pixelLayout, data.channels
         );
 
         var pixels = UInt8Array.fromBytes(Bytes.ofData(dstData.bytes));
