@@ -69,6 +69,7 @@ let useNativeBridge = false;
 let screenshotDelay = 0;
 let screenshotPath = null;
 let screenshotThenQuit = false;
+let keepHidden = false;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -95,6 +96,11 @@ while (i < argv.length) {
     }
     if (arg == '--screenshot-then-quit') {
         screenshotThenQuit = true;
+    }
+    if (arg == '--hidden') {
+        // Keep the window hidden (offscreen): useful for automated screenshot
+        // capture without a window popping up. Paired with --screenshot[-then-quit].
+        keepHidden = true;
     }
     i++;
 }
@@ -147,7 +153,7 @@ function createWindow() {
     if (mainWindow != null) return;
 
     // Create the browser window.
-    mainWindow = new BrowserWindow({
+    var windowOptions = {
         width: 1024,
         height: 768,
         show: false,
@@ -164,7 +170,16 @@ function createWindow() {
             nodeIntegration: true,
             contextIsolation: false
         }
-    });
+    };
+
+    if (keepHidden) {
+        // Window stays offscreen (`--hidden`): keep painting so capturePage()
+        // still produces a valid frame, and don't throttle rendering when hidden.
+        windowOptions.paintWhenInitiallyHidden = true;
+        windowOptions.webPreferences.backgroundThrottling = false;
+    }
+
+    mainWindow = new BrowserWindow(windowOptions);
     remoteMain.enable(mainWindow.webContents);
     exports.mainWindow = mainWindow;
 
@@ -257,7 +272,9 @@ exports.ceramicSettings = function(settings) {
 };
 
 exports.ceramicReady = function() {
-    mainWindow.show();
+    if (!keepHidden) {
+        mainWindow.show();
+    }
 
     // Take screenshot?
     if (screenshotPath != null) {
