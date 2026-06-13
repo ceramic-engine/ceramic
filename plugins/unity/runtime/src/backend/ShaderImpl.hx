@@ -10,7 +10,64 @@ using ceramic.Extensions;
  */
 #end
 @:allow(backend.MaterialData)
+@:allow(backend.Draw3D)
 class ShaderImpl {
+
+    // Param kinds for the ordered flat list below (3D backend snapshot).
+    inline static final PARAM_INT:Int = 0;
+    inline static final PARAM_FLOAT:Int = 1;
+    inline static final PARAM_VEC2:Int = 2;
+    inline static final PARAM_VEC3:Int = 3;
+    inline static final PARAM_VEC4:Int = 4;
+    inline static final PARAM_FLOAT_ARRAY:Int = 5;
+    inline static final PARAM_TEXTURE:Int = 6;
+    inline static final PARAM_MAT2:Int = 7;
+    inline static final PARAM_MAT3:Int = 8;
+    inline static final PARAM_MAT4:Int = 9;
+
+    #if !no_backend_docs
+    /**
+     * Ordered (suffixed name, kind) list of every param ever set on this shader.
+     * Lets the 3D backend snapshot all current values into a MaterialPropertyBlock
+     * per draw WITHOUT iterating the maps (Map iterators allocate on the C# target;
+     * indexed array reads don't). Grows only when a new uniform name appears.
+     */
+    #end
+    var paramsList:Array<String> = null;
+    var paramsListKinds:Array<Int> = null;
+
+    #if !no_backend_docs
+    /**
+     * Per-index flags aligned with `paramsList`: true = frame-constant param
+     * (its FIRST set happened inside the 3D backend's
+     * beginFrameParams/endFrameParams bracket, the renderer pushes those
+     * once per frame and per shader). The per-draw MaterialPropertyBlock
+     * snapshot skips them; the pooled Materials receive them instead, once
+     * per frame (tracked through `frameParamsVersion`).
+     */
+    #end
+    var paramsListFrameScope:Array<Bool> = null;
+
+    #if !no_backend_docs
+    /** Whether uniform writes are currently inside the frame-params bracket. */
+    #end
+    public static var frameParamsScope:Bool = false;
+
+    #if !no_backend_docs
+    /** Bumped whenever a frame-scope param VALUE changes (pooled materials re-apply). */
+    #end
+    public var frameParamsVersion(default, null):Int = 0;
+
+    inline function trackParam(name:String, kind:Int):Void {
+        if (paramsList == null) {
+            paramsList = [];
+            paramsListKinds = [];
+            paramsListFrameScope = [];
+        }
+        paramsList.push(name);
+        paramsListKinds.push(kind);
+        paramsListFrameScope.push(frameParamsScope);
+    }
 
     #if !no_backend_docs
     /**
@@ -229,11 +286,14 @@ class ShaderImpl {
 
         name = getSuffixedName(name);
 
-        if (!intParams.exists(name) || intParams.get(name) != value) {
+        var isNew = !intParams.exists(name);
+        if (isNew || intParams.get(name) != value) {
+            if (isNew) trackParam(name, PARAM_INT);
             intParams.set(name, value);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -252,11 +312,14 @@ class ShaderImpl {
 
         name = getSuffixedName(name);
 
-        if (!floatParams.exists(name) || floatParams.get(name) != value) {
+        var isNew = !floatParams.exists(name);
+        if (isNew || floatParams.get(name) != value) {
+            if (isNew) trackParam(name, PARAM_FLOAT);
             floatParams.set(name, value);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -277,11 +340,14 @@ class ShaderImpl {
         name = getSuffixedName(name);
 
         var unityVec2 = new unityengine.Vector2(x, y);
-        if (!vec2Params.exists(name) || vec2Params.get(name) != unityVec2) {
+        var isNew = !vec2Params.exists(name);
+        if (isNew || vec2Params.get(name) != unityVec2) {
+            if (isNew) trackParam(name, PARAM_VEC2);
             vec2Params.set(name, unityVec2);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -303,11 +369,14 @@ class ShaderImpl {
         name = getSuffixedName(name);
 
         var unityVec3 = new unityengine.Vector3(x, y, z);
-        if (!vec3Params.exists(name) || vec3Params.get(name) != unityVec3) {
+        var isNew = !vec3Params.exists(name);
+        if (isNew || vec3Params.get(name) != unityVec3) {
+            if (isNew) trackParam(name, PARAM_VEC3);
             vec3Params.set(name, unityVec3);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -330,11 +399,14 @@ class ShaderImpl {
         name = getSuffixedName(name);
 
         var unityVec4 = new unityengine.Vector4(x, y, z, w);
-        if (!vec4Params.exists(name) || vec4Params.get(name) != unityVec4) {
+        var isNew = !vec4Params.exists(name);
+        if (isNew || vec4Params.get(name) != unityVec4) {
+            if (isNew) trackParam(name, PARAM_VEC4);
             vec4Params.set(name, unityVec4);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -357,11 +429,14 @@ class ShaderImpl {
         for (i in 0...array.length) {
             nativeArray[i] = array.unsafeGet(i);
         }
-        if (!floatArrayParams.exists(name) || floatArrayParams.get(name) != nativeArray) {
+        var isNew = !floatArrayParams.exists(name);
+        if (isNew || floatArrayParams.get(name) != nativeArray) {
+            if (isNew) trackParam(name, PARAM_FLOAT_ARRAY);
             floatArrayParams.set(name, nativeArray);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -383,12 +458,15 @@ class ShaderImpl {
 
         name = getSuffixedName(name);
 
-        if (!textureParams.exists(name) || textureParams.get(name) != texture) {
+        var isNew = !textureParams.exists(name);
+        if (isNew || textureParams.get(name) != texture) {
+            if (isNew) trackParam(name, PARAM_TEXTURE);
             textureParams.set(name, texture);
             textureSlots[slot] = texture;
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }
@@ -414,6 +492,7 @@ class ShaderImpl {
         if (arr == null) {
             arr = new cs.NativeArray<Single>(4);
             mat2Params.set(name, arr);
+            trackParam(name, PARAM_MAT2);
         }
 
         arr[0] = m00;
@@ -453,6 +532,7 @@ class ShaderImpl {
         if (arr == null) {
             arr = new cs.NativeArray<Single>(9);
             mat3Params.set(name, arr);
+            trackParam(name, PARAM_MAT3);
         }
 
         arr[0] = m00;
@@ -511,11 +591,14 @@ class ShaderImpl {
 
         var unityMat4:unityengine.Matrix4x4 = untyped __cs__('m');
 
-        if (!mat4Params.exists(name) || mat4Params.get(name) != unityMat4) {
+        var isNew = !mat4Params.exists(name);
+        if (isNew || mat4Params.get(name) != unityMat4) {
+            if (isNew) trackParam(name, PARAM_MAT4);
             mat4Params.set(name, unityMat4);
             paramsVersion++;
             if (paramsVersion > MAX_PARAMS_DIRTY)
                 paramsVersion = 1;
+            if (frameParamsScope) frameParamsVersion++;
         }
 
     }

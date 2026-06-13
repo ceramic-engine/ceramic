@@ -95,6 +95,10 @@ class Backend implements tracker.Events implements spec.Backend {
     #end
     public var screen(default,null) = new backend.Screen();
 
+    #if plugin_star
+    public var draw3d(default,null) = new backend.Draw3D();
+    #end
+
     #if plugin_http
     #if !no_backend_docs
     /**

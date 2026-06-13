@@ -15,7 +15,8 @@ public class CeramicCommandBuffer
         ClearRenderTarget,
         EnableScissorRect,
         DisableScissorRect,
-        DrawMesh
+        DrawMesh,
+        DrawMeshInstanced
     }
 
     // Command sequence - lightweight command descriptors
@@ -44,6 +45,20 @@ public class CeramicCommandBuffer
         public Mesh mesh;
         public Matrix4x4 matrix;
         public Material material;
+        public int submeshIndex;
+        public int shaderPass;
+        public MaterialPropertyBlock properties; // optional (3D draws); null for plain draws
+    }
+
+    private struct DrawMeshInstancedData
+    {
+        public Mesh mesh;
+        public Material material;
+        public int submeshIndex;
+        public int shaderPass;
+        public Matrix4x4[] matrices; // copied at record time (callers reuse their chunk array)
+        public int count;
+        public MaterialPropertyBlock properties;
     }
 
     // Command storage - separate arrays for each command type
@@ -51,6 +66,7 @@ public class CeramicCommandBuffer
     private List<ClearRenderTargetData> clearRenderTargetCommands;
     private List<ScissorRectData> scissorRectCommands;
     private List<DrawMeshData> drawMeshCommands;
+    private List<DrawMeshInstancedData> drawMeshInstancedCommands;
 
     // Pre-allocated capacity to reduce allocations
     private const int DefaultCapacity = 64;
@@ -64,6 +80,7 @@ public class CeramicCommandBuffer
         clearRenderTargetCommands = new List<ClearRenderTargetData>(8);
         scissorRectCommands = new List<ScissorRectData>(16);
         drawMeshCommands = new List<DrawMeshData>(32);
+        drawMeshInstancedCommands = new List<DrawMeshInstancedData>(8);
     }
 
     // API Methods matching Unity's CommandBuffer
@@ -77,6 +94,7 @@ public class CeramicCommandBuffer
         clearRenderTargetCommands.Clear();
         scissorRectCommands.Clear();
         drawMeshCommands.Clear();
+        drawMeshInstancedCommands.Clear();
     }
 
     /// <summary>
@@ -127,9 +145,54 @@ public class CeramicCommandBuffer
         {
             mesh = mesh,
             matrix = matrix,
-            material = material
+            material = material,
+            submeshIndex = 0,
+            shaderPass = 0,
+            properties = null
         });
         commands.Add(new Command { type = CommandType.DrawMesh, dataIndex = dataIndex });
+    }
+
+    /// <summary>
+    /// Draw a mesh with transform, material, submesh/pass and per-draw properties
+    /// (used by the 3D backend: one MaterialPropertyBlock per draw)
+    /// </summary>
+    public void DrawMesh(Mesh mesh, Matrix4x4 matrix, Material material, int submeshIndex, int shaderPass, MaterialPropertyBlock properties)
+    {
+        int dataIndex = drawMeshCommands.Count;
+        drawMeshCommands.Add(new DrawMeshData
+        {
+            mesh = mesh,
+            matrix = matrix,
+            material = material,
+            submeshIndex = submeshIndex,
+            shaderPass = shaderPass,
+            properties = properties
+        });
+        commands.Add(new Command { type = CommandType.DrawMesh, dataIndex = dataIndex });
+    }
+
+    /// <summary>
+    /// Draw a mesh with hardware instancing (used by the 3D backend). The
+    /// matrices array is COPIED (callers reuse a chunk array between records,
+    /// matching Unity's own CommandBuffer.DrawMeshInstanced semantics).
+    /// </summary>
+    public void DrawMeshInstanced(Mesh mesh, int submeshIndex, Material material, int shaderPass, Matrix4x4[] matrices, int count, MaterialPropertyBlock properties)
+    {
+        var copy = new Matrix4x4[count];
+        System.Array.Copy(matrices, copy, count);
+        int dataIndex = drawMeshInstancedCommands.Count;
+        drawMeshInstancedCommands.Add(new DrawMeshInstancedData
+        {
+            mesh = mesh,
+            material = material,
+            submeshIndex = submeshIndex,
+            shaderPass = shaderPass,
+            matrices = copy,
+            count = count,
+            properties = properties
+        });
+        commands.Add(new Command { type = CommandType.DrawMeshInstanced, dataIndex = dataIndex });
     }
 
     // Additional overloads that might be useful
@@ -181,7 +244,22 @@ public class CeramicCommandBuffer
                     var drawCmd = drawMeshCommands[command.dataIndex];
                     if (drawCmd.mesh != null && drawCmd.material != null)
                     {
-                        cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                        if (drawCmd.properties != null)
+                        {
+                            cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material, drawCmd.submeshIndex, drawCmd.shaderPass, drawCmd.properties);
+                        }
+                        else
+                        {
+                            cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                        }
+                    }
+                    break;
+
+                case CommandType.DrawMeshInstanced:
+                    var instCmd = drawMeshInstancedCommands[command.dataIndex];
+                    if (instCmd.mesh != null && instCmd.material != null)
+                    {
+                        cmd.DrawMeshInstanced(instCmd.mesh, instCmd.submeshIndex, instCmd.material, instCmd.shaderPass, instCmd.matrices, instCmd.count, instCmd.properties);
                     }
                     break;
             }
@@ -217,7 +295,22 @@ public class CeramicCommandBuffer
                     var drawCmd = drawMeshCommands[command.dataIndex];
                     if (drawCmd.mesh != null && drawCmd.material != null)
                     {
-                        cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                        if (drawCmd.properties != null)
+                        {
+                            cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material, drawCmd.submeshIndex, drawCmd.shaderPass, drawCmd.properties);
+                        }
+                        else
+                        {
+                            cmd.DrawMesh(drawCmd.mesh, drawCmd.matrix, drawCmd.material);
+                        }
+                    }
+                    break;
+
+                case CommandType.DrawMeshInstanced:
+                    var instCmd = drawMeshInstancedCommands[command.dataIndex];
+                    if (instCmd.mesh != null && instCmd.material != null)
+                    {
+                        cmd.DrawMeshInstanced(instCmd.mesh, instCmd.submeshIndex, instCmd.material, instCmd.shaderPass, instCmd.matrices, instCmd.count, instCmd.properties);
                     }
                     break;
             }

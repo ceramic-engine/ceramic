@@ -83,6 +83,15 @@ class Backend implements tracker.Events implements spec.Backend {
      */
     public var screen(default,null) = new backend.Screen();
 
+    #if plugin_star
+    /**
+     * 3D rendering backend service (when the star plugin is enabled).
+     * Independent of the 2D `draw` path (own VAOs, persistent buffers, depth/cull).
+     */
+    @:plugin('star')
+    public var draw3d(default,null) = new backend.Draw3D();
+    #end
+
     #if plugin_http
     /**
      * HTTP networking backend service.

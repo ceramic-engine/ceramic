@@ -150,6 +150,13 @@ class ClayBackendTools implements tools.spec.BackendTools {
         defines.set('target', target.name);
         defines.set(target.name, '');
 
+        // Every target of the standard clay backend renders through OpenGL.
+        // This `opengl` define lets plugins gate their GL-specific code (e.g.
+        // the star 3D plugin's OpenGL backend) on the graphics API rather than
+        // on the backend name — a separate console backend reuses none of this
+        // tooling, so it never sets `opengl`.
+        defines.set('opengl', '');
+
         switch target.name {
             case 'android' | 'ios':
                 defines.set('mobile', '');

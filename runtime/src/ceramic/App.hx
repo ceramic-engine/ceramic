@@ -1657,6 +1657,20 @@ class App extends Entity {
                                 }
                             }
                         }
+                        else if (visual is Renderable) {
+                            var renderable: Renderable = cast visual;
+                            if (renderable.usedTexturesDirty) {
+                                renderable.computeUsedTextures();
+                                renderable.usedTexturesDirty = false;
+                            }
+                            final arr = renderable.usedTextures.original;
+                            for (i in 0...arr.length) {
+                                var tex = arr.unsafeGet(i);
+                                if (tex != null && tex.isRenderTexture) {
+                                    visual.computedRenderTarget.incrementDependingTextureCount(tex);
+                                }
+                            }
+                        }
                     }
                 }
             }

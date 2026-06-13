@@ -76,6 +76,14 @@ interface Backend {
      */
     var screen(default,null):backend.Screen;
 
+    #if plugin_star
+    /**
+     * 3D rendering backend service (optional plugin).
+     * Provides the independent `star.Draw3D` 3D renderer when the star plugin is enabled.
+     */
+    var draw3d(default,null):backend.Draw3D;
+    #end
+
     #if plugin_http
     /**
      * HTTP networking operations (optional plugin).

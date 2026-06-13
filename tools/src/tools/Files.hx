@@ -105,6 +105,27 @@ class Files {
 
     }
 
+    /**
+     * Computes a hash from the contents of every file in the given directory (recursive).
+     * The result only changes when a file is added, removed, renamed or modified.
+     */
+    public static function hashDirectory(dir:String):String {
+
+        var files = getFlatDirectory(dir);
+        files.sort((a, b) -> a < b ? -1 : (a > b ? 1 : 0));
+
+        var buf = new StringBuf();
+        for (relPath in files) {
+            buf.add(relPath);
+            buf.add(':');
+            buf.add(haxe.crypto.Md5.make(File.getBytes(Path.join([dir, relPath]))).toHex());
+            buf.add('\n');
+        }
+
+        return haxe.crypto.Md5.encode(buf.toString());
+
+    }
+
     public static function isEmptyDirectory(dir:String, excludeSystemFiles:Bool = true, recursive:Bool = false):Bool {
 
         for (name in FileSystem.readDirectory(dir)) {

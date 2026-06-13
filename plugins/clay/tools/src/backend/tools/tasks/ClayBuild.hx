@@ -410,6 +410,11 @@ $workletResolveClassCases
                 if (FileSystem.exists(shadersJsonPath)) {
                     var shaders:Dynamic = Json.parse(File.getContent(shadersJsonPath));
 
+                    // Shader output depends on the shade transpiler (and reflaxe) sources as well:
+                    // include their hash in the comparison so that transpiler changes
+                    // invalidate previously generated shaders.
+                    Reflect.setField(shaders, 'transpiler', Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'shade', 'src'])) + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src'])));
+
                     // Read previous shade/info.json for comparison
                     var prevShaders:Dynamic = null;
                     if (FileSystem.exists(prevShadersJsonPath)) {
@@ -462,8 +467,30 @@ $workletResolveClassCases
                                 print('Transpile shaders to GLSL');
                                 runTask('shade', shadeArgs);
 
-                                // Save current info for next comparison
-                                File.saveContent(prevShadersJsonPath, File.getContent(shadersJsonPath));
+                                // Instanced variants: shader sources that opt in
+                                // (they contain `#if shade_instanced` blocks) are
+                                // transpiled a second time with the define; outputs
+                                // get the `_inst` suffix and land in the same folder.
+                                var instArgs:Array<String> = [];
+                                for (filePath in uniqueShaders) {
+                                    if (File.getContent(filePath).indexOf('shade_instanced') != -1) {
+                                        instArgs.push('--in');
+                                        instArgs.push(filePath);
+                                    }
+                                }
+                                if (instArgs.length > 0) {
+                                    instArgs.push('--target');
+                                    instArgs.push('glsl');
+                                    instArgs.push('--out');
+                                    instArgs.push(glslOutputPath);
+                                    instArgs.push('--hxml');
+                                    instArgs.push('-D shade_instanced');
+                                    print('Transpile instanced shader variants to GLSL');
+                                    runTask('shade', instArgs);
+                                }
+
+                                // Save current info (including transpiler hash) for next comparison
+                                File.saveContent(prevShadersJsonPath, Json.stringify(shaders, null, '    '));
                             }
 
                             // Copy shaders to platform assets (directly in assets folder, no subfolder)

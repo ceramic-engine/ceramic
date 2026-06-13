@@ -449,6 +449,34 @@ class Renderer extends Entity {
                             #end
 
                         }
+
+                        else if (visual is Renderable) {
+
+                            var renderable: Renderable = cast visual;
+                            // Handle render target binding (same pattern as Quad/Mesh)
+                            if (renderable.computedRenderTarget != lastRenderTarget) {
+                                #if !ceramic_debug_no_batch
+                                flush(draw);
+                                #end
+                                unbindUsedTextures(draw);
+                                lastRenderTarget = renderable.computedRenderTarget;
+                                useRenderTarget(draw, lastRenderTarget);
+                            }
+                            if (lastClip != null) {
+                                #if !ceramic_no_scissor
+                                if (lastClipIsRegular) {
+                                    scissorWithQuad(draw, lastClip.asQuad);
+                                }
+                                #end
+                            }
+                            renderable.render(draw);
+                            #if !ceramic_debug_no_batch
+                            flush(draw);
+                            #end
+                            unbindUsedTextures(draw);
+                            stateDirty = true;
+
+                        }
                     }
                 }
             }

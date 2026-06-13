@@ -15,12 +15,12 @@ import clay.sdl.SDL;
 
 /**
  * Main entry point for Clay backend applications.
- * 
+ *
  * This class handles the initial setup and configuration of Clay applications,
  * including platform-specific initialization for web, desktop, and mobile targets.
  * It configures Clay's rendering settings, handles Electron integration,
  * manages window sizing and orientation, and sets up the Ceramic application lifecycle.
- * 
+ *
  * Key responsibilities:
  * - Clay framework initialization and configuration
  * - Platform-specific setup (web, desktop, mobile)
@@ -116,7 +116,7 @@ class Main {
 
     /**
      * Main entry point for Clay backend applications.
-     * 
+     *
      * Initializes the Clay framework with custom configuration and event handling.
      * This is called automatically when the application starts.
      */
@@ -130,7 +130,7 @@ class Main {
 
     /**
      * Configures Clay framework settings for the Ceramic application.
-     * 
+     *
      * This function handles:
      * - OpenGL/WebGL version configuration
      * - Platform-specific rendering settings
@@ -139,7 +139,7 @@ class Main {
      * - Web-specific container and viewport handling
      * - Mobile platform optimizations
      * - Error handling setup
-     * 
+     *
      * @param config The Clay configuration object to customize
      */
     static function configure(config:clay.Config) {
@@ -378,14 +378,14 @@ class Main {
 
     /**
      * Updates the web container size if needed (web only).
-     * 
+     *
      * This function continuously monitors the HTML container size and updates
      * the Canvas element accordingly. It handles:
      * - Device pixel ratio changes
      * - Container resize events
      * - Smooth resize transitions with debouncing
      * - Visibility management during resize operations
-     * 
+     *
      * @param t Frame time (default 0.016 for 60fps)
      */
     static function _updateContainerSizeIfNeeded(t:Float = 0.016) {
@@ -458,7 +458,7 @@ class Main {
 
     /**
      * Keeps Ceramic's update loop alive when the browser throttles or pauses
-     * `requestAnimationFrame` — tab hidden, window minimized/unfocused/occluded, etc.
+     * `requestAnimationFrame`, tab hidden, window minimized/unfocused/occluded, etc.
      *
      * Detection is signal-agnostic: we stamp `lastRafTimestamp` from our own rAF callback,
      * and a tiny inline Web Worker posts a heartbeat message at the target interval. When
@@ -518,7 +518,7 @@ class Main {
      * Flag indicating if the display is ready for rendering.
      */
     static var _displayReady:Bool = false;
-    
+
     /**
      * Callback function waiting for display ready state.
      */
@@ -526,10 +526,10 @@ class Main {
 
     /**
      * Application loader that waits for display ready state.
-     * 
+     *
      * This loader ensures the application doesn't start rendering until
      * the display system is fully initialized and ready.
-     * 
+     *
      * @param done Callback to execute when display is ready
      */
     static function _appLoaderCheckDisplayReady(done:Void->Void) {
@@ -545,13 +545,13 @@ class Main {
 
     /**
      * Called when the Clay backend is ready and initialized.
-     * 
+     *
      * This function handles final initialization steps including:
      * - Key-value storage initialization
      * - Web-specific display setup and extension loading
      * - Electron runner communication
      * - Display readiness management
-     * 
+     *
      * This method is called by ClayEvents and should not be called directly.
      */
     @:allow(backend.ClayEvents)
@@ -614,16 +614,16 @@ class Main {
 
     /**
      * Configures screen orientation for mobile devices (SDL platforms only).
-     * 
+     *
      * This function converts Ceramic's orientation settings into SDL hints
      * to control which orientations are allowed on mobile platforms.
-     * 
+     *
      * Supported orientations:
      * - Portrait (upright)
      * - Portrait upside down
      * - Landscape left
      * - Landscape right
-     * 
+     *
      * Multiple orientations can be combined using bitwise OR operations.
      */
     static function configureOrientation() {
