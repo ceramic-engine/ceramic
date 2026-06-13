@@ -1657,7 +1657,7 @@ class App extends Entity {
                                 }
                             }
                         }
-                        else if (visual is Renderable) {
+                        else if (visual.rendering == RENDERABLE) {
                             var renderable: Renderable = cast visual;
                             if (renderable.usedTexturesDirty) {
                                 renderable.computeUsedTextures();

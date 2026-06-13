@@ -35,6 +35,7 @@ class Renderable extends Visual {
 
     public function new() {
         super();
+        rendering = RENDERABLE;
     }
 
     /**

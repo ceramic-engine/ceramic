@@ -107,7 +107,7 @@ class SpineBindVisual {
                 // Keep pre-casted text visual if applicable
                 options.textVisual = cast visual;
             }
-            else if (visual.asQuad == null && visual.asMesh == null) {
+            else if (visual.rendering != QUAD && visual.rendering != MESH) {
                 // On unknown visual types, do not update color by default
                 options.bindColor = false;
             }

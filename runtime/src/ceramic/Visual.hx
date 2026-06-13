@@ -1016,14 +1016,30 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 /// Access as specific types
 
     /**
-     * Get this visual typed as `Quad` or null if it isn't a `Quad`
+     * How this visual renders itself (set by its type in the constructor:
+     * `Quad` → QUAD, `Mesh` → MESH, `Renderable` → RENDERABLE; otherwise NONE).
+     * The renderer dispatches on this tag instead of testing the visual's type,
+     * and it backs the `asQuad` / `asMesh` helpers below.
      */
-    public var asQuad:Quad = null;
+    public var rendering:VisualRendering = NONE;
 
     /**
-     * Get this visual typed as `Mesh` or null if it isn't a `Mesh`
+     * Get this visual typed as `Quad` or null if it isn't a `Quad`.
+     * Zero-cost inline cast guarded by `rendering` (no stored field).
      */
-    public var asMesh:Mesh = null;
+    public var asQuad(get, never):Quad;
+    inline function get_asQuad():Quad {
+        return rendering == QUAD ? cast this : null;
+    }
+
+    /**
+     * Get this visual typed as `Mesh` or null if it isn't a `Mesh`.
+     * Zero-cost inline cast guarded by `rendering` (no stored field).
+     */
+    public var asMesh(get, never):Mesh;
+    inline function get_asMesh():Mesh {
+        return rendering == MESH ? cast this : null;
+    }
 
 /// Properties
 

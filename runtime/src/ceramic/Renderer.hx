@@ -436,46 +436,26 @@ class Renderer extends Entity {
                             }
                         }
 
-                        if (quad != null && !quad.transparent) {
+                        // Dispatch on the visual's rendering tag (jump-table)
+                        // instead of per-type field reads + `is Renderable`.
+                        // `quad`/`mesh` are the locals resolved above (= this
+                        // visual's asQuad/asMesh, restored after any clip work).
+                        switch visual.rendering {
 
-                            drawQuad(draw, quad);
-
-                        }
-
-                        else if (mesh != null) {
-
-                            #if !ceramic_no_mesh
-                            drawMesh(draw, mesh);
-                            #end
-
-                        }
-
-                        else if (visual is Renderable) {
-
-                            var renderable: Renderable = cast visual;
-                            // Handle render target binding (same pattern as Quad/Mesh)
-                            if (renderable.computedRenderTarget != lastRenderTarget) {
-                                #if !ceramic_debug_no_batch
-                                flush(draw);
-                                #end
-                                unbindUsedTextures(draw);
-                                lastRenderTarget = renderable.computedRenderTarget;
-                                useRenderTarget(draw, lastRenderTarget);
-                            }
-                            if (lastClip != null) {
-                                #if !ceramic_no_scissor
-                                if (lastClipIsRegular) {
-                                    scissorWithQuad(draw, lastClip.asQuad);
+                            case QUAD:
+                                if (!quad.transparent) {
+                                    drawQuad(draw, quad);
                                 }
-                                #end
-                            }
-                            renderable.render(draw);
-                            #if !ceramic_debug_no_batch
-                            flush(draw);
-                            #end
-                            unbindUsedTextures(draw);
-                            stateDirty = true;
 
+                            case MESH:
+                                #if !ceramic_no_mesh
+                                drawMesh(draw, mesh);
+                                #end
+
+                            case RENDERABLE:
+                                drawRenderable(draw, cast visual);
+
+                            case _:
                         }
                     }
                 }
@@ -1219,6 +1199,43 @@ class Renderer extends Entity {
 
         // Increase counts
         this.z = incrementZ(z);
+
+    }
+
+    /**
+     * Draws a `Renderable` visual: it emits its own draw commands via `render()`.
+     *
+     * Handles render target binding (same pattern as Quad/Mesh), re-applies the
+     * active scissor clip if any, then brackets the custom rendering with a
+     * flush + texture unbind so batched 2D state stays consistent afterwards.
+     *
+     * @param draw Backend draw interface
+     * @param renderable The renderable visual to render
+     */
+    function drawRenderable(draw:backend.Draw, renderable:ceramic.Renderable):Void {
+
+        // Handle render target binding (same pattern as Quad/Mesh)
+        if (renderable.computedRenderTarget != lastRenderTarget) {
+            #if !ceramic_debug_no_batch
+            flush(draw);
+            #end
+            unbindUsedTextures(draw);
+            lastRenderTarget = renderable.computedRenderTarget;
+            useRenderTarget(draw, lastRenderTarget);
+        }
+        if (lastClip != null) {
+            #if !ceramic_no_scissor
+            if (lastClipIsRegular) {
+                scissorWithQuad(draw, lastClip.asQuad);
+            }
+            #end
+        }
+        renderable.render(draw);
+        #if !ceramic_debug_no_batch
+        flush(draw);
+        #end
+        unbindUsedTextures(draw);
+        stateDirty = true;
 
     }
 
