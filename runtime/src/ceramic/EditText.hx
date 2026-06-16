@@ -569,6 +569,16 @@ class EditText extends Entity implements Component implements TextInputDelegate 
 
         var keyBindings = new KeyBindings();
 
+        //Select all text
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_A)], function() {
+            // CMD/CTRL + A 
+            if (screen.focusedVisual != entity || entity.content.length == 0)
+                return;
+
+            selectText.selectionStart = 0;
+            selectText.selectionEnd = entity.content.length;
+        });
+        
         // CMD/CTRL + C is handled in SelectText component
 
         keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.KEY_X)], function() {
