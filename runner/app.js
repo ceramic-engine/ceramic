@@ -70,6 +70,7 @@ let screenshotDelay = 0;
 let screenshotPath = null;
 let screenshotThenQuit = false;
 let keepHidden = false;
+let screenshotOnSignal = false;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -101,6 +102,11 @@ while (i < argv.length) {
         // Keep the window hidden (offscreen): useful for automated screenshot
         // capture without a window popping up. Paired with --screenshot[-then-quit].
         keepHidden = true;
+    }
+    if (arg == '--screenshot-on-signal') {
+        // Don't screenshot on a timer; wait for the app to call exports.takeScreenshot()
+        // (deterministic: the app fires it once its scene is actually ready/rendered).
+        screenshotOnSignal = true;
     }
     i++;
 }
@@ -271,25 +277,33 @@ exports.ceramicSettings = function(settings) {
     mainWindow.center();
 };
 
+// Capture the window (webContents.capturePage) to the configured screenshot path,
+// then quit if requested. Exported so the ceramic app can trigger it on demand
+// (deterministic timing), via the @electron/remote bridge: electronRunner.takeScreenshot().
+function takeScreenshot() {
+    if (screenshotPath == null || mainWindow == null) return;
+    console.log("Take screenshot at path: " + screenshotPath);
+    mainWindow.webContents.capturePage().then(function(image) {
+        fs.writeFile(screenshotPath, image.toPNG(), function(err) {
+            if (err)
+                console.error(err);
+            if (screenshotThenQuit) {
+                app.quit();
+            }
+        });
+    });
+}
+exports.takeScreenshot = takeScreenshot;
+
 exports.ceramicReady = function() {
     if (!keepHidden) {
         mainWindow.show();
     }
 
-    // Take screenshot?
-    if (screenshotPath != null) {
-        setTimeout(function() {
-            console.log("Take screenshot at path: " + screenshotPath);
-            mainWindow.webContents.capturePage().then(function(image) {
-                fs.writeFile(screenshotPath, image.toPNG(), function(err) {
-                    if (err)
-                        console.error(err);
-                    if (screenshotThenQuit) {
-                        app.quit();
-                    }
-                });
-            });
-        }, 100 + screenshotDelay * 1000);
+    // Screenshot on a fixed timer, UNLESS --screenshot-on-signal: then the app
+    // calls exports.takeScreenshot() itself once its scene is ready.
+    if (screenshotPath != null && !screenshotOnSignal) {
+        setTimeout(takeScreenshot, 100 + screenshotDelay * 1000);
     }
 };
 

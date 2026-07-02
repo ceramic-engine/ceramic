@@ -41,6 +41,7 @@ class Web extends tools.Task {
         var screenshotPath = extractArgValue(args, 'screenshot');
         var screenshotDelay = extractArgValue(args, 'screenshot-delay');
         var screenshotThenQuit = extractArgFlag(args, 'screenshot-then-quit');
+        var screenshotOnSignal = extractArgFlag(args, 'screenshot-on-signal');
         var hidden = extractArgFlag(args, 'hidden');
         var audioFilters = extractArgFlag(args, 'audio-filters');
 
@@ -247,6 +248,10 @@ class Web extends tools.Task {
 
             if (screenshotThenQuit) {
                 cmdArgs.push('--screenshot-then-quit');
+            }
+
+            if (screenshotOnSignal) {
+                cmdArgs.push('--screenshot-on-signal');
             }
         }
 
