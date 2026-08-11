@@ -291,6 +291,20 @@ class Web extends tools.Task {
             proc.env.set('CERAMIC_CLI', Path.join([context.ceramicToolsPath, 'ceramic']));
         }
 
+        // When ceramic itself is launched from an electron-based host
+        // (e.g. a VSCode extension), the spawned shells can inherit
+        // ELECTRON_RUN_AS_NODE=1, which would make the electron runner
+        // start as a plain node process and fail. Electron checks the
+        // variable's presence (any value enables it), so it must be
+        // removed from the child environment entirely: build the full
+        // environment explicitly instead of inheriting it.
+        proc.inherit_env = false;
+        for (key => val in Sys.environment()) {
+            if (key != 'ELECTRON_RUN_AS_NODE' && !proc.env.exists(key)) {
+                proc.env.set(key, val);
+            }
+        }
+
         var out = new SplitStream('\n'.code, line -> {
             line = formatLineOutput(outTargetPath, line);
             stdoutWrite(line + "\n");
