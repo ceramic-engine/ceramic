@@ -1182,7 +1182,18 @@ class Draw #if !completion implements spec.Draw #end {
 
             // Falls through to the plain js loops below if the wasm memory
             // limit was reached
-            if (clay.simd.wasm.WasmSimd.requireScratch(vertsFloats, colorFloats, uvFloats, count)) {
+            var scratchReady = clay.simd.wasm.WasmSimd.requireScratch(vertsFloats, colorFloats, uvFloats, count);
+
+            // requireScratch() is the only thing that can grow the wasm
+            // memory mid-frame, and growing it detaches every view derived
+            // from it, including the batcher staging arrays. Growth keeps
+            // the memory contents, so re-deriving them here preserves the
+            // vertices already emitted into the current batch (no-op when
+            // nothing grew). This runs whether or not the scratch ended up
+            // usable: the plain js loops below write to the same arrays.
+            theBatcher.syncWasmBuffers();
+
+            if (scratchReady) {
 
             // Sources -> wasm scratch
             if (vertices32 != null) {

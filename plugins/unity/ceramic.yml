@@ -6,3 +6,10 @@ plugin:
         if unity:
             +assets:
                 - '{plugin:cwd}/assets'
+
+            # Batched + vectorized rendering code path (Burst kernels
+            # shipped with the Unity project template).
+            # Opt out with `ceramic_no_simd`.
+            if !ceramic_no_simd:
+                +defines:
+                    - ceramic_simd

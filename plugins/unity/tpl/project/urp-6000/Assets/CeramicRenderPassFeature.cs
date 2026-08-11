@@ -204,7 +204,14 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
             }
         }
 
-        // Legacy fallback methods for compatibility mode (when Render Graph is disabled)
+        // Legacy fallback methods for Compatibility Mode (when Render Graph is disabled).
+        // URP Compatibility Mode has been progressively removed from URP: in Unity 6.3 its
+        // code is stripped unless the URP_COMPATIBILITY_MODE scripting define is set, and
+        // in Unity 6.4+ it is gone entirely (the define included) — the base virtual
+        // methods no longer exist there, so these overrides must not be compiled.
+        // (Ceramic uses the Render Graph path by default; the `unity_no_rendergraph`
+        // define is therefore only usable up to Unity 6.3.)
+#if !UNITY_6000_4_OR_NEWER && (!UNITY_6000_3_OR_NEWER || URP_COMPATIBILITY_MODE)
         [System.Obsolete("This rendering path is for compatibility mode only (when Render Graph is disabled). Use Render Graph API instead.")]
         public override void Configure(CommandBuffer cmd, RenderTextureDescriptor cameraTextureDescriptor)
         {
@@ -225,6 +232,7 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                 CommandBufferPool.Release(cmd);
             }
         }
+#endif
 
         // Data structure for passing information to the render function
         private class PassData

@@ -397,6 +397,252 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+#if ceramic_simd
+
+    #if !no_backend_docs
+    /**
+     * Maximum size (in floats) of the quad staging buffer.
+     * 8192 floats hold 356 quads without custom float attributes
+     * (23-float records), still hundreds with them.
+     */
+    #end
+    #if !ceramic_debug_draw_backend inline #end static var QUAD_STAGING_SIZE:Int = 8192;
+
+    // Quad staging: managed->Burst transitions cost tens of nanoseconds,
+    // which would dominate at one kernel call per quad. Quads are instead
+    // staged as fixed-size parameter records in a small float buffer and
+    // materialized into the vertex buffer with a single kernel call per
+    // batch of staged quads.
+    //
+    // Counters (_numPos, _posIndex, ...) advance at staging time so the
+    // renderer always sees a consistent buffer state; materialization
+    // then writes at the offsets recorded when staging started. This
+    // requires staged quads to be contiguous in the vertex buffer, so
+    // they are materialized before any mesh part emission and before
+    // any flush.
+    static var _stagedQuads:Int = 0;
+    static var _quadStaging:backend.Float32Array = null;
+    static var _quadStagingPosIndex:Int = 0;
+    static var _quadStagingIdxIndex:Int = 0;
+    static var _quadStagingIdxBase:Int = 0;
+    static var _quadStagingWriteSlot:Bool = false;
+    static var _quadStagingRecordSize:Int = 0;
+    static var _quadStagingAttrCount:Int = 0;
+
+    #if !no_backend_docs
+    /**
+     * Batched emission of a complete quad: 6 indices (12 in wireframe),
+     * 4 transformed positions, 4 identical colors and 4 uv pairs.
+     *
+     * The quad is not written immediately: its parameters are staged
+     * (see above) and emitted by `Ceramic.Simd.Kernels.QuadsFlush` in
+     * blocks, one kernel call per block.
+     *
+     * The caller must have checked buffer capacity first (shouldFlush)
+     * and resolved the final color and uv values, like it does on the
+     * scalar path.
+     */
+    #end
+    #if !ceramic_debug_draw_backend inline #end public function putTransformedQuad(
+        w:Float, h:Float,
+        matA:Float, matB:Float, matC:Float, matD:Float, matTX:Float, matTY:Float,
+        z:Float, textureSlot:Float,
+        r:Float, g:Float, b:Float, a:Float,
+        u0:Float, v0:Float, u1:Float, v1:Float, u2:Float, v2:Float, u3:Float, v3:Float,
+        flipOrder:Bool, wireframe:Bool,
+        attrs:Array<Float>, attrsLen:Int, attrCount:Int
+    ):Void {
+
+        var writeSlot = textureSlot != -1;
+        var recordSize = 23 + attrCount;
+
+        if (_quadStaging == null) {
+            _quadStaging = new backend.Float32Array(QUAD_STAGING_SIZE);
+        }
+
+        // Materialize first if the staging buffer is full or if the
+        // record shape changed (both only ever happen across state
+        // changes; checked defensively anyway)
+        if (_stagedQuads > 0 && (
+            _quadStagingRecordSize != recordSize
+            || _quadStagingWriteSlot != writeSlot
+            || (_stagedQuads + 1) * recordSize > QUAD_STAGING_SIZE)) {
+            flushStagedQuads();
+        }
+
+        if (_stagedQuads == 0) {
+            _quadStagingPosIndex = _posIndex;
+            _quadStagingIdxIndex = _numIndices;
+            _quadStagingIdxBase = _numPos;
+            _quadStagingWriteSlot = writeSlot;
+            _quadStagingRecordSize = recordSize;
+            _quadStagingAttrCount = attrCount;
+        }
+
+        var st = _quadStaging;
+        var o = _stagedQuads * recordSize;
+        st[o] = w;
+        st[o+1] = h;
+        st[o+2] = matA;
+        st[o+3] = matB;
+        st[o+4] = matC;
+        st[o+5] = matD;
+        st[o+6] = matTX;
+        st[o+7] = matTY;
+        st[o+8] = z;
+        st[o+9] = textureSlot;
+        st[o+10] = r;
+        st[o+11] = g;
+        st[o+12] = b;
+        st[o+13] = a;
+        st[o+14] = u0;
+        st[o+15] = v0;
+        st[o+16] = u1;
+        st[o+17] = v1;
+        st[o+18] = u2;
+        st[o+19] = v2;
+        st[o+20] = u3;
+        st[o+21] = v3;
+        st[o+22] = (flipOrder ? 1.0 : 0.0) + (wireframe ? 2.0 : 0.0);
+        // Attribute values are resolved at staging time because the
+        // source array may be reused/mutated before materialization
+        for (n in 0...attrCount) {
+            st[o + 23 + n] = (attrs != null && n < attrsLen) ? attrs[n] : 0.0;
+        }
+        _stagedQuads++;
+
+        // Advance counters immediately so the renderer sees a
+        // consistent state (the actual buffer writes are deferred)
+        _numIndices += wireframe ? 12 : 6;
+        _numPos += 4;
+        _numColors += 4;
+        _numUVs += 4;
+        _posIndex += 4 * _vertexSize;
+        _colorIndex += 4 * _vertexSize;
+        _uvIndex += 4 * _vertexSize;
+        _floatAttributesIndex += 4 * _vertexSize;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Materializes any staged quads into the vertex/index buffers with
+     * a single kernel call. Must run before anything else writes to the
+     * buffers past the staging start offsets (mesh part emission) and
+     * before the buffers are uploaded (flush).
+     */
+    #end
+    function flushStagedQuads():Void {
+
+        if (_stagedQuads > 0) {
+            CeramicSimdKernels.QuadsFlush(
+                _meshVertices, _quadStagingPosIndex, _vertexSize, _quadStagingWriteSlot,
+                _meshIndices, _quadStagingIdxIndex, _quadStagingIdxBase,
+                _quadStaging, _quadStagingRecordSize, _quadStagingAttrCount, _stagedQuads
+            );
+            _stagedQuads = 0;
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Batched emission of a run of indexed mesh vertices: sequential
+     * indices, transformed positions gathered through the index array,
+     * colors (single, sequential per-index or gathered per-vertex,
+     * float or packed 0xAARRGGBB) and scaled uvs, written into the
+     * interleaved vertex buffer by `Ceramic.Simd.Kernels` instead of
+     * per-scalar put* calls.
+     *
+     * The caller must have checked buffer capacity for the whole run
+     * first, like it does on the scalar path.
+     */
+    #end
+    #if !ceramic_debug_draw_backend inline #end public function putTransformedMeshPart(
+        vertices32:ceramic.Float32Array, vertices:Array<Float>,
+        indices:Array<Int>, start:Int, end:Int,
+        hasUvs:Bool, uvs:Array<Float>, uvFactorX:Float, uvFactorY:Float,
+        singleColor:Bool, indicesColor:Bool, floatColors:ceramic.Float32Array, colors:Array<ceramic.AlphaColor>,
+        r:Float, g:Float, b:Float, a:Float,
+        globalAlpha:Float, premultiply:Bool, zeroAlpha:Bool,
+        meshAttrCount:Int, shaderAttrCount:Int,
+        matA:Float, matB:Float, matC:Float, matD:Float, matTX:Float, matTY:Float,
+        z:Float, textureSlot:Float
+    ):Void {
+
+        // Staged quads write at offsets recorded when staging started,
+        // which assumes they are contiguous in the vertex buffer:
+        // materialize them before interleaving mesh geometry
+        if (_stagedQuads > 0) {
+            flushStagedQuads();
+        }
+
+        var count = end - start;
+        var writeSlot = textureSlot != -1;
+
+        var colorMode = 0; // single color
+        if (!singleColor) {
+            colorMode = floatColors != null ? (indicesColor ? 1 : 2) : (indicesColor ? 3 : 4);
+        }
+
+        // Haxe arrays wrap native arrays on the C# target: hand the
+        // underlying storage to the kernels directly (same pattern as
+        // ceramic.Extensions.unsafeGet)
+        var idxRaw:cs.NativeArray<Int> = untyped __cs__('{0}.__a', indices);
+        var packedRaw:cs.NativeArray<Int> = null;
+        if (colorMode >= 3) {
+            packedRaw = untyped __cs__('{0}.__a', colors);
+        }
+        var uvsRaw:cs.NativeArray<Float> = null;
+        if (hasUvs) {
+            uvsRaw = untyped __cs__('{0}.__a', uvs);
+        }
+
+        if (vertices32 != null) {
+            CeramicSimdKernels.MeshPartF32(
+                _meshVertices, _posIndex, _vertexSize, writeSlot,
+                _meshIndices, _numIndices, _numPos,
+                vertices32, 2 + meshAttrCount,
+                idxRaw, start, count,
+                colorMode, floatColors, packedRaw,
+                r, g, b, a,
+                globalAlpha, premultiply, zeroAlpha,
+                hasUvs, uvsRaw, uvFactorX, uvFactorY,
+                meshAttrCount, shaderAttrCount,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot
+            );
+        }
+        else {
+            var vertsRaw:cs.NativeArray<Float> = untyped __cs__('{0}.__a', vertices);
+            CeramicSimdKernels.MeshPartF64(
+                _meshVertices, _posIndex, _vertexSize, writeSlot,
+                _meshIndices, _numIndices, _numPos,
+                vertsRaw, 2 + meshAttrCount,
+                idxRaw, start, count,
+                colorMode, floatColors, packedRaw,
+                r, g, b, a,
+                globalAlpha, premultiply, zeroAlpha,
+                hasUvs, uvsRaw, uvFactorX, uvFactorY,
+                meshAttrCount, shaderAttrCount,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot
+            );
+        }
+
+        _numIndices += count;
+        _numPos += count;
+        _numColors += count;
+        _numUVs += count;
+        _posIndex += count * _vertexSize;
+        _colorIndex += count * _vertexSize;
+        _uvIndex += count * _vertexSize;
+        _floatAttributesIndex += count * _vertexSize;
+
+    }
+
+#end
+
     #if !no_backend_docs
     /**
      * Begins adding custom float attributes for the current vertex.
@@ -465,6 +711,12 @@ class Draw #if !completion implements spec.Draw #end {
         _activeTextureSlot = 0;
         _currentMeshIndex = -1;
         _currentMesh = null;
+
+        #if ceramic_simd
+        // Drop any staged quads left over from an interrupted frame
+        // (e.g. an exception caught by the editor safety wrapper)
+        _stagedQuads = 0;
+        #end
 
         _stencilBufferDirty = false;
 
@@ -1429,6 +1681,11 @@ class Draw #if !completion implements spec.Draw #end {
     #end
     #if !ceramic_debug_draw_backend inline #end public function flush():Void {
 
+        #if ceramic_simd
+        // Materialize any staged quads before uploading the buffers
+        flushStagedQuads();
+        #end
+
         var mesh = _currentMesh;
 
         var stencil:backend.StencilState = NONE;
@@ -1734,3 +1991,56 @@ class Draw #if !completion implements spec.Draw #end {
     var commandBuffer:CommandBuffer;
 
 }
+
+#if ceramic_simd
+
+#if !no_backend_docs
+/**
+ * Extern bindings to the batched emission kernels shipped with the
+ * Unity project template (`Assets/CeramicSimd/CeramicSimdKernels.cs`,
+ * in the `Ceramic.Simd` assembly — the only assembly that allows
+ * unsafe code). The methods are Burst "direct calls": they run
+ * Burst-compiled when Burst is available and fall back to their plain
+ * managed bodies otherwise (e.g. on WebGL).
+ */
+#end
+@:native('Ceramic.Simd.Kernels')
+extern class CeramicSimdKernels {
+
+    static function MeshPartF32(
+        dst:backend.Float32Array, dstOffset:Int, vertexSize:Int, writeSlot:Bool,
+        idxDst:backend.UInt16Array, idxOffset:Int, idxBase:Int,
+        verts:backend.Float32Array, vertStride:Int,
+        indices:cs.NativeArray<Int>, start:Int, count:Int,
+        colorMode:Int, floatColors:backend.Float32Array, packedColors:cs.NativeArray<Int>,
+        r:Single, g:Single, b:Single, a:Single,
+        globalAlpha:Single, premultiply:Bool, zeroAlpha:Bool,
+        hasUvs:Bool, uvs:cs.NativeArray<Float>, uvFactorX:Single, uvFactorY:Single,
+        meshAttrCount:Int, shaderAttrCount:Int,
+        mA:Single, mB:Single, mC:Single, mD:Single, mTX:Single, mTY:Single,
+        z:Single, slot:Single
+    ):Void;
+
+    static function MeshPartF64(
+        dst:backend.Float32Array, dstOffset:Int, vertexSize:Int, writeSlot:Bool,
+        idxDst:backend.UInt16Array, idxOffset:Int, idxBase:Int,
+        verts:cs.NativeArray<Float>, vertStride:Int,
+        indices:cs.NativeArray<Int>, start:Int, count:Int,
+        colorMode:Int, floatColors:backend.Float32Array, packedColors:cs.NativeArray<Int>,
+        r:Single, g:Single, b:Single, a:Single,
+        globalAlpha:Single, premultiply:Bool, zeroAlpha:Bool,
+        hasUvs:Bool, uvs:cs.NativeArray<Float>, uvFactorX:Single, uvFactorY:Single,
+        meshAttrCount:Int, shaderAttrCount:Int,
+        mA:Single, mB:Single, mC:Single, mD:Single, mTX:Single, mTY:Single,
+        z:Single, slot:Single
+    ):Void;
+
+    static function QuadsFlush(
+        dst:backend.Float32Array, dstOffset:Int, vertexSize:Int, writeSlot:Bool,
+        idxDst:backend.UInt16Array, idxOffset:Int, idxBase:Int,
+        records:backend.Float32Array, recordSize:Int, attrCount:Int, quadCount:Int
+    ):Void;
+
+}
+
+#end

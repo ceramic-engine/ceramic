@@ -47,6 +47,9 @@ public class MiniLoudUnity : MonoBehaviour
         }
     }
 
+    // Runtime-only state (not a Unity-serializable type): marked
+    // explicitly so the serialization analyzer doesn't warn (UAC1001)
+    [System.NonSerialized]
     public MiniLoudAudio miniLoudAudio;
     public AudioSource audioSource;
     public int channels;

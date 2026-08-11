@@ -96,6 +96,19 @@ class TextureImpl {
 
     #if !no_backend_docs
     /**
+     * Next value used to assign `textureId`.
+     * Texture ids only need to identify a texture during batching
+     * (equality checks, `TextureId.DEFAULT` = 0 meaning "none"), so they
+     * are generated internally instead of being derived from Unity
+     * object identity, whose accessor is not stable across Unity
+     * versions (`GetInstanceID()` is obsolete-as-error starting with
+     * Unity 6.5, and its `EntityId` replacement has no `int` form).
+     */
+    #end
+    static var _nextTextureId:Int = 1;
+
+    #if !no_backend_docs
+    /**
      * Texture width in pixels.
      */
     #end
@@ -137,12 +150,12 @@ class TextureImpl {
         if (unityTexture != null) {
             this.width = unityTexture.width;
             this.height = unityTexture.height;
-            this.textureId = unityTexture.GetInstanceID();
+            this.textureId = _nextTextureId++;
         }
         else if (unityRenderTexture != null) {
             this.width = unityRenderTexture.width;
             this.height = unityRenderTexture.height;
-            this.textureId = unityRenderTexture.GetInstanceID();
+            this.textureId = _nextTextureId++;
         }
 
     }
