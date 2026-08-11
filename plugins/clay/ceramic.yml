@@ -10,10 +10,11 @@ plugin:
                 if mac || ios || windows:
                     +defines:
                         - gles_angle
-            # Batched + vectorized render path (SSE2/NEON with plain C++
-            # fallback), enabled by default on native targets.
+            # Batched render path, enabled by default. On native targets:
+            # vectorized kernels (SSE2/NEON with plain C++ fallback). On web:
+            # tight typed-array loops (bit-exact with the scalar path).
             # Opt out with `ceramic_no_simd`.
             if !ceramic_no_simd:
-                if mac || ios || windows || linux || android:
+                if mac || ios || windows || linux || android || web:
                     +defines:
                         - ceramic_simd

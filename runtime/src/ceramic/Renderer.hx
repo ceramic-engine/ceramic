@@ -1096,7 +1096,7 @@ class Renderer extends Entity {
             if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
         }
 
-    #if (cpp && ceramic_simd)
+    #if ceramic_simd
 
         // Batched emission: indices, transformed corners, colors, uvs and
         // custom float attributes are written into the backend buffers
@@ -1731,13 +1731,13 @@ class Renderer extends Entity {
                     }
                 }
 
-            #if (cpp && ceramic_simd)
+            #if ceramic_simd
 
                 // Batched emission: the whole run (indices, transformed positions,
                 // colors, uvs, custom float attributes) is written into the
                 // backend buffers through vectorized kernels, replacing the
                 // per-vertex loop compiled when `ceramic_simd` is not set.
-                draw.putTransformedMeshRun(
+                draw.putTransformedMeshPart(
                     meshVertices32, meshVertices,
                     meshIndices, startVertices, endVertices,
                     texture != null, meshUvs, uvFactorX, uvFactorY,

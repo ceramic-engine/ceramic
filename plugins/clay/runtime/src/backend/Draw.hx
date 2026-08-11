@@ -914,13 +914,14 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
-#if (cpp && ceramic_simd)
+#if ((cpp || js) && ceramic_simd)
 
     /**
      * Batched emission of a complete quad: 6 indices, 4 transformed
      * positions, 4 identical colors and 4 uv pairs, written directly
-     * into the batcher buffers through vectorized kernels instead of
-     * per-scalar put* calls.
+     * into the batcher buffers (through vectorized kernels on native
+     * targets, tight typed-array loops on js) instead of per-scalar
+     * put* calls.
      *
      * The caller must have checked buffer capacity first (shouldFlush)
      * and resolved the final color and uv values, like it does on the
@@ -970,6 +971,8 @@ class Draw #if !completion implements spec.Draw #end {
         var theBatcher = batcher;
         var writeSlot = textureSlot != -1;
 
+        #if cpp
+
         // Single fused kernel call per quad: a quad is a tiny amount of
         // work, so splitting it across several native calls would make the
         // per-call overhead dominate.
@@ -996,6 +999,98 @@ class Draw #if !completion implements spec.Draw #end {
                 clay.simd.Simd.fillQuadAttrsF64(posPtr.raw, theBatcher.posStrideFloats(), attrBase, noAttrs, 0, attrCount);
             }
         }
+
+        #else
+
+        // js: tight typed-array writes replacing the per-scalar put* chain
+
+        var stride = theBatcher.posStrideFloats();
+
+        var idxArr = theBatcher.indexArray();
+        var idx = theBatcher.indexCountValue();
+        var idxBase = theBatcher.getNumVertices();
+        if (wireframe) {
+            idxArr[idx] = idxBase; idxArr[idx + 1] = idxBase + 1;
+            idxArr[idx + 2] = idxBase + 1; idxArr[idx + 3] = idxBase + 2;
+            idxArr[idx + 4] = idxBase + 2; idxArr[idx + 5] = idxBase;
+            idxArr[idx + 6] = idxBase; idxArr[idx + 7] = idxBase + 2;
+            idxArr[idx + 8] = idxBase + 2; idxArr[idx + 9] = idxBase + 3;
+            idxArr[idx + 10] = idxBase + 3; idxArr[idx + 11] = idxBase;
+        }
+        else {
+            idxArr[idx] = idxBase; idxArr[idx + 1] = idxBase + 1; idxArr[idx + 2] = idxBase + 2;
+            idxArr[idx + 3] = idxBase; idxArr[idx + 4] = idxBase + 2; idxArr[idx + 5] = idxBase + 3;
+        }
+
+        var pos = theBatcher.posArray();
+        var p = theBatcher.posIndexValue();
+        var attrBase = writeSlot ? 4 : 3;
+
+        // Corners in emission order, same expressions as the scalar path
+        var cx0:Float; var cy0:Float; var cx1:Float; var cy1:Float;
+        var cx2:Float; var cy2:Float; var cx3:Float; var cy3:Float;
+        if (flipOrder) {
+            // br, bl, tl, tr
+            cx0 = matTX + matA * w + matC * h; cy0 = matTY + matB * w + matD * h;
+            cx1 = matTX + matC * h;            cy1 = matTY + matD * h;
+            cx2 = matTX;                       cy2 = matTY;
+            cx3 = matTX + matA * w;            cy3 = matTY + matB * w;
+        }
+        else {
+            // tl, tr, br, bl
+            cx0 = matTX;                       cy0 = matTY;
+            cx1 = matTX + matA * w;            cy1 = matTY + matB * w;
+            cx2 = matTX + matA * w + matC * h; cy2 = matTY + matB * w + matD * h;
+            cx3 = matTX + matC * h;            cy3 = matTY + matD * h;
+        }
+
+        pos[p] = cx0; pos[p + 1] = cy0; pos[p + 2] = z;
+        if (writeSlot) pos[p + 3] = textureSlot;
+        if (attrCount > 0) {
+            for (n in 0...attrCount) {
+                pos[p + attrBase + n] = (attrs != null && n < attrsLen) ? attrs[n] : 0.0;
+            }
+        }
+        p += stride;
+        pos[p] = cx1; pos[p + 1] = cy1; pos[p + 2] = z;
+        if (writeSlot) pos[p + 3] = textureSlot;
+        if (attrCount > 0) {
+            for (n in 0...attrCount) {
+                pos[p + attrBase + n] = (attrs != null && n < attrsLen) ? attrs[n] : 0.0;
+            }
+        }
+        p += stride;
+        pos[p] = cx2; pos[p + 1] = cy2; pos[p + 2] = z;
+        if (writeSlot) pos[p + 3] = textureSlot;
+        if (attrCount > 0) {
+            for (n in 0...attrCount) {
+                pos[p + attrBase + n] = (attrs != null && n < attrsLen) ? attrs[n] : 0.0;
+            }
+        }
+        p += stride;
+        pos[p] = cx3; pos[p + 1] = cy3; pos[p + 2] = z;
+        if (writeSlot) pos[p + 3] = textureSlot;
+        if (attrCount > 0) {
+            for (n in 0...attrCount) {
+                pos[p + attrBase + n] = (attrs != null && n < attrsLen) ? attrs[n] : 0.0;
+            }
+        }
+
+        var col = theBatcher.colorArray();
+        var c = theBatcher.colorIndexValue();
+        col[c] = r; col[c + 1] = g; col[c + 2] = b; col[c + 3] = a;
+        col[c + 4] = r; col[c + 5] = g; col[c + 6] = b; col[c + 7] = a;
+        col[c + 8] = r; col[c + 9] = g; col[c + 10] = b; col[c + 11] = a;
+        col[c + 12] = r; col[c + 13] = g; col[c + 14] = b; col[c + 15] = a;
+
+        var uvArr = theBatcher.uvArray();
+        var u = theBatcher.uvIndexValue();
+        uvArr[u] = u0; uvArr[u + 1] = v0;
+        uvArr[u + 2] = u1; uvArr[u + 3] = v1;
+        uvArr[u + 4] = u2; uvArr[u + 5] = v2;
+        uvArr[u + 6] = u3; uvArr[u + 7] = v3;
+
+        #end
 
         theBatcher.advanceIndices(wireframe ? 12 : 6);
         theBatcher.advanceVertices(4);
@@ -1047,7 +1142,7 @@ class Draw #if !completion implements spec.Draw #end {
      * @param textureSlot Texture slot index, or -1 when not batching multiple textures
      */
     // `extern inline`: same reason as putTransformedQuad above
-    public extern inline function putTransformedMeshRun(
+    public extern inline function putTransformedMeshPart(
         vertices32:ceramic.Float32Array, vertices:Array<Float>,
         indices:Array<Int>, start:Int, end:Int,
         hasUvs:Bool, uvs:Array<Float>, uvFactorX:Float, uvFactorY:Float,
@@ -1063,6 +1158,228 @@ class Draw #if !completion implements spec.Draw #end {
         var count = end - start;
         var writeSlot = textureSlot != -1;
         var vertStride = 2 + meshAttrCount;
+
+        #if js
+
+        // js: wasm kernels when available (SIMD or scalar wasm, sources
+        // copied into scratch — typed .set copies are nearly free), plain
+        // tight loops otherwise (module not loaded yet, or no wasm).
+
+        var wasmDone = false;
+
+        if (clay.simd.wasm.WasmSimd.ready
+            && (theBatcher.posArray().buffer:js.lib.ArrayBuffer) == clay.simd.wasm.WasmSimd.memoryBuffer) {
+
+            var vertsFloats = vertices32 != null ? vertices32.length : vertices.length;
+            var isFloatColors = !singleColor && floatColors != null;
+            var isPackedColors = !singleColor && floatColors == null;
+            // Sequential color modes only need the part window; gathered
+            // modes are indexed by absolute vertex id and need it all
+            var colorFloats = singleColor ? 0
+                : isFloatColors ? (indicesColor ? count * 4 : floatColors.length)
+                : (indicesColor ? count : colors.length);
+            var uvFloats = hasUvs ? uvs.length : 0;
+
+            // Falls through to the plain js loops below if the wasm memory
+            // limit was reached
+            if (clay.simd.wasm.WasmSimd.requireScratch(vertsFloats, colorFloats, uvFloats, count)) {
+
+            // Sources -> wasm scratch
+            if (vertices32 != null) {
+                clay.simd.wasm.WasmSimd.vertsScratch.set(cast vertices32, 0);
+            }
+            else {
+                var vs = clay.simd.wasm.WasmSimd.vertsScratch;
+                for (n in 0...vertsFloats) {
+                    vs[n] = vertices[n];
+                }
+            }
+            var colorMode = 0;
+            if (isFloatColors) {
+                colorMode = indicesColor ? 1 : 2;
+                if (indicesColor) {
+                    // window copy: kernel reads sequentially from 0
+                    var src:js.lib.Float32Array = cast floatColors;
+                    clay.simd.wasm.WasmSimd.colorsScratch.set(src.subarray(start * 4, end * 4), 0);
+                }
+                else {
+                    clay.simd.wasm.WasmSimd.colorsScratch.set(cast floatColors, 0);
+                }
+            }
+            else if (isPackedColors) {
+                colorMode = indicesColor ? 3 : 4;
+                var ps = clay.simd.wasm.WasmSimd.packedScratch;
+                if (indicesColor) {
+                    for (n in 0...count) {
+                        ps[n] = colors[start + n];
+                    }
+                }
+                else {
+                    for (n in 0...colors.length) {
+                        ps[n] = colors[n];
+                    }
+                }
+            }
+            if (hasUvs) {
+                var us = clay.simd.wasm.WasmSimd.uvsScratch;
+                for (n in 0...uvFloats) {
+                    us[n] = uvs[n];
+                }
+            }
+            var idxScratch = clay.simd.wasm.WasmSimd.indicesScratch;
+            for (n in 0...count) {
+                idxScratch[n] = indices[start + n];
+            }
+
+            var posView:js.lib.Float32Array = cast theBatcher.posArray();
+            var colView:js.lib.Float32Array = cast theBatcher.colorArray();
+            var uvView:js.lib.Float32Array = cast theBatcher.uvArray();
+            var idxView:js.lib.Uint16Array = cast theBatcher.indexArray();
+
+            clay.simd.wasm.WasmSimd.meshPartF32(
+                posView.byteOffset + theBatcher.posIndexValue() * 4, theBatcher.posStrideFloats(),
+                colView.byteOffset + theBatcher.colorIndexValue() * 4,
+                uvView.byteOffset + theBatcher.uvIndexValue() * 4,
+                idxView.byteOffset + theBatcher.indexCountValue() * 2, theBatcher.getNumVertices(),
+                clay.simd.wasm.WasmSimd.vertsScratchByteOffset, vertStride,
+                clay.simd.wasm.WasmSimd.colorsScratchByteOffset,
+                clay.simd.wasm.WasmSimd.colorsScratchByteOffset,
+                clay.simd.wasm.WasmSimd.uvsScratchByteOffset,
+                clay.simd.wasm.WasmSimd.indicesScratchByteOffset,
+                // indices and sequential colors were window-copied above,
+                // so the kernel-side part always starts at 0
+                0, count,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot, writeSlot,
+                colorMode, r, g, b, a,
+                globalAlpha, premultiply, zeroAlpha,
+                hasUvs, uvFactorX, uvFactorY,
+                meshAttrCount, shaderAttrCount
+            );
+
+            theBatcher.advanceIndices(count);
+            theBatcher.advanceVertices(count);
+            theBatcher.advanceColors(count);
+            theBatcher.advanceUVs(count);
+
+            wasmDone = true;
+            }
+        }
+
+        if (!wasmDone) {
+
+        var stride = theBatcher.posStrideFloats();
+        var attrBase = writeSlot ? 4 : 3;
+
+        var idxArr = theBatcher.indexArray();
+        var idx = theBatcher.indexCountValue();
+        var idxBase = theBatcher.getNumVertices();
+        for (n in 0...count) {
+            idxArr[idx + n] = idxBase + n;
+        }
+
+        var pos = theBatcher.posArray();
+        var p = theBatcher.posIndexValue();
+        var col = theBatcher.colorArray();
+        var c = theBatcher.colorIndexValue();
+        var uvArr = theBatcher.uvArray();
+        var u = theBatcher.uvIndexValue();
+
+        var useFloatColors = !singleColor && floatColors != null;
+
+        var i = start;
+        while (i < end) {
+
+            var j = indices[i];
+            var l = j * vertStride;
+
+            var x:Float;
+            var y:Float;
+            if (vertices32 != null) {
+                x = vertices32[l];
+                y = vertices32[l + 1];
+            }
+            else {
+                x = vertices[l];
+                y = vertices[l + 1];
+            }
+
+            pos[p] = matTX + matA * x + matC * y;
+            pos[p + 1] = matTY + matB * x + matD * y;
+            pos[p + 2] = z;
+            if (writeSlot) pos[p + 3] = textureSlot;
+            if (shaderAttrCount > 0) {
+                for (n in 0...shaderAttrCount) {
+                    if (n < meshAttrCount) {
+                        pos[p + attrBase + n] = vertices32 != null ? vertices32[l + 2 + n] : vertices[l + 2 + n];
+                    }
+                    else {
+                        pos[p + attrBase + n] = 0.0;
+                    }
+                }
+            }
+            p += stride;
+
+            if (singleColor) {
+                col[c] = r; col[c + 1] = g; col[c + 2] = b; col[c + 3] = a;
+            }
+            else if (useFloatColors) {
+                var fc = (indicesColor ? i : j) * 4;
+                var outA = globalAlpha * floatColors[fc + 3];
+                if (premultiply) {
+                    col[c] = floatColors[fc] * outA;
+                    col[c + 1] = floatColors[fc + 1] * outA;
+                    col[c + 2] = floatColors[fc + 2] * outA;
+                }
+                else {
+                    col[c] = floatColors[fc];
+                    col[c + 1] = floatColors[fc + 1];
+                    col[c + 2] = floatColors[fc + 2];
+                }
+                col[c + 3] = zeroAlpha ? 0.0 : outA;
+            }
+            else {
+                var pc:Int = colors[indicesColor ? i : j];
+                var outA = globalAlpha * (((pc >> 24) & 0xFF) / 255);
+                var cr = ((pc >> 16) & 0xFF) / 255;
+                var cg = ((pc >> 8) & 0xFF) / 255;
+                var cb = (pc & 0xFF) / 255;
+                if (premultiply) {
+                    col[c] = cr * outA;
+                    col[c + 1] = cg * outA;
+                    col[c + 2] = cb * outA;
+                }
+                else {
+                    col[c] = cr;
+                    col[c + 1] = cg;
+                    col[c + 2] = cb;
+                }
+                col[c + 3] = zeroAlpha ? 0.0 : outA;
+            }
+            c += 4;
+
+            if (hasUvs) {
+                var k = j * 2;
+                uvArr[u] = uvs[k] * uvFactorX;
+                uvArr[u + 1] = uvs[k + 1] * uvFactorY;
+            }
+            else {
+                uvArr[u] = 0.0;
+                uvArr[u + 1] = 0.0;
+            }
+            u += 2;
+
+            i++;
+        }
+
+        theBatcher.advanceIndices(count);
+        theBatcher.advanceVertices(count);
+        theBatcher.advanceColors(count);
+        theBatcher.advanceUVs(count);
+
+        }
+
+        #else
 
         // The `indices`/`vertices`/`uvs`/`colors`/view objects stay alive as
         // locals for the duration of this call, and every kernel below is a
@@ -1157,6 +1474,8 @@ class Draw #if !completion implements spec.Draw #end {
             clay.simd.Simd.fillFloats(theBatcher.uvWritePointer().raw, count * 2, 0);
         }
         theBatcher.advanceUVs(count);
+
+        #end
 
     }
 
