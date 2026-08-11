@@ -1068,24 +1068,6 @@ class Renderer extends Entity {
 
         }
 
-        // Position
-        if (customFloatAttributesSize == 0) {
-            if (textureSlot != -1) {
-                batchQuadVertices(false, true);
-            }
-            else {
-                batchQuadVertices(false, false);
-            }
-        }
-        else {
-            if (textureSlot != -1) {
-                batchQuadVertices(true, true);
-            }
-            else {
-                batchQuadVertices(true, false);
-            }
-        }
-
         // Colors
         //
         var r:Float;
@@ -1112,6 +1094,104 @@ class Renderer extends Entity {
             g = quad.color.greenFloat * a;
             b = quad.color.blueFloat * a;
             if (quad.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+        }
+
+    #if (cpp && ceramic_simd)
+
+        // Batched emission: indices, transformed corners, colors, uvs and
+        // custom float attributes are written into the backend buffers
+        // through vectorized kernels, replacing the per-scalar emission
+        // compiled when `ceramic_simd` is not set.
+        {
+
+            var u0:Float = 0;
+            var v0:Float = 0;
+            var u1:Float = 0;
+            var v1:Float = 0;
+            var u2:Float = 0;
+            var v2:Float = 0;
+            var u3:Float = 0;
+            var v3:Float = 0;
+
+            if (quad.texture != null) {
+
+                var texWidthActual = this.texWidthActual;
+                var texHeightActual = this.texHeightActual;
+                var texDensity = quad.texture.density;
+
+                var uvX:Float = (quad.frameX * texDensity) / texWidthActual;
+                var uvY:Float = (quad.frameY * texDensity) / texHeightActual;
+                var uvW:Float;
+                var uvH:Float;
+
+                if (quad.rotateFrame) {
+                    uvW = (quad.frameHeight * texDensity) / texWidthActual;
+                    uvH = (quad.frameWidth * texDensity) / texHeightActual;
+                    #if !ceramic_render_no_flip_quad_vertices
+                    // br, bl, tl, tr
+                    u0 = uvX + uvW; v0 = uvY;
+                    u1 = uvX + uvW; v1 = uvY + uvH;
+                    u2 = uvX;       v2 = uvY + uvH;
+                    u3 = uvX;       v3 = uvY;
+                    #else
+                    // tl, tr, br, bl
+                    u0 = uvX;       v0 = uvY + uvH;
+                    u1 = uvX;       v1 = uvY;
+                    u2 = uvX + uvW; v2 = uvY;
+                    u3 = uvX + uvW; v3 = uvY + uvH;
+                    #end
+                }
+                else {
+                    uvW = (quad.frameWidth * texDensity) / texWidthActual;
+                    uvH = (quad.frameHeight * texDensity) / texHeightActual;
+                    #if !ceramic_render_no_flip_quad_vertices
+                    // br, bl, tl, tr
+                    u0 = uvX + uvW; v0 = uvY + uvH;
+                    u1 = uvX;       v1 = uvY + uvH;
+                    u2 = uvX;       v2 = uvY;
+                    u3 = uvX + uvW; v3 = uvY;
+                    #else
+                    // tl, tr, br, bl
+                    u0 = uvX;       v0 = uvY;
+                    u1 = uvX + uvW; v1 = uvY;
+                    u2 = uvX + uvW; v2 = uvY + uvH;
+                    u3 = uvX;       v3 = uvY + uvH;
+                    #end
+                }
+            }
+
+            draw.putTransformedQuad(
+                w, h,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot,
+                r, g, b, a,
+                u0, v0, u1, v1, u2, v2, u3, v3,
+                #if !ceramic_render_no_flip_quad_vertices true #else false #end,
+                #if ceramic_wireframe lastWireframe #else false #end,
+                #if ceramic_quad_float_attributes floatAttributes, floatAttributes != null ? floatAttributes.length : 0, #else null, 0, #end
+                customFloatAttributesSize
+            );
+
+        }
+
+    #else
+
+        // Position
+        if (customFloatAttributesSize == 0) {
+            if (textureSlot != -1) {
+                batchQuadVertices(false, true);
+            }
+            else {
+                batchQuadVertices(false, false);
+            }
+        }
+        else {
+            if (textureSlot != -1) {
+                batchQuadVertices(true, true);
+            }
+            else {
+                batchQuadVertices(true, false);
+            }
         }
 
         var i = 0;
@@ -1193,6 +1273,8 @@ class Renderer extends Entity {
             draw.putUVs(0, 0);
             draw.putUVs(0, 0);
         }
+
+    #end
 
         // Let backend know we did finish sending quad data
         draw.endDrawQuad();
@@ -1649,6 +1731,28 @@ class Renderer extends Entity {
                     }
                 }
 
+            #if (cpp && ceramic_simd)
+
+                // Batched emission: the whole run (indices, transformed positions,
+                // colors, uvs, custom float attributes) is written into the
+                // backend buffers through vectorized kernels, replacing the
+                // per-vertex loop compiled when `ceramic_simd` is not set.
+                draw.putTransformedMeshRun(
+                    meshVertices32, meshVertices,
+                    meshIndices, startVertices, endVertices,
+                    texture != null, meshUvs, uvFactorX, uvFactorY,
+                    meshSingleColor, meshIndicesColor, meshFloatColors, meshColors,
+                    r, g, b, a,
+                    mesh.computedAlpha,
+                    !(meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA),
+                    mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD,
+                    meshCustomFloatAttributesSize, customFloatAttributesSize,
+                    matA, matB, matC, matD, matTX, matTY,
+                    z, textureSlot
+                );
+
+            #else
+
                 var i = startVertices;
                 var numPos = draw.getNumPos();
 
@@ -1753,6 +1857,8 @@ class Renderer extends Entity {
 
                     i++;
                 }
+
+            #end
 
                 if (endVertices == visualNumVertices) {
                     // No need to submit more data, exit loop

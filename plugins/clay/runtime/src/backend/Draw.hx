@@ -914,6 +914,254 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+#if (cpp && ceramic_simd)
+
+    /**
+     * Batched emission of a complete quad: 6 indices, 4 transformed
+     * positions, 4 identical colors and 4 uv pairs, written directly
+     * into the batcher buffers through vectorized kernels instead of
+     * per-scalar put* calls.
+     *
+     * The caller must have checked buffer capacity first (shouldFlush)
+     * and resolved the final color and uv values, like it does on the
+     * scalar path.
+     *
+     * @param w Quad width
+     * @param h Quad height
+     * @param matA Matrix a component
+     * @param matB Matrix b component
+     * @param matC Matrix c component
+     * @param matD Matrix d component
+     * @param matTX Matrix tx component
+     * @param matTY Matrix ty component
+     * @param z Z coordinate for depth ordering
+     * @param textureSlot Texture slot index, or -1 when not batching multiple textures
+     * @param r Red component (final, premultiplied if needed)
+     * @param g Green component (final, premultiplied if needed)
+     * @param b Blue component (final, premultiplied if needed)
+     * @param a Alpha component (final)
+     * @param u0 First vertex u, in emission order
+     * @param v0 First vertex v, in emission order
+     * @param u1 Second vertex u
+     * @param v1 Second vertex v
+     * @param u2 Third vertex u
+     * @param v2 Third vertex v
+     * @param u3 Fourth vertex u
+     * @param v3 Fourth vertex v
+     * @param flipOrder True to emit corners in br, bl, tl, tr order, false for tl, tr, br, bl
+     * @param wireframe True to emit the 12 line indices of a wireframe quad instead of 6 triangle indices
+     * @param attrs Custom float attribute values shared by the 4 corners (may be null)
+     * @param attrsLen Number of usable values in `attrs`
+     * @param attrCount Number of custom float attributes expected by the shader (zero-padded if more than `attrsLen`)
+     */
+    // `extern inline`: always inlined at call sites, no physical member
+    // generated (needed because hxcpp cannot generate reflection wrappers
+    // for functions with this many arguments)
+    public extern inline function putTransformedQuad(
+        w:Float, h:Float,
+        matA:Float, matB:Float, matC:Float, matD:Float, matTX:Float, matTY:Float,
+        z:Float, textureSlot:Float,
+        r:Float, g:Float, b:Float, a:Float,
+        u0:Float, v0:Float, u1:Float, v1:Float, u2:Float, v2:Float, u3:Float, v3:Float,
+        flipOrder:Bool, wireframe:Bool,
+        attrs:Array<Float>, attrsLen:Int, attrCount:Int
+    ):Void {
+
+        var theBatcher = batcher;
+        var writeSlot = textureSlot != -1;
+
+        // Single fused kernel call per quad: a quad is a tiny amount of
+        // work, so splitting it across several native calls would make the
+        // per-call overhead dominate.
+        var posPtr = theBatcher.posWritePointer();
+        clay.simd.Simd.emitQuad(
+            posPtr.raw, theBatcher.posStrideFloats(),
+            theBatcher.indexWritePointer().raw, theBatcher.getNumVertices(),
+            theBatcher.colorWritePointer().raw, theBatcher.uvWritePointer().raw,
+            w, h,
+            matA, matB, matC, matD, matTX, matTY,
+            z, textureSlot, writeSlot, flipOrder, wireframe,
+            r, g, b, a,
+            u0, v0, u1, v1, u2, v2, u3, v3
+        );
+        if (attrCount > 0) {
+            var attrBase = writeSlot ? 4 : 3;
+            if (attrs != null && attrsLen > 0) {
+                var srcCount = attrsLen < attrCount ? attrsLen : attrCount;
+                var attrsPtr:cpp.Pointer<Float> = cpp.NativeArray.address(attrs, 0);
+                clay.simd.Simd.fillQuadAttrsF64(posPtr.raw, theBatcher.posStrideFloats(), attrBase, attrsPtr.raw, srcCount, attrCount);
+            }
+            else {
+                var noAttrs:cpp.RawPointer<Float> = untyped __cpp__('nullptr');
+                clay.simd.Simd.fillQuadAttrsF64(posPtr.raw, theBatcher.posStrideFloats(), attrBase, noAttrs, 0, attrCount);
+            }
+        }
+
+        theBatcher.advanceIndices(wireframe ? 12 : 6);
+        theBatcher.advanceVertices(4);
+        theBatcher.advanceColors(4);
+        theBatcher.advanceUVs(4);
+
+    }
+
+    /**
+     * Batched emission of a run of indexed mesh vertices: sequential
+     * indices, transformed positions gathered through the index array,
+     * colors (single, sequential per-index or gathered per-vertex) and
+     * scaled uvs, written directly into the batcher buffers through
+     * vectorized kernels instead of per-scalar put* calls.
+     *
+     * The caller must have checked buffer capacity for the whole run
+     * first, and must not use this method when the mesh has custom
+     * float attributes (that path stays scalar).
+     *
+     * @param vertices32 32-bit float vertex source, or null to use `vertices`
+     * @param vertices 64-bit float vertex source (used when `vertices32` is null)
+     * @param indices Mesh index array
+     * @param start First index of the run (inclusive)
+     * @param end Last index of the run (exclusive)
+     * @param hasUvs True to gather and scale uvs, false to write zeroed uvs
+     * @param uvs Uv source array (ignored when `hasUvs` is false)
+     * @param uvFactorX Horizontal uv scale factor
+     * @param uvFactorY Vertical uv scale factor
+     * @param singleColor True when the whole run uses one color (r, g, b, a below)
+     * @param indicesColor True when colors are mapped per index (sequential), false for per vertex (gathered)
+     * @param floatColors Per-color float source, or null to use `colors`
+     * @param colors Per-color packed source (used when `floatColors` is null and `singleColor` is false)
+     * @param r Resolved single color red (when `singleColor` is true)
+     * @param g Resolved single color green
+     * @param b Resolved single color blue
+     * @param a Resolved single color alpha
+     * @param globalAlpha Mesh computed alpha, multiplied with each source alpha
+     * @param premultiply True to multiply rgb by the computed alpha
+     * @param zeroAlpha True to force the stored alpha to 0 (additive blending over standard batch)
+     * @param meshAttrCount Number of custom float attributes interleaved in the vertex source
+     * @param shaderAttrCount Number of custom float attributes expected by the shader (zero-padded)
+     * @param matA Matrix a component
+     * @param matB Matrix b component
+     * @param matC Matrix c component
+     * @param matD Matrix d component
+     * @param matTX Matrix tx component
+     * @param matTY Matrix ty component
+     * @param z Z coordinate for depth ordering
+     * @param textureSlot Texture slot index, or -1 when not batching multiple textures
+     */
+    // `extern inline`: same reason as putTransformedQuad above
+    public extern inline function putTransformedMeshRun(
+        vertices32:ceramic.Float32Array, vertices:Array<Float>,
+        indices:Array<Int>, start:Int, end:Int,
+        hasUvs:Bool, uvs:Array<Float>, uvFactorX:Float, uvFactorY:Float,
+        singleColor:Bool, indicesColor:Bool, floatColors:ceramic.Float32Array, colors:Array<ceramic.AlphaColor>,
+        r:Float, g:Float, b:Float, a:Float,
+        globalAlpha:Float, premultiply:Bool, zeroAlpha:Bool,
+        meshAttrCount:Int, shaderAttrCount:Int,
+        matA:Float, matB:Float, matC:Float, matD:Float, matTX:Float, matTY:Float,
+        z:Float, textureSlot:Float
+    ):Void {
+
+        var theBatcher = batcher;
+        var count = end - start;
+        var writeSlot = textureSlot != -1;
+        var vertStride = 2 + meshAttrCount;
+
+        // The `indices`/`vertices`/`uvs`/`colors`/view objects stay alive as
+        // locals for the duration of this call, and every kernel below is a
+        // leaf call (no allocation), so the raw pointers acquired here remain
+        // valid.
+        var idxPtr:cpp.Pointer<Int> = cpp.NativeArray.address(indices, start);
+
+        // Indices (sequential, deindexed emission)
+        clay.simd.Simd.fillIndicesSequentialU16(theBatcher.indexWritePointer().raw, theBatcher.getNumVertices(), count);
+        theBatcher.advanceIndices(count);
+
+        // Positions (+ interleaved custom float attributes if any)
+        if (vertices32 != null) {
+            var view:clay.buffers.ArrayBufferView = vertices32;
+            var srcPtr:cpp.Pointer<cpp.Float32> = cpp.NativeArray.address(view.buffer, view.byteOffset).reinterpret();
+            if (meshAttrCount == 0 && shaderAttrCount == 0) {
+                clay.simd.Simd.transformAffineIndexedF32(
+                    theBatcher.posWritePointer().raw, theBatcher.posStrideFloats(),
+                    srcPtr.raw, vertStride, idxPtr.raw, count,
+                    matA, matB, matC, matD, matTX, matTY,
+                    z, textureSlot, writeSlot
+                );
+            }
+            else {
+                clay.simd.Simd.transformAffineIndexedAttrsF32(
+                    theBatcher.posWritePointer().raw, theBatcher.posStrideFloats(),
+                    srcPtr.raw, vertStride, idxPtr.raw, count,
+                    matA, matB, matC, matD, matTX, matTY,
+                    z, textureSlot, writeSlot,
+                    meshAttrCount, shaderAttrCount
+                );
+            }
+        }
+        else {
+            var srcPtr:cpp.Pointer<Float> = cpp.NativeArray.address(vertices, 0);
+            if (meshAttrCount == 0 && shaderAttrCount == 0) {
+                clay.simd.Simd.transformAffineIndexedF64(
+                    theBatcher.posWritePointer().raw, theBatcher.posStrideFloats(),
+                    srcPtr.raw, vertStride, idxPtr.raw, count,
+                    matA, matB, matC, matD, matTX, matTY,
+                    z, textureSlot, writeSlot
+                );
+            }
+            else {
+                clay.simd.Simd.transformAffineIndexedAttrsF64(
+                    theBatcher.posWritePointer().raw, theBatcher.posStrideFloats(),
+                    srcPtr.raw, vertStride, idxPtr.raw, count,
+                    matA, matB, matC, matD, matTX, matTY,
+                    z, textureSlot, writeSlot,
+                    meshAttrCount, shaderAttrCount
+                );
+            }
+        }
+        theBatcher.advanceVertices(count);
+
+        // Colors
+        if (singleColor) {
+            clay.simd.Simd.fillColorRGBA(theBatcher.colorWritePointer().raw, count, r, g, b, a);
+        }
+        else if (floatColors != null) {
+            var view:clay.buffers.ArrayBufferView = floatColors;
+            if (indicesColor) {
+                // Color per index: source walks sequentially with the run
+                var srcPtr:cpp.Pointer<cpp.Float32> = cpp.NativeArray.address(view.buffer, view.byteOffset + start * 16).reinterpret();
+                clay.simd.Simd.premultiplyRGBA(theBatcher.colorWritePointer().raw, srcPtr.raw, count, globalAlpha, premultiply, zeroAlpha);
+            }
+            else {
+                // Color per vertex: gathered through the index array
+                var srcPtr:cpp.Pointer<cpp.Float32> = cpp.NativeArray.address(view.buffer, view.byteOffset).reinterpret();
+                clay.simd.Simd.premultiplyRGBAIndexed(theBatcher.colorWritePointer().raw, srcPtr.raw, idxPtr.raw, count, globalAlpha, premultiply, zeroAlpha);
+            }
+        }
+        else {
+            // Packed 0xAARRGGBB colors, decoded by the kernels
+            if (indicesColor) {
+                var srcPtr:cpp.Pointer<cpp.UInt32> = cpp.NativeArray.address(colors, start).reinterpret();
+                clay.simd.Simd.premultiplyARGB32(theBatcher.colorWritePointer().raw, srcPtr.raw, count, globalAlpha, premultiply, zeroAlpha);
+            }
+            else {
+                var srcPtr:cpp.Pointer<cpp.UInt32> = cpp.NativeArray.address(colors, 0).reinterpret();
+                clay.simd.Simd.premultiplyARGB32Indexed(theBatcher.colorWritePointer().raw, srcPtr.raw, idxPtr.raw, count, globalAlpha, premultiply, zeroAlpha);
+            }
+        }
+        theBatcher.advanceColors(count);
+
+        // UVs
+        if (hasUvs) {
+            var uvsPtr:cpp.Pointer<Float> = cpp.NativeArray.address(uvs, 0);
+            clay.simd.Simd.scaleUVIndexedF64(theBatcher.uvWritePointer().raw, uvsPtr.raw, idxPtr.raw, count, uvFactorX, uvFactorY);
+        }
+        else {
+            clay.simd.Simd.fillFloats(theBatcher.uvWritePointer().raw, count * 2, 0);
+        }
+        theBatcher.advanceUVs(count);
+
+    }
+
+#end
+
     /**
      * Checks if there is any geometry in the buffer to flush.
      *
