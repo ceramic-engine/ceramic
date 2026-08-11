@@ -1,32 +1,32 @@
 diff --git android-project/app/src/main/java/org/libsdl/app/SDLActivity.java android-project/app/src/main/java/org/libsdl/app/SDLActivity.java
-index 85d51541c..4172124b4 100644
 --- android-project/app/src/main/java/org/libsdl/app/SDLActivity.java
 +++ android-project/app/src/main/java/org/libsdl/app/SDLActivity.java
-@@ -322,6 +322,12 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
-         return new String[0];
-     }
- 
+@@ -352,7 +352,13 @@
+      */
+     protected int getInitSubsystems() {
+         return SDL.SDL_INIT_EVERYTHING;
++    }
++
 +    //---:clay:start
 +    protected void preWindowCreate() {
 +        // Overrided in subclass
-+    }
+     }
 +    //---:clay:end
-+
+ 
      public static void initialize() {
          // The static nature of the singleton and Android quirkyness force us to initialize everything here
-         // Otherwise, when exiting the app and returning to it, these variables *keep* their pre exit values
-@@ -442,6 +448,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
+@@ -476,6 +482,10 @@
+                 }
              }
          }
- 
++
 +        //---:clay:start
 +        preWindowCreate();
 +        //---:clay:end
-+
-         // Set up JNI
-         SDL.setupJNI();
  
-@@ -956,6 +966,29 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
+         // Set up JNI
+         SDL.setupJNI(getInitSubsystems());
+@@ -1097,6 +1107,29 @@
                      InputMethodManager imm = (InputMethodManager) context.getSystemService(Context.INPUT_METHOD_SERVICE);
                      imm.hideSoftInputFromWindow(mTextEdit.getWindowToken(), 0);
  
@@ -53,6 +53,6 @@ index 85d51541c..4172124b4 100644
 +                    });
 +                    //---:clay:end
 +
-                     mScreenKeyboardShown = false;
+                     onNativeScreenKeyboardHidden();
  
                      mSurface.requestFocus();

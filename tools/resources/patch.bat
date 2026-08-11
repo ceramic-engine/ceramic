@@ -56,6 +56,10 @@ echo Error: patch.exe not found. Please make sure Git for Windows is installed.
 exit /b 1
 
 :found_patch
+:: Create a backup of the original file (restored if the patch fails,
+:: like patch.sh does — otherwise a failed patch leaves the file half-patched)
+copy /Y "%FILE_TO_PATCH%" "%BACKUP_FILE%" > nul
+
 :: Apply the patch
 echo Running patch command: "!PATCH_EXE!" -p1 -f --binary --ignore-whitespace --no-backup-if-mismatch "!FILE_TO_PATCH!" ^< "!PATCH_FILE!"
 call "!PATCH_EXE!" -p1 -f --binary --ignore-whitespace --no-backup-if-mismatch "!FILE_TO_PATCH!" < "!PATCH_FILE!"
