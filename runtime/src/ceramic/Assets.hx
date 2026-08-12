@@ -817,7 +817,7 @@ class Assets extends Entity {
             _packNextAtlasPacker(() -> _prepareComplete(allSuccess));
         }
         else {
-            emitComplete(true);
+            emitComplete(allSuccess);
         }
 
     }
