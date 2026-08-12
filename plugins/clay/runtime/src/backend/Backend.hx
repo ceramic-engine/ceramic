@@ -210,7 +210,7 @@ class Backend implements tracker.Events implements spec.Backend {
 
     @:allow(backend.Draw) inline function canRender():Bool {
         #if ios
-        return mobileInBacgkround.load();
+        return !mobileInBackground.load();
         #else
         return true;
         #end
