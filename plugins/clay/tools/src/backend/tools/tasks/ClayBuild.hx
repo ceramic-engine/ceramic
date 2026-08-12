@@ -138,6 +138,36 @@ class ClayBuild extends tools.Task {
             }
         }
 
+        // Copy transpiled shaders to platform assets (directly in the
+        // assets folder, no subfolder). This must also happen when haxe
+        // compilation is skipped: the platform assets directory may have
+        // been cleaned or regenerated since the previous build, and a
+        // missing default shader otherwise only surfaces much later, as a
+        // hard-to-diagnose null object reference on the first rendered
+        // frame of the app.
+        function copyTranspiledShadersToPlatformAssets():Void {
+            var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
+            if (FileSystem.exists(glslOutputPath)) {
+                var clayBackendTools:backend.tools.ClayBackendTools = cast context.backend;
+                var dstAssetsPath:String = clayBackendTools.getDstAssetsPath(cwd, target, variant);
+
+                if (dstAssetsPath != null) {
+                    // Ensure assets directory exists
+                    if (!FileSystem.exists(dstAssetsPath)) {
+                        FileSystem.createDirectory(dstAssetsPath);
+                    }
+
+                    // Copy all generated shader files directly to assets folder
+                    for (file in FileSystem.readDirectory(glslOutputPath)) {
+                        Files.copyIfNeeded(
+                            Path.join([glslOutputPath, file]),
+                            Path.join([dstAssetsPath, file])
+                        );
+                    }
+                }
+            }
+        }
+
         // Build haxe
         var status = 0;
         if (!skipHaxeCompilation && (action == 'build' || action == 'run')) {
@@ -494,36 +524,7 @@ $workletResolveClassCases
                             }
 
                             // Copy shaders to platform assets (directly in assets folder, no subfolder)
-                            // This must happen even when skipping compilation, as assets may have been cleaned
-                            if (FileSystem.exists(glslOutputPath)) {
-                                var dstAssetsPath:String = switch (target.name) {
-                                    case 'mac':
-                                        Path.join([cwd, 'project', 'mac', project.app.name + '.app', 'Contents', 'Resources', 'assets']);
-                                    case 'ios':
-                                        Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
-                                    case 'android':
-                                        Path.join([cwd, 'project', 'android', 'app', 'src', 'main', 'assets', 'assets']);
-                                    case 'windows' | 'linux' | 'web':
-                                        Path.join([cwd, 'project', target.name, 'assets']);
-                                    default:
-                                        null;
-                                };
-
-                                if (dstAssetsPath != null) {
-                                    // Ensure assets directory exists
-                                    if (!FileSystem.exists(dstAssetsPath)) {
-                                        FileSystem.createDirectory(dstAssetsPath);
-                                    }
-
-                                    // Copy all generated shader files directly to assets folder
-                                    for (file in FileSystem.readDirectory(glslOutputPath)) {
-                                        Files.copyIfNeeded(
-                                            Path.join([glslOutputPath, file]),
-                                            Path.join([dstAssetsPath, file])
-                                        );
-                                    }
-                                }
-                            }
+                            copyTranspiledShadersToPlatformAssets();
                         }
                     }
                 }
@@ -555,6 +556,11 @@ $workletResolveClassCases
             }
 
             runHooks(cwd, args, project.app.hooks, 'end build');
+        }
+        else if (didSkipCompilation && (action == 'build' || action == 'run')) {
+            // Haxe compilation skipped: still make sure previously
+            // transpiled shaders are present in the platform assets
+            copyTranspiledShadersToPlatformAssets();
         }
 
         // Compile c++ for Windows
