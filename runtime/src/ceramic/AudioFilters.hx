@@ -29,7 +29,7 @@ import haxe.atomic.AtomicInt;
  * @see AudioMixer
  * @see Audio
  */
-@:keep
+
 class AudioFilters {
 
     #if sys
