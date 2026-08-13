@@ -82,7 +82,10 @@ abstract SpinLock(AtomicBool) {
      * Compatible with Mutex.acquire() API.
      */
     public inline function acquire():Void {
-        while (!this.compareExchange(false, true)) {
+        // `compareExchange` returns the PREVIOUS value: it is `true` for as
+        // long as the lock is held by someone else, and `false` on the
+        // attempt that actually acquired it
+        while (this.compareExchange(false, true)) {
             // Spin until we can acquire the lock
         }
     }
@@ -104,7 +107,9 @@ abstract SpinLock(AtomicBool) {
      * @return true if the lock was successfully acquired, false if already locked
      */
     public inline function tryAcquire():Bool {
-        return this.compareExchange(false, true);
+        // `compareExchange` returns the PREVIOUS value: the lock was
+        // successfully acquired when it was not already held
+        return !this.compareExchange(false, true);
     }
 
     /**
