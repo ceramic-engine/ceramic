@@ -464,6 +464,52 @@ class AudioFiltersMacro {
     }
 
     /**
+     * Allocates the worklet param storage, from the worklet's own constructor.
+     *
+     * The storage is a fixed-size vector, and its size is only known by the
+     * subclass. It cannot be allocated by the base class constructor: the
+     * number of params is resolved through an override, and an override is
+     * not reachable yet while the base constructor runs (that is how C++
+     * behaves, and worklets are also compiled as plain C++).
+     */
+    static function addWorkletParamsAllocation(fields:Array<Field>, numParams:Int):Void {
+
+        final allocate = macro @:privateAccess {
+            this.params = new haxe.ds.Vector<Float>($v{numParams});
+        };
+
+        for (field in fields) {
+            if (field.name == 'new') {
+                switch field.kind {
+                    case FFun(f):
+                        f.expr = macro { ${f.expr}; $allocate; };
+                        return;
+                    case _:
+                }
+            }
+        }
+
+        // No constructor of its own: generate one forwarding to the base
+        fields.push({
+            name: 'new',
+            pos: Context.currentPos(),
+            kind: FFun({
+                args: [
+                    { name: 'filterId', type: macro :Int },
+                    { name: 'bus', type: macro :Int }
+                ],
+                expr: macro {
+                    super(filterId, bus);
+                    $allocate;
+                },
+                ret: macro :Void
+            }),
+            access: [APublic]
+        });
+
+    }
+
+    /**
      * Processes worklet class fields to generate parameter accessors.
      * Converts @param annotated fields into getter properties that
      * read from the Web Audio API parameter arrays.
@@ -526,6 +572,8 @@ class AudioFiltersMacro {
                 }),
                 access: [AOverride]
             });
+
+            addWorkletParamsAllocation(fields, paramIndex);
         }
 
         return fields;

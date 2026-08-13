@@ -90,9 +90,11 @@ abstract class AudioFilterWorklet {
 
     /**
      * Internal storage for filter parameters.
-     * Populated automatically from fields marked with @param metadata.
+     *
+     * A fixed-size vector, allocated by the worklet itself (the generated
+     * constructor) from the number of fields marked with `@param`.
      */
-    private final params:Array<Float> = [];
+    private var params:haxe.ds.Vector<Float> = new haxe.ds.Vector<Float>(0);
 
     /**
      * Get a boolean parameter at the given position (0-based).
@@ -101,8 +103,7 @@ abstract class AudioFilterWorklet {
      * @return Boolean value of the parameter
      */
     private function getBool(index:Int):Bool {
-        final val:Null<Float> = params[index];
-        return val != null ? val != 0 : false;
+        return params[index] != 0;
     }
 
     /**
@@ -112,8 +113,7 @@ abstract class AudioFilterWorklet {
      * @return Integer value of the parameter
      */
     private function getInt(index:Int):Int {
-        final val:Null<Float> = params[index];
-        return val != null ? Std.int(val) : 0;
+        return Std.int(params[index]);
     }
 
     /**
@@ -122,8 +122,7 @@ abstract class AudioFilterWorklet {
      * @return Float value of the parameter
      */
     private function getFloat(index:Int):Float {
-        final val:Null<Float> = params[index];
-        return val != null ? val : 0;
+        return params[index];
     }
 
     /**

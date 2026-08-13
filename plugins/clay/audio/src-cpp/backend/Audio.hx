@@ -53,15 +53,6 @@ class Audio {
         final worklet = _factory(className, filterId, bus);
         if (worklet == null) return false;
 
-        // Pre-size the params storage: haxe arrays grow on out-of-bounds
-        // writes, but the transpiled C++ storage does not — indexed access
-        // must stay in bounds in this context
-        final params = @:privateAccess worklet.params;
-        final numParams = worklet.numParams();
-        while (params.length < numParams) {
-            params.push(0.0);
-        }
-
         _worklets.push(worklet);
         @:privateAccess ceramic.AudioFilters.addWorklet(worklet);
         return true;
@@ -98,10 +89,9 @@ class Audio {
 
         @:privateAccess ceramic.AudioFilters.beginUpdateFilterWorkletParams(bus, filterId);
         final params = @:privateAccess worklet.params;
-        while (params.length < count) {
-            params.push(0.0);
-        }
-        for (i in 0...count) {
+        // The worklet allocated exactly as many params as it declares
+        final total = count < params.length ? count : params.length;
+        for (i in 0...total) {
             params[i] = values[i];
         }
         @:privateAccess ceramic.AudioFilters.endUpdateFilterWorkletParams(bus, filterId);
