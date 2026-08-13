@@ -682,7 +682,10 @@ class Audio implements spec.Audio {
                     for (p in 0...filterParams.length) {
                         workletParams[p] = filterParams[p];
                     }
-                    filterInfo.filter.releaseParams();
+                    // Params changed while copying are copied again next time:
+                    // notifying from here would try to acquire the locks this
+                    // thread is already holding
+                    filterInfo.paramsDirty = filterInfo.filter.releaseParams(false);
 
                     ceramic.AudioFilters.endUpdateFilterWorkletParams(
                         bus,

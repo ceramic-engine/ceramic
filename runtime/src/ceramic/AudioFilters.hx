@@ -228,7 +228,7 @@ class AudioFilters {
         accessBusLocks.acquire();
         final busLock = lockByBus[bus];
         if (busLock != null) {
-            busLock.release();
+            busLock.acquire();
         }
         accessBusLocks.release();
         #end

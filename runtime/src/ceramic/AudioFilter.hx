@@ -193,20 +193,30 @@ abstract class AudioFilter extends Entity {
         #end
     }
 
-    public function releaseParams():Void {
-        var notifyChanged = paramsChanged;
+    /**
+     * Releases the params previously acquired with `acquireParams()`.
+     * @param notifyChanges When `false`, params that changed during the
+     *        acquisition are not notified to the audio backend: the caller
+     *        takes responsibility for handling them. Used when copying
+     *        params to the worklet, as the notification would try to acquire
+     *        locks that are already held at that point.
+     * @return Whether params changed during the acquisition
+     */
+    public function releaseParams(notifyChanges:Bool = true):Bool {
+        var paramsDidChange = paramsChanged;
         #if sys
         paramsAcquireLock.acquire();
         #end
         paramsChanged = false;
         paramsAcquired = false;
         #if sys
-        paramsAcquireLock.acquire();
+        paramsAcquireLock.release();
         paramsLock.release();
         #end
-        if (notifyChanged && bus >= 0) {
+        if (paramsDidChange && notifyChanges && bus >= 0) {
             app.backend.audio.filterParamsChanged(bus, filterId);
         }
+        return paramsDidChange;
     }
 
     public function new() {

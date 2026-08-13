@@ -906,7 +906,10 @@ class Audio implements spec.Audio {
                     for (p in 0...filterParams.length) {
                         workletParams[p] = filterParams[p];
                     }
-                    filterInfo.filter.releaseParams();
+                    // Params changed while copying are copied again next time:
+                    // notifying from here would try to acquire the locks this
+                    // thread is already holding
+                    filterInfo.paramsDirty = filterInfo.filter.releaseParams(false);
 
                     ceramic.AudioFilters.endUpdateFilterWorkletParams(
                         bus,
@@ -1032,8 +1035,6 @@ class Audio implements spec.Audio {
             for (f in 0...filters.length) {
                 final filterInfo = filters[f];
                 if (filterInfo.paramsDirty) {
-                    filterInfo.paramsDirty = false;
-
                     filterInfo.filter.acquireParams();
                     final filterParams = @:privateAccess filterInfo.filter.params;
                     final numParams = filterParams.length;
@@ -1043,7 +1044,10 @@ class Audio implements spec.Audio {
                     for (p in 0...numParams) {
                         standaloneParamsScratch[p] = filterParams[p];
                     }
-                    filterInfo.filter.releaseParams();
+                    // Params changed while copying are copied again next time:
+                    // notifying from here would try to acquire the lock this
+                    // thread is already holding
+                    filterInfo.paramsDirty = filterInfo.filter.releaseParams(false);
 
                     if (numParams > 0) {
                         AudioWorklets.setParams(
