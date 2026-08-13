@@ -35,6 +35,12 @@ class Bind extends tools.Task {
         // Create android project if needed
         AndroidProject.createAndroidProjectIfNeeded(cwd, project);
 
+        // Copy the java files being bound into the android project, so that
+        // the generated bind code always compiles with its dependencies
+        // (previously only done by the `android studio` / `export apk` tasks,
+        // leaving direct gradle builds with unresolved bind references)
+        AndroidProject.copyJavaFilesIfNeeded(cwd, project);
+
         // Get search paths
         var searchPaths = AndroidProject.javaSearchPaths(cwd, project, context.defines.exists('debug'));
 

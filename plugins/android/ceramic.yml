@@ -4,11 +4,13 @@ plugin:
 
     runtime:
         if android:
-            +java:
-                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
-                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/http/HttpRequest.java'
-            +bind:
-                - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
+            # Http support code is only bound if the http plugin is enabled
+            if plugin_http:
+                +java:
+                    - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
+                    - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/http/HttpRequest.java'
+                +bind:
+                    - '{plugin:cwd}/support/ceramic/src/main/java/ceramic/support/Http.java'
             +hooks:
                 - when: begin build
                   command: ceramic
