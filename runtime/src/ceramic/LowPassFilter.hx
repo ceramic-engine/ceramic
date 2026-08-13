@@ -175,17 +175,17 @@ class LowPassFilterWorklet extends AudioFilterWorklet {
     function calculateCoefficients(cutoff:Float, q:Float, sampleRate:Float) {
         // Calculate biquad coefficients for low-pass filter
         var omega = 2.0 * Math.PI * cutoff / sampleRate;
-        var sinOmega = Math.sin(omega);
-        var cosOmega = Math.cos(omega);
-        var alpha = sinOmega / (2.0 * q);
+        var sin = Math.sin(omega);
+        var cos = Math.cos(omega);
+        var alpha = sin / (2.0 * q);
 
         var b0 = 1.0 + alpha;
-        var b1_coeff = -2.0 * cosOmega;
+        var b1_coeff = -2.0 * cos;
         var b2_coeff = 1.0 - alpha;
 
-        var a0_coeff = (1.0 - cosOmega) / 2.0;
-        var a1_coeff = 1.0 - cosOmega;
-        var a2_coeff = (1.0 - cosOmega) / 2.0;
+        var a0_coeff = (1.0 - cos) / 2.0;
+        var a1_coeff = 1.0 - cos;
+        var a2_coeff = (1.0 - cos) / 2.0;
 
         // Normalize coefficients
         a0 = a0_coeff / b0;
