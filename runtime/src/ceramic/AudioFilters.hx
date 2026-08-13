@@ -1,6 +1,6 @@
 package ceramic;
 
-#if sys
+#if (sys && !reflaxe)
 import haxe.atomic.AtomicBool;
 import haxe.atomic.AtomicInt;
 #end
@@ -29,9 +29,15 @@ import haxe.atomic.AtomicInt;
  * @see AudioMixer
  * @see Audio
  */
+@:keep
 class AudioFilters {
 
-    #if sys
+    // Locking is compiled out in the standalone reflaxe.CPP context: there,
+    // thread safety is provided by the embedding library's C++ glue
+    // (audio_worklets.cpp), which mirrors the locking granularity below
+    // with atomic spin locks (per-bus params locks, control lock for the
+    // worklet lists, lock-free dirty fast path on the audio thread).
+    #if (sys && !reflaxe)
     private static var _workletsDirty:AtomicBool = new AtomicBool(true);
     private static var workletsDirty(get,set):Bool;
     inline static function get_workletsDirty():Bool {
@@ -65,13 +71,13 @@ class AudioFilters {
     @:allow(backend.Audio)
     private static function syncWorklets():Void {
         if (workletsDirty) {
-            #if sys
+            #if (sys && !reflaxe)
             allWorkletsLock.acquire();
             #end
             while (pendingWorklets.length > 0) {
                 final worklet = pendingWorklets.shift();
                 final bus = worklet.bus;
-                #if sys
+                #if (sys && !reflaxe)
                 accessBusLocks.acquire();
                 var busLock = lockByBus[bus];
                 if (busLock == null) {
@@ -82,21 +88,23 @@ class AudioFilters {
                 accessBusLocks.release();
                 #end
 
-                var worklets = workletsByBus[bus];
-                if (worklets == null) {
-                    worklets = [];
-                    workletsByBus[bus] = worklets;
+                // Explicit growth with non-null arrays: haxe arrays grow on
+                // out-of-bounds writes but the standalone (reflaxe.CPP)
+                // storage does not, and null comparisons on non-nullable
+                // types are compiled out there — so no null placeholders
+                while (workletsByBus.length <= bus) {
+                    workletsByBus.push([]);
                 }
-                worklets.push(worklet);
+                workletsByBus[bus].push(worklet);
 
-                #if sys
+                #if (sys && !reflaxe)
                 busLock.release();
                 #end
             }
             while (toRemoveWorklets.length > 0) {
                 final worklet = toRemoveWorklets.shift();
                 final bus = worklet.bus;
-                #if sys
+                #if (sys && !reflaxe)
                 accessBusLocks.acquire();
                 var busLock = lockByBus[bus];
                 if (busLock == null) {
@@ -107,17 +115,16 @@ class AudioFilters {
                 accessBusLocks.release();
                 #end
 
-                var worklets = workletsByBus[bus];
-                if (worklets != null) {
-                    worklets.remove(worklet);
+                if (bus < workletsByBus.length) {
+                    workletsByBus[bus].remove(worklet);
                 }
 
-                #if sys
+                #if (sys && !reflaxe)
                 busLock.release();
                 #end
             }
             workletsDirty = false;
-            #if sys
+            #if (sys && !reflaxe)
             allWorkletsLock.release();
             #end
         }
@@ -131,18 +138,38 @@ class AudioFilters {
      * @param workletClass The worklet class to instantiate
      * @return The created worklet instance
      */
+    #if !reflaxe
     @:allow(backend.Audio)
     private static function createWorklet(bus:Int, filterId:Int, workletClass:Class<AudioFilterWorklet>):AudioFilterWorklet {
         final worklet = Type.createInstance(workletClass, [filterId, bus]);
-        #if sys
+        addWorklet(worklet);
+        return worklet;
+    }
+    #end
+    // (in the standalone reflaxe.CPP context, worklets are created through
+    // a generated factory and registered with `addWorklet` — reflection is
+    // not available there)
+
+    /**
+     * Queues an already-created worklet instance for addition.
+     *
+     * Used by the standalone (non-hxcpp) audio worklet host, where worklet
+     * instances are created by a generated factory (a plain switch of
+     * constructor calls) instead of reflection, which is not available
+     * there.
+     *
+     * @param worklet The worklet instance to add
+     */
+    @:allow(backend.Audio)
+    private static function addWorklet(worklet:AudioFilterWorklet):Void {
+        #if (sys && !reflaxe)
         allWorkletsLock.acquire();
         #end
         pendingWorklets.push(worklet);
         workletsDirty = true;
-        #if sys
+        #if (sys && !reflaxe)
         allWorkletsLock.release();
         #end
-        return worklet;
     }
 
     /**
@@ -156,7 +183,7 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function destroyWorklet(bus:Int, filterId:Int):Void {
-        #if sys
+        #if (sys && !reflaxe)
         allWorkletsLock.acquire();
         #end
         // Remove a worklet, even if it's addition is pending
@@ -181,7 +208,7 @@ class AudioFilters {
                 }
             }
         }
-        #if sys
+        #if (sys && !reflaxe)
         allWorkletsLock.release();
         #end
     }
@@ -197,7 +224,7 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function beginUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
-        #if sys
+        #if (sys && !reflaxe)
         accessBusLocks.acquire();
         final busLock = lockByBus[bus];
         if (busLock != null) {
@@ -217,7 +244,7 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function endUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
-        #if sys
+        #if (sys && !reflaxe)
         accessBusLocks.acquire();
         final busLock = lockByBus[bus];
         if (busLock != null) {
@@ -243,7 +270,7 @@ class AudioFilters {
     @:allow(backend.Audio)
     private static function processBusAudioWorklets(bus:Int, buffer:AudioFilterBuffer, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
 
-        #if sys
+        #if (sys && !reflaxe)
         accessBusLocks.acquire();
         final busLock = lockByBus[bus];
         if (busLock != null) {
@@ -251,15 +278,15 @@ class AudioFilters {
             accessBusLocks.release();
         #end
 
-            final worklets = workletsByBus[bus];
-            if (worklets != null) {
+            if (bus < workletsByBus.length) {
+                final worklets = workletsByBus[bus];
                 for (i in 0...worklets.length) {
                     final worklet = worklets[i];
                     worklet.process(buffer, samples, channels, sampleRate, time);
                 }
             }
 
-        #if sys
+        #if (sys && !reflaxe)
             busLock.release();
         }
         else {

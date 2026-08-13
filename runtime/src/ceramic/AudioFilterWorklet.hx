@@ -47,6 +47,11 @@ import haxe.atomic.AtomicInt;
 #if (!macro && !display && !completion)
 @:autoBuild(ceramic.macros.AudioFiltersMacro.buildWorklet())
 #end
+// (reflaxe.CPP: never generate a Dynamic reflection wrapper for this class:
+// it is abstract, and the wrapper would instantiate an invalid
+// std::optional<AudioFilterWorklet> by value in the standalone C++ output.
+// The metadata is unknown — thus ignored — on the other targets.)
+@:dontGenerateDynamic
 abstract class AudioFilterWorklet {
 
     /**
