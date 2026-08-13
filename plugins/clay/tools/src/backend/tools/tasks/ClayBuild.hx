@@ -482,6 +482,11 @@ $workletResolveClassCases
                                     '--class-path', reflaxeCppPath,
                                     reflaxeCppExtraParams,
                                     '-D', 'reflaxe.CPP',
+                                    // Audio worklets run on the audio thread:
+                                    // dynamic typing and reflection have no
+                                    // place there, and are reported as errors
+                                    // instead of silently costing performance
+                                    '--macro', 'cxx.Compiler.setDynamicTypeEnabled(false)',
                                     '-D', 'cpp-output=' + workletsCppPath
                                 ], {cwd: filtersHaxePath});
 
