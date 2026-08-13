@@ -161,6 +161,15 @@ class ClaySetup extends tools.Task {
             }
         }
 
+        // Standalone audio worklets: expose the transpiled C++ output path,
+        // used by the linc_audio_worklets.xml build file to compile the
+        // standalone library with the project
+        if (target.name != 'web'
+            && (Reflect.hasField(project.app.defines, 'ceramic_standalone_audio_worklets')
+                || context.defines.exists('ceramic_standalone_audio_worklets'))) {
+            haxeflagsHxml.push('-D audio_worklets_out=' + Path.join([targetPath, 'audio-filters', 'cpp']));
+        }
+
         var classPathsHxml = '';
         for (entry in (project.app.paths:Array<String>)) {
             if (Path.isAbsolute(entry)) {

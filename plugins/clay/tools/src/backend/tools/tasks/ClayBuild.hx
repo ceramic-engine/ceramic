@@ -2,6 +2,7 @@ package backend.tools.tasks;
 
 import haxe.DynamicAccess;
 import haxe.Json;
+import haxe.crypto.Md5;
 import haxe.io.Path;
 import sys.FileSystem;
 import sys.io.File;
@@ -227,11 +228,12 @@ class ClayBuild extends tools.Task {
             cmdArgs.push('--macro');
             cmdArgs.push('ceramic.macros.AudioFiltersMacro.init()');
 
-            // Read previous audio-filters.json
+            // Read previous audio-filters info
             var prevAudioFilters:Dynamic = null;
             final audioFiltersJsonPath = Path.join([outTargetPath, 'audio-filters', 'info.json']);
-            if (FileSystem.exists(audioFiltersJsonPath)) {
-                prevAudioFilters = Json.parse(File.getContent(audioFiltersJsonPath));
+            final prevAudioFiltersJsonPath = Path.join([outTargetPath, 'audio-filters', 'prev-info.json']);
+            if (FileSystem.exists(prevAudioFiltersJsonPath)) {
+                prevAudioFilters = Json.parse(File.getContent(prevAudioFiltersJsonPath));
             }
 
             status = haxeWithChecksAndLogs(cmdArgs, {cwd: outTargetPath});
@@ -241,6 +243,21 @@ class ClayBuild extends tools.Task {
                 var audioFilters:Dynamic = null;
                 if (FileSystem.exists(audioFiltersJsonPath)) {
                     audioFilters = Json.parse(File.getContent(audioFiltersJsonPath));
+                }
+
+                if (audioFilters != null) {
+                    // The worklets output also depends on the audio plugin
+                    // sources (glue + standalone backend), the transpiler
+                    // sources and the runtime files copied into the worklets
+                    // mini project: include their hash in the comparison so
+                    // that changing them invalidates previous output
+                    var standaloneInputsHash = Files.hashDirectory(Path.join([context.plugins.get('clay').path, 'audio']))
+                        + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src']))
+                        + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'src']));
+                    for (runtimeFile in ['AudioFilters.hx', 'AudioFilterWorklet.hx', 'AudioFilterBuffer.hx', 'macros/AudioFiltersMacro.hx', 'SpinLock.hx']) {
+                        standaloneInputsHash += '-' + Md5.encode(File.getContent(Path.join([context.ceramicRuntimePath, 'src/ceramic', runtimeFile])));
+                    }
+                    Reflect.setField(audioFilters, 'standalone', standaloneInputsHash);
                 }
 
                 final workletsJsFilePath = Path.join([cwd, 'project', 'web', 'audio-worklets.js']);
@@ -259,8 +276,6 @@ class ClayBuild extends tools.Task {
                     else if (!Equal.equal(prevAudioFilters, audioFilters)) {
                         shouldSkipStandaloneFilters = false;
                     }
-
-                    shouldSkipStandaloneFilters = false;
 
                     // Prepare audio filters separate worklets project
                     if (!shouldSkipStandaloneFilters) {
@@ -353,12 +368,18 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                                 Path.join([context.ceramicRuntimePath, 'src/ceramic/macros/AudioFiltersMacro.hx']),
                                 Path.join([filtersHaxePath, 'ceramic/macros/AudioFiltersMacro.hx'])
                             );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/SpinLock.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/SpinLock.hx'])
+                            );
 
                             var workletIncludesStr = '';
                             var workletResolveClassCases = '';
+                            var workletFactoryCases = '';
                             for (toInclude in workletIncludes) {
                                 workletIncludesStr += 'import ' + toInclude + ';' + #if windows '\r\n' #else '\n' #end;
                                 workletResolveClassCases += '        case "' + toInclude + '": ' + toInclude + ';' + #if windows '\r\n' #else '\n' #end;
+                                workletFactoryCases += '        case "' + toInclude + '": new ' + toInclude + '(filterId, bus);' + #if windows '\r\n' #else '\n' #end;
                             }
 
                             File.saveContent(
@@ -366,8 +387,26 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                                 '
 $workletIncludesStr
 function main() {
+    #if reflaxe
+    backend.Audio.init(createWorkletInstance);
+    #else
     backend.Audio.init(resolveWorkletClass);
+    #end
 }
+
+#if reflaxe
+
+// Standalone C++ context: worklet instances are created through this
+// generated factory (plain constructor calls), as reflection is not
+// available there
+function createWorkletInstance(className:String, filterId:Int, bus:Int):Null<ceramic.AudioFilterWorklet> {
+    return switch className {
+$workletFactoryCases
+        case _: null;
+    }
+}
+
+#else
 
 function resolveWorkletClass(className:String):Class<ceramic.AudioFilterWorklet> {
     return switch className {
@@ -375,6 +414,8 @@ $workletResolveClassCases
         case _: ceramic.AudioFilterWorklet;
     }
 }
+
+#end
                                 '
                             );
 
@@ -420,9 +461,20 @@ $workletResolveClassCases
                                     Sys.exit(transpileWorkletsStatus);
                                 }
 
+                                generateStandaloneWorkletsUnityFile(workletsCppPath);
+
                             }
                         }
                     }
+                    else if (target.name != 'web') {
+                        // Even when transpiling is skipped, ensure the unity build
+                        // file compiled by linc_audio_worklets.xml is present
+                        // (derived from the existing transpiled sources)
+                        generateStandaloneWorkletsUnityFile(workletsCppPath);
+                    }
+
+                    // Save for next-time comparison
+                    File.saveContent(prevAudioFiltersJsonPath, Json.stringify(audioFilters));
                 }
                 else {
                     if (FileSystem.exists(workletsJsFilePath)) {
@@ -431,6 +483,15 @@ $workletResolveClassCases
                     if (FileSystem.exists(workletsJsMinifiedFilePath)) {
                         FileSystem.deleteFile(workletsJsMinifiedFilePath);
                     }
+                }
+
+                // When standalone audio worklets are enabled, the transpiled
+                // sources are compiled with the project (linc_audio_worklets.xml),
+                // so they are required for the native build to succeed
+                if (target.name != 'web'
+                    && context.defines.exists('ceramic_standalone_audio_worklets')
+                    && !FileSystem.exists(Path.join([workletsCppPath, 'audio_worklets_all.cpp']))) {
+                    fail('The `ceramic_standalone_audio_worklets` define is enabled, but the project has no audio filter worklet: the standalone audio worklets library needs at least one worklet to be compiled.');
                 }
 
                 // Compile GLSL shaders from Haxe shaders
@@ -772,6 +833,57 @@ $workletResolveClassCases
         } else if (action == 'run') {
             runHooks(cwd, args, project.app.hooks, 'end run');
         }
+    }
+
+    /**
+     * Generates the unity build file including every source transpiled
+     * from the audio worklet haxe code by reflaxe.CPP, except the C
+     * `main` entry point (which must not be part of the library). This
+     * file, along with the C ABI glue, is compiled with the project by
+     * `linc_audio_worklets.xml` when `ceramic_standalone_audio_worklets`
+     * is enabled.
+     */
+    function generateStandaloneWorkletsUnityFile(workletsCppPath:String):Void {
+
+        final generatedFilesJsonPath = Path.join([workletsCppPath, '_GeneratedFiles.json']);
+        if (!FileSystem.exists(generatedFilesJsonPath)) {
+            return;
+        }
+
+        final generatedFiles:{filesGenerated:Array<String>} = Json.parse(File.getContent(generatedFilesJsonPath));
+
+        // Hash of all the generated sources: embedded below so that any
+        // change in the included/depended sources changes this file's
+        // content, which is what the native build tool actually watches
+        // (the includes themselves are invisible to it)
+        var sourcesHash = '';
+        for (file in generatedFiles.filesGenerated) {
+            final filePath = Path.join([workletsCppPath, file]);
+            if (FileSystem.exists(filePath)) {
+                sourcesHash = Md5.encode(sourcesHash + Md5.encode(File.getContent(filePath)));
+            }
+        }
+
+        final content = new StringBuf();
+        content.add('// Generated by ceramic (clay backend). Single translation unit\n');
+        content.add('// gathering all the audio worklet sources transpiled by reflaxe.CPP,\n');
+        content.add('// compiled with the project by linc_audio_worklets.xml\n');
+        content.add('// generated sources hash: $sourcesHash\n');
+        for (file in generatedFiles.filesGenerated) {
+            if (file.endsWith('.cpp') && file != 'src/_main_.cpp') {
+                content.add('#include "$file"\n');
+            }
+        }
+
+        final unityFilePath = Path.join([workletsCppPath, 'audio_worklets_all.cpp']);
+        final newContent = content.toString();
+
+        // Only rewrite the file when its content changes, to avoid
+        // needless native rebuilds
+        if (!FileSystem.exists(unityFilePath) || File.getContent(unityFilePath) != newContent) {
+            File.saveContent(unityFilePath, newContent);
+        }
+
     }
 
 } // Setup

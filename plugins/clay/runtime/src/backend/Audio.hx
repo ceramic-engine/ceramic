@@ -576,7 +576,21 @@ class Audio implements spec.Audio {
         #end
 
         if (createClayBusFilter) {
-            #if cpp
+            #if (cpp && ceramic_standalone_audio_worklets)
+            // Standalone audio worklets mode: the callbacks handed to the
+            // audio engine are raw C function pointers into the standalone
+            // audio_worklets library, and `attachHaxeThread` is disabled.
+            // The audio thread thus never runs any haxe/hxcpp code and is
+            // never attached to the hxcpp runtime (no GC interaction at all).
+            _initStandaloneWorkletsIfNeeded();
+            Clay.app.audio.createBusFilter(
+                bus,
+                AudioWorkletsCallbacks.createFunc(),
+                AudioWorkletsCallbacks.destroyFunc(),
+                AudioWorkletsCallbacks.filterFunc(),
+                false /* attachHaxeThread */
+            );
+            #elseif cpp
             Clay.app.audio.createBusFilter(
                 bus,
                 cpp.Callable.fromStaticFunction(_clayFilterCreate),
@@ -604,7 +618,31 @@ class Audio implements spec.Audio {
             #end
         }
 
-        #if sys
+        #if (cpp && ceramic_standalone_audio_worklets)
+
+        // Standalone audio worklets mode: the worklet is registered with the
+        // standalone library right away, from the main thread (in hxcpp mode
+        // it is created lazily from the audio thread instead). Its readiness
+        // is then polled from the main thread update tick, as no callback can
+        // come from the standalone audio thread.
+        _initStandaloneWorkletsIfNeeded();
+        final workletClassName = Type.getClassName(filterWorkletClass);
+        if (AudioWorklets.addBusFilter(bus, filter.filterId, workletClassName) == 0) {
+            throw 'Audio filter worklet class not found in the standalone audio worklets library: ' + workletClassName;
+        }
+
+        audioFiltersLock.acquire();
+        pendingStandaloneWorkletReady.push({
+            bus: bus,
+            filterId: filter.filterId,
+            cb: filterWorkletReady
+        });
+        audioFiltersLock.release();
+
+        // (initial filter params will be pushed by the update tick, as
+        // `paramsDirty` is true on a new `AudioFilterInfo`)
+
+        #elseif sys
         audioFiltersLock.acquire();
         final byBusLock = filterLocksByBus[bus];
         byBusLock.acquire();
@@ -676,6 +714,11 @@ class Audio implements spec.Audio {
             bus,
             filterId
         );
+        #elseif (cpp && ceramic_standalone_audio_worklets)
+        if (resolvedInfo != null) {
+            AudioWorklets.destroyBusFilter(bus, resolvedInfo.id);
+            resolvedInfo = null;
+        }
         #else
         if (resolvedInfo != null) {
             if (resolvedInfo.worklet != null) {
@@ -801,11 +844,11 @@ class Audio implements spec.Audio {
         #end
     }
 
-    #if cpp
+    #if (cpp && !ceramic_standalone_audio_worklets)
 
     /**
      * Internal audio processing callback for native platforms.
-     * 
+     *
      * Called by Clay's audio thread to process audio through filters.
      * This method:
      * - Creates worklets for new filters
@@ -904,6 +947,124 @@ class Audio implements spec.Audio {
         );
 
         #end
+
+    }
+
+    #end
+
+    #if (cpp && ceramic_standalone_audio_worklets)
+
+    /** Whether the standalone audio worklets library has been initialized */
+    static var standaloneWorkletsInited:Bool = false;
+
+    /** Filter worklet ready callbacks pending, polled from the main thread */
+    static final pendingStandaloneWorkletReady:Array<{bus:Int, filterId:Int, cb:()->Void}> = [];
+
+    /** Staging buffer used to pass filter params (float64) to the standalone library (float32) */
+    static final standaloneParamsScratch:Array<cpp.Float32> = [];
+
+    /**
+     * Initializes the standalone audio worklets library and binds the
+     * main-thread update tick that polls its state. Called from the main
+     * thread the first time a filter is added.
+     */
+    static function _initStandaloneWorkletsIfNeeded():Void {
+
+        if (standaloneWorkletsInited) return;
+        standaloneWorkletsInited = true;
+
+        AudioWorklets.init();
+
+        ceramic.App.app.onUpdate(null, _standaloneWorkletsUpdate);
+
+    }
+
+    /**
+     * Main-thread update tick for the standalone audio worklets mode.
+     *
+     * The standalone audio thread never runs any haxe/hxcpp code, so no
+     * callback can come from it: the states that the hxcpp mode receives
+     * through audio thread callbacks (bus filter instances created or
+     * destroyed by the audio engine, worklets synchronized into the
+     * active processing list) are polled from here instead, and dirty
+     * filter params are flushed to the standalone library.
+     */
+    static function _standaloneWorkletsUpdate(delta:Float):Void {
+
+        audioFiltersLock.acquire();
+
+        var toNotify:Array<()->Void> = null;
+
+        // Sync active bus filter states & fire pending bus filter callbacks
+        for (bus in 0...filterIdsByBus.length) {
+            if (filterIdsByBus[bus] == null) continue;
+            final wasActive = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+            final isActive = AudioWorklets.clayBusReady(bus) != 0;
+            activeBusFilters[bus] = isActive;
+            if (isActive && !wasActive) {
+                if (busFilterReadyCallbacks.length > bus && busFilterReadyCallbacks[bus] != null) {
+                    while (busFilterReadyCallbacks[bus].length > 0) {
+                        if (toNotify == null) toNotify = [];
+                        toNotify.push(busFilterReadyCallbacks[bus].shift());
+                    }
+                }
+            }
+        }
+
+        // Fire callbacks of worklets that are now processing audio
+        var i = 0;
+        while (i < pendingStandaloneWorkletReady.length) {
+            final pending = pendingStandaloneWorkletReady[i];
+            if (AudioWorklets.filterReady(pending.bus, pending.filterId) != 0) {
+                pendingStandaloneWorkletReady.splice(i, 1);
+                if (toNotify == null) toNotify = [];
+                toNotify.push(pending.cb);
+            }
+            else {
+                i++;
+            }
+        }
+
+        // Flush dirty filter params to the standalone library
+        for (bus in 0...filterIdsByBus.length) {
+            final filters = filterIdsByBus[bus];
+            if (filters == null) continue;
+            for (f in 0...filters.length) {
+                final filterInfo = filters[f];
+                if (filterInfo.paramsDirty) {
+                    filterInfo.paramsDirty = false;
+
+                    filterInfo.filter.acquireParams();
+                    final filterParams = @:privateAccess filterInfo.filter.params;
+                    final numParams = filterParams.length;
+                    while (standaloneParamsScratch.length < numParams) {
+                        standaloneParamsScratch.push(0);
+                    }
+                    for (p in 0...numParams) {
+                        standaloneParamsScratch[p] = filterParams[p];
+                    }
+                    filterInfo.filter.releaseParams();
+
+                    if (numParams > 0) {
+                        AudioWorklets.setParams(
+                            bus, filterInfo.id,
+                            cpp.NativeArray.address(standaloneParamsScratch, 0).constRaw,
+                            numParams
+                        );
+                    }
+                }
+            }
+        }
+
+        audioFiltersLock.release();
+
+        // Callbacks are called outside of the lock (we are on the main thread)
+        if (toNotify != null) {
+            for (n in 0...toNotify.length) {
+                final cb = toNotify[n];
+                cb();
+            }
+        }
 
     }
 
