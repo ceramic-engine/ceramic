@@ -253,7 +253,8 @@ class ClayBuild extends tools.Task {
                     // that changing them invalidates previous output
                     var standaloneInputsHash = Files.hashDirectory(Path.join([context.plugins.get('clay').path, 'audio']))
                         + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src']))
-                        + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'src']));
+                        + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'src']))
+                        + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'std']));
                     for (runtimeFile in ['AudioFilters.hx', 'AudioFilterWorklet.hx', 'AudioFilterBuffer.hx', 'macros/AudioFiltersMacro.hx', 'SpinLock.hx']) {
                         standaloneInputsHash += '-' + Md5.encode(File.getContent(Path.join([context.ceramicRuntimePath, 'src/ceramic', runtimeFile])));
                     }
@@ -440,8 +441,24 @@ $workletResolveClassCases
                                 var ceramicRoot = context.ceramicRootPath;
                                 var reflaxePath = Path.join([ceramicRoot, 'git', 'reflaxe', 'src']);
                                 var reflaxeExtraParams = Path.join([ceramicRoot, 'git', 'reflaxe', 'extraParams.hxml']);
+                                // The reflaxe.CPP repository is used from its
+                                // source layout: the target std lives in `std`
+                                // and `std/cxx/_std`, which the published
+                                // haxelib flattens into `src`. Same class path
+                                // set as the upstream test suite.
+                                var reflaxeCppStdPath = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'std']);
+                                var reflaxeCppCoreStdPath = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'std/cxx/_std']);
                                 var reflaxeCppPath = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'src']);
                                 var reflaxeCppExtraParams = Path.join([ceramicRoot, 'git', 'reflaxe.CPP', 'extraParams.hxml']);
+
+                                // Transpiling doesn't remove the files it
+                                // generated previously: start from a clean
+                                // output so that no stale header can be picked
+                                // up by the native build
+                                if (FileSystem.exists(workletsCppPath)) {
+                                    Files.deleteRecursive(workletsCppPath);
+                                }
+
                                 final transpileWorkletsStatus = haxeWithChecksAndLogs([
                                     '--class-path', '.',
                                     '--class-path', Path.join([context.plugins.get('clay').path, 'audio/src-cpp']),
@@ -449,6 +466,8 @@ $workletResolveClassCases
                                     '--class-path', reflaxePath,
                                     reflaxeExtraParams,
                                     '-D', 'reflaxe',
+                                    '--class-path', reflaxeCppStdPath,
+                                    '--class-path', reflaxeCppCoreStdPath,
                                     '--class-path', reflaxeCppPath,
                                     reflaxeCppExtraParams,
                                     '-D', 'reflaxe.CPP',
