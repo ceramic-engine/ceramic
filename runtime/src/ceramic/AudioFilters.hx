@@ -1,6 +1,6 @@
 package ceramic;
 
-#if (sys && !reflaxe)
+#if sys
 import haxe.atomic.AtomicBool;
 import haxe.atomic.AtomicInt;
 #end
@@ -32,12 +32,7 @@ import haxe.atomic.AtomicInt;
 @:keep
 class AudioFilters {
 
-    // Locking is compiled out in the standalone reflaxe.CPP context: there,
-    // thread safety is provided by the embedding library's C++ glue
-    // (audio_worklets.cpp), which mirrors the locking granularity below
-    // with atomic spin locks (per-bus params locks, control lock for the
-    // worklet lists, lock-free dirty fast path on the audio thread).
-    #if (sys && !reflaxe)
+    #if sys
     private static var _workletsDirty:AtomicBool = new AtomicBool(true);
     private static var workletsDirty(get,set):Bool;
     inline static function get_workletsDirty():Bool {
@@ -59,6 +54,24 @@ class AudioFilters {
 
     private static final workletsByBus:Array<Array<AudioFilterWorklet>> = [];
 
+    #if sys
+    /**
+     * The lock protecting a given bus, creating it if needed.
+     *
+     * Grown explicitly: an out of bounds access does not grow the storage
+     * in every context this code is compiled for.
+     */
+    inline private static function busLock(bus:Int):ceramic.SpinLock {
+        accessBusLocks.acquire();
+        while (lockByBus.length <= bus) {
+            lockByBus.push(new ceramic.SpinLock());
+        }
+        final lock = lockByBus[bus];
+        accessBusLocks.release();
+        return lock;
+    }
+    #end
+
     /**
      * Synchronizes pending worklet changes with the active worklet lists.
      * 
@@ -71,21 +84,15 @@ class AudioFilters {
     @:allow(backend.Audio)
     private static function syncWorklets():Void {
         if (workletsDirty) {
-            #if (sys && !reflaxe)
+            #if sys
             allWorkletsLock.acquire();
             #end
             while (pendingWorklets.length > 0) {
                 final worklet = pendingWorklets.shift();
                 final bus = worklet.bus;
-                #if (sys && !reflaxe)
-                accessBusLocks.acquire();
-                var busLock = lockByBus[bus];
-                if (busLock == null) {
-                    busLock = new ceramic.SpinLock();
-                    lockByBus[bus] = busLock;
-                }
-                busLock.acquire();
-                accessBusLocks.release();
+                #if sys
+                final lock = busLock(bus);
+                lock.acquire();
                 #end
 
                 // Explicit growth with non-null arrays: haxe arrays grow on
@@ -97,34 +104,28 @@ class AudioFilters {
                 }
                 workletsByBus[bus].push(worklet);
 
-                #if (sys && !reflaxe)
-                busLock.release();
+                #if sys
+                lock.release();
                 #end
             }
             while (toRemoveWorklets.length > 0) {
                 final worklet = toRemoveWorklets.shift();
                 final bus = worklet.bus;
-                #if (sys && !reflaxe)
-                accessBusLocks.acquire();
-                var busLock = lockByBus[bus];
-                if (busLock == null) {
-                    busLock = new ceramic.SpinLock();
-                    lockByBus[bus] = busLock;
-                }
-                busLock.acquire();
-                accessBusLocks.release();
+                #if sys
+                final lock = busLock(bus);
+                lock.acquire();
                 #end
 
                 if (bus < workletsByBus.length) {
                     workletsByBus[bus].remove(worklet);
                 }
 
-                #if (sys && !reflaxe)
-                busLock.release();
+                #if sys
+                lock.release();
                 #end
             }
             workletsDirty = false;
-            #if (sys && !reflaxe)
+            #if sys
             allWorkletsLock.release();
             #end
         }
@@ -162,12 +163,12 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function addWorklet(worklet:AudioFilterWorklet):Void {
-        #if (sys && !reflaxe)
+        #if sys
         allWorkletsLock.acquire();
         #end
         pendingWorklets.push(worklet);
         workletsDirty = true;
-        #if (sys && !reflaxe)
+        #if sys
         allWorkletsLock.release();
         #end
     }
@@ -183,7 +184,7 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function destroyWorklet(bus:Int, filterId:Int):Void {
-        #if (sys && !reflaxe)
+        #if sys
         allWorkletsLock.acquire();
         #end
         // Remove a worklet, even if it's addition is pending
@@ -208,7 +209,7 @@ class AudioFilters {
                 }
             }
         }
-        #if (sys && !reflaxe)
+        #if sys
         allWorkletsLock.release();
         #end
     }
@@ -224,13 +225,8 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function beginUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
-        #if (sys && !reflaxe)
-        accessBusLocks.acquire();
-        final busLock = lockByBus[bus];
-        if (busLock != null) {
-            busLock.acquire();
-        }
-        accessBusLocks.release();
+        #if sys
+        busLock(bus).acquire();
         #end
     }
 
@@ -244,13 +240,8 @@ class AudioFilters {
      */
     @:allow(backend.Audio)
     private static function endUpdateFilterWorkletParams(bus:Int, filterId:Int):Void {
-        #if (sys && !reflaxe)
-        accessBusLocks.acquire();
-        final busLock = lockByBus[bus];
-        if (busLock != null) {
-            busLock.release();
-        }
-        accessBusLocks.release();
+        #if sys
+        busLock(bus).release();
         #end
     }
 
@@ -270,28 +261,21 @@ class AudioFilters {
     @:allow(backend.Audio)
     private static function processBusAudioWorklets(bus:Int, buffer:AudioFilterBuffer, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
 
-        #if (sys && !reflaxe)
-        accessBusLocks.acquire();
-        final busLock = lockByBus[bus];
-        if (busLock != null) {
-            busLock.acquire();
-            accessBusLocks.release();
+        #if sys
+        final lock = busLock(bus);
+        lock.acquire();
         #end
 
-            if (bus < workletsByBus.length) {
-                final worklets = workletsByBus[bus];
-                for (i in 0...worklets.length) {
-                    final worklet = worklets[i];
-                    worklet.process(buffer, samples, channels, sampleRate, time);
-                }
+        if (bus < workletsByBus.length) {
+            final worklets = workletsByBus[bus];
+            for (i in 0...worklets.length) {
+                final worklet = worklets[i];
+                worklet.process(buffer, samples, channels, sampleRate, time);
             }
+        }
 
-        #if (sys && !reflaxe)
-            busLock.release();
-        }
-        else {
-            accessBusLocks.release();
-        }
+        #if sys
+        lock.release();
         #end
 
     }

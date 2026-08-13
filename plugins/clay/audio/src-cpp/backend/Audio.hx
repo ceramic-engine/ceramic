@@ -13,17 +13,14 @@ import ceramic.AudioFilterWorklet;
  * factory (a plain switch of constructor calls emitted in the generated
  * `Main.hx`), because reflection is not available in this context.
  *
- * Threading model (mirrors the hxcpp host):
+ * Threading model (identical to the hxcpp host, since it is the very same
+ * `ceramic.AudioFilters` code doing the work):
  * - `addBusFilter` / `destroyBusFilter` / `setParams` are called from the
  *   game/main thread.
- * - `syncWorklets` and `processBus` are called from the audio thread.
+ * - `processBus` is called from the audio thread.
  *
- * This code is compiled lock-free (the `ceramic.AudioFilters` locking is
- * only enabled in the hxcpp context): the embedding C++ glue
- * (`audio_worklets.cpp`) provides the synchronization around these
- * functions, with the same granularity as the hxcpp host — per-bus spin
- * locks for the params, a control spin lock for the worklet lists, and a
- * lock-free dirty fast path on the audio thread.
+ * All the synchronization lives in `ceramic.AudioFilters` — the embedding
+ * C++ glue is only a C ABI forwarder.
  */
 class Audio {
 
@@ -119,23 +116,13 @@ class Audio {
     }
 
     /**
-     * Synchronizes pending worklet additions/removals into the active
-     * per-bus processing lists. Called from the audio thread, only when
-     * worklets were added or removed (the glue keeps a dirty flag).
-     */
-    public static function syncWorklets():Void {
-
-        @:privateAccess ceramic.AudioFilters.syncWorklets();
-
-    }
-
-    /**
      * Processes one audio chunk through all the worklets of the given
      * bus. Called from the audio thread.
      * @param buffer Planar float32 samples (one channel block after another)
      */
     public static function processBus(bus:Int, buffer:cxx.CArray<cxx.num.Float32>, samples:Int, channels:Int, sampleRate:Float, time:Float):Void {
 
+        @:privateAccess ceramic.AudioFilters.syncWorklets();
         @:privateAccess ceramic.AudioFilters.processBusAudioWorklets(
             bus, new AudioFilterBuffer(buffer), samples, channels, sampleRate, time
         );

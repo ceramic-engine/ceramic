@@ -15,11 +15,10 @@
  * - audio_worklets_add_bus_filter / _destroy_bus_filter / _set_params /
  *   _filter_ready are called from the game/main thread.
  * - audio_worklets_process_bus() is called from the audio thread; the
- *   library handles the synchronization between both sides internally,
- *   with the same granularity as the ceramic hxcpp host: atomic spin
- *   locks scoped per bus for the params, a control spin lock for the
- *   worklet lists, and a lock-free fast path so the audio thread takes
- *   no lock at all for worklet synchronization when nothing changed.
+ *   library handles the synchronization between both sides internally
+ *   (per-bus spin locks for the params, a lock for the worklet lists, and
+ *   a lock-free dirty fast path on the audio thread) — the very same code
+ *   the ceramic hxcpp host runs.
  *
  * Bus indices must be in the [0, 31] range.
  */

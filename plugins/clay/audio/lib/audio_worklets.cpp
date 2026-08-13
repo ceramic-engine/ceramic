@@ -9,48 +9,12 @@
 
 #define AUDIO_WORKLETS_MAX_BUSES 32
 
-// The transpiled haxe side is compiled lock-free (its locking is only
-// enabled in the hxcpp context): the synchronization between the control
-// functions (main thread) and the processing (audio thread) is provided
-// here, mirroring the granularity of the ceramic hxcpp host — atomic spin
-// locks and a lock-free dirty fast path, so that the hot path never takes
-// a lock when nothing changed, and contention stays confined to the bus
-// actually being touched.
-//
-// Locking model:
-// - g_workletsDirty (atomic flag): set by add/destroy; the audio thread
-//   only synchronizes pending worklet changes (and only then takes the
-//   control lock) when it is set. Steady state: no lock at all here.
-// - g_controlLock (spin): serializes the pending worklet lists and the
-//   per-bus active list structure — add/destroy (main), sync (audio) and
-//   the readiness polling (main). All held for very short durations.
-// - g_busLocks[bus] (spin): protects a bus' worklet params between
-//   set_params (main) and that bus' processing (audio). Params pushes are
-//   rare and tiny; the worst case is the main thread spinning during one
-//   audio block when a push overlaps the processing of the same bus —
-//   never the other way around for long, as the audio thread only waits
-//   the duration of a params copy.
+// This glue is only a C ABI forwarder: the synchronization between the
+// control functions (main thread) and the processing (audio thread) lives
+// in the transpiled `ceramic.AudioFilters`, which is the very same code the
+// hxcpp host runs — one implementation, one behaviour.
 
 namespace {
-
-    // Mirrors ceramic.SpinLock (atomic bool, acquire/release semantics)
-    class SpinLock {
-        std::atomic<bool> locked{false};
-    public:
-        void acquire() {
-            bool expected = false;
-            while (!locked.compare_exchange_weak(expected, true, std::memory_order_acquire, std::memory_order_relaxed)) {
-                expected = false;
-            }
-        }
-        void release() {
-            locked.store(false, std::memory_order_release);
-        }
-    };
-
-    SpinLock g_controlLock;
-    SpinLock g_busLocks[AUDIO_WORKLETS_MAX_BUSES];
-    std::atomic<bool> g_workletsDirty{false};
 
     inline bool validBus(int bus) {
         return bus >= 0 && bus < AUDIO_WORKLETS_MAX_BUSES;
@@ -69,55 +33,28 @@ void audio_worklets_init(void) {
 
 int audio_worklets_add_bus_filter(int bus, int filterId, const char* workletClass) {
     if (!validBus(bus)) return 0;
-    g_controlLock.acquire();
-    int result = backend::Audio::addBusFilter(bus, filterId, std::string(workletClass)) ? 1 : 0;
-    if (result) {
-        g_workletsDirty.store(true, std::memory_order_release);
-    }
-    g_controlLock.release();
-    return result;
+    return backend::Audio::addBusFilter(bus, filterId, std::string(workletClass)) ? 1 : 0;
 }
 
 void audio_worklets_destroy_bus_filter(int bus, int filterId) {
     if (!validBus(bus)) return;
-    g_controlLock.acquire();
     backend::Audio::destroyBusFilter(bus, filterId);
-    g_workletsDirty.store(true, std::memory_order_release);
-    g_controlLock.release();
 }
 
 void audio_worklets_set_params(int bus, int filterId, const float* values, int count) {
     if (!validBus(bus)) return;
-    g_busLocks[bus].acquire();
     backend::Audio::setParams(bus, filterId, const_cast<float*>(values), count);
-    g_busLocks[bus].release();
 }
 
 int audio_worklets_filter_ready(int bus, int filterId) {
     if (!validBus(bus)) return 0;
-    g_controlLock.acquire();
-    int result = backend::Audio::isFilterReady(bus, filterId) ? 1 : 0;
-    g_controlLock.release();
-    return result;
+    return backend::Audio::isFilterReady(bus, filterId) ? 1 : 0;
 }
 
 void audio_worklets_process_bus(int bus, float* buffer, unsigned int samples,
                                 unsigned int channels, float sampleRate, double time) {
     if (!validBus(bus)) return;
-
-    // Fast path: a plain atomic load when nothing was added/removed —
-    // pending worklet changes are only synchronized (and the control
-    // lock only taken) when the flag is set
-    if (g_workletsDirty.load(std::memory_order_acquire)) {
-        g_controlLock.acquire();
-        backend::Audio::syncWorklets();
-        g_workletsDirty.store(false, std::memory_order_release);
-        g_controlLock.release();
-    }
-
-    g_busLocks[bus].acquire();
     backend::Audio::processBus(bus, buffer, (int)samples, (int)channels, (double)sampleRate, time);
-    g_busLocks[bus].release();
 }
 
 /* --- Host integration helpers -------------------------------------------- */
