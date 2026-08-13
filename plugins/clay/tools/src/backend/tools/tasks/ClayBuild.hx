@@ -255,7 +255,7 @@ class ClayBuild extends tools.Task {
                         + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src']))
                         + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'src']))
                         + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe.CPP', 'std']));
-                    for (runtimeFile in ['AudioFilters.hx', 'AudioFilterWorklet.hx', 'AudioFilterBuffer.hx', 'macros/AudioFiltersMacro.hx', 'SpinLock.hx']) {
+                    for (runtimeFile in ['AudioFilters.hx', 'AudioFilterWorklet.hx', 'AudioFilterBuffer.hx', 'Float32Array.hx', 'UInt8Array.hx', 'macros/AudioFiltersMacro.hx', 'SpinLock.hx']) {
                         standaloneInputsHash += '-' + Md5.encode(File.getContent(Path.join([context.ceramicRuntimePath, 'src/ceramic', runtimeFile])));
                     }
                     Reflect.setField(audioFilters, 'standalone', standaloneInputsHash);
@@ -341,6 +341,9 @@ class ClayBuild extends tools.Task {
                                 '$packDecl
 import ceramic.AudioFilterWorklet;
 import ceramic.AudioFilterBuffer;
+import ceramic.Float32Array;
+import ceramic.UInt8Array;
+import haxe.ds.Vector;
 
 ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                                 '
@@ -364,6 +367,14 @@ ${File.getContent(ref.filePath).substring(ref.min, ref.max)}
                             File.copy(
                                 Path.join([context.ceramicRuntimePath, 'src/ceramic/AudioFilterBuffer.hx']),
                                 Path.join([filtersHaxePath, 'ceramic/AudioFilterBuffer.hx'])
+                            );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/Float32Array.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/Float32Array.hx'])
+                            );
+                            File.copy(
+                                Path.join([context.ceramicRuntimePath, 'src/ceramic/UInt8Array.hx']),
+                                Path.join([filtersHaxePath, 'ceramic/UInt8Array.hx'])
                             );
                             File.copy(
                                 Path.join([context.ceramicRuntimePath, 'src/ceramic/macros/AudioFiltersMacro.hx']),
