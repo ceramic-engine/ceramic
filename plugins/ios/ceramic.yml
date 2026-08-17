@@ -9,7 +9,7 @@ plugin:
                   command: ceramic
                   args: ['ios', 'bind']
             +defines:
-                - HXCPP_IOS_MIN_VERSION: '12.0'
+                - HXCPP_IOS_MIN_VERSION: '16.0'
         if ios && plugin_http:
             +bind:
                 - '{plugin:cwd}/support/CeramicIosSupport/CeramicIosSupport/Support/Http.h'

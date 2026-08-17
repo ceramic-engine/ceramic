@@ -27,6 +27,7 @@
 		7E57DF0A2DCE068D00FFDF72 /* libEGL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF062DCE067500FFDF72 /* libEGL.xcframework */; };
 		7E57DF0B2DCE068D00FFDF72 /* libGLESv2.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */; };
 		7E57DF0C2DCE068D00FFDF72 /* SDL3.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF052DCE067500FFDF72 /* SDL3.xcframework */; };
+		7E57DF0D2DCE068D00FFDF73 /* MyApp.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF062DCE067500FFDF74 /* MyApp.xcframework */; };
 		7E57DF0E2DCE0EC100FFDF72 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */; };
 		7E7BE9262029EA0300CBF16B /* SwiftClasses.h in Headers */ = {isa = PBXBuildFile; fileRef = 7E7BE9242029EA0300CBF16B /* SwiftClasses.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7E7BE9292029EA0300CBF16B /* SwiftClasses.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */; };
@@ -37,6 +38,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		7E57C0DE2DCE100000FFDF06 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7E57C0DE2DCE100000FFDF01;
+			remoteInfo = "Build Haxe";
+		};
 		7E7BE9272029EA0300CBF16B /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
@@ -81,6 +89,7 @@
 		7E5157BA281D5742005BF102 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libGLESv2.xcframework; path = Frameworks/libGLESv2.xcframework; sourceTree = "<group>"; };
 		7E57DF052DCE067500FFDF72 /* SDL3.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SDL3.xcframework; path = Frameworks/SDL3.xcframework; sourceTree = "<group>"; };
+		7E57DF062DCE067500FFDF74 /* MyApp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MyApp.xcframework; path = Frameworks/MyApp.xcframework; sourceTree = "<group>"; };
 		7E57DF062DCE067500FFDF72 /* libEGL.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libEGL.xcframework; path = Frameworks/libEGL.xcframework; sourceTree = "<group>"; };
 		7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftClasses.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -102,6 +111,7 @@
 				7E57DF0A2DCE068D00FFDF72 /* libEGL.xcframework in Frameworks */,
 				7E57DF0B2DCE068D00FFDF72 /* libGLESv2.xcframework in Frameworks */,
 				7E57DF0C2DCE068D00FFDF72 /* SDL3.xcframework in Frameworks */,
+				7E57DF0D2DCE068D00FFDF73 /* MyApp.xcframework in Frameworks */,
 				7E5157BB281D5742005BF102 /* CoreBluetooth.framework in Frameworks */,
 				7E921177265301CB002B8DA5 /* Metal.framework in Frameworks */,
 				4079DA641C769A2700B81DF7 /* GameController.framework in Frameworks */,
@@ -155,6 +165,7 @@
 				7E57DF062DCE067500FFDF72 /* libEGL.xcframework */,
 				7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */,
 				7E57DF052DCE067500FFDF72 /* SDL3.xcframework */,
+				7E57DF062DCE067500FFDF74 /* MyApp.xcframework */,
 				7E5157BA281D5742005BF102 /* CoreBluetooth.framework */,
 				7E921176265301CB002B8DA5 /* Metal.framework */,
 				4079DA631C769A2700B81DF7 /* GameController.framework */,
@@ -224,12 +235,25 @@
 		};
 /* End PBXHeadersBuildPhase section */
 
+/* Begin PBXAggregateTarget section */
+		7E57C0DE2DCE100000FFDF01 /* Build Haxe */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */;
+			buildPhases = (
+				26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */,
+			);
+			dependencies = (
+			);
+			name = "Build Haxe";
+			productName = "Build Haxe";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXNativeTarget section */
 		1D6058900D05DD3D006BFB54 /* MyApp */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "MyApp" */;
 			buildPhases = (
-				26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */,
 				1D60588D0D05DD3D006BFB54 /* Resources */,
 				1D60588E0D05DD3D006BFB54 /* Sources */,
 				1D60588F0D05DD3D006BFB54 /* Frameworks */,
@@ -238,6 +262,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				7E57C0DE2DCE100000FFDF05 /* PBXTargetDependency */,
 				7E7BE9282029EA0300CBF16B /* PBXTargetDependency */,
 			);
 			name = MyApp;
@@ -297,6 +322,7 @@
 			projectRoot = "";
 			targets = (
 				1D6058900D05DD3D006BFB54 /* MyApp */,
+				7E57C0DE2DCE100000FFDF01 /* Build Haxe */,
 				7E7BE9212029EA0300CBF16B /* SwiftClasses */,
 			);
 		};
@@ -325,6 +351,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -332,6 +359,7 @@
 			);
 			name = "Ceramic / Haxe";
 			outputPaths = (
+				"$(PROJECT_DIR)/Frameworks/MyApp.xcframework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -373,6 +401,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7E57C0DE2DCE100000FFDF05 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7E57C0DE2DCE100000FFDF01 /* Build Haxe */;
+			targetProxy = 7E57C0DE2DCE100000FFDF06 /* PBXContainerItemProxy */;
+		};
 		7E7BE9282029EA0300CBF16B /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7E7BE9212029EA0300CBF16B /* SwiftClasses */;
@@ -393,7 +426,6 @@
 				DEAD_CODE_STRIPPING = NO;
 				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -404,15 +436,6 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/../../out/clay/ios-debug/cpp",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-l",
-					"\"MyApp\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = mycompany.MyApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -434,7 +457,6 @@
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
-				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = arm64;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/Frameworks",
@@ -445,15 +467,6 @@
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
-				);
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(PROJECT_DIR)/../../out/clay/ios/cpp",
-				);
-				OTHER_LDFLAGS = (
-					"$(inherited)",
-					"-l",
-					"\"MyApp\"",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = mycompany.MyApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -594,7 +607,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 			};
@@ -629,16 +642,39 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
 		};
+		7E57C0DE2DCE100000FFDF03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		7E57C0DE2DCE100000FFDF04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E57C0DE2DCE100000FFDF03 /* Debug */,
+				7E57C0DE2DCE100000FFDF04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "MyApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

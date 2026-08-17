@@ -46,14 +46,20 @@ class Xcode extends tools.Task {
         var iosProjectEGLFramework = Path.join([iosProjectPath, 'Frameworks', 'libEGL.xcframework']);
         var ceramicAngleEGLFramework = Path.join([context.ceramicRootPath, 'bin/angle/angle-ios-universal/libEGL.xcframework']);
         var iosProjectEGLLib = Path.join([iosProjectEGLFramework, 'ios-arm64/libEGL.framework/libEGL']);
-        var ceramicAngleEGLLib = Path.join([iosProjectEGLFramework, 'ios-arm64/libEGL.framework/libEGL']);
+        var ceramicAngleEGLLib = Path.join([ceramicAngleEGLFramework, 'ios-arm64/libEGL.framework/libEGL']);
 
         var iosProjectGLESv2Framework = Path.join([iosProjectPath, 'Frameworks', 'libGLESv2.xcframework']);
         var ceramicAngleGLESv2Framework = Path.join([context.ceramicRootPath, 'bin/angle/angle-ios-universal/libGLESv2.xcframework']);
         var iosProjectGLESv2Lib = Path.join([iosProjectGLESv2Framework, 'ios-arm64/libGLESv2.framework/libGLESv2']);
-        var ceramicAngleGLESv2Lib = Path.join([iosProjectGLESv2Framework, 'ios-arm64/libGLESv2.framework/libGLESv2']);
+        var ceramicAngleGLESv2Lib = Path.join([ceramicAngleGLESv2Framework, 'ios-arm64/libGLESv2.framework/libGLESv2']);
 
-        if (context.defines.exists('gles_angle')) {
+        // ANGLE is the default GL implementation on iOS (same rule as the
+        // clay plugin): the define may be absent when this task is invoked
+        // directly, but the generated project references the frameworks
+        // unconditionally, so they must be provisioned
+        var usesAngle = !context.defines.exists('no_gles_angle');
+
+        if (usesAngle) {
 
             if (FileSystem.exists(ceramicAngleEGLFramework) && !Files.haveSameLastModified(ceramicAngleEGLLib, iosProjectEGLLib)) {
                 Files.copyDirectory(ceramicAngleEGLFramework, iosProjectEGLFramework, true);
@@ -74,6 +80,14 @@ class Xcode extends tools.Task {
                 Files.deleteRecursive(iosProjectGLESv2Framework);
             }
         }
+
+        // Make sure the app xcframework referenced by the Xcode project
+        // exists with both platform slices: xcodebuild validates it at
+        // build planning time, before the build phase that compiles the
+        // real code has a chance to run
+        var backendName = context.backend != null ? context.backend.name : 'clay';
+        var outTargetPath = BuildTargetExtensions.outPathWithName(backendName, 'ios', cwd, context.debug, context.variant);
+        IosProject.ensureAppXcframework(cwd, project, outTargetPath);
 
         // Open? Build or Run?
         var doBuild = extractArgFlag(args, 'build');
