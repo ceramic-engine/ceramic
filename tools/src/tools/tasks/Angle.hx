@@ -116,10 +116,66 @@ class Angle extends tools.Task {
                     else {
                         print('Already up to date: ' + assetLocalNameNoExt);
                     }
+
+                    #if mac
+                    if (os == 'ios') {
+                        fixIosSimulatorInfoPlists(assetLocalPathDir);
+                    }
+                    #end
                 }
             }
         }
 
     }
+
+    #if mac
+
+    /**
+     * The simulator build of ANGLE doesn't emit an Info.plist in its
+     * framework bundles (the device build does), and Xcode refuses to
+     * embed a framework without one. Synthesize the missing Info.plist
+     * from the device slice with the platform fields adjusted.
+     */
+    static function fixIosSimulatorInfoPlists(iosAnglePath:String):Void {
+
+        for (framework in ['libEGL', 'libGLESv2']) {
+            final xcframeworkPath = Path.join([iosAnglePath, framework + '.xcframework']);
+            if (!FileSystem.exists(xcframeworkPath))
+                continue;
+
+            var devicePlist = null;
+            final missingSimulatorPlists = [];
+            for (slice in FileSystem.readDirectory(xcframeworkPath)) {
+                if (!slice.startsWith('ios-'))
+                    continue;
+                final plistPath = Path.join([xcframeworkPath, slice, framework + '.framework', 'Info.plist']);
+                if (slice.endsWith('-simulator')) {
+                    if (!FileSystem.exists(plistPath) && FileSystem.exists(Path.directory(plistPath))) {
+                        missingSimulatorPlists.push(plistPath);
+                    }
+                }
+                else if (FileSystem.exists(plistPath)) {
+                    devicePlist = plistPath;
+                }
+            }
+
+            if (devicePlist == null)
+                continue;
+
+            for (plistPath in missingSimulatorPlists) {
+                print('Add missing Info.plist to $framework simulator slice');
+                File.copy(devicePlist, plistPath);
+                command('/usr/libexec/PlistBuddy', ['-c', 'Set :CFBundleSupportedPlatforms:0 iPhoneSimulator', plistPath], { mute: true });
+                command('/usr/libexec/PlistBuddy', ['-c', 'Set :DTPlatformName iphonesimulator', plistPath], { mute: true });
+                final sdkName = command('/usr/libexec/PlistBuddy', ['-c', 'Print :DTSDKName', plistPath], { mute: true }).stdout;
+                if (sdkName != null && sdkName.trim().startsWith('iphoneos')) {
+                    command('/usr/libexec/PlistBuddy', ['-c', 'Set :DTSDKName ' + sdkName.trim().replace('iphoneos', 'iphonesimulator'), plistPath], { mute: true });
+                }
+            }
+        }
+
+    }
+
+    #end
 
 }
