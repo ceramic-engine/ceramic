@@ -4,8 +4,6 @@ plugin:
 
     runtime:
         if ios:
-            +podspecs:
-                - '{plugin:cwd}/support/CeramicIosSupport/CeramicIosSupport.podspec'
             +hooks:
                 - when: begin build
                   command: ceramic

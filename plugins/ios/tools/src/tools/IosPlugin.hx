@@ -18,7 +18,6 @@ class IosPlugin {
         context.addTask('ios bind', new tools.tasks.ios.Bind());
         context.addTask('ios xcode', new tools.tasks.ios.Xcode());
         context.addTask('ios compile', new tools.tasks.ios.Compile());
-        context.addTask('ios pod install', new tools.tasks.ios.InstallPods());
 
     }
 
