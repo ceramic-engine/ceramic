@@ -18,3 +18,12 @@ plugin:
                 if mac || ios || windows || linux || android || web:
                     +defines:
                         - ceramic_simd
+            # Generational + concurrent GC, enabled by default on native
+            # targets: most of the marking runs on a dedicated thread,
+            # which shortens collection pauses on the main thread.
+            # Opt out with `ceramic_no_concurrent_gc`.
+            if !ceramic_no_concurrent_gc:
+                if mac || ios || windows || linux || android:
+                    +defines:
+                        - HXCPP_GC_GENERATIONAL
+                        - HXCPP_GC_CONCURRENT
