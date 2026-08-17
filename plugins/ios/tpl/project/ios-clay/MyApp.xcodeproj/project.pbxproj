@@ -6,6 +6,20 @@
 	objectVersion = 54;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		7E57C0DE2DCE100000FFDF01 /* Build Haxe */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */;
+			buildPhases = (
+				26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */,
+			);
+			dependencies = (
+			);
+			name = "Build Haxe";
+			productName = "Build Haxe";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		1E2E17AD131E8B5D0048F3C7 /* project/assets in Resources */ = {isa = PBXBuildFile; fileRef = 1E2E17A5131E8B5D0048F3C7 /* project/assets */; };
 		1EEEBA9B121AF1C60048A9DF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1EEEBA9A121AF1C60048A9DF /* UIKit.framework */; };
@@ -89,8 +103,8 @@
 		7E5157BA281D5742005BF102 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		7E57DF042DCE067500FFDF72 /* libGLESv2.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libGLESv2.xcframework; path = Frameworks/libGLESv2.xcframework; sourceTree = "<group>"; };
 		7E57DF052DCE067500FFDF72 /* SDL3.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SDL3.xcframework; path = Frameworks/SDL3.xcframework; sourceTree = "<group>"; };
-		7E57DF062DCE067500FFDF74 /* MyApp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MyApp.xcframework; path = Frameworks/MyApp.xcframework; sourceTree = "<group>"; };
 		7E57DF062DCE067500FFDF72 /* libEGL.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = libEGL.xcframework; path = Frameworks/libEGL.xcframework; sourceTree = "<group>"; };
+		7E57DF062DCE067500FFDF74 /* MyApp.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = MyApp.xcframework; path = Frameworks/MyApp.xcframework; sourceTree = "<group>"; };
 		7E57DF0D2DCE0EC100FFDF72 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		7E7BE9222029EA0300CBF16B /* SwiftClasses.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftClasses.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7E7BE9242029EA0300CBF16B /* SwiftClasses.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SwiftClasses.h; sourceTree = "<group>"; };
@@ -234,20 +248,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
-
-/* Begin PBXAggregateTarget section */
-		7E57C0DE2DCE100000FFDF01 /* Build Haxe */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */;
-			buildPhases = (
-				26CE64D519C4D0EA00ED5864 /* Ceramic / Haxe */,
-			);
-			dependencies = (
-			);
-			name = "Build Haxe";
-			productName = "Build Haxe";
-		};
-/* End PBXAggregateTarget section */
 
 /* Begin PBXNativeTarget section */
 		1D6058900D05DD3D006BFB54 /* MyApp */ = {
@@ -424,7 +424,6 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEAD_CODE_STRIPPING = NO;
-				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -455,7 +454,6 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				DEVELOPMENT_TEAM = UMH9Q352QB;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -476,6 +474,20 @@
 			};
 			name = Release;
 		};
+		7E57C0DE2DCE100000FFDF03 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		7E57C0DE2DCE100000FFDF04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		7E7BE92B2029EA0300CBF16B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -491,11 +503,9 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = UMH9Q352QB;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -537,12 +547,10 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
-				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
-				DEVELOPMENT_TEAM = UMH9Q352QB;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -649,37 +657,23 @@
 			};
 			name = Release;
 		};
-		7E57C0DE2DCE100000FFDF03 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Debug;
-		};
-		7E57C0DE2DCE100000FFDF04 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				PRODUCT_NAME = "$(TARGET_NAME)";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7E57C0DE2DCE100000FFDF03 /* Debug */,
-				7E57C0DE2DCE100000FFDF04 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		1D6058960D05DD3E006BFB54 /* Build configuration list for PBXNativeTarget "MyApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				1D6058940D05DD3E006BFB54 /* Debug */,
 				1D6058950D05DD3E006BFB54 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7E57C0DE2DCE100000FFDF02 /* Build configuration list for PBXAggregateTarget "Build Haxe" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7E57C0DE2DCE100000FFDF03 /* Debug */,
+				7E57C0DE2DCE100000FFDF04 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
