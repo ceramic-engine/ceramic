@@ -25,9 +25,11 @@ using StringTools;
  * plugins:
  *   - imgui
  * 
- * // Optionally specify a custom font:
+ * // Optionally specify a custom font (raw TTF bytes; use a `.bin` suffix
+ * // so the font plugin does not transform the file into a bitmap font):
  * defines:
- *   imgui_font: "assets/fonts/MyFont.ttf"
+ *   imgui_font: "MyFont.ttf.bin"
+ *   imgui_font_fallback: "MyFallbackFont.ttf.bin" # optional, merged glyphs (e.g. CJK)
  * 
  * // In your code:
  * import imguicpp.ImGui; // or imguijs.ImGui for web
@@ -59,9 +61,20 @@ class ImGuiPlugin {
             log.info('Init imgui plugin');
 
             #if imgui_font
-            // Load font for dear imgui
+            // Custom font specified by the project through the `imgui_font` define
             ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
                 assets.add('binary:' + ceramic.macros.DefinesMacro.getDefine('imgui_font'));
+                #if imgui_font_fallback
+                // Optional fallback font merged into the main one (e.g. CJK coverage)
+                assets.add('binary:' + ceramic.macros.DefinesMacro.getDefine('imgui_font_fallback'));
+                #end
+            });
+            #elseif !imgui_no_default_font
+            // Batteries-included default fonts bundled with the plugin
+            // (Roboto-Medium + Kosugi CJK fallback). See ImGuiSystem for loading.
+            ceramic.App.app.onceDefaultAssetsLoad(null, function(assets) {
+                assets.add('binary:' + ImGuiSystem.DEFAULT_FONT);
+                assets.add('binary:' + ImGuiSystem.DEFAULT_FONT_FALLBACK);
             });
             #end
 

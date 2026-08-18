@@ -466,9 +466,8 @@ import ceramic.ViewSize;
 import ceramic.ViewSystem;
 #end
 
-#if (plugin_imgui && (web || cpp))
+#if (plugin_imgui && (cpp || js))
 import imgui.ImGui;
-import imgui.Helpers;
 #end
 
 #if plugin_gif

@@ -1,19 +1,22 @@
 package tools.tasks.imgui;
 
-import tools.Helpers.*;
-import tools.Project;
 import haxe.io.Path;
-import haxe.Json;
 import sys.FileSystem;
 import sys.io.File;
+import tools.Helpers.*;
 
 using StringTools;
 
+/**
+ * Copies the prebuilt dcimgui wasm module (emscripten single-file js) into
+ * the ceramic project's web directory, where the imgui plugin loads it at
+ * startup on the web target.
+ */
 class SetupJS extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Setup imgui-js files for this ceramic project.";
+        return "Copy the dcimgui wasm module into this ceramic project (web target).";
 
     }
 
@@ -23,33 +26,31 @@ class SetupJS extends tools.Task {
 
         var doRemove = extractArgFlag(args, 'remove');
 
+        // With --if-exists (used by the automatic build hook), silently skip
+        // when there is no web export (e.g. a clay mac/ios build).
+        var ifExists = extractArgFlag(args, 'if-exists');
+
         var webProjectPath = Path.join([cwd, 'project/web']);
-        var imguiJSDistPath = Path.join([context.ceramicGitDepsPath, 'imgui-hx/lib/imgui-js/dist']);
+        var moduleSource = Path.join([context.ceramicGitDepsPath, 'imgui-hx/lib/prebuilt/web/dcimgui.js']);
 
         if (!FileSystem.exists(webProjectPath)) {
-            if (doRemove) {
+            if (doRemove || ifExists) {
                 return;
             }
             FileSystem.createDirectory(webProjectPath);
         }
 
-        for (name in [
-            'imgui_impl.umd.js',
-            'imgui.umd.js'
-        ]) {
-            var source = Path.join([imguiJSDistPath, name]);
-            var dest = Path.join([webProjectPath, name]);
-            if (doRemove) {
-                if (FileSystem.exists(dest)) {
-                    FileSystem.deleteFile(dest);
-                }
+        var dest = Path.join([webProjectPath, 'dcimgui.js']);
+        if (doRemove) {
+            if (FileSystem.exists(dest)) {
+                FileSystem.deleteFile(dest);
             }
-            else {
-                if (!Files.haveSameLastModified(source, dest)) {
-                    success('Copy $name');
-                    File.copy(source, dest);
-                    Files.setToSameLastModified(source, dest);
-                }
+        }
+        else {
+            if (!Files.haveSameLastModified(moduleSource, dest)) {
+                success('Copy dcimgui.js');
+                File.copy(moduleSource, dest);
+                Files.setToSameLastModified(moduleSource, dest);
             }
         }
 

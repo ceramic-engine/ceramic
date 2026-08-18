@@ -10,11 +10,24 @@ plugin:
             +paths:
                 - '{plugin:cwd}/runtime/src'
 
+            # Batteries-included default font (Roboto-Medium) + CJK fallback
+            # (Kosugi), bundled with the plugin. Only included when the project
+            # does not provide its own `imgui_font`.
+            if !imgui_font:
+              +assets:
+                  - '{plugin:cwd}/assets'
+
             if web:
               +hooks:
                   - when: begin build
                     command: ceramic
-                    args: ['imgui', 'setup', 'js']
+                    args: ['imgui', 'setup', 'web']
+
+            if unity:
+              +hooks:
+                  - when: end build
+                    command: ceramic
+                    args: ['imgui', 'setup', 'unity', '--if-exists']
 
         if !plugin_imgui:
 
@@ -22,4 +35,4 @@ plugin:
               +hooks:
                   - when: begin build
                     command: ceramic
-                    args: ['imgui', 'setup', 'js', '--remove']
+                    args: ['imgui', 'setup', 'web', '--remove']
