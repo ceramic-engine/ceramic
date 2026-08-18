@@ -809,7 +809,13 @@ $workletResolveClassCases
         }
         // iOS
         else if (action == 'run' && target.name == 'ios') {
-            runTask('ios xcode', ['--open']);
+            final runDevice = extractArgFlag(args, 'run-device');
+            if (runDevice) {
+                runTask('ios run device', []);
+            }
+            else {
+                runTask('ios xcode', ['--open']);
+            }
             runHooks(cwd, args, project.app.hooks, 'end run');
         }
         // Android

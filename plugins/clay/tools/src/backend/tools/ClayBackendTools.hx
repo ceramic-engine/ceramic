@@ -100,7 +100,8 @@ class ClayBackendTools implements tools.spec.BackendTools {
             name: 'ios',
             displayName: 'iOS',
             configs: [
-                Run('Run iOS'),
+                Run('Run iOS (Xcode)'),
+                Run('Run iOS (Device)', ['--run-device']),
                 Build('Build iOS'),
                 Clean('Clean iOS')
             ]
