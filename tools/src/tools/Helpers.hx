@@ -643,6 +643,54 @@ class Helpers {
     }
 
     /** Checks if a command exists by searching through PATH directories. */
+    /**
+     * Deletes previously compiled C++ objects when the haxe defines used to
+     * generate the code changed since the last hxcpp invocation for this
+     * output directory. hxcpp's incremental build doesn't take defines into
+     * account when reusing object files: mixing objects compiled with
+     * different defines gives link errors at best, silently inconsistent
+     * binaries at worst.
+     * @return `true` when the objects were cleaned
+     */
+    public static function cleanCppObjectsIfDefinesChanged(cppPath:String):Bool {
+
+        var optionsPath = Path.join([cppPath, 'Options.txt']);
+        if (!FileSystem.exists(optionsPath))
+            return false;
+
+        // Ignore the entries that don't affect C++ compilation
+        var ignoredEntries = ['app_info', 'assets_path', 'target_path'];
+        var relevantOptions = [];
+        for (line in File.getContent(optionsPath).replace("\r\n", "\n").split("\n")) {
+            var ignored = false;
+            for (entry in ignoredEntries) {
+                if (line.startsWith(entry + '=')) {
+                    ignored = true;
+                    break;
+                }
+            }
+            if (!ignored && line.trim() != '') {
+                relevantOptions.push(line);
+            }
+        }
+        var options = relevantOptions.join("\n");
+
+        var snapshotPath = Path.join([cppPath, '.ceramic-options']);
+        if (FileSystem.exists(snapshotPath) && File.getContent(snapshotPath) == options)
+            return false;
+
+        var cleaned = false;
+        var objPath = Path.join([cppPath, 'obj']);
+        if (FileSystem.exists(objPath)) {
+            print('Haxe defines changed, clean previous C++ objects');
+            Files.deleteRecursive(objPath);
+            cleaned = true;
+        }
+        File.saveContent(snapshotPath, options);
+        return cleaned;
+
+    }
+
     public static function commandExists(command:String):Bool {
 
         // Get system PATH

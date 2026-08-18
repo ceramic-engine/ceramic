@@ -33,6 +33,8 @@ class Compile extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'linux', cwd, debug, variant);
 
+        cleanCppObjectsIfDefinesChanged(Path.join([outTargetPath, 'cpp']));
+
         final allBinaries = [];
         final baseBinary = context.debug ? 'Main-debug' : 'Main';
 

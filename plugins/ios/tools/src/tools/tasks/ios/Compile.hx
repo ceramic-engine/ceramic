@@ -32,6 +32,18 @@ class Compile extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'ios', cwd, debug, variant);
 
+        // When defines changed, the combined per-platform libs are stale
+        // too: drop them so they can't be reused in the repackaged
+        // xcframework
+        if (cleanCppObjectsIfDefinesChanged(Path.join([outTargetPath, 'cpp']))) {
+            for (sdkDirName in ['lib-iphoneos', 'lib-iphonesimulator']) {
+                var libDir = Path.join([outTargetPath, 'cpp', sdkDirName]);
+                if (FileSystem.exists(libDir)) {
+                    Files.deleteRecursive(libDir);
+                }
+            }
+        }
+
         // Compile one static library per architecture
         //
         var builtBinaries = [];

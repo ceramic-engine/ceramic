@@ -661,6 +661,7 @@ $workletResolveClassCases
 
         // Compile c++ for Windows
         if (target.name == 'windows') {
+            cleanCppObjectsIfDefinesChanged(Path.join([outTargetPath, 'cpp']));
             var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
             if (context.defines.exists('HXCPP_M32')) {
                 hxcppArgs.push('-DHXCPP_M32');

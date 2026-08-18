@@ -30,6 +30,8 @@ class Compile extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
         var outTargetPath = BuildTargetExtensions.outPathWithName(context.backend.name, 'android', cwd, debug, variant);
 
+        cleanCppObjectsIfDefinesChanged(Path.join([outTargetPath, 'cpp']));
+
         var archList = archs.split(',');
         var archs = [];
         for (arch in archList) {
