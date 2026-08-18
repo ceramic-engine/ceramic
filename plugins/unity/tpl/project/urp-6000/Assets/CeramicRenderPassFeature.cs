@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
@@ -29,6 +30,17 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
         public void SetCeramicCommandBuffer(CeramicCommandBuffer cmd)
         {
             m_CeramicCommandBuffer = cmd;
+        }
+
+        // Render textures sampled during this pass (set every frame by the Ceramic
+        // backend). They are sampled through a Unity Material, which RenderGraph
+        // cannot see, so we declare them as tracked reads (UseTexture) to keep and
+        // order their producing passes. See backend.Draw.pendingSampledRenderTargets.
+        List<RTHandle> m_SampledRenderTargets;
+
+        public void SetSampledRenderTargets(List<RTHandle> sampled)
+        {
+            m_SampledRenderTargets = sampled;
         }
 
         RTHandle m_RenderTarget;
@@ -62,6 +74,24 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
             if (targetDepth != null)
             {
                 m_RenderTargetDepth_Info = CreateRenderTargetInfo(targetDepth);
+            }
+        }
+
+        // Import each sampled render texture and declare it as a read on the pass
+        // builder. Works for both raster and unsafe passes (IBaseRenderGraphBuilder).
+        // Importing the same RTHandle that a producing pass writes creates the
+        // read->write edge RenderGraph needs to keep and order that pass.
+        private void DeclareSampledRenderTargets(RenderGraph renderGraph, IBaseRenderGraphBuilder builder)
+        {
+            if (m_SampledRenderTargets == null)
+                return;
+            for (int i = 0; i < m_SampledRenderTargets.Count; i++)
+            {
+                var sampled = m_SampledRenderTargets[i];
+                if (sampled == null || sampled == GetRenderTarget())
+                    continue;
+                var sampledHandle = renderGraph.ImportTexture(sampled, CreateRenderTargetInfo(sampled));
+                builder.UseTexture(sampledHandle, AccessFlags.Read);
             }
         }
 
@@ -138,6 +168,11 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                     passData.depthTarget = resourceData.activeDepthTexture;
                 }
 
+                // Declare render textures sampled by this pass as tracked reads, so
+                // RenderGraph keeps and orders their producing passes before this one
+                // (ceramic samples them via Material, which RenderGraph cannot see).
+                DeclareSampledRenderTargets(renderGraph, builder);
+
                 // Store command buffer in pass data
                 passData.commandBuffer = GetCeramicCommandBuffer();
 
@@ -183,6 +218,9 @@ public class CeramicRenderPassFeature : ScriptableRendererFeature
                 {
                     passData.hasDepth = false;
                 }
+
+                // Same tracked-read declaration as the raster path (see there).
+                DeclareSampledRenderTargets(renderGraph, builder);
 
                 passData.commandBuffer = GetCeramicCommandBuffer();
                 builder.AllowPassCulling(false);

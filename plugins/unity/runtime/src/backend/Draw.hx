@@ -1347,7 +1347,42 @@ class Draw #if !completion implements spec.Draw #end {
 
         _materialCurrentTextures[_activeTextureSlot] = backendItem;
 
+        #if unity_rendergraph
+        trackSampledRenderTexture(backendItem);
+        #end
+
     }
+
+    #if unity_rendergraph
+    #if !no_backend_docs
+    /**
+     * If `backendItem` is a render texture (and not the target currently being
+     * rendered into), record it as sampled by the current command buffer, so it
+     * can be declared as a tracked read to RenderGraph (see
+     * `pendingSampledRenderTargets`).
+     */
+    #end
+    function trackSampledRenderTexture(backendItem:backend.Texture):Void {
+
+        if (backendItem == null) return;
+
+        var texImpl:TextureImpl = backendItem;
+        if (texImpl.unityRenderTexture == null) return; // not a render texture
+
+        var set = _currentSampledRenderTargets;
+        if (set == null) return;
+
+        // Exclude the render target we are currently rendering into (self-reference)
+        if (_currentRenderTarget != null && _currentRenderTarget.backendItem == backendItem) return;
+
+        // Dedup (the number of distinct render textures per pass is small)
+        for (i in 0...set.length) {
+            if (set.unsafeGet(i) == backendItem) return;
+        }
+        set.push(backendItem);
+
+    }
+    #end
 
     #if !no_backend_docs
     /**
@@ -1807,6 +1842,33 @@ class Draw #if !completion implements spec.Draw #end {
     #end
     var pendingRenderTargets:Array<ceramic.RenderTexture> = [];
 
+    #if unity_rendergraph
+    #if !no_backend_docs
+    /**
+     * Render textures sampled during each pending command buffer (one sub-array
+     * per pending command buffer, index-aligned with `pendingCommandBuffers`).
+     *
+     * On URP RenderGraph, ceramic samples render textures through a Unity
+     * Material, which RenderGraph does NOT track: a producing pass whose output
+     * has no tracked reader gets culled/reordered. We collect the render
+     * textures each pass samples and declare them as tracked reads
+     * (`builder.UseTexture(..., Read)`) so RenderGraph keeps and orders the
+     * producing passes correctly.
+     */
+    #end
+    var pendingSampledRenderTargets:Array<Array<backend.Texture>> = [];
+
+    #if !no_backend_docs
+    /** Pool of reusable sub-arrays for `pendingSampledRenderTargets`. */
+    #end
+    var _sampledRenderTargetsPool:Array<Array<backend.Texture>> = [];
+
+    #if !no_backend_docs
+    /** Sampled render textures of the command buffer currently being recorded. */
+    #end
+    var _currentSampledRenderTargets:Array<backend.Texture> = null;
+    #end
+
     #if !no_backend_docs
     /**
      * Screen width captured during draw for render pass setup.
@@ -1833,6 +1895,17 @@ class Draw #if !completion implements spec.Draw #end {
         pendingCommandBuffers.setArrayLength(0);
         pendingRenderTargets.setArrayLength(0);
 
+        #if unity_rendergraph
+        // Recycle the per-buffer sampled render texture sub-arrays.
+        for (i in 0...pendingSampledRenderTargets.length) {
+            var set = pendingSampledRenderTargets.unsafeGet(i);
+            set.setArrayLength(0);
+            _sampledRenderTargetsPool.push(set);
+        }
+        pendingSampledRenderTargets.setArrayLength(0);
+        _currentSampledRenderTargets = null;
+        #end
+
     }
 
     #if !no_backend_docs
@@ -1850,6 +1923,15 @@ class Draw #if !completion implements spec.Draw #end {
         commandBuffer = CommandBufferPool.Get();
         pendingCommandBuffers.push(commandBuffer);
         pendingRenderTargets.push(renderTarget);
+
+        #if unity_rendergraph
+        // Start a fresh (recycled) set to collect the render textures sampled
+        // while recording this command buffer.
+        var set = _sampledRenderTargetsPool.length > 0 ? _sampledRenderTargetsPool.pop() : [];
+        set.setArrayLength(0);
+        pendingSampledRenderTargets.push(set);
+        _currentSampledRenderTargets = set;
+        #end
 
     }
 
@@ -1934,6 +2016,19 @@ class Draw #if !completion implements spec.Draw #end {
             else {
                 untyped __cs__('{0}.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)', renderPass);
             }
+            #end
+
+            #if unity_rendergraph
+            // Declare the render textures sampled by this pass as tracked reads,
+            // so RenderGraph keeps and orders their producing passes before this
+            // one (they are otherwise sampled via Material, invisible to it).
+            var sampledSet = pendingSampledRenderTargets.unsafeGet(i);
+            untyped __cs__('var sampledList = new System.Collections.Generic.List<UnityEngine.Rendering.RTHandle>()');
+            for (s in 0...sampledSet.length) {
+                var sampledTex:TextureImpl = sampledSet.unsafeGet(s);
+                untyped __cs__('sampledList.Add((UnityEngine.Rendering.RTHandle){0})', sampledTex.unityRtHandle);
+            }
+            untyped __cs__('{0}.SetSampledRenderTargets(sampledList)', renderPass);
             #end
 
             // Add render pass

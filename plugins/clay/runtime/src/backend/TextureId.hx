@@ -27,34 +27,8 @@ abstract #if documentation TextureIdClayImpl(clay.Types.TextureId) #else Texture
      */
     #if (!debug && !completion) inline #end public static var DEFAULT:TextureId = #if clay_web null #else untyped 0 #end;
 
-    #if (cpp && plugin_imgui)
-
-    /**
-     * Converts this TextureId to ImGui's texture ID format.
-     * Allows textures to be displayed in ImGui windows and widgets.
-     *
-     * @return ImGui-compatible texture identifier
-     */
-    @:to public inline function toImTextureID():imguicpp.ImGui.ImTextureID {
-
-        return untyped __cpp__('(void*)(long long){0}', this);
-
-    }
-
-    /**
-     * Creates a TextureId from an ImGui texture identifier.
-     * Allows ImGui-managed textures to be used in Ceramic rendering.
-     *
-     * @param imTextureID ImGui texture identifier
-     * @return Ceramic-compatible TextureId
-     */
-    @:from public static inline function fromImTextureID(imTextureID:imguicpp.ImGui.ImTextureID) {
-
-        var textureId:TextureId = untyped __cpp__('(int)(long long){0}', imTextureID);
-        return textureId;
-
-    }
-
-    #end
+    // NOTE: the old TextureId ↔ ImTextureID pointer-cast shim was removed with the
+    // imgui plugin rework: ImTextureID values are now small registry keys managed by
+    // ceramic.ImGuiTextures (cross-backend), never raw GPU handles.
 
 }

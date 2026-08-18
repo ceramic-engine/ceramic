@@ -173,7 +173,14 @@ class UnityBackendTools implements tools.spec.BackendTools {
             'mp4' => true,
             'mov' => true,
             'zip' => true,
-            'ogg' => true,
+            'ogg' => true
+        ];
+
+        // Extensions holding raw binary data: Unity must import these as a
+        // TextAsset via the `.bytes` suffix (NOT `.txt`, which makes Unity
+        // treat the file as text and re-encode it, corrupting binary data
+        // such as fonts). `TextAsset.bytes` then returns the exact bytes.
+        var binaryExtensions = [
             'bin' => true
         ];
 
@@ -222,7 +229,11 @@ class UnityBackendTools implements tools.spec.BackendTools {
                 if (sounds.exists(asWav)) continue;
             }
 
-            if (!nonTxtExtensions.exists(ext)) {
+            if (binaryExtensions.exists(ext)) {
+                // Raw binary: .bytes preserves the exact bytes (see above)
+                dstPath += '.bytes';
+            }
+            else if (!nonTxtExtensions.exists(ext)) {
                 // Unity needs a .txt extension to treat an asset as text, let's add it
                 dstPath += '.txt';
             }
