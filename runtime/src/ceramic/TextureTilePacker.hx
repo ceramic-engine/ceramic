@@ -87,6 +87,11 @@ class TextureTilePacker extends Entity {
     public var margin(default,null):Int;
 
     /**
+     * Antialiasing (MSAA samples) used by the shared render texture(s).
+     */
+    public var antialiasing(default, null):Int = 0;
+
+    /**
      * Next packer in the chain for overflow handling.
      * 
      * When this packer runs out of space, tiles are allocated
@@ -130,7 +135,7 @@ class TextureTilePacker extends Entity {
      * @param padHeight Height of each grid cell (default: 16)
      * @param margin Pixel margin around tiles (default: 1)
      */
-    public function new(autoRender:Bool, maxPixelTextureWidth:Int = -1, maxPixelTextureHeight:Int = -1, padWidth:Int = 16, padHeight:Int = 16, margin:Int = 1) {
+    public function new(autoRender:Bool, maxPixelTextureWidth:Int = -1, maxPixelTextureHeight:Int = -1, padWidth:Int = 16, padHeight:Int = 16, margin:Int = 1, antialiasing:Int = 0) {
 
         super();
 
@@ -150,7 +155,8 @@ class TextureTilePacker extends Entity {
 
         var textureWidth = Std.int(Math.min(maxPixelTextureWidth, 2048 / screen.texturesDensity));
         var textureHeight = Std.int(Math.min(maxPixelTextureHeight, 2048 / screen.texturesDensity));
-        texture = new RenderTexture(textureWidth, textureHeight);
+        this.antialiasing = antialiasing;
+        texture = new RenderTexture(textureWidth, textureHeight, -1, true, true, antialiasing);
 
         if (autoRender) {
             texture.autoRender = true;
@@ -311,7 +317,7 @@ class TextureTilePacker extends Entity {
 
         // No space available, use another packer (with another texture)
         if (nextPacker == null) {
-            nextPacker = new TextureTilePacker(texture.autoRender, maxPixelTextureWidth, maxPixelTextureHeight, padWidth, padHeight, margin);
+            nextPacker = new TextureTilePacker(texture.autoRender, maxPixelTextureWidth, maxPixelTextureHeight, padWidth, padHeight, margin, antialiasing);
         }
         return nextPacker.allocTile(width, height);
 
