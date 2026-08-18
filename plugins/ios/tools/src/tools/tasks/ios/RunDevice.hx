@@ -6,7 +6,6 @@ import process.Process;
 import sys.FileSystem;
 import tools.Helpers.*;
 import tools.InstanceManager;
-import tools.IosProject;
 
 using StringTools;
 
@@ -229,7 +228,7 @@ Connected devices: ' + devices.map(device -> device.name + ' (' + device.udid + 
 
         proc.create();
 
-        proc.tick_until_exit_status(() -> {
+        var status = proc.tick_until_exit_status(() -> {
             Runner.tick();
             timer.update();
             if (context.shouldExit) {
@@ -237,6 +236,11 @@ Connected devices: ' + devices.map(device -> device.name + ' (' + device.udid + 
                 Sys.exit(0);
             }
         });
+
+        if (status != 0) {
+            fail('Failed to launch the app (status $status).
+Make sure the device is still connected and unlocked, then try again.');
+        }
 
     }
 
