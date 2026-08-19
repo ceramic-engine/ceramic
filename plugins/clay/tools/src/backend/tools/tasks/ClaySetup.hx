@@ -259,11 +259,66 @@ ${libsHxml.join('\n')}
 ${haxeflagsHxml.join('\n')}
 ').ltrim();
 
-        // Save hxml file
-        File.saveContent(hxmlPath, hxmlFileContent);
-        Files.setToSameLastModified(projectPath, hxmlPath);
+        // Cppia split mode: the app is compiled as a native HOST (ceramic
+        // runtime + clay backend, exporting its classes) and a cppia CLIENT
+        // (the project code only, rebuilt in seconds). project.hxml becomes
+        // the host build, project-cppia.hxml the client build.
+        var cppiaMode = extractArgFlag(args, 'cppia') || context.defines.exists('ceramic_cppia');
+        if (cppiaMode && target.name != 'web') {
 
-        print('Updated clay hxml at: $hxmlPath');
+            // Host: same as the monolithic build, minus the project code.
+            // Only the paths living inside the project directory are project
+            // code; plugin-contributed absolute paths (shade runtime, etc.)
+            // belong to the host.
+            var hostContent = hxmlFileContent;
+            hostContent = hostContent.replace('-cp ' + '../../../src' + '\n', '');
+            var normalizedCwd = Path.normalize(cwd);
+            for (entry in (project.app.paths:Array<String>)) {
+                var absEntry = Path.isAbsolute(entry) ? entry : Path.join([cwd, entry]);
+                if (Path.normalize(absEntry).startsWith(normalizedCwd + '/')) {
+                    var relativePath = getRelativePath(absEntry, targetPath);
+                    hostContent = hostContent.replace('-cp ' + relativePath + '\n', '');
+                }
+            }
+            // Typing order matters when no project code is compiled in:
+            // if `ceramic.App` is the first module typed, its own typing
+            // recursively reaches modules that use the `app` shortcut while
+            // `App` is still being built, and `ceramic.Shortcuts` fails to
+            // type. Forcing Shortcuts first (the canonical cppia-host
+            // pattern of listing extra modules) restores a valid order.
+            hostContent += 'ceramic.Shortcuts\n';
+            hostContent += '-D ceramic_cppia_host\n';
+            hostContent += '-D scriptable\n';
+            hostContent += '-D dll_export=export_classes.info\n';
+            hostContent += '-dce no\n';
+
+            // Client: the project code compiled to cppia against the host
+            // exports (same defines so conditional compilation matches)
+            var clientContent = hxmlFileContent;
+            clientContent = clientContent.replace('-main backend.Main', '-main CPPIAMain');
+            clientContent = clientContent.replace('-cpp cpp', '-cppia app.cppia');
+            clientContent += '-D cppia\n';
+            clientContent += '-D dll_import=export_classes.info\n';
+            clientContent += '-dce no\n';
+
+            File.saveContent(hxmlPath, hostContent);
+            Files.setToSameLastModified(projectPath, hxmlPath);
+
+            var clientHxmlPath = Path.join([targetPath, 'project-cppia.hxml']);
+            File.saveContent(clientHxmlPath, clientContent);
+            Files.setToSameLastModified(projectPath, clientHxmlPath);
+
+            print('Updated clay hxml (cppia host) at: $hxmlPath');
+            print('Updated clay hxml (cppia client) at: $clientHxmlPath');
+        }
+        else {
+
+            // Save hxml file
+            File.saveContent(hxmlPath, hxmlFileContent);
+            Files.setToSameLastModified(projectPath, hxmlPath);
+
+            print('Updated clay hxml at: $hxmlPath');
+        }
 
         var availableTargets = context.backend.getBuildTargets();
         var targetName = getTargetName(args, availableTargets);

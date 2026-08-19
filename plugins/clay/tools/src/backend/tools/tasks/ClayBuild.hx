@@ -57,6 +57,7 @@ class ClayBuild extends tools.Task {
         var noSkip = extractArgFlag(args, 'no-skip') || context.defines.exists('ceramic_no_skip');
         var useNativeBridge = extractArgFlag(args, 'native-bridge') || context.defines.exists('ceramic_native_bridge');
         var archs = extractArgValue(args, 'archs');
+        var cppiaFlag = extractArgFlag(args, 'cppia') || context.defines.exists('ceramic_cppia');
         var didSkipCompilation = false;
 
         switch (config) {
@@ -139,6 +140,27 @@ class ClayBuild extends tools.Task {
             }
         }
 
+        // Cppia split mode: the skip logic above (project sources) drives
+        // the CLIENT compile; the native HOST is only rebuilt when the
+        // engine side (runtime, backend, clay, hxml) changed
+        var cppiaHostStale = false;
+        var cppiaHostHashFile:String = null;
+        var cppiaHostHash:String = null;
+        if (cppiaFlag && (action == 'build' || action == 'run')) {
+            cppiaHostHashFile = Path.join([outTargetPath, '.cppia-host-hash']);
+            cppiaHostHash = Files.hashDirectory(Path.join([context.ceramicRuntimePath, 'src']))
+                + '-' + Files.hashDirectory(Path.join([context.plugins.get('clay').path, 'runtime', 'src']))
+                + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'clay', 'src']))
+                + '-' + Md5.encode(File.getContent(Path.join([outTargetPath, 'project.hxml'])));
+            var exportInfoPath = Path.join([outTargetPath, 'export_classes.info']);
+            cppiaHostStale = !FileSystem.exists(exportInfoPath)
+                || !FileSystem.exists(cppiaHostHashFile)
+                || File.getContent(cppiaHostHashFile) != cppiaHostHash;
+            if (!cppiaHostStale) {
+                print('Skip cppia host compilation (up to date)');
+            }
+        }
+
         // Copy transpiled shaders to platform assets (directly in the
         // assets folder, no subfolder). This must also happen when haxe
         // compilation is skipped: the platform assets directory may have
@@ -171,7 +193,7 @@ class ClayBuild extends tools.Task {
 
         // Build haxe
         var status = 0;
-        if (!skipHaxeCompilation && (action == 'build' || action == 'run')) {
+        if ((cppiaFlag ? cppiaHostStale : !skipHaxeCompilation) && (action == 'build' || action == 'run')) {
 
             runHooks(cwd, args, project.app.hooks, 'begin build');
 
@@ -626,7 +648,8 @@ $workletResolveClassCases
                 }
 
                 // We can now save last modified list, as build seems ok
-                if (saveLastModifiedListCallback != null) {
+                // (in cppia mode this is done after the client compile)
+                if (!cppiaFlag && saveLastModifiedListCallback != null) {
                     saveLastModifiedListCallback();
                     saveLastModifiedListCallback = null;
                 }
@@ -656,6 +679,55 @@ $workletResolveClassCases
         else if (didSkipCompilation && (action == 'build' || action == 'run')) {
             // Haxe compilation skipped: still make sure previously
             // transpiled shaders are present in the platform assets
+            copyTranspiledShadersToPlatformAssets();
+        }
+
+        // Cppia split mode: compile the client (project code only) into
+        // app.cppia against the host exports, then ship it with the assets
+        if (cppiaFlag && status == 0 && (action == 'build' || action == 'run')) {
+            var appCppiaPath = Path.join([outTargetPath, 'app.cppia']);
+            var mustCompileClient = cppiaHostStale || !skipHaxeCompilation || !FileSystem.exists(appCppiaPath);
+            if (mustCompileClient) {
+                var clientArgs = ['project-cppia.hxml'];
+                if (debug) {
+                    clientArgs.push('-debug');
+                }
+                var haxeServerPort = runningHaxeServerPort();
+                if (haxeServerPort != -1) {
+                    clientArgs.push('--connect');
+                    clientArgs.push('' + haxeServerPort);
+                }
+                print('Run haxe compiler (cppia client)');
+                status = haxeWithChecksAndLogs(clientArgs, {cwd: outTargetPath});
+                if (status != 0) {
+                    error('Error when compiling cppia client. (status = $status)');
+                    Sys.exit(status);
+                }
+                if (saveLastModifiedListCallback != null) {
+                    saveLastModifiedListCallback();
+                    saveLastModifiedListCallback = null;
+                }
+            }
+            else {
+                print('Skip cppia client compilation');
+            }
+
+            if (cppiaHostStale && cppiaHostHash != null) {
+                File.saveContent(cppiaHostHashFile, cppiaHostHash);
+            }
+
+            if (FileSystem.exists(appCppiaPath)) {
+                var clayBackendToolsForCppia:backend.tools.ClayBackendTools = cast context.backend;
+                var cppiaDstAssetsPath:String = clayBackendToolsForCppia.getDstAssetsPath(cwd, target, variant);
+                if (cppiaDstAssetsPath != null) {
+                    if (!FileSystem.exists(cppiaDstAssetsPath)) {
+                        FileSystem.createDirectory(cppiaDstAssetsPath);
+                    }
+                    Files.copyIfNeeded(appCppiaPath, Path.join([cppiaDstAssetsPath, 'app.cppia']));
+                }
+            }
+
+            // Shaders may need re-copying even when the host was skipped
             copyTranspiledShadersToPlatformAssets();
         }
 

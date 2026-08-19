@@ -595,7 +595,7 @@ class Audio implements spec.Audio {
                 bus,
                 cpp.Callable.fromStaticFunction(_clayFilterCreate),
                 cpp.Callable.fromStaticFunction(_clayFilterDestroy),
-                cpp.Callable.fromStaticFunction(_clayFilterProcess)
+                cpp.Callable.fromStaticFunction(AudioFilterProcessShim._clayFilterProcess)
             );
             #elseif web
             Clay.app.audio.createBusFilter(
@@ -863,7 +863,7 @@ class Audio implements spec.Audio {
      * @param aSamplerate Sample rate in Hz
      * @param time Current audio time in seconds
      */
-    static function _clayFilterProcess(bus:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
+    static function _clayFilterProcess(bus:Int, instanceId:Int, buffer:AudioFilterBuffer, aSamples:Int, aChannels:Int, aSamplerate:Float, time:Float):Void {
 
         #if !documentation
 
@@ -944,7 +944,7 @@ class Audio implements spec.Audio {
         }
 
         // Do the actual processing
-        final buffer = new AudioFilterBuffer(cpp.Pointer.fromRaw(aBuffer));
+
         ceramic.AudioFilters.processBusAudioWorklets(
             bus, buffer, aSamples, aChannels, aSamplerate, time
         );
@@ -1103,5 +1103,27 @@ class Audio implements spec.Audio {
 
     /** Reference count for each loaded audio resource */
     var loadedAudioRetainCount:Map<String,Int> = new Map();
+
+}
+
+/**
+ * Module-private shim holding the raw native audio callback: its signature
+ * is fixed by the C ABI (raw `float*` buffer) and such types cannot get
+ * valid scriptable glue when the host is compiled with `-D scriptable`.
+ * Private classes are excluded from that glue, and the raw pointer is
+ * wrapped here before reaching `Audio`.
+ */
+@:access(backend.Audio)
+private class AudioFilterProcessShim {
+
+    public static function _clayFilterProcess(bus:Int, instanceId:Int, aBuffer:cpp.RawPointer<cpp.Float32>, aSamples:cpp.UInt32, aChannels:cpp.UInt32, aSamplerate:cpp.Float32, time:cpp.Float64):Void {
+
+        Audio._clayFilterProcess(
+            bus, instanceId,
+            new AudioFilterBuffer(cpp.Pointer.fromRaw(aBuffer)),
+            aSamples, aChannels, aSamplerate, time
+        );
+
+    }
 
 }

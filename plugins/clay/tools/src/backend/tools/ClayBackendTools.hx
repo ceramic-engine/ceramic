@@ -317,7 +317,9 @@ class ClayBackendTools implements tools.spec.BackendTools {
             var assetsJsonName = assetsPrefix + '_assets.json';
 
             for (name in tools.Files.getFlatDirectory(dstAssetsPath)) {
-                if (name != assetsJsonName) {
+                // app.cppia is injected by the build (cppia split mode),
+                // not part of the asset list: never prune it
+                if (name != assetsJsonName && name != 'app.cppia') {
                     var dstPath = Path.join([dstAssetsPath, name]);
                     if (!validDstPaths.exists(dstPath)) {
 

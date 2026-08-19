@@ -35,7 +35,14 @@ class Main {
     /**
      * The Ceramic project instance.
      */
+    #if ceramic_cppia_host
+    // Typed as Dynamic: the cpp.cppia.Module extern (hx::CppiaLoadedModule)
+    // cannot appear in a generated header, its C++ type only exists where
+    // <hx/Scriptable.h> is included. The reference keeps the module alive.
+    static var cppiaModule:Dynamic = null;
+    #else
     static var project:Project = null;
+    #end
 
     /**
      * Clay events handler instance for managing application lifecycle events.
@@ -230,7 +237,33 @@ class Main {
         // settings.targetFps = 60;
         // #end
 
+        #if ceramic_cppia_host
+        // The project code lives in a separate cppia module, compiled apart
+        // from this host binary for fast iteration: load it and run its
+        // entry point (CPPIAMain), which constructs `Project` with the
+        // init settings exposed by `ceramic.App.init()`.
+        // Loaded this early (before clay io/assets are ready), the module
+        // file is read directly from the platform assets location
+        var cppiaPath:String = null;
+        #if mac
+        cppiaPath = ceramic.Path.join([haxe.io.Path.directory(Sys.programPath()), '..', 'Resources', 'assets', 'app.cppia']);
+        #elseif (windows || linux)
+        cppiaPath = ceramic.Path.join([haxe.io.Path.directory(Sys.programPath()), 'assets', 'app.cppia']);
+        #end
+        if (cppiaPath == null || !sys.FileSystem.exists(cppiaPath)) {
+            throw 'Failed to locate app.cppia (path: ' + cppiaPath + ')';
+        }
+        var cppiaBytes = sys.io.File.getBytes(cppiaPath);
+        if (cppiaBytes == null) {
+            throw 'Failed to load app.cppia from assets';
+        }
+        var module = cpp.cppia.Module.fromData(cppiaBytes.getData());
+        cppiaModule = module;
+        module.boot();
+        module.run();
+        #else
         project = @:privateAccess new Project(settings);
+        #end
         app = @:privateAccess ceramic.App.app;
 
         #if (web && plugin_bridge)

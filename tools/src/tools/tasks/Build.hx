@@ -82,6 +82,13 @@ class Build extends tools.Task {
             print('Will build with configuration ' + kind + ' for target ' + target.name + (context.debug ? ' debug' : '') + ' (' + target.displayName + ').');
         }
 
+        // Backend-specific build modes carried by flags need to reach the
+        // setup task too, which runs with its own args: promote them to
+        // defines (the shared channel between tasks)
+        if (extractArgFlag(args, 'cppia') && !context.defines.exists('ceramic_cppia')) {
+            context.defines.set('ceramic_cppia', '');
+        }
+
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
             checkProjectHaxelibSetup(cwd, args);
