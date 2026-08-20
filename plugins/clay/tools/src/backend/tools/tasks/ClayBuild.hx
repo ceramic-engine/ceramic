@@ -753,8 +753,21 @@ $workletResolveClassCases
             copyTranspiledShadersToPlatformAssets();
         }
 
+        // In cppia mode the native host is compiled once and reused; only
+        // rebuild the host C++ when it is actually stale (first build, or the
+        // engine / clay / hxcpp / project.hxml changed). A project-only cppia
+        // iteration keeps the existing host binary — that reuse is the whole
+        // point of the split, so running hxcpp Build.xml every time (a full
+        // dependency scan + relink) would defeat the fast-iteration goal.
+        var hostBinaryName = debug ? 'Main-debug' : 'Main';
+        var skipHostCppCompile = cppiaFlag && !cppiaHostStale
+            && FileSystem.exists(Path.join([outTargetPath, 'cpp', hostBinaryName]));
+        if (skipHostCppCompile) {
+            print('Skip cppia host C++ compilation (up to date)');
+        }
+
         // Compile c++ for Windows
-        if (target.name == 'windows') {
+        if (!skipHostCppCompile && target.name == 'windows') {
             cleanCppObjectsIfDefinesChanged(Path.join([outTargetPath, 'cpp']));
             var hxcppArgs = ['run', 'hxcpp', 'Build.xml'];
             if (context.defines.exists('HXCPP_M32')) {
@@ -832,7 +845,7 @@ $workletResolveClassCases
         }
 
         // Compile c++ for iOS on requested architectures
-        if (target.name == 'ios') {
+        if (!skipHostCppCompile && target.name == 'ios') {
             if (archs != null && archs.trim() != '') {
                 var compileArgs = ['--archs', archs.trim()];
                 if (simulator)
@@ -842,14 +855,14 @@ $workletResolveClassCases
         }
 
         // Compile c++ for Android on requested architectures
-        if (target.name == 'android') {
+        if (!skipHostCppCompile && target.name == 'android') {
             if (archs != null && archs.trim() != '') {
                 runTask('android compile', ['--archs', archs.trim()]);
             }
         }
 
         // Compile c++ for Mac on requested architectures
-        if (target.name == 'mac') {
+        if (!skipHostCppCompile && target.name == 'mac') {
             if (archs == null || archs.trim() == '') {
                 #if mac_arm64
                 archs = 'arm64';
@@ -862,7 +875,7 @@ $workletResolveClassCases
         }
 
         // Compile c++ for Linux on requested architectures
-        if (target.name == 'linux') {
+        if (!skipHostCppCompile && target.name == 'linux') {
             if (archs == null || archs.trim() == '') {
                 #if linux_arm64
                 archs = 'arm64';
