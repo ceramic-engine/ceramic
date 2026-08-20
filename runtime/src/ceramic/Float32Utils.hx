@@ -43,7 +43,7 @@ class Float32Utils {
     }
 
     public inline static function abs32(a:Float32):Float32 {
-        #if cpp
+        #if (!cppia && cpp)
         return untyped __cpp__('({0} < 0.0f ? -{1} : {2})', a, a, a);
         #else
         return Math.abs(a);
@@ -65,6 +65,12 @@ class Float32Utils {
     #end
 
     macro public static function f32(expr:Expr):ExprOf<Float32> {
+        // In cppia the bytecode cannot embed inline C++/C# code (CppCode):
+        // fall back to the plain expression (the client only pilots control
+        // flow; float32 storage stays native on the host side)
+        if (Context.defined('cppia')) {
+            return expr;
+        }
         if (Context.defined('cpp')) {
             var exprStr = new Printer().printExpr(expr);
             if (exprStr.indexOf('.') == -1) {
