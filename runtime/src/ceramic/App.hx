@@ -822,6 +822,14 @@ class App extends Entity {
         Tracker.backend = new TrackerBackend();
 
         settings = new Settings();
+
+        // Default the window title to the app display name from ceramic.yml
+        // when provided (the project can still override `settings.title`)
+        var infoDisplayName:String = Reflect.field(info, 'displayName');
+        if (infoDisplayName != null && infoDisplayName.length > 0) {
+            settings.title = infoDisplayName;
+        }
+
         screen = new Screen();
         audio = new Audio();
         input = new Input();
