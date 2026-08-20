@@ -183,6 +183,16 @@ class Tools {
             }
         }
 
+        // Cppia split build: promote the flag to a define here (globally) so
+        // every task and subtask sees it consistently — notably the output
+        // path (out/<group>/<target>-cppia...) which must be isolated from a
+        // standard build across setup, build, assets and compile subtasks
+        if (args.indexOf('--cppia') != -1) {
+            if (!context.defines.exists('ceramic_cppia')) {
+                context.defines.set('ceramic_cppia', '');
+            }
+        }
+
         // Custom defines
         index = 0;
         while (index < args.length) {

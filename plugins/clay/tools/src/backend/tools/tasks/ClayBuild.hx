@@ -153,14 +153,10 @@ class ClayBuild extends tools.Task {
                 + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'clay', 'src']))
                 + '-' + Md5.encode(File.getContent(Path.join([outTargetPath, 'project.hxml'])));
             var exportInfoPath = Path.join([outTargetPath, 'export_classes.info']);
-            // A regular (non-cppia) build may have overwritten the generated
-            // C++ with the monolithic app since the last host build: the
-            // compiled defines are the reliable witness of what's on disk
-            var cppOptionsPath = Path.join([outTargetPath, 'cpp', 'Options.txt']);
-            var cppIsHostBuild = FileSystem.exists(cppOptionsPath)
-                && File.getContent(cppOptionsPath).indexOf('ceramic_cppia_host') != -1;
+            // The cppia build now has its own out/ dir (outPathWithName adds a
+            // `-cppia` segment), so a standard build can no longer clobber the
+            // host C++; the host is rebuilt only when the engine side changed.
             cppiaHostStale = !FileSystem.exists(exportInfoPath)
-                || !cppIsHostBuild
                 || !FileSystem.exists(cppiaHostHashFile)
                 || File.getContent(cppiaHostHashFile) != cppiaHostHash;
             if (!cppiaHostStale) {
