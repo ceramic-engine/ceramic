@@ -198,6 +198,96 @@ class ClayBuild extends tools.Task {
             }
         }
 
+        // Transpile the project/engine shade shaders to GLSL from one or more
+        // `info.json` files (each written by a `ShadeMacro.initRegister` pass),
+        // then copy the result to the platform assets. Taking several info
+        // files lets the cppia split combine engine shaders (host compile) with
+        // project shaders (client compile) in a single transpilation.
+        function transpileShadersFromInfos(infoPaths:Array<String>):Void {
+
+            var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
+            var prevShadersJsonPath = Path.join([outTargetPath, 'shade', 'prev-info.json']);
+
+            // Union the shader references from every info file, deduped by hash
+            var uniqueShaders:Map<String, String> = new Map();
+            var combinedRefs:Array<Dynamic> = [];
+            for (infoPath in infoPaths) {
+                if (!FileSystem.exists(infoPath)) continue;
+                var shaders:Dynamic = Json.parse(File.getContent(infoPath));
+                if (shaders == null || shaders.shaders == null) continue;
+                var refs:Array<{ pack:Array<String>, name:String, filePath:String, hash:String }> = shaders.shaders;
+                for (ref in refs) {
+                    if (!uniqueShaders.exists(ref.hash)) {
+                        uniqueShaders.set(ref.hash, ref.filePath);
+                        combinedRefs.push(ref);
+                    }
+                }
+            }
+
+            if (combinedRefs.length == 0) return;
+
+            // Skip key: the combined refs + the transpiler sources hash (a
+            // transpiler change must invalidate previously generated shaders)
+            var combined:Dynamic = {
+                shaders: combinedRefs,
+                transpiler: Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'shade', 'src']))
+                    + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src']))
+            };
+
+            var prevShaders:Dynamic = null;
+            if (FileSystem.exists(prevShadersJsonPath)) {
+                prevShaders = Json.parse(File.getContent(prevShadersJsonPath));
+            }
+
+            var shouldSkipShaderCompilation = prevShaders != null && Equal.equal(prevShaders, combined, true)
+                && FileSystem.exists(glslOutputPath);
+
+            if (!shouldSkipShaderCompilation) {
+
+                if (FileSystem.exists(glslOutputPath)) {
+                    Files.deleteRecursive(glslOutputPath);
+                }
+
+                var shadeArgs:Array<String> = [];
+                for (filePath in uniqueShaders) {
+                    shadeArgs.push('--in');
+                    shadeArgs.push(filePath);
+                }
+                shadeArgs.push('--target');
+                shadeArgs.push('glsl');
+                shadeArgs.push('--out');
+                shadeArgs.push(glslOutputPath);
+                print('Transpile shaders to GLSL');
+                runTask('shade', shadeArgs);
+
+                // Instanced variants: shader sources that opt in (they contain
+                // `#if shade_instanced` blocks) are transpiled a second time
+                // with the define; outputs get the `_inst` suffix.
+                var instArgs:Array<String> = [];
+                for (filePath in uniqueShaders) {
+                    if (File.getContent(filePath).indexOf('shade_instanced') != -1) {
+                        instArgs.push('--in');
+                        instArgs.push(filePath);
+                    }
+                }
+                if (instArgs.length > 0) {
+                    instArgs.push('--target');
+                    instArgs.push('glsl');
+                    instArgs.push('--out');
+                    instArgs.push(glslOutputPath);
+                    instArgs.push('--hxml');
+                    instArgs.push('-D shade_instanced');
+                    print('Transpile instanced shader variants to GLSL');
+                    runTask('shade', instArgs);
+                }
+
+                File.saveContent(prevShadersJsonPath, Json.stringify(combined, null, '    '));
+            }
+
+            copyTranspiledShadersToPlatformAssets();
+
+        }
+
         // Build haxe
         var status = 0;
         if ((cppiaFlag ? cppiaHostStale : !skipHaxeCompilation) && (action == 'build' || action == 'run')) {
@@ -558,100 +648,12 @@ $workletResolveClassCases
                     fail('The `ceramic_standalone_audio_worklets` define is enabled, but the project has no audio filter worklet: the standalone audio worklets library needs at least one worklet to be compiled.');
                 }
 
-                // Compile GLSL shaders from Haxe shaders
-                final shadersJsonPath = Path.join([outTargetPath, 'shade', 'info.json']);
-                final prevShadersJsonPath = Path.join([outTargetPath, 'shade', 'prev-info.json']);
-
-                if (FileSystem.exists(shadersJsonPath)) {
-                    var shaders:Dynamic = Json.parse(File.getContent(shadersJsonPath));
-
-                    // Shader output depends on the shade transpiler (and reflaxe) sources as well:
-                    // include their hash in the comparison so that transpiler changes
-                    // invalidate previously generated shaders.
-                    Reflect.setField(shaders, 'transpiler', Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'shade', 'src'])) + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'reflaxe', 'src'])));
-
-                    // Read previous shade/info.json for comparison
-                    var prevShaders:Dynamic = null;
-                    if (FileSystem.exists(prevShadersJsonPath)) {
-                        prevShaders = Json.parse(File.getContent(prevShadersJsonPath));
-                    }
-
-                    if (shaders != null && shaders.shaders != null) {
-                        final shaderReferences:Array<{
-                            pack:Array<String>,
-                            name:String,
-                            filePath:String,
-                            hash:String
-                        }> = shaders.shaders;
-
-                        if (shaderReferences.length > 0) {
-                            // Check if shaders changed (skip if identical)
-                            var shouldSkipShaderCompilation = false;
-                            if (prevShaders != null && Equal.equal(prevShaders, shaders, true)) {
-                                shouldSkipShaderCompilation = true;
-                            }
-
-                            var glslOutputPath = Path.join([outTargetPath, 'shade', 'glsl']);
-
-                            if (!shouldSkipShaderCompilation) {
-                                // Collect unique shader files (by hash to avoid duplicates)
-                                var uniqueShaders:Map<String, String> = new Map();
-                                for (ref in shaderReferences) {
-                                    if (!uniqueShaders.exists(ref.hash)) {
-                                        uniqueShaders.set(ref.hash, ref.filePath);
-                                    }
-                                }
-
-                                // Delete existing glsl folder if any
-                                if (FileSystem.exists(glslOutputPath)) {
-                                    Files.deleteRecursive(glslOutputPath);
-                                }
-
-                                // Build args for shade task
-                                var shadeArgs:Array<String> = [];
-                                for (filePath in uniqueShaders) {
-                                    shadeArgs.push('--in');
-                                    shadeArgs.push(filePath);
-                                }
-                                shadeArgs.push('--target');
-                                shadeArgs.push('glsl');
-                                shadeArgs.push('--out');
-                                shadeArgs.push(glslOutputPath);
-
-                                // Run shade task
-                                print('Transpile shaders to GLSL');
-                                runTask('shade', shadeArgs);
-
-                                // Instanced variants: shader sources that opt in
-                                // (they contain `#if shade_instanced` blocks) are
-                                // transpiled a second time with the define; outputs
-                                // get the `_inst` suffix and land in the same folder.
-                                var instArgs:Array<String> = [];
-                                for (filePath in uniqueShaders) {
-                                    if (File.getContent(filePath).indexOf('shade_instanced') != -1) {
-                                        instArgs.push('--in');
-                                        instArgs.push(filePath);
-                                    }
-                                }
-                                if (instArgs.length > 0) {
-                                    instArgs.push('--target');
-                                    instArgs.push('glsl');
-                                    instArgs.push('--out');
-                                    instArgs.push(glslOutputPath);
-                                    instArgs.push('--hxml');
-                                    instArgs.push('-D shade_instanced');
-                                    print('Transpile instanced shader variants to GLSL');
-                                    runTask('shade', instArgs);
-                                }
-
-                                // Save current info (including transpiler hash) for next comparison
-                                File.saveContent(prevShadersJsonPath, Json.stringify(shaders, null, '    '));
-                            }
-
-                            // Copy shaders to platform assets (directly in assets folder, no subfolder)
-                            copyTranspiledShadersToPlatformAssets();
-                        }
-                    }
+                // Compile GLSL shaders from Haxe shaders. In cppia mode the
+                // project shaders live in the client module and are transpiled
+                // after the client compile (see below), so only do the engine
+                // shaders here; a monolithic build does everything here.
+                if (!cppiaFlag) {
+                    transpileShadersFromInfos([Path.join([outTargetPath, 'shade', 'info.json'])]);
                 }
 
                 // We can now save last modified list, as build seems ok
@@ -704,6 +706,11 @@ $workletResolveClassCases
                     clientArgs.push('--connect');
                     clientArgs.push('' + haxeServerPort);
                 }
+                // Collect the project shaders (they live in the client module):
+                // written to a separate `shade-cppia/info.json` so it does not
+                // clobber the engine shaders info produced by the host compile
+                clientArgs.push('--macro');
+                clientArgs.push('shade.macros.ShadeMacro.initRegister(' + Json.stringify(Path.join([outTargetPath, 'shade-cppia'])) + ')');
                 print('Run haxe compiler (cppia client)');
                 status = haxeWithChecksAndLogs(clientArgs, {cwd: outTargetPath});
                 if (status != 0) {
@@ -714,6 +721,17 @@ $workletResolveClassCases
                     saveLastModifiedListCallback();
                     saveLastModifiedListCallback = null;
                 }
+
+                // Transpile engine (host) + project (client) shaders together.
+                // ShadeMacro.initRegister writes to <targetPath>/shade/info.json,
+                // so the client info lives under shade-cppia/shade/. The client
+                // compile actually sees both engine and project shaders (it
+                // shares the ceramic runtime classpath), but the host info is
+                // included too for robustness — dedup by hash handles overlap.
+                transpileShadersFromInfos([
+                    Path.join([outTargetPath, 'shade', 'info.json']),
+                    Path.join([outTargetPath, 'shade-cppia', 'shade', 'info.json'])
+                ]);
             }
             else {
                 print('Skip cppia client compilation');
