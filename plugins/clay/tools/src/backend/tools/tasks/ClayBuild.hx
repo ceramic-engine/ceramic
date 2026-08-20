@@ -151,6 +151,7 @@ class ClayBuild extends tools.Task {
             cppiaHostHash = Files.hashDirectory(Path.join([context.ceramicRuntimePath, 'src']))
                 + '-' + Files.hashDirectory(Path.join([context.plugins.get('clay').path, 'runtime', 'src']))
                 + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'clay', 'src']))
+                + '-' + Files.hashDirectory(Path.join([context.ceramicRootPath, 'git', 'hxcpp', 'src']))
                 + '-' + Md5.encode(File.getContent(Path.join([outTargetPath, 'project.hxml'])));
             var exportInfoPath = Path.join([outTargetPath, 'export_classes.info']);
             // The cppia build now has its own out/ dir (outPathWithName adds a
