@@ -46,9 +46,9 @@ class ClayBackendTools implements tools.spec.BackendTools {
                 displayName: 'Mac',
                 configs: [
                     Run('Run Mac'),
-                    Run('Run Mac (Cppia)', ['--cppia']),
+                    Run('Run Mac (CPPIA)', ['--cppia']),
                     Build('Build Mac'),
-                    Build('Build Mac (Cppia)', ['--cppia']),
+                    Build('Build Mac (CPPIA)', ['--cppia']),
                     Clean('Clean Mac')
                 ]
             });
@@ -59,9 +59,9 @@ class ClayBackendTools implements tools.spec.BackendTools {
                 displayName: 'Windows',
                 configs: [
                     Run('Run Windows'),
-                    Run('Run Windows (Cppia)', ['--cppia']),
+                    Run('Run Windows (CPPIA)', ['--cppia']),
                     Build('Build Windows'),
-                    Build('Build Windows (Cppia)', ['--cppia']),
+                    Build('Build Windows (CPPIA)', ['--cppia']),
                     Clean('Clean Windows')
                 ]
             });
@@ -72,9 +72,9 @@ class ClayBackendTools implements tools.spec.BackendTools {
                 displayName: 'Linux',
                 configs: [
                     Run('Run Linux'),
-                    Run('Run Linux (Cppia)', ['--cppia']),
+                    Run('Run Linux (CPPIA)', ['--cppia']),
                     Build('Build Linux'),
-                    Build('Build Linux (Cppia)', ['--cppia']),
+                    Build('Build Linux (CPPIA)', ['--cppia']),
                     Clean('Clean Linux')
                 ]
             });

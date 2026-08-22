@@ -191,6 +191,20 @@ class Tools {
             if (!context.defines.exists('ceramic_cppia')) {
                 context.defines.set('ceramic_cppia', '');
             }
+            // The generational and concurrent GC modes are not safe under the
+            // cppia bytecode interpreter: the VM holds live object references
+            // the collector cannot see through its precise/concurrent root scan,
+            // leading to use-after-free crashes. Their benefit is negligible
+            // next to the cost of interpreting bytecode, so force the classic GC
+            // for cppia builds. These defines gate the GC +defines contributed
+            // by the clay plugin ceramic.yml (evaluated during project load,
+            // which happens after this point).
+            if (!context.defines.exists('ceramic_no_concurrent_gc')) {
+                context.defines.set('ceramic_no_concurrent_gc', '');
+            }
+            if (!context.defines.exists('ceramic_no_generational_gc')) {
+                context.defines.set('ceramic_no_generational_gc', '');
+            }
         }
 
         // Custom defines
