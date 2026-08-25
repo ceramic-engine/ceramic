@@ -7,8 +7,5 @@ plugin:
                 - '{plugin:cwd}/tpl/generated'
             +libs:
                 - loreline
-                - hscript
-            +defines:
-                - hscriptPos
             +paths:
                 - '{plugin:cwd}/runtime/src'
