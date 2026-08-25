@@ -1106,6 +1106,8 @@ class Audio implements spec.Audio {
 
 }
 
+#if cpp
+
 /**
  * Module-private shim holding the raw native audio callback: its signature
  * is fixed by the C ABI (raw `float*` buffer) and such types cannot get
@@ -1127,3 +1129,5 @@ private class AudioFilterProcessShim {
     }
 
 }
+
+#end
