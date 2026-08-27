@@ -2,10 +2,10 @@ package ceramic;
 
 #if plugin_imgui
 
-using ceramic.Extensions;
-
 import ceramic.Shortcuts.*;
 import imgui.ImGui;
+
+using ceramic.Extensions;
 
 /**
  * Dear ImGui integration for ceramic - fully backend-agnostic.
@@ -21,6 +21,9 @@ import imgui.ImGui;
  *    `backend.Draw` during the normal visuals pass (no imgui_impl_* backend).
  *  - TEXTURES: the 1.92 `ImTextureData` protocol handled with ceramic
  *    textures; `ImTextureID` is a registry key (see `ImGuiTextures`).
+ *  - LAYOUT: window positions, sizes and dock nodes are persisted through
+ *    ceramic's `PersistentData` instead of ImGui's own `imgui.ini` file (see
+ *    `saveLayout()`); opt out with the `imgui_no_persistent_layout` define.
  *
  * Usage stays the same as before: make `ImGui.*` calls anywhere between
  * updates (typically in `update()`); frame boundaries are automatic.
@@ -79,8 +82,19 @@ class ImGuiSystem extends System {
      */
     public var nativeScreen:Bool = true;
 
+    /**
+     * Id of the `PersistentData` storage holding the ImGui layout (window
+     * positions and sizes, dock node tree, collapsed/selected tabs...).
+     */
+    public static inline final LAYOUT_STORAGE_ID:String = 'imgui-layout';
+
+    /** Key of the ini settings blob inside that storage. */
+    static inline final LAYOUT_KEY:String = 'iniSettings';
+
     var inited:Bool = false;
     var frameStarted:Bool = false;
+    var layoutData:PersistentData = null;
+    var lastSavedLayout:String = null;
     var textInputActive:Bool = false;
     var lastTextInputText:String = '';
     var blockingDefaultScroll:Bool = false;
@@ -163,6 +177,12 @@ class ImGuiSystem extends System {
             | ImGuiBackendFlags.RendererHasVtxOffset;
         io.configFlags = io.configFlags | ImGuiConfigFlags.DockingEnable;
 
+        // Persist the layout through ceramic instead of ImGui's own file IO.
+        // Opt out with the `imgui_no_persistent_layout` define.
+        #if !imgui_no_persistent_layout
+        initLayoutPersistence();
+        #end
+
         // Apply ceramic's default ImGui theme (a dark blue style, nicer than
         // the built-in default). Opt out with the `imgui_no_default_theme` define.
         #if !imgui_no_default_theme
@@ -172,14 +192,14 @@ class ImGuiSystem extends System {
         bindInput();
 
         // Route ImGui's clipboard (copy/paste in InputText etc.) through
-        // ceramic's clipboard backend. (Native only: on web, ImGui's internal
-        // clipboard is used - the browser API is async/permission-gated.)
-        #if cpp
-        imguicpp.ImGuiNative.setClipboardHandlers(
+        // ceramic's clipboard backend, on native AND web: the backend itself
+        // picks the best channel (Electron's clipboard module when running
+        // under electron, an internal fallback in a plain browser - the
+        // browser clipboard API being async/permission-gated).
+        imgui.ImGuiClipboard.setHandlers(
             () -> app.backend.clipboard.getText(),
             text -> app.backend.clipboard.setText(text)
         );
-        #end
 
         renderable = new ImGuiRenderable();
         renderable.active = true;
@@ -240,6 +260,84 @@ class ImGuiSystem extends System {
     #end
 
     // =========================================================================
+    // Layout persistence
+    // =========================================================================
+
+    #if (cpp || js || cs)
+    /**
+     * Take over ImGui's ini settings and store them through ceramic.
+     *
+     * Left alone, ImGui reads and writes `imgui.ini` in the process working
+     * directory: inside the bundle for a packaged mac app (where a stale file
+     * silently overrides every `FirstUseEver` position), and nowhere at all on
+     * web. `PersistentData` goes through `app.backend.io`, so the layout lands
+     * where the backend puts save data on every target, web included.
+     */
+    function initLayoutPersistence():Void {
+
+        imgui.ImGuiIniSettings.disable();
+
+        layoutData = new PersistentData(LAYOUT_STORAGE_ID);
+
+        var iniSettings:String = layoutData.get(LAYOUT_KEY);
+        if (iniSettings != null && iniSettings != '') {
+            lastSavedLayout = iniSettings;
+            // Must happen before the first frame, like ImGui's own ini loading
+            ImGui.loadIniSettingsFromMemory(iniSettings);
+        }
+
+        // ImGui only raises `wantSaveIniSettings` every `io.iniSavingRate`
+        // seconds (5 by default), so a quit right after a window move would
+        // otherwise lose it.
+        app.onTerminate(this, saveLayout);
+
+    }
+    #end
+
+    /**
+     * Write the current ImGui layout to persistent storage now.
+     *
+     * Called automatically when ImGui reports the layout changed and when the
+     * app terminates; call it explicitly to save at another moment (before a
+     * scene switch, on window blur...). No-op when layout persistence is off.
+     */
+    public function saveLayout():Void {
+
+        #if (cpp || js || cs)
+        if (layoutData == null) return;
+
+        var iniSettings = ImGui.saveIniSettingsToMemory();
+        if (iniSettings == null) iniSettings = '';
+        // ImGui flags the layout dirty more eagerly than it actually changes
+        if (iniSettings == lastSavedLayout) return;
+
+        lastSavedLayout = iniSettings;
+        layoutData.set(LAYOUT_KEY, iniSettings);
+        layoutData.save();
+        #end
+
+    }
+
+    /**
+     * Forget the persisted layout, so the next run starts from the app's
+     * default arrangement again (see `imgui.ImGuiDockBuilder` to build one).
+     *
+     * This does not rearrange the live windows: pair it with a rebuild of the
+     * layout, or with a restart.
+     */
+    public function clearLayout():Void {
+
+        #if (cpp || js || cs)
+        if (layoutData == null) return;
+
+        lastSavedLayout = null;
+        layoutData.remove(LAYOUT_KEY);
+        layoutData.save();
+        #end
+
+    }
+
+    // =========================================================================
     // Frame lifecycle
     // =========================================================================
 
@@ -294,6 +392,11 @@ class ImGuiSystem extends System {
             }
         }
         #end
+
+        if (io.wantSaveIniSettings) {
+            io.wantSaveIniSettings = false;
+            saveLayout();
+        }
 
         updateTextInputSession(io.wantTextInput);
 

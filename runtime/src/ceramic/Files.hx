@@ -455,6 +455,21 @@ class Files {
 
         sys.io.File.copy(srcPath, dstPath);
 
+        #elseif (web && ceramic_use_electron)
+
+        var fs = Platform.nodeRequire('fs');
+
+        if (fs == null) {
+            log.warning('copyFileWithIntermediateDirs() is not supported on this target without fs module');
+        }
+        else {
+            var dstDir = Path.directory(dstPath);
+            if (!fs.existsSync(dstDir)) {
+                fs.mkdirSync(dstDir, { recursive: true });
+            }
+            fs.copyFileSync(srcPath, dstPath);
+        }
+
         #else
 
         log.warning('copyFileWithIntermediateDirs() is not supported on this target');
