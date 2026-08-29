@@ -223,17 +223,24 @@ class ImGuiVisuals {
         }
 
         // Redirect ceramic pointer events: align the (never drawn) hit proxy
-        // quad with the on-screen ImGui item rect. ImGui coordinates are
-        // ceramic logical screen coordinates (single viewport). The proxy is
-        // the filter's `hitVisual`: `visualInContentHits` concats the tested
-        // visual's matrix (RENDER TEXTURE coordinates, which include the
-        // atlas tile offset) with the proxy's matrix, so the proxy transform
-        // must map RT coordinates to screen: compensate the tile offset.
+        // quad with the on-screen ImGui item rect. The item rect (ImGui
+        // coordinates, single viewport) is first mapped to ceramic logical
+        // screen coordinates (identity mapping unless
+        // `ImGuiSystem.nativeScreen` is enabled). The proxy is the filter's
+        // `hitVisual`: `visualInContentHits` concats the tested visual's
+        // matrix (RENDER TEXTURE coordinates, which include the atlas tile
+        // offset) with the proxy's matrix, so the proxy transform must map
+        // RT coordinates to screen: compensate the tile offset.
         var rectMin = ImGui.getItemRectMin();
         var rectMax = ImGui.getItemRectMax();
         var hovered = ImGui.isItemHovered();
-        var displayedW = rectMax.x - rectMin.x;
-        var displayedH = rectMax.y - rectMin.y;
+        var system = ImGuiSystem.shared;
+        var screenMinX = system.imGuiToScreenX(rectMin.x, rectMin.y);
+        var screenMinY = system.imGuiToScreenY(rectMin.x, rectMin.y);
+        var screenMaxX = system.imGuiToScreenX(rectMax.x, rectMax.y);
+        var screenMaxY = system.imGuiToScreenY(rectMax.x, rectMax.y);
+        var displayedW = screenMaxX - screenMinX;
+        var displayedH = screenMaxY - screenMinY;
         var scaleX = entry.width > 0 ? displayedW / entry.width : 1.0;
         var scaleY = entry.height > 0 ? displayedH / entry.height : 1.0;
         var tileX = 0.0;
@@ -243,7 +250,7 @@ class ImGuiVisuals {
             tileY = textureTile.frameY;
         }
         var hitProxy = entry.hitProxy;
-        hitProxy.pos(rectMin.x - tileX * scaleX, rectMin.y - tileY * scaleY);
+        hitProxy.pos(screenMinX - tileX * scaleX, screenMinY - tileY * scaleY);
         hitProxy.scale(scaleX, scaleY);
         // Sized so that (tile offset + area) * scale ends exactly at rectMax;
         // the extra left/top margin is harmless: hits are gated by hover.

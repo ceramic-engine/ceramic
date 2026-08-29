@@ -16,17 +16,53 @@ import imgui.ImGui;
  * `drawRenderable` bracket flushes and dirties the 2D state afterwards, so the
  * regular pipeline resumes untouched.
  *
- * Coordinates are logical (ImGui's `DisplaySize` is ceramic's logical screen
- * size; the backend applies density to both geometry and scissor). Vertex
- * colors are premultiplied CPU-side to match ceramic's premultiplied-alpha
- * compositing.
+ * Geometry and scissors are pushed in logical coordinates (the backend
+ * applies density to both). ImGui itself is laid out either in native screen
+ * points (`ImGuiSystem.nativeScreen`, the default) or directly in logical
+ * coordinates: an affine transform, refreshed each frame, maps ImGui
+ * coordinates to logical ones. Vertex colors are premultiplied CPU-side to
+ * match ceramic's premultiplied-alpha compositing.
  */
 class ImGuiRenderable extends Renderable {
+
+    // Transform applied to ImGui geometry and scissors before feeding the
+    // draw backend (identity in logical mode; native screen points ->
+    // logical coordinates when `ImGuiSystem.nativeScreen` is enabled).
+    // Refreshed at the beginning of every `render()` call.
+    var tA:Float = 1;
+    var tB:Float = 0;
+    var tC:Float = 0;
+    var tD:Float = 1;
+    var tTX:Float = 0;
+    var tTY:Float = 0;
 
     public function new() {
 
         super();
         depth = 10000; // above everything by default (configurable)
+
+    }
+
+    function updateImGuiTransform():Void {
+
+        if (ImGuiSystem.shared.nativeScreen) {
+            // ImGui coordinates are native screen points: combine the
+            // points -> framebuffer scale (native density) with the screen's
+            // reverse matrix (framebuffer -> logical), like
+            // `Visual.bindToNativeScreenSize()` does with a `Transform`.
+            var screen = ceramic.App.app.screen;
+            var density = screen.nativeDensity;
+            var reverseMatrix = @:privateAccess screen.reverseMatrix;
+            tA = reverseMatrix.a * density;
+            tB = reverseMatrix.b * density;
+            tC = reverseMatrix.c * density;
+            tD = reverseMatrix.d * density;
+            tTX = reverseMatrix.tx;
+            tTY = reverseMatrix.ty;
+        }
+        else {
+            tA = 1; tB = 0; tC = 0; tD = 1; tTX = 0; tTY = 0;
+        }
 
     }
 
@@ -57,6 +93,8 @@ class ImGuiRenderable extends Renderable {
 
         // Fulfill this frame's dynamic texture requests (font atlas pages...).
         ImGuiTextures.process(drawData);
+
+        updateImGuiTransform();
 
         if (drawData.cmdListsCount <= 0) return;
 
@@ -145,13 +183,21 @@ class ImGuiRenderable extends Renderable {
                 var tex = ImGuiTextures.texture(cast texId);
                 if (tex == null || tex.destroyed) continue;
 
-                // Per-command scissor (logical coordinates).
+                // Per-command scissor (ImGui coordinates, mapped to logical
+                // coordinates through the current ImGui transform).
                 var clip:ImVec4 = imCmd.clipRect;
                 var clipX:Float = clip.x - displayPosX;
                 var clipY:Float = clip.y - displayPosY;
                 var clipW:Float = (clip.z - displayPosX) - clipX;
                 var clipH:Float = (clip.w - displayPosY) - clipY;
                 if (clipW <= 0 || clipH <= 0) continue;
+
+                var clipX2:Float = clipX + clipW;
+                var clipY2:Float = clipY + clipH;
+                var scissorX1:Float = tA * clipX + tC * clipY + tTX;
+                var scissorY1:Float = tB * clipX + tD * clipY + tTY;
+                var scissorX2:Float = tA * clipX2 + tC * clipY2 + tTX;
+                var scissorY2:Float = tB * clipX2 + tD * clipY2 + tTY;
 
                 draw.flush();
 
@@ -161,7 +207,10 @@ class ImGuiRenderable extends Renderable {
                     draw.bindTexture(tex.backendItem);
                 }
 
-                draw.enableScissor(clipX, clipY, clipW, clipH);
+                draw.enableScissor(
+                    Math.min(scissorX1, scissorX2), Math.min(scissorY1, scissorY2),
+                    Math.abs(scissorX2 - scissorX1), Math.abs(scissorY2 - scissorY1)
+                );
 
                 #if (js || cs)
                 pushCommand(draw, multiTexture, vtx, idx, vertSize,
@@ -238,6 +287,10 @@ class ImGuiRenderable extends Renderable {
         var uy:Float = vert.uv.y;
         var col:Int = cast vert.col;
 
+        // Map ImGui coordinates to logical coordinates
+        var fx:Float = tA * px + tC * py + tTX;
+        var fy:Float = tB * px + tD * py + tTY;
+
         // IM_COL32: R | G<<8 | B<<16 | A<<24 → premultiplied floats.
         var a = ((col >>> 24) & 0xFF) / 255.0;
         var r = ((col) & 0xFF) / 255.0 * a;
@@ -245,10 +298,10 @@ class ImGuiRenderable extends Renderable {
         var b = ((col >>> 16) & 0xFF) / 255.0 * a;
 
         if (multiTexture) {
-            draw.putPosAndTextureSlot(px, py, 0, 0);
+            draw.putPosAndTextureSlot(fx, fy, 0, 0);
         }
         else {
-            draw.putPos(px, py, 0);
+            draw.putPos(fx, fy, 0);
         }
         draw.putUVs(ux, uy);
         draw.putColor(r, g, b, a);
@@ -316,16 +369,20 @@ class ImGuiRenderable extends Renderable {
         var uy:Float = heapF32(vertAddr + 12);
         var col:Int = heapU32(vertAddr + 16);
 
+        // Map ImGui coordinates to logical coordinates
+        var fx:Float = tA * px + tC * py + tTX;
+        var fy:Float = tB * px + tD * py + tTY;
+
         var a = ((col >>> 24) & 0xFF) / 255.0;
         var r = ((col) & 0xFF) / 255.0 * a;
         var g = ((col >>> 8) & 0xFF) / 255.0 * a;
         var b = ((col >>> 16) & 0xFF) / 255.0 * a;
 
         if (multiTexture) {
-            draw.putPosAndTextureSlot(px, py, 0, 0);
+            draw.putPosAndTextureSlot(fx, fy, 0, 0);
         }
         else {
-            draw.putPos(px, py, 0);
+            draw.putPos(fx, fy, 0);
         }
         draw.putUVs(ux, uy);
         draw.putColor(r, g, b, a);

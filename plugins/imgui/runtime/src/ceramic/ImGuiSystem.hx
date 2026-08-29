@@ -68,10 +68,22 @@ class ImGuiSystem extends System {
      */
     public var wheelScale:Float = 1.0 / 24.0;
 
+    /**
+     * When enabled (default), the ImGui UI is laid out at the screen's
+     * NATIVE size (1 ImGui point = 1 screen point), independently of the
+     * app's logical scaling (FIT, FILL...): the game keeps its own scaling
+     * while the UI stays at a consistent, crisp size — the same behavior as
+     * the `elements` plugin's Im UI. Set to `false` to lay out the UI in
+     * the app's logical coordinates instead (the previous behavior, where
+     * the UI is scaled together with the app content).
+     */
+    public var nativeScreen:Bool = true;
+
     var inited:Bool = false;
     var frameStarted:Bool = false;
     var textInputActive:Bool = false;
     var lastTextInputText:String = '';
+    var blockingDefaultScroll:Bool = false;
 
     override function new() {
 
@@ -237,8 +249,16 @@ class ImGuiSystem extends System {
         if (!inited) return;
 
         var io = ImGui.getIO();
-        io.displaySize = ImVec2.make(screen.width, screen.height);
-        io.displayFramebufferScale = ImVec2.make(screen.texturesDensity, screen.texturesDensity);
+        if (nativeScreen) {
+            // The UI is laid out in native screen points, whatever the
+            // app's logical scaling is (see `nativeScreen` doc)
+            io.displaySize = ImVec2.make(screen.nativeWidth, screen.nativeHeight);
+            io.displayFramebufferScale = ImVec2.make(screen.nativeDensity, screen.nativeDensity);
+        }
+        else {
+            io.displaySize = ImVec2.make(screen.width, screen.height);
+            io.displayFramebufferScale = ImVec2.make(screen.texturesDensity, screen.texturesDensity);
+        }
         io.deltaTime = delta > 0 ? delta : 1.0 / 60.0;
 
         ImGui.newFrame();
@@ -259,6 +279,22 @@ class ImGuiSystem extends System {
         wantCaptureMouse = io.wantCaptureMouse;
         wantCaptureKeyboard = io.wantCaptureKeyboard;
 
+        #if ceramic_auto_block_default_scroll
+        // While ImGui wants the mouse (pointer over/interacting with the UI),
+        // flag ourselves as blocking default scroll, like ceramic's Scroller
+        // does: on web, this keeps the page from scrolling when the user
+        // scrolls inside an ImGui window.
+        if (wantCaptureMouse != blockingDefaultScroll) {
+            blockingDefaultScroll = wantCaptureMouse;
+            if (blockingDefaultScroll) {
+                app.numBlockingDefaultScroll++;
+            }
+            else {
+                app.numBlockingDefaultScroll--;
+            }
+        }
+        #end
+
         updateTextInputSession(io.wantTextInput);
 
         // Sweep visuals displayed through ImGuiVisuals (release unused entries)
@@ -277,6 +313,47 @@ class ImGuiSystem extends System {
     }
 
     // =========================================================================
+    // Coordinate conversion (ceramic logical space <-> ImGui space)
+    // =========================================================================
+
+    /**
+     * Convert a position in ceramic's logical screen coordinates to ImGui
+     * coordinates (native screen points when `nativeScreen` is enabled,
+     * identical coordinates otherwise).
+     */
+    public function screenToImGuiX(x:Float, y:Float):Float {
+        if (!nativeScreen) return x;
+        var matrix = @:privateAccess screen.matrix;
+        return matrix.transformX(x, y) / screen.nativeDensity;
+    }
+
+    /** @see screenToImGuiX */
+    public function screenToImGuiY(x:Float, y:Float):Float {
+        if (!nativeScreen) return y;
+        var matrix = @:privateAccess screen.matrix;
+        return matrix.transformY(x, y) / screen.nativeDensity;
+    }
+
+    /**
+     * Convert a position in ImGui coordinates back to ceramic's logical
+     * screen coordinates.
+     */
+    public function imGuiToScreenX(x:Float, y:Float):Float {
+        if (!nativeScreen) return x;
+        var density = screen.nativeDensity;
+        var reverseMatrix = @:privateAccess screen.reverseMatrix;
+        return reverseMatrix.transformX(x * density, y * density);
+    }
+
+    /** @see imGuiToScreenX */
+    public function imGuiToScreenY(x:Float, y:Float):Float {
+        if (!nativeScreen) return y;
+        var density = screen.nativeDensity;
+        var reverseMatrix = @:privateAccess screen.reverseMatrix;
+        return reverseMatrix.transformY(x * density, y * density);
+    }
+
+    // =========================================================================
     // Input bridge (ceramic events → ImGui event queue)
     // =========================================================================
 
@@ -286,11 +363,11 @@ class ImGuiSystem extends System {
 
         screen.onMouseMove(this, (x, y) -> {
             var io = ImGui.getIO();
-            ImGuiIO.addMousePosEvent(io, x, y);
+            ImGuiIO.addMousePosEvent(io, screenToImGuiX(x, y), screenToImGuiY(x, y));
         });
         screen.onMouseDown(this, (buttonId, x, y) -> {
             var io = ImGui.getIO();
-            ImGuiIO.addMousePosEvent(io, x, y);
+            ImGuiIO.addMousePosEvent(io, screenToImGuiX(x, y), screenToImGuiY(x, y));
             ImGuiIO.addMouseButtonEvent(io, imguiMouseButton(buttonId), true);
         });
         screen.onMouseUp(this, (buttonId, x, y) -> {
