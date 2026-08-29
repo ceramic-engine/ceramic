@@ -590,7 +590,7 @@ class Audio implements spec.Audio {
                 AudioWorkletsCallbacks.filterFunc(),
                 false /* attachHaxeThread */
             );
-            #elseif cpp
+            #elseif (cpp && !documentation)
             Clay.app.audio.createBusFilter(
                 bus,
                 cpp.Callable.fromStaticFunction(_clayFilterCreate),
@@ -1106,7 +1106,7 @@ class Audio implements spec.Audio {
 
 }
 
-#if cpp
+#if (cpp && !documentation)
 
 /**
  * Module-private shim holding the raw native audio callback: its signature
