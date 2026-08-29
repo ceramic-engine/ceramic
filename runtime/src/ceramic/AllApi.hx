@@ -200,6 +200,7 @@ import ceramic.Quad;
 import ceramic.ReadOnlyArray;
 import ceramic.ReadOnlyMap;
 import ceramic.ReadOnlyPoint;
+import ceramic.Renderable;
 import ceramic.Renderer;
 import ceramic.RenderTexture;
 import ceramic.ReusableArray;
@@ -283,6 +284,7 @@ import ceramic.ValueEntry;
 import ceramic.Velocity;
 import ceramic.VisibleBounds;
 import ceramic.Visual;
+import ceramic.VisualRendering;
 import ceramic.VisualTransition;
 import ceramic.WatchDirectory;
 import ceramic.WaitCallbacks;
@@ -468,6 +470,12 @@ import ceramic.ViewSystem;
 
 #if (plugin_imgui && (cpp || js))
 import imgui.ImGui;
+import imgui.ImGuiFonts;
+import imgui.ImGuiThemes;
+import ceramic.ImGuiRenderable;
+import ceramic.ImGuiSystem;
+import ceramic.ImGuiTextures;
+import ceramic.ImGuiVisuals;
 #end
 
 #if plugin_gif
@@ -705,8 +713,8 @@ class AllApi {
         interp.variables.set('Layer', ceramic.Layer);
         interp.variables.set('Lazy', ceramic.Lazy);
         interp.variables.set('Line', ceramic.Line);
-        interp.variables.set('LineCap', ceramic.LineCap);
-        interp.variables.set('LineJoin', ceramic.LineJoin);
+        interp.variables.set('LineCap', ceramic.scriptable.ScriptableLineCap);
+        interp.variables.set('LineJoin', ceramic.scriptable.ScriptableLineJoin);
         interp.variables.set('Logger', ceramic.Logger);
         interp.variables.set('Mesh', ceramic.Mesh);
         interp.variables.set('MeshColorMapping', ceramic.scriptable.ScriptableMeshColorMapping);
