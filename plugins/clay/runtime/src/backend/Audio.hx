@@ -617,6 +617,35 @@ class Audio implements spec.Audio {
             );
             #end
         }
+        #if web
+        else {
+            // The clay bus filter already exists (or its creation is in
+            // flight), so the callback above won't run for this filter: its
+            // worklet still needs to be created. Do it right away if the bus
+            // filter is ready, or defer to when it becomes ready otherwise.
+            // Without this, a filter added to an existing bus (e.g. re-added
+            // after being removed) never gets its worklet instance on web,
+            // and stops processing audio or reacting to param changes.
+            final hasBusFilterNow = activeBusFilters.length > bus ? (activeBusFilters[bus] ?? false) : false;
+            if (hasBusFilterNow) {
+                final cb = addBusFilterWorklet;
+                addBusFilterWorklet = null;
+                cb();
+            }
+            else {
+                if (busFilterReadyCallbacks[bus] == null) {
+                    busFilterReadyCallbacks[bus] = [];
+                }
+                busFilterReadyCallbacks[bus].push(() -> {
+                    if (addBusFilterWorklet != null) {
+                        final cb = addBusFilterWorklet;
+                        addBusFilterWorklet = null;
+                        cb();
+                    }
+                });
+            }
+        }
+        #end
 
         #if (cpp && ceramic_standalone_audio_worklets)
 
