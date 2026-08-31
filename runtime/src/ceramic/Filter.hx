@@ -595,6 +595,65 @@ class Filter extends Layer implements Observable {
 
     }
 
+/// Coordinate conversion
+
+    /**
+     * Guards against a `hitVisual` that would itself render into this filter's
+     * render texture, which would make the delegation below recurse forever.
+     * Nothing in ceramic sets up such a hit visual, but the field is public.
+     */
+    var convertingThroughHitVisual:Bool = false;
+
+    /**
+     * Screen -> local conversion, routed through `hitVisual` like hit testing
+     * already is (see `visualInContentHits()`).
+     *
+     * When `hitVisual` is the filter itself - which is the default, and the
+     * case everywhere in ceramic except when something explicitly redirects it
+     * - this behaves exactly like `Visual.screenToVisual()`.
+     *
+     * When it has been redirected, the filter is no longer where its result
+     * appears on screen: something else displays the render texture and aligns
+     * a proxy with it, so the filter's own matrix says nothing about where the
+     * content is drawn. Converting through it then yields coordinates in the
+     * wrong frame of reference. Callers working on deltas do not notice (a
+     * constant offset cancels out), but anything comparing an absolute
+     * converted position against a pointer position is silently wrong - which
+     * is the whole point of keeping hits and coordinates on the same
+     * reference.
+     */
+    override public function screenToVisual(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
+
+        final hitVisual = this.hitVisual;
+        if (!convertingThroughHitVisual && hitVisual != null && hitVisual != this) {
+            convertingThroughHitVisual = true;
+            hitVisual.screenToVisual(x, y, point, handleFilters);
+            convertingThroughHitVisual = false;
+            return;
+        }
+
+        super.screenToVisual(x, y, point, handleFilters);
+
+    }
+
+    /**
+     * Local -> screen conversion, the exact counterpart of `screenToVisual()`
+     * above; see its documentation.
+     */
+    override public function visualToScreen(x:Float, y:Float, point:Point, handleFilters:Bool = true):Void {
+
+        final hitVisual = this.hitVisual;
+        if (!convertingThroughHitVisual && hitVisual != null && hitVisual != this) {
+            convertingThroughHitVisual = true;
+            hitVisual.visualToScreen(x, y, point, handleFilters);
+            convertingThroughHitVisual = false;
+            return;
+        }
+
+        super.visualToScreen(x, y, point, handleFilters);
+
+    }
+
 /// Hitting visuals in content
 
     /**
