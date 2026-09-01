@@ -53,6 +53,13 @@ class ShaderAsset extends Asset {
     public var shaderClass:Class<shade.Shader> = null;
 
     /**
+     * When set, shader files are read from this directory instead of the regular
+     * assets directory. Used when a `shade` shader has been re-transpiled on the fly
+     * from its Haxe source while the app is running.
+     */
+    var transformedPath:String = null;
+
+    /**
      * Create a new shader asset.
      * @param name Shader file name (with or without extension)
      * @param variant Optional variant suffix
@@ -140,7 +147,15 @@ class ShaderAsset extends Asset {
             log.info('Load shader $logName');
         }
 
-        app.backend.shaders.load(Assets.realAssetPath(path, runtimeAssets), baseAttributes, customAttributes, textureIdAttribute, function(backendItem) {
+        // Shaders coming from a `shade` class are generated at build time into the
+        // platform assets directory, so they must not be resolved against the watched
+        // source assets directory that `watchDirectory()` installs as `runtimeAssets`.
+        var shaderPath = transformedPath != null ?
+            Path.join([transformedPath, path])
+        :
+            Assets.realAssetPath(path, shaderClass != null ? null : runtimeAssets);
+
+        app.backend.shaders.load(shaderPath, baseAttributes, customAttributes, textureIdAttribute, function(backendItem) {
 
             if (backendItem == null) {
                 status = BROKEN;
@@ -155,11 +170,18 @@ class ShaderAsset extends Asset {
 
             shader.backendItem = backendItem;
 
+            var prevShader = this.shader;
+
             this.shader = shader;
             this.shader.asset = this;
             this.shader.id = 'shader:' + path;
             status = READY;
             emitComplete(true);
+
+            if (prevShader != null) {
+                prevShader.asset = null;
+                prevShader.destroy();
+            }
 
         });
 
@@ -169,6 +191,46 @@ class ShaderAsset extends Asset {
 
         if (!app.backend.shaders.supportsHotReloadPath())
             return;
+
+        // Shaders built from a `shade` class have no source in the watched assets
+        // directory: they are watched through their Haxe source instead,
+        // see `Assets.watchShadeShaders()`.
+        if (shaderClass != null)
+            return;
+
+        var basePath = Path.withoutExtension(path);
+
+        for (extension in ['.vert', '.frag']) {
+            var filePath = basePath + extension;
+
+            var previousTime:Float = -1;
+            if (previousFiles.exists(filePath)) {
+                previousTime = previousFiles.get(filePath);
+            }
+            var newTime:Float = -1;
+            if (newFiles.exists(filePath)) {
+                newTime = newFiles.get(filePath);
+            }
+
+            if (newTime != previousTime) {
+                log.info('Reload shader (file has changed)');
+                load();
+                return;
+            }
+        }
+
+    }
+
+    /**
+     * Reload this shader from files that were just re-generated into `transformedDir`.
+     * Used by `Assets.watchShadeShaders()` when a `shade` Haxe source changed.
+     * @param transformedDir Directory holding the freshly transpiled `.vert`/`.frag`
+     */
+    @:noCompletion public function reloadFromTransformedDir(transformedDir:String):Void {
+
+        transformedPath = transformedDir;
+        log.info('Reload shader (shade source has changed)');
+        load();
 
     }
 
