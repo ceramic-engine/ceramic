@@ -201,6 +201,21 @@ class ImGuiSystem extends System {
             text -> app.backend.clipboard.setText(text)
         );
 
+        #if web
+        // Native builds detect macOS at compile time and switch ImGui to the
+        // mac conventions (Cmd instead of Ctrl for copy/paste/select-all...).
+        // The wasm build cannot, so a mac host must be detected at runtime.
+        // Without this, Cmd+V does nothing in input fields on web.
+        try {
+            final hostPlatform:String = js.Syntax.code("(navigator.platform || '')");
+            if (hostPlatform.indexOf('Mac') != -1) {
+                var io = ImGui.getIO();
+                io.configMacOSXBehaviors = true;
+            }
+        }
+        catch (e:Dynamic) {}
+        #end
+
         renderable = new ImGuiRenderable();
         renderable.active = true;
 
