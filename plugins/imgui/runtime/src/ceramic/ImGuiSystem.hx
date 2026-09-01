@@ -75,8 +75,8 @@ class ImGuiSystem extends System {
      * When enabled (default), the ImGui UI is laid out at the screen's
      * NATIVE size (1 ImGui point = 1 screen point), independently of the
      * app's logical scaling (FIT, FILL...): the game keeps its own scaling
-     * while the UI stays at a consistent, crisp size — the same behavior as
-     * the `elements` plugin's Im UI. Set to `false` to lay out the UI in
+     * while the UI stays at a consistent, crisp size. This is the same
+     * behavior as the `elements` plugin's Im UI. Set to `false` to lay out the UI in
      * the app's logical coordinates instead (the previous behavior, where
      * the UI is scaled together with the app content).
      */
@@ -487,6 +487,23 @@ class ImGuiSystem extends System {
         input.onKeyUp(this, key -> forwardKey(key, false));
 
         app.textInput.onUpdate(this, handleTextInputUpdate);
+
+        // Losing focus eats the matching key-up events, for instance when
+        // switching apps with a modifier held. Tell ImGui about it, so that
+        // it clears its pressed keys and modifiers. Without this, a stuck
+        // Shift silently turns every mouse wheel into a horizontal scroll
+        // until Shift is pressed again.
+        app.onBeginEnterBackground(this, () -> {
+            ImGuiIO.addFocusEvent(ImGui.getIO(), false);
+        });
+        #if web
+        // On web, background/FOCUS_LOST only fires when the page is hidden.
+        // A plain window blur, like an app switch that keeps the page
+        // visible, is reported by nothing else, so listen to it directly.
+        js.Browser.window.addEventListener('blur', _ -> {
+            if (!ceramic.App.app.destroyed) ImGuiIO.addFocusEvent(ImGui.getIO(), false);
+        });
+        #end
 
         #end
 
