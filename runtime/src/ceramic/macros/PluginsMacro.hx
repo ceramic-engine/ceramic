@@ -50,6 +50,58 @@ using StringTools;
 class PluginsMacro {
 
     /**
+     * Init macro that makes every enabled plugin's static extensions available directly
+     * on `ceramic.Assets`, so projects don't have to declare a `using` for each of them.
+     *
+     * Must run as an init macro (`--macro`): `@:using` is resolved before build macros
+     * run, so adding the metadata from a build macro on `Assets` would have no effect.
+     *
+     * Plugin classes are detected by looking for their source file on the classpath
+     * rather than by resolving the type, which would force `Assets` to be typed while
+     * these very classes reference it.
+     */
+    macro public static function addPluginsUsing():Void {
+
+        for (key => val in Context.getDefines()) {
+            if (key.startsWith('plugin_')) {
+                var pluginTypeName = pluginTypeNameFromDefine(key);
+
+                try {
+                    Context.resolvePath('ceramic/' + pluginTypeName + '.hx');
+                }
+                catch (e:Dynamic) {
+                    // That plugin ships no such class, nothing to expose
+                    continue;
+                }
+
+                haxe.macro.Compiler.addMetadata(
+                    '@:using(ceramic.' + pluginTypeName + ')',
+                    'ceramic.Assets'
+                );
+            }
+        }
+
+    }
+
+    /**
+     * Derive the plugin class name from a `plugin_<name>` compiler define.
+     */
+    #if macro
+    static function pluginTypeNameFromDefine(key:String):String {
+
+        var pluginName = key.substring('plugin_'.length);
+        var pluginTypeName = pluginName.charAt(0).toUpperCase() + pluginName.substring(1) + 'Plugin';
+
+        // Special cases (better if we did not have to do that though)
+        if (pluginTypeName == 'ImguiPlugin')
+            pluginTypeName = 'ImGuiPlugin';
+
+        return pluginTypeName;
+
+    }
+    #end
+
+    /**
      * Resolves plugin classes and generates initialization calls for each enabled plugin.
      * 
      * This macro examines compiler defines at compile-time to determine which
@@ -65,12 +117,7 @@ class PluginsMacro {
 
         for (key => val in Context.getDefines()) {
             if (key.startsWith('plugin_')) {
-                var pluginName = key.substring('plugin_'.length);
-                var pluginTypeName = pluginName.charAt(0).toUpperCase() + pluginName.substring(1) + 'Plugin';
-
-                // Special cases (better if we did not have to do that though)
-                if (pluginTypeName == 'ImguiPlugin')
-                    pluginTypeName = 'ImGuiPlugin';
+                var pluginTypeName = pluginTypeNameFromDefine(key);
 
                 var pluginType = TPath({
                     pack: ['ceramic'],

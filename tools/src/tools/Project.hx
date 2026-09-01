@@ -161,6 +161,7 @@ class Project {
 
         app.hxml += "\n" + "-D app_info=" + Json.stringify(Json.stringify(appInfo));
         app.hxml += "\n" + "--macro ceramic.macros.MacroCache.init()";
+        app.hxml += "\n" + "--macro ceramic.macros.PluginsMacro.addPluginsUsing()";
 
         app.hxml += '\n' + '-D tracker_ceramic';
         app.hxml += '\n' + '-D tracker_no_default_backend';
