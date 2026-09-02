@@ -518,6 +518,22 @@ class ImGuiSystem extends System {
         js.Browser.window.addEventListener('blur', _ -> {
             if (!ceramic.App.app.destroyed) ImGuiIO.addFocusEvent(ImGui.getIO(), false);
         });
+
+        // The OS can swallow a modifier's key-up while the page keeps focus
+        // (Mission Control, a screenshot shortcut...). A stuck Shift then
+        // turns every vertical wheel into a horizontal scroll, so scrolling
+        // silently stops until the key is cleared (which is why bringing the
+        // window to background and back fixes it: that clears the keys). Each
+        // wheel event carries the real modifier state, so resync ImGui from
+        // it. Capture phase, so this runs before clay's own wheel listener.
+        js.Browser.window.addEventListener('wheel', (e:js.html.WheelEvent) -> {
+            if (ceramic.App.app.destroyed) return;
+            var io = ImGui.getIO();
+            ImGuiIO.addKeyEvent(io, ImGuiKey.ImGuiMod_Ctrl, e.ctrlKey);
+            ImGuiIO.addKeyEvent(io, ImGuiKey.ImGuiMod_Shift, e.shiftKey);
+            ImGuiIO.addKeyEvent(io, ImGuiKey.ImGuiMod_Alt, e.altKey);
+            ImGuiIO.addKeyEvent(io, ImGuiKey.ImGuiMod_Super, e.metaKey);
+        }, untyped { capture: true, passive: true });
         #end
 
         #end
