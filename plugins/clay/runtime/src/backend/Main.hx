@@ -481,6 +481,15 @@ class Main {
 
                 lastResizeTime = now;
             }
+            else if (resizing == 0 && readyToDisplay) {
+                // The size moved while we were debouncing (the overlay was added
+                // above) but settled back to what is already applied, so there is
+                // nothing to resize and no timeout will remove the overlay. Remove
+                // it here, otherwise the screen stays hidden until the next real
+                // resize. This happens when a window comes back from the
+                // background after a transient size change.
+                js.Browser.document.body.classList.remove('ceramic-invisible');
+            }
         }
 
         js.Browser.window.requestAnimationFrame(_updateContainerSizeIfNeeded);
