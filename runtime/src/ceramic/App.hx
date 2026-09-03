@@ -635,24 +635,35 @@ class App extends Entity {
 
     /**
      * Visuals (ordered)
-     * Active list of visuals being managed by ceramic.
-     * This list is ordered and updated at every frame.
-     * In between, it could contain destroyed visuals as they
+     * The list of **mounted** visuals: the ones being updated, rendered and hit-tested
+     * (see `Visual.mounted`). This list is ordered and updated at every frame.
+     * In between, it could contain destroyed or unmounted visuals as they
      * are removed only at the end of the frame for performance reasons.
      */
     public var visuals(default,null):Array<Visual> = [];
 
     /**
-     * Pending visuals: visuals that have been created this frame
-     * but were not added to the `visual` list yet
+     * Every existing visual, mounted or not. Only meant for tooling that must reach
+     * visuals kept aside (asset hot-reload, debugging); the app itself works on `visuals`.
+     */
+    public var allVisuals(default,null):Array<Visual> = [];
+
+    /**
+     * Pending visuals: visuals that have been mounted this frame
+     * but were not added to the `visuals` list yet
      */
     public var pendingVisuals(default,null):Array<Visual> = [];
 
     /**
-     * Pending destroyed visuals: visuals that have been destroyed this frame
-     * but were not removed to the `visual` list yet
+     * Visuals that have been unmounted or destroyed this frame
+     * but were not removed from the `visuals` list yet
      */
     public var destroyedVisuals(default,null):Array<Visual> = [];
+
+    /**
+     * `true` when a visual was destroyed this frame and `allVisuals` needs compaction.
+     */
+    var allVisualsDirty:Bool = false;
 
     /**
      * All groups of entities in this app
@@ -1128,8 +1139,60 @@ class App extends Entity {
         });
         #end
 
+        #if (ceramic_debug_unmounted_visuals || (debug && !ceramic_no_debug_unmounted_visuals))
+        // Migration aid, on by default in debug builds: list the visuals that exist but
+        // are not mounted (thus never updated, rendered or hit-tested), grouped by their
+        // chain of parents up to the root and that root's render target. A visual that
+        // was expected on screen shows up here with a root whose target is `null`.
+        // Inactive visuals are skipped: a visual kept aside on purpose (pools, recycling)
+        // is `active = false`, a forgotten one is still active.
+        Timer.interval(this, 5.0, function() {
+            var countByChain = new Map<String,Int>();
+            var chains:Array<String> = [];
+            for (i in 0...allVisuals.length) {
+                var visual = allVisuals.unsafeGet(i);
+                if (visual.destroyed || visual.mounted || !visual.active) continue;
+                var chain = Type.getClassName(Type.getClass(visual));
+                var root = visual;
+                while (root.parent != null) {
+                    root = root.parent;
+                    chain += ' <- ' + Type.getClassName(Type.getClass(root));
+                }
+                var target = root.renderTarget;
+                chain += ' [root target: ' + (target == null ? 'null' : (target == screen ? 'screen' : 'renderTexture')) + ']';
+                #if ceramic_debug_entity_allocs
+                // Creation site of the unmounted visual: the most useful hint to fix it
+                var pos = visual.posInfos;
+                if (pos != null) chain += ' created at ' + pos.fileName + ':' + pos.lineNumber;
+                #end
+                if (countByChain.exists(chain)) countByChain.set(chain, countByChain.get(chain) + 1);
+                else { chains.push(chain); countByChain.set(chain, 1); }
+            }
+            if (chains.length > 0) {
+                log.warning('Active but unmounted visuals, never displayed (' + allVisuals.length + ' total, ' + visuals.length + ' mounted). Add them to `screen` or a render texture, or make them inactive:');
+                for (chain in chains) log.warning('   ' + countByChain.get(chain) + ' x ' + chain);
+            }
+        });
+        #end
+
         #if (ceramic_debug_num_entities || ceramic_debug_num_visuals)
         Timer.interval(this, 5.0, function() {
+            #if ceramic_debug_num_visuals
+            // Roots per render target, with their mounted state
+            inline function logRoots(name:String, roots:Array<Visual>) {
+                var parts = [];
+                for (i in 0...roots.length) {
+                    var v = roots.unsafeGet(i);
+                    parts.push(Type.getClassName(Type.getClass(v)) + (v.mounted ? '' : '(UNMOUNTED)'));
+                }
+                log.success(' - roots of ' + name + ' (' + roots.length + '): ' + parts.join(', '));
+            }
+            logRoots('screen', screen.rootVisuals);
+            for (i in 0...renderTextures.length) {
+                logRoots('renderTexture#' + i, renderTextures.unsafeGet(i).rootVisuals);
+            }
+            log.success(' - allVisuals: ' + allVisuals.length + ' / pending: ' + pendingVisuals.length);
+            #end
             var numEntitiesByClass = new Map<String,Int>();
             var usedClasses:Array<String> = [];
             var entities = #if ceramic_debug_num_entities _entities #else visuals #end;
@@ -1442,7 +1505,10 @@ class App extends Entity {
     @:noCompletion
     inline public function addVisual(visual:Visual):Void {
 
-        pendingVisuals.push(visual);
+        if (!visual.inVisualsList) {
+            visual.inVisualsList = true;
+            pendingVisuals.push(visual);
+        }
 
     }
 
@@ -1459,6 +1525,17 @@ class App extends Entity {
     }
 
     /**
+     * Called when a visual is destroyed, so that `allVisuals` gets compacted
+     * at the end of the update step of current frame.
+     */
+    @:noCompletion
+    inline public function destroyVisual(visual:Visual):Void {
+
+        allVisualsDirty = true;
+
+    }
+
+    /**
      * Synchronize pending visuals into the main visuals list.
      * @return True if any visuals were synchronized
      */
@@ -1466,9 +1543,15 @@ class App extends Entity {
 
         if (pendingVisuals.length > 0) {
 
-            // Add pending visuals
+            // Add pending visuals (skipping the ones unmounted again before being synced)
             while (pendingVisuals.length > 0) {
-                visuals.push(pendingVisuals.pop());
+                var visual = pendingVisuals.pop();
+                if (visual.mounted) {
+                    visuals.push(visual);
+                }
+                else {
+                    visual.inVisualsList = false;
+                }
             }
 
             hierarchyDirty = true;
@@ -1489,7 +1572,7 @@ class App extends Entity {
 
         if (destroyedVisuals.length > 0) {
 
-            // Remove destroyed visuals
+            // Remove destroyed and unmounted visuals
             var i = 0;
             var gap = 0;
             var len = visuals.length;
@@ -1498,7 +1581,8 @@ class App extends Entity {
                 do {
 
                     var visual = visuals.unsafeGet(i);
-                    if (visual.destroyed) {
+                    if (visual.destroyed || !visual.mounted) {
+                        visual.inVisualsList = false;
                         i++;
                         gap++;
                     }
@@ -1523,6 +1607,26 @@ class App extends Entity {
 
             hierarchyDirty = true;
 
+        }
+
+        if (allVisualsDirty) {
+            allVisualsDirty = false;
+
+            // Remove destroyed visuals from `allVisuals` (same gap-closing compaction)
+            var i = 0;
+            var gap = 0;
+            var len = allVisuals.length;
+            while (i < len) {
+                while (i < len && allVisuals.unsafeGet(i).destroyed) {
+                    i++;
+                    gap++;
+                }
+                if (gap != 0 && i < len) {
+                    allVisuals.unsafeSet(i - gap, allVisuals.unsafeGet(i));
+                }
+                i++;
+            }
+            allVisuals.setArrayLength(len - gap);
         }
 
     }
@@ -1642,26 +1746,26 @@ class App extends Entity {
                         visual.computeClip();
                     }
 
-                    if (visual.computedRenderTarget != null) {
+                    if (visual.computedRenderTargetTexture != null) {
                         if (visual.asQuad != null) {
                             if (visual.asQuad.texture != null) {
-                                visual.computedRenderTarget.incrementDependingTextureCount(visual.asQuad.texture);
+                                visual.computedRenderTargetTexture.incrementDependingTextureCount(visual.asQuad.texture);
                             }
                             if (visual.shader != null && visual.shader.usedTextures != null) {
                                 final usedTextures = visual.shader.usedTextures;
                                 for (t in 0...usedTextures.length) {
-                                    visual.computedRenderTarget.incrementDependingTextureCount(usedTextures.unsafeGet(t));
+                                    visual.computedRenderTargetTexture.incrementDependingTextureCount(usedTextures.unsafeGet(t));
                                 }
                             }
                         }
                         else if (visual.asMesh != null) {
                             if (visual.asMesh.texture != null) {
-                                visual.computedRenderTarget.incrementDependingTextureCount(visual.asMesh.texture);
+                                visual.computedRenderTargetTexture.incrementDependingTextureCount(visual.asMesh.texture);
                             }
                             if (visual.shader != null && visual.shader.usedTextures != null) {
                                 final usedTextures = visual.shader.usedTextures;
                                 for (t in 0...usedTextures.length) {
-                                    visual.computedRenderTarget.incrementDependingTextureCount(usedTextures.unsafeGet(t));
+                                    visual.computedRenderTargetTexture.incrementDependingTextureCount(usedTextures.unsafeGet(t));
                                 }
                             }
                         }
@@ -1675,7 +1779,7 @@ class App extends Entity {
                             for (i in 0...arr.length) {
                                 var tex = arr.unsafeGet(i);
                                 if (tex != null && tex.isRenderTexture) {
-                                    visual.computedRenderTarget.incrementDependingTextureCount(tex);
+                                    visual.computedRenderTargetTexture.incrementDependingTextureCount(tex);
                                 }
                             }
                         }
@@ -1696,23 +1800,27 @@ class App extends Entity {
 
         if (hierarchyDirty) {
 
-            // Compute visuals depth
-            for (i in 0...visuals.length) {
-
-                var visual = visuals.unsafeGet(i);
-                if (!visual.destroyed) {
-
-                    if (visual.parent == null) {
-                        visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
-
-                        if (visual.children != null) {
-                            Visual.computeChildrenDepth(visual);
-                        }
-                    }
-                }
+            // Compute visuals depth, starting from the visuals directly added to each render target
+            computeRootsDepth(screen.rootVisuals);
+            for (i in 0...renderTextures.length) {
+                computeRootsDepth(renderTextures.unsafeGet(i).rootVisuals);
             }
 
             hierarchyDirty = false;
+        }
+
+    }
+
+    inline function computeRootsDepth(roots:Array<Visual>):Void {
+
+        for (i in 0...roots.length) {
+            var visual = roots.unsafeGet(i);
+            if (!visual.destroyed) {
+                visual.computedDepth = visual.depth * Visual.DEPTH_FACTOR;
+                if (visual.children != null) {
+                    Visual.computeChildrenDepth(visual);
+                }
+            }
         }
 
     }

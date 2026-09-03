@@ -175,6 +175,7 @@ class SceneSystem extends System {
                 for (scene in rootScenes) {
                     if (scene.parent == prevFilter.content) {
                         prevFilter.content.remove(scene);
+                        screen.add(scene);
                         scene.scaleX = 1;
                         scene.scaleY = 1;
                     }
@@ -197,10 +198,12 @@ class SceneSystem extends System {
                         for (i in 0...toRemove.length) {
                             var childScene = toRemove.unsafeGet(i);
                             prevFilter.content.remove(childScene);
+                            screen.add(childScene);
                             childScene.active = false;
                         }
                     }
                 }
+                screen.remove(prevFilter);
                 if (autoDestroyFilter)
                     prevFilter.destroy();
                 else
@@ -208,6 +211,8 @@ class SceneSystem extends System {
             }
             this.filter = filter;
             if (filter != null) {
+                // Root scenes are drawn through the filter, which is itself displayed on screen
+                screen.add(filter);
                 if (autoScaleFilter) {
                     scaleFilter();
                 }
@@ -445,6 +450,9 @@ class SceneSystem extends System {
                     if (filter != null) {
                         filter.content.add(scene);
                     }
+                    else {
+                        screen.add(scene);
+                    }
                     scene._boot();
                 }
             }
@@ -526,8 +534,8 @@ class SceneSystem extends System {
             if (scene.destroyed)
                 continue;
 
-            // Auto-boot scene it's been added to screen
-            if (scene.status == NONE && scene.parent != null) {
+            // Auto-boot scene once it's been added to screen (or to a mounted parent)
+            if (scene.status == NONE && scene.mounted) {
                 scene._boot();
             }
 

@@ -51,7 +51,37 @@ using ceramic.Extensions;
 @dynamicEvents
 @:dce
 #end
-class Screen extends Entity implements Observable {
+class Screen extends Entity implements Observable implements RenderTarget {
+
+/// Render target
+
+    /**
+     * Visuals added directly to the screen (via `screen.add()` or `visual.renderTarget = screen`).
+     * Like a visual's `children`, this lists direct additions only, not their descendants.
+     */
+    public var visuals(get, never):ReadOnlyArray<Visual>;
+    inline function get_visuals():ReadOnlyArray<Visual> {
+        return rootVisuals;
+    }
+
+    @:allow(ceramic.Visual) @:allow(ceramic.App)
+    var rootVisuals:Array<Visual> = [];
+
+    /**
+     * Add a visual to the screen so that it gets mounted and rendered (same as `visual.renderTarget = screen`).
+     * If the visual has a parent, it is removed from it first.
+     */
+    public function add(visual:Visual):Void {
+        if (visual.parent != null) visual.parent.remove(visual);
+        visual.renderTarget = this;
+    }
+
+    /**
+     * Remove a visual previously added to the screen, which unmounts it (same as `visual.renderTarget = null`).
+     */
+    public function remove(visual:Visual):Void {
+        if (visual.parent == null && visual.renderTarget == this) visual.renderTarget = null;
+    }
 
 /// Properties
 

@@ -1163,8 +1163,14 @@ class ParticleEmitter extends Entity implements Component implements Observable 
 
         particle.visual = getParticleVisual(particle.visual);
 
-        if (visual != null && particle.visual.parent != visual) {
-            visual.add(particle.visual);
+        if (visual != null) {
+            if (particle.visual.parent != visual) {
+                visual.add(particle.visual);
+            }
+        }
+        else if (particle.visual.renderTarget == null) {
+            // Standalone emitter (not attached to a visual): particles are displayed on screen
+            ceramic.App.app.screen.add(particle.visual);
         }
 
         _activeParticles.push(particle);

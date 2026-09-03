@@ -355,7 +355,7 @@ class Renderer extends Entity {
                 if (visual.computedVisible) {
 
                     // If it should be redrawn anyway
-                    if (visual.computedRenderTarget == null || visual.computedRenderTarget.renderDirty) {
+                    if (visual.computedRenderTargetTexture == null || visual.computedRenderTargetTexture.renderDirty) {
 
                         var clip:ceramic.Visual;
                         #if !ceramic_no_clip
@@ -375,7 +375,7 @@ class Renderer extends Entity {
                                     draw.disableScissor();
                                 }
                                 else {
-                                    lastRenderTarget = lastClip.computedRenderTarget;
+                                    lastRenderTarget = lastClip.computedRenderTargetTexture;
                                     useRenderTarget(draw, lastRenderTarget);
 
                                     // Finish clipping
@@ -388,7 +388,7 @@ class Renderer extends Entity {
                             if (lastClip != null) {
 
                                 // Update render target
-                                lastRenderTarget = lastClip.computedRenderTarget;
+                                lastRenderTarget = lastClip.computedRenderTargetTexture;
                                 useRenderTarget(draw, lastRenderTarget);
 
                                 #if !ceramic_no_scissor
@@ -549,8 +549,8 @@ class Renderer extends Entity {
             useFirstTextureInBatch(draw, lastTexture);
 
             // Update render target
-            if (quad.computedRenderTarget != lastRenderTarget) {
-                lastRenderTarget = quad.computedRenderTarget;
+            if (quad.computedRenderTargetTexture != lastRenderTarget) {
+                lastRenderTarget = quad.computedRenderTargetTexture;
                 useRenderTarget(draw, lastRenderTarget);
                 if (lastClip != null && lastClipIsRegular) {
                     scissorWithQuad(draw, lastClip.asQuad);
@@ -586,7 +586,7 @@ class Renderer extends Entity {
             lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
-            lastRenderTarget = quad.computedRenderTarget;
+            lastRenderTarget = quad.computedRenderTargetTexture;
             useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
@@ -607,14 +607,14 @@ class Renderer extends Entity {
     #if ceramic_wireframe
                     quad.wireframe != lastWireframe ||
     #end
-                    quad.computedRenderTarget != lastRenderTarget;
+                    quad.computedRenderTargetTexture != lastRenderTarget;
     #if ceramic_debug_draw_flush_reason
                 if (debugDraw && stateDirty) {
                     if (!isSameShader(quad.shader, lastShader))
                         log.debug('- dirty: shader');
                     if (newComputedBlending != lastComputedBlending)
                         log.debug('- dirty: blending $lastComputedBlending -> $newComputedBlending');
-                    if (quad.computedRenderTarget != lastRenderTarget)
+                    if (quad.computedRenderTargetTexture != lastRenderTarget)
                         log.debug('- dirty: render target');
                 }
     #end
@@ -1297,12 +1297,12 @@ class Renderer extends Entity {
     function drawRenderable(draw:backend.Draw, renderable:ceramic.Renderable):Void {
 
         // Handle render target binding (same pattern as Quad/Mesh)
-        if (renderable.computedRenderTarget != lastRenderTarget) {
+        if (renderable.computedRenderTargetTexture != lastRenderTarget) {
             #if !ceramic_debug_no_batch
             flush(draw);
             #end
             unbindUsedTextures(draw);
-            lastRenderTarget = renderable.computedRenderTarget;
+            lastRenderTarget = renderable.computedRenderTargetTexture;
             useRenderTarget(draw, lastRenderTarget);
         }
         if (lastClip != null) {
@@ -1411,8 +1411,8 @@ class Renderer extends Entity {
             useFirstTextureInBatch(draw, lastTexture);
 
             // Update render target
-            if (mesh.computedRenderTarget != lastRenderTarget) {
-                lastRenderTarget = mesh.computedRenderTarget;
+            if (mesh.computedRenderTargetTexture != lastRenderTarget) {
+                lastRenderTarget = mesh.computedRenderTargetTexture;
                 useRenderTarget(draw, lastRenderTarget);
                 if (lastClip != null && lastClipIsRegular) {
                     scissorWithQuad(draw, lastClip.asQuad);
@@ -1448,7 +1448,7 @@ class Renderer extends Entity {
             lastComputedBlending = ceramic.Blending.PREMULTIPLIED_ALPHA;
 
             // No render target when writing to stencil buffer
-            lastRenderTarget = mesh.computedRenderTarget;
+            lastRenderTarget = mesh.computedRenderTargetTexture;
             useRenderTarget(draw, lastRenderTarget);
 
             // Use default shader
@@ -1469,14 +1469,14 @@ class Renderer extends Entity {
     #if ceramic_wireframe
                     mesh.wireframe != lastWireframe ||
     #end
-                    mesh.computedRenderTarget != lastRenderTarget;
+                    mesh.computedRenderTargetTexture != lastRenderTarget;
     #if ceramic_debug_draw_flush_reason
                 if (debugDraw && stateDirty) {
                     if (!isSameShader(mesh.shader, lastShader))
                         log.debug('- dirty: shader');
                     if (newComputedBlending != lastComputedBlending)
                         log.debug('- dirty: blending $lastComputedBlending -> $newComputedBlending');
-                    if (mesh.computedRenderTarget != lastRenderTarget)
+                    if (mesh.computedRenderTargetTexture != lastRenderTarget)
                         log.debug('- dirty: render target');
                 }
     #end
@@ -1963,7 +1963,7 @@ class Renderer extends Entity {
             // Keep explicit blending
         }*/
         /*if (blending == ceramic.Blending.AUTO && quad.texture != null && quad.texture.isRenderTexture) {
-            if (quad.computedRenderTarget != null) {
+            if (quad.computedRenderTargetTexture != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
             }
             else {
@@ -1971,7 +1971,7 @@ class Renderer extends Entity {
             }
         }
         else*/ if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
-            if (quad.computedRenderTarget != null) {
+            if (quad.computedRenderTargetTexture != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
             else {
@@ -2007,7 +2007,7 @@ class Renderer extends Entity {
         }
         */
         /*if (blending == ceramic.Blending.AUTO && mesh.texture != null && mesh.texture.isRenderTexture) {
-            if (mesh.computedRenderTarget != null) {
+            if (mesh.computedRenderTargetTexture != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE_ALPHA;
             }
             else {
@@ -2015,7 +2015,7 @@ class Renderer extends Entity {
             }
         }
         else*/ if (blending == ceramic.Blending.AUTO || blending == ceramic.Blending.ADD) {
-            if (mesh.computedRenderTarget != null) {
+            if (mesh.computedRenderTargetTexture != null) {
                 blending = ceramic.Blending.RENDER_TO_TEXTURE;
             }
             else {

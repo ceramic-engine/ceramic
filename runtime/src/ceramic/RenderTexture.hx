@@ -61,9 +61,39 @@ import ceramic.Quad;
  * @see Filter
  */
 @:allow(ceramic.App)
-class RenderTexture extends Texture {
+class RenderTexture extends Texture implements RenderTarget {
 
     static var _clearQuad:Quad = null;
+
+/// Render target
+
+    /**
+     * Visuals added directly to this render texture (via `add()` or `visual.renderTarget = renderTexture`).
+     * Like a visual's `children`, this lists direct additions only, not their descendants.
+     */
+    public var visuals(get, never):ReadOnlyArray<Visual>;
+    inline function get_visuals():ReadOnlyArray<Visual> {
+        return rootVisuals;
+    }
+
+    @:allow(ceramic.Visual) @:allow(ceramic.App)
+    var rootVisuals:Array<Visual> = [];
+
+    /**
+     * Add a visual to this render texture so that it gets mounted and rendered into it
+     * (same as `visual.renderTarget = renderTexture`). If the visual has a parent, it is removed from it first.
+     */
+    public function add(visual:Visual):Void {
+        if (visual.parent != null) visual.parent.remove(visual);
+        visual.renderTarget = this;
+    }
+
+    /**
+     * Remove a visual previously added to this render texture, which unmounts it (same as `visual.renderTarget = null`).
+     */
+    public function remove(visual:Visual):Void {
+        if (visual.parent == null && visual.renderTarget == this) visual.renderTarget = null;
+    }
 
     /**
      * Whether this texture automatically renders when visuals target it.
@@ -199,6 +229,14 @@ class RenderTexture extends Texture {
         if (_initialClearQuad != null) {
             _initialClearQuad.destroy();
             _initialClearQuad = null;
+        }
+
+        // Unmount the visuals directly added to this render texture
+        if (rootVisuals.length > 0) {
+            var toUnmount = [].concat(rootVisuals);
+            for (i in 0...toUnmount.length) {
+                toUnmount[i].renderTarget = null;
+            }
         }
 
         app.renderTextures.remove(this);

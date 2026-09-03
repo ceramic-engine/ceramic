@@ -144,7 +144,7 @@ class ImageAsset extends Asset {
                     emitReplaceTexture(this.texture, prevTexture);
 
                     // Texture was reloaded. Update related visuals
-                    for (visual in [].concat(app.visuals)) {
+                    for (visual in [].concat(app.allVisuals)) {
                         if (!visual.destroyed) {
                             if (visual.asQuad != null) {
                                 var quad = visual.asQuad;

@@ -41,6 +41,7 @@ import tracker.Observable;
  * 
  * // Toggle effect
  * blurFilter.enabled = false; // Disable blur
+ * screen.add(blurFilter);
  * ```
  * 
  * @see RenderTexture
@@ -702,7 +703,7 @@ class Filter extends Layer implements Observable {
                 _matrix.tx = tx1;
 
                 // Is there another hit visual to look for?
-                if (hv.computedRenderTarget != null) {
+                if (hv.computedRenderTargetTexture != null) {
                     // Probably
                     var didFindParentHitVisual = false;
                     var parent = hv.parent;
@@ -710,7 +711,7 @@ class Filter extends Layer implements Observable {
                         do {
                             if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                                 var filter:Filter = cast parent;
-                                if (filter.renderTexture == hv.computedRenderTarget) {
+                                if (filter.renderTexture == hv.computedRenderTargetTexture) {
                                     // Yes
                                     hv = filter.hitVisual;
                                     didFindParentHitVisual = true;

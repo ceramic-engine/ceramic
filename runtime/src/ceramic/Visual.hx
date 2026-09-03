@@ -39,6 +39,7 @@ using ceramic.Extensions;
  * visual.onPointerDown(this, info -> {
  *     trace('Visual clicked at ${info.x}, ${info.y}');
  * });
+ * screen.add(visual);
  * ```
  */
 @:allow(ceramic.App)
@@ -1150,7 +1151,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     public var contentDirty(default, set):Bool = true;
     inline function set_contentDirty(contentDirty:Bool):Bool {
         this.contentDirty = contentDirty;
-        if (contentDirty) {
+        if (contentDirty && mounted) {
             ceramic.App.app.visualsContentDirty = true;
         }
         return contentDirty;
@@ -1243,16 +1244,44 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     }
 
     /**
-     * If set, the visual will be rendered into this target RenderTexture instance
-     * instead of being drawn onto screen directly.
+     * Where this visual is rendered: the `screen`, or a `RenderTexture`.
+     * When `null`, the visual inherits its parent's render target.
      */
-    public var renderTarget(default,set):RenderTexture = null;
-    function set_renderTarget(renderTarget:RenderTexture):RenderTexture {
-        if (this.renderTarget == renderTarget) return renderTarget;
-        this.renderTarget = renderTarget;
+    public var renderTarget(default,set):RenderTarget = null;
+    function set_renderTarget(renderTarget:RenderTarget):RenderTarget {
+        var target = renderTarget;
+        #if ceramic_visible_visuals
+        // Compat: a visual without parent is displayed on screen by default
+        if (target == null && parent == null && !destroyed) target = ceramic.App.app.screen;
+        #end
+        var prevTarget = this.renderTarget;
+        if (prevTarget == target) return target;
+        this.renderTarget = target;
         matrixDirty = true;
         renderTargetDirty = true;
-        return renderTarget;
+        if (parent == null) {
+            // A visual without parent is mounted iff it has a render target:
+            // keep the targets' lists of directly added visuals in sync, then update mounting
+            if (prevTarget != null) rootVisualsOf(prevTarget).remove(this);
+            if (target != null) rootVisualsOf(target).push(this);
+            setMounted(target != null);
+        }
+        return target;
+    }
+
+    /**
+     * The list of visuals directly added to the given render target.
+     * Pointer comparison + unchecked cast: no dynamic access through the interface.
+     */
+    inline static function rootVisualsOf(target:RenderTarget):Array<Visual> {
+        var screen = ceramic.App.app.screen;
+        if (target == screen) {
+            return screen.rootVisuals;
+        }
+        else {
+            var renderTexture:RenderTexture = cast target;
+            return renderTexture.rootVisuals;
+        }
     }
 
     /**
@@ -1636,10 +1665,17 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
     }
 
+    // `flags` bit allocation: bits 0..15 belong to ceramic (internal), bits 16..31 to
+    // user code through `flag(index)`. Within the internal half, bits are shared with
+    // subclasses: Quad uses 1 << 4 (FLAG_TRANSPARENT) and 1 << 5 (FLAG_ROTATE_FRAME).
+    // Check every subclass before claiming a bit here; 1 << 8 .. 1 << 15 are free.
     private inline static final FLAG_NOT_ACTIVE:Int = 1; // 1 << 0
     private inline static final FLAG_VISIBLE_WHEN_ACTIVE:Int = 2; // 1 << 1
     private inline static final FLAG_TOUCHABLE_WHEN_ACTIVE:Int = 4; // 1 << 2
     private inline static final FLAG_IS_HIT_VISUAL:Int = 8; // 1 << 3
+    // 1 << 4 and 1 << 5 are used by Quad (see above)
+    private inline static final FLAG_MOUNTED:Int = 256; // 1 << 8
+    private inline static final FLAG_IN_VISUALS_LIST:Int = 512; // 1 << 9
 
     #if plugin_arcade
     private inline static final FLAG_ARCADE_BODY_ENABLE:Int = 64; // 1 << 6
@@ -1648,6 +1684,78 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     #if ceramic_wireframe
     private inline static final FLAG_RENDER_WIREFRAME:Int = 128; // 1 << 7
     #end
+
+    /**
+     * Whether this visual is mounted, that is updated, rendered and hit-tested by the app.
+     *
+     * A visual without parent is mounted when its `renderTarget` is set (`screen` or a
+     * `RenderTexture`, see `screen.add()` / `renderTexture.add()`); a visual with a parent
+     * is mounted when its parent is. A visual that is not mounted has no impact at all
+     * on the app: it can be created ahead of time, kept aside or pooled for free.
+     */
+    public var mounted(get, never):Bool;
+    inline function get_mounted():Bool {
+        return flags & FLAG_MOUNTED == FLAG_MOUNTED;
+    }
+
+    /**
+     * Where this visual is rendered: the `screen`, a `RenderTexture`, or `null` if it
+     * is not mounted. Resolved from this visual's `renderTarget` and its parents'.
+     */
+    public var root(get, never):RenderTarget;
+    function get_root():RenderTarget {
+        if (!mounted) return null;
+        if (renderTargetDirty) computeRenderTarget();
+        if (computedRenderTargetTexture != null) return computedRenderTargetTexture;
+        return ceramic.App.app.screen;
+    }
+
+    /**
+     * `true` if this visual is mounted and rendered onto the screen (rather than into a `RenderTexture`).
+     */
+    public var mountedOnScreen(get, never):Bool;
+    function get_mountedOnScreen():Bool {
+        if (!mounted) return false;
+        if (renderTargetDirty) computeRenderTarget();
+        return computedRenderTargetTexture == null;
+    }
+
+    /**
+     * Update the mounted state of this visual and its whole subtree.
+     * This is the only place where `FLAG_MOUNTED` is written.
+     */
+    function setMounted(mounted:Bool):Void {
+        if (mounted == (flags & FLAG_MOUNTED == FLAG_MOUNTED)) return;
+        flags = mounted ? flags | FLAG_MOUNTED : flags & ~FLAG_MOUNTED;
+        if (mounted) {
+            ceramic.App.app.addVisual(this);
+            // Content that got dirty while unmounted must be computed now
+            ceramic.App.app.visualsContentDirty = true;
+        }
+        else {
+            ceramic.App.app.removeVisual(this);
+        }
+        if (children != null) {
+            var children = @:privateAccess this.children.original;
+            for (i in 0...children.length) {
+                children.unsafeGet(i).setMounted(mounted);
+            }
+        }
+    }
+
+    /**
+     * Whether this visual is currently in `app.visuals` or `app.pendingVisuals`.
+     * Prevents duplicates when a visual is mounted, unmounted and mounted again within a frame.
+     */
+    @:noCompletion @:allow(ceramic.App)
+    var inVisualsList(get, set):Bool;
+    inline function get_inVisualsList():Bool {
+        return flags & FLAG_IN_VISUALS_LIST == FLAG_IN_VISUALS_LIST;
+    }
+    inline function set_inVisualsList(inVisualsList:Bool):Bool {
+        flags = inVisualsList ? flags | FLAG_IN_VISUALS_LIST : flags & ~FLAG_IN_VISUALS_LIST;
+        return inVisualsList;
+    }
 
     /**
      * Read and write arbitrary boolean flags on this visual.
@@ -1747,10 +1855,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     public var computedDepth(default, null):Float = 0;
 
     /**
-     * Computed render target. When a visual has a `renderTarget` assigned, its `computedRenderTarget` will
-     * be assigned with the same instance, and its children's `computedRenderTarget` property as well.
+     * The `RenderTexture` this visual is actually rasterized into, resolved from its own
+     * `renderTarget` and its parents'. `null` means the visual is drawn onto the screen.
      */
-    public var computedRenderTarget(default, null):RenderTexture = null;
+    public var computedRenderTargetTexture(default, null):RenderTexture = null;
 
     /**
      * Computed touchable value. This is `true` if this visual is `touchable` and all
@@ -1976,7 +2084,12 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
-        ceramic.App.app.addVisual(this);
+        ceramic.App.app.allVisuals.push(this);
+
+        #if ceramic_visible_visuals
+        // Compat: a visual without parent is displayed on screen by default
+        renderTarget = ceramic.App.app.screen;
+        #end
 
 #if ceramic_luxe_legacy
         backendItem = ceramic.App.app.backend.draw.getItem(this);
@@ -2001,7 +2114,10 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             ceramic.App.app.screen.focusedVisual = null;
         }
 
-        ceramic.App.app.removeVisual(this);
+        // Leave the render target's list if this was a mounted root, then unmount the whole subtree
+        if (parent == null && renderTarget != null) rootVisualsOf(renderTarget).remove(this);
+        setMounted(false);
+        ceramic.App.app.destroyVisual(this);
 
         if (parent != null) parent.remove(this);
         if (transform != null) transform = null;
@@ -2255,13 +2371,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             // A visuals that renders to texture never hits by default
             // unless the render texture is managed by a `Filter` instance, re-routing touch
             if (renderTargetDirty) computeRenderTarget();
-            if (computedRenderTarget != null) {
+            if (computedRenderTargetTexture != null) {
                 var parent = this.parent;
                 if (parent != null) {
                     do {
                         if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
-                            if (filter.renderTexture == computedRenderTarget) {
+                            if (filter.renderTexture == computedRenderTargetTexture) {
                                 if (Screen.matchedHitVisual == null || filter.hitVisual == Screen.matchedHitVisual) {
                                     return filter.visualInContentHits(this, x, y);
                                 }
@@ -2373,13 +2489,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             // A visuals that renders to texture never hits by default
             // unless the render texture is managed by a `Filter` instance, re-routing touch
             if (renderTargetDirty) computeRenderTarget();
-            if (computedRenderTarget != null) {
+            if (computedRenderTargetTexture != null) {
                 var parent = this.parent;
                 if (parent != null) {
                     do {
                         if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
-                            if (filter.renderTexture == computedRenderTarget) {
+                            if (filter.renderTexture == computedRenderTargetTexture) {
                                 filter.screenToVisual(x, y, point);
 
                                 _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
@@ -2423,13 +2539,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             // A visuals that renders to texture never hits by default
             // unless the render texture is managed by a `Filter` instance, re-routing touch
             if (renderTargetDirty) computeRenderTarget();
-            if (computedRenderTarget != null) {
+            if (computedRenderTargetTexture != null) {
                 var parent = this.parent;
                 if (parent != null) {
                     do {
                         if (parent.asQuad != null && Std.isOfType(parent, Filter)) {
                             var filter:Filter = cast parent;
-                            if (filter.renderTexture == computedRenderTarget) {
+                            if (filter.renderTexture == computedRenderTargetTexture) {
 
                                 _matrix.setTo(matA, matB, matC, matD, matTX, matTY);
                                 point.x = _matrix.transformX(x, y);
@@ -2523,7 +2639,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         computedClip = null;
         if (parent != null) {
             if (parent.computedClip != null || parent.clip != null) {
-                if (computedRenderTarget == parent.computedRenderTarget) {
+                if (computedRenderTargetTexture == parent.computedRenderTargetTexture) {
                     computedClip = parent.computedClip != null ? parent.computedClip : parent.clip;
                 }
             }
@@ -2532,7 +2648,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         computedClip = clip;
         if (computedClip == null && parent != null) {
             if (parent.computedClip != null) {
-                if (computedRenderTarget == parent.computedRenderTarget) {
+                if (computedRenderTargetTexture == parent.computedRenderTargetTexture) {
                     computedClip = parent.computedClip;
                 }
             }
@@ -2575,15 +2691,23 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             parent.computeRenderTarget();
         }
 
-        var prevComputedRenderTarget = computedRenderTarget;
+        var prevComputedRenderTarget = computedRenderTargetTexture;
 
-        computedRenderTarget = renderTarget;
-        if (computedRenderTarget == null && parent != null && parent.computedRenderTarget != null) {
-            computedRenderTarget = parent.computedRenderTarget;
+        if (renderTarget == null) {
+            // No explicit target: inherit the parent's
+            computedRenderTargetTexture = parent != null ? parent.computedRenderTargetTexture : null;
+        }
+        else if (renderTarget == ceramic.App.app.screen) {
+            // Explicitly targeting the screen: the backends express it as a null render texture
+            computedRenderTargetTexture = null;
+        }
+        else {
+            // Explicitly targeting a render texture
+            computedRenderTargetTexture = cast renderTarget;
         }
 
         /*
-        if (prevComputedRenderTarget != computedRenderTarget) {
+        if (prevComputedRenderTarget != computedRenderTargetTexture) {
             // Release dependant render target texture
             if (prevComputedRenderTarget != null) {
                 if (asQuad != null) {
@@ -2598,15 +2722,15 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
                 }
             }
             // Add dependent render target texture
-            if (computedRenderTarget != null) {
+            if (computedRenderTargetTexture != null) {
                 if (asQuad != null) {
                     if (asQuad.texture != null && asQuad.texture.isRenderTexture) {
-                        computedRenderTarget.incrementDependingTextureCount(asQuad.texture);
+                        computedRenderTargetTexture.incrementDependingTextureCount(asQuad.texture);
                     }
                 }
                 else if (asMesh != null) {
                     if (asMesh.texture != null && asMesh.texture.isRenderTexture) {
-                        computedRenderTarget.incrementDependingTextureCount(asMesh.texture);
+                        computedRenderTargetTexture.incrementDependingTextureCount(asMesh.texture);
                     }
                 }
             }
@@ -2960,9 +3084,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
 
             App.app.hierarchyDirty = true;
 
-            if (visual.parent != null) {
-                visual.parent.remove(visual);
-            }
+            detachFromCurrentPlace(visual);
 
             visual.parent = this;
             visual.visibilityDirty = true;
@@ -2973,7 +3095,57 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             }
             @:privateAccess children.original.push(visual);
             clipDirty = true;
+
+            // A child follows its parent's mounted state
+            visual.setMounted(mounted);
         }
+
+    }
+
+    /**
+     * Detach `visual` from wherever it currently is (its parent, or a render target it was
+     * directly added to) so that it can become a child of this visual, without touching its
+     * mounted state (the caller sets it right after).
+     *
+     * A root's `renderTarget == screen` only meant "displayed": as a child, the visual must
+     * inherit its parent's target instead, so it is cleared. An explicit `RenderTexture` is
+     * kept, as it is today: the child is then rasterized into it.
+     */
+    function detachFromCurrentPlace(visual:Visual):Void {
+
+        if (visual.parent != null) {
+            visual.parent.detachChild(visual);
+        }
+        else if (visual.renderTarget != null) {
+            rootVisualsOf(visual.renderTarget).remove(visual);
+            if (visual.renderTarget == ceramic.App.app.screen) {
+                @:bypassAccessor visual.renderTarget = null;
+            }
+        }
+
+    }
+
+    /**
+     * Remove `visual` from `children` and clear its parent, without touching its mounted state.
+     */
+    function detachChild(visual:Visual):Void {
+
+        App.app.hierarchyDirty = true;
+
+        if (children != null) {
+            var index = children.indexOf(visual);
+            if (index != -1) {
+                @:privateAccess children.original.splice(index, 1);
+            }
+            else {
+                ceramic.Shortcuts.log.warning('Cannot remove visual $visual, index is -1');
+            }
+        }
+        visual.parent = null;
+        visual.visibilityDirty = true;
+        visual.matrixDirty = true;
+        visual.renderTargetDirty = true;
+        visual.clipDirty = true;
 
     }
 
@@ -3009,9 +3181,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             }
         } else {
             // Visual has a different parent or no parent
-            if (visual.parent != null) {
-                visual.parent.remove(visual);
-            }
+            detachFromCurrentPlace(visual);
 
             visual.parent = this;
             visual.visibilityDirty = true;
@@ -3030,6 +3200,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             @:privateAccess children.original.push(visual);
         }
         clipDirty = true;
+
+        // A child follows its parent's mounted state
+        visual.setMounted(mounted);
 
     }
 
@@ -3065,9 +3238,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             }
         } else {
             // Visual has a different parent or no parent
-            if (visual.parent != null) {
-                visual.parent.remove(visual);
-            }
+            detachFromCurrentPlace(visual);
 
             visual.parent = this;
             visual.visibilityDirty = true;
@@ -3087,6 +3258,9 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         }
         clipDirty = true;
 
+        // A child follows its parent's mounted state
+        visual.setMounted(mounted);
+
     }
 
     /**
@@ -3095,22 +3269,28 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      */
     public function remove(visual:Visual):Void {
 
-        App.app.hierarchyDirty = true;
+        detachChild(visual);
 
-        if (children == null) return;
-
-        var index = children.indexOf(visual);
-        if (index != -1) {
-            @:privateAccess children.original.splice(children.indexOf(visual), 1);
+        // The detached visual is a root now: it stays mounted only if it has its own render target
+        if (visual.destroyed) {
+            visual.setMounted(false);
         }
         else {
-            ceramic.Shortcuts.log.warning('Cannot remove visual $visual, index is -1');
+            #if ceramic_visible_visuals
+            if (visual.renderTarget == null) {
+                // Compat: a visual without parent is displayed on screen by default
+                visual.renderTarget = ceramic.App.app.screen;
+                return;
+            }
+            #end
+            if (visual.renderTarget != null) {
+                rootVisualsOf(visual.renderTarget).push(visual);
+                visual.setMounted(true);
+            }
+            else {
+                visual.setMounted(false);
+            }
         }
-        visual.parent = null;
-        visual.visibilityDirty = true;
-        visual.matrixDirty = true;
-        visual.renderTargetDirty = true;
-        visual.clipDirty = true;
 
     }
 

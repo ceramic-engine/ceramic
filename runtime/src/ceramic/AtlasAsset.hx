@@ -31,6 +31,7 @@ import ceramic.Shortcuts.*;
  *         // Use it with a Quad
  *         var quad = new Quad();
  *         quad.tile = region;
+ *         screen.add(quad);
  *
  *         // Use it with a Sprite
  *         // (requires sprite plugin) Sprite has better atlas region support than Quad:
@@ -38,6 +39,7 @@ import ceramic.Shortcuts.*;
  *         // to display correctly with their original bounds and pivot points.
  *         var sprite = new Sprite();
  *         sprite.region = region;
+ *         screen.add(sprite);
  *     }
  * });
  * assets.addAsset(atlasAsset);
@@ -203,7 +205,7 @@ class AtlasAsset extends Asset {
                                 emitReplaceAtlas(this.atlas, prevAtlas);
 
                                 // Atlas was reloaded. Update related visuals
-                                for (visual in [].concat(app.visuals)) {
+                                for (visual in [].concat(app.allVisuals)) {
                                     if (!visual.destroyed) {
                                         if (visual.asQuad != null) {
                                             var quad = visual.asQuad;

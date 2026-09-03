@@ -31,6 +31,7 @@ using StringTools;
  * // Use loaded font
  * var text = new Text();
  * text.font = assets.font('arial');
+ * screen.add(text);
  * ```
  */
 class FontAsset extends Asset {
@@ -226,7 +227,7 @@ class FontAsset extends Asset {
                                 }
 
                                 // Font was reloaded. Update related visuals
-                                for (visual in [].concat(app.visuals)) {
+                                for (visual in [].concat(app.allVisuals)) {
                                     if (!visual.destroyed && Std.isOfType(visual, Text)) {
                                         var text:Text = cast visual;
                                         if (text.font == prevFont) {

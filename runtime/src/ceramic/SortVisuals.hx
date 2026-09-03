@@ -79,12 +79,12 @@ class SortVisuals {
         else if (!b.computedVisible && !b.computedTouchable) {
             result = 1;
         }
-        else if (a.computedRenderTarget != b.computedRenderTarget) {
-            if (a.computedRenderTarget == null) result = 1;
-            else if (b.computedRenderTarget == null) result = -1;
-            else if (a.computedRenderTarget.priority > b.computedRenderTarget.priority) result = -1;
-            else if (a.computedRenderTarget.priority < b.computedRenderTarget.priority) result = 1;
-            else if (a.computedRenderTarget.index < b.computedRenderTarget.index) result = -1;
+        else if (a.computedRenderTargetTexture != b.computedRenderTargetTexture) {
+            if (a.computedRenderTargetTexture == null) result = 1;
+            else if (b.computedRenderTargetTexture == null) result = -1;
+            else if (a.computedRenderTargetTexture.priority > b.computedRenderTargetTexture.priority) result = -1;
+            else if (a.computedRenderTargetTexture.priority < b.computedRenderTargetTexture.priority) result = 1;
+            else if (a.computedRenderTargetTexture.index < b.computedRenderTargetTexture.index) result = -1;
             else result = 1;
         }
         else if (a.computedDepth > b.computedDepth) {

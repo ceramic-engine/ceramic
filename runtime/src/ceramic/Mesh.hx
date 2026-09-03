@@ -41,6 +41,7 @@ using ceramic.Extensions;
  *     Color.GREEN,
  *     Color.BLUE
  * ];
+ * screen.add(mesh);
  *
  * // Create a textured quad
  * var mesh = new Mesh();
@@ -62,6 +63,7 @@ using ceramic.Extensions;
  *     1, 1,      // Bottom-right UV
  *     0, 1       // Bottom-left UV
  * ];
+ * screen.add(mesh);
  * ```
  *
  * @see Visual
@@ -228,8 +230,8 @@ class Mesh extends Visual {
                 if (renderTargetDirty) {
                     computeRenderTarget();
                 }
-                if (computedRenderTarget != null) {
-                    computedRenderTarget.decrementDependingTextureCount(this.texture);
+                if (computedRenderTargetTexture != null) {
+                    computedRenderTargetTexture.decrementDependingTextureCount(this.texture);
                 }
             }*/
         }
@@ -240,7 +242,7 @@ class Mesh extends Visual {
                 computeRenderTarget();
             }
             if (computeRenderTarget != null) {
-                computedRenderTarget.incrementDependingTextureCount(texture);
+                computedRenderTargetTexture.incrementDependingTextureCount(texture);
             }
         }*/
 
