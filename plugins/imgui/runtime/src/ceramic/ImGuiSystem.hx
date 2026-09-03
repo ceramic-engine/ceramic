@@ -217,6 +217,7 @@ class ImGuiSystem extends System {
         #end
 
         renderable = new ImGuiRenderable();
+        ceramic.App.app.screen.add(renderable);
         renderable.active = true;
 
         inited = true;

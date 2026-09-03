@@ -409,12 +409,16 @@ private class ImGuiVisualEntry {
             this.nearest = nearest;
             filter.density = -1; // Follow screen.texturesDensity
             filter.touchable = false;
-            // The filter quad itself must never draw on screen: only its
-            // content -> render texture pass matters, display goes through
-            // ImGui.image. (Parentless visuals are rendered in ceramic.)
+            // The filter must be mounted (added to screen) for its content ->
+            // render texture pass to run, but its own quad must never draw on
+            // screen: display goes through ImGui.image.
             filter.transparent = true;
+            ceramic.App.app.screen.add(filter);
 
+            // Mounted too so that the hit-test loop (which only visits mounted
+            // visuals) reaches it; transparent, so still never drawn.
             hitProxy = new Quad();
+            ceramic.App.app.screen.add(hitProxy);
             hitProxy.transparent = true; // Never drawn
             hitProxy.touchable = false;
             hitProxy.depth = 10000; // Wins pointer hits over scene visuals behind the UI
