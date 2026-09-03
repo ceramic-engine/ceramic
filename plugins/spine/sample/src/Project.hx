@@ -36,6 +36,7 @@ class Project extends Entity {
             }
 
             var anim = new Spine();
+            screen.add(anim);
             anim.spineData = assets.spine(Spines.STRETCHYMAN);
             anim.pos(0, screen.height * 0.9);
             anim.animate(Spines.STRETCHYMAN.SNEAK, true);
