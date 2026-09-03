@@ -83,6 +83,7 @@ class ImSystem extends System {
     function createView():Void {
 
         filter = new Filter();
+        ceramic.App.app.screen.add(filter);
         filter.textureFilter = NEAREST;
         filter.bindToNativeScreenSize();
         filter.depth = 1000;
