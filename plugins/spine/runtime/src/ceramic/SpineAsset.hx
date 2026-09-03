@@ -39,6 +39,7 @@ using StringTools;
  * var spineAsset = assets.spine('hero');
  * var spine = new Spine();
  * spine.spineData = spineAsset.spineData;
+ * screen.add(spine);
  * ```
  * 
  * @see SpineData
@@ -266,7 +267,7 @@ class SpineAsset extends Asset {
                         if (prevPages != null) {
                             for (asset in prevPages) {
                                 var texture = asset.texture;
-                                for (visual in [].concat(ceramic.App.app.visuals)) {
+                                for (visual in [].concat(ceramic.App.app.allVisuals)) {
                                     if (visual.asQuad != null) {
                                         var quad = visual.asQuad;
                                         if (quad.texture == texture) {
@@ -290,7 +291,7 @@ class SpineAsset extends Asset {
                             // When replacing the spine data, emit an event to notify about it
                             emitReplaceSpineData(this.spineData, prevSpineData);
 
-                            for (visual in [].concat(ceramic.App.app.visuals)) {
+                            for (visual in [].concat(ceramic.App.app.allVisuals)) {
                                 if (Std.isOfType(visual, Spine)) {
                                     var spine:Spine = cast visual;
                                     if (spine.spineData == prevSpineData) {
