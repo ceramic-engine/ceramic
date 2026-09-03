@@ -19,6 +19,7 @@ using ceramic.Extensions;
  * triangle.color = Color.RED;
  * triangle.antialiasing = 2; // 2-pixel antialiasing border
  * triangle.pos(100, 100);
+ * screen.add(triangle);
  * ```
  * 
  * @see Triangle For a simpler triangle without antialiasing

@@ -22,6 +22,7 @@ package ceramic;
  * 
  * // Scale UV coordinates to create tiling
  * background.scaleUV(10, 10); // 10x10 tile pattern
+ * screen.add(background);
  * ```
  * 
  * @see Texture.wrapS Horizontal wrap mode property

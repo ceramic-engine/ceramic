@@ -26,12 +26,14 @@ using ceramic.Extensions;
  * var triangle = new Triangle();
  * triangle.size(50, 40);
  * triangle.color = Color.RED;
+ * screen.add(triangle);
  *
  * // Create a play button icon
  * var playButton = new Triangle();
  * playButton.size(30, 30);
  * playButton.rotation = 90; // Point right
  * playButton.color = Color.WHITE;
+ * screen.add(playButton);
  *
  * // Animated direction indicator
  * var arrow = new Triangle();

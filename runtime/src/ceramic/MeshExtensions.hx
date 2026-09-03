@@ -19,6 +19,7 @@ using ceramic.Extensions;
  * var mesh = new Mesh();
  * mesh.createQuad(100, 100); // Creates a 100x100 quad
  * mesh.createArc(50, 180, 10, 32, INSIDE); // Creates a semi-circle arc
+ * screen.add(mesh);
  * ```
  *
  * @see Mesh The base mesh class these extensions apply to
@@ -52,6 +53,7 @@ class MeshExtensions {
      * var mesh = new Mesh();
      * mesh.createQuad(200, 150); // Creates a 200x150 quad
      * mesh.texture = myTexture;  // Apply texture
+     * screen.add(mesh);
      * ```
      */
     public static function createQuad(mesh:Mesh, width:Float, height:Float, floatsPerVertex:Int = -1):Void {
@@ -180,6 +182,7 @@ class MeshExtensions {
      * mesh.createQuad(100, 100, 6); // 6 floats per vertex
      * mesh.setDarkColor(Color.PURPLE); // Set dark color
      * mesh.shader = myDarkColorShader; // Use compatible shader
+     * screen.add(mesh);
      * ```
      */
     public static function setDarkColor(mesh:Mesh, darkColor:Color):Void {
@@ -242,6 +245,7 @@ class MeshExtensions {
      * mesh.createQuad(100, 100, 6); // 6 floats per vertex
      * var shadowColor = AlphaColor.fromRGBA(0, 0, 0, 128); // 50% black
      * mesh.setDarkAlphaColor(shadowColor);
+     * screen.add(mesh);
      * ```
      */
     public static function setDarkAlphaColor(mesh:Mesh, darkAlphaColor:AlphaColor):Void {

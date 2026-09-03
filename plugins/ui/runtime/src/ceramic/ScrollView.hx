@@ -27,6 +27,7 @@ import ceramic.Scroller;
  * content.viewSize(300, 800);
  * content.size(300, 800);
  * scrollView.contentView.add(content);
+ * screen.add(scrollView);
  * ```
  *
  * @see Scroller The underlying scrolling component

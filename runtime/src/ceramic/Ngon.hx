@@ -26,12 +26,14 @@ using ceramic.Extensions;
  * hexagon.sides = 6;
  * hexagon.radius = 40;
  * hexagon.color = Color.YELLOW;
+ * screen.add(hexagon);
  *
  * // Create a smooth circle
  * var circle = new Ngon();
  * circle.sides = 64;
  * circle.radius = 50;
  * circle.color = Color.WHITE;
+ * screen.add(circle);
  *
  * // Animated shape morphing
  * var morph = new Ngon();
@@ -40,6 +42,7 @@ using ceramic.Extensions;
  * app.onUpdate(this, delta -> {
  *     morph.sides = Math.round(3 + Math.sin(Timer.now) * 3);
  * });
+ * screen.add(morph);
  * ```
  *
  * @see Mesh

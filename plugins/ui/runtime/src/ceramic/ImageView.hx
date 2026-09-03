@@ -28,6 +28,7 @@ import tracker.Observable;
  * // Or use custom scaling
  * imageView.scaling = CUSTOM;
  * imageView.imageScale = 2.0;
+ * screen.add(imageView);
  * ```
  * 
  * @see ImageViewScaling

@@ -15,6 +15,7 @@ package ceramic;
  * row.add(button1);
  * row.add(button2);
  * row.add(button3);
+ * screen.add(row);
  * ```
  * 
  * @see ColumnLayout For vertical arrangement

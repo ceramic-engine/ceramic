@@ -29,6 +29,7 @@ import ceramic.Shortcuts.*;
  * player.arcade.onCollide(this, (v1, v2) -> {
  *     trace("Collision detected!");
  * });
+ * screen.add(player);
  * ```
  * 
  * @see Visual.arcade for accessing this component

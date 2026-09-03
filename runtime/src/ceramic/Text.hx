@@ -273,6 +273,7 @@ class Text extends Visual {
      * var text = new Text();
      * text.glyphCode = (_, _) -> '*'.code;
      * text.content = 'Som2 pas!wOrd';
+     * screen.add(text);
      * ```
      */
     public var glyphCode:(charCode:Int, pos:Int)->Int = null;

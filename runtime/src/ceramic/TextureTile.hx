@@ -28,6 +28,7 @@ package ceramic;
  * var player = new Quad();
  * player.tile = playerTile;
  * player.size(32, 48);
+ * screen.add(player);
  * ```
  * 
  * @see Quad.tile Property that accepts TextureTile

@@ -33,6 +33,7 @@ using StringTools;
  * var spine = new Spine();
  * spine.spineData = assets.spine(Spines.HERO);
  * spine.animation = Spines.HERO.WALK;
+ * screen.add(spine);
  * ```
  *
  * @see Spine

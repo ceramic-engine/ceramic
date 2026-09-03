@@ -9,6 +9,7 @@ package ceramic;
  * var layout = new LinearLayout();
  * layout.direction = HORIZONTAL; // Children arranged left-to-right
  * layout.direction = VERTICAL;   // Children arranged top-to-bottom
+ * screen.add(layout);
  * ```
  * 
  * @see LinearLayout

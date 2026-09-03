@@ -27,6 +27,7 @@ package ceramic;
  * 
  * // Scale up the container to fill screen
  * lowRes.scale(3); // 3x scale for 960x720 display
+ * screen.add(lowRes);
  * ```
  * 
  * @see PixelArt For the pixel-perfect rendering component

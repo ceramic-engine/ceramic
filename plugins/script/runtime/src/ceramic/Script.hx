@@ -35,6 +35,7 @@ import hscript.Parser;
  * var entity = new Quad();
  * entity.size(50, 50);
  * entity.script = new Script(scriptCode);
+ * screen.add(entity);
  * ```
  */
 class Script extends Entity implements Component {

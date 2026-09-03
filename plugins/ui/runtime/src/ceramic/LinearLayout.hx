@@ -25,6 +25,7 @@ package ceramic;
  *
  * layout.add(header);
  * layout.add(content);
+ * screen.add(layout);
  * ```
  *
  * @see RowLayout A horizontal-only variant

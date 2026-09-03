@@ -42,6 +42,7 @@ using StringTools;
  *         var spine = new Spine();
  *         spine.spineData = heroData;
  *         spine.animate("idle", true);
+ *         screen.add(spine);
  *     }
  * });
  * ```
@@ -149,6 +150,7 @@ class SpinePlugin {
      *     if (asset != null) {
      *         var spine = new Spine();
      *         spine.spineData = asset.spineData;
+     *         screen.add(spine);
      *     }
      * });
      * ```
@@ -181,6 +183,7 @@ class SpinePlugin {
      * if (heroData != null) {
      *     var spine = new Spine();
      *     spine.spineData = heroData;
+     *     screen.add(spine);
      * }
      * ```
      */

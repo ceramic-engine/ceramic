@@ -34,6 +34,7 @@ using ceramic.Extensions;
  *     100, 100  // Bottom right
  * ];
  * shape.color = Color.BLUE; // Fill color
+ * screen.add(shape);
  *
  * // Create a star shape
  * var star = new Shape();
@@ -46,6 +47,7 @@ using ceramic.Extensions;
  * }
  * star.points = points;
  * star.color = Color.YELLOW; // Fill color
+ * screen.add(star);
  * ```
  *
  * @see Mesh

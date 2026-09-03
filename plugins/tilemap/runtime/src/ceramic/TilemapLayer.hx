@@ -27,6 +27,7 @@ using ceramic.Extensions;
  *
  * // Access a specific layer
  * var layer = tilemap.layer('collision');
+ * screen.add(tilemap);
  *
  * // Apply a filter to all tiles in the layer
  * var blur = new Filter();

@@ -11,6 +11,7 @@ package elements;
  * ```haxe
  * var scrollView = new ScrollView();
  * scrollView.scrollbarVisibility = ScrollbarVisibility.AUTO_SHOW;
+ * screen.add(scrollView);
  * ```
  */
 enum abstract ScrollbarVisibility(Int) {

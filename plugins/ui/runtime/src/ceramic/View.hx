@@ -32,6 +32,7 @@ using ceramic.Extensions;
  * container.padding(10); // 10px padding on all sides
  * container.borderSize = 2;
  * container.borderColor = Color.WHITE;
+ * screen.add(container);
  * ```
  *
  * @see LinearLayout For arranging views in rows/columns

@@ -23,6 +23,7 @@ package ceramic;
  *     scale: 0.5,
  *     depth: 10
  * };
+ * screen.add(existingSpine);
  * ```
  * 
  * Creating a new Spine instance

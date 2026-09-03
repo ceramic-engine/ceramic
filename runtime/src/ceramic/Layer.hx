@@ -33,11 +33,13 @@ import ceramic.Shortcuts.*;
  * // Scroll the entire game world
  * gameLayer.x = camera.contentTranslateX;
  * gameLayer.y = camera.contentTranslateY;
+ * screen.add(gameLayer);
  *
  * // Create a UI layer that stays fixed
  * var uiLayer = new Layer();
  * uiLayer.size(screen.width, screen.height);
  * uiLayer.depth = 100; // Render on top
+ * screen.add(uiLayer);
  * ```
  *
  * @see Quad

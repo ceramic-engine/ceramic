@@ -43,6 +43,7 @@ using ceramic.Extensions;
  * ];
  * line.thickness = 3;
  * line.color = Color.RED;
+ * screen.add(line);
  *
  * // Create a closed shape
  * var shape = new Line();
@@ -56,6 +57,7 @@ using ceramic.Extensions;
  * shape.loop = true;
  * shape.join = MITER;
  * shape.thickness = 2;
+ * screen.add(shape);
  * ```
  *
  * @see Mesh

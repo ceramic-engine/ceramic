@@ -26,18 +26,21 @@ using ceramic.Extensions;
  * background.texture = assets.texture("pattern");
  * background.size(screen.width, screen.height);
  * background.spacing(2, 2); // 2px gap between tiles
+ * screen.add(background);
  * 
  * // Create a horizontally repeating border
  * var border = new Repeat();
  * border.tile = atlas.get("border_segment");
  * border.size(400, 32);
  * border.repeatY = false; // Only repeat horizontally
+ * screen.add(border);
  * 
  * // Create a mirrored pattern for seamless tiling
  * var seamless = new Repeat();
  * seamless.texture = assets.texture("tile");
  * seamless.mirror(true, true); // Mirror in both directions
  * seamless.size(800, 600);
+ * screen.add(seamless);
  * ```
  * 
  * Performance note: The class reuses Quad instances from a pool, so creating

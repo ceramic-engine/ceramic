@@ -19,6 +19,7 @@ import ceramic.Shortcuts.*;
  * // Attach editor to allow painting on the 'main' layer
  * var editor = new TilemapEditor('main', grassTile, emptyTile);
  * tilemap.component(editor);
+ * screen.add(tilemap);
  * 
  * // Listen for edit events
  * editor.onFill(this, index -> {

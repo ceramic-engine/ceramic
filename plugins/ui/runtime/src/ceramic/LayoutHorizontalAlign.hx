@@ -10,6 +10,7 @@ package ceramic;
  * view.layoutHorizontalAlign = CENTER; // Center child horizontally
  * view.layoutHorizontalAlign = LEFT;   // Align child to left edge
  * view.layoutHorizontalAlign = RIGHT;  // Align child to right edge
+ * screen.add(view);
  * ```
  * 
  * @see View

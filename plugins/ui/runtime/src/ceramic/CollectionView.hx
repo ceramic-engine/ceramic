@@ -30,6 +30,7 @@ using ceramic.Extensions;
  *
  * // Implement data source
  * collection.dataSource = new MyCustomCollectionViewDataSource();
+ * screen.add(collection);
  * ```
  *
  * @see CollectionViewDataSource

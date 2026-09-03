@@ -38,6 +38,7 @@ import ceramic.Shortcuts.*;
  *
  * // Use custom emitter
  * var custom = new Particles(new MyCustomEmitter());
+ * screen.add(custom);
  * ```
  *
  * @see ParticleEmitter The underlying emitter being managed

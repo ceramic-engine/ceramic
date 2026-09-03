@@ -28,6 +28,7 @@ using ceramic.Extensions;
  * pager.loop = true;
  * pager.preloadAmplitude = 2; // Preload 2 pages before/after
  * pager.dataSource = myDataSource;
+ * screen.add(pager);
  * ```
  */
 class PagerView extends ScrollView {

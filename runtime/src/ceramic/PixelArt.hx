@@ -26,6 +26,7 @@ package ceramic;
  * pixelArt.size(320, 240); // Original pixel art size
  * pixelArt.content.add(myPixelSprite);
  * pixelArt.scale(3); // Scale up 3x with clean pixels
+ * screen.add(pixelArt);
  *
  * // CRT monitor effect
  * var crt = new PixelArt();
@@ -34,12 +35,14 @@ package ceramic;
  * crt.verticalMaskCount = 320; // RGB phosphor mask
  * crt.verticalMaskIntensity = 0.1;
  * crt.glowStrength = 0.2; // Slight glow on bright pixels
+ * screen.add(crt);
  *
  * // Game Boy style LCD grid
  * var lcd = new PixelArt();
  * lcd.gridThickness = 0.1;
  * lcd.gridColor = Color.fromRgb(0x9BBC0F); // GB green
  * lcd.gridAlpha = 0.15;
+ * screen.add(lcd);
  * ```
  *
  * Based on techniques from: https://colececil.io/blog/2017/scaling-pixel-art-without-destroying-it/

@@ -30,6 +30,7 @@ import haxe.Json;
  *         // Create a Fragment instance from the data
  *         var fragment = new Fragment();
  *         fragment.fragmentData = menuFragment;
+ *         screen.add(fragment);
  *     }
  * });
  * fragmentsAsset.load();

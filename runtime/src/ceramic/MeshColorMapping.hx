@@ -21,6 +21,7 @@ package ceramic;
  * // Color per vertex (for gradients)
  * mesh.colorMapping = VERTICES;
  * mesh.colors = [Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW];
+ * screen.add(mesh);
  * ```
  *
  * @see Mesh The mesh class that uses this color mapping

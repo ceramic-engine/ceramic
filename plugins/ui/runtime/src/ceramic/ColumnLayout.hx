@@ -23,6 +23,7 @@ package ceramic;
  * column.add(new TextView("Title"));
  * column.add(new TextView("Subtitle"));
  * column.add(new Button("Click Me"));
+ * screen.add(column);
  * ```
  * 
  * @see LinearLayout for the base implementation

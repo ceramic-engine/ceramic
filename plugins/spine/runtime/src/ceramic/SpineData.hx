@@ -33,9 +33,11 @@ using ceramic.Extensions;
  *         // Create multiple Spine instances from the same data
  *         var hero1 = new Spine();
  *         hero1.spineData = spineData;
+ *         screen.add(hero1);
  *         
  *         var hero2 = new Spine();
  *         hero2.spineData = spineData;
+ *         screen.add(hero2);
  *     }
  * });
  * ```

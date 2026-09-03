@@ -30,12 +30,14 @@ using ceramic.Extensions;
  * // Apply to a quad
  * var quad = new Quad();
  * quad.tile = heroRegion;
+ * screen.add(quad);
  *
  * // Apply to a sprite: needs sprite plugin,
  * // but supports region offsets which are not
  * // supported on plain quad tiles
  * var sprite = new Sprite();
  * sprite.region = heroRegion;
+ * screen.add(sprite);
  * ```
  *
  * @see TextureAtlasPage Individual texture pages in the atlas

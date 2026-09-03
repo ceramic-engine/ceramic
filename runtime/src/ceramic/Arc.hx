@@ -26,6 +26,7 @@ using ceramic.Extensions;
  * arc.angle = 90; // Quarter circle
  * arc.thickness = 20;
  * arc.color = Color.BLUE;
+ * screen.add(arc);
  *
  * // Create a pie chart segment
  * var pie = new Arc();
@@ -34,6 +35,7 @@ using ceramic.Extensions;
  * pie.borderPosition = INSIDE;
  * pie.angle = 120; // One third of circle
  * pie.color = Color.GREEN;
+ * screen.add(pie);
  *
  * // Create a smooth ring
  * var ring = new Arc();
@@ -42,6 +44,7 @@ using ceramic.Extensions;
  * ring.angle = 360; // Full circle
  * ring.sides = 64; // Smoother circle
  * ring.color = Color.YELLOW;
+ * screen.add(ring);
  * ```
  *
  * @see Mesh

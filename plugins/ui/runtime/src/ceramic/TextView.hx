@@ -23,6 +23,7 @@ using StringTools;
  * label.align = CENTER;
  * label.verticalAlign = CENTER;
  * label.viewSize(200, 50); // Text centered in 200x50 area
+ * screen.add(label);
  * ```
  * 
  * @see Text The underlying text visual

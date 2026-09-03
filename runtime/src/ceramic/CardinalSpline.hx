@@ -40,6 +40,7 @@ using ceramic.Extensions;
  * // Draw the smooth curve
  * var line = new Line();
  * line.points = smooth;
+ * screen.add(line);
  * ```
  * 
  * ## Algorithm

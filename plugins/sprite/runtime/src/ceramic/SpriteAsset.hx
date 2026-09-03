@@ -28,6 +28,7 @@ import ase.Ase;
  *     var sprite = new Sprite();
  *     sprite.sheet = assets.sheet(Sprites.CHARACTER);
  *     sprite.animation = "idle";
+ *     screen.add(sprite);
  * });
  * ```
  */

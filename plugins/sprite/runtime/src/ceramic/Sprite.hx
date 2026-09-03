@@ -19,6 +19,7 @@ import ceramic.Shortcuts.*;
  * sprite.sheet = assets.sheet("character");
  * sprite.animation = "walk";
  * sprite.loop = true;
+ * screen.add(sprite);
  * ```
  */
 class Sprite<T=String> extends Visual {

@@ -43,6 +43,7 @@ using ceramic.TilemapPlugin;
  * // Create a visual from the data
  * var tilemap = new Tilemap();
  * tilemap.tilemapData = tilemapData;
+ * screen.add(tilemap);
  * ```
  * 
  * @see TilemapData The unified tilemap data structure

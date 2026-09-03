@@ -36,6 +36,7 @@ using ceramic.Extensions;
  * mesh.vertices = vertices;
  * mesh.indices = indices;
  * mesh.uvs = uvs;
+ * screen.add(mesh);
  * ```
  *
  * @see MeshExtensions For higher-level mesh creation methods

@@ -27,6 +27,7 @@ import ceramic.Text;
  * 
  * // Adjust italic angle (default is 10 degrees)
  * var italic = text.component<ItalicText>();
+ * screen.add(text);
  * italic.skewX = 15; // More pronounced italic
  * ```
  * 

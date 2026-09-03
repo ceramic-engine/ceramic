@@ -39,6 +39,7 @@ using ceramic.Extensions;
  *
  * // Clear and reuse next frame
  * graphics.clear();
+ * screen.add(graphics);
  * ```
  */
 class Graphics extends Visual {

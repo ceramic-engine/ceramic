@@ -47,6 +47,7 @@ import haxe.xml.Fast;
  * // Apply to tilemap
  * var tilemap = new Tilemap();
  * tilemap.tilemapData = tilemapData;
+ * screen.add(tilemap);
  * ```
  * 
  * @see TilemapData

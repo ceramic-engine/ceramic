@@ -24,6 +24,7 @@ using ceramic.Extensions;
  * logo.shadowSize = 0.15; // Larger shadow
  * logo.pos(screen.width * 0.5, screen.height * 0.5);
  * logo.anchor(0.5, 0.5);
+ * screen.add(logo);
  * ```
  */
 class CeramicLogo extends Mesh {

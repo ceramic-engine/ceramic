@@ -29,10 +29,12 @@ import ceramic.Shortcuts.*;
  *
  * // Position accounting for trim offset
  * quad.pos(100 + region.offsetX, 200 + region.offsetY);
+ * screen.add(quad);
  *
  * // Apply to a sprite (extended support of trimmed regions with offsets, needs sprite plugin)
  * var sprite = new Sprite();
  * sprite.region = region;
+ * screen.add(sprite);
  * ```
  *
  * @see TextureAtlas The container for regions

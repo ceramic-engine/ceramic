@@ -10,6 +10,7 @@ package ceramic;
  * view.layoutVerticalAlign = CENTER; // Center child vertically
  * view.layoutVerticalAlign = TOP;    // Align child to top edge
  * view.layoutVerticalAlign = BOTTOM; // Align child to bottom edge
+ * screen.add(view);
  * ```
  * 
  * @see View

@@ -36,6 +36,7 @@ package ceramic;
  * content.offsetX = 10; // Offset from padding
  * content.offsetY = 10;
  * layers.add(content);
+ * screen.add(layers);
  * ```
  *
  * @see View
