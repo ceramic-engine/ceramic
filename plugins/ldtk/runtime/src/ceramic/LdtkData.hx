@@ -2452,9 +2452,19 @@ class LdtkAutoLayerRuleDefinition {
     public var outOfBoundsValue:Int;
 
     /**
-     * Rule pattern (size x size)
+     * Rule pattern (size x size). Each cell holds its first condition:
+     * 0 = ignored, +v = IntGrid value v required, -v = value v forbidden (see `patternAlt` for extra conditions).
      */
     public var pattern:Array<Int>;
+
+    /**
+     * Extra conditions per pattern cell (same size and order as `pattern`, same value encoding).
+     * Each entry is an empty array when the cell has a single condition.
+     * A cell matches if (it has no required value, or the cell value is one of the required values)
+     * AND (the cell value is none of the forbidden values).
+     * (added in LDtk 1.5.4)
+     */
+    public var patternAlt:Array<Array<Int>>;
 
     /**
      * If `true`, enable Perlin filtering to only apply rule on specific random area
@@ -2552,6 +2562,14 @@ class LdtkAutoLayerRuleDefinition {
             flipY = json.get('flipY');
             outOfBoundsValue = json.get('outOfBoundsValue') != null ? Std.int(json.get('outOfBoundsValue')) : -1;
             pattern = LdtkDataHelpers.toIntArray(json.get('pattern'));
+
+            var rawPatternAlt:Array<Dynamic> = json.get('patternAlt');
+            if (rawPatternAlt != null) {
+                patternAlt = [for (i in 0...rawPatternAlt.length) rawPatternAlt[i] != null ? LdtkDataHelpers.toIntArray(rawPatternAlt[i]) : []];
+            }
+            else {
+                patternAlt = pattern != null ? [for (i in 0...pattern.length) []] : [];
+            }
             perlinActive = json.get('perlinActive');
             perlinOctaves = json.get('perlinOctaves');
             perlinScale = json.get('perlinScale');
@@ -2610,6 +2628,7 @@ class LdtkAutoLayerRuleDefinition {
                 flipY: ''+flipY,
                 outOfBoundsValue: ''+outOfBoundsValue,
                 pattern: ''+pattern,
+                patternAlt: ''+patternAlt,
                 perlinActive: ''+perlinActive,
                 perlinOctaves: ''+perlinOctaves,
                 perlinScale: ''+perlinScale,
