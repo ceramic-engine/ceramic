@@ -36,6 +36,22 @@ using StringTools;
 class LdtkData extends Entity {
 
     /**
+     * Emitted when the per-tile pixel data of a tileset (empty / opaque tiles) changed after
+     * its texture was hot reloaded, so that already converted levels can be rebuilt.
+     */
+    @event function tilesetsPixelDataChange();
+
+    /**
+     * Called by the LDtk parser once it refreshed the pixel data of a tileset after a
+     * texture hot reload, when that data actually changed.
+     */
+    public function notifyTilesetsPixelDataChange():Void {
+
+        emitTilesetsPixelDataChange();
+
+    }
+
+    /**
      * File format version
      */
     public var version:String;
@@ -2072,6 +2088,30 @@ class LdtkTilesetDefinition {
      */
     public var averageColors:Array<AlphaColor> = null;
 
+    /**
+     * One char per tile from LDtk `cachedPixelData.opaqueTiles`: '1' when every pixel is opaque.
+     * Exact, unlike `averageColors` whose channels are quantized to 4 bits.
+     */
+    public var opaqueTiles:String = null;
+
+    /**
+     * Per tile, `true` when every pixel has alpha 0, read once from the loaded texture
+     * (see `TilemapLdtkParser.computeTilesetsPixelData()`). `null` when this tileset has no
+     * texture (skipped, or no image) or when the backend can't read pixels back.
+     */
+    public var emptyTiles:haxe.ds.Vector<Bool> = null;
+
+    /**
+     * Per tile, `true` when every pixel has alpha 255. Same lifecycle as `emptyTiles`.
+     */
+    public var opaqueTilesFromPixels:haxe.ds.Vector<Bool> = null;
+
+    /**
+     * Set when the texture of this tileset was deliberately not loaded (`skip` option,
+     * or no texture loader), so that its absence is not reported as a load failure.
+     */
+    public var textureSkipped:Bool = false;
+
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -2125,6 +2165,9 @@ class LdtkTilesetDefinition {
                         averageColors.push(color);
                     }
                 }
+                if (cachedPixelDataJson.get('opaqueTiles') != null) {
+                    opaqueTiles = cachedPixelDataJson.get('opaqueTiles');
+                }
             }
         }
 
@@ -2148,6 +2191,35 @@ class LdtkTilesetDefinition {
     inline public function averageColor(tileId:Int):AlphaColor {
 
         return averageColors != null && averageColors.length > tileId ? averageColors[tileId] : AlphaColor.NONE;
+
+    }
+
+    /**
+     * `true` when the tile has no visible pixel.
+     * Only trusts pixels read from our own texture: LDtk's average color is too coarse
+     * for this (a tile with a few faint pixels averages to zero). Unknown means `false`.
+     */
+    inline public function isTileEmpty(tileId:Int):Bool {
+
+        final v = emptyTiles;
+        return v != null && tileId >= 0 && tileId < v.length && v[tileId];
+
+    }
+
+    /**
+     * `true` when every pixel of the tile is opaque.
+     * Pixels read from our texture first, then LDtk `opaqueTiles`, then the average color
+     * as a last resort (its 4-bit alpha can hide a few fully transparent pixels).
+     */
+    inline public function isTileOpaque(tileId:Int):Bool {
+
+        final v = opaqueTilesFromPixels;
+        if (v != null)
+            return tileId >= 0 && tileId < v.length && v[tileId];
+        if (opaqueTiles != null)
+            return tileId >= 0 && tileId < opaqueTiles.length && opaqueTiles.charCodeAt(tileId) == '1'.code;
+        final c = averageColor(tileId);
+        return c != AlphaColor.NONE && c.alpha == 0xFF;
 
     }
 
@@ -2411,12 +2483,36 @@ class LdtkAutoLayerRuleDefinition {
     public var size:Int;
 
     /**
-     * Array of all the tile IDs. They are used randomly or as stamps, based on `tileMode` value.
+     * Array of all the tile IDs, flattened from `tileRectsIds`.
+     * Deprecated in LDtk 1.5.0 in favor of `tileRectsIds`, but still filled for convenience.
      */
     public var tileIds:Array<Int>;
 
     /**
-     * Defines how `tileIds` array is used
+     * Array containing all the possible tile IDs rectangles (picked randomly).
+     * Each entry is a list of tile IDs: a single tile in `Single` tile mode, or a rectangle of tiles in `Stamp` tile mode.
+     * (added in LDtk 1.5.0, replaces `tileIds`)
+     */
+    public var tileRectsIds:Array<Array<Int>>;
+
+    /**
+     * If `true`, the tile(s) rendered by this rule can be randomly flipped horizontally.
+     * This doesn't affect the pattern matching (see `flipX` for that).
+     * The resulting flips are already baked in the `autoLayerTiles` flip bits.
+     * (added in LDtk 1.5.4)
+     */
+    public var tileRandomFlipX:Bool = false;
+
+    /**
+     * If `true`, the tile(s) rendered by this rule can be randomly flipped vertically.
+     * This doesn't affect the pattern matching (see `flipY` for that).
+     * The resulting flips are already baked in the `autoLayerTiles` flip bits.
+     * (added in LDtk 1.5.4)
+     */
+    public var tileRandomFlipY:Bool = false;
+
+    /**
+     * Defines how `tileRectsIds` array is used
      */
     public var tileMode:LdtkTileMode;
 
@@ -2463,8 +2559,36 @@ class LdtkAutoLayerRuleDefinition {
             pivotX = json.get('pivotX');
             pivotY = json.get('pivotY');
             size = Std.int(json.get('size'));
-            tileIds = LdtkDataHelpers.toIntArray(json.get('tileIds'));
             tileMode = LdtkTileMode.fromString(json.get('tileMode'));
+            tileRandomFlipX = json.get('tileRandomFlipX') == true;
+            tileRandomFlipY = json.get('tileRandomFlipY') == true;
+
+            var rawTileRectsIds:Array<Dynamic> = json.get('tileRectsIds');
+            var rawTileIds:Array<Dynamic> = json.get('tileIds');
+            if (rawTileRectsIds != null) {
+                tileRectsIds = [for (i in 0...rawTileRectsIds.length) LdtkDataHelpers.toIntArray(rawTileRectsIds[i])];
+                if (rawTileIds != null) {
+                    tileIds = LdtkDataHelpers.toIntArray(rawTileIds);
+                }
+                else {
+                    // Rebuild the deprecated flat list from the rectangles
+                    tileIds = [];
+                    for (rect in tileRectsIds) {
+                        for (tid in rect) {
+                            tileIds.push(tid);
+                        }
+                    }
+                }
+            }
+            else if (rawTileIds != null) {
+                // Pre-1.5.0 project: derive rectangles from the flat list, depending on tile mode
+                tileIds = LdtkDataHelpers.toIntArray(rawTileIds);
+                tileRectsIds = tileMode == Stamp ? [tileIds.copy()] : [for (tid in tileIds) [tid]];
+            }
+            else {
+                tileIds = [];
+                tileRectsIds = [];
+            }
             uid = Std.int(json.get('uid'));
             xModulo = Std.int(json.get('xModulo'));
             xOffset = Std.int(json.get('xOffset'));
@@ -2494,6 +2618,9 @@ class LdtkAutoLayerRuleDefinition {
                 pivotY: ''+pivotY,
                 size: ''+size,
                 tileIds: ''+tileIds,
+                tileRectsIds: ''+tileRectsIds,
+                tileRandomFlipX: ''+tileRandomFlipX,
+                tileRandomFlipY: ''+tileRandomFlipY,
                 tileMode: ''+tileMode,
                 uid: ''+uid,
                 xModulo: ''+xModulo,
@@ -2739,6 +2866,12 @@ class LdtkLevel {
      */
     public var worldY:Int;
 
+    /**
+     * Root random seed of this level, used to derive the per-layer Auto-layer seeds (`LdtkLayerInstance.seed`).
+     * `-1` if the level predates LDtk 1.5.4 (per-layer seeds are then independent).
+     */
+    public var seed:Int = -1;
+
     public function new(?ldtkData:LdtkData, ?world:LdtkWorld, ?json:DynamicAccess<Dynamic>) {
 
         this.world = world;
@@ -2770,6 +2903,7 @@ class LdtkLevel {
             worldDepth = Std.int(json.get('worldDepth'));
             worldX = Std.int(json.get('worldX'));
             worldY = Std.int(json.get('worldY'));
+            seed = json.get('seed') != null ? Std.int(json.get('seed')) : -1;
 
             var layerInstancesJson:Array<Dynamic> = json.get('layerInstances');
             layerInstances = layerInstancesJson != null ? [for (i in 0...layerInstancesJson.length) {
@@ -2976,6 +3110,7 @@ class LdtkLevel {
                 neighbours: ''+neighbours,
                 externalRelPath: ''+externalRelPath,
                 fieldInstances: ''+fieldInstances,
+                iid: ''+iid,
                 identifier: ''+identifier,
                 layerInstances: ''+layerInstances,
                 pxWid: ''+pxWid,
@@ -2983,7 +3118,8 @@ class LdtkLevel {
                 uid: ''+uid,
                 worldDepth: ''+worldDepth,
                 worldX: ''+worldX,
-                worldY: ''+worldY
+                worldY: ''+worldY,
+                seed: ''+seed
             });
             LdtkDataHelpers.endObjectToString();
             return res;
