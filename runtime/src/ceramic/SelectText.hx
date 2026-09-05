@@ -147,6 +147,49 @@ class SelectText extends Entity implements Component implements Observable {
 
     }
 
+/// Public apis
+
+    public function findPreviousWordBoundary(fromPos:Int) {
+        var content = entity.content;
+
+        if (fromPos <= 0) {
+            return 0;
+        }
+
+        var leftPart = content.substring(0, fromPos);
+        var wordBoundaryRegex = ~/(\S+)\s*$/;
+
+        if (wordBoundaryRegex.match(leftPart)) {
+            return wordBoundaryRegex.matchedPos().pos;
+        }
+
+        return 0;
+    }
+
+    public function findNextWordBoundary(fromPos:Int) {
+        var content = entity.content;
+        var contentLength = content.length;
+
+        if (fromPos >= contentLength) {
+            return contentLength;
+        }
+
+        var rightPart = content.substring(fromPos);
+        var nextWordRegex = ~/^\S*\s*(\S|$)/;
+
+        if (nextWordRegex.match(rightPart)) {
+            var matchInfo = nextWordRegex.matchedPos();
+            var pos = fromPos + matchInfo.pos + matchInfo.len - 1;
+
+            if (pos > contentLength || rightPart.charAt(matchInfo.pos + matchInfo.len - 1) == '') {
+                pos = contentLength;
+            }
+            return pos;
+        }
+
+        return contentLength;
+    }
+
     function bindAsComponent() {
 
         entity.onGlyphQuadsChange(this, updateSelectionGraphics);
