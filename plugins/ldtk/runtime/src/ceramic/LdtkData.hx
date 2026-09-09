@@ -1832,6 +1832,23 @@ class LdtkLayerDefinition {
      */
     public var tilePivotY:Float;
 
+    /**
+     * Uid of the level custom field (an enum) used as biome to filter rule groups, or -1 if none
+     * (added in LDtk 1.5.0)
+     */
+    public var biomeFieldUid:Int = -1;
+
+    /**
+     * Uid of a Tiles layer: auto tiles are not rendered where that layer has a tile, or -1 if none
+     */
+    public var autoTilesKilledByOtherLayerUid:Int = -1;
+
+    /**
+     * This layer definition as used by the LDtk rule engine (`ldtk.rules`).
+     * Shares the same `ldtk.rules.RuleDef` instances as `autoRuleGroups[].rules[].rule`.
+     */
+    public var ruleLayerDef:ldtk.rules.RuleLayerDef = null;
+
     public function new(?defs:LdtkDefinitions, ?json:DynamicAccess<Dynamic>) {
 
         this.defs = defs;
@@ -1863,6 +1880,10 @@ class LdtkLayerDefinition {
 
             tilePivotX = json.get('tilePivotX');
             tilePivotY = json.get('tilePivotY');
+            biomeFieldUid = json.get('biomeFieldUid') != null ? Std.int(json.get('biomeFieldUid')) : -1;
+            autoTilesKilledByOtherLayerUid = json.get('autoTilesKilledByOtherLayerUid') != null ? Std.int(json.get('autoTilesKilledByOtherLayerUid')) : -1;
+
+            ruleLayerDef = buildRuleLayerDef();
         }
 
     }
@@ -1904,6 +1925,31 @@ class LdtkLayerDefinition {
 
     }
 
+    function buildRuleLayerDef():ldtk.rules.RuleLayerDef {
+
+        var ld = new ldtk.rules.RuleLayerDef(uid);
+        ld.identifier = identifier;
+        ld.isIntGrid = (type == IntGrid);
+        ld.isAutoLayer = (type == AutoLayer);
+        ld.gridSize = gridSize;
+        ld.tilePivotX = tilePivotX;
+        ld.tilePivotY = tilePivotY;
+        ld.tilesetDefUid = tilesetDefUid != -1 ? tilesetDefUid : null;
+        ld.autoSourceLayerDefUid = autoSourceLayerDefUid != -1 ? autoSourceLayerDefUid : null;
+        ld.biomeFieldUid = biomeFieldUid != -1 ? biomeFieldUid : null;
+        ld.autoTilesKilledByOtherLayerUid = autoTilesKilledByOtherLayerUid != -1 ? autoTilesKilledByOtherLayerUid : null;
+        ld.valueGroupUids = ldtk.rules.ArrayRuleSource.makeGroupTable(
+            intGridValues != null ? [for (i in 0...intGridValues.length) { value: intGridValues[i].value, groupUid: intGridValues[i].groupUid }] : []
+        );
+        if (autoRuleGroups != null) {
+            for (i in 0...autoRuleGroups.length) {
+                ld.groups.push(autoRuleGroups[i].ruleGroupDef);
+            }
+        }
+        return ld;
+
+    }
+
     public function toString() {
 
         if (LdtkDataHelpers.beginObjectToString(this)) {
@@ -1920,6 +1966,8 @@ class LdtkLayerDefinition {
                 pxOffsetX: ''+pxOffsetX,
                 pxOffsetY: ''+pxOffsetY,
                 autoRuleGroups: ''+autoRuleGroups,
+                biomeFieldUid: ''+biomeFieldUid,
+                autoTilesKilledByOtherLayerUid: ''+autoTilesKilledByOtherLayerUid,
                 tilePivotX: ''+tilePivotX,
                 tilePivotY: ''+tilePivotY
             });
@@ -2368,11 +2416,26 @@ class LdtkAutoRuleGroup {
 
     public var usesWizard:Bool;
 
+    /**
+     * Enum value ids of the level biome field required for this group to apply (empty if none)
+     */
+    public var requiredBiomeValues:Array<String> = [];
+
+    /**
+     * How `requiredBiomeValues` are combined: 0 = any of them (OR), 1 = all of them (AND)
+     */
+    public var biomeRequirementMode:Int = 0;
+
+    /**
+     * This group as used by the LDtk rule engine (`ldtk.rules`)
+     */
+    public var ruleGroupDef:ldtk.rules.RuleGroupDef = null;
+
     public function new(?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
-            active = json.get('active');
-            isOptional = json.get('isOptional');
+            active = json.get('active') == true;
+            isOptional = json.get('isOptional') == true;
             name = json.get('name');
 
             var rulesJson:Array<Dynamic> = json.get('rules');
@@ -2381,7 +2444,18 @@ class LdtkAutoRuleGroup {
             }] : [];
 
             uid = Std.int(json.get('uid'));
-            usesWizard = json.get('usesWizard');
+            usesWizard = json.get('usesWizard') == true;
+
+            var biomeJson:Array<Dynamic> = json.get('requiredBiomeValues');
+            requiredBiomeValues = biomeJson != null ? [for (i in 0...biomeJson.length) Std.string(biomeJson[i])] : [];
+            biomeRequirementMode = json.get('biomeRequirementMode') != null ? Std.int(json.get('biomeRequirementMode')) : 0;
+
+            ruleGroupDef = new ldtk.rules.RuleGroupDef(uid, name);
+            ruleGroupDef.active = active;
+            ruleGroupDef.isOptional = isOptional;
+            ruleGroupDef.requiredBiomeValues = requiredBiomeValues;
+            ruleGroupDef.biomeRequirementMode = biomeRequirementMode;
+            ruleGroupDef.rules = [for (i in 0...rules.length) rules[i].rule];
         }
 
     }
@@ -2395,7 +2469,9 @@ class LdtkAutoRuleGroup {
                 name: ''+name,
                 rules: ''+rules,
                 uid: ''+uid,
-                usesWizard: ''+usesWizard
+                usesWizard: ''+usesWizard,
+                requiredBiomeValues: ''+requiredBiomeValues,
+                biomeRequirementMode: ''+biomeRequirementMode
             });
             LdtkDataHelpers.endObjectToString();
             return res;
@@ -2551,6 +2627,11 @@ class LdtkAutoLayerRuleDefinition {
      */
     public var yOffset:Int;
 
+    /**
+     * This rule as used by the LDtk rule engine (`ldtk.rules.RuleEngine`), to recompute auto-layer tiles at runtime.
+     */
+    public var rule:ldtk.rules.RuleDef = null;
+
     public function new(?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
@@ -2612,6 +2693,9 @@ class LdtkAutoLayerRuleDefinition {
             xOffset = Std.int(json.get('xOffset'));
             yModulo = Std.int(json.get('yModulo'));
             yOffset = Std.int(json.get('yOffset'));
+
+            // The same rule, as understood by the LDtk rule engine (`ldtk.rules`)
+            rule = ldtk.rules.RuleDef.fromJson(cast json);
         }
 
     }
@@ -2752,12 +2836,18 @@ class LdtkIntGridValue {
      */
     public var value:Int;
 
+    /**
+     * Parent group identifier (0 if none)
+     */
+    public var groupUid:Int = 0;
+
     public function new(?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
             color = Color.fromString(json.get('color'));
             identifier = json.get('identifier');
             value = Std.int(json.get('value'));
+            groupUid = json.get('groupUid') != null ? Std.int(json.get('groupUid')) : 0;
         }
 
     }
@@ -2768,7 +2858,8 @@ class LdtkIntGridValue {
             var res = 'LdtkIntGridValue' + LdtkDataHelpers.objectToString({
                 color: ''+color,
                 identifier: ''+identifier,
-                value: ''+value
+                value: ''+value,
+                groupUid: ''+groupUid
             });
             LdtkDataHelpers.endObjectToString();
             return res;
@@ -2998,6 +3089,36 @@ class LdtkLevel {
                 _ceramicTilemap.destroy();
             }
         }
+
+    }
+
+    /**
+     * Re-derive the random seed of every layer instance from this level's root `seed`,
+     * the same way the LDtk editor does. Does nothing if the level has no root seed.
+     * Auto-layers are not recomputed automatically: use `LdtkLayerInstance.regenerateAutoLayerTiles()`.
+     */
+    public function applySeedToLayers():Void {
+
+        if (seed == -1 || layerInstances == null)
+            return;
+        for (i in 0...layerInstances.length) {
+            var li = layerInstances[i];
+            if (li.def != null)
+                li.seed = ldtk.rules.RuleRandom.deriveLayerSeed(seed, li.def.uid);
+        }
+
+    }
+
+    /**
+     * Pick a new random root seed (or use the given one) and re-derive the seed of every layer instance.
+     * Auto-layers are not recomputed automatically: use `LdtkLayerInstance.regenerateAutoLayerTiles()`.
+     * Returns the new root seed.
+     */
+    public function regenerateSeed(?forcedSeed:Int):Int {
+
+        seed = forcedSeed != null ? forcedSeed : Std.random(9999999);
+        applySeedToLayers();
+        return seed;
 
     }
 
@@ -3360,6 +3481,11 @@ enum abstract LdtkLevelLocation(Int) from Int to Int {
 class LdtkFieldInstance {
 
     /**
+     * Reference of the field definition uid
+     */
+    public var defUid:Int = -1;
+
+    /**
      * The related field definition
      */
     public var def:LdtkFieldDefinition = null;
@@ -3386,7 +3512,7 @@ class LdtkFieldInstance {
         this.def = def;
 
         if (json != null) {
-            var defUid:Int = Std.int(json.get('defUid'));
+            defUid = Std.int(json.get('defUid'));
 
             if (ldtkData != null) {
                 var fields = ldtkData.defs.levelFields;
@@ -3613,6 +3739,35 @@ class LdtkLayerInstance {
      */
     public var seed:Int;
 
+    /**
+     * Incremented every time the IntGrid content changes through `setIntGrid()` or `markIntGridChanged()`.
+     * Rule runners reading this layer use it to know when to refresh their prefilter data.
+     */
+    public var intGridVersion:Int = 0;
+
+    /**
+     * Bounds (inclusive cells) of the IntGrid changes made since `clearIntGridDirtyRect()` was last called,
+     * `-1` when nothing is pending. `LdtkRuleRunner` uses them to recompute only the affected area.
+     */
+    public var intGridDirtyLeft:Int = -1;
+
+    public var intGridDirtyTop:Int = -1;
+
+    public var intGridDirtyRight:Int = -1;
+
+    public var intGridDirtyBottom:Int = -1;
+
+    /**
+     * Value of `intGridVersion` when the dirty rect started accumulating: a runner whose last compute
+     * saw at least this version can rely on the rect to cover every change it has not seen yet.
+     */
+    public var intGridDirtySinceVersion:Int = 0;
+
+    /**
+     * Rule runner recomputing this layer's auto tiles at runtime (created on demand by `LdtkRuleRunner.get()`)
+     */
+    public var ruleRunner:LdtkRuleRunner = null;
+
     public function new(?level:LdtkLevel, ?ldtkData:LdtkData, ?ldtkWorld:LdtkWorld, ?json:DynamicAccess<Dynamic>) {
 
         if (json != null) {
@@ -3687,6 +3842,76 @@ class LdtkLayerInstance {
                 gridTiles = null;
             }
         }
+
+    }
+
+    /**
+     * Change an IntGrid value of this layer (0 = empty).
+     * Auto-layers reading this IntGrid are not recomputed automatically: call `regenerateAutoLayerTiles()`
+     * on them, or `LdtkRuleRunner.refreshAutoLayersUsingSource()`.
+     */
+    public function setIntGrid(cx:Int, cy:Int, value:Int):Void {
+
+        if (intGrid == null || cx < 0 || cy < 0 || cx >= cWid || cy >= cHei)
+            return;
+        var index = cx + cy * cWid;
+        if (intGrid[index] == value)
+            return;
+        intGrid[index] = value;
+        intGridVersion++;
+        extendIntGridDirtyRect(cx, cy, cx, cy);
+
+    }
+
+    /**
+     * Call this after modifying `intGrid` directly (the whole layer is then considered changed)
+     */
+    public function markIntGridChanged():Void {
+
+        intGridVersion++;
+        extendIntGridDirtyRect(0, 0, cWid - 1, cHei - 1);
+
+    }
+
+    /**
+     * Forget the pending IntGrid dirty rect. Called by `LdtkRuleRunner.refreshAutoLayersUsingSource()` once every
+     * auto-layer reading this IntGrid has been recomputed.
+     */
+    public function clearIntGridDirtyRect():Void {
+
+        intGridDirtyLeft = -1;
+        intGridDirtyTop = -1;
+        intGridDirtyRight = -1;
+        intGridDirtyBottom = -1;
+        intGridDirtySinceVersion = intGridVersion;
+
+    }
+
+    function extendIntGridDirtyRect(left:Int, top:Int, right:Int, bottom:Int):Void {
+
+        if (intGridDirtyLeft < 0) {
+            intGridDirtyLeft = left;
+            intGridDirtyTop = top;
+            intGridDirtyRight = right;
+            intGridDirtyBottom = bottom;
+        }
+        else {
+            if (left < intGridDirtyLeft) intGridDirtyLeft = left;
+            if (top < intGridDirtyTop) intGridDirtyTop = top;
+            if (right > intGridDirtyRight) intGridDirtyRight = right;
+            if (bottom > intGridDirtyBottom) intGridDirtyBottom = bottom;
+        }
+
+    }
+
+    /**
+     * Recompute `autoLayerTiles` from the current IntGrid with the LDtk rule engine (same results as the editor),
+     * then refresh `ceramicLayer`. If `tilemap` is given, its layers displaying this data are marked dirty.
+     * Returns `false` if this layer has no usable rules.
+     */
+    public function regenerateAutoLayerTiles(?tilemap:Tilemap):Bool {
+
+        return LdtkRuleRunner.refreshAutoLayer(this, tilemap);
 
     }
 

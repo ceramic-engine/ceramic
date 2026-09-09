@@ -3,5 +3,4 @@ plugin:
 
     runtime:
         if plugin_ldtk:
-            +paths:
-                - '{plugin:cwd}/runtime/src'
+            +paths: ['{plugin:cwd}/runtime/src', '{plugin:cwd}/../../git/ldtk-haxe-api/src']
