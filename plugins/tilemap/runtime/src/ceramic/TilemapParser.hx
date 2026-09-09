@@ -385,6 +385,28 @@ class TilemapParser {
 
     }
 
+    @:plugin('ldtk')
+    public function computeTilesetsPixelData(ldtkData:LdtkData):Bool {
+
+        if (ldtkParser == null) {
+            ldtkParser = new TilemapLdtkParser();
+        }
+
+        return ldtkParser.computeTilesetsPixelData(ldtkData);
+
+    }
+
+    @:plugin('ldtk')
+    public function loadLdtkLevelTilemaps(ldtkData:LdtkData):Void {
+
+        if (ldtkParser == null) {
+            ldtkParser = new TilemapLdtkParser();
+        }
+
+        ldtkParser.loadLdtkLevelTilemaps(ldtkData);
+
+    }
+
 #end
 
 }

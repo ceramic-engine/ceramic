@@ -60,6 +60,16 @@ interface Textures {
     function supportsHotReloadPath():Bool;
 
     /**
+     * Checks if the backend can read pixels back from a texture (`fetchTexturePixels()`).
+     *
+     * When false, callers needing pixel data must skip that work rather than treat
+     * the missing data as an error.
+     *
+     * @return True if `fetchTexturePixels()` returns actual pixel data, false otherwise
+     */
+    function supportsFetchTexturePixels():Bool;
+
+    /**
      * Creates a texture from raw pixel data.
      * 
      * Pixels should be provided as RGBA bytes (4 bytes per pixel) in row-major order.

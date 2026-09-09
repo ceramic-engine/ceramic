@@ -119,3 +119,6 @@
 [submodule "git/clipper"]
 	path = git/clipper
 	url = https://github.com/jeremyfa/Clipper2.git
+[submodule "git/ldtk-haxe-api"]
+	path = git/ldtk-haxe-api
+	url = https://github.com/jeremyfa/ldtk-haxe-api.git

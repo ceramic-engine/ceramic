@@ -270,6 +270,17 @@ class Textures implements spec.Textures {
 
     }
 
+    /**
+     * Clay reads texture pixels back through a temporary framebuffer.
+     *
+     * @return Always returns true for Clay backend
+     */
+    inline public function supportsFetchTexturePixels():Bool {
+
+        return true;
+
+    }
+
     /** Counter for unique render texture IDs */
     var nextRenderIndex:Int = 0;
 

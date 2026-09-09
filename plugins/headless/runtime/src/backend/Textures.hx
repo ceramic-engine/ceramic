@@ -89,6 +89,17 @@ class Textures implements spec.Textures {
 
     }
 
+    /**
+     * The headless backend has no pixel data to read back.
+     *
+     * @return Always false for the headless backend
+     */
+    inline public function supportsFetchTexturePixels():Bool {
+
+        return false;
+
+    }
+
     #if !no_backend_docs
     /**
      * Creates a texture from raw pixel data.

@@ -51,6 +51,23 @@ using ceramic.TilemapPlugin;
  */
 class TilemapAsset extends Asset {
 
+    #if plugin_ldtk
+    /**
+     * Emitted when the pixel data of one of the LDtk tilesets (empty / opaque tiles) changed
+     * after a texture hot reload. Levels converted before that are stale and should be rebuilt.
+     */
+    @event function tilesetsPixelDataChange();
+    #end
+
+    #if plugin_ldtk
+    function relayTilesetsPixelDataChange():Void {
+
+        log.debug('Tilemap $name: tileset pixel data changed');
+        emitTilesetsPixelDataChange();
+
+    }
+    #end
+
 /// Properties
 
     /**
@@ -484,6 +501,7 @@ class TilemapAsset extends Asset {
             if (rawLdtkData != null && rawLdtkData.length > 0) {
 
                 var tilemapParser = owner.getTilemapParser();
+                var prevLdtkData = ldtkData;
                 ldtkData = tilemapParser.parseLdtk(rawLdtkData, loadExternalLdtkLevelData);
 
                 if (ldtkData == null) {
@@ -506,10 +524,27 @@ class TilemapAsset extends Asset {
                     // destroying one will destroy the other
                     ldtkData.asset = this;
 
+                    // Relay tileset pixel data changes as an asset-level event. The previous
+                    // data isn't destroyed on reload, so stop listening to it explicitly.
+                    if (prevLdtkData != null) {
+                        prevLdtkData.offTilesetsPixelDataChange(relayTilesetsPixelDataChange);
+                    }
+                    ldtkData.onTilesetsPixelDataChange(this, relayTilesetsPixelDataChange);
+
                     // Run load of assets again to load textures
                     assets.onceComplete(this, function(isSuccess) {
 
                         if (isSuccess) {
+
+                            // Textures are loaded: read them back once, then build level
+                            // tilemaps so that tile filtering relies on actual pixels
+                            if (!tilemapParser.computeTilesetsPixelData(ldtkData)) {
+                                status = BROKEN;
+                                ceramic.App.app.logger.error('Failed to read tileset pixels of LDtk tilemap at path: $path');
+                                emitComplete(false);
+                                return;
+                            }
+                            tilemapParser.loadLdtkLevelTilemaps(ldtkData);
 
                             // Success
                             status = READY;

@@ -590,6 +590,18 @@ class Textures implements spec.Textures {
 
     }
 
+    /**
+     * Unity reads texture pixels back with `GetRawTextureData`, which requires
+     * a readable texture and throws otherwise.
+     *
+     * @return Always returns true for Unity backend
+     */
+    inline public function supportsFetchTexturePixels():Bool {
+
+        return true;
+
+    }
+
     #if !no_backend_docs
     /**
      * Gets the maximum number of textures that can be used in a single draw call.
