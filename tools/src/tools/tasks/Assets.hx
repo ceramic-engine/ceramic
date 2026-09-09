@@ -151,6 +151,9 @@ class Assets extends tools.Task {
         }
         else {
             transformedAssetsPath = TempDirectory.tempDir('transformedAssets');
+            if (transformedAssetsPath == null) {
+                fail('Could not create a temporary directory for transformed assets (check TMPDIR)');
+            }
             context.tempDirs.push(transformedAssetsPath);
         }
 

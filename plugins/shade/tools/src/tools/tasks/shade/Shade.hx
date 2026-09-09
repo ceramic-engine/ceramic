@@ -55,6 +55,11 @@ class Shade extends Task {
 
         // Step 1: Create a temporary directory
         var tempDir = TempDirectory.tempDir('shade-compile');
+        if (tempDir == null) {
+            // Never fall through with a null base: Path.join() would turn every
+            // generated file into a cwd-relative path and pollute the project.
+            fail('Could not create a temporary directory for shader compilation (check TMPDIR)');
+        }
 
         // Step 2: Copy shader files with correct package structure
         for (hxFile in hxFiles) {

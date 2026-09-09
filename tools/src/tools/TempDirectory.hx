@@ -27,10 +27,16 @@ class TempDirectory {
             // macOS temporary directory
             return "/private/tmp";
 
-            #elseif linux
-            // Linux temporary directory
+            #else
+            // Linux and other unix systems: honor TMPDIR, then fall back to
+            // /tmp. Most distros (Fedora, Debian...) do NOT set TMPDIR, and
+            // returning null here made every caller build paths from a null
+            // base, which Path.join silently turns into a RELATIVE path: the
+            // shade transpiler then littered the project root with Main.hx,
+            // import.hx, build.hxml, shaders/ and shade-out/.
             var temp = Sys.getEnv("TMPDIR");
-            if (temp != null) return haxe.io.Path.removeTrailingSlashes(temp);
+            if (temp != null && temp != "") return haxe.io.Path.removeTrailingSlashes(temp);
+            return "/tmp";
 
             #end
         } catch (e:Dynamic) {
