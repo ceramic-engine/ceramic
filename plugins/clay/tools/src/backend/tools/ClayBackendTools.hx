@@ -196,35 +196,7 @@ class ClayBackendTools implements tools.spec.BackendTools {
     public function runUpdate(cwd:String, args:Array<String>):Void {
 
         // Update/install clay (and dependencies)
-
-        var output = ''+haxelib(['list'], { mute: true }).stdout;
-        var libs = new Map<String,Bool>();
-        for (line in output.split("\n")) {
-            var libName = line.split(':')[0];
-            libs.set(libName, true);
-        }
-
-        var requiredLibs = backend.tools.tasks.ClaySetup.requiredLibs;
-
-        for (lib in requiredLibs) {
-            ensureHaxelibDevToCeramicGit(lib, cwd);
-        }
-
-        // Check that required libs are available
-        //
-        output = ''+haxelib(['list'], { mute: true }).stdout;
-        libs = new Map<String,Bool>();
-        for (line in output.split("\n")) {
-            var libName = line.split(':')[0];
-            libs.set(libName, true);
-        }
-
-        for (lib in requiredLibs) {
-            if (!libs.exists(lib)) {
-                // Lib not available?
-                fail('Failed to update or install $lib. Check log.');
-            }
-        }
+        backend.tools.tasks.ClaySetup.ensureRequiredLibs(cwd);
 
     }
 

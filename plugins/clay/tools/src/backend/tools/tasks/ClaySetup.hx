@@ -40,8 +40,9 @@ class ClaySetup extends tools.Task {
 
     override function run(cwd:String, args:Array<String>):Void {
 
-        var updateFramework = args.indexOf('--update-framework') != -1;
-        checkFrameworkSetup(updateFramework, cwd);
+        // `--update-framework` used to force this step; it is now always performed
+        // (cheap and self-repairing), so the flag is accepted but has no effect anymore
+        ensureRequiredLibs(cwd);
 
         var project = new tools.Project();
         var projectPath = Path.join([cwd, 'ceramic.yml']);
@@ -320,73 +321,29 @@ ${haxeflagsHxml.join('\n')}
             print('Updated clay hxml at: $hxmlPath');
         }
 
-        var availableTargets = context.backend.getBuildTargets();
-        var targetName = getTargetName(args, availableTargets);
-        if (targetName == 'default') targetName = 'web';
-
-        // Run initial project setup if needed
-        runInitialProjectSetupIfNeeded(cwd, args, targetPath);
-
     }
 
-    function runInitialProjectSetupIfNeeded(cwd:String, args:Array<String>, targetPath:String):Void {
-
-        var projectHxmlPath = Path.join([targetPath, 'project.hxml']);
-
-        if (FileSystem.exists(projectHxmlPath)) {
-            return; // Project seems ready
-        }
-
-        var extraArgs = [];
-        if (context.debug) {
-            extraArgs.push('--debug');
-        }
-        if (context.variant != null) {
-            extraArgs.push('--variant');
-            extraArgs.push(context.variant);
-        }
-
-        // Default to web target
-        runCeramic(cwd, ['clay', 'libs', 'web']);
-        runCeramic(cwd, ['clay', 'build', 'web', '--assets'].concat(extraArgs));
-
-    }
-
-    function checkFrameworkSetup(forceSetup:Bool = false, cwd:String):Void {
-
-        // Almost the same thing as backend.runUpdate()
-
-        var output = ''+haxelib(['list'], { mute: true }).stdout;
-        var libs = new Map<String,Bool>();
-        for (line in output.split("\n")) {
-            var libName = line.split(':')[0];
-            libs.set(libName, true);
-        }
-
-        var allLibsInstalled = true;
-        if (!forceSetup) {
-            for (lib in requiredLibs) {
-                if (!libs.exists(lib)) {
-                    allLibsInstalled = false;
-                    break;
-                }
-            }
-            if (allLibsInstalled) {
-                return;
-            }
-        }
+    /**
+     * Register the clay backend libraries (`requiredLibs`) as `dev` haxelibs of the
+     * project's local `.haxelib` repository, pointing to ceramic's `git/` checkouts.
+     *
+     * Always runs: `ensureHaxelibDevToCeramicGit()` is idempotent and rewrites a
+     * missing or stale `.dev` entry. Deciding from `haxelib list` (as it used to)
+     * only checked library names, so a broken entry was never repaired, and the
+     * listing walks up parent directories, which lies for a project nested in a
+     * directory that has its own `.haxelib`.
+     */
+    public static function ensureRequiredLibs(cwd:String):Void {
 
         for (lib in requiredLibs) {
             ensureHaxelibDevToCeramicGit(lib, cwd);
-            libs.set(lib, true);
         }
 
-        // Check that libs are available
-        //
+        // Check that every lib has a valid dev entry
         for (lib in requiredLibs) {
-            if (!libs.exists(lib)) {
-                // Lib not available?
-                fail('Failed to update or install $lib. Check log.');
+            var devPath = Path.join([cwd, '.haxelib', lib, '.dev']);
+            if (!FileSystem.exists(devPath) || !FileSystem.exists(File.getContent(devPath).trim())) {
+                fail('Failed to install $lib in $cwd/.haxelib. Check log.');
             }
         }
 
