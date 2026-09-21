@@ -581,9 +581,9 @@ class SpineMontage<T> extends Entity implements Component {
         // Will unbind any managed spine if needed
         spine = null;
 
-        // Create new spine instance, displayed on screen (inactive until an animation plays)
+        // Create new spine instance (inactive until an animation plays).
+        // Mounting it (screen.add(), a parent...) is left to the caller.
         var spine = new Spine();
-        ceramic.App.app.screen.add(spine);
         spine.spineData = spineData;
         spine.active = false;
         boundToSpineInstance = bound;
