@@ -177,6 +177,13 @@ class EntityMacro {
                 fieldNames.push(field.name);
             }
         }
+        // A `@:structInit` entity without an explicit constructor gets a compiler-generated one
+        // that calls `super()` without the parent's optional arguments (breaks on strict-arity
+        // targets like C++, e.g. with `ceramic_debug_entity_allocs`). Fail early with a readable
+        // error instead of an obscure C++ compilation failure.
+        if (constructor == null && localClass.meta.has(':structInit')) {
+            Context.error('@:structInit entities need an explicit constructor: the compiler-generated one calls super() without the parent constructor\'s optional arguments', localClass.pos);
+        }
         var typeName = localClass.name;
         if (localClass.pack.length > 0) {
             typeName = localClass.pack.join('.') + '.' + typeName;
