@@ -246,6 +246,9 @@ class Graphics extends Visual {
      * Clear all graphics and recycle visuals to pools
      */
     override function clear():Void {
+        // Pooled visuals are removed (thus unmounted, zero cost) and set inactive:
+        // the inactive state marks them as intentionally parked so the
+        // unmounted-visuals diagnostic skips them. They get added back when reused.
         // Recycle meshes
         for (mesh in activeMeshes) {
             mesh.active = false;

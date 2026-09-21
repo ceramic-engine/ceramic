@@ -1790,6 +1790,11 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     function set_active(active:Bool):Bool {
         if (active == (flags & FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE)) return active;
         flags = active ? flags & ~FLAG_NOT_ACTIVE : flags | FLAG_NOT_ACTIVE;
+     *
+     * Convention: a visual kept aside on purpose should be either unmounted (no parent and
+     * no `renderTarget`, see `mounted`) or inactive. Pools do both: an unmounted visual costs
+     * nothing, and `active = false` tells the unmounted-visuals diagnostic (debug builds)
+     * that it is parked intentionally rather than forgotten.
         if (active) {
             visible = flags & FLAG_VISIBLE_WHEN_ACTIVE == FLAG_VISIBLE_WHEN_ACTIVE;
             touchable = flags & FLAG_TOUCHABLE_WHEN_ACTIVE == FLAG_TOUCHABLE_WHEN_ACTIVE;

@@ -218,10 +218,17 @@ class MeshPool {
         mesh._height = 0;
         mesh.transform = null;
         mesh.rotation = 0;
+        // Reset visible/touchable while active so that `set_active(false)` remembers
+        // them and restores them when the mesh is reused (`get()` sets `active = true`)
         mesh.active = true;
         mesh.visible = true;
         mesh.touchable = true;
+        // Parked on purpose: a pooled mesh is unmounted (no parent, no render target)
+        // so it costs nothing; `active = false` marks it as intentionally parked so the
+        // unmounted-visuals diagnostic skips it
         mesh.active = false;
+        // Required, not cosmetic: a detached visual with a render target would be
+        // mounted as a root of that target
         mesh.renderTarget = null;
         mesh.texture = null;
         mesh.multiTouch = false;
