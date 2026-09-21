@@ -24,6 +24,7 @@ class Setup extends tools.Task {
 
         checkProjectHaxelibSetup(cwd, args);
         installMissingLibsIfNeeded(cwd, args, project);
+        ensureGeneratedFiles(cwd, project);
 
         if (context.backend != null) {
 

@@ -46,7 +46,7 @@ class Hxml extends tools.Task {
         else {
 
             // Get HXML from ceramic project
-            ensureCeramicProject(cwd, args, App);
+            var project = ensureCeramicProject(cwd, args, App);
 
             var availableTargets = context.backend.getBuildTargets();
             var targetName = getTargetName(args, availableTargets);
@@ -78,6 +78,7 @@ class Hxml extends tools.Task {
 
             // Update setup, if needed
             if (extractArgFlag(args, 'setup', true)) {
+                ensureGeneratedFiles(cwd, project);
                 context.backend.runSetup(cwd, ['setup', target.name, '--update-project'], target, context.variant, true);
             }
 

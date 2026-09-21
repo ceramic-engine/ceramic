@@ -877,6 +877,43 @@ class Helpers {
 
     }
 
+    /**
+     * Make sure the project's `gen/` directory holds the generated source templates:
+     * ceramic's own (`tools/tpl/generated`: asset name classes, collections) and the
+     * ones contributed by plugins through `app.generated` (when `project` is given).
+     * Existing files are never overwritten. Must run before a backend setup writes
+     * the hxml, so that the `gen` class path points to a real directory on a first
+     * build (the class path itself is always declared, see `ProjectLoader`).
+     */
+    public static function ensureGeneratedFiles(projectPath:String, ?project:Project):Void {
+
+        var projectGenPath = Path.join([projectPath, 'gen']);
+
+        var generatedTplPaths = [Path.join([context.ceramicToolsPath, 'tpl', 'generated'])];
+        if (project != null && project.app != null) {
+            var pluginGeneratedPaths:Array<String> = project.app.generated;
+            if (pluginGeneratedPaths != null) {
+                for (generatedTplPath in pluginGeneratedPaths) {
+                    generatedTplPaths.push(generatedTplPath);
+                }
+            }
+        }
+
+        for (generatedTplPath in generatedTplPaths) {
+            if (FileSystem.exists(generatedTplPath) && FileSystem.isDirectory(generatedTplPath)) {
+                var generatedFiles = Files.getFlatDirectory(generatedTplPath);
+                for (file in generatedFiles) {
+                    var sourceFile = Path.join([generatedTplPath, file]);
+                    var destFile = Path.join([projectGenPath, file]);
+                    if (!FileSystem.exists(destFile)) {
+                        Files.copyIfNeeded(sourceFile, destFile);
+                    }
+                }
+            }
+        }
+
+    }
+
     public static function checkProjectHaxelibSetup(cwd:String, args:Array<String>) {
 
         var ceramicHaxelibRepoPath = Path.join([context.ceramicRootPath, '.haxelib']);

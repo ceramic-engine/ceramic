@@ -82,6 +82,9 @@ class Build extends tools.Task {
             print('Will build with configuration ' + kind + ' for target ' + target.name + (context.debug ? ' debug' : '') + ' (' + target.displayName + ').');
         }
 
+        // Generated files (gen/) must exist before the setup writes the hxml
+        ensureGeneratedFiles(cwd, project);
+
         // Update setup, if needed
         if (extractArgFlag(args, 'setup', true)) {
             checkProjectHaxelibSetup(cwd, args);
@@ -96,35 +99,6 @@ class Build extends tools.Task {
         if (extractArgFlag(args, 'assets', true)) {
             var task = new Assets();
             task.run(cwd, ['assets', target.name, '--variant', context.variant]);
-        }
-
-        // Check generated files
-        var generatedTplPath = Path.join([context.ceramicToolsPath, 'tpl', 'generated']);
-        var generatedFiles = Files.getFlatDirectory(generatedTplPath);
-        var projectGenPath = Path.join([context.cwd, 'gen']);
-        for (file in generatedFiles) {
-            var sourceFile = Path.join([generatedTplPath, file]);
-            var destFile = Path.join([projectGenPath, file]);
-            if (!FileSystem.exists(destFile)) {
-                Files.copyIfNeeded(sourceFile, destFile);
-            }
-        }
-
-        // Check generated files (plugins)
-        var generatedPaths:Array<String> = project.app.generated;
-        if (generatedPaths != null) {
-            for (generatedTplPath in generatedPaths) {
-                if (FileSystem.exists(generatedTplPath) && FileSystem.isDirectory(generatedTplPath)) {
-                    var generatedFiles = Files.getFlatDirectory(generatedTplPath);
-                    for (file in generatedFiles) {
-                        var sourceFile = Path.join([generatedTplPath, file]);
-                        var destFile = Path.join([projectGenPath, file]);
-                        if (!FileSystem.exists(destFile)) {
-                            Files.copyIfNeeded(sourceFile, destFile);
-                        }
-                    }
-                }
-            }
         }
 
         // Prevent running two things in parallel

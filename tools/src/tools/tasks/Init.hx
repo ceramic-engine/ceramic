@@ -156,17 +156,8 @@ app:
             backends.push('clay');
         }
 
-        // Check generated files
-        var generatedTplPath = Path.join([context.ceramicToolsPath, 'tpl', 'generated']);
-        var generatedFiles = Files.getFlatDirectory(generatedTplPath);
-        var projectGenPath = Path.join([projectPath, 'gen']);
-        for (file in generatedFiles) {
-            var sourceFile = Path.join([generatedTplPath, file]);
-            var destFile = Path.join([projectGenPath, file]);
-            if (!FileSystem.exists(destFile)) {
-                Files.copyIfNeeded(sourceFile, destFile);
-            }
-        }
+        // Generated files (gen/), before the backend setup writes the hxml
+        ensureGeneratedFiles(projectPath);
 
         success('Project created at path: ' + projectPath);
 
