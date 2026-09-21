@@ -22,7 +22,6 @@ import ase.chunks.SliceChunk;
  * @see AsepriteFrame for frame data structure
  * @see Sprite for animation playback (when sprite plugin is enabled)
  */
-@:structInit
 class AsepriteData extends Entity {
 
     /**
@@ -163,6 +162,38 @@ class AsepriteData extends Entity {
      * - Texture regions in the atlas
      * - Associated sprite and image assets
      */
+    /**
+     * Creates a new AsepriteData instance holding the parsed content of an Aseprite file.
+     *
+     * An explicit constructor (rather than `@:structInit`) so that the entity
+     * constructor arguments, such as the debug allocation position, are forwarded properly.
+     *
+     * @param ase The raw Aseprite format file data
+     * @param palette The color palette extracted from the file
+     * @param tags Animation tags defined in the file
+     * @param slices Slices defined in the file
+     * @param layers Layer information from the file
+     * @param duration Total duration of the complete animation in seconds
+     * @param frames All frames extracted from the file
+     * @param prefix Prefix used for naming texture regions in the atlas
+     * @param atlasPacker The texture atlas packer used to pack frame images (optional)
+     */
+    public function new(ase:Ase, palette:AsepritePalette, tags:Map<String, AsepriteTag>, slices:Map<String,SliceChunk>, layers:Array<LayerChunk>, duration:Float, frames:Array<AsepriteFrame>, prefix:String, ?atlasPacker:TextureAtlasPacker #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+
+        super(#if ceramic_debug_entity_allocs pos #end);
+
+        this.ase = ase;
+        this.palette = palette;
+        this.tags = tags;
+        this.slices = slices;
+        this.layers = layers;
+        this.duration = duration;
+        this.frames = frames;
+        this.prefix = prefix;
+        this.atlasPacker = atlasPacker;
+
+    }
+
     override function destroy() {
 
         #if plugin_sprite

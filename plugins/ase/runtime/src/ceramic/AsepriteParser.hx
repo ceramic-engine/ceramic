@@ -187,17 +187,7 @@ class AsepriteParser {
             }
         }
 
-        var asepriteData:AsepriteData = {
-            ase: ase,
-            palette: palette,
-            tags: tags,
-            slices: slices,
-            layers: layers,
-            duration: duration,
-            frames: frames,
-            atlasPacker: atlasPacker,
-            prefix: prefix
-        };
+        var asepriteData = new AsepriteData(ase, palette, tags, slices, layers, duration, frames, prefix, atlasPacker);
 
         return asepriteData;
 
