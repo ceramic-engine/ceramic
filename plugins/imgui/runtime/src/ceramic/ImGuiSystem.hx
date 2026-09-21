@@ -167,7 +167,24 @@ class ImGuiSystem extends System {
 
         #if (cpp || js || cs)
 
-        ImGui.createContext();
+        // ImGui keeps the CURRENT context in a global on the native side, and
+        // `createContext()` deliberately restores the previous one when there
+        // already is one (imgui.cpp: "Restore previous context if any, else
+        // keep new one."). An editor that keeps the native library loaded
+        // between runs - Unity's play mode - therefore starts the second run
+        // with that global still pointing at the PREVIOUS run's context: the
+        // fresh context would be created and then ignored, while io, font atlas
+        // and draw data all kept going through the dead one, whose textures
+        // died with the previous run (and whose atlas is still flagged as
+        // uploaded, so it is never recreated). The app boots and paints its
+        // background, but draws no UI at all until the editor is restarted.
+        // So take over explicitly, and dispose of any leftover context.
+        var previousContext = ImGui.getCurrentContext();
+        var context = ImGui.createContext();
+        ImGui.setCurrentContext(context);
+        if (#if cpp previousContext != null #else previousContext != 0 #end) {
+            ImGui.destroyContext(previousContext);
+        }
 
         var io = ImGui.getIO();
         // We are a 1.92-style renderer: dynamic textures (font atlas pages are
