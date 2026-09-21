@@ -1146,12 +1146,25 @@ class App extends Entity {
         // was expected on screen shows up here with a root whose target is `null`.
         // Inactive visuals are skipped: a visual kept aside on purpose (pools, recycling)
         // is `active = false`, a forgotten one is still active.
+        // To stay readable: a visual is only reported once it has been seen unmounted on
+        // two consecutive ticks (grace period of one interval), a chain is only logged
+        // again when its count changes, and the number of chains per tick is capped.
+        var unmountedSeenBefore = new Map<Visual,Bool>();
+        var reportedChainCounts = new Map<String,Int>();
+        var lastReportedTotal = -1;
+        final maxChainsPerTick = 20;
         Timer.interval(this, 5.0, function() {
+            var seenNow = new Map<Visual,Bool>();
             var countByChain = new Map<String,Int>();
             var chains:Array<String> = [];
+            var total = 0;
             for (i in 0...allVisuals.length) {
                 var visual = allVisuals.unsafeGet(i);
                 if (visual.destroyed || visual.mounted || !visual.active) continue;
+                seenNow.set(visual, true);
+                // Grace period: only report visuals already unmounted at the previous tick
+                if (!unmountedSeenBefore.exists(visual)) continue;
+                total++;
                 var chain = Type.getClassName(Type.getClass(visual));
                 var root = visual;
                 while (root.parent != null) {
@@ -1168,10 +1181,45 @@ class App extends Entity {
                 if (countByChain.exists(chain)) countByChain.set(chain, countByChain.get(chain) + 1);
                 else { chains.push(chain); countByChain.set(chain, 1); }
             }
-            if (chains.length > 0) {
-                log.warning('Active but unmounted visuals, never displayed (' + allVisuals.length + ' total, ' + visuals.length + ' mounted). Add them to `screen` or a render texture, or make them inactive:');
-                for (chain in chains) log.warning('   ' + countByChain.get(chain) + ' x ' + chain);
+            unmountedSeenBefore = seenNow;
+
+            // Only log chains whose count changed since they were last reported
+            var changedChains:Array<String> = [];
+            var unchangedChains = 0;
+            for (chain in chains) {
+                var count = countByChain.get(chain);
+                if (reportedChainCounts.exists(chain) && reportedChainCounts.get(chain) == count) {
+                    unchangedChains++;
+                }
+                else {
+                    reportedChainCounts.set(chain, count);
+                    changedChains.push(chain);
+                }
             }
+            // Forget chains that disappeared so that they get reported again if they come back
+            for (chain in reportedChainCounts.keys()) {
+                if (!countByChain.exists(chain)) reportedChainCounts.remove(chain);
+            }
+
+            if (changedChains.length > 0) {
+                log.warning('Active but unmounted visuals, never displayed (' + total + ' unmounted, ' + allVisuals.length + ' total, ' + visuals.length + ' mounted). Add them to `screen` or a render texture, or make them inactive:');
+                var numLogged = 0;
+                for (chain in changedChains) {
+                    if (numLogged >= maxChainsPerTick) {
+                        log.warning('   ... and ' + (changedChains.length - numLogged) + ' more');
+                        break;
+                    }
+                    log.warning('   ' + countByChain.get(chain) + ' x ' + chain);
+                    numLogged++;
+                }
+                if (unchangedChains > 0) {
+                    log.warning('   (' + unchangedChains + ' unchanged chain' + (unchangedChains > 1 ? 's' : '') + ' not repeated)');
+                }
+            }
+            else if (total != lastReportedTotal && lastReportedTotal != -1 && total > 0) {
+                log.warning('Active but unmounted visuals: ' + total + ' (' + unchangedChains + ' unchanged chain' + (unchangedChains > 1 ? 's' : '') + ' not repeated)');
+            }
+            lastReportedTotal = total;
         });
         #end
 
