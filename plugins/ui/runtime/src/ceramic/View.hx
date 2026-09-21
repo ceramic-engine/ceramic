@@ -26,6 +26,12 @@ using ceramic.Extensions;
  * - offset: Position adjustment relative to default layout position
  * - flex: Relative sizing weight for flexible layouts
  *
+ * Only mounted views (displayed on screen or in a render texture, see `Visual.mounted`)
+ * take part in the automatic layout pass. A view kept aside is left untouched until it is
+ * mounted, at which point it gets laid out right away. To measure a view before displaying
+ * it, use `autoComputeSizeIfNeeded()` or `computeSizeIfNeeded()`, which are synchronous and
+ * work on any view.
+ *
  * ```haxe
  * var container = new View();
  * container.viewSize(ViewSize.fill(), 200); // Full width, 200px height
@@ -678,6 +684,14 @@ class View extends Layer {
         return active;
     }
 
+    override function mountedChanged():Void {
+        // Unmounted views are skipped by the layout pass, so a view that got
+        // dirty while unmounted must be laid out as soon as it is mounted again
+        if (mounted && layoutDirty) {
+            View.requestLayout();
+        }
+    }
+
     override function set_width(width:Float):Float {
         if (_width == width) return width;
         _width = width;
@@ -1307,24 +1321,28 @@ class View extends Layer {
 
         var hasAnyDirty = false;
 
-        // Gather views to update first
+        // Gather views to update first. Unmounted views (not displayed anywhere) are
+        // ignored by the whole layout pass: they keep their `layoutDirty` flag and
+        // get laid out once they are mounted (see `mountedChanged()`).
         for (i in 0..._allViews.length) {
             var view = _allViews.unsafeGet(i);
-            if (view.layoutDirty) {
+            if (view.layoutDirty && view.mounted) {
                 hasAnyDirty = true;
                 break;
             }
         }
 
-        // TODO prevent allocation?
-        var toUpdate = [].concat(_allViews);
-
         if (hasAnyDirty) {
+            // Copy the list because laying out can create or destroy views
+            var toUpdate = [].concat(_allViews);
+
             // Mark all parent-of-dirty views as dirty as well
             // if the conditions are met
             for (i in 0...toUpdate.length) {
                 var view = toUpdate.unsafeGet(i);
-                _markParentsAsLayoutDirtyIfNeeded(view);
+                if (view.mounted) {
+                    _markParentsAsLayoutDirtyIfNeeded(view);
+                }
             }
 
             // Reset computed sizes
@@ -1333,7 +1351,7 @@ class View extends Layer {
             //  - view's own layout is dirty
             for (i in 0..._allViews.length) {
                 var view = _allViews.unsafeGet(i);
-                if (view.shouldResetComputedSize()) {
+                if (view.mounted && view.shouldResetComputedSize()) {
                     view.resetComputedSize();
                 }
             }
@@ -1341,11 +1359,15 @@ class View extends Layer {
             // Then emit layout event by starting from the top-level views
             for (i in 0...toUpdate.length) {
                 var view = toUpdate.unsafeGet(i);
-                _layoutParentThenSelf(view);
+                if (view.mounted) {
+                    _layoutParentThenSelf(view);
+                }
             }
             for (i in 0...toUpdate.length) {
                 var view = toUpdate.unsafeGet(i);
-                _layoutParentThenSelf(view);
+                if (view.mounted) {
+                    _layoutParentThenSelf(view);
+                }
             }
         }
 

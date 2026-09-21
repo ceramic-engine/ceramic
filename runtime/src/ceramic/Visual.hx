@@ -1735,6 +1735,7 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
         else {
             ceramic.App.app.removeVisual(this);
         }
+        mountedChanged();
         if (children != null) {
             var children = @:privateAccess this.children.original;
             for (i in 0...children.length) {
@@ -1742,6 +1743,13 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
             }
         }
     }
+
+    /**
+     * Called right after `mounted` changed on this visual (before children are updated).
+     * Subclasses can override it to react to being mounted or unmounted, for instance to
+     * resume work that was skipped while unmounted. Default implementation does nothing.
+     */
+    function mountedChanged():Void {}
 
     /**
      * Whether this visual is currently in `app.visuals` or `app.pendingVisuals`.
@@ -1782,6 +1790,11 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
      * If you want to keep a visual around without it being displayed or interactive, simply
      * set its `active` property to `false`. It will be almost like it doesn't exist and its
      * impact on rendering will be minimal.
+     *
+     * Convention: a visual kept aside on purpose should be either unmounted (no parent and
+     * no `renderTarget`, see `mounted`) or inactive. Pools do both: an unmounted visual costs
+     * nothing, and `active = false` tells the unmounted-visuals diagnostic (debug builds)
+     * that it is parked intentionally rather than forgotten.
      */
     public var active(get,set):Bool;
     inline function get_active():Bool {
@@ -1790,11 +1803,6 @@ class Visual extends #if ceramic_visual_base VisualBase #else Entity #end #if pl
     function set_active(active:Bool):Bool {
         if (active == (flags & FLAG_NOT_ACTIVE != FLAG_NOT_ACTIVE)) return active;
         flags = active ? flags & ~FLAG_NOT_ACTIVE : flags | FLAG_NOT_ACTIVE;
-     *
-     * Convention: a visual kept aside on purpose should be either unmounted (no parent and
-     * no `renderTarget`, see `mounted`) or inactive. Pools do both: an unmounted visual costs
-     * nothing, and `active = false` tells the unmounted-visuals diagnostic (debug builds)
-     * that it is parked intentionally rather than forgotten.
         if (active) {
             visible = flags & FLAG_VISIBLE_WHEN_ACTIVE == FLAG_VISIBLE_WHEN_ACTIVE;
             touchable = flags & FLAG_TOUCHABLE_WHEN_ACTIVE == FLAG_TOUCHABLE_WHEN_ACTIVE;
