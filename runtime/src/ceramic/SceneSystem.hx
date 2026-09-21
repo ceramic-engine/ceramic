@@ -198,7 +198,10 @@ class SceneSystem extends System {
                         for (i in 0...toRemove.length) {
                             var childScene = toRemove.unsafeGet(i);
                             prevFilter.content.remove(childScene);
-                            screen.add(childScene);
+                            // Outgoing root scene (fading out or aborted boot) caught in a
+                            // filter change: keep it out of the destroyed filter, hidden and
+                            // inactive until it destroys itself. Unmounted (no parent, no
+                            // render target) + inactive: zero cost.
                             childScene.active = false;
                         }
                     }
