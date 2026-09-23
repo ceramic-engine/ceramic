@@ -601,6 +601,28 @@ class EditText extends Entity implements Component implements TextInputDelegate 
             emitUpdate(newText);
         });
 
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.LEFT)], function() {
+            // CMD/CTRL + LEFT Arrow Key
+            if (screen.focusedVisual != entity)
+                return;
+
+            var pos = selectText.findPreviousWordBoundary(selectText.selectionStart);
+            
+            selectText.selectionStart = pos;
+            selectText.selectionEnd = pos;
+        });
+
+        keyBindings.bind([CMD_OR_CTRL, KEY(KeyCode.RIGHT)], function() {
+            // CMD/CTRL + RIGHT Arrow Key
+            if (screen.focusedVisual != entity)
+                return;
+
+            var pos = selectText.findNextWordBoundary(selectText.selectionStart);
+            
+            selectText.selectionStart = pos;
+            selectText.selectionEnd = pos;
+        });
+        
         onDestroy(keyBindings, function(_) {
             keyBindings.destroy();
             keyBindings = null;
