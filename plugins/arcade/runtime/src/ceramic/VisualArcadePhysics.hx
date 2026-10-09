@@ -136,6 +136,14 @@ class VisualArcadePhysics extends Entity {
     public var offsetY:Float = 0;
 
     /**
+     * Whether the body size follows the visual's scale (default).
+     * Set it to `false` to keep the body at the visual's unscaled size, so that
+     * squash and stretch animations do not change the collision box. The sign
+     * of the scale is still used to flip the body around its anchor.
+     */
+    public var useVisualScale:Bool = true;
+
+    /**
      * Creates a new VisualArcadePhysics component.
      * 
      * Automatically registers with the ArcadeSystem for updates.

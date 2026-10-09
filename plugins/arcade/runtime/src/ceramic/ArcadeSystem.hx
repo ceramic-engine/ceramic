@@ -227,6 +227,11 @@ class ArcadeSystem extends System {
                     // TODO ensure position is accurate when rotation/scale with non-centered anchor?
                     var scaleX = visual.scaleX;
                     var scaleY = visual.scaleY;
+                    if (!item.useVisualScale) {
+                        // Keep the sign only: the body is flipped but not resized
+                        scaleX = scaleX < 0 ? -1 : 1;
+                        scaleY = scaleY < 0 ? -1 : 1;
+                    }
                     var anchorX = visual.anchorX;
                     var anchorY = visual.anchorY;
                     if (scaleX < 0) {

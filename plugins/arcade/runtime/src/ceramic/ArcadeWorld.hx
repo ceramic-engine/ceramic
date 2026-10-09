@@ -1261,7 +1261,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
     @:plugin('tilemap')
     public function collideBodyVsTilemapLayer(body:Body, layer:TilemapLayer, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
 
-        return #if !debug inline #end separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, false);
+        return #if !debug inline #end separateBodyVsTilemapLayersSwept(body, null, layer, collideCallback, processCallback, false);
 
     }
 
@@ -1283,25 +1283,177 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     function separateBodyVsTilemap(body:Body, tilemap:Tilemap, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool, overlapOnly:Bool = false):Bool {
 
-        _total = 0;
-
         if (tilemap.collidableLayersDirty) {
             tilemap.computeCollidableLayers();
         }
 
         var layers = tilemap.computedCollidableLayers;
-        if (layers != null && layers.length > 0) {
+        if (layers == null || layers.length == 0) {
+            return false;
+        }
 
-            for (i in 0...layers.length) {
-                var layer = layers.unsafeGet(i);
+        return #if !debug inline #end separateBodyVsTilemapLayersSwept(body, layers, null, collideCallback, processCallback, overlapOnly);
 
-                var total = _total;
-                inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, overlapOnly);
-                _total += total;
+    }
+
+    /**
+     * Separates a body against tilemap layers (`layers`, or the single `layer` if given),
+     * moving the body along its displacement in several steps when it moved a lot this frame.
+     *
+     * A body is only tested against the tiles it overlaps at its current position, so a body
+     * moving more than its own size in one frame could end up past a tile without ever
+     * overlapping it. Stepping by at most half the body size on each axis makes sure the
+     * first tile on the path is met. The steps only concern the collision test: velocity and
+     * gravity were integrated once, for the whole frame, before this is called.
+     */
+    function separateBodyVsTilemapLayersSwept(body:Body, layers:Array<TilemapLayer>, layer:TilemapLayer, collideCallback:Body->Body->Void, processCallback:Body->Body->Bool, overlapOnly:Bool):Bool {
+
+        var steps = 1;
+        var startX = body.prevX;
+        var startY = body.prevY;
+        var dx = body.x - startX;
+        var dy = body.y - startY;
+
+        if (!overlapOnly && body.enable && body.moves && !body.immovable && !body.isCircle) {
+            var halfWidth = body.width * 0.5;
+            var halfHeight = body.height * 0.5;
+            if (halfWidth > 0 && halfHeight > 0) {
+                var stepsX = Math.abs(dx) / halfWidth;
+                var stepsY = Math.abs(dy) / halfHeight;
+                var neededSteps = stepsX > stepsY ? stepsX : stepsY;
+                if (neededSteps > 1) {
+                    steps = Math.ceil(neededSteps);
+                    if (steps > MAX_SWEEP_STEPS) {
+                        steps = MAX_SWEEP_STEPS;
+                    }
+                }
             }
         }
 
-        return (_total > 0);
+        if (steps == 1) {
+            // The body moved less than half its size: test it where it is
+            return #if !debug inline #end separateBodyVsTilemapLayers(body, layers, layer, collideCallback, processCallback, overlapOnly);
+        }
+
+        var result = false;
+        var stepX = dx / steps;
+        var stepY = dy / steps;
+
+        body.x = startX;
+        body.y = startY;
+
+        for (i in 0...steps) {
+            // Each step is a small displacement of its own, so the overlap limits
+            // of the separation reason on the step rather than on the whole frame
+            body.prevX = body.x;
+            body.prevY = body.y;
+            if (!(stepX > 0 && body.blockedRight) && !(stepX < 0 && body.blockedLeft)) {
+                body.x += stepX;
+            }
+            if (!(stepY > 0 && body.blockedDown) && !(stepY < 0 && body.blockedUp)) {
+                body.y += stepY;
+            }
+            if (#if !debug inline #end separateBodyVsTilemapLayers(body, layers, layer, collideCallback, processCallback, overlapOnly)) {
+                result = true;
+            }
+        }
+
+        // Restore the frame's starting position: the body's displacement
+        // for the frame is read from it afterwards
+        body.prevX = startX;
+        body.prevY = startY;
+
+        return result;
+
+    }
+
+    static inline final MAX_SWEEP_STEPS:Int = 16;
+
+    function separateBodyVsTilemapLayers(body:Body, layers:Array<TilemapLayer>, layer:TilemapLayer, collideCallback:Body->Body->Void, processCallback:Body->Body->Bool, overlapOnly:Bool):Bool {
+
+        var total = 0;
+
+        if (layer != null) {
+            inline separateBodyVsTilemapLayer(body, layer, collideCallback, processCallback, overlapOnly);
+            total = _total;
+        }
+        else {
+            for (i in 0...layers.length) {
+                var aLayer = layers.unsafeGet(i);
+                inline separateBodyVsTilemapLayer(body, aLayer, collideCallback, processCallback, overlapOnly);
+                total += _total;
+            }
+        }
+
+        return (total > 0);
+
+    }
+
+    /**
+     * Pushes `body` out of `tile`, a full tile it is still overlapping after the regular
+     * separation, through one of the tile's exposed faces: the face the body came from if
+     * it moved on that axis this step, otherwise the nearest one.
+     * Returns `false` when no face is exposed (the body is inside a thick wall).
+     */
+    function escapeFromTile(body:Body, tile:Body, topExposed:Bool, bottomExposed:Bool, leftExposed:Bool, rightExposed:Bool):Bool {
+
+        // Distance to move the body to get it out through each face
+        var throughTop = body.bottom - tile.top;
+        var throughBottom = tile.bottom - body.top;
+        var throughLeft = body.right - tile.left;
+        var throughRight = tile.right - body.left;
+
+        var dx = body.deltaX();
+        var dy = body.deltaY();
+
+        var face = -1; // 0 top, 1 bottom, 2 left, 3 right
+        if (dy > 0 && topExposed) {
+            face = 0;
+        }
+        else if (dy < 0 && bottomExposed) {
+            face = 1;
+        }
+        else if (dx > 0 && leftExposed) {
+            face = 2;
+        }
+        else if (dx < 0 && rightExposed) {
+            face = 3;
+        }
+        else {
+            var best = Math.POSITIVE_INFINITY;
+            if (topExposed && throughTop < best) { best = throughTop; face = 0; }
+            if (bottomExposed && throughBottom < best) { best = throughBottom; face = 1; }
+            if (leftExposed && throughLeft < best) { best = throughLeft; face = 2; }
+            if (rightExposed && throughRight < best) { best = throughRight; face = 3; }
+        }
+
+        switch face {
+            case 0:
+                body.y -= throughTop;
+                if (body.velocityY > 0) body.velocityY = 0;
+                body.blockedDown = true;
+                body.touchingDown = true;
+            case 1:
+                body.y += throughBottom;
+                if (body.velocityY < 0) body.velocityY = 0;
+                body.blockedUp = true;
+                body.touchingUp = true;
+            case 2:
+                body.x -= throughLeft;
+                if (body.velocityX > 0) body.velocityX = 0;
+                body.blockedRight = true;
+                body.touchingRight = true;
+            case 3:
+                body.x += throughRight;
+                if (body.velocityX < 0) body.velocityX = 0;
+                body.blockedLeft = true;
+                body.touchingLeft = true;
+            case _:
+                return false;
+        }
+        body.blockedNone = false;
+        body.touchingNone = false;
+        return true;
 
     }
 
@@ -1352,6 +1504,10 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             if (tiles != null) {
 
                 var checkCollisionValues = layer.checkCollisionValues;
+
+                // A layer that collides on its four sides is made of full tiles,
+                // as opposed to one-way platforms
+                var fullLayer = layer.checkCollisionUp && layer.checkCollisionRight && layer.checkCollisionDown && layer.checkCollisionLeft;
 
                 var minColumn = Math.floor((body.left - offsetX) / tileWidth);
                 var maxColumn = Math.ceil((body.right - offsetX) / tileWidth);
@@ -1485,7 +1641,29 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             //     tileBody.forceX = false;
                             // }
 
-                            if (separate(body, tileBody, processCallback, overlapOnly)) {
+                            var collided = separate(body, tileBody, processCallback, overlapOnly);
+
+                            // The regular separation refuses to move a body that is deeper inside a
+                            // tile than what it moved this frame (plus a small bias), which fits two
+                            // moving bodies but leaves a body stuck inside a wall. A full tile never
+                            // lets a body stay inside: push it out through its nearest exposed face.
+                            if (!overlapOnly && fullLayer && body.enable && body.moves && !body.immovable && !body.isCircle && intersects(body, tileBody)) {
+                                var leftExposed = true;
+                                var rightExposed = true;
+                                if (column > 0) {
+                                    var gidLeft = tiles.unsafeGet(index - 1).gid;
+                                    leftExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidLeft) : gidLeft > 0);
+                                }
+                                if (column < layerData.columns - 1) {
+                                    var gidRight = tiles.unsafeGet(index + 1).gid;
+                                    rightExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidRight) : gidRight > 0);
+                                }
+                                if (escapeFromTile(body, tileBody, tileBody.checkCollisionUp, tileBody.checkCollisionDown, leftExposed, rightExposed)) {
+                                    collided = true;
+                                }
+                            }
+
+                            if (collided) {
 
                                 if (collideCallback != null) {
                                     collideCallback(body, tileBody);
