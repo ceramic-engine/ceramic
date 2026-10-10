@@ -73,7 +73,7 @@ class PixelArtCrt_Frag extends Frag {
     @param var resolution:Vec2;
     @param var outputScale:Float;
 
-    @param var sampling:Float;
+    @param var beamAmount:Float;
     @param var hardPix:Float;
     @param var sharpBand:Float;
 
@@ -417,19 +417,23 @@ class PixelArtCrt_Frag extends Frag {
 
         var frame:Float = cornerMask(uv);
 
-        // Reconstruction, in linear light: `rgb` is the normalized color, `scanSum` is the
-        // Lottes scanline profile (the un-normalized sum of row weights, below 1 between rows)
-        var rgb:Vec3 = vec3(0.0);
-        var scanSum:Float = 1.0;
+        // Reconstruction, in linear light: `sharp` and `beam` are the two normalized
+        // reconstructions blended by `beamAmount`, `scanSharp` and `scanBeam` the matching
+        // Lottes scanline profiles (un-normalized sums of row weights, below 1 between rows)
+        var sharp:Vec3 = vec3(0.0);
+        var beam:Vec3 = vec3(0.0);
+        var scanSharp:Float = 1.0;
+        var scanBeam:Float = 1.0;
 
-        if (sampling < 0.5) {
-            rgb = sharpTexel(uv);
+        if (beamAmount < 1.0) {
+            sharp = sharpTexel(uv);
             if (scanlineStrength > 0.0) {
-                var scale:Float = beamScale(rgb);
-                scanSum = scan(uv, -1.0, scale) + scan(uv, 0.0, scale) + scan(uv, 1.0, scale);
+                var scale:Float = beamScale(sharp);
+                scanSharp = scan(uv, -1.0, scale) + scan(uv, 0.0, scale) + scan(uv, 1.0, scale);
             }
         }
-        else {
+
+        if (beamAmount > 0.0) {
             var b:Vec3 = vec3(0.0);
             if (quality < 1.5) {
                 b = horz3(uv, 0.0);
@@ -447,8 +451,8 @@ class PixelArtCrt_Frag extends Frag {
                 }
                 var a:Vec3 = horz3(uv, offA);
                 var wa:Float = scan(uv, offA, beamScale(a));
-                rgb = (a * wa + b * wb) / (wa + wb);
-                scanSum = wa + wb;
+                beam = (a * wa + b * wb) / (wa + wb);
+                scanBeam = wa + wb;
             }
             else {
                 // Lottes `Tri`: three source rows
@@ -456,10 +460,13 @@ class PixelArtCrt_Frag extends Frag {
                 var c:Vec3 = horz3(uv, 1.0);
                 var wa:Float = scan(uv, -1.0, beamScale(a));
                 var wc:Float = scan(uv, 1.0, beamScale(c));
-                rgb = (a * wa + b * wb + c * wc) / (wa + wb + wc);
-                scanSum = wa + wb + wc;
+                beam = (a * wa + b * wb + c * wc) / (wa + wb + wc);
+                scanBeam = wa + wb + wc;
             }
         }
+
+        var rgb:Vec3 = mix(sharp, beam, beamAmount);
+        var scanSum:Float = mix(scanSharp, scanBeam, beamAmount);
 
         rgb *= mix(1.0, scanSum, scanlineStrength);
 
