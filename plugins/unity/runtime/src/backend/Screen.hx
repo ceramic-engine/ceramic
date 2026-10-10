@@ -1,5 +1,6 @@
 package backend;
 
+import ceramic.Files;
 import ceramic.IntIntMap;
 import haxe.io.Bytes;
 import unityengine.ImageConversion;
@@ -618,20 +619,23 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
 
-        if (path != null) {
-            ScreenCapture.CaptureScreenshot(path, 1);
-            done();
-        }
-        else {
-            var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
-            if (unityTexture != null) {
-                var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
-                done(Bytes.ofData(pngBytesData));
+        // Always go through a texture: `ScreenCapture.CaptureScreenshot(path)` writes the file
+        // at some later frame, which would make `done` fire before the screenshot exists
+        var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
+        if (unityTexture != null) {
+            var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+            untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
+            if (path != null) {
+                Files.saveBytes(path, Bytes.ofData(pngBytesData));
+                done();
             }
             else {
-                ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
-                done(null);
+                done(Bytes.ofData(pngBytesData));
             }
+        }
+        else {
+            ceramic.Shortcuts.log.warning('Failed to generate texture from screen');
+            done(null);
         }
 
     }
