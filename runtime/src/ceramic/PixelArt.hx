@@ -33,7 +33,7 @@ import tracker.Autorun;
  * // Your own settings
  * pixelArt.applyPreset({
  *     mode: CRT,
- *     sampling: BEAM,
+ *     beamAmount: 1,
  *     scanlineStrength: 0.8,
  *     maskType: APERTURE
  * });
@@ -347,20 +347,21 @@ class PixelArt extends Filter {
 /// CRT mode: reconstruction
 
     /**
-     * How each source pixel is reconstructed (`CRT` mode): `SHARP` pixels, or the
-     * Gaussian `BEAM` of crt-lottes. Default: `SHARP`.
+     * How much of the crt-lottes Gaussian beam goes into each pixel (`CRT` mode):
+     * `0.0` (default) keeps crisp pixels (see `sharpBand`), `1.0` is the full beam
+     * (see `hardPix` and `hardScan`), values in between blend the two.
      */
-    public var sampling(default,set):PixelArtSampling = SHARP;
-    function set_sampling(sampling:PixelArtSampling):PixelArtSampling {
-        if (this.sampling != sampling) {
-            this.sampling = sampling;
-            if (mode == CRT && shader != null) shader.setFloat('sampling', sampling == BEAM ? 1 : 0);
+    public var beamAmount(default,set):Float = 0.0;
+    function set_beamAmount(beamAmount:Float):Float {
+        if (this.beamAmount != beamAmount) {
+            this.beamAmount = beamAmount;
+            if (mode == CRT && shader != null) shader.setFloat('beamAmount', beamAmount);
         }
-        return sampling;
+        return beamAmount;
     }
 
     /**
-     * Horizontal spread of the beam (`CRT` mode, `BEAM` sampling), a negative Gaussian
+     * Horizontal spread of the beam (`CRT` mode, with `beamAmount`), a negative Gaussian
      * scale as in crt-lottes: `-3.0` soft (default), `-2.0` softer, `-4.0` sharper.
      */
     public var hardPix(default,set):Float = -3.0;
@@ -373,9 +374,10 @@ class PixelArt extends Filter {
     }
 
     /**
-     * Width, in screen pixels, of the band around texel edges where `SHARP` sampling
+     * Width, in screen pixels, of the band around texel edges where the crisp sampling
      * interpolates (`CRT` mode). `1.0` (default) keeps sub-pixel scrolling smooth
-     * without visible blur; smaller values are sharper but shimmer when scrolling.
+     * without visible blur; smaller values are sharper but shimmer when scrolling,
+     * larger ones soften the pixel edges.
      */
     public var sharpBand(default,set):Float = 1.0;
     function set_sharpBand(sharpBand:Float):Float {
@@ -524,7 +526,9 @@ class PixelArt extends Filter {
 
     /**
      * Amount of halo added around bright pixels (`CRT` mode), `0.0` (none, default) to
-     * `1.0`. The halo is a blur of the source at its own resolution, so it stays cheap.
+     * `1.0`. The halo is a blur of the source at its own resolution (radius `bloomSize`),
+     * so it stays cheap. Bright areas are already bright: the halo shows on their edges
+     * and in the dark areas next to them.
      */
     public var bloomAmount(default,set):Float = 0.0;
     function set_bloomAmount(bloomAmount:Float):Float {
@@ -537,9 +541,10 @@ class PixelArt extends Filter {
     }
 
     /**
-     * Radius of the halo blur in source pixels (`CRT` mode). `2.0` by default.
+     * Radius of the halo blur in source pixels (`CRT` mode). `4.0` by default.
+     * Only visible while `bloomAmount` is above zero.
      */
-    public var bloomSize(default,set):Float = 2.0;
+    public var bloomSize(default,set):Float = 4.0;
     function set_bloomSize(bloomSize:Float):Float {
         if (this.bloomSize != bloomSize) {
             this.bloomSize = bloomSize;
@@ -775,7 +780,7 @@ class PixelArt extends Filter {
         glowThresholdMin = preset.glowThresholdMin;
         glowThresholdMax = preset.glowThresholdMax;
 
-        sampling = preset.sampling;
+        beamAmount = preset.beamAmount;
         hardPix = preset.hardPix;
         sharpBand = preset.sharpBand;
         hardScan = preset.hardScan;
@@ -825,7 +830,7 @@ class PixelArt extends Filter {
             glowStrength: glowStrength,
             glowThresholdMin: glowThresholdMin,
             glowThresholdMax: glowThresholdMax,
-            sampling: sampling,
+            beamAmount: beamAmount,
             hardPix: hardPix,
             sharpBand: sharpBand,
             hardScan: hardScan,
@@ -932,7 +937,7 @@ class PixelArt extends Filter {
             updateViewport();
             shader.setFloat('outputScale', currentOutputScale);
 
-            shader.setFloat('sampling', sampling == BEAM ? 1 : 0);
+            shader.setFloat('beamAmount', beamAmount);
             shader.setFloat('hardPix', hardPix);
             shader.setFloat('sharpBand', sharpBand);
 

@@ -36,7 +36,7 @@ class PixelArtPreset {
 
     // CRT mode
 
-    public var sampling:PixelArtSampling = SHARP;
+    public var beamAmount:Float = 0.0;
     public var hardPix:Float = -3.0;
     public var sharpBand:Float = 1.0;
     public var hardScan:Float = -8.0;
@@ -50,7 +50,7 @@ class PixelArtPreset {
     public var lcdGridStrength:Float = 0.0;
     public var lcdSubpixelLow:Float = 0.65;
     public var bloomAmount:Float = 0.0;
-    public var bloomSize:Float = 2.0;
+    public var bloomSize:Float = 4.0;
     public var warpX:Float = 0.0;
     public var warpY:Float = 0.0;
     public var cornerRadius:Float = 0.0;
@@ -94,7 +94,7 @@ class PixelArtPreset {
 
         return {
             mode: CRT,
-            sampling: BEAM,
+            beamAmount: 1.0,
             hardPix: -3.0,
             hardScan: -8.0,
             beamMin: 1.0,
@@ -103,8 +103,8 @@ class PixelArtPreset {
             maskType: TV,
             maskDark: 0.5,
             maskLight: 1.5,
-            bloomAmount: 0.15,
-            bloomSize: 2.0,
+            bloomAmount: 0.25,
+            bloomSize: 4.0,
             warpX: 1.0 / 32.0,
             warpY: 1.0 / 24.0,
             cornerRadius: 8.0,
@@ -125,7 +125,7 @@ class PixelArtPreset {
 
         return {
             mode: CRT,
-            sampling: BEAM,
+            beamAmount: 1.0,
             hardPix: -4.0,
             hardScan: -10.0,
             beamMin: 1.0,
@@ -134,8 +134,8 @@ class PixelArtPreset {
             maskType: APERTURE,
             maskDark: 0.6,
             maskLight: 1.4,
-            bloomAmount: 0.08,
-            bloomSize: 1.5,
+            bloomAmount: 0.12,
+            bloomSize: 3.0,
             vignetteStrength: 0.1,
             gamma: 2.2,
             brightness: 1.05,
@@ -152,7 +152,6 @@ class PixelArtPreset {
 
         return {
             mode: CRT,
-            sampling: SHARP,
             maskType: LCD,
             lcdGridStrength: 0.4,
             lcdSubpixelLow: 0.65,
@@ -225,7 +224,7 @@ class PixelArtPreset {
         if (glowThresholdMin != defaults.glowThresholdMin) add('glowThresholdMin', Std.string(glowThresholdMin));
         if (glowThresholdMax != defaults.glowThresholdMax) add('glowThresholdMax', Std.string(glowThresholdMax));
 
-        if (sampling != defaults.sampling) add('sampling', sampling == BEAM ? 'BEAM' : 'SHARP');
+        if (beamAmount != defaults.beamAmount) add('beamAmount', Std.string(beamAmount));
         if (hardPix != defaults.hardPix) add('hardPix', Std.string(hardPix));
         if (sharpBand != defaults.sharpBand) add('sharpBand', Std.string(sharpBand));
         if (hardScan != defaults.hardScan) add('hardScan', Std.string(hardScan));

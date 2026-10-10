@@ -1,7 +1,7 @@
 package ceramic;
 
 /**
- * Cost of the `BEAM` reconstruction of a `PixelArt` filter in `CRT` mode
+ * Cost of the beam reconstruction (`beamAmount`) of a `PixelArt` filter in `CRT` mode
  * (texture reads per screen pixel).
  */
 enum abstract PixelArtQuality(Int) to Int {
