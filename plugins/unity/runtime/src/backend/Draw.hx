@@ -894,11 +894,15 @@ class Draw #if !completion implements spec.Draw #end {
                 untyped __cs__('cmd.SetRenderTarget((UnityEngine.RenderTexture){0})', unityRenderTexture);
                 #end
 
+                // The size of what the camera projects, from the same values the camera's own
+                // projection uses (orthographic size and aspect), so that the render target
+                // transform below inverts it exactly. Kept as floats: truncating to int could be one
+                // pixel short (1617.9999 -> 1617), which scaled every render texture slightly.
                 untyped __cs__('var cameraHeight = 2*UnityEngine.Camera.main.orthographicSize');
                 untyped __cs__('var cameraWidth = cameraHeight*UnityEngine.Camera.main.aspect');
 
-                var camWidth:Int = untyped __cs__('(int)cameraWidth');
-                var camHeight:Int = untyped __cs__('(int)cameraHeight');
+                var camWidth:Float = untyped __cs__('(float)cameraWidth');
+                var camHeight:Float = untyped __cs__('(float)cameraHeight');
 
                 updateProjectionMatrix(
                     renderTarget.width,
