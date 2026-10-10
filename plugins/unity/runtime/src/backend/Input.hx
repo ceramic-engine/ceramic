@@ -455,6 +455,14 @@ class Input implements tracker.Events implements spec.Input {
 
     var gamepadPressed:IntIntMap = new IntIntMap(16, 0.5, false);
 
+    /**
+     * Axis slots kept per gamepad in `gamepadAxis` (left stick x/y, right stick x/y, and one spare)
+     */
+    inline static final NUM_GAMEPAD_AXES:Int = 5;
+
+    /**
+     * Last axis values sent, to only emit changes
+     */
     var gamepadAxis:IntMap<Single> = new IntMap(16, 0.5, false);
 
     var gamepadDualShockGyroControls:IntMap<Array<ButtonControl>> = new IntMap(16, 0.5, false);
@@ -509,6 +517,11 @@ class Input implements tracker.Events implements spec.Input {
                 emitGamepadEnable(index, gamepad.displayName);
                 for (n in 0...GAMEPAD_STORAGE_SIZE) {
                     gamepadPressed.set(index * GAMEPAD_STORAGE_SIZE + n, 0);
+                }
+                // Forget the axis values too, so that a stick already held is reported
+                // right away (ceramic resets them to zero when a gamepad is enabled)
+                for (n in 0...NUM_GAMEPAD_AXES) {
+                    gamepadAxis.set(index * NUM_GAMEPAD_AXES + n, 0);
                 }
             }
 
@@ -566,6 +579,12 @@ class Input implements tracker.Events implements spec.Input {
                             emitGamepadUp(index, n);
                         }
                     }
+                    for (n in 0...NUM_GAMEPAD_AXES) {
+                        if (gamepadAxis.get(index * NUM_GAMEPAD_AXES + n) != 0) {
+                            gamepadAxis.set(index * NUM_GAMEPAD_AXES + n, 0);
+                            emitGamepadAxis(index, n, 0);
+                        }
+                    }
                     emitGamepadDisable(index);
                 }
                 unusedGamepads.unsafeSet(i, null);
@@ -595,9 +614,9 @@ class Input implements tracker.Events implements spec.Input {
 
     function updateGamepadAxis(index:Int, axis:Int, value:Single) {
 
-        var prevValue = gamepadAxis.get(index * 5 + axis);
+        var prevValue = gamepadAxis.get(index * NUM_GAMEPAD_AXES + axis);
         if (prevValue != value) {
-            gamepadAxis.set(index * 5 + axis, value);
+            gamepadAxis.set(index * NUM_GAMEPAD_AXES + axis, value);
             emitGamepadAxis(index, axis, value);
         }
 
