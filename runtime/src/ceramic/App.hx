@@ -895,6 +895,12 @@ class App extends Entity {
         // Notify screen
         screen.backendReady();
 
+        // Listen to the backend's keyboard and gamepad events from now on: the backend may
+        // emit some before the app is ready (a gamepad connected at startup is reported on
+        // the first update), and they must not be lost. Each one is queued and replayed
+        // at the next update, as before.
+        bindBackendInputEvents();
+
         // Run pre-init callbacks
         if (preInitCallbacks != null) {
             for (callback in [].concat(preInitCallbacks)) {
@@ -1313,6 +1319,18 @@ class App extends Entity {
         backend.onUpdate(this, update);
         backend.onRender(this, render);
 
+    }
+
+    /**
+     * Update method called before the app is fully ready.
+     * Handles basic asset and immediate callback processing.
+     */
+    /**
+     * Forward the backend's keyboard and gamepad events to `input`, queued so that they
+     * are processed at the beginning of the next update.
+     */
+    function bindBackendInputEvents():Void {
+
         // Forward key events
         //
         backend.input.onKeyDown(this, function(key) {
@@ -1346,10 +1364,6 @@ class App extends Entity {
 
     }
 
-    /**
-     * Update method called before the app is fully ready.
-     * Handles basic asset and immediate callback processing.
-     */
     function updatePreReady(delta:Float):Void {
 
         #if sys
