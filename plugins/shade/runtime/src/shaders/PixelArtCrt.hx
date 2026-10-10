@@ -31,31 +31,19 @@ class PixelArtCrt_Vert extends Vert {
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
 
-    /**
-     * Size of the framebuffer in pixels, to give the fragment its screen position
-     */
-    @param var viewport:Vec2;
-
     @in var vertexPosition:Vec3;
     @in var vertexTCoord:Vec2;
     @in var vertexColor:Vec4;
 
     @out var tcoord:Vec2;
     @out var color:Vec4;
-    @out var screenPos:Vec2;
 
     function main():Vec4 {
 
         tcoord = vertexTCoord;
         color = vertexColor;
 
-        var clip:Vec4 = projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);
-
-        // Position in framebuffer pixels: phosphor masks stay fixed on the screen,
-        // like the glass of a real tube, whatever the content does
-        screenPos = (clip.xy / clip.w * 0.5 + 0.5) * viewport;
-
-        return clip;
+        return projectionMatrix * modelViewMatrix * vec4(vertexPosition, 1.0);
 
     }
 
@@ -72,6 +60,14 @@ class PixelArtCrt_Frag extends Frag {
     @param var bloomTex:Sampler2D;
     @param var resolution:Vec2;
     @param var outputScale:Float;
+
+    /**
+     * The filter on screen, in screen pixels: origin in `xy`, size in `zw`. Gives each
+     * fragment its screen position, so that phosphor masks stay fixed on the screen like
+     * the glass of a real tube, whatever the content does (`gl_FragCoord` is not available
+     * on every target)
+     */
+    @param var screenRect:Vec4;
 
     @param var beamAmount:Float;
     @param var hardPix:Float;
@@ -110,7 +106,6 @@ class PixelArtCrt_Frag extends Frag {
 
     @in var tcoord:Vec2;
     @in var color:Vec4;
-    @in var screenPos:Vec2;
 
     /**
      * Flicker frequency, in radians per second
@@ -343,7 +338,11 @@ class PixelArtCrt_Frag extends Frag {
 
     }
 
-    function mask(uv:Vec2):Vec3 {
+    /**
+     * `uv`: image coordinates (after curvature), for the LCD mask tied to source pixels.
+     * `screenPos`: fragment position in screen pixels, for the phosphor masks
+     */
+    function mask(uv:Vec2, screenPos:Vec2):Vec3 {
 
         var m:Vec3 = vec3(1.0);
         var pos:Vec2 = screenPos / maskScale;
@@ -411,6 +410,10 @@ class PixelArtCrt_Frag extends Frag {
     function main():Vec4 {
 
         var uv:Vec2 = tcoord;
+
+        // Position of this fragment in screen pixels (computed here: on HLSL, only
+        // main() can read the interpolated inputs)
+        var screenPos:Vec2 = screenRect.xy + tcoord * screenRect.zw;
         if (warpX > 0.0 || warpY > 0.0) {
             uv = warp(uv);
         }
@@ -476,7 +479,7 @@ class PixelArtCrt_Frag extends Frag {
         }
 
         if (maskType > 0.5) {
-            rgb *= mask(uv);
+            rgb *= mask(uv, screenPos);
         }
 
         rgb *= brightness;
@@ -491,7 +494,7 @@ class PixelArtCrt_Frag extends Frag {
         rgb = toDisplay(rgb);
 
         if (noiseStrength > 0.0) {
-            rgb += (hash(screenPos + fract(time) * 100.0) - 0.5) * noiseStrength;
+            rgb += (hash(floor(screenPos) + fract(time) * 100.0) - 0.5) * noiseStrength;
         }
 
         if (flickerStrength > 0.0) {
