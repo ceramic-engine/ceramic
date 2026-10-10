@@ -736,6 +736,14 @@ class PixelArt extends Filter {
      */
     var currentOutputScale:Float = 1;
 
+    /**
+     * Values last pushed as `screenRect` uniform (the filter on screen, in screen pixels)
+     */
+    var currentScreenRectX:Float = 0;
+    var currentScreenRectY:Float = 0;
+    var currentScreenRectWidth:Float = 0;
+    var currentScreenRectHeight:Float = 0;
+
     var time:Float = 0;
 
     override function set_density(density:Float):Float {
@@ -754,7 +762,6 @@ class PixelArt extends Filter {
         bindShader();
 
         onResize(this, handleResize);
-        screen.onResize(this, updateViewport);
         app.onPostUpdate(this, handlePostUpdate);
 
     }
@@ -889,7 +896,8 @@ class PixelArt extends Filter {
         assets.ensureShader(shaderClass, null, asset -> {
             if (destroyed || mode != bindMode || asset == null) return;
             shaderAutorun = autorun(() -> {
-                final loaded = assets.shader(shaderClass);
+                // Explicit type: the generic lookup is erased to a plain object on C#
+                final loaded:Shader = cast assets.shader(shaderClass);
                 Autorun.unobserve();
                 if (loaded == null) return;
                 if (shader != null) {
@@ -934,8 +942,8 @@ class PixelArt extends Filter {
             shader.setFloat('glowThresholdMax', glowThresholdMax);
         }
         else {
-            updateViewport();
             shader.setFloat('outputScale', currentOutputScale);
+            shader.setVec4('screenRect', currentScreenRectX, currentScreenRectY, currentScreenRectWidth, currentScreenRectHeight);
 
             shader.setFloat('beamAmount', beamAmount);
             shader.setFloat('hardPix', hardPix);
@@ -1017,27 +1025,34 @@ class PixelArt extends Filter {
 
     }
 
-    function updateViewport():Void {
-
-        if (mode == CRT && shader != null) {
-            shader.setVec2('viewport',
-                screen.nativeWidth * screen.nativeDensity,
-                screen.nativeHeight * screen.nativeDensity
-            );
-        }
-
-    }
-
+    /**
+     * Push `outputScale` (when computed automatically) and `screenRect`, both derived from
+     * where the filter is on screen. Rotation is not taken into account.
+     */
     function updateOutputScale():Void {
+
+        if (matrixDirty) computeMatrix();
+        final screenScale = Math.sqrt(matA * matA + matB * matB) * screen.density;
 
         var value = outputScale;
         if (value < 0) {
-            if (matrixDirty) computeMatrix();
-            value = Math.sqrt(matA * matA + matB * matB) * screen.density;
+            value = screenScale;
         }
         if (value != currentOutputScale) {
             currentOutputScale = value;
             if (mode == CRT && shader != null) shader.setFloat('outputScale', value);
+        }
+
+        final rectX = matTX * screen.density;
+        final rectY = matTY * screen.density;
+        final rectWidth = width * screenScale;
+        final rectHeight = height * screenScale;
+        if (rectX != currentScreenRectX || rectY != currentScreenRectY || rectWidth != currentScreenRectWidth || rectHeight != currentScreenRectHeight) {
+            currentScreenRectX = rectX;
+            currentScreenRectY = rectY;
+            currentScreenRectWidth = rectWidth;
+            currentScreenRectHeight = rectHeight;
+            if (mode == CRT && shader != null) shader.setVec4('screenRect', rectX, rectY, rectWidth, rectHeight);
         }
 
     }
