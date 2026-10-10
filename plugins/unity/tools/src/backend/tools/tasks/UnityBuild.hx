@@ -241,7 +241,8 @@ class UnityBuild extends tools.Task {
         if (!FileSystem.exists(sourcePath)) return;
 
         // Unity shaders go to same assets folder as other ceramic assets
-        var dstAssetsPath = Path.join([cwd, 'project', 'unity', project.app.name, 'Assets', 'Ceramic', 'Resources', 'assets']);
+        // (in the Unity project configured with `unity.project`, if any)
+        var dstAssetsPath = Path.join([tools.UnityProject.resolveUnityProjectPath(cwd, project), 'Assets', 'Ceramic', 'Resources', 'assets']);
 
         // Ensure assets directory exists
         if (!FileSystem.exists(dstAssetsPath)) {
