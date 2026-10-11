@@ -200,6 +200,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    public function setCursorVisible(visible:Bool):Void {
+
+        //
+
+    }
+
     #if !no_backend_docs
     /**
      * Captures a screenshot and returns it as a texture.

@@ -236,6 +236,18 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Shows or hides the mouse cursor.
+     * @param visible Whether the cursor is visible
+     */
+    #end
+    public function setCursorVisible(visible:Bool):Void {
+
+        untyped __cs__('UnityEngine.Cursor.visible = {0}', visible);
+
+    }
+
 /// Internal
 
     #if !no_backend_docs

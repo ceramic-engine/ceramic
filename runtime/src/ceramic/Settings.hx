@@ -123,6 +123,11 @@ class Settings implements Observable {
     @observe public var fullscreen:Bool = false;
 
     /**
+     * Mouse cursor shown or hidden while over the app.
+     */
+    @observe public var cursorVisible:Bool = true;
+
+    /**
      * Target frames per second for the application.
      *
      * Controls the desired frame rate:

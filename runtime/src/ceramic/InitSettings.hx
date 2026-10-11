@@ -178,6 +178,17 @@ class InitSettings {
     }
 
     /**
+     * Mouse cursor shown or hidden while over the app.
+     */
+    public var cursorVisible(get,set):Bool;
+    inline function get_cursorVisible():Bool {
+        return settings.cursorVisible;
+    }
+    inline function set_cursorVisible(cursorVisible:Bool):Bool {
+        return settings.cursorVisible = cursorVisible;
+    }
+
+    /**
      * Target FPS. Using default FPS if value < 1 or try to match the given value if >= 1.
      */
     public var targetFps(get,set):Int;

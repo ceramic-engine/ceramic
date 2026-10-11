@@ -76,6 +76,14 @@ interface Screen {
     function setWindowFullscreen(fullscreen:Bool):Void;
 
     /**
+     * Shows or hides the mouse cursor while it is over the app.
+     * Has no effect on platforms without a mouse cursor.
+     * 
+     * @param visible True to show the cursor, false to hide it
+     */
+    function setCursorVisible(visible:Bool):Void;
+
+    /**
      * Captures the current screen content as a texture.
      * This is useful for post-processing effects or transitions.
      * 

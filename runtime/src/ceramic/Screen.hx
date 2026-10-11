@@ -361,6 +361,14 @@ class Screen extends Entity implements Observable implements RenderTarget {
             #if debug log.info('Setting fullscreen=$fullscreen'); #end
             app.backend.screen.setWindowFullscreen(fullscreen);
         });
+        settings.onCursorVisibleChange(this, function(cursorVisible, prevCursorVisible) {
+            #if debug log.info('Setting cursorVisible=$cursorVisible'); #end
+            app.backend.screen.setCursorVisible(cursorVisible);
+        });
+        if (!settings.cursorVisible) {
+            // Hidden before the backend was ready: apply it now
+            app.backend.screen.setCursorVisible(false);
+        }
         settings.onScalingChange(this, function(scaling, prevScaling) {
             #if debug log.info('Setting scaling=$scaling'); #end
             resize();

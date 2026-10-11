@@ -205,6 +205,12 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    public function setCursorVisible(visible:Bool):Void {
+
+        Clay.app.runtime.setCursorVisible(visible);
+
+    }
+
 /// Screenshot
 
     /**
