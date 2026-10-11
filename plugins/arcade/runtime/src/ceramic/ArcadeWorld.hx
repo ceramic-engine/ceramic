@@ -1391,8 +1391,10 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
     /**
      * Pushes `body` out of `tile`, a full tile it is still overlapping after the regular
-     * separation, through one of the tile's exposed faces: the face the body came from if
-     * it moved on that axis this step, otherwise the nearest one.
+     * separation, through one of the tile's exposed faces. The face the body came through
+     * is preferred when the body moved on that axis this step and is not deeper through
+     * that face than its displacement, otherwise the nearest exposed face is used: a body
+     * resting a few pixels inside a wall is pushed sideways, never lifted onto the wall.
      * Returns `false` when no face is exposed (the body is inside a thick wall).
      */
     function escapeFromTile(body:Body, tile:Body, topExposed:Bool, bottomExposed:Bool, leftExposed:Bool, rightExposed:Bool):Bool {
@@ -1405,18 +1407,19 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 
         var dx = body.deltaX();
         var dy = body.deltaY();
+        var bias = this.overlapBias;
 
         var face = -1; // 0 top, 1 bottom, 2 left, 3 right
-        if (dy > 0 && topExposed) {
+        if (dy > 0 && topExposed && throughTop <= dy + bias) {
             face = 0;
         }
-        else if (dy < 0 && bottomExposed) {
+        else if (dy < 0 && bottomExposed && throughBottom <= -dy + bias) {
             face = 1;
         }
-        else if (dx > 0 && leftExposed) {
+        else if (dx > 0 && leftExposed && throughLeft <= dx + bias) {
             face = 2;
         }
-        else if (dx < 0 && rightExposed) {
+        else if (dx < 0 && rightExposed && throughRight <= -dx + bias) {
             face = 3;
         }
         else {
@@ -1546,6 +1549,10 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                         var tileExtraHeight:Float = 0;
                         var forceX:Bool = false;
 
+                        // Rows covered by the tile body once merged with its solid neighbours
+                        var topRow = row;
+                        var bottomRow = row;
+
                         if (row > minRow) {
                             var indexPrevRow = (row - 1) * layerData.columns + column;
                             var tilePrevRow = tiles.unsafeGet(indexPrevRow);
@@ -1555,6 +1562,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                                 tileBody.checkCollisionUp = false;
                                 tileExtraY -= tileHeight;
                                 tileExtraHeight += tileHeight;
+                                topRow = row - 1;
                             }
 
                             forceX = true;
@@ -1568,6 +1576,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             if ((checkCollisionValues != null) ? checkCollisionValues.contains(gidNextRow) : gidNextRow > 0) {
                                 tileBody.checkCollisionDown = false;
                                 tileExtraHeight += tileHeight;
+                                bottomRow = row + 1;
                             }
 
                             forceX = true;
@@ -1648,17 +1657,44 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             // moving bodies but leaves a body stuck inside a wall. A full tile never
                             // lets a body stay inside: push it out through its nearest exposed face.
                             if (!overlapOnly && fullLayer && body.enable && body.moves && !body.immovable && !body.isCircle && intersects(body, tileBody)) {
+                                // A face is exposed when no solid tile lies beyond it, along the
+                                // whole tile body (the collision flags only know about the rows
+                                // the body overlaps, so they cannot tell this for its top row)
+                                var columns = layerData.columns;
+                                var topExposed = true;
+                                var bottomExposed = true;
                                 var leftExposed = true;
                                 var rightExposed = true;
-                                if (column > 0) {
-                                    var gidLeft = tiles.unsafeGet(index - 1).gid;
-                                    leftExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidLeft) : gidLeft > 0);
+                                if (topRow > 0) {
+                                    var gidAbove = tiles.unsafeGet((topRow - 1) * columns + column).gid;
+                                    topExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidAbove) : gidAbove > 0);
                                 }
-                                if (column < layerData.columns - 1) {
-                                    var gidRight = tiles.unsafeGet(index + 1).gid;
-                                    rightExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidRight) : gidRight > 0);
+                                if (bottomRow < layerData.rows - 1) {
+                                    var gidBelow = tiles.unsafeGet((bottomRow + 1) * columns + column).gid;
+                                    bottomExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidBelow) : gidBelow > 0);
                                 }
-                                if (escapeFromTile(body, tileBody, tileBody.checkCollisionUp, tileBody.checkCollisionDown, leftExposed, rightExposed)) {
+                                // A side is exposed along the rows the body actually overlaps
+                                var sideRow = topRow;
+                                while (sideRow <= bottomRow) {
+                                    var sideTop = offsetY + sideRow * tileHeight;
+                                    if (body.top < sideTop + tileHeight && body.bottom > sideTop) {
+                                        var sideIndex = sideRow * columns + column;
+                                        if (column > 0) {
+                                            var gidLeft = tiles.unsafeGet(sideIndex - 1).gid;
+                                            if ((checkCollisionValues != null) ? checkCollisionValues.contains(gidLeft) : gidLeft > 0) {
+                                                leftExposed = false;
+                                            }
+                                        }
+                                        if (column < columns - 1) {
+                                            var gidRight = tiles.unsafeGet(sideIndex + 1).gid;
+                                            if ((checkCollisionValues != null) ? checkCollisionValues.contains(gidRight) : gidRight > 0) {
+                                                rightExposed = false;
+                                            }
+                                        }
+                                    }
+                                    sideRow++;
+                                }
+                                if (escapeFromTile(body, tileBody, topExposed, bottomExposed, leftExposed, rightExposed)) {
                                     collided = true;
                                 }
                             }
