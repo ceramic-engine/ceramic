@@ -94,7 +94,8 @@ class PixelArt_Frag extends Frag {
             var g:Float = sampleSharpened(tcoord).g;
             var b:Float = sampleSharpened(tcoord - aberr).b;
 
-            texColor = vec4(r, g, b, 1.0);
+            // Keep the alpha of the content, so that a translucent filter stays translucent
+            texColor = vec4(r, g, b, sampleSharpened(tcoord).a);
         } else {
             texColor = sampleSharpened(tcoord);
         }
@@ -115,7 +116,7 @@ class PixelArt_Frag extends Frag {
             aa *= gridAlpha;
 
             // Mix grid and background color
-            texColor.rgb = mix(texColor.rgb, gridColor, aa);
+            texColor.rgb = mix(texColor.rgb, gridColor * texColor.a, aa); // premultiplied content
         }
 
         // --- Scanlines ---
@@ -150,7 +151,6 @@ class PixelArt_Frag extends Frag {
             }
         }
 
-        texColor.a = 1.0;
 
         return color * texColor;
 

@@ -503,7 +503,8 @@ class PixelArtCrt_Frag extends Frag {
 
         rgb *= frame;
 
-        return color * vec4(clamp(rgb, 0.0, 1.0), 1.0);
+        // Keep the alpha of the content, so that a translucent filter stays translucent
+        return color * vec4(clamp(rgb, 0.0, 1.0), texture(mainTex, uv).a);
 
     }
 
