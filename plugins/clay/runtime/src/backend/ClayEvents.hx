@@ -161,6 +161,8 @@ class ClayEvents extends clay.Events {
         gamepadButtonMapping.set(12, 13);
         gamepadButtonMapping.set(13, 14);
         gamepadButtonMapping.set(14, 15);
+        // SDL_GAMEPAD_BUTTON_TOUCHPAD
+        gamepadButtonMapping.set(20, 17);
 
         #end
 

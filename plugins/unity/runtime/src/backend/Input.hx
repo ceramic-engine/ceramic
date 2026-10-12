@@ -551,6 +551,11 @@ class Input implements tracker.Events implements spec.Input {
             updateGamepadButton(index, 14, gamepad.dpad.left.isPressed);
             updateGamepadButton(index, 15, gamepad.dpad.right.isPressed);
 
+            // Touchpad of PlayStation gamepads, same index as the web gamepad API
+            if (untyped __cs__('{0} is UnityEngine.InputSystem.DualShock.DualShockGamepad', gamepad)) {
+                updateGamepadButton(index, 17, untyped __cs__('((UnityEngine.InputSystem.DualShock.DualShockGamepad){0}).touchpadButton.isPressed', gamepad));
+            }
+
             updateGamepadAxis(index, 0, gamepad.leftStick.x.ReadValue());
             updateGamepadAxis(index, 1, gamepad.leftStick.y.ReadValue() * -1);
             updateGamepadAxis(index, 2, gamepad.rightStick.x.ReadValue());

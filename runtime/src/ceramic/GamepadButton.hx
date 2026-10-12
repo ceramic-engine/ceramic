@@ -117,6 +117,13 @@ enum abstract GamepadButton(Int) from Int to Int {
     var DPAD_RIGHT:GamepadButton = 15;
 
     /**
+     * Touchpad button (pressing the touchpad down).
+     * Available on PlayStation gamepads (DualShock 4, DualSense).
+     * Same index as the touchpad in the web gamepad API.
+     */
+    var TOUCHPAD:GamepadButton = 17;
+
+    /**
      * Returns a string representation of this gamepad button.
      * @return The button name as a string (e.g., "A", "START", "DPAD_UP")
      */
@@ -138,6 +145,7 @@ enum abstract GamepadButton(Int) from Int to Int {
             case DPAD_DOWN: 'DPAD_DOWN';
             case DPAD_LEFT: 'DPAD_LEFT';
             case DPAD_RIGHT: 'DPAD_RIGHT';
+            case TOUCHPAD: 'TOUCHPAD';
             case _: '$this';
         }
     }
