@@ -1443,6 +1443,22 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
             if (rightExposed && throughRight < best) { best = throughRight; face = 3; }
         }
 
+        #if arcade_debug_escape
+        if (face != -1) {
+            final moved = switch face { case 0: throughTop; case 1: throughBottom; case 2: throughLeft; case _: throughRight; };
+            if (moved >= 4) {
+                ceramic.Shortcuts.log.warning(
+                    'ARCADE ESCAPE face=' + (switch face { case 0: 'top'; case 1: 'bottom'; case 2: 'left'; case _: 'right'; })
+                    + ' moved=' + moved + ' body=' + body.x + ',' + body.y + ' ' + body.width + 'x' + body.height
+                    + ' prev=' + body.prevX + ',' + body.prevY + ' delta=' + dx + ',' + dy
+                    + ' tile=' + tile.x + ',' + tile.y + ' ' + tile.width + 'x' + tile.height
+                    + ' through top=' + throughTop + ' bottom=' + throughBottom + ' left=' + throughLeft + ' right=' + throughRight
+                    + ' exposed top=' + topExposed + ' bottom=' + bottomExposed + ' left=' + leftExposed + ' right=' + rightExposed
+                );
+            }
+        }
+        #end
+
         switch face {
             case 0:
                 body.y -= throughTop;
@@ -1686,11 +1702,17 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                                     var gidBelow = tiles.unsafeGet((bottomRow + 1) * columns + column).gid;
                                     bottomExposed = !((checkCollisionValues != null) ? checkCollisionValues.contains(gidBelow) : gidBelow > 0);
                                 }
-                                // A side is exposed along the rows the body actually overlaps
+                                // A side is exposed along the rows the body really overlaps. A row
+                                // the body only grazes (resting on the floor next to a wall, sunk a
+                                // fraction of a pixel by gravity) is a contact the regular separation
+                                // settles: counting it would close the side and push the body out
+                                // through the top of the wall, up to a whole tile
+                                var sideTolerance = Math.min(overlapBias, body.height * 0.5);
                                 var sideRow = topRow;
                                 while (sideRow <= bottomRow) {
                                     var sideTop = offsetY + sideRow * tileHeight;
-                                    if (body.top < sideTop + tileHeight && body.bottom > sideTop) {
+                                    var sideOverlap = Math.min(body.bottom, sideTop + tileHeight) - Math.max(body.top, sideTop);
+                                    if (sideOverlap > sideTolerance) {
                                         var sideIndex = sideRow * columns + column;
                                         if (column > 0) {
                                             var gidLeft = tiles.unsafeGet(sideIndex - 1).gid;
