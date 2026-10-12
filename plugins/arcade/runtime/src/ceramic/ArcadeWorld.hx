@@ -51,6 +51,19 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
 #if plugin_arcade
 
     /**
+     * Whether a body moving a lot in one frame is tested against tilemaps in several
+     * steps along its displacement, so that it can't go through a tile without ever
+     * overlapping it (see `separateBodyVsTilemapLayersSwept()`).
+     */
+    public var sweepTilemaps:Bool = true;
+
+    /**
+     * Whether a body still overlapping a full tile after the regular separation is
+     * pushed out through one of the tile's exposed faces (see `escapeFromTile()`).
+     */
+    public var escapeFullTiles:Bool = true;
+
+    /**
      * Creates a new ArcadeWorld with the specified bounds.
      * 
      * The world bounds define the area where physics simulation occurs.
@@ -1314,7 +1327,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         var dx = body.x - startX;
         var dy = body.y - startY;
 
-        if (!overlapOnly && body.enable && body.moves && !body.immovable && !body.isCircle) {
+        if (sweepTilemaps && !overlapOnly && body.enable && body.moves && !body.immovable && !body.isCircle) {
             var halfWidth = body.width * 0.5;
             var halfHeight = body.height * 0.5;
             if (halfWidth > 0 && halfHeight > 0) {
@@ -1656,7 +1669,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
                             // tile than what it moved this frame (plus a small bias), which fits two
                             // moving bodies but leaves a body stuck inside a wall. A full tile never
                             // lets a body stay inside: push it out through its nearest exposed face.
-                            if (!overlapOnly && fullLayer && body.enable && body.moves && !body.immovable && !body.isCircle && intersects(body, tileBody)) {
+                            if (escapeFullTiles && !overlapOnly && fullLayer && body.enable && body.moves && !body.immovable && !body.isCircle && intersects(body, tileBody)) {
                                 // A face is exposed when no solid tile lies beyond it, along the
                                 // whole tile body (the collision flags only know about the rows
                                 // the body overlaps, so they cannot tell this for its top row)
