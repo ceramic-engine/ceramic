@@ -157,6 +157,7 @@ class Filter extends Layer implements Observable {
         this.enabled = enabled;
         transparent = !enabled;
         contentDirty = true;
+        updateContentVisibility();
         return enabled;
     }
 
@@ -361,6 +362,8 @@ class Filter extends Layer implements Observable {
         content = new Quad();
         content.transparent = true;
         content.color = Color.WHITE;
+        // Hidden until the render texture exists (see `updateContentVisibility()`)
+        content.visible = false;
         add(content);
 
         hitVisual = this;
@@ -370,6 +373,19 @@ class Filter extends Layer implements Observable {
     }
 
 /// Internal
+
+    /**
+     * An enabled filter only shows its content through its render texture. The texture
+     * is created by `computeContent()`, which does not run while the filter itself is not
+     * visible (for instance created with a zero alpha): until then, the content would be
+     * drawn straight to its parent's target, at its own alpha. A disabled filter draws
+     * its content directly, so it stays visible.
+     */
+    inline function updateContentVisibility():Void {
+
+        content.visible = !enabled || renderTexture != null;
+
+    }
 
     function handleTexturesDensityChange(density:Float, prevDensity:Float):Void {
 
@@ -443,6 +459,7 @@ class Filter extends Layer implements Observable {
 
         content.size(filterWidth, filterHeight);
         content.renderTarget = renderTexture;
+        updateContentVisibility();
 
         // When using a texture tile, move content to match its position with tile position
         if (textureTile != null) {
