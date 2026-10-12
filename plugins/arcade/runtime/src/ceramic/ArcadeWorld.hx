@@ -1446,7 +1446,7 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
         #if arcade_debug_escape
         if (face != -1) {
             final moved = switch face { case 0: throughTop; case 1: throughBottom; case 2: throughLeft; case _: throughRight; };
-            if (moved >= 4) {
+            if (moved >= overlapBias) {
                 ceramic.Shortcuts.log.warning(
                     'ARCADE ESCAPE face=' + (switch face { case 0: 'top'; case 1: 'bottom'; case 2: 'left'; case _: 'right'; })
                     + ' moved=' + moved + ' body=' + body.x + ',' + body.y + ' ' + body.width + 'x' + body.height
