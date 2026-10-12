@@ -694,6 +694,21 @@ class Input extends Entity {
     }
 
     /**
+     * Key code produced by the physical key `scanCode` with the current keyboard layout,
+     * that is the key printed on it: `KEY_Z` gives `KEY_W` on an AZERTY keyboard.
+     * Use `KeyCode.name()` on the result to display it. Returns `KeyCode.UNKNOWN`
+     * when the backend can't tell (on web, before the layout is known and before
+     * that key was pressed, if the browser has no keyboard layout API).
+     * @param scanCode The physical key
+     * @return The key code for the current layout, or `KeyCode.UNKNOWN`
+     */
+    public function keyCodeForScanCode(scanCode:ScanCode):KeyCode {
+
+        return ceramic.App.app.backend.input.keyCodeForScanCode(scanCode);
+
+    }
+
+    /**
      * Gets the name/description of a connected gamepad.
      * @param gamepadId The ID of the gamepad
      * @return The gamepad name, or null if not connected

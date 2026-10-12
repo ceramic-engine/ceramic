@@ -134,4 +134,14 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    /**
+     * Key code produced by the physical key `scanCode` with the current keyboard
+     * layout: unknown without a keyboard.
+     */
+    public function keyCodeForScanCode(scanCode:ceramic.ScanCode):ceramic.KeyCode {
+
+        return ceramic.KeyCode.UNKNOWN;
+
+    }
+
 }

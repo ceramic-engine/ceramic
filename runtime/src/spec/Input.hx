@@ -16,4 +16,11 @@ package spec;
  */
 interface Input {
 
+    /**
+     * Key code produced by the physical key `scanCode` with the current keyboard
+     * layout (the letter printed on that key), or `KeyCode.UNKNOWN` when the
+     * backend can't tell.
+     */
+    function keyCodeForScanCode(scanCode:ceramic.ScanCode):ceramic.KeyCode;
+
 }

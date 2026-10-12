@@ -306,6 +306,50 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    /**
+     * Key code produced by the physical key `scanCode` with the current keyboard
+     * layout, from the display name Unity gives to that key, or `KeyCode.UNKNOWN`.
+     * Covers the keys whose meaning depends on the layout: letters, digits and
+     * punctuation (same key indexes as `updateKeyboardInput()`).
+     */
+    public function keyCodeForScanCode(scanCode:ceramic.ScanCode):ceramic.KeyCode {
+
+        var keyboard = Keyboard.current;
+        if (keyboard == null) return KeyCode.UNKNOWN;
+
+        var value:Int = switch (scanCode:Int) {
+            case ScanCode.SPACE: 1;
+            case ScanCode.ENTER: 2;
+            case ScanCode.TAB: 3;
+            case ScanCode.GRAVE: 4;
+            case ScanCode.APOSTROPHE: 5;
+            case ScanCode.SEMICOLON: 6;
+            case ScanCode.COMMA: 7;
+            case ScanCode.PERIOD: 8;
+            case ScanCode.SLASH: 9;
+            case ScanCode.BACKSLASH: 10;
+            case ScanCode.LEFTBRACKET: 11;
+            case ScanCode.RIGHTBRACKET: 12;
+            case ScanCode.MINUS: 13;
+            case ScanCode.EQUALS: 14;
+            case _:
+                // Letters then digits, contiguous in both ScanCode and Unity's Key
+                final code:Int = scanCode;
+                final first:Int = ScanCode.KEY_A;
+                final last:Int = ScanCode.KEY_0;
+                (code >= first && code <= last) ? 15 + (code - first) : -1;
+        }
+        if (value == -1) return KeyCode.UNKNOWN;
+
+        var key:KeyControl = untyped __cs__('{0}[{1}]', keyboard.allKeys, value-1);
+        if (key == null || key.displayName == null || key.displayName.length == 0) return KeyCode.UNKNOWN;
+
+        var name = key.displayName.toLowerCase();
+        var keyCode = keyCodeByName != null ? keyCodeByName.get(name) : null;
+        return keyCode != null ? keyCode : name.charCodeAt(0);
+
+    }
+
     inline function testKey(keyboard:Keyboard, value:Int, scanCode:Int, ?keyCode:Null<Int>):Void {
 
         var key:KeyControl = untyped __cs__('{0}[{1}]', keyboard.allKeys, value-1);

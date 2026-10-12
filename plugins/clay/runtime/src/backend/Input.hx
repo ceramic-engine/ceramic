@@ -102,6 +102,16 @@ class Input implements tracker.Events implements spec.Input {
     };
 
     /**
+     * Key code produced by the physical key `scanCode` with the current keyboard
+     * layout, or `KeyCode.UNKNOWN` if unknown.
+     */
+    public function keyCodeForScanCode(scanCode:ceramic.ScanCode):ceramic.KeyCode {
+
+        return Clay.app.runtime.keyCodeForScanCode(scanCode);
+
+    }
+
+    /**
      * Creates a new Input backend instance.
      * Input events are automatically dispatched by the Clay runtime.
      */
