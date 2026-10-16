@@ -110,6 +110,19 @@ class RenderTexture extends Texture implements RenderTarget {
     public var clearOnRender:Bool = true;
 
     /**
+     * Horizontal translation applied to everything rendered into this texture,
+     * in logical units. A visual at `x` is drawn at `x + translateX` in the texture,
+     * which lets a texture smaller than the content show a window of it.
+     */
+    public var translateX:Float = 0;
+
+    /**
+     * Vertical translation applied to everything rendered into this texture,
+     * in logical units. See `translateX`.
+     */
+    public var translateY:Float = 0;
+
+    /**
      * Marks the texture as needing to be rendered.
      * Set to true to trigger a render in the next frame.
      * Automatically set when visuals targeting this texture change.

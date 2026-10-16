@@ -346,13 +346,19 @@ class Draw #if !completion implements spec.Draw #end {
 
                 _renderTargetTransform.identity();
                 _renderTargetTransform.scale(renderTarget.density, renderTarget.density);
+                // The vertical flip of render targets comes after this transform
+                final flipRenderTargetY = batcher.shouldFlipRenderTargetY();
+                _renderTargetTransform.translate(
+                    renderTarget.translateX * renderTarget.density,
+                    (flipRenderTargetY ? -renderTarget.translateY : renderTarget.translateY) * renderTarget.density
+                );
 
                 updateViewMatrix(
                     renderTarget.density,
                     renderTarget.width,
                     renderTarget.height,
                     _renderTargetTransform,
-                    batcher.shouldFlipRenderTargetY() ? -1 : 1
+                    flipRenderTargetY ? -1 : 1
                 );
 
                 _viewportDensity = renderTarget.density;

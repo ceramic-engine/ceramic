@@ -924,6 +924,11 @@ class Draw #if !completion implements spec.Draw #end {
                     density * camHeight / renderTarget.height
                 );
                 _renderTargetTransform.translate(-translateX, -translateY);
+                // Translation of the content of the render texture, in the same scaled space
+                _renderTargetTransform.translate(
+                    renderTarget.translateX * density * camWidth / renderTarget.width,
+                    renderTarget.translateY * density * camHeight / renderTarget.height
+                );
 
                 _viewportDensity = renderTarget.density;
                 _viewportWidth = renderTarget.width * _viewportDensity;
