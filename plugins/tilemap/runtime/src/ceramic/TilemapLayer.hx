@@ -506,6 +506,12 @@ class TilemapLayer extends Visual {
                     maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
                     minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
                     maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                    // Stay inside the layer: out of range columns would wrap to the next or
+                    // previous row and draw its edge tiles twice
+                    if (minColumn < 0) minColumn = 0;
+                    if (maxColumn > layerColumns - 1) maxColumn = layerColumns - 1;
+                    if (minRow < 0) minRow = 0;
+                    if (maxRow > layerRows - 1) maxRow = layerRows - 1;
                 }
 
                 var numTiles = tiles.length;
@@ -743,6 +749,12 @@ class TilemapLayer extends Visual {
                     maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
                     minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
                     maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                    // Stay inside the layer: out of range columns would wrap to the next or
+                    // previous row and draw its edge tiles twice
+                    if (minColumn < 0) minColumn = 0;
+                    if (maxColumn > layerColumns - 1) maxColumn = layerColumns - 1;
+                    if (minRow < 0) minRow = 0;
+                    if (maxRow > layerRows - 1) maxRow = layerRows - 1;
                 }
 
                 var layerColor = Color.multiply(layerData.color, tilesColor);
