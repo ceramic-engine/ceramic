@@ -108,6 +108,8 @@ class Input extends Entity {
 
     var gamepadNames:IntMap<String> = new IntMap();
 
+    var gamepadLabelsById:IntIntMap = new IntIntMap();
+
     /**
      * List of currently connected gamepad IDs.
      * Updated automatically when gamepads are connected or disconnected.
@@ -422,8 +424,9 @@ class Input extends Entity {
             activeGamepads.original.push(gamepadId);
         }
 
-        // Keep gamepad name
+        // Keep gamepad name, and the labels printed on its buttons
         gamepadNames.set(gamepadId, name);
+        gamepadLabelsById.set(gamepadId, GamepadLabels.fromGamepadName(name));
 
     }
 
@@ -449,8 +452,9 @@ class Input extends Entity {
             activeGamepads.original.splice(index, 1);
         }
 
-        // Remove gamepad name
+        // Remove gamepad name and labels
         gamepadNames.remove(gamepadId);
+        gamepadLabelsById.remove(gamepadId);
 
     }
 
@@ -716,6 +720,19 @@ class Input extends Entity {
     public function gamepadName(gamepadId:Int):String {
 
         return gamepadNames.get(gamepadId);
+
+    }
+
+    /**
+     * The labels printed on the buttons of a connected gamepad (Xbox, PlayStation,
+     * Nintendo...), resolved from its name. `GamepadButton` is positional on every backend:
+     * use this to show the player the label of a button on their gamepad.
+     * @param gamepadId The ID of the gamepad
+     * @return The labels of the gamepad, `GENERIC` if unknown or not connected
+     */
+    public function gamepadLabels(gamepadId:Int):GamepadLabels {
+
+        return gamepadLabelsById.get(gamepadId);
 
     }
 
