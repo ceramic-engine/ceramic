@@ -1286,6 +1286,52 @@ class ArcadeWorld #if plugin_arcade extends arcade.World #end {
     }
 
     /**
+     * Layers of several tilemaps gathered for `collideBodyVsTilemaps()`, reused.
+     */
+    var _multiTilemapLayers:Array<TilemapLayer> = [];
+
+    /**
+     * Collides a body with the collidable layers of several tilemaps at once, in a single
+     * sweep (`separateBodyVsTilemapLayersSwept`): tilemaps placed next to each other then
+     * behave as one continuous solid. Colliding them one after the other would not: each
+     * sweep restarts from the body's previous position and would undo what the others did.
+     * With `layerName`, only the layer of that name in each tilemap is used.
+     */
+    @:plugin('tilemap')
+    public function collideBodyVsTilemaps(body:Body, tilemaps:Array<Tilemap>, ?layerName:String, ?collideCallback:Body->Body->Void, ?processCallback:Body->Body->Bool):Bool {
+
+        var layers = _multiTilemapLayers;
+        var n = 0;
+        for (t in 0...tilemaps.length) {
+            var tilemap = tilemaps.unsafeGet(t);
+            if (layerName != null) {
+                var layer = tilemap.layer(layerName);
+                if (layer != null) {
+                    layers[n++] = layer;
+                }
+            }
+            else {
+                if (tilemap.collidableLayersDirty) {
+                    tilemap.computeCollidableLayers();
+                }
+                var tilemapLayers = tilemap.computedCollidableLayers;
+                if (tilemapLayers != null) {
+                    for (i in 0...tilemapLayers.length) {
+                        layers[n++] = tilemapLayers.unsafeGet(i);
+                    }
+                }
+            }
+        }
+        if (n == 0) {
+            return false;
+        }
+        layers.setArrayLength(n);
+
+        return #if !debug inline #end separateBodyVsTilemapLayersSwept(body, layers, null, collideCallback, processCallback, false);
+
+    }
+
+    /**
      * Reusable body instance for tilemap collisions.
      * 
      * Instead of creating a new body for each tile collision, we reuse
