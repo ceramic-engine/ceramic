@@ -1160,8 +1160,14 @@ class Draw #if !completion implements spec.Draw #end {
         z:Float, textureSlot:Float
     ):Void {
 
-        var theBatcher = batcher;
         var count = end - start;
+        if (count <= 0) {
+            // Nothing to emit. Returning here also keeps the native address of an
+            // empty `indices` array from being taken below, which would grow it
+            return;
+        }
+
+        var theBatcher = batcher;
         var writeSlot = textureSlot != -1;
         var vertStride = 2 + meshAttrCount;
 

@@ -570,6 +570,8 @@ class Draw #if !completion implements spec.Draw #end {
         z:Float, textureSlot:Float
     ):Void {
 
+        if (end <= start) return;
+
         // Staged quads write at offsets recorded when staging started,
         // which assumes they are contiguous in the vertex buffer:
         // materialize them before interleaving mesh geometry
