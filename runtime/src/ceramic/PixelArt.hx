@@ -175,9 +175,18 @@ class PixelArt extends Filter {
     function set_scanlineOffset(scanlineOffset:Float):Float {
         if (this.scanlineOffset != scanlineOffset) {
             this.scanlineOffset = scanlineOffset;
-            if (mode == SHARP && shader != null) shader.setFloat('scanlineOffset', scanlineOffset);
+            if (mode == SHARP && shader != null) shader.setFloat('scanlineOffset', wrapOffset(scanlineOffset));
         }
         return scanlineOffset;
+    }
+
+    /**
+     * The scanline and vertical mask patterns repeat every 2 pixels of offset: the shader
+     * gets the offset reduced to `[0, 2)`, so that a large offset (a far scroll of a big
+     * world) does not lose precision in its `sin()`, which would shift a line here and there.
+     */
+    inline static function wrapOffset(offset:Float):Float {
+        return ((offset % 2) + 2) % 2;
     }
 
     /**
@@ -244,7 +253,7 @@ class PixelArt extends Filter {
     function set_verticalMaskOffset(verticalMaskOffset:Float):Float {
         if (this.verticalMaskOffset != verticalMaskOffset) {
             this.verticalMaskOffset = verticalMaskOffset;
-            if (mode == SHARP && shader != null) shader.setFloat('verticalMaskOffset', verticalMaskOffset);
+            if (mode == SHARP && shader != null) shader.setFloat('verticalMaskOffset', wrapOffset(verticalMaskOffset));
         }
         return verticalMaskOffset;
     }
@@ -930,12 +939,12 @@ class PixelArt extends Filter {
 
             shader.setFloat('scanlineCount', scanlineCount);
             shader.setFloat('scanlineIntensity', 1.0 - scanlineIntensity);
-            shader.setFloat('scanlineOffset', scanlineOffset);
+            shader.setFloat('scanlineOffset', wrapOffset(scanlineOffset));
             shader.setFloat('scanlineShape', scanlineShape);
 
             shader.setFloat('verticalMaskCount', verticalMaskCount);
             shader.setFloat('verticalMaskIntensity', 1.0 - verticalMaskIntensity);
-            shader.setFloat('verticalMaskOffset', verticalMaskOffset);
+            shader.setFloat('verticalMaskOffset', wrapOffset(verticalMaskOffset));
 
             shader.setFloat('glowStrength', glowStrength);
             shader.setFloat('glowThresholdMin', glowThresholdMin);
