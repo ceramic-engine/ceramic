@@ -527,7 +527,10 @@ class ClayEvents extends clay.Events {
 
     /**
      * Configures gamepad-specific settings based on controller type.
-     * Handles special cases like Nintendo controllers that need button swapping.
+     * Gamepad buttons are positional (`GamepadButton.A` is the bottom face button), so the
+     * gamepads that report their face buttons by label get them swapped back to positions:
+     * Retroid Pocket handhelds, and on web the Nintendo gamepads that the browser does not
+     * give with the standard (positional) mapping.
      * @param id Gamepad ID
      * @param name Gamepad name/identifier string
      */
@@ -536,8 +539,8 @@ class ClayEvents extends clay.Events {
         #if !(ceramic_no_ab_swap && ceramic_no_xy_swap)
         if (name != null) {
             var lowerName = name.toLowerCase();
-            if (#if web lowerName.indexOf(' vendor: 057e ') != -1 || lowerName.startsWith('057e-') || #end lowerName.contains('retroid pocket controller')) {
-                // Nintendo controller on web, or retroid pocket, swap A & B buttons and X & Y buttons
+            if (#if web ((lowerName.indexOf(' vendor: 057e ') != -1 || lowerName.startsWith('057e-')) && !hasStandardMapping(id)) || #end lowerName.contains('retroid pocket controller')) {
+                // Face buttons reported by label (Nintendo layout), swap A & B buttons and X & Y buttons
                 #if !ceramic_no_ab_swap
                 swapAbGamepads.set(id, true);
                 #end
@@ -565,6 +568,26 @@ class ClayEvents extends clay.Events {
         #end
 
     }
+
+    #if web
+    /**
+     * Whether the browser gives this gamepad with the "standard" mapping, where buttons are
+     * positional (W3C Gamepad: button 0 is the bottom button of the right cluster).
+     */
+    function hasStandardMapping(id:Int):Bool {
+
+        final list = js.Browser.navigator.getGamepads != null ? js.Browser.navigator.getGamepads() : null;
+        if (list != null) {
+            for (gamepad in list) {
+                if (gamepad != null && gamepad.index == id) {
+                    return gamepad.mapping == js.html.GamepadMappingType.STANDARD;
+                }
+            }
+        }
+        return false;
+
+    }
+    #end
 
     /**
      * Handles gamepad analog stick and trigger movement events.
