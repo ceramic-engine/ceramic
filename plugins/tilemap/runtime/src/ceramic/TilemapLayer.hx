@@ -348,6 +348,7 @@ class TilemapLayer extends Visual {
         var tilemapData:TilemapData = tilemap.tilemapData;
 
         computePosAndSize();
+        updateClipRange();
 
         final layerData = this.layerData;
         final hasTiles = layerData != null && layerData.shouldRenderTiles && layerData.hasTiles;
@@ -364,6 +365,96 @@ class TilemapLayer extends Visual {
         }
 
         contentDirty = false;
+
+    }
+
+/// Clip
+
+    /**
+     * The cells within the clip of the tilemap (`Tilemap.clipTiles()`), as of the last
+     * `updateClipRange()`: the ones the tiles are built from. An empty range is stored
+     * as `0, -1` on both axes.
+     */
+    var clipMinColumn:Int = 0;
+    var clipMaxColumn:Int = -1;
+    var clipMinRow:Int = 0;
+    var clipMaxRow:Int = -1;
+    var clipRangeComputed:Bool = false;
+
+    /**
+     * Computes the cells within the clip of the tilemap, bounded by the layer.
+     * @return `true` if they differ from the previous ones
+     */
+    function updateClipRange():Bool {
+
+        final tilemap = this.tilemap;
+        final layerData = this.layerData;
+
+        var minColumn = 0;
+        var maxColumn = -1;
+        var minRow = 0;
+        var maxRow = -1;
+
+        if (tilemap != null && layerData != null) {
+            final layerColumns = layerData.columns;
+            final layerRows = layerData.rows;
+            minColumn = 0;
+            maxColumn = layerColumns - 1;
+            minRow = 0;
+            maxRow = layerRows - 1;
+
+            final clipTilesX = tilemap.clipTilesX;
+            final clipTilesY = tilemap.clipTilesY;
+            final clipTilesWidth = tilemap.clipTilesWidth;
+            final clipTilesHeight = tilemap.clipTilesHeight;
+            if (clipTilesX != -1 || clipTilesY != -1 || clipTilesWidth != -1 || clipTilesHeight != -1) {
+                final offsetX = layerData.offsetX + layerData.x * layerData.tileWidth;
+                final offsetY = layerData.offsetY + layerData.y * layerData.tileHeight;
+                minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
+                maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
+                minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
+                maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
+                // Stay inside the layer: out of range columns would wrap to the next or
+                // previous row and draw its edge tiles twice
+                if (minColumn < 0) minColumn = 0;
+                if (maxColumn > layerColumns - 1) maxColumn = layerColumns - 1;
+                if (minRow < 0) minRow = 0;
+                if (maxRow > layerRows - 1) maxRow = layerRows - 1;
+            }
+
+            if (minColumn > maxColumn || minRow > maxRow) {
+                minColumn = 0;
+                maxColumn = -1;
+                minRow = 0;
+                maxRow = -1;
+            }
+        }
+
+        final changed = !clipRangeComputed
+            || minColumn != clipMinColumn || maxColumn != clipMaxColumn
+            || minRow != clipMinRow || maxRow != clipMaxRow;
+
+        clipRangeComputed = true;
+        clipMinColumn = minColumn;
+        clipMaxColumn = maxColumn;
+        clipMinRow = minRow;
+        clipMaxRow = maxRow;
+
+        return changed;
+
+    }
+
+    /**
+     * Called by the tilemap when its clip changes: the layer is built again only if the
+     * cells within the clip change. The position of a tiles filter follows the clip
+     * itself, so a layer with a tiles filter is always built again.
+     */
+    @:allow(ceramic.Tilemap)
+    function clipChanged():Void {
+
+        if (updateClipRange() || tilesFilter != null) {
+            contentDirty = true;
+        }
 
     }
 
@@ -502,16 +593,10 @@ class TilemapLayer extends Visual {
                 var tilesPerLayer = layerColumns * layerRows;
 
                 if (hasClipping) {
-                    minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
-                    maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
-                    minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
-                    maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
-                    // Stay inside the layer: out of range columns would wrap to the next or
-                    // previous row and draw its edge tiles twice
-                    if (minColumn < 0) minColumn = 0;
-                    if (maxColumn > layerColumns - 1) maxColumn = layerColumns - 1;
-                    if (minRow < 0) minRow = 0;
-                    if (maxRow > layerRows - 1) maxRow = layerRows - 1;
+                    minColumn = clipMinColumn;
+                    maxColumn = clipMaxColumn;
+                    minRow = clipMinRow;
+                    maxRow = clipMaxRow;
                 }
 
                 var numTiles = tiles.length;
@@ -745,16 +830,10 @@ class TilemapLayer extends Visual {
                 var numTiles = tiles.length;
 
                 if (hasClipping) {
-                    minColumn = Math.floor((clipTilesX - offsetX) / layerData.tileWidth);
-                    maxColumn = Math.ceil((clipTilesX + clipTilesWidth - offsetX) / layerData.tileWidth);
-                    minRow = Math.floor((clipTilesY - offsetY) / layerData.tileHeight);
-                    maxRow = Math.ceil((clipTilesY + clipTilesHeight - offsetY) / layerData.tileHeight);
-                    // Stay inside the layer: out of range columns would wrap to the next or
-                    // previous row and draw its edge tiles twice
-                    if (minColumn < 0) minColumn = 0;
-                    if (maxColumn > layerColumns - 1) maxColumn = layerColumns - 1;
-                    if (minRow < 0) minRow = 0;
-                    if (maxRow > layerRows - 1) maxRow = layerRows - 1;
+                    minColumn = clipMinColumn;
+                    maxColumn = clipMaxColumn;
+                    minRow = clipMinRow;
+                    maxRow = clipMaxRow;
                 }
 
                 var layerColor = Color.multiply(layerData.color, tilesColor);

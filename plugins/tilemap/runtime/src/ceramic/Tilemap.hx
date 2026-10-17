@@ -128,11 +128,7 @@ class Tilemap extends Quad {
     function set_clipTilesX(clipTilesX:Float):Float {
         if (this.clipTilesX == clipTilesX) return clipTilesX;
         this.clipTilesX = clipTilesX;
-        contentDirty = true;
-        for (i in 0...layers.length) {
-            var layer = layers.unsafeGet(i);
-            layer.contentDirty = true;
-        }
+        clipLayers();
         return clipTilesX;
     }
 
@@ -147,11 +143,7 @@ class Tilemap extends Quad {
     function set_clipTilesY(clipTilesY:Float):Float {
         if (this.clipTilesY == clipTilesY) return clipTilesY;
         this.clipTilesY = clipTilesY;
-        contentDirty = true;
-        for (i in 0...layers.length) {
-            var layer = layers.unsafeGet(i);
-            layer.contentDirty = true;
-        }
+        clipLayers();
         return clipTilesY;
     }
 
@@ -166,11 +158,7 @@ class Tilemap extends Quad {
     function set_clipTilesWidth(clipTilesWidth:Float):Float {
         if (this.clipTilesWidth == clipTilesWidth) return clipTilesWidth;
         this.clipTilesWidth = clipTilesWidth;
-        contentDirty = true;
-        for (i in 0...layers.length) {
-            var layer = layers.unsafeGet(i);
-            layer.contentDirty = true;
-        }
+        clipLayers();
         return clipTilesWidth;
     }
 
@@ -185,11 +173,7 @@ class Tilemap extends Quad {
     function set_clipTilesHeight(clipTilesHeight:Float):Float {
         if (this.clipTilesHeight == clipTilesHeight) return clipTilesHeight;
         this.clipTilesHeight = clipTilesHeight;
-        contentDirty = true;
-        for (i in 0...layers.length) {
-            var layer = layers.unsafeGet(i);
-            layer.contentDirty = true;
-        }
+        clipLayers();
         return clipTilesHeight;
     }
 
@@ -344,10 +328,27 @@ class Tilemap extends Quad {
      */
     public function clipTiles(clipTilesX, clipTilesY, clipTilesWidth, clipTilesHeight) {
 
-        this.clipTilesX = clipTilesX;
-        this.clipTilesY = clipTilesY;
-        this.clipTilesWidth = clipTilesWidth;
-        this.clipTilesHeight = clipTilesHeight;
+        // The four values first, so that the layers are checked once, against the
+        // final clip
+        if (this.clipTilesX == clipTilesX && this.clipTilesY == clipTilesY
+            && this.clipTilesWidth == clipTilesWidth && this.clipTilesHeight == clipTilesHeight) return;
+        @:bypassAccessor this.clipTilesX = clipTilesX;
+        @:bypassAccessor this.clipTilesY = clipTilesY;
+        @:bypassAccessor this.clipTilesWidth = clipTilesWidth;
+        @:bypassAccessor this.clipTilesHeight = clipTilesHeight;
+        clipLayers();
+
+    }
+
+    /**
+     * Lets each layer know that the clip changed: only the layers whose cells within
+     * the clip change are built again.
+     */
+    function clipLayers():Void {
+
+        for (i in 0...layers.length) {
+            layers.unsafeGet(i).clipChanged();
+        }
 
     }
 
