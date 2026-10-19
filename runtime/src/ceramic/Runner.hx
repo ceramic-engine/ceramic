@@ -14,6 +14,95 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
+#if (android && cpp)
+@:cppFileCode('
+#include <sched.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <mutex>
+#include <string>
+#include <vector>
+
+namespace ceramic_thread_cores {
+
+    static std::mutex mutex;
+    static bool initialized = false;
+    static bool available = false;
+    static cpu_set_t all;
+    static cpu_set_t slow;
+    static cpu_set_t fast;
+    static cpu_set_t fastest;
+    static std::string description;
+
+    static long maxFrequency(int cpu) {
+        char path[128];
+        snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cpu);
+        FILE* file = fopen(path, "r");
+        if (file == nullptr) return -1;
+        long value = -1;
+        if (fscanf(file, "%ld", &value) != 1) value = -1;
+        fclose(file);
+        return value;
+    }
+
+    static std::string list(cpu_set_t* set, int count) {
+        std::string result;
+        for (int i = 0; i < count; i++) {
+            if (!CPU_ISSET(i, set)) continue;
+            if (!result.empty()) result += ",";
+            result += std::to_string(i);
+        }
+        return result;
+    }
+
+    // The clusters, from the maximum frequency of each core
+    static void init() {
+        initialized = true;
+        int count = (int)sysconf(_SC_NPROCESSORS_CONF);
+        if (count <= 0 || count > CPU_SETSIZE) return;
+        std::vector<long> frequencies(count);
+        long lowest = -1;
+        long highest = -1;
+        for (int i = 0; i < count; i++) {
+            frequencies[i] = maxFrequency(i);
+            if (frequencies[i] <= 0) return;
+            if (lowest < 0 || frequencies[i] < lowest) lowest = frequencies[i];
+            if (frequencies[i] > highest) highest = frequencies[i];
+        }
+        if (lowest == highest) return;
+        CPU_ZERO(&all);
+        CPU_ZERO(&slow);
+        CPU_ZERO(&fast);
+        CPU_ZERO(&fastest);
+        for (int i = 0; i < count; i++) {
+            CPU_SET(i, &all);
+            if (frequencies[i] == lowest) CPU_SET(i, &slow);
+            else CPU_SET(i, &fast);
+            if (frequencies[i] == highest) CPU_SET(i, &fastest);
+        }
+        available = true;
+        description = "slow=" + list(&slow, count) + " fast=" + list(&fast, count) + " fastest=" + list(&fastest, count);
+    }
+
+    static bool apply(int cores, bool* first) {
+        std::lock_guard<std::mutex> lock(mutex);
+        *first = !initialized;
+        if (!initialized) init();
+        if (!available) return false;
+        cpu_set_t* set = cores == 1 ? &slow : cores == 2 ? &fast : cores == 3 ? &fastest : &all;
+        // The kernel keeps the cores the app is allowed (its cpuset) out of the ones asked
+        return sched_setaffinity(0, sizeof(cpu_set_t), set) == 0;
+    }
+
+    static const char* describe() {
+        std::lock_guard<std::mutex> lock(mutex);
+        return available ? description.c_str() : "one cluster or unknown";
+    }
+
+}
+')
+#end
+
 /**
  * Cross-platform thread management utility for executing code on main and background threads.
  * 
@@ -217,6 +306,32 @@ class Runner {
         Thread.create(fn);
         #else
         app.onceImmediate(fn);
+        #end
+
+    }
+
+    /**
+     * Makes the calling thread run on the given kind of cores (see `ThreadCores`), on
+     * Android devices whose cores are not all the same. Returns `true` if the choice was
+     * applied, `false` where it has no effect (other platforms, cores all the same, cores
+     * not allowed to the app right now).
+     *
+     * Android may reset the cores of the threads of the app when it goes to the
+     * background and comes back: a long-lived thread should apply its choice again from
+     * time to time, for instance before each piece of work (the call is cheap).
+     */
+    public static function setThreadCores(cores:ThreadCores):Bool {
+
+        #if (android && cpp)
+        var first = false;
+        final applied:Bool = untyped __cpp__('::ceramic_thread_cores::apply({0}, &{1})', (cores:Int), first);
+        if (first) {
+            final description:String = untyped __cpp__('::String(::ceramic_thread_cores::describe())');
+            runInMain(() -> log.info('Thread cores: ' + description));
+        }
+        return applied;
+        #else
+        return false;
         #end
 
     }
