@@ -14,16 +14,17 @@ package ceramic;
 
 import ceramic.Shortcuts.*;
 
-#if (android && cpp)
+#if ((android || linux) && cpp)
 @:cppFileCode('
 #include <sched.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <mutex>
 #include <string>
 #include <vector>
 
-namespace ceramic_thread_cores {
+namespace ceramic_thread_affinity {
 
     static std::mutex mutex;
     static bool initialized = false;
@@ -34,9 +35,8 @@ namespace ceramic_thread_cores {
     static cpu_set_t fastest;
     static std::string description;
 
-    static long maxFrequency(int cpu) {
-        char path[128];
-        snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/cpufreq/cpuinfo_max_freq", cpu);
+    // A number read from a file, or -1
+    static long readNumber(const char* path) {
         FILE* file = fopen(path, "r");
         if (file == nullptr) return -1;
         long value = -1;
@@ -44,6 +44,97 @@ namespace ceramic_thread_cores {
         fclose(file);
         return value;
     }
+
+    static long coreValue(const char* name, int cpu) {
+        char path[128];
+        snprintf(path, sizeof(path), "/sys/devices/system/cpu/cpu%d/%s", cpu, name);
+        return readNumber(path);
+    }
+
+    // The slow, fast and fastest cores from one value per core (higher is faster):
+    // the slow ones have the lowest value, the fastest ones the highest
+    static bool fromValues(const std::vector<long>& values) {
+        int count = (int)values.size();
+        long lowest = -1;
+        long highest = -1;
+        for (int i = 0; i < count; i++) {
+            if (values[i] <= 0) return false;
+            if (lowest < 0 || values[i] < lowest) lowest = values[i];
+            if (values[i] > highest) highest = values[i];
+        }
+        if (lowest == highest) return false;
+        for (int i = 0; i < count; i++) {
+            if (values[i] == lowest) CPU_SET(i, &slow);
+            else CPU_SET(i, &fast);
+            if (values[i] == highest) CPU_SET(i, &fastest);
+        }
+        return true;
+    }
+
+    #ifdef __ANDROID__
+
+    // Android: the clusters, from the maximum frequency of each core
+    static bool readTopology(int count) {
+        std::vector<long> frequencies(count);
+        for (int i = 0; i < count; i++) frequencies[i] = coreValue("cpufreq/cpuinfo_max_freq", i);
+        return fromValues(frequencies);
+    }
+
+    #else
+
+    // A list of cores like "0-7,16" read from a file into `set`
+    static bool readList(const char* path, cpu_set_t* set) {
+        FILE* file = fopen(path, "r");
+        if (file == nullptr) return false;
+        char buffer[1024];
+        bool read = fgets(buffer, sizeof(buffer), file) != nullptr;
+        fclose(file);
+        if (!read) return false;
+        CPU_ZERO(set);
+        const char* c = buffer;
+        bool any = false;
+        while (*c >= 48 && *c <= 57) {
+            long from = strtol(c, (char**)&c, 10);
+            long to = from;
+            if (*c == 45) to = strtol(c + 1, (char**)&c, 10);
+            for (long i = from; i <= to && i < CPU_SETSIZE; i++) {
+                CPU_SET((int)i, set);
+                any = true;
+            }
+            if (*c == 44) c++;
+        }
+        return any;
+    }
+
+    // Linux desktop: the cores of a processor that are all the same can still have
+    // different maximum frequencies (favored or preferred cores of the turbo), so they
+    // are not told apart by frequency. Intel hybrid processors list their efficiency and
+    // performance cores; otherwise the kernel gives the capacity of each core (ARM)
+    static bool readTopology(int count) {
+        cpu_set_t atom;
+        cpu_set_t core;
+        if (readList("/sys/devices/cpu_atom/cpus", &atom) && readList("/sys/devices/cpu_core/cpus", &core)) {
+            long highest = -1;
+            for (int i = 0; i < count; i++) {
+                if (!CPU_ISSET(i, &core)) continue;
+                long frequency = coreValue("cpufreq/cpuinfo_max_freq", i);
+                if (frequency > highest) highest = frequency;
+            }
+            for (int i = 0; i < count; i++) {
+                if (CPU_ISSET(i, &atom)) CPU_SET(i, &slow);
+                if (CPU_ISSET(i, &core)) {
+                    CPU_SET(i, &fast);
+                    if (highest <= 0 || coreValue("cpufreq/cpuinfo_max_freq", i) == highest) CPU_SET(i, &fastest);
+                }
+            }
+            return CPU_COUNT(&slow) > 0 && CPU_COUNT(&fast) > 0;
+        }
+        std::vector<long> capacities(count);
+        for (int i = 0; i < count; i++) capacities[i] = coreValue("cpu_capacity", i);
+        return fromValues(capacities);
+    }
+
+    #endif
 
     static std::string list(cpu_set_t* set, int count) {
         std::string result;
@@ -55,48 +146,54 @@ namespace ceramic_thread_cores {
         return result;
     }
 
-    // The clusters, from the maximum frequency of each core
     static void init() {
         initialized = true;
         int count = (int)sysconf(_SC_NPROCESSORS_CONF);
         if (count <= 0 || count > CPU_SETSIZE) return;
-        std::vector<long> frequencies(count);
-        long lowest = -1;
-        long highest = -1;
-        for (int i = 0; i < count; i++) {
-            frequencies[i] = maxFrequency(i);
-            if (frequencies[i] <= 0) return;
-            if (lowest < 0 || frequencies[i] < lowest) lowest = frequencies[i];
-            if (frequencies[i] > highest) highest = frequencies[i];
-        }
-        if (lowest == highest) return;
         CPU_ZERO(&all);
         CPU_ZERO(&slow);
         CPU_ZERO(&fast);
         CPU_ZERO(&fastest);
-        for (int i = 0; i < count; i++) {
-            CPU_SET(i, &all);
-            if (frequencies[i] == lowest) CPU_SET(i, &slow);
-            else CPU_SET(i, &fast);
-            if (frequencies[i] == highest) CPU_SET(i, &fastest);
-        }
+        for (int i = 0; i < count; i++) CPU_SET(i, &all);
+        if (!readTopology(count)) return;
         available = true;
         description = "slow=" + list(&slow, count) + " fast=" + list(&fast, count) + " fastest=" + list(&fastest, count);
     }
 
-    static bool apply(int cores, bool* first) {
+    static bool apply(int affinity, bool* first) {
         std::lock_guard<std::mutex> lock(mutex);
         *first = !initialized;
         if (!initialized) init();
         if (!available) return false;
-        cpu_set_t* set = cores == 1 ? &slow : cores == 2 ? &fast : cores == 3 ? &fastest : &all;
+        cpu_set_t* set = affinity == 1 ? &slow : affinity == 2 ? &fast : affinity == 3 ? &fastest : &all;
         // The kernel keeps the cores the app is allowed (its cpuset) out of the ones asked
         return sched_setaffinity(0, sizeof(cpu_set_t), set) == 0;
     }
 
     static const char* describe() {
         std::lock_guard<std::mutex> lock(mutex);
-        return available ? description.c_str() : "one cluster or unknown";
+        return available ? description.c_str() : "one kind of cores or unknown";
+    }
+
+}
+')
+#elseif ((ios || mac) && cpp)
+@:cppFileCode('
+#include <pthread.h>
+#include <pthread/qos.h>
+
+namespace ceramic_thread_affinity {
+
+    // No affinity on Apple platforms: a quality of service class leads the scheduler to
+    // the performance or efficiency cores
+    static bool apply(int affinity, bool* first) {
+        *first = false;
+        qos_class_t qos = affinity == 1 ? QOS_CLASS_BACKGROUND : affinity == 0 ? QOS_CLASS_DEFAULT : QOS_CLASS_USER_INTERACTIVE;
+        return pthread_set_qos_class_self_np(qos, 0) == 0;
+    }
+
+    static const char* describe() {
+        return "quality of service";
     }
 
 }
@@ -311,23 +408,25 @@ class Runner {
     }
 
     /**
-     * Makes the calling thread run on the given kind of cores (see `ThreadCores`), on
-     * Android devices whose cores are not all the same. Returns `true` if the choice was
-     * applied, `false` where it has no effect (other platforms, cores all the same, cores
-     * not allowed to the app right now).
+     * Makes the calling thread run on the given kind of cores (see `ThreadAffinity`), on
+     * devices whose cores are not all the same. On Android and Linux, the thread is
+     * restricted to these cores; on iOS and macOS, it gets a quality of service class
+     * that leads the system to them. Returns `true` if the choice was applied, `false`
+     * where it has no effect (other platforms, cores all the same, cores not allowed to
+     * the app right now).
      *
      * Android may reset the cores of the threads of the app when it goes to the
      * background and comes back: a long-lived thread should apply its choice again from
      * time to time, for instance before each piece of work (the call is cheap).
      */
-    public static function setThreadCores(cores:ThreadCores):Bool {
+    public static function setThreadAffinity(affinity:ThreadAffinity):Bool {
 
-        #if (android && cpp)
+        #if (((android || linux) || ios || mac) && cpp)
         var first = false;
-        final applied:Bool = untyped __cpp__('::ceramic_thread_cores::apply({0}, &{1})', (cores:Int), first);
+        final applied:Bool = untyped __cpp__('::ceramic_thread_affinity::apply({0}, &{1})', (affinity:Int), first);
         if (first) {
-            final description:String = untyped __cpp__('::String(::ceramic_thread_cores::describe())');
-            runInMain(() -> log.info('Thread cores: ' + description));
+            final description:String = untyped __cpp__('::String(::ceramic_thread_affinity::describe())');
+            runInMain(() -> log.info('Thread affinity: ' + description));
         }
         return applied;
         #else
