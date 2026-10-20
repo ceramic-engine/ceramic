@@ -46,6 +46,24 @@ class Renderer extends Entity {
     var drawCalls:Int = 0;
 
     /**
+     * For the meshes sent with their own indices (see `_drawMesh()`): the list 0, 1, 2...
+     * used as the vertices of a mesh sent whole, and for a mesh sent in parts, the
+     * vertices and indices of the current part, the number each mesh vertex has in it
+     * (`indexedSlot`) and the part it was last numbered for (`indexedStamp`).
+     */
+    var indexedIdentityList:Array<Int> = [];
+
+    var indexedPartVertices:Array<Int> = [];
+
+    var indexedPartIndices:Array<Int> = [];
+
+    var indexedSlot:Array<Int> = [];
+
+    var indexedStamp:Array<Int> = [];
+
+    var indexedPart:Int = 0;
+
+    /**
      * Currently active GPU shader program.
      */
     var activeShader:backend.Shader = null;
@@ -1647,22 +1665,46 @@ class Renderer extends Entity {
         var startVertices = 0;
         var meshDrawsRenderTexture:Bool = mesh.texture != null && mesh.texture.isRenderTexture;
         var endVertices = visualNumVertices;
-        // Divide and multiply by 3 (a triangle has 3 vertices, we want to split between 2 triangles)
-        //var maxVertices = Std.int((maxVertFloats / floatsPerVertex) / 3) * 3;
 
-        // Submit the current batch if we exceed the max buffer size
-        if (draw.shouldFlush(visualNumVertices, visualNumVertices, customFloatAttributesSize)) {//posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
-            flushAndCleanState();
-            textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+        // Meshes are sent with their own indices, each vertex written once per batch,
+        // except when colors are per index (a vertex can then have several colors) or
+        // when drawing the wireframe (indices of edges)
+        var meshVertexCount = Std.int(meshVerticesLength / (2 + meshCustomFloatAttributesSize));
+        var indexedSubmission = !meshIndicesColor && visualNumVertices % 3 == 0 #if ceramic_wireframe && !lastWireframe #end;
 
-            // Check that our mesh is still not too large
-            if (visualNumVertices > draw.remainingVertices() || visualNumVertices > draw.remainingIndices()) {
-                endVertices = Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
-                #if ceramic_wireframe
-                endVertices = lastWireframe ? Std.int(endVertices / 6) * 6 : Std.int(endVertices / 3) * 3;
-                #else
-                endVertices = Std.int(endVertices / 3) * 3;
-                #end
+        // The whole mesh goes in one part when it fits in a batch, every vertex being
+        // written: only when the mesh has no more vertices than indices (vertices no index
+        // uses would be written for nothing) and when its uvs and colors cover every
+        // vertex (only the vertices the indices use are read otherwise)
+        var indexedWhole = indexedSubmission
+            && meshVertexCount <= visualNumVertices
+            && (mesh.texture == null || meshUvs.length >= meshVertexCount * 2)
+            && (meshSingleColor || (meshFloatColors != null ? meshFloatColors.length >= meshVertexCount * 4 : meshColors.length >= meshVertexCount));
+
+        if (indexedSubmission) {
+            if (indexedWhole && (meshVertexCount > draw.remainingVertices() || visualNumVertices > draw.remainingIndices())) {
+                flushAndCleanState();
+                textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+
+                // Still too large for an empty batch: sent in parts
+                indexedWhole = meshVertexCount <= draw.remainingVertices() && visualNumVertices <= draw.remainingIndices();
+            }
+        }
+        else {
+            // Submit the current batch if we exceed the max buffer size
+            if (draw.shouldFlush(visualNumVertices, visualNumVertices, customFloatAttributesSize)) {//posFloatsAfter > maxVertFloats || uvFloatsAfter > maxVertFloats) {
+                flushAndCleanState();
+                textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+
+                // Check that our mesh is still not too large
+                if (visualNumVertices > draw.remainingVertices() || visualNumVertices > draw.remainingIndices()) {
+                    endVertices = Std.int(Math.min(draw.remainingVertices(), draw.remainingIndices()));
+                    #if ceramic_wireframe
+                    endVertices = lastWireframe ? Std.int(endVertices / 6) * 6 : Std.int(endVertices / 3) * 3;
+                    #else
+                    endVertices = Std.int(endVertices / 3) * 3;
+                    #end
+                }
             }
         }
 
@@ -1679,6 +1721,151 @@ class Renderer extends Entity {
         //var uvList = draw.getUvList();
         //var colorList = draw.getColorList();
 
+        var a:Float = 0;
+        var r:Float = 0;
+        var g:Float = 0;
+        var b:Float = 0;
+
+        inline function computeSingleColor() {
+
+            // Single color
+            //
+            if (meshSingleColor) {
+
+                if (stencilClip) {
+                    a = 1;
+                    r = 1;
+                    g = 0;
+                    b = 0;
+                }
+                else {
+                    if (meshFloatColors != null) {
+                        a = mesh.computedAlpha * meshFloatColors[3];
+                        r = meshFloatColors[0];
+                        g = meshFloatColors[1];
+                        b = meshFloatColors[2];
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                    else if (lastComputedBlending == ceramic.Blending.ALPHA) {
+                        var meshAlphaColor = meshColors.unsafeGet(0);
+                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                        r = meshAlphaColor.redFloat;
+                        g = meshAlphaColor.greenFloat;
+                        b = meshAlphaColor.blueFloat;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                    else {
+                        var meshAlphaColor = meshColors.unsafeGet(0);
+                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                        r = meshAlphaColor.redFloat * a;
+                        g = meshAlphaColor.greenFloat * a;
+                        b = meshAlphaColor.blueFloat * a;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                }
+            }
+
+        }
+
+    #if !ceramic_simd
+        // Writes vertex `j` of the mesh (`i` being its index when colors are per index)
+        inline function putMeshVertex(j:Int, i:Int) {
+
+            var k = j * 2;
+            var l = j * (2 + meshCustomFloatAttributesSize);
+
+            // Position
+            //
+            var x = verticesGet(l++);
+            var y = verticesGet(l++);
+
+            if (textureSlot != -1) {
+                draw.putPosAndTextureSlot(
+                    matTX + matA * x + matC * y,
+                    matTY + matB * x + matD * y,
+                    z,
+                    textureSlot
+                );
+            }
+            else {
+                draw.putPos(
+                    matTX + matA * x + matC * y,
+                    matTY + matB * x + matD * y,
+                    z
+                );
+            }
+
+            // Color
+            //
+            if (!meshSingleColor) {
+                if (meshFloatColors != null) {
+                    var floatColorIndex = (meshIndicesColor ? i : j) * 4;
+
+                    if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                        a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
+                        r = meshFloatColors[floatColorIndex];
+                        g = meshFloatColors[floatColorIndex+1];
+                        b = meshFloatColors[floatColorIndex+2];
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                    else {
+                        a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
+                        r = meshFloatColors[floatColorIndex] * a;
+                        g = meshFloatColors[floatColorIndex+1] * a;
+                        b = meshFloatColors[floatColorIndex+2] * a;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                }
+                else {
+                    var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
+
+                    if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
+                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                        r = meshAlphaColor.redFloat;
+                        g = meshAlphaColor.greenFloat;
+                        b = meshAlphaColor.blueFloat;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                    else {
+                        a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
+                        r = meshAlphaColor.redFloat * a;
+                        g = meshAlphaColor.greenFloat * a;
+                        b = meshAlphaColor.blueFloat * a;
+                        if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
+                    }
+                }
+            }
+            draw.putColor(r, g, b, a);
+
+            // UV
+            //
+            if (texture != null) {
+                var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
+                var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
+                draw.putUVs(uvX, uvY);
+            }
+            else {
+                draw.putUVs(0, 0);
+            }
+
+            // Custom (float) attributes
+            //
+            if (customFloatAttributesSize != 0) {
+                draw.beginFloatAttributes();
+                for (n in 0...customFloatAttributesSize) {
+                    if (n < meshCustomFloatAttributesSize) {
+                        draw.putFloatAttribute(n, verticesGet(l++));
+                    }
+                    else {
+                        draw.putFloatAttribute(n, 0.0);
+                    }
+                }
+                draw.endFloatAttributes();
+            }
+
+        }
+    #end
+
         inline function batchMeshVertices() {
 
             // We may run this code multiple times if the mesh
@@ -1687,49 +1874,7 @@ class Renderer extends Entity {
             // Exit condition is at the end.
             while (true) {
 
-                //var colorFloats = this.colorFloats;
-
-                var a:Float = 0;
-                var r:Float = 0;
-                var g:Float = 0;
-                var b:Float = 0;
-
-                // Single color
-                //
-                if (meshSingleColor) {
-
-                    if (stencilClip) {
-                        a = 1;
-                        r = 1;
-                        g = 0;
-                        b = 0;
-                    }
-                    else {
-                        if (meshFloatColors != null) {
-                            a = mesh.computedAlpha * meshFloatColors[3];
-                            r = meshFloatColors[0];
-                            g = meshFloatColors[1];
-                            b = meshFloatColors[2];
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                        }
-                        else if (lastComputedBlending == ceramic.Blending.ALPHA) {
-                            var meshAlphaColor = meshColors.unsafeGet(0);
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat;
-                            g = meshAlphaColor.greenFloat;
-                            b = meshAlphaColor.blueFloat;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                        }
-                        else {
-                            var meshAlphaColor = meshColors.unsafeGet(0);
-                            a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                            r = meshAlphaColor.redFloat * a;
-                            g = meshAlphaColor.greenFloat * a;
-                            b = meshAlphaColor.blueFloat * a;
-                            if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                        }
-                    }
-                }
+                computeSingleColor();
 
             #if ceramic_simd
 
@@ -1751,6 +1896,7 @@ class Renderer extends Entity {
                     z, textureSlot
                 );
 
+
             #else
 
                 var i = startVertices;
@@ -1760,100 +1906,11 @@ class Renderer extends Entity {
                 while (i < endVertices) {
 
                     var j = meshIndices.unsafeGet(i);
-                    var k = j * 2;
-                    var l = j * (2 + meshCustomFloatAttributesSize);
-
-                    // Position
-                    //
-                    var x = verticesGet(l++);
-                    var y = verticesGet(l++);
 
                     draw.putIndice(numPos);
                     numPos++;
 
-                    if (textureSlot != -1) {
-                        draw.putPosAndTextureSlot(
-                            matTX + matA * x + matC * y,
-                            matTY + matB * x + matD * y,
-                            z,
-                            textureSlot
-                        );
-                    }
-                    else {
-                        draw.putPos(
-                            matTX + matA * x + matC * y,
-                            matTY + matB * x + matD * y,
-                            z
-                        );
-                    }
-
-                    // Color
-                    //
-                    if (!meshSingleColor) {
-                        if (meshFloatColors != null) {
-                            var floatColorIndex = (meshIndicesColor ? i : j) * 4;
-
-                            if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                                a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
-                                r = meshFloatColors[floatColorIndex];
-                                g = meshFloatColors[floatColorIndex+1];
-                                b = meshFloatColors[floatColorIndex+2];
-                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                            }
-                            else {
-                                a = mesh.computedAlpha * meshFloatColors[floatColorIndex+3];
-                                r = meshFloatColors[floatColorIndex] * a;
-                                g = meshFloatColors[floatColorIndex+1] * a;
-                                b = meshFloatColors[floatColorIndex+2] * a;
-                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                            }
-                        }
-                        else {
-                            var meshAlphaColor:AlphaColor = meshIndicesColor ? meshColors.unsafeGet(i) : meshColors.unsafeGet(j);
-
-                            if (meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA) {
-                                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                                r = meshAlphaColor.redFloat;
-                                g = meshAlphaColor.greenFloat;
-                                b = meshAlphaColor.blueFloat;
-                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                            }
-                            else {
-                                a = mesh.computedAlpha * meshAlphaColor.alphaFloat;
-                                r = meshAlphaColor.redFloat * a;
-                                g = meshAlphaColor.greenFloat * a;
-                                b = meshAlphaColor.blueFloat * a;
-                                if (mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD) a = 0;
-                            }
-                        }
-                    }
-                    draw.putColor(r, g, b, a);
-
-                    // UV
-                    //
-                    if (texture != null) {
-                        var uvX:Float = meshUvs.unsafeGet(k) * uvFactorX;
-                        var uvY:Float = meshUvs.unsafeGet(k + 1) * uvFactorY;
-                        draw.putUVs(uvX, uvY);
-                    }
-                    else {
-                        draw.putUVs(0, 0);
-                    }
-
-                    // Custom (float) attributes
-                    //
-                    if (customFloatAttributesSize != 0) {
-                        draw.beginFloatAttributes();
-                        for (n in 0...customFloatAttributesSize) {
-                            if (n < meshCustomFloatAttributesSize) {
-                                draw.putFloatAttribute(n, verticesGet(l++));
-                            }
-                            else {
-                                draw.putFloatAttribute(n, 0.0);
-                            }
-                        }
-                        draw.endFloatAttributes();
-                    }
+                    putMeshVertex(j, i);
 
                     i++;
                 }
@@ -1888,16 +1945,161 @@ class Renderer extends Entity {
 
         }
 
-        batchMeshVertices();
+        // Writes a part of the mesh: the vertices numbered in `vertexList`, then the
+        // indices of the part, given relative to `vertexList`
+        inline function putIndexedPart(vertexList:Array<Int>, vertexCount:Int, localIndices:Array<Int>, indexCount:Int) {
 
-        // Let backend know we did finish sending mesh data
-        draw.endDrawMesh();
+            computeSingleColor();
+
+        #if ceramic_simd
+            draw.putIndexedMeshPart(
+                meshVertices32, meshVertices,
+                vertexList, vertexCount, localIndices, indexCount,
+                texture != null, meshUvs, uvFactorX, uvFactorY,
+                meshSingleColor, meshFloatColors, meshColors,
+                r, g, b, a,
+                mesh.computedAlpha,
+                !(meshDrawsRenderTexture || lastComputedBlending == ceramic.Blending.ALPHA),
+                mesh.blending == ceramic.Blending.ADD && lastComputedBlending != ceramic.Blending.ADD,
+                meshCustomFloatAttributesSize, customFloatAttributesSize,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot
+            );
+        #else
+            var base = draw.getNumPos();
+            for (n in 0...vertexCount) {
+                putMeshVertex(vertexList.unsafeGet(n), -1);
+            }
+            for (n in 0...indexCount) {
+                draw.putIndice(base + localIndices.unsafeGet(n));
+            }
+        #end
+
+        }
+
+        inline function batchIndexedMesh() {
+
+            if (indexedWhole) {
+                putIndexedPart(indexedIdentity(meshVertexCount), meshVertexCount, meshIndices, visualNumVertices);
+            }
+            else {
+                // Parts that fit in the batch, triangle by triangle, in order: each part
+                // numbers the vertices it uses from 0 (`indexedSlot`), `indexedStamp`
+                // telling which part a vertex was last numbered for, so that nothing has
+                // to be cleared between parts
+                final partVertices = this.indexedPartVertices;
+                final partIndices = this.indexedPartIndices;
+                final slots = this.indexedSlot;
+                final stamps = this.indexedStamp;
+                ensureIndexedVertices(meshVertexCount);
+                var part = nextIndexedPart();
+                var vertexCount = 0;
+                var indexCount = 0;
+                var maxVertices = draw.remainingVertices();
+                var maxIndices = draw.remainingIndices();
+                var t = 0;
+                while (t < visualNumVertices) {
+                    final v0 = meshIndices.unsafeGet(t);
+                    final v1 = meshIndices.unsafeGet(t + 1);
+                    final v2 = meshIndices.unsafeGet(t + 2);
+                    var added = 0;
+                    if (stamps[v0] != part) added++;
+                    if (stamps[v1] != part && v1 != v0) added++;
+                    if (stamps[v2] != part && v2 != v0 && v2 != v1) added++;
+                    if (vertexCount + added > maxVertices || indexCount + 3 > maxIndices) {
+                        if (indexCount > 0) {
+                            putIndexedPart(partVertices, vertexCount, partIndices, indexCount);
+                        }
+                        flushAndCleanState();
+                        textureSlot = activeShaderCanBatchMultipleTextures ? activeTextureSlot : -1;
+                        part = nextIndexedPart();
+                        vertexCount = 0;
+                        indexCount = 0;
+                        maxVertices = draw.remainingVertices();
+                        maxIndices = draw.remainingIndices();
+                        continue;
+                    }
+                    for (n in 0...3) {
+                        final v = n == 0 ? v0 : n == 1 ? v1 : v2;
+                        if (stamps[v] != part) {
+                            stamps[v] = part;
+                            slots[v] = vertexCount;
+                            partVertices[vertexCount] = v;
+                            vertexCount++;
+                        }
+                        partIndices[indexCount] = slots[v];
+                        indexCount++;
+                    }
+                    t += 3;
+                }
+                if (indexCount > 0) {
+                    putIndexedPart(partVertices, vertexCount, partIndices, indexCount);
+                }
+            }
+
+        }
+
+        if (indexedSubmission) {
+            batchIndexedMesh();
+        }
+        else {
+            batchMeshVertices();
+        }
+
+        // Let backend know we did finish sending mesh data        draw.endDrawMesh();
 
         // Increase counts
         this.z = incrementZ(z);
 
     }
 #end
+
+    /**
+     * The list 0, 1, 2... up to `count` (at least).
+     */
+    function indexedIdentity(count:Int):Array<Int> {
+
+        final list = indexedIdentityList;
+        var n = list.length;
+        while (n < count) {
+            list.push(n);
+            n++;
+        }
+        return list;
+
+    }
+
+    /**
+     * Makes room in the tables of the parts for a mesh of `count` vertices.
+     */
+    function ensureIndexedVertices(count:Int):Void {
+
+        final stamps = indexedStamp;
+        final slots = indexedSlot;
+        var n = stamps.length;
+        while (n < count) {
+            stamps.push(0);
+            slots.push(0);
+            n++;
+        }
+
+    }
+
+    /**
+     * A new part number: no vertex is numbered for it yet.
+     */
+    function nextIndexedPart():Int {
+
+        indexedPart++;
+        if (indexedPart >= 0x3FFFFFFF) {
+            // Start again from 1, after forgetting every number given so far
+            final stamps = indexedStamp;
+            for (n in 0...stamps.length) stamps[n] = 0;
+            indexedPart = 1;
+        }
+        return indexedPart;
+
+    }
 
     /**
      * Increments the Z (depth) value with a non-linear progression to maintain

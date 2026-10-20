@@ -1502,6 +1502,65 @@ class Draw #if !completion implements spec.Draw #end {
 
     }
 
+    /**
+     * Writes a part of a mesh with its own indices (see `Renderer`): the vertices
+     * numbered in `vertexList` (`vertexCount` of them), each written once, then
+     * `indexCount` indices `base + localIndices[n]`, `base` being the first vertex
+     * written. The vertices go through `putTransformedMeshPart()`, which also writes
+     * sequential indices for them: these are then replaced by the real ones. A part
+     * never has more vertices than indices, so they fit in the same range. Colors are
+     * single or per vertex, never per index.
+     *
+     * The caller must have checked buffer capacity for `vertexCount` vertices and
+     * `indexCount` indices first.
+     */
+    public extern inline function putIndexedMeshPart(
+        vertices32:ceramic.Float32Array, vertices:Array<Float>,
+        vertexList:Array<Int>, vertexCount:Int, localIndices:Array<Int>, indexCount:Int,
+        hasUvs:Bool, uvs:Array<Float>, uvFactorX:Float, uvFactorY:Float,
+        singleColor:Bool, floatColors:ceramic.Float32Array, colors:Array<ceramic.AlphaColor>,
+        r:Float, g:Float, b:Float, a:Float,
+        globalAlpha:Float, premultiply:Bool, zeroAlpha:Bool,
+        meshAttrCount:Int, shaderAttrCount:Int,
+        matA:Float, matB:Float, matC:Float, matD:Float, matTX:Float, matTY:Float,
+        z:Float, textureSlot:Float
+    ):Void {
+
+        if (indexCount > 0) {
+
+            putTransformedMeshPart(
+                vertices32, vertices,
+                vertexList, 0, vertexCount,
+                hasUvs, uvs, uvFactorX, uvFactorY,
+                singleColor, false, floatColors, colors,
+                r, g, b, a,
+                globalAlpha, premultiply, zeroAlpha,
+                meshAttrCount, shaderAttrCount,
+                matA, matB, matC, matD, matTX, matTY,
+                z, textureSlot
+            );
+
+            // Read after the vertices are written: the range they took starts here
+            var theBatcher = batcher;
+            var base = theBatcher.getNumVertices() - vertexCount;
+
+            #if js
+            var idxArr = theBatcher.indexArray();
+            var idx = theBatcher.indexCountValue() - vertexCount;
+            for (n in 0...indexCount) {
+                idxArr[idx + n] = base + localIndices[n];
+            }
+            #else
+            var dst = theBatcher.indexWritePointer().add(-vertexCount);
+            var src:cpp.Pointer<Int> = cpp.NativeArray.address(localIndices, 0);
+            clay.simd.Simd.copyIndicesOffsetU16(dst.raw, src.raw, indexCount, base);
+            #end
+
+            theBatcher.advanceIndices(indexCount - vertexCount);
+        }
+
+    }
+
 #end
 
     /**
