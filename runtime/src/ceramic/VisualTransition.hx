@@ -48,6 +48,7 @@ using ceramic.Extensions;
  * - Size: width, height, size()
  * - Scale: scaleX, scaleY, scale()
  * - Rotation: rotation (with shortest path)
+ * - Revolution: rotation that supports full 360 degrees revolution
  * - Transform: transform, translateX/Y, skewX/Y
  * - Appearance: alpha, color
  * - Anchor: anchorX, anchorY, anchor()
@@ -192,6 +193,8 @@ class VisualTransition extends Entity implements Component {
 
     /** Flag indicating if the rotation was modified in the current transition. */
     var rotationChanged:Bool = false;
+    /** Flag indicating if the revolution (non-clamped rotation) was modified in the current transition. */
+    var revolutionChanged:Bool = false;
     /** Active tween responsible for animating the rotation. */
     var rotationTween:Tween = null;
     /** Target rotation value in degrees to animate towards. */
@@ -416,6 +419,7 @@ class VisualTransition extends Entity implements Component {
         anchorXChanged = false;
         anchorYChanged = false;
         rotationChanged = false;
+        revolutionChanged = false;
         widthChanged = false;
         heightChanged = false;
         colorChanged = false;
@@ -649,6 +653,13 @@ class VisualTransition extends Entity implements Component {
                     viewHeightTween = null;
                 #end
             });
+            propsTween.onComplete(this, () -> {
+                if (revolutionChanged)
+                // To prevent accumulation of rotation it must be clamped
+                // when the tween completes.
+                // NOTE: debatable, user can expect values like 720
+                    entity.rotation = GeometryUtils.clampDegrees(entity.rotation);
+            });
 
             if (xChanged) {
                 xTween = propsTween;
@@ -705,7 +716,11 @@ class VisualTransition extends Entity implements Component {
                 anchorYStart = anchorYCurrent;
                 anchorYEnd = anchorYTarget;
             }
-            if (rotationChanged) {
+            if (revolutionChanged) {
+                rotationTween = propsTween;
+                rotationStart = GeometryUtils.clampDegrees(rotationCurrent);
+                rotationEnd = rotationTarget;
+            } else if (rotationChanged) {
                 rotationTween = propsTween;
                 rotationStart = GeometryUtils.clampDegrees(rotationCurrent);
                 rotationEnd = GeometryUtils.clampDegrees(rotationTarget);
@@ -1119,6 +1134,24 @@ abstract VisualTransitionProperties(VisualTransition) from VisualTransition {
         if (this.rotationTween == null || rotation != this.rotationEnd) {
             this.anyPropertyChanged = true;
             this.rotationChanged = true;
+            this.revolutionChanged = false;
+        }
+        this.rotationTarget = rotation;
+        return rotation;
+    }
+
+    /**
+     * Target rotation in degrees.
+     * Does not use shortest path interpolation.
+     * Allows to animate full revolutions (e.g. 720 degrees as 2 full revolutions)
+     */
+    public var revolution(get, set):Float;
+    function get_revolution():Float return this.rotationTarget;
+    function set_revolution(rotation:Float):Float {
+        if (this.rotationTween == null || rotation != this.rotationEnd) {
+            this.anyPropertyChanged = true;
+            this.rotationChanged = false;
+            this.revolutionChanged = true;
         }
         this.rotationTarget = rotation;
         return rotation;
