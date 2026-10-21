@@ -756,7 +756,70 @@ class TilemapLayer extends Visual {
      * @param tilemap The parent tilemap
      * @param tilemapData The tilemap data containing tileset information
      */
+    /**
+     * For each gid met by the build of tile meshes going on (`gidBuild`): its tileset
+     * (`null` when the tile cannot be drawn), texture, tile size and texture coordinates.
+     * A layer shows the same tiles many times, and reading the fields of a tileset has a
+     * cost (they are observable): they are computed once per gid and per build, with the
+     * same expressions as for each tile.
+     */
+    static var gidBuild:Int = 0;
+
+    static var gidStamps:Array<Int> = [];
+
+    static var gidTilesets:Array<Tileset> = [];
+
+    static var gidTextures:Array<Texture> = [];
+
+    /** Tile width and height, by gid */
+    static var gidSizes:Array<Int> = [];
+
+    /** Texture coordinates u1, v1, u2, v2, by gid */
+    static var gidUvs:Array<Float> = [];
+
+    static function cacheGid(tilemapData:TilemapData, gid:Int, build:Int):Void {
+
+        var tileset = tilemapData.tilesetForGid(gid);
+        var texture:Texture = null;
+        if (tileset != null && tileset.image != null && tileset.columns > 0) {
+            texture = tileset.image.texture;
+        }
+        if (texture == null) {
+            tileset = null;
+        }
+
+        gidStamps[gid] = build;
+        gidTilesets[gid] = tileset;
+        gidTextures[gid] = texture;
+
+        if (tileset != null) {
+            var index = gid - tileset.firstGid;
+
+            // Calculate texture coordinates
+            var frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
+            var frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2 + tileset.spacing) + tileset.margin;
+
+            var textureWidth = tileset.image.width;
+            var textureHeight = tileset.image.height;
+
+            gidSizes[gid * 2] = tileset.tileWidth;
+            gidSizes[gid * 2 + 1] = tileset.tileHeight;
+            gidUvs[gid * 4] = frameX / textureWidth;
+            gidUvs[gid * 4 + 1] = frameY / textureHeight;
+            gidUvs[gid * 4 + 2] = (frameX + tileset.tileWidth) / textureWidth;
+            gidUvs[gid * 4 + 3] = (frameY + tileset.tileHeight) / textureHeight;
+        }
+
+    }
+
     function computeTileMeshes(tilemap:Tilemap, tilemapData:TilemapData) {
+
+        final build = ++gidBuild;
+        final gidStamps = TilemapLayer.gidStamps;
+        final gidTilesets = TilemapLayer.gidTilesets;
+        final gidTextures = TilemapLayer.gidTextures;
+        final gidSizes = TilemapLayer.gidSizes;
+        final gidUvs = TilemapLayer.gidUvs;
 
         var layerData = this.layerData;
 
@@ -853,17 +916,20 @@ class TilemapLayer extends Visual {
 
                                 if (tile != 0) {
                                     var gid = tile.gid;
-                                    var tileset = tilemapData.tilesetForGid(gid);
+                                    if (gid >= gidStamps.length || gidStamps.unsafeGet(gid) != build) {
+                                        cacheGid(tilemapData, gid, build);
+                                    }
+                                    var tileset = gidTilesets.unsafeGet(gid);
 
-                                    if (tileset != null && tileset.image != null && tileset.columns > 0) {
-                                        var texture = tileset.image.texture;
-                                        if (texture != null) {
+                                    if (tileset != null) {
+                                        var texture = gidTextures.unsafeGet(gid);
+                                        {
                                             var textureIndex = texture.index;
 
-                                            var index = gid - tileset.firstGid;
-
-                                            var column = (t % layerColumns);
-                                            var row = Math.floor(t / layerColumns);
+                                            // The cell of the loop, but for the tiles of the extra
+                                            // layers stacked after the first one
+                                            var column = t < tilesPerLayer ? c : (t % layerColumns);
+                                            var row = t < tilesPerLayer ? r : Math.floor(t / layerColumns);
                                             var alpha = layerAlpha;
                                             var layerIndex = 0;
                                             var depthExtra = 0.0;
@@ -943,30 +1009,24 @@ class TilemapLayer extends Visual {
                                                 alpha *= tilesAlpha.unsafeGet(t);
                                             }
 
-                                            var tileLeft = column * tileset.tileWidth;
+                                            var tileWidth = gidSizes.unsafeGet(gid * 2);
+                                            var tileHeight = gidSizes.unsafeGet(gid * 2 + 1);
+
+                                            var tileLeft = column * tileWidth;
                                             if (tilesOffsetX != null) {
                                                 tileLeft += tilesOffsetX.unsafeGet(t);
                                             }
 
-                                            var tileTop = row * tileset.tileHeight;
+                                            var tileTop = row * tileHeight;
                                             if (tilesOffsetY != null) {
                                                 tileTop += tilesOffsetY.unsafeGet(t);
                                             }
 
-                                            var tileWidth = tileset.tileWidth;
-                                            var tileHeight = tileset.tileHeight;
-
-                                            // Calculate texture coordinates
-                                            var frameX = (index % tileset.columns) * (tileset.tileWidth + tileset.margin * 2 + tileset.spacing) + tileset.margin;
-                                            var frameY = Math.floor(index / tileset.columns) * (tileset.tileHeight + tileset.margin * 2 + tileset.spacing) + tileset.margin;
-
-                                            var textureWidth = tileset.image.width;
-                                            var textureHeight = tileset.image.height;
-
-                                            var u1 = frameX / textureWidth;
-                                            var v1 = frameY / textureHeight;
-                                            var u2 = (frameX + tileset.tileWidth) / textureWidth;
-                                            var v2 = (frameY + tileset.tileHeight) / textureHeight;
+                                            // Texture coordinates (see `cacheGid()`)
+                                            var u1 = gidUvs.unsafeGet(gid * 4);
+                                            var v1 = gidUvs.unsafeGet(gid * 4 + 1);
+                                            var u2 = gidUvs.unsafeGet(gid * 4 + 2);
+                                            var v2 = gidUvs.unsafeGet(gid * 4 + 3);
 
                                             // Create base UV coordinates for top-left, top-right, bottom-right, bottom-left
                                             var tlU = u1;
