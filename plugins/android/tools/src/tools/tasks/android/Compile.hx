@@ -68,6 +68,19 @@ class Compile extends tools.Task {
             if (haxelib(hxcppArgs, { cwd: Path.join([outTargetPath, 'cpp']) }).status != 0) {
                 fail('Failed to compile C++ for arch $arch');
             }
+
+            // Keep the symbols of this build aside, to symbolicate its crashes
+            if (context.defines.exists('HXCPP_DEBUG_LINK_AND_STRIP')) {
+                var libPrefix = debug ? 'libMain-debug' : 'libMain';
+                var libSuffix = switch arch {
+                    case 'armv7': '-v7';
+                    case 'arm64': '-64';
+                    case 'x86' | 'i386': '-x86';
+                    default: '-' + arch;
+                }
+                var cppPath = Path.join([outTargetPath, 'cpp']);
+                AndroidSymbols.archive(cwd, project, arch, Path.join([cppPath, libPrefix + libSuffix + '.so']), cppPath);
+            }
         }
 
         // Create android project if needed

@@ -6,6 +6,13 @@ plugin:
         if clay:
             # +assets:
             #     - '{plugin:cwd}/assets'
+            # Android: an unstripped copy of the native library of each build is kept aside
+            # (the app ships the stripped one), its symbols archived under its build id to
+            # symbolicate crashes (see `ceramic android crash`).
+            # Opt out with `ceramic_no_android_symbols`.
+            if android && !ceramic_no_android_symbols:
+                +defines:
+                    - HXCPP_DEBUG_LINK_AND_STRIP
             if !no_gles_angle:
                 if mac || ios || windows:
                     +defines:
