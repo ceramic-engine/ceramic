@@ -336,6 +336,31 @@ class AndroidProject {
 
     }
 
+    /**
+     * Update the java files of the project that come from the template and belong to
+     * Ceramic rather than to the project: the SDL activity and surface, and the clay
+     * activity, so that an existing project gets their fixes.
+     */
+    public static function updateTemplateJavaFiles(androidProjectPath:String):Void {
+
+        final tplJavaPath = Path.join([context.plugins.get('android').path, 'tpl/project/android-clay/app/src/main/java']);
+
+        if (!context.defines.exists('ceramic_android_no_sdl_java_update')) {
+            Files.copyDirectory(
+                Path.join([tplJavaPath, 'org/libsdl/app']),
+                Path.join([androidProjectPath, 'app/src/main/java/org/libsdl/app'])
+            );
+        }
+
+        if (!context.defines.exists('ceramic_android_no_clay_java_update')) {
+            Files.copyDirectory(
+                Path.join([tplJavaPath, 'clay']),
+                Path.join([androidProjectPath, 'app/src/main/java/clay'])
+            );
+        }
+
+    }
+
     public static function copyJavaFilesIfNeeded(cwd:String, project:Project):Void {
 
         var androidProjectPath = Path.join([cwd, 'project/android']);

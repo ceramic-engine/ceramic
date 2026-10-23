@@ -42,15 +42,8 @@ class ExportAPK extends tools.Task {
         // Copy java files if needed
         AndroidProject.copyJavaFilesIfNeeded(cwd, project);
 
-        // Update SDL files if needed
-        if (!context.defines.exists('ceramic_android_no_sdl_java_update')) {
-            final tplSDLJavaFilesPath = Path.join([context.plugins.get('android').path, 'tpl/project/android-clay/app/src/main/java/org/libsdl/app']);
-            final projectSDLJavaFilesPath = Path.join([androidProjectPath, 'app/src/main/java/org/libsdl/app']);
-            Files.copyDirectory(
-                tplSDLJavaFilesPath,
-                projectSDLJavaFilesPath
-            );
-        }
+        // Update SDL and clay java files if needed
+        AndroidProject.updateTemplateJavaFiles(androidProjectPath);
 
         #if (mac || linux)
         // Make build-haxe.sh executable
