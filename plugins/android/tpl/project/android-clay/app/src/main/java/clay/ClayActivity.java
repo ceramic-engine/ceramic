@@ -2,6 +2,8 @@ package clay;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.app.Activity;
 import android.util.Log;
 import android.view.View;
@@ -17,6 +19,37 @@ public class ClayActivity extends org.libsdl.app.SDLActivity {
     private final static String CLAY_TAG = "CLAY";
     public static Activity clay_activity;
     boolean clayImmersiveFullscreen = true;
+
+    /**
+     * How long a frame can stay in the graphics driver before the drawing surface is
+     * destroyed and created again (milliseconds), 0 to disable. Some drivers can block a
+     * frame for good, waiting for a buffer of the window that never comes back: destroying
+     * the surface makes the driver give up the blocked call, then the app pauses and resumes
+     * with the same GL context, the same way it does when going to background and back.
+     */
+    protected long clayRenderStallRecoveryMillis = 3000;
+
+    /** How often the watchdog checks the frame being rendered (milliseconds). */
+    protected long clayRenderWatchdogPeriodMillis = 500;
+
+    private static native long nativeRenderStallMillis();
+
+    private final Handler clayRenderWatchdog = new Handler(Looper.getMainLooper());
+    private boolean clayRenderWatchdogActive = false;
+    private boolean clayRenderWatchdogAvailable = true;
+
+    // Stall duration at the last recovery attempt: a frame still stuck afterwards is only
+    // retried once it has been stuck for another full delay
+    private long clayRenderStallAtLastRecovery = 0;
+
+    private final Runnable clayRenderWatchdogCheck = new Runnable() {
+        @Override
+        public void run() {
+            if (!clayRenderWatchdogActive) return;
+            checkRenderStall();
+            clayRenderWatchdog.postDelayed(this, clayRenderWatchdogPeriodMillis);
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -36,6 +69,7 @@ public class ClayActivity extends org.libsdl.app.SDLActivity {
     protected void onPause() {
         super.onPause();
         Log.i(CLAY_TAG, "Clay / On Pause");
+        stopRenderWatchdog();
     }
 
     @Override
@@ -48,6 +82,7 @@ public class ClayActivity extends org.libsdl.app.SDLActivity {
     protected void onResume() {
         super.onResume();
         Log.i(CLAY_TAG, "Clay / On Resume");
+        startRenderWatchdog();
     }
 
     @Override
@@ -91,6 +126,79 @@ public class ClayActivity extends org.libsdl.app.SDLActivity {
                 hideSystemUi();
             }
         }
+    }
+
+    private void startRenderWatchdog() {
+
+        if (clayRenderStallRecoveryMillis <= 0 || !clayRenderWatchdogAvailable || SDLActivity.mBrokenLibraries) {
+            return;
+        }
+
+        if (!clayRenderWatchdogActive) {
+            clayRenderWatchdogActive = true;
+            clayRenderStallAtLastRecovery = 0;
+            clayRenderWatchdog.postDelayed(clayRenderWatchdogCheck, clayRenderWatchdogPeriodMillis);
+        }
+
+    }
+
+    private void stopRenderWatchdog() {
+
+        clayRenderWatchdogActive = false;
+        clayRenderWatchdog.removeCallbacks(clayRenderWatchdogCheck);
+
+    }
+
+    private void checkRenderStall() {
+
+        if (mSurface == null || mCurrentNativeState != NativeState.RESUMED) {
+            return;
+        }
+
+        long stalled;
+        try {
+            stalled = nativeRenderStallMillis();
+        }
+        catch (UnsatisfiedLinkError e) {
+            Log.w(CLAY_TAG, "Clay / Render watchdog not available in the native library");
+            clayRenderWatchdogAvailable = false;
+            stopRenderWatchdog();
+            return;
+        }
+
+        if (stalled < clayRenderStallRecoveryMillis) {
+            clayRenderStallAtLastRecovery = 0;
+            return;
+        }
+
+        if (clayRenderStallAtLastRecovery > 0 && stalled < clayRenderStallAtLastRecovery + clayRenderStallRecoveryMillis) {
+            return;
+        }
+
+        clayRenderStallAtLastRecovery = stalled;
+        Log.w(CLAY_TAG, "Clay / Render stalled for " + stalled + "ms, recreate the surface");
+        recreateSurface();
+
+    }
+
+    /**
+     * Destroy the drawing surface and create it again. SDL pauses the native thread when the
+     * surface is destroyed and resumes it with the new surface, keeping the GL context.
+     */
+    protected void recreateSurface() {
+
+        final View surface = mSurface;
+        if (surface == null) return;
+
+        surface.setVisibility(View.GONE);
+        clayRenderWatchdog.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                surface.setVisibility(View.VISIBLE);
+                Log.i(CLAY_TAG, "Clay / Surface shown again after a render stall");
+            }
+        }, clayRenderWatchdogPeriodMillis);
+
     }
 
     @TargetApi(19)
