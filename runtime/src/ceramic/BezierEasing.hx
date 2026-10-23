@@ -64,10 +64,13 @@ class BezierEasing {
     static var NEWTON_MIN_SLOPE = 0.001;
     
     /** Precision threshold for binary subdivision */
-    static var SUBDIVISION_PRECISION = 0.0000001;
+    static var SUBDIVISION_PRECISION = 1e-14;
     
     /** Maximum iterations for binary subdivision */
-    static var SUBDIVISION_MAX_ITERATIONS = 10;
+    static var SUBDIVISION_MAX_ITERATIONS = 60;
+
+    /** Newton-Raphson is considered converged when its last step is below this */
+    static var NEWTON_CONVERGENCE = 0.000001;
     
     /** Constant for quadratic to cubic conversion */
     static var TWO_THIRD = 2.0 / 3.0;
@@ -178,8 +181,9 @@ class BezierEasing {
     public function ease(x:Float):Float {
 
         if (linearEasing) return x;
-        if (x == 0) return 0;
-        if (x == 1) return 1;
+        // x outside (0, 1) saturates to 0 / 1
+        if (x <= 0) return 0;
+        if (x >= 1) return 1;
         return calcBezier(getTForX(x), mY1, mY2);
 
     }
@@ -207,7 +211,12 @@ class BezierEasing {
 
         var initialSlope = getSlope(guessForT, mX1, mX2);
         if (initialSlope >= NEWTON_MIN_SLOPE) {
-            return newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+            var t = newtonRaphsonIterate(aX, guessForT, mX1, mX2);
+            if (t >= intervalStart && t <= intervalStart + SAMPLE_STEP_SIZE)
+                return t;
+            // Newton-Raphson did not converge (e.g. on steep curves such as (1, 0, 0, 1) around 0.5):
+            // bisect the sample interval instead
+            return binarySubdivide(aX, intervalStart, intervalStart + SAMPLE_STEP_SIZE, mX1, mX2);
         } else if (initialSlope == 0.0) {
             return guessForT;
         } else {
@@ -274,16 +283,19 @@ class BezierEasing {
      */
     function newtonRaphsonIterate(aX:Float, aGuessT:Float, mX1:Float, mX2:Float) {
 
+        var step = 0.0;
         for (i in 0...NEWTON_ITERATIONS) {
             var currentSlope = getSlope(aGuessT, mX1, mX2);
             if (currentSlope == 0.0) {
                 return aGuessT;
             }
             var currentX = calcBezier(aGuessT, mX1, mX2) - aX;
-            aGuessT -= currentX / currentSlope;
+            step = currentX / currentSlope;
+            aGuessT -= step;
         }
 
-        return aGuessT;
+        // -1 when not converged, so that the caller bisects instead
+        return Math.abs(step) <= NEWTON_CONVERGENCE ? aGuessT : -1;
 
     }
 
