@@ -43,6 +43,7 @@ import ceramic.Quad;
  * // Use as a regular texture
  * var quad = new Quad();
  * quad.texture = rt;
+ * screen.add(quad);
  * 
  * // Manual rendering with stamp
  * rt.autoRender = false;

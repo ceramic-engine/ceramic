@@ -40,6 +40,7 @@ using ceramic.Extensions;
  * arrow.size(20, 30);
  * arrow.anchor(0.5, 0.5);
  * arrow.color = Color.YELLOW;
+ * screen.add(arrow);
  * app.onUpdate(this, delta -> {
  *     arrow.y = arrow.y + Math.sin(Timer.now * 2) * 2;
  * });
