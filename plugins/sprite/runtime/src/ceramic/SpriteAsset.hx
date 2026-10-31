@@ -244,8 +244,12 @@ class SpriteAsset extends Asset {
                     }
 
                     var ase:Ase = Ase.fromBytes(bytes);
-                    var newAsepriteData = AsepriteParser.parseAse(ase, path + (assetReloadedCount > 0 ? '?hot='+assetReloadedCount : ''), atlasPacker);
-                    newAsepriteData.id = 'sprite:' + path;
+                    // A variant gets regions of its own in the shared atlas: two variants of
+                    // a file (for instance one per layer, see `layers`) do not overwrite each other
+                    var prefix = path + (variant != null ? ':' + variant : '');
+                    var layers:Array<String> = options != null ? options.layers : null;
+                    var newAsepriteData = AsepriteParser.parseAse(ase, prefix + (assetReloadedCount > 0 ? '?hot='+assetReloadedCount : ''), atlasPacker, -1, true, layers != null ? { layers: layers } : null);
+                    newAsepriteData.id = 'sprite:' + prefix;
 
                     if (asepritePostPack != null) {
                         atlasPacker.offFinishPack(asepritePostPack);
