@@ -207,6 +207,47 @@ class ViewCacheTest extends TestCase {
         assertEquals(9.0 * 2, window.renderedScene().quads[0].boundsHeight);
     }
 
+    /**
+     * A clean view that moved renders again in prepaint (its layout is
+     * retained): the element states it accesses while rendering must be kept
+     * by the frames that reuse it afterwards, like the states it accessed
+     * while painting. They were lost once it was reused, so it got fresh
+     * states (an animation restarted) the next time it moved.
+     */
+    function testMovedViewKeepsItsElementStatesOnceReused() {
+        final counter = app.newEntity(_ -> new CacheCounter());
+        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        final child = view((window, cx) -> {
+            state = window.useKeyedState('kept', cx.app, _ -> 7);
+            return div().id('c').w(px(20)).h(px(state.read(cx).value)).bg(red());
+        });
+        final root = view((_, cx) -> div().pl(px(counter.read(cx).count)).child((child : AnyView)));
+        final window = openWindow(root, true);
+        window.draw();
+        final first = state;
+
+        // It moves: rendered again in prepaint
+        counter.read(app).count = 5;
+        frame();
+        assertEquals(2, child.read(app).renders);
+        assertTrue(first == state);
+
+        // The parent renders, the child stays in place and is reused
+        for (_ in 0...3) {
+            root.update(app, (_, cx) -> cx.notify());
+            frame();
+            assertEquals(2, child.read(app).renders);
+            assertFalse((first : Model).destroyed);
+        }
+
+        // It moves again: still the same state
+        counter.read(app).count = 9;
+        frame();
+        assertEquals(3, child.read(app).renders);
+        assertTrue(first == state);
+        assertFalse((first : Model).destroyed);
+    }
+
     function testReusedHitboxesAndListenersStillWork() {
         final log:Array<String> = [];
         final child = view((_, _) -> div().id('button').w(px(40)).h(px(20)).bg(red())

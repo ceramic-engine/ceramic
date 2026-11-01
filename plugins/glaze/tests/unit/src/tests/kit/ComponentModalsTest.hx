@@ -746,6 +746,55 @@ class ComponentModalsTest extends TestCase {
         assertTrue(Type.enumEq(before, rightId()));
     }
 
+    /**
+     * A second notification stacks onto the first one without replaying the
+     * first one's enter animation: the first stays where its slide ended
+     * (only the stack reflow moves it, by at most the collapsed peek) while
+     * the second one slides in. A regression test of the port (no Rust
+     * counterpart): the story's "Show Notification" pressed twice replayed
+     * the first slide-in, because the notification view, clean but moved by
+     * the stack reflow, lost the animation state it accessed while
+     * rendering again in prepaint (see `ViewCacheTest`). Frames are drawn
+     * like the platform draws them (next frame callbacks, then dirty
+     * windows only): an explicit draw of a clean window renders every view
+     * and hides the bug.
+     */
+    function testSecondNotificationDoesNotReplayTheFirstOnesEnterAnimation() {
+        final opened = notificationRoot(true);
+        final cx = opened.cx;
+        final list = cx.update((_, app) -> opened.root.read(app).list);
+        final probed = (selector:String) -> Notification.info(selector)
+            .autohide(false)
+            .content((_, _, _) -> new BoundsProbe(selector, div().h(px(4.))).intoAnyElement());
+        final y = (selector:String) -> BoundsProbe.bounds.get(selector).origin.y;
+        final frame = () -> {
+            cx.advanceClock(1. / 60.);
+            cx.runUntilParked();
+            cx.update((window, _) -> {
+                window.simulateNextFrame();
+                window.drawIfDirty();
+            });
+        };
+
+        updateList(cx, list, (list, window, cx) -> list.push(probed('first'), window, cx));
+        final firstStart = y('first');
+        for (_ in 0...60) frame();
+        final firstRest = y('first');
+        // The first notification slid down from its offset to its place.
+        assertTrue(firstRest - firstStart > NotificationList.NOTIFICATION_TRANSITION_OFFSET / 2, 'the first notification slid from $firstStart to $firstRest');
+
+        updateList(cx, list, (list, window, cx) -> list.push(probed('second'), window, cx));
+        final secondStart = y('second');
+        final peek = 14.;
+        for (index in 0...60) {
+            final firstY = y('first');
+            assertTrue(firstY >= firstRest - 0.5 && firstY <= firstRest + peek + 0.5, 'frame $index: the first notification is at $firstY, it rested at $firstRest');
+            frame();
+        }
+        // Meanwhile the second one slid in.
+        assertTrue(y('second') - secondStart > NotificationList.NOTIFICATION_TRANSITION_OFFSET / 2, 'the second notification slid from $secondStart to ${y('second')}');
+    }
+
     function testPerNotificationPlacementStacksByAnchor() {
         final opened = notificationRoot(true);
         final cx = opened.cx;

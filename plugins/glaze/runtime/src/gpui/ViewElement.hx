@@ -429,7 +429,9 @@ class ViewElement extends Element {
         // the retained ones, already laid out, and nothing is laid out again.
         // Otherwise its new subtree replaces the retained one, laid out again.
         final oldRoot = layoutId;
+        layoutAccessedStart = window.accessedElementStatesIndex();
         final newRoot = renderAndRequestLayout(window, cx, state.layoutNodes);
+        layoutAccessedEnd = window.accessedElementStatesIndex();
         final adopted = window.viewLayoutNodesAdopted() && newRoot == oldRoot;
         state.layoutNodes = layoutNodes;
         if (!adopted && !window.replaceRetainedLayout(oldRoot, newRoot)) {
@@ -442,9 +444,10 @@ class ViewElement extends Element {
         state.layoutId = newRoot;
         state.layoutFrame = window.layoutFrame();
         state.layoutTextStyle = layoutTextStyle;
-        // The render happened within the prepaint range
-        state.layoutAccessedStart = 0;
-        state.layoutAccessedEnd = 0;
+        // The render happened before the prepaint range: the element states
+        // it accessed are kept like those of a render in `requestLayout`
+        state.layoutAccessedStart = layoutAccessedStart;
+        state.layoutAccessedEnd = layoutAccessedEnd;
     }
 
     /**
