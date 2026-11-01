@@ -146,11 +146,124 @@ class SystemFontFallbackTest extends TestCase {
         assertEquals('HiraginoSansGB-W3', face.postScriptName);
     }
 
-    function testEmojiStaysMissingAndLoadsNothing() {
-        final p = platform(true);
+    function testEmojiStaysMissingWithoutAnEmojiFont() {
+        final p = platform(false);
+        p.systemFallback = new SystemFontFallback({han: [], kana: [], hangul: [], other: [], emoji: ['/nonexistent/emoji.ttc']});
         final line = layout(p, 'Go 🚀');
         assertEquals(0, glyphAt(line, 3).glyphId);
         assertEquals(0, p.systemFallback.loadedPaths.length);
+    }
+
+    static final APPLE_EMOJI = '/System/Library/Fonts/Apple Color Emoji.ttc';
+
+    /** Checks the glyph at `index` is a polychrome glyph of Apple Color Emoji with a colored BGRA tile */
+    function assertColorEmoji(p:CeramicTextSystem, line:LineLayout, index:Int, requireColors:Bool = true, ?pos:haxe.PosInfos) {
+        var glyph:Null<gpui.ShapedGlyph> = null;
+        var fontId = -1;
+        // The first glyph of the cluster (a variation selector after it is a
+        // hidden glyph of the same cluster, like HarfBuzz's)
+        for (run in line.runs)
+            for (g in run.glyphs)
+                if (g.index == index && glyph == null) {
+                    glyph = g;
+                    fontId = (run.fontId:Int);
+                }
+        assertNotNull(glyph, 'glyph at $index', pos);
+        if (glyph == null)
+            return;
+        assertEquals('Apple Color Emoji', p.ttfFont(fontId).familyName, pos);
+        assertTrue(glyph.isEmoji, 'polychrome glyph at $index', pos);
+        assertTrue((glyph.id:Int) != 0, 'real glyph at $index', pos);
+        final params = new RenderGlyphParams(fontId, glyph.id, 16, 0, 0, 2, true);
+        final bounds = p.glyphRasterBounds(params);
+        // 32 px per em: the 32 px strike, its bottom 4 px (100 font units) below the baseline
+        assertEquals(32.0, bounds.size.width, pos);
+        assertEquals(32.0, bounds.size.height, pos);
+        assertEquals(-28.0, bounds.origin.y, pos);
+        final tile = p.rasterizeGlyph(params, bounds);
+        assertEquals(32 * 32 * 4, tile.length, pos);
+        var opaque = 0;
+        var colored = 0;
+        var i = 0;
+        while (i < tile.length) {
+            final b = tile.get(i), g = tile.get(i + 1), r = tile.get(i + 2), a = tile.get(i + 3);
+            if (a > 0)
+                opaque++;
+            if (a > 128 && (Math.abs(r - g) > 40 || Math.abs(g - b) > 40))
+                colored++;
+            i += 4;
+        }
+        assertTrue(opaque > 32 * 32 / 4, 'tile has ink ($opaque pixels)', pos);
+        // Some emoji are grey (keycaps, the families of Apple Color Emoji)
+        if (requireColors)
+            assertTrue(colored > 0, 'tile has colors ($colored pixels)', pos);
+    }
+
+    function testEmojiFromTheSystemEmojiFont() {
+        if (!ceramic.Files.exists(APPLE_EMOJI))
+            return;
+        final p = platform(true);
+        final text = 'Go 🚀 ok';
+        final line = layout(p, text);
+        assertColorEmoji(p, line, 3);
+        // Advances from the font (1 em at 16 px), ASCII stays on Inter
+        final interId = (p.fontId(Font.of('Inter')):Int);
+        assertEquals(interId, glyphAt(line, 0).fontId);
+        assertEquals(interId, glyphAt(line, 8).fontId);
+        var rocketX = -1.0, nextX = -1.0;
+        for (run in line.runs)
+            for (g in run.glyphs) {
+                if (g.index == 3) rocketX = g.position.x;
+                if (g.index == 7) nextX = g.position.x;
+            }
+        assertEquals(16.0, nextX - rocketX);
+        // Only the emoji font was read, and only its small tables
+        assertEquals(1, p.systemFallback.loadedPaths.length);
+        assertEquals(APPLE_EMOJI, p.systemFallback.loadedPaths[0]);
+        assertTrue(p.systemFallback.loadedBytes < 2 * 1048576, 'read ${p.systemFallback.loadedBytes} bytes');
+        trace('Emoji fallback: ${Math.round(p.systemFallback.loadedBytes / 1024)} KB of Apple Color Emoji read in ${Math.round(p.systemFallback.loadTime * 1000)} ms');
+    }
+
+    function testEmojiSequencesUseTheEmojiFont() {
+        if (!ceramic.Files.exists(APPLE_EMOJI))
+            return;
+        final p = platform(true);
+        // Variation selector 16 on a text default character, a keycap, a skin
+        // tone
+        final text = 'a ❤️ 1️⃣ 👍🏽';
+        final line = layout(p, text);
+        assertColorEmoji(p, line, 2);
+        assertColorEmoji(p, line, Utf8.byteLength('a ❤️ '), false);
+        final thumb = Utf8.byteLength('a ❤️ 1️⃣ ');
+        assertColorEmoji(p, line, thumb);
+        // Sequences are one glyph (morx ligatures): a family, a flag, a skin
+        // tone with a profession
+        for (sequence in ['👨‍👩‍👧', '🇫🇷', '👩🏽‍💻']) {
+            final seqLine = layout(p, 'x' + sequence);
+            assertColorEmoji(p, seqLine, 1, sequence != '👨‍👩‍👧');
+            var count = 0;
+            for (run in seqLine.runs)
+                for (g in run.glyphs)
+                    if (g.index > 0 && (g.id:Int) != p.ttfFont(run.fontId).glyphForChar(0x20))
+                        count++;
+            assertEquals(1, count, 'one glyph for $sequence');
+        }
+        // Variation selector 15 keeps the text presentation
+        final plain = layout(p, 'a ❤︎');
+        final g = glyphAt(plain, 2);
+        assertTrue(p.ttfFont(g.fontId).familyName != 'Apple Color Emoji');
+    }
+
+    function testEmojiKeepsTheLineMetricsOfTheText() {
+        if (!ceramic.Files.exists(APPLE_EMOJI))
+            return;
+        final p = platform(true);
+        final plain = layout(p, 'Hello world');
+        final emoji = layout(p, 'Hello 🌍');
+        // GPUI keeps the line height of the style; the layout's own ascent
+        // and descent follow the fonts of its glyphs (cosmic-text's max)
+        assertTrue(emoji.ascent >= plain.ascent);
+        assertEquals(16.0, emoji.fontSize);
     }
 
     function testLocalePrefersRegionalFaces() {

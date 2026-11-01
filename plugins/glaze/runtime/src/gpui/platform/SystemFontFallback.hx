@@ -19,10 +19,17 @@ using StringTools;
  * file is read once (whether it covers the character or not) and all its
  * faces are kept.
  *
- * Not covered: color emoji (`sbix`, `CBDT`, `COLR` fonts are not listed, the
- * `ttf` library has no color glyphs), and fonts the `ttf` library cannot
- * draw (macOS 26 PingFang uses Apple's `hvgl` outlines, so Chinese uses
- * Hiragino Sans GB and Heiti instead).
+ * Emoji come from the emoji font of the platform (Apple Color Emoji, Segoe
+ * UI Emoji, Noto Color Emoji: `sbix`, `COLR` and `CBDT` color glyphs, see
+ * `ttf.color.ColorGlyphs`), the font CoreText, DirectWrite and fontconfig
+ * fall back on for them. Emoji font files are read piece by piece
+ * (`ttf.Font.fromSource()` over `ceramic.Files.getBytesRange()`): Apple
+ * Color Emoji is 192 MB, almost all of it bitmaps, and only its small
+ * tables (about 750 KB) and the images drawn are read.
+ *
+ * Not covered: fonts the `ttf` library cannot draw (macOS 26 PingFang uses
+ * Apple's `hvgl` outlines, so Chinese uses Hiragino Sans GB and Heiti
+ * instead).
  */
 class SystemFontFallback {
 
@@ -45,8 +52,16 @@ class SystemFontFallback {
     /** Total time spent reading and parsing font files, in seconds */
     public var loadTime(default, null):Float = 0;
 
-    /** Total size of the font files read so far, in bytes */
+    /**
+     * Total size of the font data read so far, in bytes (for emoji fonts,
+     * the tables read when they were loaded, not the images read since).
+     */
     public var loadedBytes(default, null):Float = 0;
+
+    /** Faces of the emoji font, once loaded (see `loadEmojiFace()`) */
+    public final emojiFaces:Array<ttf.Font> = [];
+
+    var emojiTried:Bool = false;
 
     final triedPaths:Map<String, Bool> = new Map();
 
@@ -77,6 +92,10 @@ class SystemFontFallback {
             return false;
         if (candidates == null)
             candidates = systemCandidates(cjkLocale);
+        if (kind == EMOJI) {
+            if (loadEmojiFace() && emojiFaces[0].glyphForChar(codePoint) != 0)
+                return true;
+        }
         final paths = switch kind {
             case HAN: candidates.han;
             case KANA: candidates.kana;
@@ -91,6 +110,61 @@ class SystemFontFallback {
                 return true;
         }
         return false;
+    }
+
+    /**
+     * Loads the emoji font of the platform (once): the first candidate file
+     * that exists, its first face only, read piece by piece. Returns true
+     * if an emoji face is loaded.
+     */
+    public function loadEmojiFace():Bool {
+        if (emojiTried)
+            return emojiFaces.length > 0;
+        emojiTried = true;
+        if (candidates == null)
+            candidates = systemCandidates(cjkLocale);
+        final paths = candidates.emoji != null ? candidates.emoji : [];
+        for (path in paths) {
+            if (triedPaths.exists(path))
+                continue;
+            triedPaths.set(path, true);
+            final start = haxe.Timer.stamp();
+            final face = loadPartial(path);
+            loadTime += haxe.Timer.stamp() - start;
+            if (face == null || face.numGlyphs <= 1)
+                continue;
+            loadedPaths.push(path);
+            emojiFaces.push(face);
+            faces.push(face);
+            fileRanks.push(loadedPaths.length - 1);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * The first face of a font file, with its large bitmap tables left in
+     * the file (`ttf.Font.fromSource()`), or null.
+     */
+    function loadPartial(path:String):Null<ttf.Font> {
+        try {
+            if (!ceramic.Files.exists(path))
+                return null;
+            final size = ceramic.Files.getSize(path);
+            if (size <= 0 || size > 0x7FFFFFFF)
+                return null;
+            var read = 0.0;
+            final source = new ttf.FontSource.FunctionFontSource(Std.int(size), (offset, length) -> {
+                read += length;
+                return ceramic.Files.getBytesRange(path, offset, length);
+            });
+            final face = ttf.Font.fromSource(source, 0);
+            loadedBytes += read;
+            return face;
+        }
+        catch (e:Dynamic) {
+            return null;
+        }
     }
 
     function loadFile(path:String, codePoint:Int):Bool {
@@ -150,6 +224,7 @@ class SystemFontFallback {
     static inline final KANA = 2;
     static inline final HANGUL = 3;
     static inline final OTHER = 4;
+    static inline final EMOJI = 5;
 
     static function kindOf(c:Int):Int {
         if (c <= 0x7F)
@@ -160,9 +235,9 @@ class SystemFontFallback {
             || (c >= 0xFE00 && c <= 0xFE0F) || (c >= 0xE0000 && c <= 0xE01EF) || c == 0x20E3
             || (c >= 0xD800 && c <= 0xDFFF) || (c >= 0xE000 && c <= 0xF8FF))
             return SKIP;
-        // Emoji (color fonts are not supported)
-        if ((c >= 0x1F000 && c <= 0x1FAFF) || (c >= 0x1F1E6 && c <= 0x1F1FF))
-            return SKIP;
+        // Emoji, regional indicators, skin tone modifiers
+        if (c >= 0x1F000 && c <= 0x1FAFF)
+            return EMOJI;
         if ((c >= 0x3040 && c <= 0x30FF) || (c >= 0x31F0 && c <= 0x31FF) || (c >= 0xFF66 && c <= 0xFF9F) || (c >= 0x1B000 && c <= 0x1B16F))
             return KANA;
         if ((c >= 0xAC00 && c <= 0xD7AF) || (c >= 0x1100 && c <= 0x11FF) || (c >= 0x3130 && c <= 0x318F)
@@ -217,7 +292,7 @@ class SystemFontFallback {
             case 'linux':
                 return linuxCandidates(locale);
             case _:
-                return {han: [], kana: [], hangul: [], other: []};
+                return {han: [], kana: [], hangul: [], other: [], emoji: []};
         }
     }
 
@@ -243,6 +318,7 @@ class SystemFontFallback {
             // fonts, which have many symbols too
             other: ['$s/SFNS.ttf', '$s/Menlo.ttc', '$s/Apple Symbols.ttf', '$s/Geneva.ttf']
                 .concat(arialUnicode).concat(han).concat(['$s/ZapfDingbats.ttf']),
+            emoji: ['$s/Apple Color Emoji.ttc'],
         };
     }
 
@@ -265,6 +341,7 @@ class SystemFontFallback {
             hangul: [malgun, '$dir\\gulim.ttc'],
             // cosmic-text's common fallbacks on Windows
             other: ['$dir\\segoeui.ttf', '$dir\\seguisym.ttf', '$dir\\seguihis.ttf', '$dir\\arial.ttf'].concat(han),
+            emoji: ['$dir\\seguiemj.ttf'],
         };
     }
 
@@ -304,6 +381,18 @@ class SystemFontFallback {
             }
             return result;
         }
+        // Emoji fonts by file name, without the style filters
+        function matchingAny(patterns:Array<String>):Array<String> {
+            final result:Array<String> = [];
+            for (pattern in patterns) {
+                for (file in files) {
+                    final name = file.substr(file.lastIndexOf('/') + 1).toLowerCase();
+                    if (name.startsWith(pattern) && result.indexOf(file) == -1)
+                        result.push(file);
+                }
+            }
+            return result;
+        }
         final region = switch locale {
             case 'ja' | 'ja-JP': 'jp';
             case 'ko' | 'ko-KR': 'kr';
@@ -323,6 +412,7 @@ class SystemFontFallback {
                 'notosans-regular', 'dejavusans.ttf', 'freesans', 'notosanssymbols-regular',
                 'notosanssymbols2-regular', 'notosansmath-regular', 'dejavusans', 'notosans'
             ]).concat(han),
+            emoji: matchingAny(['notocoloremoji', 'twemoji', 'joypixels', 'emojione']),
         };
     }
 }
@@ -337,4 +427,6 @@ typedef Candidates = {
     var hangul:Array<String>;
     /** Everything else (symbols, other scripts) */
     var other:Array<String>;
+    /** The emoji font (color glyphs), tried for emoji before `other` */
+    @:optional var emoji:Array<String>;
 }

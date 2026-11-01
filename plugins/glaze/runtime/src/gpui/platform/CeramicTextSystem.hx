@@ -53,9 +53,17 @@ import ttf.shape.Shaper;
  * color glyph) are drawn by the browser, like gpui-pre-web's `WebTextSystem`:
  * see `canvasFontFallback` and `canvasText` (`CanvasFallbackText`).
  *
- * Not supported: color glyphs of font files (emoji), subpixel (LCD) masks,
- * glyph dilation, complex scripts and bidirectional text (see the `ttf`
- * library).
+ * Emoji fonts (`isKnownEmojiFont`: Apple Color Emoji, Segoe UI Emoji, Noto
+ * Color Emoji) give polychrome glyphs: straight alpha BGRA tiles from their
+ * `sbix`, `CBDT` or `COLR` color glyphs (`ttf.color.ColorGlyphs`, which
+ * renders them like swash's `ColorOutline(0)` then `ColorBitmap(BestFit)`
+ * sources of GPUI's `render_glyph_image`). Emoji sequences (emoji
+ * presentation, variation selector 16, skin tones, regional indicators,
+ * keycaps) prefer the fonts with color glyphs, and the system fallback
+ * loads the emoji font of the platform for them.
+ *
+ * Not supported: subpixel (LCD) masks, glyph dilation, complex scripts and
+ * bidirectional text (see the `ttf` library).
  */
 class CeramicTextSystem implements PlatformTextSystem {
 
@@ -78,8 +86,12 @@ class CeramicTextSystem implements PlatformTextSystem {
         final shaper = new Shaper();
         // Advances and metrics in f32, like cosmic-text
         shaper.singlePrecision = true;
+        // Emoji prefer the color fonts
+        shaper.isEmojiPresentation = isEmojiPresentation;
         shaper;
     };
+
+    final colorBitmap:ttf.color.ColorBitmap = new ttf.color.ColorBitmap();
 
     final rasterizer:GlyphRasterizer = new GlyphRasterizer();
 
@@ -341,9 +353,30 @@ class CeramicTextSystem implements PlatformTextSystem {
         return result;
     }
 
+    /**
+     * Emoji fonts, whose glyphs are polychrome: Noto Color Emoji (GPUI's
+     * `check_is_known_emoji_font`), Apple Color Emoji (GPUI's macOS
+     * `is_emoji`) and Segoe UI Emoji (the emoji font of the Windows system
+     * fallback).
+     */
     static function isKnownEmojiFont(postScriptName:String):Bool {
-        // TODO: Include other common emoji fonts
-        return postScriptName == 'NotoColorEmoji';
+        return switch postScriptName {
+            case 'NotoColorEmoji' | 'AppleColorEmoji' | '.AppleColorEmojiUI' | 'SegoeUIEmoji': true;
+            case _: false;
+        }
+    }
+
+    /**
+     * Characters displayed as emoji by default (Unicode `Emoji_Presentation`,
+     * from unicode-properties' emoji status, like the web fallback).
+     */
+    static function isEmojiPresentation(c:Int):Bool {
+        if (c < 0x231A)
+            return false;
+        final status = CanvasFallbackTables.emojiStatus(c);
+        // EmojiPresentation, EmojiPresentationAndModifierBase,
+        // EmojiPresentationAndEmojiComponent, EmojiPresentationAndModifierAndEmojiComponent
+        return status == 2 || status == 4 || status == 6 || status == 7;
     }
 
     function findBestMatch(font:Font, candidates:Array<Int>):Int {
@@ -458,6 +491,11 @@ class CeramicTextSystem implements PlatformTextSystem {
         if (canvas.canvasFont(params.fontId) != null)
             return canvas.glyphRasterBounds(params);
         final face = loadedFonts[params.fontId].face;
+        if (params.isEmoji) {
+            final color = face.color();
+            if (color != null && color.bounds(params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), colorBitmap))
+                return new Bounds(new Point(colorBitmap.left, -colorBitmap.top), new Size(colorBitmap.width, colorBitmap.height));
+        }
         final b = rasterizer.rasterBounds(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
         if (b.width <= 0 || b.height <= 0)
             return new Bounds(new Point(0, 0), new Size(0, 0));
@@ -481,6 +519,8 @@ class CeramicTextSystem implements PlatformTextSystem {
         if (params.subpixelRendering)
             throw 'subpixel rendering is not supported';
         final face = loadedFonts[params.fontId].face;
+        if (params.isEmoji)
+            return rasterizeColorGlyph(face, params, rasterBounds);
         final b = rasterizer.rasterize(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
         final width = Std.int(rasterBounds.size.width);
         final height = Std.int(rasterBounds.size.height);
@@ -490,6 +530,38 @@ class CeramicTextSystem implements PlatformTextSystem {
             final w = Std.int(Math.min(width, b.width));
             for (row in 0...Std.int(Math.min(height, b.height))) {
                 result.blit(row * width, b.data, row * b.width, w);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * A polychrome glyph (Rust `rasterize_glyph` with `Content::Color`):
+     * the color glyph converted from RGBA to BGRA, straight alpha. A glyph of
+     * an emoji font without color data falls back on its outline (swash's
+     * last `Source::Outline`), drawn black with the coverage as alpha.
+     */
+    function rasterizeColorGlyph(face:ttf.Font, params:RenderGlyphParams, rasterBounds:Bounds):Bytes {
+        final width = Std.int(rasterBounds.size.width);
+        final height = Std.int(rasterBounds.size.height);
+        final result = Bytes.alloc(width * height * 4);
+        result.fill(0, result.length, 0);
+        final color = face.color();
+        final size = params.fontSize * params.scaleFactor;
+        if (color != null && color.rasterize(params.glyphId, size, subpixelOffsetX(params), subpixelOffsetY(params), colorBitmap)) {
+            final c = colorBitmap;
+            c.swapRedBlue();
+            final w = Std.int(Math.min(width, c.width));
+            for (row in 0...Std.int(Math.min(height, c.height)))
+                result.blit(row * width * 4, c.data, row * c.width * 4, w * 4);
+            c.data = null;
+            return result;
+        }
+        final b = rasterizer.rasterize(face, params.glyphId, size, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
+        if (b.data != null) {
+            for (row in 0...Std.int(Math.min(height, b.height))) {
+                for (x in 0...Std.int(Math.min(width, b.width)))
+                    result.set((row * width + x) * 4 + 3, b.data.get(row * b.width + x));
             }
         }
         return result;
@@ -681,6 +753,24 @@ class CeramicTextSystem implements PlatformTextSystem {
             return;
         for (k in 0...d.count) {
             final c = d.codePoints[k];
+            // Emoji sequences want a color font (same rules as the shaper)
+            final next = k + 1 < d.count ? d.codePoints[k + 1] : -1;
+            if (next == 0xFE0F || (next >= 0x1F3FB && next <= 0x1F3FF) || (c >= 0x1F1E6 && c <= 0x1F1FF)
+                || (c > 0x7F && next != 0xFE0E && isEmojiPresentation(c))) {
+                final key = c | COLOR_COVERAGE;
+                if (!coverageChecked.exists(key)) {
+                    coverageChecked.set(key, true);
+                    if (!anyColorFaceCovers(c, system)) {
+                        final count = system.faces.length;
+                        system.loadEmojiFace();
+                        if (system.faces.length != count)
+                            fallbackGeneration++;
+                    }
+                }
+                // Drawn by the emoji font: no text font needed
+                if (anyColorFaceCovers(c, system))
+                    continue;
+            }
             if (c <= 0x7F || coverageChecked.exists(c))
                 continue;
             coverageChecked.set(c, true);
@@ -693,13 +783,33 @@ class CeramicTextSystem implements PlatformTextSystem {
         }
     }
 
-    function anyFaceCovers(c:Int, system:SystemFontFallback):Bool {
+    /** Key of `coverageChecked` for the color coverage of a code point */
+    static inline final COLOR_COVERAGE = 0x40000000;
+
+    function anyColorFaceCovers(c:Int, system:SystemFontFallback):Bool {
         for (f in faces) {
-            if (f.glyphForChar(c) != 0)
+            if (f.hasColorGlyphs && f.glyphForChar(c) != 0)
                 return true;
         }
         for (f in system.faces) {
-            if (f.glyphForChar(c) != 0)
+            if (f.hasColorGlyphs && f.glyphForChar(c) != 0)
+                return true;
+        }
+        return false;
+    }
+
+    /**
+     * Whether a face without color glyphs maps the character (text
+     * presentation: the shaper prefers them, so a color font covering it is
+     * not enough).
+     */
+    function anyFaceCovers(c:Int, system:SystemFontFallback):Bool {
+        for (f in faces) {
+            if (f.glyphForChar(c) != 0 && !f.hasColorGlyphs)
+                return true;
+        }
+        for (f in system.faces) {
+            if (f.glyphForChar(c) != 0 && !f.hasColorGlyphs)
                 return true;
         }
         return false;
@@ -795,6 +905,15 @@ class CeramicTextSystem implements PlatformTextSystem {
                 wordWidth = f32(wordWidth + xAdvance);
 
                 final isEmoji = loaded.isKnownEmojiFont;
+
+                // Rust: "HACK: Prevent crash caused by variation selectors."
+                // (Noto Color Emoji's glyph 3; glyph 3 of Apple Color Emoji
+                // is its space, which GPUI's macOS platform keeps)
+                if ((g.id:Int) == 3 && isEmoji && face.postScriptName == 'NotoColorEmoji') {
+                    x = f32(x + xAdvance);
+                    continue;
+                }
+
                 final glyph = new ShapedGlyph(g.id, new Point(x, 0.0), g.index, isEmoji);
                 x = f32(x + xAdvance);
                 final last = runs.length > 0 ? runs[runs.length - 1] : null;

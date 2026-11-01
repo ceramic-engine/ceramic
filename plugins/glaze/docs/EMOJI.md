@@ -1,11 +1,43 @@
 # Color emoji on native targets: plan
 
-Status (2026-11-01): emoji render in color on the web (the Canvas2D fallback
-ported from gpui-pre-web). On native targets they are notdef boxes: the
-system font fallback finds Apple Color Emoji, but the `ttf` library reads
-only outline glyphs (`glyf`, `CFF`, `CFF2`) and emoji fonts store color
-bitmaps or color layers. Emoji matter for the code editor (comments,
-strings, Markdown), chat and any user text.
+Status (2026-11-01): steps 1 to 6 are done (see "Done" below). Emoji
+render in color on macOS through the system fallback (Apple Color Emoji,
+`sbix` + `morx`); the `ttf` library also reads `COLR` / `CPAL` and `CBDT` /
+`CBLC`, and the fallback lists Segoe UI Emoji (Windows) and Noto Color
+Emoji (Linux), not tested on those systems yet. On the web, emoji still come
+from the Canvas2D fallback ported from gpui-pre-web. Step 7 (optional
+bundled font) is left.
+
+## Done
+
+- `ttf` (pure Haxe, no Ceramic): `ttf.color.ColorGlyphs` (`Font.color()`)
+  renders color glyphs like swash's `ColorOutline(0)` then
+  `ColorBitmap(BestFit)` sources: `Sbix`, `Cbdt` (PNG strikes: first strike
+  at least as large as the size, scaled with swash's Mitchell filter, Apple
+  Color Emoji's 100 font unit drop), `Colr` (version 0 layers, palette 0,
+  swash's `blit`), its own `Inflate` and `Png` (every color type and depth,
+  interlacing), Apple's `flip` glyphs. `Font.fromSource()` reads only the
+  table directory and the small tables of a face (Apple Color Emoji: 742 KB
+  of 192 MB, under 1 ms), images are read glyph by glyph.
+  `ttf.layout.Morx`: noncontextual, contextual and ligature subtables with
+  the default features, used for fonts without `GSUB` like HarfBuzz. The
+  shaper prefers fonts with color glyphs for emoji sequences (emoji
+  presentation, VS16, skin tones, regional indicators, keycaps) and fonts
+  without for text presentation, and groups emoji sequences in one cluster
+  like HarfBuzz. Checked against swash 0.2.10 (placements exact, pixels
+  within 2 levels) and HarfBuzz 14 (`morx` glyphs and clusters), on node,
+  hxcpp and the interpreter.
+- `SystemFontFallback`: an emoji class (Apple Color Emoji, Segoe UI Emoji,
+  Noto Color Emoji or Twemoji files), loaded lazily through
+  `ceramic.Files.getBytesRange()` (new in Ceramic, with `Files.getSize()`).
+- `CeramicTextSystem`: Apple Color Emoji and Segoe UI Emoji are known emoji
+  fonts (polychrome glyphs, straight alpha BGRA tiles painted by
+  `TextPainter.emitEmoji`), the emoji font is loaded for emoji sequences,
+  GPUI's glyph 3 hack only applies to Noto Color Emoji.
+- Editor: gpui-kit moves the caret and deletes by code point
+  (`RopeExt::clip_offset` on char boundaries), not by grapheme; the port does
+  the same (`tests.kit.InputEmojiTest`: movement, deletion, selections,
+  UTF-16 offsets, hit testing, line height).
 
 ## What GPUI does
 
