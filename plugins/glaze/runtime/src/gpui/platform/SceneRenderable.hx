@@ -142,6 +142,7 @@ class SceneRenderable extends Renderable {
 
         if (scene == null || scene.len() == 0) return;
         if (!ensureShaders()) return;
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
 
         if (gammaRatiosDirty) {
             gammaRatiosDirty = false;
@@ -184,6 +185,7 @@ class SceneRenderable extends Renderable {
         }
 
         draw.flush();
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
 
     }
 

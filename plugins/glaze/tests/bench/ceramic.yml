@@ -9,8 +9,23 @@ app:
         # GPUI port (linked through plugins/gpui.plugin)
         - gpui
 
+    # The story gallery ported to Haxe (shared with samples/story), for the
+    # story scenarios (src/scenarios/StoryDense.hx)
+    paths:
+        - ../../samples/story/shared
+
     defines:
         # Native bench runs use a hidden SDL window (no window on screen)
         - clay_sdl_headless
-        # Uncomment to count allocations of the main gpui objects (see gpui.util.AllocationCounters)
-        - gpui_count_allocations
+
+    # Count the allocations of the main gpui objects (see gpui.util.AllocationCounters)
+    if !perf:
+        +defines:
+            - gpui_count_allocations
+
+    # `ceramic clay build mac --variant perf`: release build without the hxcpp
+    # pointer checks, safe mode and stack bookkeeping that Ceramic adds for
+    # crash dumps, and without the allocation counters, for timings
+    if perf:
+        +defines:
+            - ceramic_no_hxcpp_checks

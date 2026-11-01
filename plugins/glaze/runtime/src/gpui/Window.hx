@@ -1144,6 +1144,7 @@ class Window implements WindowInvalidator {
             textInputPlatform.textInputStateChanged(focusedTextInput != -1 ? FocusGained : FocusLost);
         }
 
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.FINISH);
         layoutEngine.finishFrame();
         windowTextSystem.finishFrame();
         nextFrame.finish(renderedFrame);
@@ -1197,6 +1198,7 @@ class Window implements WindowInvalidator {
         resetCursorStyle();
         refreshing = false;
         focusMovedWhileDrawing = _focus != focusBeforeListeners;
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.FINISH);
     }
 
     static function samePath(a:Array<Int>, b:Array<Int>):Bool {
@@ -1221,8 +1223,11 @@ class Window implements WindowInvalidator {
             ? new Size(Math.max(_viewportSize.width - inspectorWidth, 0.0), _viewportSize.height)
             : _viewportSize;
         final rootElement = root.intoAnyElement();
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.LAYOUT);
         final rootLayoutId = rootElement.requestLayout(this, app);
         layoutEngine.stretchAutoSizeToFill(rootLayoutId, rootSize, _scaleFactor);
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.LAYOUT);
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PREPAINT);
         rootElement.prepaintAsRoot(
             new Point(0, 0),
             new SizeOf<AvailableSpace>(AvailableSpace.Definite(rootSize.width), AvailableSpace.Definite(rootSize.height)),
@@ -1233,8 +1238,11 @@ class Window implements WindowInvalidator {
         final inspectorElement = prepaintInspector(inspectorWidth, app);
         #else
         final rootElement = root.intoAnyElement();
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.LAYOUT);
         final rootLayoutId = rootElement.requestLayout(this, app);
         layoutEngine.stretchAutoSizeToFill(rootLayoutId, _viewportSize, _scaleFactor);
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.LAYOUT);
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PREPAINT);
         rootElement.prepaintAsRoot(
             new Point(0, 0),
             new SizeOf<AvailableSpace>(AvailableSpace.Definite(_viewportSize.width), AvailableSpace.Definite(_viewportSize.height)),
@@ -1261,8 +1269,10 @@ class Window implements WindowInvalidator {
         }
 
         mouseHitTest = nextFrame.hitTest(_mousePosition);
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.PREPAINT);
 
         // Now actually paint the elements.
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PAINT);
         rootElement.paint(this, app);
 
         #if gpui_inspector
@@ -1281,6 +1291,7 @@ class Window implements WindowInvalidator {
         #if gpui_inspector
         paintInspectorHitbox(app);
         #end
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.PAINT);
     }
 
     static inline function minSize():SizeOf<AvailableSpace> {
