@@ -12,14 +12,36 @@ plugin:
                 - ropey
                 - unicode-segmentation
                 - unicode-linebreak
-                # markdown, html5ever, oniguruma and textmate: move them here (and
-                # drop the four +paths lines below) once the Ceramic tools are rebuilt
+                - markdown
+                - html5ever
+                - oniguruma
+                - textmate
+                - similar
             +paths:
                 - '{plugin:cwd}/runtime/src'
-                - '{plugin:cwd}/../ceramic/git/markdown/src'
-                - '{plugin:cwd}/../ceramic/git/html5ever/src'
-                - '{plugin:cwd}/../ceramic/git/oniguruma/src'
-                - '{plugin:cwd}/../ceramic/git/textmate/src'
-                - '{plugin:cwd}/../ceramic/git/similar/src'
             +assets:
                 - '{plugin:cwd}/assets'
+
+            # Opt-in: vscode-oniguruma's onig.wasm as the code highlighter's
+            # regex engine on the web (define gpui_onig_wasm). The hook copies
+            # onig.wasm and its JavaScript binding from onig-wasm/ into
+            # project/web, or removes them when the define is not set.
+            if web && gpui_onig_wasm:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm']
+
+            if web && !gpui_onig_wasm:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm', '--remove']
+
+        if !plugin_gpui:
+
+            if web:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm', '--remove']
