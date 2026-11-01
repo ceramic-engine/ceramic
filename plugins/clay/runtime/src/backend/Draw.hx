@@ -361,13 +361,15 @@ class Draw #if !completion implements spec.Draw #end {
                     flipRenderTargetY ? -1 : 1
                 );
 
+                // Viewport from the actual size of the texture in pixels
+                // (width * density could be a hair below it as a float, and get truncated)
                 _viewportDensity = renderTarget.density;
-                _viewportWidth = renderTarget.width * _viewportDensity;
-                _viewportHeight = renderTarget.height * _viewportDensity;
+                _viewportWidth = renderTexture.width;
+                _viewportHeight = renderTexture.height;
                 batcher.setViewport(
                     0, 0,
-                    Std.int(renderTarget.width * renderTarget.density),
-                    Std.int(renderTarget.height * renderTarget.density)
+                    renderTexture.width,
+                    renderTexture.height
                 );
 
                 if (renderTarget.clearOnRender) {
@@ -386,23 +388,31 @@ class Draw #if !completion implements spec.Draw #end {
 
                 batcher.setRenderTarget(null);
 
+                // Cover the actual pixels of the window, with a projection that gives
+                // exactly `density` pixels per logical unit (same as render targets),
+                // so that textures rendered at that density map 1:1 to the screen.
+                // The logical screen size, rounded up, may overflow the window slightly.
+                final density = ceramic.App.app.backend.screen.getDensity();
+                final pixelWidth = Clay.app.screenPixelWidth;
+                final pixelHeight = Clay.app.screenPixelHeight;
+
                 updateProjectionMatrix(
-                    ceramic.App.app.backend.screen.getWidth(),
-                    ceramic.App.app.backend.screen.getHeight()
+                    pixelWidth / density,
+                    pixelHeight / density
                 );
                 updateViewMatrix(
-                    ceramic.App.app.backend.screen.getDensity(),
-                    ceramic.App.app.backend.screen.getWidth(),
-                    ceramic.App.app.backend.screen.getHeight(),
+                    density,
+                    pixelWidth / density,
+                    pixelHeight / density,
                     @:privateAccess ceramic.App.app.screen.matrix
                 );
-                _viewportDensity = ceramic.App.app.backend.screen.getDensity();
-                _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
-                _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
+                _viewportDensity = density;
+                _viewportWidth = pixelWidth;
+                _viewportHeight = pixelHeight;
                 batcher.setViewport(
                     0, 0,
-                    Std.int(_viewportWidth),
-                    Std.int(_viewportHeight)
+                    pixelWidth,
+                    pixelHeight
                 );
             }
         }

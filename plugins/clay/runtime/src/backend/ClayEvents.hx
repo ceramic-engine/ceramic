@@ -249,6 +249,27 @@ class ClayEvents extends clay.Events {
 
     }
 
+    /**
+     * Converts a normalized touch X position (0 to 1 across the window)
+     * to logical coordinates, from the actual pixel width of the window
+     * (the logical screen width is rounded up and may overflow it).
+     */
+    inline function touchX(x:Float):Float {
+
+        return x * Clay.app.screenPixelWidth / Clay.app.screenDensity;
+
+    }
+
+    /**
+     * Converts a normalized touch Y position (0 to 1 across the window)
+     * to logical coordinates, from the actual pixel height of the window.
+     */
+    inline function touchY(y:Float):Float {
+
+        return y * Clay.app.screenPixelHeight / Clay.app.screenDensity;
+
+    }
+
 /// Overrides
 
     /**
@@ -409,8 +430,8 @@ class ClayEvents extends clay.Events {
 
         backend.screen.emitTouchDown(
             index,
-            x * lastWidth,
-            y * lastHeight
+            touchX(x),
+            touchY(y)
         );
 
     }
@@ -439,8 +460,8 @@ class ClayEvents extends clay.Events {
 
         backend.screen.emitTouchUp(
             index,
-            x * lastWidth,
-            y * lastHeight
+            touchX(x),
+            touchY(y)
         );
 
         touches.remove(touchId);
@@ -472,8 +493,8 @@ class ClayEvents extends clay.Events {
 
         backend.screen.emitTouchMove(
             index,
-            x * lastWidth,
-            y * lastHeight
+            touchX(x),
+            touchY(y)
         );
 
     }
