@@ -66,7 +66,7 @@ Rust free functions used everywhere (`px`, `rems`, `relative`, `point`, `size`, 
 
 ## Reactivity
 
-- Entity state that is read during render is a `gpui.Model` with `@observe` fields (tracker). The tracker principles are in the Reactivity section of [README.md](README.md).
+- Entity state that is read during render is a `gpui.Model` with `@observe` fields (tracker).
 - `cx.notify()` stays available for state that is not observable.
 
 ## Performance (hxcpp first)
