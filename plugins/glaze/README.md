@@ -2,11 +2,6 @@
 
 Haxe port of [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) (Zed's UI framework) as a Ceramic plugin, as a foundation to port [gpui-kit](https://github.com/longbridge/gpui-kit) on top of it.
 
-Design notes and roadmap:
-
-- [CERAMIC_GPUI_BRAINSTORM_1.md](CERAMIC_GPUI_BRAINSTORM_1.md): analysis of GPUI, gpui-kit, Ceramic and the star plugin.
-- [CERAMIC_GPUI_PLAN_1.md](CERAMIC_GPUI_PLAN_1.md): step by step implementation plan.
-
 ## Layout
 
 | Path | Content |
