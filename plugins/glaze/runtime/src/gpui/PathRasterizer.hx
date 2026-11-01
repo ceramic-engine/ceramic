@@ -80,53 +80,63 @@ class PathRasterizer {
     }
 
     /**
-     * A key identifying the rasterized tile: geometry in device pixels (the
-     * snapping depends on the absolute position), viewport, rectangle.
+     * A key identifying the rasterized tile, independent of where the tile
+     * is: `rasterize()` and `rasterizeCurves()` only read the vertices
+     * snapped to the 1/256 grid relative to the tile corner, the curve
+     * parameters, the path bounds relative to the tile and the tile size, so
+     * the key hashes exactly these values. A path moved by whole device
+     * pixels (scrolling) gets the same key, unless the `f32` snapping of its
+     * vertices differs at the new position, which then gives another key.
+     *
+     * Two independent 32 bit hashes plus the count of hashed values: equal
+     * keys for different tiles would need a collision of both hashes.
      */
     public static function cacheKey(path:Path, scaleFactor:Float, x0:Float, y0:Float, width:Int, height:Int, viewportWidth:Int, viewportHeight:Int):String {
-        final buf = new StringBuf();
-        buf.add(x0);
-        buf.add(',');
-        buf.add(y0);
-        buf.add(',');
-        buf.add(width);
-        buf.add('x');
-        buf.add(height);
-        buf.add('/');
-        buf.add(viewportWidth);
-        buf.add('x');
-        buf.add(viewportHeight);
-        buf.add('@');
-        buf.add(scaleFactor);
-        buf.add(':');
+        final ox = x0 * SUBPIXEL;
+        final oy = y0 * SUBPIXEL;
+        final hash = keyHash;
+        hash.reset();
+        hash.addInt(width);
+        hash.addInt(height);
+
+        // boundsClip() relative to the tile: f32 values minus whole pixels,
+        // exact in f32
         final b = path.bounds;
-        buf.add('${b.origin.x},${b.origin.y},${b.size.width},${b.size.height}:');
+        final left = f(b.origin.x * scaleFactor);
+        final top = f(b.origin.y * scaleFactor);
+        hash.addF32(left - x0);
+        hash.addF32(top - y0);
+        hash.addF32(f(left + f(b.size.width * scaleFactor)) - x0);
+        hash.addF32(f(top + f(b.size.height * scaleFactor)) - y0);
+
         if (path.fillPolygons != null) {
-            buf.add('f${path.fillRule}');
+            hash.addInt(path.fillRule == EvenOdd ? 1 : 2);
             for (poly in path.fillPolygons) {
-                buf.add('|');
-                for (v in poly) {
-                    buf.add(v);
-                    buf.add(',');
+                hash.addInt(-1 - poly.length);
+                var i = 0;
+                while (i < poly.length) {
+                    hash.addInt(Std.int(snapX(poly[i], scaleFactor, viewportWidth) - ox));
+                    hash.addInt(Std.int(snapY(poly[i + 1], scaleFactor, viewportHeight) - oy));
+                    i += 2;
                 }
             }
         }
         else {
-            buf.add('t');
+            hash.addInt(3);
             for (v in path.vertices) {
-                buf.add(v.xyPosition.x);
-                buf.add(',');
-                buf.add(v.xyPosition.y);
-                buf.add(',');
-                buf.add(v.s);
-                buf.add(',');
-                buf.add(v.t);
-                buf.add(';');
+                hash.addInt(Std.int(snapX(v.xyPosition.x, scaleFactor, viewportWidth) - ox));
+                hash.addInt(Std.int(snapY(v.xyPosition.y, scaleFactor, viewportHeight) - oy));
+                hash.addFloat(v.s);
+                hash.addFloat(v.t);
             }
         }
-        final key = buf.toString();
-        return key.length > 256 ? haxe.crypto.Md5.encode(key) + key.length : key;
+        return hash.key();
     }
+
+    static final keyHash:PathKeyHash = new PathKeyHash();
+
+    /** Number of tiles rasterized so far (instrumentation, see `test/bench`) */
+    public static var rasterizedCount:Int = 0;
 
     /**
      * A vertex coordinate (logical pixels) in 1/256 device pixel units, as
@@ -151,6 +161,7 @@ class PathRasterizer {
      * `viewportWidth` x `viewportHeight` device pixels.
      */
     public static function rasterize(path:Path, scaleFactor:Float, x0:Float, y0:Float, width:Int, height:Int, viewportWidth:Int, viewportHeight:Int):AtlasTile.AtlasTileSource {
+        rasterizedCount++;
         final mask = Bytes.alloc(width * height);
         mask.fill(0, mask.length, 0);
         final ox = x0 * SUBPIXEL;
@@ -215,6 +226,7 @@ class PathRasterizer {
      * documentation for the encoding).
      */
     public static function rasterizeCurves(path:Path, scaleFactor:Float, x0:Float, y0:Float, width:Int, height:Int, viewportWidth:Int, viewportHeight:Int):AtlasTile.AtlasTileSource {
+        rasterizedCount++;
         final samples = new haxe.ds.Vector<Float>(width * height * 4);
         for (i in 0...samples.length)
             samples[i] = 0;
@@ -464,6 +476,68 @@ class PathRasterizer {
                 }
             }
         }
+    }
+
+}
+
+/**
+ * Two independent 32 bit hashes (FNV-1a and a multiply-rotate mix, with
+ * murmur3's finalizer) over 32 bit words, for `PathRasterizer.cacheKey()`.
+ */
+class PathKeyHash {
+
+    var h1:Int = 0;
+
+    var h2:Int = 0;
+
+    var count:Int = 0;
+
+    public function new() {}
+
+    public inline function reset():Void {
+        h1 = 0x811C9DC5;
+        h2 = 0x2F3B5A1D;
+        count = 0;
+    }
+
+    public function addInt(value:Int):Void {
+        var a:haxe.Int32 = h1 ^ value;
+        a = a * 0x01000193;
+        h1 = a;
+        var k:haxe.Int32 = value;
+        k = k * 0xCC9E2D51;
+        k = (k << 15) | (k >>> 17);
+        k = k * 0x1B873593;
+        var b:haxe.Int32 = h2 ^ k;
+        b = (b << 13) | (b >>> 19);
+        b = b * 5 + 0xE6546B64;
+        h2 = b;
+        count++;
+    }
+
+    /** A value exact in `f32` */
+    public inline function addF32(value:Float):Void {
+        addInt(haxe.io.FPHelper.floatToI32(value));
+    }
+
+    /** Any double: its `f32` rounding, then the `f32` rounding of the rest */
+    public inline function addFloat(value:Float):Void {
+        final high = SpringMath.f32(value);
+        addInt(haxe.io.FPHelper.floatToI32(high));
+        addInt(haxe.io.FPHelper.floatToI32(value - high));
+    }
+
+    static inline function fmix(h:haxe.Int32):Int {
+        h = h ^ (h >>> 16);
+        h = h * 0x85EBCA6B;
+        h = h ^ (h >>> 13);
+        h = h * 0xC2B2AE35;
+        h = h ^ (h >>> 16);
+        return h;
+    }
+
+    public function key():String {
+        return fmix(h1 ^ count) + ':' + fmix(h2 ^ count) + ':' + count;
     }
 
 }

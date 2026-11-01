@@ -87,6 +87,26 @@ class AtlasState<Backend:AtlasBackend> {
         return result;
     }
 
+    /**
+     * Forgets every tile of the texture `textureIndex` (Ceramic addition,
+     * for atlases that reuse a whole page, see `CeramicAtlas`). The backend
+     * is not told: it is the one emptying the page.
+     */
+    public function forgetTexture(textureIndex:Int):Void {
+        var keys:Null<Array<String>> = null;
+        for (key => tile in tilesByKey) {
+            if (tile.textureId.index == textureIndex) {
+                if (keys == null) keys = [];
+                keys.push(key);
+            }
+        }
+        if (keys != null) {
+            for (key in keys) {
+                tilesByKey.remove(key);
+            }
+        }
+    }
+
     public function remove(key:AtlasKey):Void {
         final keyString = key.keyString();
         final tile = tilesByKey.get(keyString);

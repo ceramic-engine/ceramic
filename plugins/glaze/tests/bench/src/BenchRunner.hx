@@ -35,8 +35,14 @@ import gpui.util.FrameProfiler;
  * - `GPUI_BENCH_RESULTS`: results directory (default `test/bench/results`);
  * - `GPUI_BENCH_SCREEN`: `1` runs the measured block through the real update
  *   loop with the renderable on the screen (one step per tick), so the
- *   `render` phase (SceneRenderable, with `gpui_profile_frames`) and the wall
- *   time between two ticks (GL flush and swap included) are measured too.
+ *   `render` phase (SceneRenderable, with `gpui_profile_frames`), the time
+ *   Ceramic spends drawing (from its begin draw to its finish draw event) and
+ *   the wall time between two ticks (GL flush and swap included) are
+ *   measured too;
+ * - `GPUI_BENCH_ATLAS`: `1` runs the atlas upload micro benchmark instead;
+ * - `GPUI_BENCH_RT`: `1` or `0` forces the `renderToTexture` mode of the
+ *   windows' renderables (`SceneRenderable.renderToTexture`), otherwise the
+ *   default (`SceneRenderable.defaultRenderToTexture`).
  */
 class BenchRunner {
 
@@ -65,6 +71,8 @@ class BenchRunner {
 
     final screen:Bool;
 
+    final renderToTexture:Null<Bool>;
+
     final scenarios:Array<Scenario>;
 
     final timestamp:String;
@@ -75,6 +83,13 @@ class BenchRunner {
 
     var written:Array<String> = [];
 
+    /** Ceramic draw time of the last on screen measure (median and p99, ms) */
+    var lastDrawMedian:Float = 0.0;
+
+    /** Path tiles rasterized during the last measure */
+    var lastPathRasterizations:Int = 0;
+    var lastDrawP99:Float = 0.0;
+
     public function new(owner:ceramic.Entity, app:App) {
         this.owner = owner;
         this.app = app;
@@ -83,6 +98,8 @@ class BenchRunner {
         final onlyEnv = env('GPUI_BENCH_ONLY');
         only = onlyEnv == 'full' || onlyEnv == 'cached' ? onlyEnv : null;
         screen = env('GPUI_BENCH_SCREEN') == '1';
+        final rtEnv = env('GPUI_BENCH_RT');
+        renderToTexture = rtEnv == '1' ? true : rtEnv == '0' ? false : null;
         timestamp = DateTools.format(Date.now(), '%Y%m%d-%H%M%S');
         scenarios = select(Scenarios.all());
     }
@@ -101,8 +118,57 @@ class BenchRunner {
      * Runs every selected scenario, then exits the process (1 when an idle
      * check failed).
      */
+    /**
+     * Atlas upload micro benchmark (`GPUI_BENCH_ATLAS=1`): 60 bursts of 300
+     * new glyph-like monochrome tiles and 4 polychrome tiles, each followed
+     * by `CeramicAtlas.upload()`, timed.
+     */
+    static function atlasBench():Void {
+        final atlas = new gpui.platform.CeramicAtlas(1024, true, false);
+        var seed = 1;
+        function rnd(n:Int):Int {
+            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            return seed % n;
+        }
+        final times:Array<Float> = [];
+        var key = 0;
+        for (round in 0...60) {
+            // A burst of new glyphs (a new page of text), and a few images
+            for (_ in 0...300) {
+                final w = 6 + rnd(14);
+                final h = 10 + rnd(14);
+                final bytes = haxe.io.Bytes.alloc(w * h);
+                for (i in 0...bytes.length) bytes.set(i, rnd(256));
+                atlas.getOrInsertWith(gpui.AtlasKey.Svg('g${key++}', w, h), () -> new gpui.AtlasTile.AtlasTileSource(w, h, bytes));
+            }
+            for (_ in 0...4) {
+                final w = 24 + rnd(40);
+                final h = 24 + rnd(40);
+                final bytes = haxe.io.Bytes.alloc(w * h * 4);
+                for (i in 0...bytes.length) bytes.set(i, rnd(256));
+                final source = new gpui.AtlasTile.AtlasTileSource(w, h, bytes);
+                source.straightAlpha = true;
+                atlas.getOrInsertWith(gpui.AtlasKey.Image(key++, 0), () -> source);
+            }
+            final start = now();
+            atlas.upload();
+            times.push(now() - start);
+        }
+        times.sort(Reflect.compare);
+        var sum = 0.0;
+        for (t in times) sum += t;
+        print('atlas upload: ${fmt(times[times.length >> 1])} ms median, total ${fmt(sum)} ms over ${times.length} uploads, ${atlas.textures.length} pages');
+        atlas.destroy();
+    }
+
     public function run():Void {
-        print('gpui benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : ''));
+        if (env('GPUI_BENCH_ATLAS') == '1') {
+            atlasBench();
+            exit(0);
+            return;
+        }
+        print('gpui benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : '')
+            + (renderToTexture != null ? ', renderToTexture $renderToTexture' : ''));
         final tasks:Array<(Void->Void)->Void> = [];
         for (scenario in scenarios) {
             for (caching in scenario.cachedModes) {
@@ -133,6 +199,9 @@ class BenchRunner {
 
     function runMode(scenario:Scenario, caching:Bool, done:Void->Void):Void {
         final window = scenario.setup(app, caching);
+        if (renderToTexture != null) {
+            window.renderable.renderToTexture = renderToTexture;
+        }
         AllocationCounters.reset();
         window.draw();
         final elementCount = AllocationCounters.divs + AllocationCounters.texts + AllocationCounters.svgs + AllocationCounters.viewElements;
@@ -170,11 +239,20 @@ class BenchRunner {
         var reusedViews = 0;
         var counters = 0;
         var anyElements = 0;
+        var pathRasterizations = 0;
         var minorPausesBefore = 0.0;
         var minorPauseTotalBefore = 0.0;
         var volumeBefore = 0.0;
         var lastTick = 0.0;
+        final drawTimes:Array<Float> = [];
+        var drawStart = 0.0;
+        var measuringDraws = false;
+        final onBeginDraw = () -> drawStart = now();
+        final onFinishDraw = () -> {
+            if (measuringDraws) drawTimes.push(now() - drawStart);
+        };
         function frameBody(frame:Int):Void {
+            measuringDraws = frame > WARMUP_FRAMES;
             final measured = frame >= WARMUP_FRAMES;
             if (frame == WARMUP_FRAMES) {
                 FrameProfiler.reset();
@@ -184,6 +262,7 @@ class BenchRunner {
             }
             final countersBefore = AllocationCounters.total();
             final elementsBefore = AnyElement.allocatedCount;
+            final rasterizedBefore = gpui.PathRasterizer.rasterizedCount;
             final start = now();
             if (measured && lastTick > 0) {
                 wallTimes.push(start - lastTick);
@@ -201,6 +280,7 @@ class BenchRunner {
                 reusedViews += window.reusedViewCount;
                 counters += AllocationCounters.total() - countersBefore;
                 anyElements += AnyElement.allocatedCount - elementsBefore;
+                pathRasterizations += gpui.PathRasterizer.rasterizedCount - rasterizedBefore;
             }
         }
         final total = WARMUP_FRAMES + frames;
@@ -208,6 +288,7 @@ class BenchRunner {
             for (frame in 0...total) {
                 frameBody(frame);
             }
+            lastPathRasterizations = pathRasterizations;
             finishMeasure(scenario, window, caching, elementCount, run, times, wallTimes, renderedViews, reusedViews, counters, anyElements, minorPausesBefore, minorPauseTotalBefore, gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore);
             done();
             return;
@@ -216,12 +297,23 @@ class BenchRunner {
         // renders the window after each update
         var frame = 0;
         var handler:Null<Float->Void> = null;
+        ceramic.App.app.onBeginDraw(owner, onBeginDraw);
+        ceramic.App.app.onFinishDraw(owner, onFinishDraw);
         handler = _ -> {
             if (frame < total) {
                 frameBody(frame++);
                 return;
             }
             ceramic.App.app.offUpdate(handler);
+            ceramic.App.app.offBeginDraw(onBeginDraw);
+            ceramic.App.app.offFinishDraw(onFinishDraw);
+            drawTimes.sort(Reflect.compare);
+            if (drawTimes.length > 0) {
+                print('  ceramic draw per frame: ${fmt(drawTimes[drawTimes.length >> 1])} ms median, p99 ${fmt(percentile(drawTimes, 0.99))} ms');
+            }
+            lastPathRasterizations = pathRasterizations;
+            lastDrawMedian = drawTimes.length > 0 ? drawTimes[drawTimes.length >> 1] : 0.0;
+            lastDrawP99 = drawTimes.length > 0 ? percentile(drawTimes, 0.99) : 0.0;
             finishMeasure(scenario, window, caching, elementCount, run, times, wallTimes, renderedViews, reusedViews, counters, anyElements, minorPausesBefore, minorPauseTotalBefore, gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore);
             done();
         };
@@ -272,7 +364,8 @@ class BenchRunner {
         print('${scenario.name} $modeLabel$runLabel: $elementCount elements, draw ${fmt(mean)} ms mean, ${fmt(median)} ms median, '
             + 'p95 ${fmt(percentile(times, 0.95))} ms, p99 ${fmt(percentile(times, 0.99))} ms, max ${fmt(times[times.length - 1])} ms, '
             + 'views rendered ${fmt(renderedViews / frames)} / reused ${fmt(reusedViews / frames)} per frame, '
-            + 'objects created ${fmt(counters / frames)} per frame (new AnyElement ${fmt(anyElements / frames)})'
+            + 'objects created ${fmt(counters / frames)} per frame (new AnyElement ${fmt(anyElements / frames)}), '
+            + 'path tiles rasterized ${fmt(lastPathRasterizations / frames)} per frame'
             #if cpp + ', ${fmt(bytes / frames / 1024)} KiB allocated per frame' #end);
         wallTimes.sort(Reflect.compare);
         final wallMedian = wallTimes.length > 0 ? wallTimes[wallTimes.length >> 1] : 0.0;
@@ -319,6 +412,10 @@ class BenchRunner {
             wallMedianMs: wallMedian,
             wallP99Ms: wallTimes.length > 0 ? percentile(wallTimes, 0.99) : 0.0,
             wallMaxMs: wallTimes.length > 0 ? wallTimes[wallTimes.length - 1] : 0.0,
+            drawMedianMs: screen ? lastDrawMedian : 0.0,
+            pathRasterizationsPerFrame: lastPathRasterizations / frames,
+            drawP99Ms: screen ? lastDrawP99 : 0.0,
+            renderToTexture: window.renderable.renderToTexture,
             phasesMsPerFrame: phases,
             phaseCounts: phaseCounts,
             gc: {
@@ -343,6 +440,16 @@ class BenchRunner {
         final countersBefore = AllocationCounters.total();
         var ticks = 0;
         var bytesBefore = 0.0;
+        var cpuBefore = 0.0;
+        var wallBefore = 0.0;
+        final drawTimes:Array<Float> = [];
+        var drawStart = 0.0;
+        final onBeginDraw = () -> drawStart = now();
+        final onFinishDraw = () -> {
+            if (ticks > 10 && ticks <= 10 + idleFrames) drawTimes.push(now() - drawStart);
+        };
+        ceramic.App.app.onBeginDraw(owner, onBeginDraw);
+        ceramic.App.app.onFinishDraw(owner, onFinishDraw);
         ceramic.App.app.screen.add(window.renderable);
         var handler:Null<Float->Void> = null;
         handler = _ -> {
@@ -351,11 +458,22 @@ class BenchRunner {
                 // Measure the idle frames with the GC disabled
                 gcEnable(false);
                 bytesBefore = heapBytes();
+                cpuBefore = cpuTime();
+                wallBefore = now();
             }
             else if (ticks == 10 + idleFrames) {
                 final bytes = heapBytes() - bytesBefore;
+                final cpuMs = (cpuTime() - cpuBefore) / idleFrames;
+                final wallMs = (now() - wallBefore) / idleFrames;
                 gcEnable(true);
                 ceramic.App.app.offUpdate(handler);
+                ceramic.App.app.offBeginDraw(onBeginDraw);
+                ceramic.App.app.offFinishDraw(onFinishDraw);
+                drawTimes.sort(Reflect.compare);
+                final drawMedian = drawTimes.length > 0 ? drawTimes[drawTimes.length >> 1] : 0.0;
+                print('  idle frame: ceramic draw ${fmt(drawMedian)} ms median, p99 ${fmt(percentile(drawTimes, 0.99))} ms'
+                    #if cpp + ', process CPU ${fmt(cpuMs)} ms' #end + ', wall ${fmt(wallMs)} ms per frame'
+                    + ', renderToTexture ${window.renderable.renderToTexture}');
                 final draws = window.drawCount - drawCount;
                 final objects = AllocationCounters.total() - countersBefore;
                 final ok = draws == 0 && scene == window.renderedScene() && objects == 0;
@@ -370,6 +488,11 @@ class BenchRunner {
                     objectsCreated: objects,
                     bytesTotal: bytes,
                     bytesPerFrame: bytes / idleFrames,
+                    drawMedianMs: drawMedian,
+                    drawP99Ms: percentile(drawTimes, 0.99),
+                    cpuMsPerFrame: #if cpp cpuMs #else 0.0 #end,
+                    wallMsPerFrame: wallMs,
+                    renderToTexture: window.renderable.renderToTexture,
                     ok: ok
                 });
                 writeResult(result, scenario.name, caching, 0);
@@ -572,6 +695,15 @@ class BenchRunner {
 
     static function now():Float {
         return haxe.Timer.stamp() * 1000.0;
+    }
+
+    /** Process CPU time in ms (native), 0 elsewhere */
+    static function cpuTime():Float {
+        #if sys
+        return Sys.cpuTime() * 1000.0;
+        #else
+        return 0.0;
+        #end
     }
 
     static function heapBytes():Float {

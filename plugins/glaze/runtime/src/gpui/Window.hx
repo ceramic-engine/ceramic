@@ -52,6 +52,13 @@ class WindowOptions {
     /** Whether the user can minimize the window (GPUI `WindowOptions::is_minimizable`) */
     public var isMinimizable:Bool = true;
 
+    /**
+     * Whether the renderable draws the scene into a render texture, only when
+     * it changed (see `SceneRenderable.renderToTexture`), when not set:
+     * `SceneRenderable.defaultRenderToTexture`.
+     */
+    public var renderToTexture:Null<Bool> = null;
+
 }
 
 /**
@@ -854,6 +861,7 @@ class Window implements WindowInvalidator {
         renderable.size(options.width, options.height);
         renderable.sceneScale = _scaleFactor;
         renderable.scene = renderedFrame.scene;
+        if (options.renderToTexture != null) renderable.renderToTexture = options.renderToTexture;
 
         if (options.atlas != null) {
             spriteAtlas = options.atlas;
@@ -862,6 +870,7 @@ class Window implements WindowInvalidator {
             // The headless backend has no textures: pages stay on the CPU
             final atlas = new gpui.platform.CeramicAtlas(1024, #if headless false #else true #end);
             renderable.atlasTextures = atlas.textures;
+            renderable.atlas = atlas;
             atlas.onTexturesChange = () -> renderable.usedTexturesDirty = true;
             renderable.usedTexturesDirty = true;
             spriteAtlas = atlas;

@@ -52,6 +52,7 @@ class Tests {
         runner.add(new tests.AnchoredTest());
         runner.add(new tests.ImgTest());
         runner.add(new tests.AtlasAllocatorTest());
+        runner.add(new tests.RenderCacheTest());
         runner.add(new tests.InputHandlerTest());
         runner.add(new tests.TextInputBehaviourTest());
         runner.add(new tests.ViewCacheTest());

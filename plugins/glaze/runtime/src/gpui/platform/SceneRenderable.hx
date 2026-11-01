@@ -29,25 +29,100 @@ import gpui.scene.Underline;
  * this visual's local coordinates, then transformed by its world matrix,
  * so the renderable can be moved, scaled or rendered into a render texture
  * like any other visual.
+ *
+ * With `renderToTexture`, the scene is drawn into a `RenderTexture` of the
+ * renderable's size at `sceneScale` density, only when it changed (a new
+ * scene, a new scale, size or gamma), and a child `Quad` shows that texture
+ * without filtering. Ceramic then draws a single quad per frame while the
+ * window is idle.
  */
 class SceneRenderable extends Renderable {
 
     /**
+     * Whether new renderables draw into a render texture (see
+     * `renderToTexture`). On by default: the 425 golden scenes give the same
+     * bytes in both modes. The `gpui_no_render_to_texture` define turns it off.
+     */
+    public static var defaultRenderToTexture:Bool = #if gpui_no_render_to_texture false #else true #end;
+
+    /**
      * Scene to draw. Not owned: the window replaces it every frame.
      */
-    public var scene:Scene = null;
+    public var scene(default, set):Scene = null;
+    function set_scene(scene:Scene):Scene {
+        this.scene = scene;
+        if (atlas != null && scene != null) {
+            atlas.markSceneUsed(scene);
+        }
+        // Assigned once per drawn frame: the atlas may have new pages too
+        if (targetDrawer != null) {
+            targetDrawer.usedTexturesDirty = true;
+        }
+        markRenderDirty();
+        return scene;
+    }
+
+    /**
+     * The atlas owned by the window of this renderable, if any: told which
+     * path pages each new scene uses (see `CeramicAtlas.markSceneUsed()`).
+     * Leave null for an atlas shared by several windows.
+     */
+    public var atlas:Null<CeramicAtlas> = null;
 
     /**
      * Number of scene units (scaled pixels) per local unit.
      * Usually the screen density.
      */
-    public var sceneScale:Float = 1;
+    public var sceneScale(default, set):Float = 1;
+    function set_sceneScale(sceneScale:Float):Float {
+        if (this.sceneScale != sceneScale) {
+            this.sceneScale = sceneScale;
+            targetLayoutDirty();
+        }
+        return sceneScale;
+    }
 
     /**
      * Atlas textures, indexed by the `textureIndex` of sprite primitives.
      * Set `usedTexturesDirty = true` after changing this array.
      */
-    public var atlasTextures:Array<Texture> = [];
+    public var atlasTextures(default, set):Array<Texture> = [];
+    function set_atlasTextures(atlasTextures:Array<Texture>):Array<Texture> {
+        this.atlasTextures = atlasTextures;
+        if (targetDrawer != null) {
+            targetDrawer.usedTexturesDirty = true;
+        }
+        markRenderDirty();
+        return atlasTextures;
+    }
+
+    /**
+     * Draw the scene into a render texture shown by a child quad, and only
+     * when it changed, instead of drawing it again at every Ceramic frame.
+     * Defaults to `defaultRenderToTexture`.
+     */
+    public var renderToTexture(default, set):Bool = false;
+    function set_renderToTexture(renderToTexture:Bool):Bool {
+        if (this.renderToTexture != renderToTexture) {
+            this.renderToTexture = renderToTexture;
+            if (renderToTexture) {
+                targetLayoutDirty();
+            }
+            else {
+                destroyTarget();
+            }
+        }
+        return renderToTexture;
+    }
+
+    /** Render texture of `renderToTexture` (null until the first update) */
+    public var targetTexture(default, null):Null<ceramic.RenderTexture> = null;
+
+    /** Draws the scene into `targetTexture` */
+    var targetDrawer:Null<SceneTargetDrawer> = null;
+
+    /** Shows `targetTexture` */
+    var targetQuad:Null<ceramic.Quad> = null;
 
     /**
      * Font gamma (see GPUI's `ZED_FONTS_GAMMA`), clamped to 1.0..2.2.
@@ -61,6 +136,7 @@ class SceneRenderable extends Renderable {
     function set_fontsGamma(fontsGamma:Float):Float {
         this.fontsGamma = Math.max(1.0, Math.min(2.2, fontsGamma));
         gammaRatiosDirty = true;
+        markRenderDirty();
         return this.fontsGamma;
     }
 
@@ -68,11 +144,28 @@ class SceneRenderable extends Renderable {
      * Contrast enhancement of grayscale text (see GPUI's `ZED_FONTS_GRAYSCALE_ENHANCED_CONTRAST`).
      * Defaults to 0.0 like GPUI's Metal renderer (see `fontsGamma`).
      */
-    public var grayscaleEnhancedContrast:Float = 0.0;
+    public var grayscaleEnhancedContrast(default, set):Float = 0.0;
+    function set_grayscaleEnhancedContrast(grayscaleEnhancedContrast:Float):Float {
+        this.grayscaleEnhancedContrast = grayscaleEnhancedContrast;
+        markRenderDirty();
+        return grayscaleEnhancedContrast;
+    }
 
     var gammaRatios:Array<Float> = [0, 0, 0, 0];
 
     var gammaRatiosDirty:Bool = true;
+
+    /**
+     * The uniforms set by the renderer. A shader keeps the values of its
+     * uniforms, and only this class sets these ones (the shaders are shared
+     * by every renderable): a value equal to the last one given to the same
+     * shader is not set again.
+     */
+    static final dashOneUniform = new UniformCache('dashOne');
+    static final gammaRatiosUniform = new UniformCache('gammaRatios');
+    static final contrastUniform = new UniformCache('grayscaleEnhancedContrast');
+    static final pathCoverageUniform = new UniformCache('pathCoverage');
+    static final straightAlphaUniform = new UniformCache('straightAlpha');
 
     var quadShader:Shader = null;
     var shadowShader:Shader = null;
@@ -98,6 +191,148 @@ class SceneRenderable extends Renderable {
     public function new() {
 
         super();
+
+        if (defaultRenderToTexture) {
+            renderToTexture = true;
+        }
+
+    }
+
+    override function destroy():Void {
+
+        destroyTarget();
+        super.destroy();
+
+    }
+
+    override function set_width(width:Float):Float {
+
+        if (this.width != width) {
+            super.set_width(width);
+            targetLayoutDirty();
+        }
+        return width;
+
+    }
+
+    override function set_height(height:Float):Float {
+
+        if (this.height != height) {
+            super.set_height(height);
+            targetLayoutDirty();
+        }
+        return height;
+
+    }
+
+    /**
+     * Draw the scene into the render texture again at the next Ceramic frame
+     * (`renderToTexture` mode; nothing to do otherwise). Called when the
+     * scene, the atlas textures, the scale, the size or the gamma change.
+     */
+    public function markRenderDirty():Void {
+
+        if (targetTexture != null) {
+            targetTexture.renderDirty = true;
+        }
+
+    }
+
+    inline function targetLayoutDirty():Void {
+
+        if (renderToTexture) {
+            contentDirty = true;
+        }
+
+    }
+
+    /**
+     * Creates or resizes the render texture of `renderToTexture` mode, before
+     * the visuals are rendered.
+     */
+    override function computeContent():Void {
+
+        if (renderToTexture) {
+            updateTarget();
+        }
+        contentDirty = false;
+
+    }
+
+    function updateTarget():Void {
+
+        final density = sceneScale;
+        final textureWidth = Math.round(width * density);
+        final textureHeight = Math.round(height * density);
+
+        if (textureWidth <= 0 || textureHeight <= 0) {
+            destroyTarget();
+            return;
+        }
+
+        if (targetTexture != null
+            && targetTexture.density == density
+            && Math.round(targetTexture.width * density) == textureWidth
+            && Math.round(targetTexture.height * density) == textureHeight) {
+            layoutTargetQuad();
+            return;
+        }
+
+        if (targetTexture != null) {
+            targetQuad.texture = null;
+            targetTexture.destroy();
+            targetTexture = null;
+        }
+
+        // No depth, stencil or multisampling: GPUI's shaders antialias
+        // their primitives themselves, nothing clips with the stencil
+        final texture = new ceramic.RenderTexture(width, height, density, false, false, 0);
+        texture.autoRender = false;
+        texture.clearOnRender = true;
+        texture.filter = NEAREST;
+        texture.renderDirty = true;
+        targetTexture = texture;
+
+        if (targetDrawer == null) {
+            targetDrawer = new SceneTargetDrawer(this);
+        }
+        targetDrawer.usedTexturesDirty = true;
+        texture.add(targetDrawer);
+
+        if (targetQuad == null) {
+            targetQuad = new ceramic.Quad();
+            // Rows bottom up (see `SceneTargetDrawer.render()`)
+            targetQuad.scaleY = -1;
+            // Input goes to this renderable (see `GpuiInput`)
+            targetQuad.touchable = false;
+            add(targetQuad);
+        }
+        targetQuad.texture = texture;
+        layoutTargetQuad();
+
+    }
+
+    inline function layoutTargetQuad():Void {
+
+        targetQuad.size(width, height);
+        targetQuad.pos(0, height);
+
+    }
+
+    function destroyTarget():Void {
+
+        if (targetQuad != null) {
+            targetQuad.destroy();
+            targetQuad = null;
+        }
+        if (targetDrawer != null) {
+            targetDrawer.destroy();
+            targetDrawer = null;
+        }
+        if (targetTexture != null) {
+            targetTexture.destroy();
+            targetTexture = null;
+        }
 
     }
 
@@ -140,6 +375,19 @@ class SceneRenderable extends Renderable {
 
     override function render(draw:backend.Draw):Void {
 
+        // In `renderToTexture` mode, `targetDrawer` draws the scene into the
+        // texture shown by `targetQuad`
+        if (renderToTexture) return;
+        renderScene(draw, matA, matB, matC, matD, matTX, matTY);
+
+    }
+
+    /**
+     * Draws the scene with the given local (logical units) to world matrix.
+     */
+    @:allow(gpui.platform.SceneTargetDrawer)
+    function renderScene(draw:backend.Draw, a:Float, b:Float, c:Float, d:Float, tx:Float, ty:Float):Void {
+
         if (scene == null || scene.len() == 0) return;
         if (!ensureShaders()) return;
         gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
@@ -151,12 +399,12 @@ class SceneRenderable extends Renderable {
 
         // Local (scaled pixels) to world transform
         final invScale = 1.0 / sceneScale;
-        wa = matA * invScale;
-        wb = matB * invScale;
-        wc = matC * invScale;
-        wd = matD * invScale;
-        wtx = matTX;
-        wty = matTY;
+        wa = a * invScale;
+        wb = b * invScale;
+        wc = c * invScale;
+        wd = d * invScale;
+        wtx = tx;
+        wty = ty;
 
         draw.setBlendFuncSeparate(
             BlendMode.ONE, BlendMode.ONE_MINUS_SRC_ALPHA,
@@ -278,7 +526,7 @@ class SceneRenderable extends Renderable {
     function drawQuads(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
         // Order barrier of the dash code (see `GpuiQuad_Frag.dashOne`)
-        quadShader.setFloat('dashOne', 1);
+        dashOneUniform.setFloat(quadShader, 1);
         useShader(draw, quadShader);
         final quads = scene.quads;
 
@@ -512,8 +760,8 @@ class SceneRenderable extends Renderable {
 
     function drawMonochromeSprites(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
-        monoSpriteShader.setVec4('gammaRatios', gammaRatios[0], gammaRatios[1], gammaRatios[2], gammaRatios[3]);
-        monoSpriteShader.setFloat('grayscaleEnhancedContrast', grayscaleEnhancedContrast);
+        gammaRatiosUniform.setVec4(monoSpriteShader, gammaRatios[0], gammaRatios[1], gammaRatios[2], gammaRatios[3]);
+        contrastUniform.setFloat(monoSpriteShader, grayscaleEnhancedContrast);
         useShader(draw, monoSpriteShader);
 
         final texture = bindAtlasTexture(draw, batch.textureIndex);
@@ -578,7 +826,7 @@ class SceneRenderable extends Renderable {
         // curves, monochrome pages coverage masks (see `PathRasterizer`)
         final batchTexture = batch.textureIndex >= 0 && batch.textureIndex < atlasTextures.length ? atlasTextures[batch.textureIndex] : null;
         final curves = batchTexture != null && CeramicAtlas.isStraightAlpha(batchTexture);
-        pathSpriteShader.setFloat('pathCoverage', curves ? 2 : 1);
+        pathCoverageUniform.setFloat(pathSpriteShader, curves ? 2 : 1);
         useShader(draw, pathSpriteShader);
 
         final texture = bindAtlasTexture(draw, batch.textureIndex);
@@ -713,7 +961,7 @@ class SceneRenderable extends Renderable {
         // for color; One, OneMinusSourceAlpha for alpha). Other textures
         // (texture backed images) are premultiplied.
         final straightAlpha = CeramicAtlas.isStraightAlpha(atlasTexture);
-        polySpriteShader.setFloat('straightAlpha', straightAlpha ? 1.0 : 0.0);
+        straightAlphaUniform.setFloat(polySpriteShader, straightAlpha ? 1.0 : 0.0);
         useShader(draw, polySpriteShader);
         if (straightAlpha) {
             draw.setBlendFuncSeparate(
@@ -820,6 +1068,88 @@ class SceneRenderable extends Renderable {
         result[2] = ratios[2] * norm13;
         result[3] = ratios[3] * norm24;
 
+    }
+
+}
+
+/**
+ * The renderable drawing the scene of a `SceneRenderable` into its render
+ * texture (`renderToTexture` mode), at the origin of the texture.
+ */
+@:allow(gpui.platform.SceneRenderable)
+class SceneTargetDrawer extends Renderable {
+
+    final owner:SceneRenderable;
+
+    function new(owner:SceneRenderable) {
+
+        super();
+        this.owner = owner;
+        pos(0, 0);
+
+    }
+
+    override function computeUsedTextures():Void {
+
+        final arr = usedTextures.original;
+        arr.resize(0);
+        for (texture in owner.atlasTextures) {
+            if (texture != null) {
+                arr.push(texture);
+            }
+        }
+
+    }
+
+    override function render(draw:backend.Draw):Void {
+
+        // Ceramic flips the content of render textures vertically (row 0 at
+        // the top, like loaded textures). The scene is drawn mirrored so that
+        // this flip gives back the vertex positions the screen would get: the
+        // GPU rasterizes and interpolates exactly like on the screen, with
+        // the texture rows bottom up (`targetQuad` shows them mirrored back)
+        final height = owner.targetTexture != null ? owner.targetTexture.height : owner.height;
+        owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+
+    }
+
+}
+
+/**
+ * The last value given to a uniform of a shader (see `SceneRenderable`).
+ */
+class UniformCache {
+
+    final name:String;
+
+    var shader:Null<Shader> = null;
+
+    var x:Float = 0;
+    var y:Float = 0;
+    var z:Float = 0;
+    var w:Float = 0;
+
+    public function new(name:String) {
+        this.name = name;
+    }
+
+    public inline function setFloat(target:Shader, value:Float):Void {
+        if (shader != target || x != value) {
+            shader = target;
+            x = value;
+            target.setFloat(name, value);
+        }
+    }
+
+    public inline function setVec4(target:Shader, x:Float, y:Float, z:Float, w:Float):Void {
+        if (shader != target || this.x != x || this.y != y || this.z != z || this.w != w) {
+            shader = target;
+            this.x = x;
+            this.y = y;
+            this.z = z;
+            this.w = w;
+            target.setVec4(name, x, y, z, w);
+        }
     }
 
 }
