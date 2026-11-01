@@ -1,0 +1,6 @@
+Lucide icons (https://lucide.dev), copied from gpui-kit/crates/assets/assets/icons:
+bell, heart, rocket, settings, star, sun.
+
+Lucide is licensed under ISC (Copyright (c) 2026 Lucide Icons and Contributors).
+Icons derived from Feather are licensed under MIT (Copyright (c) 2013-present Cole Bemis).
+None of the icons used here is in the Feather list. See LICENSE.

@@ -1,0 +1,4680 @@
+// Ported from gpui-pre 0.3.10: src/window.rs
+// Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui;
+
+import gpui.platform.SceneRenderable;
+import gpui.scene.Scene;
+import haxe.ds.IntMap;
+
+/**
+ * Options of a new window.
+ */
+@:structInit
+class WindowOptions {
+
+    /** Logical width of the window (viewport) */
+    public var width:Float = 512;
+
+    /** Logical height of the window (viewport) */
+    public var height:Float = 512;
+
+    /** Scale factor (device pixels per logical pixel), the screen density when not set */
+    public var scaleFactor:Null<Float> = null;
+
+    /** Size of a rem, in logical pixels */
+    public var remSize:Float = 16;
+
+    /** Draw automatically from the `GpuiSystem` when the window is dirty */
+    public var autoDraw:Bool = true;
+
+    /** Whether the window starts active (focused at the platform level) */
+    public var active:Bool = true;
+
+    /** Route Ceramic input (mouse, keyboard) to this window, see `GpuiInput` */
+    public var bindInput:Bool = true;
+
+    /**
+     * The sprite atlas (glyphs, SVGs, images). By default a new
+     * `CeramicAtlas` whose textures are given to the renderable.
+     */
+    public var atlas:Null<PlatformAtlas> = null;
+
+    /**
+     * Whether views are cached by default (see `ViewElement`), when not set:
+     * `Window.defaultViewCaching`.
+     */
+    public var viewCaching:Null<Bool> = null;
+
+    /** Whether the user can resize the window (GPUI `WindowOptions::is_resizable`) */
+    public var isResizable:Bool = true;
+
+    /** Whether the user can minimize the window (GPUI `WindowOptions::is_minimizable`) */
+    public var isMinimizable:Bool = true;
+
+}
+
+/**
+ * The state of a piece of element state, kept across frames by
+ * `Window.withElementState()`. `value` is `null` the first time.
+ */
+class ElementStateBox<S> {
+
+    public var value:Null<S> = null;
+
+    public function new() {}
+
+}
+
+/**
+ * The model created by `Window.useState()` / `useKeyedState()`: a small
+ * entity holding an observable value. Reading `value` during render
+ * subscribes the view, writing it from a handler draws the view again.
+ */
+class StateModel<T> extends Model {
+
+    @observe public var value:T;
+
+    public function new(value:T) {
+        super();
+        this.value = value;
+    }
+
+    /**
+     * GPUI drops a keyed state entity with its value; a dropped focus handle
+     * is released, so a window focused on it reports no focus anymore
+     * (`Window::focused` is `None`). Port focus handles are never released:
+     * the windows focused on a dropped state's handle forget it here.
+     */
+    override function destroy() {
+        final value:Dynamic = this.value;
+        if (value != null && Std.isOfType(value, Droppable)) {
+            (value : Droppable).drop();
+        }
+        if (value != null && Std.isOfType(value, FocusHandle)) {
+            for (window in Window.windows) {
+                if (@:privateAccess window._focus == value) {
+                    @:privateAccess window._focus = null;
+                }
+            }
+        }
+        super.destroy();
+    }
+
+}
+
+/**
+ * A mouse listener registered for the next frame (Rust `AnyMouseListener`),
+ * called for events of the given kind only.
+ */
+private class MouseListenerEntry {
+
+    public final kind:PlatformInputKind;
+
+    public final listener:(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App) -> Void;
+
+    public function new(kind:PlatformInputKind, listener:(PlatformInput, DispatchPhase, Window, App) -> Void) {
+        this.kind = kind;
+        this.listener = listener;
+    }
+
+}
+
+/**
+ * A cursor style requested by an element for its hitbox (or for the whole
+ * window when `hitboxId == -1`).
+ */
+private class CursorStyleRequest {
+
+    public final hitboxId:Int;
+
+    public final style:CursorStyle;
+
+    public function new(hitboxId:Int, style:CursorStyle) {
+        this.hitboxId = hitboxId;
+        this.style = style;
+    }
+
+}
+
+/**
+ * A tooltip set by an element for the next frame.
+ */
+private class TooltipRequest {
+
+    public final id:Int;
+
+    public final tooltip:AnyTooltip;
+
+    public function new(id:Int, tooltip:AnyTooltip) {
+        this.id = id;
+        this.tooltip = tooltip;
+    }
+
+}
+
+/**
+ * The pending keystrokes of a multi-stroke binding, with the focus they were
+ * typed in and the timeout after which they are replayed.
+ */
+private class PendingInput {
+
+    public var keystrokes:Array<Keystroke> = [];
+
+    /** The focus id when the keystrokes were typed, -1 for none */
+    public var focus:Int = -1;
+
+    public var timeout:Null<PendingInputTimeout> = null;
+
+    public function new() {}
+
+}
+
+/**
+ * The timeout of pending input: running (with its timer) or paused by an entity.
+ */
+private class PendingInputTimeout {
+
+    public var duration:Float;
+
+    public var remaining:Float;
+
+    /** Running: start time and timer task. Paused: `task == null`. */
+    public var startedAt:Float = 0;
+
+    public var task:Null<AnyTask> = null;
+
+    /** The entity that paused the timeout, -1 when running */
+    public var pauseOwnerId:Int = -1;
+
+    public var pauseReleaseSubscription:Null<Subscription> = null;
+
+    public function new(duration:Float) {
+        this.duration = duration;
+        this.remaining = duration;
+    }
+
+    public inline function isPaused():Bool {
+        return pauseOwnerId != -1;
+    }
+
+    public function pause(ownerId:Int, releaseSubscription:Subscription, now:Float):Bool {
+        if (isPaused()) {
+            releaseSubscription.dispose();
+            return false;
+        }
+        remaining = Math.max(0, remaining - (now - startedAt));
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        pauseOwnerId = ownerId;
+        pauseReleaseSubscription = releaseSubscription;
+        return true;
+    }
+
+    public function resume(ownerId:Int, startedAt:Float, task:AnyTask):Bool {
+        if (isPaused() && pauseOwnerId == ownerId) {
+            pauseOwnerId = -1;
+            if (pauseReleaseSubscription != null) {
+                pauseReleaseSubscription.dispose();
+                pauseReleaseSubscription = null;
+            }
+            this.startedAt = startedAt;
+            this.task = task;
+            return true;
+        }
+        task.cancel();
+        return false;
+    }
+
+    public function resetDuration(duration:Float):Void {
+        this.duration = duration;
+        this.remaining = duration;
+    }
+
+    /** Drops the timeout (Rust: dropping the task and the pause subscription) */
+    public function drop():Void {
+        if (task != null) {
+            task.cancel();
+            task = null;
+        }
+        if (pauseReleaseSubscription != null) {
+            pauseReleaseSubscription.dispose();
+            pauseReleaseSubscription = null;
+        }
+    }
+
+}
+
+/**
+ * An element whose drawing is deferred until after the main tree (see `Window.deferDraw`).
+ */
+private class DeferredDraw {
+
+    public var currentView:Model;
+
+    public var priority:Int;
+
+    public var parentNode:Int;
+
+    public var elementIdStack:Array<ElementId>;
+
+    public var textStyleStack:Array<TextStyleRefinement>;
+
+    public var contentMask:Null<ContentMask>;
+
+    public var remSize:Float;
+
+    /** The element to draw, `null` when the draw is reused from the previous frame */
+    public var element:Null<AnyElement>;
+
+    public var absoluteOffset:Point;
+
+    public final prepaintStart:PrepaintStateIndex = new PrepaintStateIndex();
+
+    public final prepaintEnd:PrepaintStateIndex = new PrepaintStateIndex();
+
+    public final paintStart:PaintIndex = new PaintIndex();
+
+    public final paintEnd:PaintIndex = new PaintIndex();
+
+    public function new() {}
+
+}
+
+/**
+ * The bounds of the tooltip shown during the last frame.
+ */
+private class TooltipBounds {
+
+    public final id:Int;
+
+    public final bounds:Bounds;
+
+    public function new(id:Int, bounds:Bounds) {
+        this.id = id;
+        this.bounds = bounds;
+    }
+
+}
+
+private enum abstract InputModality(Int) {
+    var Mouse = 0;
+    var Keyboard = 1;
+    var Touch = 2;
+}
+
+/**
+ * A window control area and the hitbox of the element that acts as it.
+ */
+class WindowControlHitbox {
+
+    public final area:WindowControlArea;
+
+    public final hitbox:Hitbox;
+
+    public function new(area:WindowControlArea, hitbox:Hitbox) {
+        this.area = area;
+        this.hitbox = hitbox;
+    }
+
+}
+
+#if gpui_inspector
+/**
+ * An inspector element path and the next instance id given to an element
+ * built at that path (an entry of Rust's `next_inspector_instance_ids`).
+ */
+class InspectorInstanceCount {
+
+    public final path:InspectorElementId.InspectorElementPath;
+
+    public var count:Int = 0;
+
+    public function new(path:InspectorElementId.InspectorElementPath) {
+        this.path = path;
+    }
+
+}
+#end
+
+private class Frame {
+
+    public final scene:Scene = new Scene();
+
+    public final elementStates:Map<String, ElementStateBox<Dynamic>> = new Map();
+
+    public final accessedElementStates:Array<String> = [];
+
+    /**
+     * Keys of the element states accessed by reused prepaint and paint
+     * ranges: `finish()` moves them from the previous frame.
+     */
+    public final reusedElementStates:Array<String> = [];
+
+    /** The focused handle when this frame was drawn */
+    public var focus:Null<FocusHandle> = null;
+
+    public var windowActive:Bool = false;
+
+    public final mouseListeners:Array<MouseListenerEntry> = [];
+
+    public final dispatchTree:DispatchTree;
+
+    public final hitboxes:Array<Hitbox> = [];
+
+    public final tooltipRequests:Array<TooltipRequest> = [];
+
+    public final cursorStyles:Array<CursorStyleRequest> = [];
+
+    /** The window control areas painted this frame (Rust `window_control_hitboxes`) */
+    public final windowControlHitboxes:Array<WindowControlHitbox> = [];
+
+    public final tabStops:TabStopMap = new TabStopMap();
+
+    public final deferredDraws:Array<DeferredDraw> = [];
+
+    /** Input handlers registered with `handleInput` (only the last one is used) */
+    public final inputHandlers:Array<Null<PlatformInputHandler>> = [];
+
+    #if gpui_inspector
+    /** Next instance id of each inspector element path, by path key (Rust `next_inspector_instance_ids`) */
+    public var nextInspectorInstanceIds:Map<String, InspectorInstanceCount> = new Map();
+
+    /** The inspector id of the pickable hitboxes, by hitbox id (Rust `inspector_hitboxes`) */
+    public var inspectorHitboxes:Map<Int, InspectorElementId> = new Map();
+    #end
+
+    public function new(keymap:Keymap) {
+        dispatchTree = new DispatchTree(keymap);
+    }
+
+    /**
+     * Clears the frame for reuse. Element states still in it were not accessed
+     * during the last frame: they are dropped, and models among them destroyed.
+     */
+    public function clear():Void {
+        for (key => state in elementStates) {
+            final value:Dynamic = state.value;
+            if (value != null) {
+                if (Std.isOfType(value, Model)) {
+                    (value : Model).destroy();
+                }
+                else if (Std.isOfType(value, Interactivity.InteractiveElementState)) {
+                    (value : Interactivity.InteractiveElementState).dispose();
+                }
+                else if (Std.isOfType(value, Droppable)) {
+                    (value : Droppable).drop();
+                }
+            }
+        }
+        elementStates.clear();
+        accessedElementStates.resize(0);
+        reusedElementStates.resize(0);
+        scene.clear();
+        focus = null;
+        mouseListeners.resize(0);
+        dispatchTree.clear();
+        hitboxes.resize(0);
+        tooltipRequests.resize(0);
+        cursorStyles.resize(0);
+        windowControlHitboxes.resize(0);
+        tabStops.clear();
+        deferredDraws.resize(0);
+        inputHandlers.resize(0);
+
+        #if gpui_inspector
+        nextInspectorInstanceIds.clear();
+        inspectorHitboxes.clear();
+        #end
+    }
+
+    /**
+     * Moves the element states accessed through reused ranges from the
+     * previous frame (Rust `Frame::finish`; other states are moved when
+     * accessed), then sorts the scene.
+     */
+    public function finish(previous:Frame):Void {
+        for (key in reusedElementStates) {
+            if (!elementStates.exists(key)) {
+                final state = previous.elementStates.get(key);
+                if (state != null) {
+                    previous.elementStates.remove(key);
+                    elementStates.set(key, state);
+                }
+            }
+        }
+        reusedElementStates.resize(0);
+        scene.finish();
+    }
+
+    public function cursorStyle(window:Window):Null<CursorStyle> {
+        var style:Null<CursorStyle> = null;
+        var i = cursorStyles.length - 1;
+        while (i >= 0) {
+            final request = cursorStyles[i];
+            if (request.hitboxId == -1) {
+                return request.style;
+            }
+            if (style == null && window.isHitboxIdHoveredIgnoringLastInput(request.hitboxId)) {
+                style = request.style;
+            }
+            i--;
+        }
+        return style;
+    }
+
+    public function hitTest(position:Point):HitTest {
+        var setHoverHitboxCount = false;
+        final hitTest = new HitTest();
+        var i = hitboxes.length - 1;
+        while (i >= 0) {
+            final hitbox = hitboxes[i];
+            final bounds = hitbox.bounds.intersect(hitbox.contentMask.bounds);
+            if (bounds.contains(position)) {
+                hitTest.ids.push(hitbox.id);
+                if (!setHoverHitboxCount && hitbox.behavior == BlockMouseExceptScroll) {
+                    hitTest.hoverHitboxCount = hitTest.ids.length;
+                    setHoverHitboxCount = true;
+                }
+                if (hitbox.behavior == BlockMouse) {
+                    break;
+                }
+            }
+            i--;
+        }
+        if (!setHoverHitboxCount) {
+            hitTest.hoverHitboxCount = hitTest.ids.length;
+        }
+        return hitTest;
+    }
+
+    public function focusPath():Array<Int> {
+        return focus != null ? dispatchTree.focusPath(focus.id) : [];
+    }
+
+}
+
+/**
+ * Holds the state for a specific window: its root view, its layout engine,
+ * the scene of the last frame (shown by `renderable`, a Ceramic visual), and
+ * the stacks used while drawing (text styles, content masks, offsets...).
+ *
+ * Drawing (`draw()`) renders the root view, lays out the element tree with
+ * taffy, prepaints and paints it into the next frame's scene, then swaps
+ * frames. It runs from the `GpuiSystem` in `lateUpdate`, only when the window
+ * is dirty: a view whose observed fields changed, `cx.notify()` on a view of
+ * the window, `refresh()`... When nothing changed, `renderable` keeps drawing
+ * the scene of the previous frame and nothing is rebuilt.
+ *
+ * Input: `dispatchEvent()` dispatches a `PlatformInput` (mouse events to the
+ * hitboxes and mouse listeners of the last frame, capture then bubble; key
+ * events along the dispatch tree from the root to the focused element, with
+ * multi-stroke key bindings, their pending timeout and action dispatch).
+ * `GpuiInput` feeds Ceramic input to the windows.
+ *
+ * View caching: like GPUI, a view embedded with `.cached(style)` reuses the
+ * prepaint and paint of the previous frame (hitboxes, dispatch nodes,
+ * listeners, scene paint operations...) while it is not dirty. Unlike GPUI,
+ * every view is also cached by default (`viewCaching`, `.uncached()` opts
+ * out): its tracker tells exactly when it must render again. A view is dirty
+ * when it was notified (`cx.notify()` or a tracker reaction) or when one of
+ * its descendants is; `refresh()` redraws every view. See `ViewElement`.
+ *
+ * Differences with GPUI: no platform window (the window is a Ceramic visual
+ * of the given size, `setActive()` stands for platform activation; the
+ * platform's text input side is `textInputPlatform` plus the input handler
+ * slot of `takeInputHandler()` / `setInputHandler()`), no touch, prompts,
+ * inspector or accessibility. Focus handles are stored, not referenced by id.
+ */
+class Window implements WindowInvalidator {
+
+    static var nextWindowId:Int = 1;
+
+    static final ORIGIN:Point = new Point(0, 0);
+
+    /**
+     * Open windows.
+     */
+    public static final windows:Array<Window> = [];
+
+    /**
+     * A unique id of this window.
+     */
+    public final id:Int;
+
+    /**
+     * The app of this window.
+     */
+    public final app:App;
+
+    /**
+     * The Ceramic visual showing the scene of the last frame. Add it to a
+     * scene or a visual to display the window.
+     */
+    public final renderable:SceneRenderable;
+
+    /**
+     * Draw automatically from the `GpuiSystem` when dirty.
+     */
+    public var autoDraw:Bool;
+
+    /**
+     * `true` when the window needs to be drawn again.
+     */
+    public var dirty(default, null):Bool = true;
+
+    /**
+     * Number of frames drawn so far.
+     */
+    public var drawCount(default, null):Int = 0;
+
+    /**
+     * Number of views rendered during the last frame.
+     */
+    public var renderedViewCount(default, null):Int = 0;
+
+    /**
+     * Number of cached views reused (not rendered) during the last frame.
+     */
+    public var reusedViewCount(default, null):Int = 0;
+
+    /**
+     * Whether views are cached by default (see `ViewElement`). Views embedded
+     * with `.cached(style)` are cached either way.
+     */
+    public var viewCaching:Bool;
+
+    /**
+     * Disables every view cache, `.cached(style)` included (GPUI disables
+     * caching this way while the inspector is picking). For tests and debugging.
+     */
+    public var viewCachingDisabled:Bool = false;
+
+    /**
+     * The default of `WindowOptions.viewCaching`.
+     */
+    public static var defaultViewCaching:Bool = true;
+
+    /**
+     * `true` while drawing a frame that must not reuse any cached view
+     * (Rust `refreshing`): after `refresh()`, and while a `.cached(style)`
+     * view renders its content.
+     */
+    @:allow(gpui)
+    var refreshing:Bool = false;
+
+    var focusMovedWhileDrawing:Bool = false;
+
+    /**
+     * `true` while drawing a window that was not dirty (an explicit `draw()`):
+     * views cached by default render like GPUI's uncached views, views
+     * cached with a style are reused.
+     */
+    @:allow(gpui)
+    var drawingClean:Bool = false;
+
+    /** Views notified since the last frame (Rust: the invalidator's dirty views) */
+    final pendingDirtyViews:IntMap<Bool> = new IntMap();
+
+    /** Hitbox ids of the groups being prepainted (see `ViewElement` cache keys) */
+    @:allow(gpui)
+    final prepaintGroupHitboxes:Array<Int> = [];
+
+    /** Product of the opacities of the elements being prepainted */
+    @:allow(gpui)
+    var prepaintOpacity:Float = 1.0;
+
+    final scratchPrepaintIndex:PrepaintStateIndex = new PrepaintStateIndex();
+
+    final scratchPaintIndex:PaintIndex = new PaintIndex();
+
+    var root:Null<AnyView> = null;
+
+    var _scaleFactor:Float;
+
+    var _remSize:Float;
+
+    var _viewportSize:Size;
+
+    final layoutEngine:TaffyLayoutEngine = new TaffyLayoutEngine();
+
+    var renderedFrame:Frame;
+
+    var nextFrame:Frame;
+
+    #if gpui_inspector
+    var inspector:Null<Inspector> = null;
+    #end
+
+    final textStyleStack:Array<TextStyleRefinement> = [];
+
+    final contentMaskStack:Array<ContentMask> = [];
+
+    final elementOffsetStack:Array<Point> = [];
+
+    final elementIdStack:Array<ElementId> = [];
+
+    final remSizeOverrideStack:Array<Float> = [];
+
+    final renderedEntityStack:Array<Model> = [];
+
+    /** Image caches of the enclosing `ImageCacheElement`s (the last one is used by `img`) */
+    public final imageCacheStack:Array<AnyImageCache> = [];
+
+    var elementOpacity:Float = 1.0;
+
+    final trackers:IntMap<ViewTracker> = new IntMap();
+
+    final renderedViews:IntMap<Bool> = new IntMap();
+
+    final dirtyViews:IntMap<Bool> = new IntMap();
+
+    final scratchQuad:PaintQuad = new PaintQuad();
+
+    var drawing:Bool = false;
+
+    var destroyed:Bool = false;
+
+    // Input, hitboxes and focus (step 8 / 9)
+
+    var _active:Bool = true;
+
+    /** Whether the pointer is over the window (set by `GpuiInput`) */
+    @:allow(gpui)
+    var hovered:Bool = false;
+
+    var _mousePosition:Point = new Point(0, 0);
+
+    var mouseHitTest:HitTest = new HitTest();
+
+    var _modifiers:Modifiers = Modifiers.none();
+
+    var _capslock:Bool = false;
+
+    var lastInputModality:InputModality = Mouse;
+
+    var nextHitboxId:Int = 0;
+
+    var nextTooltipId:Int = 0;
+
+    var tooltipBounds:Null<TooltipBounds> = null;
+
+    var requestedAutoscroll:Null<Bounds> = null;
+
+    var _defaultPrevented:Bool = false;
+
+    /** The hitbox that has captured the pointer, -1 if none */
+    var _capturedHitbox:Int = -1;
+
+    /** The focused handle (Rust stores the `FocusId`) */
+    var _focus:Null<FocusHandle> = null;
+
+    var focusEnabled:Bool = true;
+
+    /**
+     * Incremented every time focus moves. Used to invalidate a pending
+     * keyboard activation state when focus changes.
+     */
+    @:allow(gpui)
+    var focusGeneration:Int = 0;
+
+    var focusLostPath:Array<Int> = [];
+
+    final focusListeners:SubscriberSet<(WindowFocusEvent, Window, App) -> Bool> = new SubscriberSet();
+
+    final focusLostListeners:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
+
+    final pendingInputObservers:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
+
+    final activationObservers:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
+
+    var pendingInput:Null<PendingInput> = null;
+
+    var pendingModifierModifiers:Modifiers = Modifiers.none();
+
+    var pendingModifierSawOtherInput:Bool = false;
+
+    // Text input (step 11)
+
+    /**
+     * The input handler given to the platform after the last draw (Rust: owned by
+     * the platform window, `set_input_handler` / `take_input_handler`).
+     */
+    var platformInputHandler:Null<PlatformInputHandler> = null;
+
+    /**
+     * The platform side of text input (Rust `PlatformWindow` text input methods):
+     * configuration, text input state changes and IME position. `GpuiInput` sets
+     * a `TextInputBridge` driving Ceramic's text editing; `null` ignores them.
+     */
+    public var textInputPlatform:Null<PlatformTextInput> = null;
+
+    var lastTextInputConfiguration:Null<TextInputConfiguration> = null;
+
+    /** The focus id of the focused element accepting text input, -1 if none */
+    var focusedTextInput:Int = -1;
+
+    var nextFrameCallbacks:Array<(Window, App) -> Void> = [];
+
+    var currentCursorStyle:CursorStyle = Arrow;
+
+    // Text, sprites and paths (steps 4 and 10)
+
+    /**
+     * The sprite atlas of this window (glyphs, SVGs, images): its textures
+     * are the `atlasTextures` of the renderable.
+     */
+    public final spriteAtlas:PlatformAtlas;
+
+    final windowTextSystem:WindowTextSystem;
+
+    final painter:TextPainter;
+
+    final glyphParams:RenderGlyphParams = new RenderGlyphParams();
+
+    public function new(app:App, ?options:WindowOptions) {
+        if (options == null) options = {};
+        this.id = nextWindowId++;
+        this.app = app;
+        this.platformOperations = new gpui.platform.CeramicWindowOperations(this);
+        this.autoDraw = options.autoDraw;
+        this.viewCaching = options.viewCaching != null ? options.viewCaching : defaultViewCaching;
+        _scaleFactor = options.scaleFactor != null ? options.scaleFactor : ceramic.App.app.screen.density;
+        _remSize = options.remSize;
+        _viewportSize = new Size(options.width, options.height);
+        _active = options.active;
+        _isResizable = options.isResizable;
+        _isMinimizable = options.isMinimizable;
+        renderedFrame = new Frame(app.keymap);
+        nextFrame = new Frame(app.keymap);
+
+        renderable = new SceneRenderable();
+        renderable.size(options.width, options.height);
+        renderable.sceneScale = _scaleFactor;
+        renderable.scene = renderedFrame.scene;
+
+        if (options.atlas != null) {
+            spriteAtlas = options.atlas;
+        }
+        else {
+            // The headless backend has no textures: pages stay on the CPU
+            final atlas = new gpui.platform.CeramicAtlas(1024, #if headless false #else true #end);
+            renderable.atlasTextures = atlas.textures;
+            atlas.onTexturesChange = () -> renderable.usedTexturesDirty = true;
+            renderable.usedTexturesDirty = true;
+            spriteAtlas = atlas;
+        }
+        windowTextSystem = new WindowTextSystem(app.textSystem());
+        painter = new TextPainter(nextFrame.scene, spriteAtlas, app.textSystem(), _scaleFactor);
+        painter.quadPainter = paintQuad;
+
+        windows.push(this);
+        if (app.onRefreshWindows == null) {
+            app.onRefreshWindows = refreshWindowsOf;
+        }
+        if (autoDraw) {
+            GpuiSystem.ensure();
+        }
+        if (options.bindInput) {
+            GpuiInput.bind(this);
+        }
+    }
+
+    static function refreshWindowsOf(app:App):Void {
+        for (window in windows) {
+            if (window.app == app) {
+                window.refresh();
+            }
+        }
+    }
+
+    /**
+     * Opens a window whose root view is built by `build` (Rust
+     * `cx.open_window(options, |window, cx| cx.new(...))`).
+     */
+    public static function open(app:App, options:Null<WindowOptions>, build:(Window, App) -> AnyView):Window {
+        final window = new Window(app, options);
+        window.root = build(window, app);
+        return window;
+    }
+
+    /**
+     * Sets the root view of the window.
+     */
+    public function setRoot(view:AnyView):Void {
+        root = view;
+        refresh();
+    }
+
+    /**
+     * The root view of the window.
+     */
+    public inline function rootView():Null<AnyView> {
+        return root;
+    }
+
+    /**
+     * Closes the window: stops drawing and reacting, destroys the renderable.
+     */
+    public function destroy():Void {
+        if (destroyed)
+            return;
+        destroyed = true;
+        windows.remove(this);
+        if (hitRegionsOwner == this) {
+            hitRegionsOwner = null;
+            ceramic.App.app.screen.setWindowHitRegions([]);
+        }
+        GpuiInput.unbind(this);
+        clearPendingInput();
+        for (entityId => tracker in trackers) {
+            tracker.destroy();
+            app.removeWindowInvalidator(entityId, id);
+        }
+        trackers.clear();
+        nextFrame.clear();
+        renderedFrame.clear();
+        renderable.destroy();
+        if (Std.isOfType(spriteAtlas, gpui.platform.CeramicAtlas)) {
+            (cast spriteAtlas : gpui.platform.CeramicAtlas).destroy();
+        }
+        root = null;
+    }
+
+    public inline function isDestroyed():Bool {
+        return destroyed;
+    }
+
+/// Invalidation
+
+    /**
+     * Marks the view of the given entity dirty (called by `App.notify`, which
+     * tracker reactions go through too).
+     */
+    public function invalidateView(entityId:Int, cx:App):Void {
+        pendingDirtyViews.set(entityId, true);
+        // Like GPUI's `WindowInvalidator::invalidate_view`, a view notified
+        // while the window draws is recorded for the next frame but does not
+        // make the window dirty (otherwise a view that notifies from its own
+        // render, like gpui-kit's list syncing its search placeholder, would
+        // be drawn again forever by the effect flush).
+        if (!drawing) {
+            dirty = true;
+        }
+    }
+
+    /**
+     * Schedule this window to be redrawn on the next frame, rendering every
+     * view again (cached views included).
+     */
+    public function refresh():Void {
+        // Like GPUI, a refresh requested while drawing is ignored
+        if (!drawing) {
+            refreshing = true;
+            dirty = true;
+        }
+    }
+
+    /**
+     * Marks the given view and its ancestors in the last frame dirty (Rust
+     * `mark_view_dirty`): a cached view renders again when one of its
+     * descendants must.
+     */
+    function markViewDirty(viewId:Int):Void {
+        final tree = renderedFrame.dispatchTree;
+        var nodeId = tree.viewNodeId(viewId);
+        if (nodeId == -1) {
+            dirtyViews.set(viewId, true);
+            return;
+        }
+        while (nodeId != -1) {
+            final node = tree.node(nodeId);
+            final nodeViewId = node.viewId;
+            if (nodeViewId != -1) {
+                if (dirtyViews.exists(nodeViewId)) {
+                    break;
+                }
+                dirtyViews.set(nodeViewId, true);
+            }
+            nodeId = node.parent;
+        }
+    }
+
+    /**
+     * Whether the given view must render during the frame being drawn.
+     */
+    @:allow(gpui)
+    inline function isViewDirty(viewId:Int):Bool {
+        return dirtyViews.exists(viewId);
+    }
+
+/// Geometry
+
+    /**
+     * The scale factor of the display associated with the window.
+     */
+    public inline function scaleFactor():Float {
+        return _scaleFactor;
+    }
+
+    /**
+     * Changes the scale factor and redraws.
+     */
+    public function setScaleFactor(scaleFactor:Float):Void {
+        _scaleFactor = scaleFactor;
+        renderable.sceneScale = scaleFactor;
+        refresh();
+    }
+
+    /**
+     * The size of the drawable area of the window, in logical pixels.
+     */
+    public inline function viewportSize():Size {
+        return _viewportSize;
+    }
+
+    /**
+     * Resizes the window (and its renderable), then redraws.
+     */
+    public function resize(width:Float, height:Float):Void {
+        _viewportSize = new Size(width, height);
+        renderable.size(width, height);
+        refresh();
+    }
+
+    /**
+     * The size of an em for the base font of the application.
+     */
+    public function remSize():Pixels {
+        return remSizeOverrideStack.length > 0 ? remSizeOverrideStack[remSizeOverrideStack.length - 1] : _remSize;
+    }
+
+    /**
+     * Sets the size of an em for the base font of the application.
+     */
+    public function setRemSize(remSize:Pixels):Void {
+        _remSize = remSize;
+    }
+
+    /**
+     * Executes the provided function with the specified rem size.
+     */
+    public function withRemSize<R>(remSize:Null<Float>, f:Window->R):R {
+        if (remSize == null)
+            return f(this);
+        remSizeOverrideStack.push(remSize);
+        final result = f(this);
+        remSizeOverrideStack.pop();
+        return result;
+    }
+
+    /**
+     * Snaps a value to the device pixel grid.
+     */
+    public inline function pixelSnap(value:Pixels):Pixels {
+        return TaffyLayoutEngine.roundToDevicePixel(value, _scaleFactor) / _scaleFactor;
+    }
+
+    /**
+     * Snaps bounds to the device pixel grid.
+     */
+    public inline function pixelSnapBounds(bounds:Bounds):Bounds {
+        return bounds.map(pixelSnap);
+    }
+
+    /**
+     * Snaps a point to the device pixel grid.
+     */
+    public inline function pixelSnapPoint(position:Point):Point {
+        return new Point(pixelSnap(position.x), pixelSnap(position.y));
+    }
+
+    /**
+     * The line height of the current text style.
+     */
+    public function lineHeight():Pixels {
+        return textStyle().lineHeightInPixels(remSize());
+    }
+
+/// Drawing
+
+    /**
+     * Draws the window if it is dirty. Returns `true` if it was drawn.
+     */
+    public function drawIfDirty():Bool {
+        if (!dirty || destroyed)
+            return false;
+        draw();
+        return true;
+    }
+
+    /**
+     * Produce a new frame and assign it to the renderable (Rust `Window::draw`).
+     * Runs inside an app update, so effects pushed while drawing are flushed at the end.
+     */
+    public function draw():Void {
+        if (drawing || destroyed)
+            return;
+        drawing = true;
+        drawingClean = !dirty;
+        app.startUpdate();
+        try {
+            drawFrame();
+        }
+        catch (e:haxe.Exception) {
+            drawing = false;
+            drawingClean = false;
+            AnyElement.clearArena();
+            @:privateAccess app.pendingUpdates--;
+            throw e;
+        }
+        drawing = false;
+        drawingClean = false;
+        // Focus listeners may move focus: draw again to render the new focus
+        // state and dispatch the resulting focus events (`refresh` is ignored
+        // while drawing, so this happens once the draw phase is over).
+        if (focusMovedWhileDrawing) {
+            focusMovedWhileDrawing = false;
+            refresh();
+        }
+        publishHitRegions();
+        app.finishUpdate();
+    }
+
+    function drawFrame():Void {
+        // Rust `invalidate_entities`
+        for (entityId in pendingDirtyViews.keys()) {
+            markViewDirty(entityId);
+        }
+        pendingDirtyViews.clear();
+
+        dirty = false;
+        renderedViews.clear();
+        renderedViewCount = 0;
+        reusedViewCount = 0;
+        requestedAutoscroll = null;
+
+        // Restore the previously used input handler into an empty slot of the
+        // last frame, so that a reused paint range finds it at its index.
+        final previousInputHandler = platformInputHandler;
+        platformInputHandler = null;
+        if (previousInputHandler != null) {
+            final handlers = renderedFrame.inputHandlers;
+            var slot = handlers.length - 1;
+            while (slot >= 0 && handlers[slot] != null) {
+                slot--;
+            }
+            if (slot >= 0) {
+                handlers[slot] = previousInputHandler;
+            }
+            else {
+                handlers.push(previousInputHandler);
+            }
+        }
+
+        if (root != null) {
+            drawRoots();
+        }
+
+        dirtyViews.clear();
+        nextFrame.windowActive = _active;
+
+        // Register the requested input handler with the platform (the last one).
+        var focusedTextInput = -1;
+        var handlerIndex = nextFrame.inputHandlers.length - 1;
+        while (handlerIndex >= 0) {
+            final inputHandler = nextFrame.inputHandlers[handlerIndex];
+            if (inputHandler != null) {
+                nextFrame.inputHandlers[handlerIndex] = null;
+                final acceptsTextInput = inputHandler.acceptsTextInput(this, app);
+                platformInputHandler = inputHandler;
+                if (acceptsTextInput) {
+                    focusedTextInput = focusId();
+                }
+                break;
+            }
+            handlerIndex--;
+        }
+        applyTextInputConfiguration(app);
+        final previousTextInput = this.focusedTextInput;
+        this.focusedTextInput = focusedTextInput;
+        if ((previousTextInput != -1) != (focusedTextInput != -1) && textInputPlatform != null) {
+            textInputPlatform.textInputStateChanged(focusedTextInput != -1 ? FocusGained : FocusLost);
+        }
+
+        layoutEngine.finishFrame();
+        windowTextSystem.finishFrame();
+        nextFrame.finish(renderedFrame);
+
+        final previousFocusPath = renderedFrame.focusPath();
+        final previousWindowActive = renderedFrame.windowActive;
+        final previous = renderedFrame;
+        renderedFrame = nextFrame;
+        nextFrame = previous;
+        nextFrame.clear();
+        renderable.scene = renderedFrame.scene;
+        final currentFocusPath = renderedFrame.focusPath();
+        final currentWindowActive = renderedFrame.windowActive;
+        var focusBeforeListeners = _focus;
+
+        // Views not rendered (or reused) anymore stop reacting
+        var stale:Null<Array<Int>> = null;
+        final dispatchTree = renderedFrame.dispatchTree;
+        for (entityId in trackers.keys()) {
+            if (!renderedViews.exists(entityId) && !dispatchTree.containsView(entityId)) {
+                if (stale == null) stale = [];
+                stale.push(entityId);
+            }
+        }
+        if (stale != null) {
+            for (entityId in stale) {
+                trackers.get(entityId).destroy();
+                trackers.remove(entityId);
+                app.removeWindowInvalidator(entityId, id);
+            }
+        }
+
+        AnyElement.clearArena();
+        drawCount++;
+
+        if (!samePath(previousFocusPath, currentFocusPath) || previousWindowActive != currentWindowActive) {
+            if (previousFocusPath.length > 0 && currentFocusPath.length == 0) {
+                focusLostPath = previousFocusPath;
+                focusLostListeners.retain(0, listener -> listener(this, app));
+                focusLostPath = [];
+                focusBeforeListeners = _focus;
+            }
+
+            final event = new WindowFocusEvent(
+                previousWindowActive ? previousFocusPath : [],
+                currentWindowActive ? currentFocusPath : []
+            );
+            focusListeners.retain(0, listener -> listener(event, this, app));
+        }
+
+        resetCursorStyle();
+        refreshing = false;
+        focusMovedWhileDrawing = _focus != focusBeforeListeners;
+    }
+
+    static function samePath(a:Array<Int>, b:Array<Int>):Bool {
+        if (a.length != b.length)
+            return false;
+        for (i in 0...a.length) {
+            if (a[i] != b[i])
+                return false;
+        }
+        return true;
+    }
+
+    function drawRoots():Void {
+        tooltipBounds = null;
+
+        // Layout all root elements. Like the root element on the web, which
+        // stretches to fill the viewport unless explicitly sized, window roots
+        // fill the window when their size is `auto`.
+        #if gpui_inspector
+        final inspectorWidth:Float = 30.0 * (remSize() : Float);
+        final rootSize = inspector != null
+            ? new Size(Math.max(_viewportSize.width - inspectorWidth, 0.0), _viewportSize.height)
+            : _viewportSize;
+        final rootElement = root.intoAnyElement();
+        final rootLayoutId = rootElement.requestLayout(this, app);
+        layoutEngine.stretchAutoSizeToFill(rootLayoutId, rootSize, _scaleFactor);
+        rootElement.prepaintAsRoot(
+            new Point(0, 0),
+            new SizeOf<AvailableSpace>(AvailableSpace.Definite(rootSize.width), AvailableSpace.Definite(rootSize.height)),
+            this,
+            app
+        );
+
+        final inspectorElement = prepaintInspector(inspectorWidth, app);
+        #else
+        final rootElement = root.intoAnyElement();
+        final rootLayoutId = rootElement.requestLayout(this, app);
+        layoutEngine.stretchAutoSizeToFill(rootLayoutId, _viewportSize, _scaleFactor);
+        rootElement.prepaintAsRoot(
+            new Point(0, 0),
+            new SizeOf<AvailableSpace>(AvailableSpace.Definite(_viewportSize.width), AvailableSpace.Definite(_viewportSize.height)),
+            this,
+            app
+        );
+        #end
+
+        prepaintDeferredDraws();
+
+        var activeDragElement:Null<AnyElement> = null;
+        var tooltipElement:Null<AnyElement> = null;
+        final activeDrag = app.activeDrag;
+        if (activeDrag != null) {
+            app.activeDrag = null;
+            final element = activeDrag.view.intoAnyElement();
+            final offset = _mousePosition.sub(activeDrag.cursorOffset);
+            element.prepaintAsRoot(offset, minSize(), this, app);
+            activeDragElement = element;
+            app.activeDrag = activeDrag;
+        }
+        else {
+            tooltipElement = prepaintTooltip();
+        }
+
+        mouseHitTest = nextFrame.hitTest(_mousePosition);
+
+        // Now actually paint the elements.
+        rootElement.paint(this, app);
+
+        #if gpui_inspector
+        paintInspector(inspectorElement, app);
+        #end
+
+        paintDeferredDraws();
+
+        if (activeDragElement != null) {
+            activeDragElement.paint(this, app);
+        }
+        else if (tooltipElement != null) {
+            tooltipElement.paint(this, app);
+        }
+
+        #if gpui_inspector
+        paintInspectorHitbox(app);
+        #end
+    }
+
+    static inline function minSize():SizeOf<AvailableSpace> {
+        return new SizeOf<AvailableSpace>(AvailableSpace.MinContent, AvailableSpace.MinContent);
+    }
+
+    function prepaintTooltip():Null<AnyElement> {
+        var tooltipRequestIndex = nextFrame.tooltipRequests.length - 1;
+        while (tooltipRequestIndex >= 0) {
+            final tooltipRequest = nextFrame.tooltipRequests[tooltipRequestIndex];
+            tooltipRequestIndex--;
+            final element = tooltipRequest.tooltip.view.intoAnyElement();
+            final mousePosition = tooltipRequest.tooltip.mousePosition;
+            final tooltipSize = element.layoutAsRoot(minSize(), this, app);
+
+            var originX:Float = mousePosition.x + 1;
+            var originY:Float = mousePosition.y + 1;
+            final windowRight = _viewportSize.width;
+            final windowBottom = _viewportSize.height;
+
+            if (originX + tooltipSize.width > windowRight) {
+                final newX = mousePosition.x - tooltipSize.width - 1;
+                if (newX >= 0) {
+                    originX = newX;
+                }
+                else {
+                    originX = Math.max(0, originX - (originX + tooltipSize.width) - windowRight);
+                }
+            }
+
+            if (originY + tooltipSize.height > windowBottom) {
+                final newY = mousePosition.y - tooltipSize.height - 1;
+                if (newY >= 0) {
+                    originY = newY;
+                }
+                else {
+                    originY = Math.max(0, originY - (originY + tooltipSize.height) - windowBottom);
+                }
+            }
+
+            final tooltipBoundsValue = new Bounds(new Point(originX, originY), tooltipSize);
+
+            // It's possible for an element to have an active tooltip while not being painted (e.g.
+            // via the `visible_on_hover` method). Since mouse listeners are not active in this
+            // case, instead update the tooltip's visibility here.
+            final isVisible = tooltipRequest.tooltip.checkVisibleAndUpdate(tooltipBoundsValue, this, app);
+            if (!isVisible) {
+                continue;
+            }
+
+            pushAbsoluteElementOffset(tooltipBoundsValue.origin);
+            element.prepaint(this, app);
+            popElementOffset();
+
+            tooltipBounds = new TooltipBounds(tooltipRequest.id, tooltipBoundsValue);
+            return element;
+        }
+        return null;
+    }
+
+    /**
+     * The scene of the last frame.
+     */
+    public inline function renderedScene():Scene {
+        return renderedFrame.scene;
+    }
+
+/// Rendered views and tracker capture
+
+    /**
+     * Starts a phase of the given view: pushes it on the rendered entity stack
+     * and makes its tracker the current autorun. The first phase of a frame
+     * (`requestLayout`, which renders the view) drops the previous
+     * dependencies; the next ones keep collecting.
+     */
+    @:allow(gpui)
+    function beginRenderedView(view:Model, firstPhase:Bool):Void {
+        final entityId = view.entityId;
+        renderedEntityStack.push(view);
+        var tracker = trackers.get(entityId);
+        if (tracker == null) {
+            tracker = new ViewTracker(() -> app.notify(entityId), view);
+            trackers.set(entityId, tracker);
+            app.addWindowInvalidator(entityId, id, this);
+        }
+        if (firstPhase) {
+            if (!renderedViews.exists(entityId)) {
+                renderedViews.set(entityId, true);
+                renderedViewCount++;
+            }
+            tracker.beginCapture();
+        }
+        else {
+            tracker.resumeCapture();
+        }
+    }
+
+    /**
+     * Ends the phase started by `beginRenderedView()`.
+     */
+    /**
+     * Counts a view reused from the cache during this frame.
+     */
+    @:allow(gpui)
+    inline function countReusedView():Void {
+        reusedViewCount++;
+    }
+
+    @:allow(gpui)
+    function endRenderedView():Void {
+        final view = renderedEntityStack.pop();
+        final tracker = trackers.get(view.entityId);
+        if (tracker != null) {
+            tracker.endCapture();
+        }
+    }
+
+    /**
+     * Runs `f` as part of the rendering of the given view (Rust
+     * `with_rendered_view`): reads of observable fields subscribe the view.
+     */
+    public function withRenderedView<R>(view:Model, f:Window->R):R {
+        beginRenderedView(view, false);
+        var result:R;
+        try {
+            result = f(this);
+        }
+        catch (e:haxe.Exception) {
+            endRenderedView();
+            throw e;
+        }
+        endRenderedView();
+        return result;
+    }
+
+    /**
+     * The entity id of the view being drawn (Rust `current_view`).
+     */
+    public function currentView():Int {
+        if (renderedEntityStack.length == 0) {
+            throw 'No view is being rendered';
+        }
+        return renderedEntityStack[renderedEntityStack.length - 1].entityId;
+    }
+
+    /**
+     * The tracker of the given view in this window, if it was rendered.
+     */
+    public inline function viewTracker(entityId:Int):Null<ViewTracker> {
+        return trackers.get(entityId);
+    }
+
+/// Layout
+
+    /**
+     * Add a node to the layout tree for the current frame. Takes the `Style` of the element for which
+     * layout is being requested, along with the layout ids of any children.
+     */
+    public function requestLayout(style:Style, children:Null<Array<LayoutId>>, cx:App):LayoutId {
+        return layoutEngine.requestLayout(style, remSize(), _scaleFactor, children);
+    }
+
+    /**
+     * Add a node to the layout tree for the current frame. Instead of taking a `Style` and children,
+     * this variant takes a function that is invoked during layout so you can use arbitrary logic to
+     * determine the element's size.
+     */
+    public function requestMeasuredLayout(style:Style, measure:TaffyLayoutEngine.MeasureFn):LayoutId {
+        return layoutEngine.requestMeasuredLayout(style, remSize(), _scaleFactor, measure);
+    }
+
+    /**
+     * Compute the layout for the given id within the given available space.
+     */
+    public function computeLayout(layoutId:LayoutId, availableSpace:SizeOf<AvailableSpace>, cx:App):Void {
+        layoutEngine.computeLayout(layoutId, availableSpace, this, cx);
+    }
+
+    /**
+     * Obtain the bounds computed for the given LayoutId relative to the window. This method will usually be invoked by
+     * GPUI itself automatically in order to pass your element its `Bounds` automatically.
+     */
+    public function layoutBounds(layoutId:LayoutId):Bounds {
+        final bounds = layoutEngine.layoutBounds(layoutId, _scaleFactor);
+        // Always add the offset like GPUI does, even when it is zero:
+        // `-0.0 + 0.0` is `+0.0`, so skipping it would keep a negative zero
+        return bounds.add(pixelSnapPoint(elementOffset()));
+    }
+
+/// Element ids and element state
+
+    @:allow(gpui)
+    inline function pushElementId(id:ElementId):Void {
+        elementIdStack.push(id);
+    }
+
+    @:allow(gpui)
+    inline function popElementId():Void {
+        elementIdStack.pop();
+    }
+
+    @:allow(gpui)
+    function prepareElementId(id:ElementId):GlobalElementId {
+        elementIdStack.push(id);
+        return new GlobalElementId(elementIdStack.copy());
+    }
+
+    /**
+     * Push a text style onto the stack, and call a function with that style active.
+     */
+    public function withId<R>(elementId:ElementIdArg, f:Window->R):R {
+        elementIdStack.push(elementId);
+        final result = f(this);
+        elementIdStack.pop();
+        return result;
+    }
+
+    /**
+     * Calls the provided function with the `GlobalElementId` of the given element id appended to the current path.
+     */
+    public function withGlobalId<R>(elementId:ElementIdArg, f:(GlobalElementId, Window) -> R):R {
+        elementIdStack.push(elementId);
+        final result = f(new GlobalElementId(elementIdStack.copy()), this);
+        elementIdStack.pop();
+        return result;
+    }
+
+    /**
+     * Provide elements in the called function with a new namespace in which their identifiers must be unique.
+     */
+    public inline function withElementNamespace<R>(elementId:ElementIdArg, f:Window->R):R {
+        return withId(elementId, f);
+    }
+
+    /**
+     * Updates or initializes state for an element with the given id that lives across multiple
+     * frames. The state is in `box.value` (`null` the first time): read it, and assign it before
+     * returning. States not accessed during a frame are dropped (models among them destroyed).
+     * Rust keys states by type: here `type` is that key.
+     */
+    public function withElementState<S, R>(globalId:GlobalElementId, type:Class<S>, f:(ElementStateBox<S>, Window) -> R):R {
+        final box = elementStateBox(globalId.key + '#' + Type.getClassName(type));
+        return f(cast box, this);
+    }
+
+    /**
+     * The state box of the given element state key for this frame, moved
+     * from the last frame or created (the key is marked as accessed).
+     */
+    @:allow(gpui)
+    function elementStateBox(key:String):ElementStateBox<Dynamic> {
+        nextFrame.accessedElementStates.push(key);
+        var box:ElementStateBox<Dynamic> = nextFrame.elementStates.get(key);
+        if (box == null) {
+            box = renderedFrame.elementStates.get(key);
+            if (box != null) {
+                renderedFrame.elementStates.remove(key);
+            }
+            else {
+                box = new ElementStateBox<Dynamic>();
+            }
+            nextFrame.elementStates.set(key, box);
+        }
+        return box;
+    }
+
+    /**
+     * The value of the given element state key, from this frame or the last
+     * one, without accessing it.
+     */
+    @:allow(gpui)
+    function peekElementState(key:String):Dynamic {
+        var box:ElementStateBox<Dynamic> = nextFrame.elementStates.get(key);
+        if (box == null) {
+            box = renderedFrame.elementStates.get(key);
+        }
+        return box != null ? box.value : null;
+    }
+
+    /**
+     * Like `withElementState()`, for elements that may have no id: `f` gets
+     * `null` instead of a state box when `globalId` is `null`.
+     */
+    public function withOptionalElementState<S, R>(globalId:Null<GlobalElementId>, type:Class<S>, f:(Null<ElementStateBox<S>>, Window) -> R):R {
+        if (globalId != null) {
+            return withElementState(globalId, type, f);
+        }
+        return f(null, this);
+    }
+
+    /**
+     * Use a piece of state that exists as long this element is being rendered in consecutive frames.
+     * The state is a `StateModel` holding an observable value: reading it in render subscribes the
+     * view, and the view is also notified when the state entity is notified.
+     */
+    public function useKeyedState<T>(key:ElementIdArg, cx:App, init:Window->T):Entity<StateModel<T>> {
+        final currentView = this.currentView();
+        return withGlobalId(key, (globalId, window) -> {
+            return window.withElementState(globalId, StateModel, (state, window) -> {
+                if (state.value != null) {
+                    return (cast state.value : Entity<StateModel<T>>);
+                }
+                final initial = init(window);
+                final newState:Entity<StateModel<T>> = cx.newEntity(_ -> new StateModel<T>(initial));
+                cx.observe(newState, (_, cx) -> cx.notify(currentView));
+                state.value = (newState : StateModel<T>);
+                return newState;
+            });
+        });
+    }
+
+    /**
+     * Use a piece of state that exists as long this element is being rendered in consecutive frames,
+     * keyed by the code location of the call.
+     */
+    public function useState<T>(cx:App, init:Window->T, ?pos:haxe.PosInfos):Entity<StateModel<T>> {
+        return useKeyedState(ElementId.CodeLocation(pos.fileName, pos.lineNumber), cx, init);
+    }
+
+/// Stacks
+
+    /**
+     * The current text style. Which is composed of all the style refinements provided to `withTextStyle`.
+     */
+    public function textStyle():TextStyle {
+        final style = new TextStyle();
+        for (refinement in textStyleStack) {
+            style.refine(refinement);
+        }
+        return style;
+    }
+
+    final sharedTextStyleRefinements:Array<TextStyleRefinement> = [];
+
+    var sharedTextStyle:Null<TextStyle> = null;
+
+    /**
+     * The current text style, shared between calls while the text style
+     * stack holds the same refinements: must not be modified. Used for the
+     * cache keys of views (no allocation per view).
+     */
+    @:allow(gpui)
+    function sharedCurrentTextStyle():TextStyle {
+        final stack = textStyleStack;
+        final cached = sharedTextStyleRefinements;
+        var same = sharedTextStyle != null && cached.length == stack.length;
+        if (same) {
+            for (i in 0...stack.length) {
+                if (stack[i] != cached[i]) {
+                    same = false;
+                    break;
+                }
+            }
+        }
+        if (!same) {
+            sharedTextStyle = textStyle();
+            cached.resize(0);
+            for (refinement in stack) cached.push(refinement);
+        }
+        return sharedTextStyle;
+    }
+
+    /**
+     * Push a text style onto the stack, and call a function with that style active.
+     */
+    public function withTextStyle<R>(style:Null<TextStyleRefinement>, f:Window->R):R {
+        if (style == null)
+            return f(this);
+        textStyleStack.push(style);
+        final result = f(this);
+        textStyleStack.pop();
+        return result;
+    }
+
+    public inline function pushTextStyle(style:TextStyleRefinement):Void {
+        textStyleStack.push(style);
+    }
+
+    public inline function popTextStyle():Void {
+        textStyleStack.pop();
+    }
+
+    /**
+     * Obtain the current content mask.
+     */
+    public function contentMask():ContentMask {
+        if (contentMaskStack.length > 0) {
+            return contentMaskStack[contentMaskStack.length - 1];
+        }
+        return new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
+    }
+
+    /**
+     * Invoke the given function with the given content mask after intersecting it
+     * with the current mask.
+     */
+    public function withContentMask<R>(mask:Null<ContentMask>, f:Window->R):R {
+        if (mask == null)
+            return f(this);
+        pushContentMask(mask);
+        final result = f(this);
+        popContentMask();
+        return result;
+    }
+
+    public function pushContentMask(mask:ContentMask):Void {
+        contentMaskStack.push(mask.intersect(contentMask()));
+    }
+
+    public inline function popContentMask():Void {
+        contentMaskStack.pop();
+    }
+
+    /**
+     * Obtain the current element offset.
+     */
+    public function elementOffset():Point {
+        if (elementOffsetStack.length > 0) {
+            return elementOffsetStack[elementOffsetStack.length - 1];
+        }
+        return ORIGIN;
+    }
+
+    /**
+     * Updates the global element offset relative to the current offset.
+     */
+    public function withElementOffset<R>(offset:Point, f:Window->R):R {
+        if (offset.isZero())
+            return f(this);
+        return withAbsoluteElementOffset(elementOffset().add(offset), f);
+    }
+
+    /**
+     * Updates the global element offset based on the given offset.
+     */
+    public function withAbsoluteElementOffset<R>(offset:Point, f:Window->R):R {
+        elementOffsetStack.push(offset);
+        final result = f(this);
+        elementOffsetStack.pop();
+        return result;
+    }
+
+    public inline function pushAbsoluteElementOffset(offset:Point):Void {
+        elementOffsetStack.push(offset);
+    }
+
+    public inline function popElementOffset():Void {
+        elementOffsetStack.pop();
+    }
+
+    /**
+     * Executes the provided function with the specified image cache (none: `f` runs as is).
+     */
+    public function withImageCache<R>(imageCache:Null<AnyImageCache>, f:Window->R):R {
+        if (imageCache == null)
+            return f(this);
+        imageCacheStack.push(imageCache);
+        final result = f(this);
+        imageCacheStack.pop();
+        return result;
+    }
+
+    public inline function pushImageCache(imageCache:AnyImageCache):Void {
+        imageCacheStack.push(imageCache);
+    }
+
+    public inline function popImageCache():Void {
+        imageCacheStack.pop();
+    }
+
+    /**
+     * Executes the given closure with an additional element opacity applied.
+     */
+    public function withElementOpacity<R>(opacity:Null<Float>, f:Window->R):R {
+        if (opacity == null)
+            return f(this);
+        final previous = pushElementOpacity(opacity);
+        final result = f(this);
+        popElementOpacity(previous);
+        return result;
+    }
+
+    /**
+     * Multiplies the element opacity by `opacity` and returns the previous one, to give to `popElementOpacity`.
+     */
+    public inline function pushElementOpacity(opacity:Float):Float {
+        final previous = elementOpacity;
+        elementOpacity = previous * opacity;
+        return previous;
+    }
+
+    public inline function popElementOpacity(previous:Float):Void {
+        elementOpacity = previous;
+    }
+
+    /**
+     * The current element opacity.
+     */
+    public inline function currentElementOpacity():Float {
+        return elementOpacity;
+    }
+
+/// Snapping (scaled pixels)
+
+    inline function snapStroke(value:Float):Float {
+        return TaffyLayoutEngine.roundStrokeToDevicePixel(value, _scaleFactor);
+    }
+
+    inline function roundToDevice(value:Float):Float {
+        return TaffyLayoutEngine.roundToDevicePixel(value, _scaleFactor);
+    }
+
+    inline function floorToDevice(value:Float):Float {
+        return TaffyLayoutEngine.floorToDevicePixel(value, _scaleFactor);
+    }
+
+    inline function ceilToDevice(value:Float):Float {
+        return TaffyLayoutEngine.ceilToDevicePixel(value, _scaleFactor);
+    }
+
+    // Snapped content mask, refreshed by `snapContentMask()`
+    var maskX:Float = 0;
+    var maskY:Float = 0;
+    var maskW:Float = 0;
+    var maskH:Float = 0;
+
+    /** Covers the current content mask with device pixels (floor near edges, ceil far edges) */
+    function snapContentMask():Void {
+        final bounds = contentMask().bounds;
+        final left = floorToDevice(bounds.origin.x);
+        final top = floorToDevice(bounds.origin.y);
+        final right = Math.max(ceilToDevice(bounds.origin.x + bounds.size.width), left);
+        final bottom = Math.max(ceilToDevice(bounds.origin.y + bounds.size.height), top);
+        maskX = left;
+        maskY = top;
+        maskW = right - left;
+        maskH = bottom - top;
+    }
+
+/// Painting
+
+    /**
+     * A `PaintQuad` reused by the elements of this window to paint quads
+     * without allocating (fill it, then give it to `paintQuad()`).
+     */
+    public function scratchPaintQuad():PaintQuad {
+        final quad = scratchQuad;
+        quad.background = null;
+        quad.setSolidBackground(0, 0, 0, 0);
+        quad.setBorderWidths(0, 0, 0, 0);
+        quad.setBorderColor(0, 0, 0, 0);
+        quad.borderStyle = Solid;
+        return quad;
+    }
+
+    /**
+     * Invoke the given function with the content mask reset to that
+     * of the window.
+     */
+    public function paintLayer<R>(bounds:Bounds, f:Window->R):R {
+        final mask = contentMask().bounds;
+        // In f32, like GPUI (see `TextPainter.pushCoverLayer`)
+        final pushed = TextPainter.pushCoverLayer(nextFrame.scene, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, _scaleFactor);
+        final result = f(this);
+        if (pushed) {
+            nextFrame.scene.popLayer();
+        }
+        return result;
+    }
+
+    /**
+     * Paint one or more drop shadows into the scene for the next frame at the current z-index.
+     */
+    public function paintDropShadows(bounds:Bounds, cornerRadii:Corners, shadows:Array<BoxShadow>):Void {
+        if (shadows == null || shadows.length == 0)
+            return;
+        paintShadows(bounds, cornerRadii, shadows, false);
+    }
+
+    /**
+     * Paint one or more inset shadows into the scene for the next frame at the current z-index.
+     */
+    public function paintInsetShadows(bounds:Bounds, cornerRadii:Corners, shadows:Array<BoxShadow>):Void {
+        if (shadows == null || shadows.length == 0)
+            return;
+        paintShadows(bounds, cornerRadii, shadows, true);
+    }
+
+    function paintShadows(bounds:Bounds, cornerRadii:Corners, shadows:Array<BoxShadow>, inset:Bool):Void {
+        final scaleFactor = _scaleFactor;
+        snapContentMask();
+        final opacity = elementOpacity;
+
+        // Element bounds covered with device pixels
+        final elementLeft = floorToDevice(bounds.origin.x);
+        final elementTop = floorToDevice(bounds.origin.y);
+        final elementRight = Math.max(ceilToDevice(bounds.origin.x + bounds.size.width), elementLeft);
+        final elementBottom = Math.max(ceilToDevice(bounds.origin.y + bounds.size.height), elementTop);
+
+        final scene = nextFrame.scene;
+        for (shadow in shadows) {
+            if (shadow.inset != inset)
+                continue;
+
+            // Drop shadow: (bounds + offset) dilated by the spread. Inset: the hole, shrunk by the spread.
+            final spreadRadius:Float = shadow.spreadRadius;
+            final amount:Float = inset ? -spreadRadius : spreadRadius;
+            final x = bounds.origin.x + shadow.offset.x - amount;
+            final y = bounds.origin.y + shadow.offset.y - amount;
+            final w = bounds.size.width + amount + amount;
+            final h = bounds.size.height + amount + amount;
+            final left = floorToDevice(x);
+            final top = floorToDevice(y);
+            final right = Math.max(ceilToDevice(x + w), left);
+            final bottom = Math.max(ceilToDevice(y + h), top);
+
+            final primitive = scene.nextShadow();
+            primitive.setBounds(left, top, right - left, bottom - top);
+            primitive.setContentMask(maskX, maskY, maskW, maskH);
+            if (inset) {
+                // Clamp at zero so a large spread can't produce negative radii
+                final spread:Float = shadow.spreadRadius;
+                primitive.setCornerRadii(
+                    Math.max(cornerRadii.topLeft - spread, 0) * scaleFactor,
+                    Math.max(cornerRadii.topRight - spread, 0) * scaleFactor,
+                    Math.max(cornerRadii.bottomRight - spread, 0) * scaleFactor,
+                    Math.max(cornerRadii.bottomLeft - spread, 0) * scaleFactor
+                );
+            }
+            else {
+                primitive.setCornerRadii(
+                    cornerRadii.topLeft * scaleFactor,
+                    cornerRadii.topRight * scaleFactor,
+                    cornerRadii.bottomRight * scaleFactor,
+                    cornerRadii.bottomLeft * scaleFactor
+                );
+            }
+            final color = shadow.color;
+            primitive.setColor(color.h, color.s, color.l, color.a * clamp01(opacity));
+            final blurRadius:Float = shadow.blurRadius;
+            primitive.blurRadius = blurRadius * scaleFactor;
+            primitive.setElementBounds(elementLeft, elementTop, elementRight - elementLeft, elementBottom - elementTop);
+            primitive.setElementCornerRadii(
+                cornerRadii.topLeft * scaleFactor,
+                cornerRadii.topRight * scaleFactor,
+                cornerRadii.bottomRight * scaleFactor,
+                cornerRadii.bottomLeft * scaleFactor
+            );
+            primitive.inset = inset;
+            scene.commitShadow(primitive);
+        }
+    }
+
+    static inline function clamp01(value:Float):Float {
+        return value < 0 ? 0 : (value > 1 ? 1 : value);
+    }
+
+    /**
+     * Paint one or more quads into the scene for the next frame at the current stacking context.
+     * Quads are colored rectangular regions with an optional background, border, and corner radius.
+     *
+     * Like GPUI, a quad with a transparent background is split into strips
+     * around its largest border free interior.
+     */
+    public function paintQuad(quad:PaintQuad):Void {
+        final opacity = clamp01(elementOpacity);
+        final scaleFactor = _scaleFactor;
+
+        // Snap bounds
+        final bounds = quad.bounds;
+        final left = roundToDevice(bounds.origin.x);
+        final top = roundToDevice(bounds.origin.y);
+        final right = Math.max(roundToDevice(bounds.origin.x + bounds.size.width), left);
+        final bottom = Math.max(roundToDevice(bounds.origin.y + bounds.size.height), top);
+
+        // Snap border widths
+        final borderTop = snapStroke(quad.borderWidthTop);
+        final borderRight = snapStroke(quad.borderWidthRight);
+        final borderBottom = snapStroke(quad.borderWidthBottom);
+        final borderLeft = snapStroke(quad.borderWidthLeft);
+
+        snapContentMask();
+
+        final radii = quad.cornerRadii;
+        final radiusTopLeft = radii.topLeft * scaleFactor;
+        final radiusTopRight = radii.topRight * scaleFactor;
+        final radiusBottomRight = radii.bottomRight * scaleFactor;
+        final radiusBottomLeft = radii.bottomLeft * scaleFactor;
+
+        // Background with opacity applied, and transparency check
+        final background = quad.background;
+        var transparent:Bool;
+        if (background == null) {
+            transparent = quad.solidA * opacity == 0.0;
+        }
+        else {
+            transparent = switch background.tag {
+                case LinearGradient: background.colors0.color.a * opacity == 0.0 && background.colors1.color.a * opacity == 0.0;
+                case _: background.solid.a * opacity == 0.0;
+            }
+        }
+
+        final scene = nextFrame.scene;
+
+        inline function emit(maskX:Float, maskY:Float, maskW:Float, maskH:Float):Void {
+            final q = scene.nextQuad();
+            q.setBounds(left, top, right - left, bottom - top);
+            q.setContentMask(maskX, maskY, maskW, maskH);
+            if (background == null) {
+                q.backgroundTag = 0;
+                q.backgroundColorSpace = 0;
+                q.setSolidBackground(quad.solidH, quad.solidS, quad.solidL, quad.solidA * opacity);
+            }
+            else {
+                q.backgroundTag = cast background.tag;
+                q.backgroundColorSpace = cast background.colorSpace;
+                final solid = background.solid;
+                q.backgroundSolidH = solid.h;
+                q.backgroundSolidS = solid.s;
+                q.backgroundSolidL = solid.l;
+                q.backgroundSolidA = solid.a * opacity;
+                q.backgroundGradientAngleOrPatternHeight = background.gradientAngleOrPatternHeight;
+                final c0 = background.colors0;
+                q.backgroundColor0H = c0.color.h;
+                q.backgroundColor0S = c0.color.s;
+                q.backgroundColor0L = c0.color.l;
+                q.backgroundColor0A = c0.color.a * opacity;
+                q.backgroundColor0Percentage = c0.percentage;
+                final c1 = background.colors1;
+                q.backgroundColor1H = c1.color.h;
+                q.backgroundColor1S = c1.color.s;
+                q.backgroundColor1L = c1.color.l;
+                q.backgroundColor1A = c1.color.a * opacity;
+                q.backgroundColor1Percentage = c1.percentage;
+            }
+            q.setBorderColor(quad.borderColorH, quad.borderColorS, quad.borderColorL, quad.borderColorA * opacity);
+            q.setCornerRadii(radiusTopLeft, radiusTopRight, radiusBottomRight, radiusBottomLeft);
+            q.setBorderWidths(borderTop, borderRight, borderBottom, borderLeft);
+            q.borderStyle = quad.borderStyle;
+            scene.commitQuad(q);
+        }
+
+        if (!transparent) {
+            emit(maskX, maskY, maskW, maskH);
+            return;
+        }
+
+        // Splitting a border-only quad around its empty interior avoids shading
+        // every transparent pixel inside large outlines.
+        // Largest border interior (GPUI's `largest_border_interior`)
+        final edgeTop = Math.max(radiusTopLeft, radiusTopRight);
+        final edgeRight = Math.max(radiusTopRight, radiusBottomRight);
+        final edgeBottom = Math.max(radiusBottomLeft, radiusBottomRight);
+        final edgeLeft = Math.max(radiusTopLeft, radiusBottomLeft);
+        final antialias = 1.0;
+
+        // Rounded corners need only be excluded on one axis. Either candidate
+        // is empty of border pixels, so use the larger interior.
+        final hLeft = left + borderLeft + antialias;
+        final hTop = top + Math.max(borderTop, edgeTop) + antialias;
+        final hRight = right - borderRight - antialias;
+        final hBottom = bottom - Math.max(borderBottom, edgeBottom) - antialias;
+        final vLeft = left + Math.max(borderLeft, edgeLeft) + antialias;
+        final vTop = top + borderTop + antialias;
+        final vRight = right - Math.max(borderRight, edgeRight) - antialias;
+        final vBottom = bottom - borderBottom - antialias;
+        final hArea = Math.max(hRight - hLeft, 0.0) * Math.max(hBottom - hTop, 0.0);
+        final vArea = Math.max(vRight - vLeft, 0.0) * Math.max(vBottom - vTop, 0.0);
+
+        final innerLeft = hArea >= vArea ? hLeft : vLeft;
+        final innerTop = hArea >= vArea ? hTop : vTop;
+        final innerRight = hArea >= vArea ? hRight : vRight;
+        final innerBottom = hArea >= vArea ? hBottom : vBottom;
+
+        // `Bounds::from_corners` then `is_empty`
+        if (innerRight - innerLeft <= 0 || innerBottom - innerTop <= 0) {
+            emit(maskX, maskY, maskW, maskH);
+            return;
+        }
+
+        final quadMaskX = maskX;
+        final quadMaskY = maskY;
+        final quadMaskW = maskW;
+        final quadMaskH = maskH;
+
+        inline function strip(x0:Float, y0:Float, x1:Float, y1:Float):Void {
+            // content_mask.bounds.intersect(strip), then is_empty
+            final ix = Math.max(quadMaskX, x0);
+            final iy = Math.max(quadMaskY, y0);
+            final ir = Math.max(Math.min(quadMaskX + quadMaskW, x1), ix);
+            final ib = Math.max(Math.min(quadMaskY + quadMaskH, y1), iy);
+            if (ir - ix > 0 && ib - iy > 0) {
+                emit(ix, iy, ir - ix, ib - iy);
+            }
+        }
+
+        // Top
+        strip(left, top, right, innerTop);
+        // Bottom
+        strip(left, innerBottom, right, bottom);
+        // Left
+        strip(left, innerTop, innerLeft, innerBottom);
+        // Right
+        strip(innerRight, innerTop, right, innerBottom);
+    }
+
+    /**
+     * Paint an underline into the scene for the next frame at the current z-index.
+     */
+    public function paintUnderline(origin:Point, width:Pixels, style:UnderlineStyle):Void {
+        final thickness = snapStroke(style.thickness);
+        final height = style.wavy ? thickness * 3.0 : thickness;
+        snapContentMask();
+        final underline = nextFrame.scene.nextUnderline();
+        underline.setBounds(roundToDevice(origin.x), roundToDevice(origin.y), snapStroke(width), height);
+        underline.setContentMask(maskX, maskY, maskW, maskH);
+        final color = style.color;
+        if (color != null) {
+            underline.setColor(color.h, color.s, color.l, color.a * clamp01(elementOpacity));
+        }
+        underline.thickness = thickness;
+        underline.wavy = style.wavy;
+        nextFrame.scene.commitUnderline(underline);
+    }
+
+    /**
+     * Paint a strikethrough into the scene for the next frame at the current z-index.
+     */
+    public function paintStrikethrough(origin:Point, width:Pixels, style:StrikethroughStyle):Void {
+        snapContentMask();
+        final underline = nextFrame.scene.nextUnderline();
+        underline.setBounds(roundToDevice(origin.x), roundToDevice(origin.y), snapStroke(width), snapStroke(style.thickness));
+        underline.setContentMask(maskX, maskY, maskW, maskH);
+        final color = style.color;
+        if (color != null) {
+            underline.setColor(color.h, color.s, color.l, color.a * clamp01(elementOpacity));
+        }
+        underline.thickness = snapStroke(style.thickness);
+        underline.wavy = false;
+        nextFrame.scene.commitUnderline(underline);
+    }
+
+/// Text, SVG and images
+
+    /**
+     * The text system of this window (Rust `window.text_system()`): the
+     * app's `TextSystem` plus a per window line layout cache.
+     */
+    public inline function textSystem():WindowTextSystem {
+        return windowTextSystem;
+    }
+
+    /**
+     * The `TextPainter` of this window, refreshed with the current scene,
+     * scale factor, element opacity and content mask. Give it to
+     * `ShapedLine.paint()` / `WrappedLine.paint()` during the paint phase.
+     */
+    public function textPainter():TextPainter {
+        final p = painter;
+        p.scene = nextFrame.scene;
+        p.atlas = spriteAtlas;
+        p.textSystem = windowTextSystem.textSystem;
+        p.scaleFactor = _scaleFactor;
+        p.elementOpacity = elementOpacity;
+        p.contentMaskBounds = contentMask().bounds;
+        return p;
+    }
+
+    /**
+     * Paints a monochrome (non-emoji) glyph into the scene for the next frame at the current z-index.
+     *
+     * The y component of the origin is the baseline of the glyph.
+     * You should generally prefer to use the `ShapedLine.paint()` or `WrappedLine.paint()` methods.
+     * This method is only useful if you need to paint a single glyph that has already been shaped.
+     */
+    public function paintGlyph(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels, color:Hsla):Void {
+        snapContentMask();
+        TextPainter.emitGlyph(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize, color);
+    }
+
+    /**
+     * Paints an emoji glyph into the scene for the next frame at the current z-index.
+     *
+     * The y component of the origin is the baseline of the glyph.
+     */
+    public function paintEmoji(origin:Point, fontId:FontId, glyphId:GlyphId, fontSize:Pixels):Void {
+        snapContentMask();
+        TextPainter.emitEmoji(nextFrame.scene, spriteAtlas, windowTextSystem.textSystem, glyphParams, _scaleFactor, elementOpacity, maskX, maskY, maskW, maskH, origin.x, origin.y, fontId, glyphId, fontSize);
+    }
+
+    /**
+     * Paint a monochrome SVG into the scene for the next frame at the current stacking context.
+     *
+     * `data` is the SVG source (when null, `path` is loaded from the asset
+     * source); `path` is also the atlas key, so different data needs
+     * different paths. Throws if the SVG cannot be rendered.
+     */
+    public function paintSvg(bounds:Bounds, path:String, data:Null<haxe.io.Bytes>, transformation:Null<TransformationMatrix>, color:Hsla, cx:App):Void {
+        final elementOpacity = this.elementOpacity;
+
+        // snap_bounds
+        final left = roundToDevice(bounds.origin.x);
+        final top = roundToDevice(bounds.origin.y);
+        final right = Math.max(roundToDevice(bounds.origin.x + bounds.size.width), left);
+        final bottom = Math.max(roundToDevice(bounds.origin.y + bounds.size.height), top);
+
+        final factor = SvgRenderer.SMOOTH_SVG_SCALE_FACTOR;
+        final params = new RenderSvgParams(path, Std.int(Math.fceil((right - left) * factor)), Std.int(Math.fceil((bottom - top) * factor)));
+
+        final tile = spriteAtlas.getOrInsertWith(AtlasKey.Svg(path, params.width, params.height), () -> cx.svgRenderer().renderAlphaMask(params, data));
+        if (tile == null)
+            return;
+
+        snapContentMask();
+        final tileWidth = tile.bounds.size.width / factor;
+        final tileHeight = tile.bounds.size.height / factor;
+        final centerX = left + (right - left) / 2;
+        final centerY = top + (bottom - top) / 2;
+        final x = TextPainter.roundHalfTowardZero(centerX - tileWidth / 2);
+        final y = TextPainter.roundHalfTowardZero(centerY - tileHeight / 2);
+
+        final scene = nextFrame.scene;
+        final sprite = scene.nextMonochromeSprite();
+        sprite.setBounds(x, y, Math.fceil(tileWidth), Math.fceil(tileHeight));
+        sprite.setContentMask(maskX, maskY, maskW, maskH);
+        sprite.setColor(color.h, color.s, color.l, color.a * clamp01(elementOpacity));
+        sprite.setTile(tile.textureId.index, tile.bounds.origin.x, tile.bounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        if (transformation != null) {
+            sprite.setTransformation(transformation.m00, transformation.m01, transformation.m10, transformation.m11, transformation.tx, transformation.ty);
+        }
+        scene.commitMonochromeSprite(sprite);
+    }
+
+    /**
+     * Paint an image into `bounds`, positioning and scaling it according to `imageBounds`.
+     *
+     * The visible region rendered is `bounds.intersect(imageBounds)`, with `cornerRadii`
+     * applied to `bounds`. Throws if `frameIndex` is not valid.
+     */
+    public function paintImage(bounds:Bounds, imageBounds:Bounds, cornerRadii:Corners, data:RenderImage, frameIndex:Int, grayscale:Bool):Void {
+        final visibleBounds = bounds.intersect(imageBounds);
+        if (visibleBounds.size.width <= 0 || visibleBounds.size.height <= 0)
+            return;
+        if (imageBounds.size.width <= 0 || imageBounds.size.height <= 0)
+            return;
+
+        final frame = data.frame(frameIndex);
+        if (frame == null)
+            throw "It's the caller's job to pass a valid frame index";
+
+        final tile = spriteAtlas.getOrInsertWith(AtlasKey.Image(data.id, frameIndex), () -> {
+            final source = new AtlasTile.AtlasTileSource(frame.width, frame.height, frame.bytes);
+            if (frame.texture != null) {
+                source.texture = frame.texture;
+            }
+            else {
+                source.straightAlpha = true;
+            }
+            return source;
+        });
+        if (tile == null)
+            throw 'Callback above only returns Some';
+
+        // snap_bounds(visible_bounds)
+        final left = roundToDevice(visibleBounds.origin.x);
+        final top = roundToDevice(visibleBounds.origin.y);
+        final right = Math.max(roundToDevice(visibleBounds.origin.x + visibleBounds.size.width), left);
+        final bottom = Math.max(roundToDevice(visibleBounds.origin.y + visibleBounds.size.height), top);
+
+        var tileX = tile.bounds.origin.x;
+        var tileY = tile.bounds.origin.y;
+        var tileW = tile.bounds.size.width;
+        var tileH = tile.bounds.size.height;
+        if (!visibleBounds.equals(imageBounds)) {
+            final xOffsetRatio = (visibleBounds.origin.x - imageBounds.origin.x) / imageBounds.size.width;
+            final yOffsetRatio = (visibleBounds.origin.y - imageBounds.origin.y) / imageBounds.size.height;
+            final widthRatio = visibleBounds.size.width / imageBounds.size.width;
+            final heightRatio = visibleBounds.size.height / imageBounds.size.height;
+
+            final subOriginX = tileX + gpui.util.MathUtil.round(xOffsetRatio * tileW);
+            final subOriginY = tileY + gpui.util.MathUtil.round(yOffsetRatio * tileH);
+            final subWidth = gpui.util.MathUtil.round(widthRatio * tileW);
+            final subHeight = gpui.util.MathUtil.round(heightRatio * tileH);
+
+            final maxX = tileX + tileW;
+            final maxY = tileY + tileH;
+
+            final clampedOriginX = Math.min(Math.max(subOriginX, tileX), maxX);
+            final clampedOriginY = Math.min(Math.max(subOriginY, tileY), maxY);
+            final clampedWidth = Math.max(Math.min(subWidth, maxX - clampedOriginX), 0);
+            final clampedHeight = Math.max(Math.min(subHeight, maxY - clampedOriginY), 0);
+            tileX = clampedOriginX;
+            tileY = clampedOriginY;
+            tileW = clampedWidth;
+            tileH = clampedHeight;
+        }
+
+        snapContentMask();
+        final radii = cornerRadii.clampRadiiForQuadSize(visibleBounds.size).scale(_scaleFactor);
+
+        final scene = nextFrame.scene;
+        final sprite = scene.nextPolychromeSprite();
+        sprite.grayscale = grayscale;
+        sprite.setBounds(left, top, right - left, bottom - top);
+        sprite.setContentMask(maskX, maskY, maskW, maskH);
+        sprite.setCornerRadii(radii.topLeft, radii.topRight, radii.bottomRight, radii.bottomLeft);
+        sprite.setTile(tile.textureId.index, tileX, tileY, tileW, tileH);
+        sprite.opacity = elementOpacity;
+        scene.commitPolychromeSprite(sprite);
+    }
+
+    /**
+     * Paint the given `Path` into the scene for the next frame at the current z-index.
+     *
+     * Differences with GPUI: the path is rasterized by `PathRasterizer` into
+     * a tile of the atlas (cached by geometry), at the device pixel
+     * resolution, with the 4x MSAA sample coverage of GPUI's Metal renderer
+     * (vertex snapping, Metal sample positions, Loop-Blinn curve alpha),
+     * then drawn with its color by a shader that reproduces the per sample
+     * storage and the resolve; GPUI renders its triangles into an
+     * intermediate 4x MSAA texture. The background (solid, linear gradient
+     * or pattern) is evaluated per pixel by the shader, over the path bounds
+     * clipped by the content mask, like GPUI.
+     */
+    public function paintPath(path:Path, color:IntoBackground):Void {
+        final background:Background = color;
+        final opacity = clamp01(elementOpacity);
+        path.contentMask = contentMask();
+        path.color = background.opacity(opacity);
+
+        final sf = _scaleFactor;
+        final bounds = path.bounds;
+        snapContentMask();
+
+        // Device rectangle covering the path (plus antialiasing), clipped by the mask
+        var x0 = Math.ffloor(bounds.origin.x * sf) - 1;
+        var y0 = Math.ffloor(bounds.origin.y * sf) - 1;
+        var x1 = Math.fceil((bounds.origin.x + bounds.size.width) * sf) + 1;
+        var y1 = Math.fceil((bounds.origin.y + bounds.size.height) * sf) + 1;
+        x0 = Math.max(x0, maskX);
+        y0 = Math.max(y0, maskY);
+        x1 = Math.min(x1, maskX + maskW);
+        y1 = Math.min(y1, maskY + maskH);
+        final width = Std.int(x1 - x0);
+        final height = Std.int(y1 - y0);
+        if (width <= 0 || height <= 0)
+            return;
+
+        // GPUI's intermediate path texture has the size of the drawable
+        final viewportWidth = Math.round(_viewportSize.width * sf);
+        final viewportHeight = Math.round(_viewportSize.height * sf);
+        final key = PathRasterizer.cacheKey(path, sf, x0, y0, width, height, viewportWidth, viewportHeight);
+        final tile = if (PathRasterizer.hasCurves(path)) {
+            spriteAtlas.getOrInsertWith(AtlasKey.PathCurves(key), () -> PathRasterizer.rasterizeCurves(path, sf, x0, y0, width, height, viewportWidth, viewportHeight));
+        }
+        else {
+            spriteAtlas.getOrInsertWith(AtlasKey.Path(key), () -> PathRasterizer.rasterize(path, sf, x0, y0, width, height, viewportWidth, viewportHeight));
+        }
+        if (tile == null)
+            return;
+
+        final scene = nextFrame.scene;
+        final sprite = scene.nextPath();
+        sprite.setBounds(bounds.origin.x * sf, bounds.origin.y * sf, bounds.size.width * sf, bounds.size.height * sf);
+        sprite.setSpriteBounds(x0, y0, width, height);
+        // GPUI scales the content mask of paths without covering it with device pixels
+        final mask = path.contentMask.bounds;
+        sprite.setContentMask(mask.origin.x * sf, mask.origin.y * sf, mask.size.width * sf, mask.size.height * sf);
+        final b = path.color;
+        sprite.background = b.tag == Solid ? null : b;
+        sprite.setColor(b.solid.h, b.solid.s, b.solid.l, b.solid.a);
+        sprite.vertexCount = path.vertices.length;
+        sprite.setTile(tile.textureId.index, tile.bounds.origin.x, tile.bounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
+        scene.commitPath(sprite);
+    }
+
+    /**
+     * Removes an image from the sprite atlas.
+     */
+    public function dropImage(data:RenderImage):Void {
+        for (frameIndex in 0...data.frameCount()) {
+            spriteAtlas.remove(AtlasKey.Image(data.id, frameIndex));
+        }
+    }
+
+/// Deferred draws
+
+    /**
+     * Defers the drawing of the given element, scheduling it to be painted on top of the currently-drawn tree
+     * at a later time. The `priority` parameter determines the drawing order relative to other deferred elements,
+     * with higher values being drawn on top.
+     *
+     * When `contentMask` is provided, the deferred element will be clipped to that region during
+     * paint. When `null`, no additional clipping is applied.
+     *
+     * This method should only be called as part of the prepaint phase of element drawing.
+     */
+    public function deferDraw(element:AnyElement, absoluteOffset:Point, priority:Int, ?contentMask:ContentMask):Void {
+        final draw = new DeferredDraw();
+        draw.currentView = renderedEntityStack[renderedEntityStack.length - 1];
+        draw.parentNode = nextFrame.dispatchTree.activeNodeId();
+        draw.elementIdStack = elementIdStack.copy();
+        draw.textStyleStack = textStyleStack.copy();
+        draw.contentMask = contentMask;
+        draw.remSize = remSize();
+        draw.priority = priority;
+        draw.element = element;
+        draw.absoluteOffset = absoluteOffset;
+        nextFrame.deferredDraws.push(draw);
+    }
+
+    function deferredDrawOrder(start:Int, end:Int):Array<Int> {
+        final order = [for (i in start...end) i];
+        final draws = nextFrame.deferredDraws;
+        // Stable sort by priority
+        haxe.ds.ArraySort.sort(order, (a, b) -> {
+            final pa = draws[a].priority;
+            final pb = draws[b].priority;
+            return pa != pb ? (pa < pb ? -1 : 1) : (a < b ? -1 : (a > b ? 1 : 0));
+        });
+        return order;
+    }
+
+    function prepaintDeferredDraws():Void {
+        // Process deferred draws in multiple rounds to support nesting.
+        // Each round processes all current deferred draws, which may push new ones.
+        //
+        // The draws are processed in place: prepaint ranges recorded during a
+        // round (view caches, nested deferred draws) index the same array that
+        // `reusePrepaint` slices on the next frame.
+        var roundStart = 0;
+        var depth = 0;
+        final prepaintStart = scratchPrepaintIndex;
+        while (true) {
+            final roundEnd = nextFrame.deferredDraws.length;
+            if (roundStart == roundEnd)
+                break;
+            // Limit maximum nesting depth to prevent infinite loops.
+            if (depth >= 10)
+                throw 'Exceeded maximum (10) deferred depth';
+            depth++;
+
+            for (index in deferredDrawOrder(roundStart, roundEnd)) {
+                final draw = nextFrame.deferredDraws[index];
+                elementIdStack.resize(0);
+                for (id in draw.elementIdStack) elementIdStack.push(id);
+                textStyleStack.resize(0);
+                for (style in draw.textStyleStack) textStyleStack.push(style);
+                nextFrame.dispatchTree.setActiveNode(draw.parentNode);
+
+                prepaintIndexInto(prepaintStart);
+                final element = draw.element;
+                if (element != null) {
+                    beginRenderedView(draw.currentView, false);
+                    remSizeOverrideStack.push(draw.remSize);
+                    pushAbsoluteElementOffset(draw.absoluteOffset);
+                    element.prepaint(this, app);
+                    popElementOffset();
+                    remSizeOverrideStack.pop();
+                    endRenderedView();
+                }
+                else {
+                    reusePrepaint(draw.prepaintStart, draw.prepaintEnd);
+                }
+                prepaintIndexInto(draw.prepaintEnd);
+                draw.prepaintStart.copyFrom(prepaintStart);
+            }
+
+            elementIdStack.resize(0);
+            textStyleStack.resize(0);
+            roundStart = roundEnd;
+        }
+    }
+
+    function paintDeferredDraws():Void {
+        // Paint all deferred draws in priority order.
+        // Since prepaint has already processed nested deferreds, we just paint them all.
+        final draws = nextFrame.deferredDraws;
+        if (draws.length == 0)
+            return;
+        final paintStart = scratchPaintIndex;
+        for (index in deferredDrawOrder(0, draws.length)) {
+            final draw = draws[index];
+            elementIdStack.resize(0);
+            for (id in draw.elementIdStack) elementIdStack.push(id);
+            nextFrame.dispatchTree.setActiveNode(draw.parentNode);
+
+            paintIndexInto(paintStart);
+            final element = draw.element;
+            if (element != null) {
+                beginRenderedView(draw.currentView, false);
+                if (draw.contentMask != null) pushContentMask(draw.contentMask);
+                remSizeOverrideStack.push(draw.remSize);
+                element.paint(this, app);
+                remSizeOverrideStack.pop();
+                if (draw.contentMask != null) popContentMask();
+                endRenderedView();
+            }
+            else {
+                reusePaint(draw.paintStart, draw.paintEnd);
+            }
+            paintIndexInto(draw.paintEnd);
+            draw.paintStart.copyFrom(paintStart);
+        }
+        elementIdStack.resize(0);
+    }
+
+/// View caching (Rust `prepaint_index`, `reuse_prepaint`, `paint_index`, `reuse_paint`)
+
+    /**
+     * Writes the current position in the prepaint state of the next frame into `index`.
+     */
+    @:allow(gpui)
+    function prepaintIndexInto(index:PrepaintStateIndex):Void {
+        final frame = nextFrame;
+        index.hitboxesIndex = frame.hitboxes.length;
+        index.tooltipsIndex = frame.tooltipRequests.length;
+        index.deferredDrawsIndex = frame.deferredDraws.length;
+        index.dispatchTreeIndex = frame.dispatchTree.len();
+        index.accessedElementStatesIndex = frame.accessedElementStates.length;
+        windowTextSystem.layoutIndexInto(index.lineLayoutIndex);
+    }
+
+    /**
+     * Copies the prepaint state recorded between `start` and `end` during the
+     * last frame into the next one: hitboxes, tooltips, accessed element
+     * states, line layouts, dispatch nodes (under the active node) and
+     * deferred draws (reused as well when drawn).
+     */
+    @:allow(gpui)
+    function reusePrepaint(start:PrepaintStateIndex, end:PrepaintStateIndex):Void {
+        final rendered = renderedFrame;
+        final next = nextFrame;
+        for (i in start.hitboxesIndex...end.hitboxesIndex) {
+            next.hitboxes.push(rendered.hitboxes[i]);
+        }
+        for (i in start.tooltipsIndex...end.tooltipsIndex) {
+            next.tooltipRequests.push(rendered.tooltipRequests[i]);
+        }
+        for (i in start.accessedElementStatesIndex...end.accessedElementStatesIndex) {
+            final key = rendered.accessedElementStates[i];
+            next.accessedElementStates.push(key);
+            next.reusedElementStates.push(key);
+        }
+        windowTextSystem.reuseLayouts(start.lineLayoutIndex, end.lineLayoutIndex);
+
+        final oldStart = start.dispatchTreeIndex;
+        final newStart = next.dispatchTree.reuseSubtree(oldStart, end.dispatchTreeIndex, rendered.dispatchTree, focusId());
+        if (next.dispatchTree.reusedSubtreeContainsFocus) {
+            next.focus = _focus;
+        }
+
+        for (i in start.deferredDrawsIndex...end.deferredDrawsIndex) {
+            final source = rendered.deferredDraws[i];
+            final draw = new DeferredDraw();
+            draw.currentView = source.currentView;
+            draw.parentNode = source.parentNode - oldStart + newStart;
+            draw.elementIdStack = source.elementIdStack;
+            draw.textStyleStack = source.textStyleStack;
+            draw.contentMask = source.contentMask;
+            draw.remSize = source.remSize;
+            draw.priority = source.priority;
+            draw.element = null;
+            draw.absoluteOffset = source.absoluteOffset;
+            draw.prepaintStart.copyFrom(source.prepaintStart);
+            draw.prepaintEnd.copyFrom(source.prepaintEnd);
+            draw.paintStart.copyFrom(source.paintStart);
+            draw.paintEnd.copyFrom(source.paintEnd);
+            next.deferredDraws.push(draw);
+        }
+    }
+
+    /**
+     * Number of element states accessed so far during this frame.
+     */
+    @:allow(gpui)
+    inline function accessedElementStatesIndex():Int {
+        return nextFrame.accessedElementStates.length;
+    }
+
+    /**
+     * Marks the element states accessed between `start` and `end` during the
+     * last frame as accessed again (they are kept for the next frame).
+     */
+    @:allow(gpui)
+    function reuseAccessedElementStates(start:Int, end:Int):Void {
+        final rendered = renderedFrame;
+        final next = nextFrame;
+        for (i in start...end) {
+            final key = rendered.accessedElementStates[i];
+            next.accessedElementStates.push(key);
+            next.reusedElementStates.push(key);
+        }
+    }
+
+    /**
+     * Writes the current position in the paint state of the next frame into `index`.
+     */
+    @:allow(gpui)
+    function paintIndexInto(index:PaintIndex):Void {
+        final frame = nextFrame;
+        index.sceneIndex = frame.scene.paintIndex();
+        index.mouseListenersIndex = frame.mouseListeners.length;
+        index.inputHandlersIndex = frame.inputHandlers.length;
+        index.cursorStylesIndex = frame.cursorStyles.length;
+        index.accessedElementStatesIndex = frame.accessedElementStates.length;
+        index.tabHandleIndex = frame.tabStops.paintIndex();
+        windowTextSystem.layoutIndexInto(index.lineLayoutIndex);
+    }
+
+    /**
+     * Copies the paint state recorded between `start` and `end` during the
+     * last frame into the next one: cursor styles, input handlers, mouse
+     * listeners, accessed element states, tab stops, line layouts and the
+     * scene paint operations (replayed).
+     */
+    @:allow(gpui)
+    function reusePaint(start:PaintIndex, end:PaintIndex):Void {
+        final rendered = renderedFrame;
+        final next = nextFrame;
+        for (i in start.cursorStylesIndex...end.cursorStylesIndex) {
+            next.cursorStyles.push(rendered.cursorStyles[i]);
+        }
+        for (i in start.inputHandlersIndex...end.inputHandlersIndex) {
+            next.inputHandlers.push(rendered.inputHandlers[i]);
+            rendered.inputHandlers[i] = null;
+        }
+        for (i in start.mouseListenersIndex...end.mouseListenersIndex) {
+            next.mouseListeners.push(rendered.mouseListeners[i]);
+        }
+        for (i in start.accessedElementStatesIndex...end.accessedElementStatesIndex) {
+            final key = rendered.accessedElementStates[i];
+            next.accessedElementStates.push(key);
+            next.reusedElementStates.push(key);
+        }
+        next.tabStops.replayRange(rendered.tabStops, start.tabHandleIndex, end.tabHandleIndex);
+        windowTextSystem.reuseLayouts(start.lineLayoutIndex, end.lineLayoutIndex);
+        next.scene.replay(start.sceneIndex, end.sceneIndex, rendered.scene);
+    }
+
+/// View caching: debugging
+
+    /**
+     * A text summary of the last frame besides its scene (hitboxes, mouse
+     * listeners, cursor styles, tooltips, deferred draws, input handlers,
+     * dispatch nodes with their contexts, focus and view ids, tab order),
+     * independent of hitbox ids: two windows drawing the same views, one with
+     * view caching and one without, must give the same summary. For tests.
+     */
+    public function debugFrameSummary():String {
+        final frame = renderedFrame;
+        final buf = new StringBuf();
+        buf.add('hitboxes ${frame.hitboxes.length}\n');
+        for (hitbox in frame.hitboxes) {
+            buf.add('  ${hitbox.bounds} ${hitbox.contentMask.bounds} ${hitbox.behavior}\n');
+        }
+        buf.add('mouse listeners ${frame.mouseListeners.length}\n');
+        for (entry in frame.mouseListeners) {
+            buf.add('  ${entry.kind}\n');
+        }
+        buf.add('cursor styles ${frame.cursorStyles.length}\n');
+        for (request in frame.cursorStyles) {
+            buf.add('  ${request.style} ${request.hitboxId == -1 ? 'window' : 'hitbox'}\n');
+        }
+        buf.add('tooltips ${frame.tooltipRequests.length}\n');
+        buf.add('deferred draws ${frame.deferredDraws.length}\n');
+        var handlers = 0;
+        for (handler in frame.inputHandlers) {
+            if (handler != null) handlers++;
+        }
+        if (platformInputHandler != null) handlers++;
+        buf.add('input handlers $handlers\n');
+        final tree = frame.dispatchTree;
+        buf.add('dispatch nodes ${tree.len()}\n');
+        for (i in 0...tree.len()) {
+            final node = tree.node(i);
+            buf.add('  ${node.parent} ctx=${node.context != null ? node.context.toString() : ''} focus=${node.focusId} view=${node.viewId} keys=${node.keyListeners.length} actions=${node.actionListeners.length} mods=${node.modifiersChangedListeners.length}\n');
+        }
+        buf.add('focus ${frame.focus != null ? frame.focus.id : -1}\n');
+        buf.add('tab stops ${frame.tabStops.tabStopCount()}\n');
+        var handle = frame.tabStops.next(-1);
+        final first = handle;
+        var count = 0;
+        while (handle != null && count < 1000) {
+            buf.add('  ${handle.id}\n');
+            handle = frame.tabStops.next(handle.id);
+            if (handle == first) break;
+            count++;
+        }
+        return buf.toString();
+    }
+
+/// View caching: layout
+
+    /**
+     * The layout engine frame number (see `TaffyLayoutEngine.retain`).
+     */
+    @:allow(gpui)
+    inline function layoutFrame():Int {
+        return layoutEngine.currentFrame();
+    }
+
+    /**
+     * Retains the layout subtree a cached view recorded during the last frame.
+     */
+    @:allow(gpui)
+    inline function retainLayout(layoutId:LayoutId, recordedFrame:Int):Bool {
+        return layoutEngine.retain(layoutId, recordedFrame);
+    }
+
+    /**
+     * Replaces a retained layout subtree by the subtree of the same view
+     * rendered again (see `TaffyLayoutEngine.replaceRetained`).
+     */
+    @:allow(gpui)
+    inline function replaceRetainedLayout(oldRoot:LayoutId, newRoot:LayoutId):Bool {
+        return layoutEngine.replaceRetained(oldRoot, newRoot);
+    }
+
+    /**
+     * Marks a view dirty for the next frame (used when a cache turns out to be stale).
+     */
+    @:allow(gpui)
+    function invalidateViewForNextFrame(viewId:Int):Void {
+        pendingDirtyViews.set(viewId, true);
+        dirty = true;
+    }
+
+    /**
+     * The image cache on top of the image cache stack, or null.
+     */
+    @:allow(gpui)
+    inline function currentImageCache():Null<AnyImageCache> {
+        return imageCacheStack.length > 0 ? imageCacheStack[imageCacheStack.length - 1] : null;
+    }
+
+    /**
+     * The layout engine of this window.
+     */
+    @:allow(gpui)
+    inline function layoutEngineInstance():TaffyLayoutEngine {
+        return layoutEngine;
+    }
+
+/// Hitboxes and mouse state
+
+    /**
+     * This method should be called during `prepaint`. You can use
+     * the returned `Hitbox` during `paint` or in an event handler
+     * to determine whether the inserted hitbox was the topmost.
+     */
+    public function insertHitbox(bounds:Bounds, behavior:HitboxBehavior):Hitbox {
+        final hitbox = new Hitbox(nextHitboxId, bounds, contentMask(), behavior);
+        nextHitboxId++;
+        nextFrame.hitboxes.push(hitbox);
+        return hitbox;
+    }
+
+    /**
+     * Checks if the hitbox with this id is currently hovered. Returns `false` during keyboard
+     * input modality so that keyboard navigation suppresses hover highlights.
+     * (Rust `HitboxId::is_hovered`.)
+     */
+    public function isHitboxIdHovered(hitboxId:Int):Bool {
+        // If this hitbox has captured the pointer, it's always considered hovered
+        if (_capturedHitbox == hitboxId) {
+            return true;
+        }
+        if (lastInputWasKeyboard()) {
+            return false;
+        }
+        return hitboxHitTest(hitboxId);
+    }
+
+    /**
+     * Checks if the hitbox with this id is currently hovered, regardless of the last
+     * input modality used.
+     */
+    public function isHitboxIdHoveredIgnoringLastInput(hitboxId:Int):Bool {
+        if (_capturedHitbox == hitboxId) {
+            return true;
+        }
+        return hitboxHitTest(hitboxId);
+    }
+
+    function hitboxHitTest(hitboxId:Int):Bool {
+        final hitTest = mouseHitTest;
+        for (i in 0...hitTest.hoverHitboxCount) {
+            if (hitTest.ids[i] == hitboxId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if the hitbox with this id contains the mouse and should handle scroll events.
+     */
+    public function shouldHitboxIdHandleScroll(hitboxId:Int):Bool {
+        return mouseHitTest.ids.indexOf(hitboxId) != -1;
+    }
+
+    /**
+     * Checks whether the hitbox would be hovered at `position`, regardless of the current input
+     * modality or mouse position.
+     */
+    public function isHitboxIdHoveredAt(hitboxId:Int, position:Point):Bool {
+        final hitTest = renderedFrame.hitTest(position);
+        for (i in 0...hitTest.hoverHitboxCount) {
+            if (hitTest.ids[i] == hitboxId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The position of the mouse relative to the window.
+     */
+    public inline function mousePosition():Point {
+        return _mousePosition;
+    }
+
+    /**
+     * Captures the pointer for the given hitbox. While captured, all mouse move and mouse up
+     * events will be routed to listeners that check this hitbox's `isHovered` status,
+     * regardless of actual hit testing. This enables drag operations that continue
+     * even when the pointer moves outside the element's bounds.
+     *
+     * The capture is automatically released on mouse up.
+     */
+    public function capturePointer(hitboxId:Int):Void {
+        _capturedHitbox = hitboxId;
+    }
+
+    /**
+     * Releases any active pointer capture.
+     */
+    public function releasePointer():Void {
+        _capturedHitbox = -1;
+    }
+
+    /**
+     * Returns the hitbox that has captured the pointer, or -1.
+     */
+    public inline function capturedHitbox():Int {
+        return _capturedHitbox;
+    }
+
+    /**
+     * The current state of the keyboard's modifiers.
+     */
+    public inline function modifiers():Modifiers {
+        return _modifiers;
+    }
+
+    /**
+     * Returns true if the last input event was keyboard-based (key press, tab navigation, etc.).
+     * This is used for focus-visible styling to show focus indicators only for keyboard navigation.
+     */
+    public inline function lastInputWasKeyboard():Bool {
+        return lastInputModality == Keyboard;
+    }
+
+    /**
+     * Returns true if the last input event was a touch.
+     */
+    public inline function lastInputWasTouch():Bool {
+        return lastInputModality == Touch;
+    }
+
+    /**
+     * The current state of the keyboard's capslock.
+     */
+    public inline function capslock():Bool {
+        return _capslock;
+    }
+
+    /**
+     * Prevent the default behavior of this event.
+     */
+    public inline function preventDefault():Void {
+        _defaultPrevented = true;
+    }
+
+    /**
+     * Obtain whether default has been prevented for the event currently being dispatched
+     * (Rust `default_prevented`).
+     */
+    public inline function defaultPrevented():Bool {
+        return _defaultPrevented;
+    }
+
+    /**
+     * Returns whether this window is focused by the operating system (receiving key events).
+     */
+    public inline function isWindowActive():Bool {
+        return _active;
+    }
+
+    /**
+     * Activates or deactivates the window (the platform window gaining or losing focus).
+     */
+    public function setActive(active:Bool):Void {
+        if (_active == active)
+            return;
+        _active = active;
+        activationObservers.retain(0, callback -> callback(this, app));
+        refresh();
+    }
+
+/// Platform window
+
+    var _isResizable:Bool = true;
+
+    var _isMinimizable:Bool = true;
+
+    var _clientInset:Null<Pixels> = null;
+
+    var _removed:Bool = false;
+
+    /**
+     * The native window operations Ceramic does not expose yet (minimize,
+     * zoom, interactive move and resize, window menu, title bar double click).
+     * Null by default: the requests are ignored, like GPUI's headless windows.
+     */
+    public var platformOperations:Null<PlatformWindowOperations> = null;
+
+    /**
+     * The resize zones of a client-decorated window in window coordinates,
+     * flat as `x, y, width, height, kind` (`ceramic.WindowHitKind`), set by
+     * the element that draws the window border (gpui-kit's WindowBorder) and
+     * published to the native window with the drag areas of the window
+     * controls (see `CeramicWindowOperations.hitRegions`). Port addition:
+     * GPUI starts native resizes from `startWindowResize`, which SDL cannot
+     * do, so the operating system needs the zones up front.
+     */
+    public var nativeResizeZones:Null<Array<Float>> = null;
+
+    /** The window whose hit regions the native window currently uses. */
+    static var hitRegionsOwner:Null<Window> = null;
+
+    /** The hit regions this window published last (flat, screen coordinates). */
+    var publishedHitRegions:Array<Float> = [];
+
+    final hitRegionPoint = new ceramic.Point();
+
+    /**
+     * Publishes the drag and resize regions of this window to the native
+     * window after a frame (see `CeramicWindowOperations.hitRegions`), when
+     * they changed. A window without any gives the native window back to the
+     * one that had them last only if it was this one.
+     */
+    function publishHitRegions():Void {
+        if (!Std.isOfType(platformOperations, gpui.platform.CeramicWindowOperations))
+            return;
+        final regions = gpui.platform.CeramicWindowOperations.hitRegions(this, hitRegionPoint);
+        if (regions.length == 0 && hitRegionsOwner != this)
+            return;
+        var same = hitRegionsOwner == this && regions.length == publishedHitRegions.length;
+        if (same) {
+            for (i in 0...regions.length) {
+                if (regions[i] != publishedHitRegions[i]) {
+                    same = false;
+                    break;
+                }
+            }
+        }
+        if (same)
+            return;
+        publishedHitRegions = regions;
+        hitRegionsOwner = regions.length > 0 ? this : null;
+        ceramic.App.app.screen.setWindowHitRegions(regions);
+    }
+
+    /**
+     * The decorations the platform gives the window (Rust
+     * `PlatformWindow::window_decorations`). The port's windows are server
+     * decorated; tests can set `Client` to check client side decorations.
+     */
+    public var platformDecorations:Decorations = Server;
+
+    /**
+     * The window controls the platform supports (Rust
+     * `PlatformWindow::window_controls`, everything by default).
+     */
+    public var platformControls:WindowControls = new WindowControls();
+
+    /**
+     * Returns whether the title bar window controls need to be rendered by the application (Wayland and X11)
+     */
+    public inline function windowDecorations():Decorations {
+        return platformDecorations;
+    }
+
+    /**
+     * Returns the controls supported by the platform.
+     */
+    public inline function windowControls():WindowControls {
+        return platformControls;
+    }
+
+    /**
+     * When using client side decorations, set this to the width of the invisible decorations (Wayland and X11)
+     */
+    public function setClientInset(inset:Pixels):Void {
+        // The port has no client side decorations: the inset is only kept.
+        _clientInset = inset;
+    }
+
+    /**
+     * Returns the client_inset value by `setClientInset`.
+     */
+    public inline function clientInset():Null<Pixels> {
+        return _clientInset;
+    }
+
+    /**
+     * Returns whether this window is resizable.
+     */
+    public inline function isResizable():Bool {
+        return _isResizable;
+    }
+
+    /**
+     * Returns whether this window is minimizable.
+     */
+    public inline function isMinimizable():Bool {
+        return _isMinimizable;
+    }
+
+    /**
+     * Check if the platform window is maximized.
+     */
+    public function isMaximized():Bool {
+        return platformOperations != null && platformOperations.isMaximized();
+    }
+
+    /**
+     * Returns whether or not the window is currently fullscreen (Ceramic's
+     * `settings.fullscreen`, the state of the app window).
+     */
+    public function isFullscreen():Bool {
+        return ceramic.App.app.settings.fullscreen;
+    }
+
+    /**
+     * Toggle full screen status on the current window at the platform level
+     * (through Ceramic's `settings.fullscreen`).
+     */
+    public function toggleFullscreen():Void {
+        final settings = ceramic.App.app.settings;
+        settings.fullscreen = !settings.fullscreen;
+    }
+
+    /**
+     * Minimize the window at the platform level.
+     */
+    public function minimizeWindow():Void {
+        if (platformOperations != null) platformOperations.minimize();
+    }
+
+    /**
+     * Zoom the window at the platform level (maximize or restore).
+     */
+    public function zoomWindow():Void {
+        if (platformOperations != null) platformOperations.zoom();
+    }
+
+    /**
+     * Tells the compositor to take control of window movement (Wayland and X11).
+     */
+    public function startWindowMove():Void {
+        // The operating system moves the window through the hit regions
+        // (see CeramicWindowOperations)
+        if (platformOperations != null) platformOperations.startWindowMove();
+    }
+
+    /**
+     * Tells the compositor to take control of window resize (Wayland and X11), when the window is resizable.
+     */
+    public function startWindowResize(edge:ResizeEdge):Void {
+        if (_isResizable) {
+            // The operating system resizes the window through the hit regions
+            // (see CeramicWindowOperations)
+            if (platformOperations != null) platformOperations.startWindowResize(edge);
+        }
+    }
+
+    /**
+     * Opens the native title bar context menu, useful when implementing client side decorations (Wayland and X11)
+     */
+    public function showWindowMenu(position:Point):Void {
+        if (platformOperations != null) platformOperations.showWindowMenu(position);
+    }
+
+    /**
+     * Performs the system action of a title bar double click (macOS).
+     */
+    public function titlebarDoubleClick():Void {
+        if (platformOperations != null) platformOperations.titlebarDoubleClick(_isResizable, _isMinimizable);
+    }
+
+    /**
+     * Close this window at the end of the current update (GPUI sets
+     * `removed` and the app closes it once the update returns).
+     */
+    public function removeWindow():Void {
+        if (_removed) return;
+        _removed = true;
+        app.defer(_ -> destroy());
+    }
+
+    /**
+     * Returns a conservative rectangle avoiding platform-known obscured
+     * content. Ceramic reports no system insets nor visual viewport, so it
+     * is the whole viewport.
+     */
+    public function fullyVisibleBounds():Bounds {
+        return new Bounds(new Point(0., 0.), viewportSize());
+    }
+
+    /**
+     * Records the hitbox of an element acting as a window control area
+     * (Rust `insert_window_control_hitbox`).
+     */
+    public function insertWindowControlHitbox(area:WindowControlArea, hitbox:Hitbox):Void {
+        nextFrame.windowControlHitboxes.push(new WindowControlHitbox(area, hitbox));
+    }
+
+    /**
+     * The window control areas of the last drawn frame.
+     */
+    public inline function windowControlHitboxes():Array<WindowControlHitbox> {
+        return renderedFrame.windowControlHitboxes;
+    }
+
+    /**
+     * Returns whether the mouse cursor is over this window.
+     */
+    public inline function isWindowHovered():Bool {
+        return hovered;
+    }
+
+    /**
+     * Updates the cursor style at the platform level. This method should only be called
+     * during the paint phase of element drawing.
+     */
+    public function setCursorStyle(style:CursorStyle, hitbox:Hitbox):Void {
+        nextFrame.cursorStyles.push(new CursorStyleRequest(hitbox.id, style));
+    }
+
+    /**
+     * Updates the cursor style for the entire window at the platform level. A cursor
+     * style using this method will have precedence over any cursor style set using
+     * `setCursorStyle`.
+     */
+    public function setWindowCursorStyle(style:CursorStyle):Void {
+        nextFrame.cursorStyles.push(new CursorStyleRequest(-1, style));
+    }
+
+    /**
+     * The cursor style of the last frame for the current mouse position.
+     */
+    public inline function cursorStyle():CursorStyle {
+        return currentCursorStyle;
+    }
+
+    @:allow(gpui)
+    function resetCursorStyle():Void {
+        final style = renderedFrame.cursorStyle(this);
+        currentCursorStyle = style != null ? style : Arrow;
+        // Set the cursor only if we're the hovered window.
+        if (hovered) {
+            GpuiInput.setCursor(currentCursorStyle);
+        }
+    }
+
+    /**
+     * Sets a tooltip to be rendered for the upcoming frame. This method should only be called
+     * during the paint phase of element drawing.
+     */
+    public function setTooltip(tooltip:AnyTooltip):Int {
+        final id = nextTooltipId++;
+        nextFrame.tooltipRequests.push(new TooltipRequest(id, tooltip));
+        return id;
+    }
+
+    /**
+     * Checks if the tooltip with the given id is currently hovered (Rust `TooltipId::is_hovered`).
+     */
+    public function isTooltipHovered(tooltipId:Int):Bool {
+        return tooltipBounds != null && tooltipBounds.id == tooltipId && tooltipBounds.bounds.contains(_mousePosition);
+    }
+
+    /**
+     * Request that the given bounds be scrolled into view by the nearest scrollable ancestor.
+     */
+    public function requestAutoscroll(bounds:Bounds):Void {
+        requestedAutoscroll = bounds;
+    }
+
+    /**
+     * Take the requested autoscroll bounds, if any.
+     */
+    public function takeAutoscroll():Null<Bounds> {
+        final bounds = requestedAutoscroll;
+        requestedAutoscroll = null;
+        return bounds;
+    }
+
+/// Listeners (paint phase)
+
+    /**
+     * Register a mouse event listener on the window for the next frame. The type of event
+     * is given by `kind`. When the next frame is rendered the listener will be cleared.
+     *
+     * This is a fairly low-level method, so prefer using event handlers on elements unless you have
+     * a specific need to register a global listener.
+     */
+    public function onMouseEvent(kind:PlatformInputKind, listener:(PlatformInput, DispatchPhase, Window, App) -> Void):Void {
+        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, listener));
+    }
+
+    /**
+     * Register a key event listener on this node for the next frame. The listener gets every
+     * keyboard event (key down, key up, modifiers changed): check `event.kind`.
+     */
+    public function onKeyEvent(listener:(PlatformInput, DispatchPhase, Window, App) -> Void):Void {
+        nextFrame.dispatchTree.onKeyEvent(listener);
+    }
+
+    /**
+     * Register a modifiers changed event listener on the window for the next frame.
+     */
+    public function onModifiersChanged(listener:(ModifiersChangedEvent, Window, App) -> Void):Void {
+        nextFrame.dispatchTree.onModifiersChanged(listener);
+    }
+
+    /**
+     * Register an action listener on this node for the next frame, for actions of exactly
+     * the given class.
+     */
+    public function onAction(actionType:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void):Void {
+        nextFrame.dispatchTree.onAction(actionType, listener);
+    }
+
+    /**
+     * Sets the key context for the current element. This context will be used to translate
+     * keybindings into actions.
+     */
+    public function setKeyContext(context:KeyContext):Void {
+        nextFrame.dispatchTree.setKeyContext(context);
+    }
+
+    /**
+     * Sets the focus handle for the current element. This handle will be used to manage focus state
+     * and keyboard event dispatch for the element.
+     *
+     * This method should only be called as part of the prepaint phase of element drawing.
+     */
+    public function setFocusHandle(focusHandle:FocusHandle, cx:App):Void {
+        if (focusHandle.isFocused(this)) {
+            nextFrame.focus = focusHandle;
+        }
+        nextFrame.dispatchTree.setFocusId(focusHandle.id);
+    }
+
+    /**
+     * Sets the view id for the current element.
+     */
+    public function setViewId(viewId:Int):Void {
+        nextFrame.dispatchTree.setViewId(viewId);
+    }
+
+    /**
+     * Executes the given closure within a tab group of the given index (no group when `null`).
+     */
+    public function withTabGroup<R>(index:Null<Int>, f:Window->R):R {
+        if (index != null) {
+            nextFrame.tabStops.beginGroup(index);
+            final result = f(this);
+            nextFrame.tabStops.endGroup();
+            return result;
+        }
+        return f(this);
+    }
+
+    /**
+     * Inserts the given focus handle in the tab order of the next frame.
+     */
+    public function insertTabStop(focusHandle:FocusHandle):Void {
+        nextFrame.tabStops.insert(focusHandle);
+    }
+
+    /**
+     * The focus handle of the next frame, when an element painted so far is focused.
+     */
+    @:allow(gpui)
+    inline function nextFrameFocus():Null<FocusHandle> {
+        return nextFrame.focus;
+    }
+
+    @:allow(gpui)
+    inline function nextFrameDispatchTree():DispatchTree {
+        return nextFrame.dispatchTree;
+    }
+
+/// Focus
+
+    /**
+     * Obtain the currently focused `FocusHandle`. If no elements are focused, returns `null`.
+     */
+    public inline function focused(?cx:App):Null<FocusHandle> {
+        return _focus;
+    }
+
+    /**
+     * The id of the focused handle, -1 if nothing is focused.
+     */
+    public inline function focusId():Int {
+        return _focus != null ? _focus.id : -1;
+    }
+
+    /**
+     * Whether the focus handle `parent` contains `child` (or is `child`) in the most recently
+     * rendered frame (Rust `FocusId::contains`).
+     */
+    public function focusContains(parent:Int, child:Int):Bool {
+        return renderedFrame.dispatchTree.focusContains(parent, child);
+    }
+
+    /**
+     * Move focus to the element associated with the given `FocusHandle`.
+     */
+    public function focus(handle:FocusHandle, ?cx:App):Void {
+        if (!focusEnabled || (_focus != null && _focus.id == handle.id)) {
+            return;
+        }
+
+        _focus = handle;
+        focusGeneration++;
+        clearPendingKeystrokes();
+
+        refresh();
+    }
+
+    /**
+     * Remove focus from all elements within this context's window.
+     */
+    public function blur(?cx:App):Void {
+        clearPendingKeystrokes();
+
+        if (!focusEnabled) {
+            return;
+        }
+
+        if (_focus != null) {
+            focusGeneration++;
+        }
+        _focus = null;
+        refresh();
+    }
+
+    /**
+     * Blur the window and don't allow anything in it to be focused again.
+     */
+    public function disableFocus(?cx:App):Void {
+        blur(cx);
+        focusEnabled = false;
+    }
+
+    /**
+     * Move focus to next tab stop.
+     */
+    public function focusNext(?cx:App):Void {
+        if (!focusEnabled) {
+            return;
+        }
+
+        final handle = renderedFrame.tabStops.next(focusId());
+        if (handle != null) {
+            focus(handle, cx);
+        }
+    }
+
+    /**
+     * Move focus to previous tab stop.
+     */
+    public function focusPrev(?cx:App):Void {
+        if (!focusEnabled) {
+            return;
+        }
+
+        final handle = renderedFrame.tabStops.prev(focusId());
+        if (handle != null) {
+            focus(handle, cx);
+        }
+    }
+
+    /**
+     * While focus-lost listeners are being dispatched, returns the closest ancestor of the
+     * previously focused element that can still receive focus. Returns `null` at all other times.
+     * Handles are not kept by id here: it returns the focus id, or -1.
+     */
+    public function focusLostRestoreTargetId():Int {
+        if (focusLostPath.length == 0)
+            return -1;
+        var i = focusLostPath.length - 2;
+        while (i >= 0) {
+            final id = focusLostPath[i];
+            if (renderedFrame.dispatchTree.focusableNodeId(id) != -1) {
+                return id;
+            }
+            i--;
+        }
+        return -1;
+    }
+
+    /**
+     * Registers a focus listener (called after each frame whose focus path changed).
+     * Returns the subscription and the function activating it.
+     */
+    @:allow(gpui)
+    function newFocusListener(listener:(WindowFocusEvent, Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+        final subscriber = focusListeners.insert(0, listener);
+        return {subscription: subscriber.subscription, activate: subscriber.activate};
+    }
+
+    /**
+     * Registers a callback called when the window is activated or deactivated
+     * (Rust `window.activation_observers.insert`).
+     */
+    @:allow(gpui)
+    function newActivationObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+        final subscriber = activationObservers.insert(0, callback);
+        return {subscription: subscriber.subscription, activate: subscriber.activate};
+    }
+
+    /**
+     * Registers a listener called when the focus is lost (the focus path becomes empty).
+     */
+    @:allow(gpui)
+    function newFocusLostListener(listener:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+        final subscriber = focusLostListeners.insert(0, listener);
+        return {subscription: subscriber.subscription, activate: subscriber.activate};
+    }
+
+    /**
+     * Register a listener to be called when the given focus handle or one of its descendants receives focus.
+     * This does not fire if the given focus handle - or one of its descendants - was previously focused.
+     */
+    public function onFocusIn(handle:FocusHandle, cx:App, listener:(Window, App) -> Void):Subscription {
+        final focusId = handle.id;
+        final result = newFocusListener((event, window, cx) -> {
+            if (event.isFocusIn(focusId)) {
+                listener(window, cx);
+            }
+            return true;
+        });
+        cx.defer(_ -> result.activate());
+        return result.subscription;
+    }
+
+    /**
+     * Register a listener to be called when the given focus handle or one of its descendants loses focus.
+     */
+    public function onFocusOut(handle:FocusHandle, cx:App, listener:(FocusOutEvent, Window, App) -> Void):Subscription {
+        final focusId = handle.id;
+        final result = newFocusListener((event, window, cx) -> {
+            final blurredId = event.previousLast();
+            if (blurredId != -1 && event.isFocusOut(focusId)) {
+                listener(new FocusOutEvent(blurredId), window, cx);
+            }
+            return true;
+        });
+        cx.defer(_ -> result.activate());
+        return result.subscription;
+    }
+
+    /**
+     * Register a callback called when the pending input (multi-stroke keystrokes) changes.
+     */
+    public function observePendingInput(cx:App, callback:(Window, App) -> Void):Subscription {
+        final subscriber = pendingInputObservers.insert(0, (window, cx) -> {
+            callback(window, cx);
+            return true;
+        });
+        subscriber.activate();
+        return subscriber.subscription;
+    }
+
+/// Text input
+
+    /**
+     * Sets an input handler, such as `ElementInputHandler`, which interfaces with the
+     * platform to receive textual input with proper integration with concerns such
+     * as IME interactions. This handler will be active for the upcoming frame until
+     * the following frame is rendered. Only registered when `focusHandle` is focused.
+     *
+     * This method should only be called as part of the paint phase of element drawing.
+     */
+    public function handleInput(focusHandle:FocusHandle, inputHandler:InputHandler, ?cx:App):Void {
+        if (cx == null) cx = app;
+        if (focusHandle.isFocused(this)) {
+            nextFrame.inputHandlers.push(new PlatformInputHandler(this, cx, inputHandler).withFocus(focusHandle.id));
+        }
+    }
+
+    /**
+     * Takes the input handler registered by the last frame, if any (Rust
+     * `PlatformWindow::take_input_handler`). Give it back with `setInputHandler()`.
+     */
+    public function takeInputHandler():Null<PlatformInputHandler> {
+        final inputHandler = platformInputHandler;
+        platformInputHandler = null;
+        return inputHandler;
+    }
+
+    /**
+     * The input handler registered by the last frame, without taking it.
+     */
+    public inline function peekInputHandler():Null<PlatformInputHandler> {
+        return platformInputHandler;
+    }
+
+    /**
+     * Gives an input handler (back) to the platform slot (Rust
+     * `PlatformWindow::set_input_handler`).
+     */
+    public function setInputHandler(inputHandler:PlatformInputHandler):Void {
+        platformInputHandler = inputHandler;
+    }
+
+    /**
+     * Notifies native text services that the focused component's text changed.
+     *
+     * Text components should call this after application-driven edits, in addition
+     * to notifying GPUI to redraw. Unfocused or unregistered components are ignored.
+     */
+    public function notifyTextInputChanged(focusHandle:FocusHandle):Void {
+        if (focusedTextInput == focusHandle.id && focusHandle.isFocused(this) && textInputPlatform != null) {
+            textInputPlatform.textInputStateChanged(ContentChanged);
+        }
+    }
+
+    /**
+     * Notifies native text services that the focused component's selection changed.
+     *
+     * Text components should call this after application-driven selection changes,
+     * in addition to notifying GPUI to redraw.
+     */
+    public function notifyTextSelectionChanged(focusHandle:FocusHandle):Void {
+        if (focusedTextInput == focusHandle.id && focusHandle.isFocused(this) && textInputPlatform != null) {
+            textInputPlatform.textInputStateChanged(SelectionChanged);
+        }
+    }
+
+    /**
+     * Forwards the focused input handler's `TextInputConfiguration` to the platform
+     * when it differs from the last forwarded value. With no input handler the
+     * default configuration applies, so a field's preferences don't outlive its focus.
+     */
+    function applyTextInputConfiguration(cx:App):Void {
+        final inputHandler = takeInputHandler();
+        var configuration:TextInputConfiguration;
+        if (inputHandler != null) {
+            configuration = inputHandler.textInputConfiguration(this, cx);
+            setInputHandler(inputHandler);
+        }
+        else {
+            configuration = TextInputConfiguration.defaultValue();
+        }
+        if (lastTextInputConfiguration == null || !lastTextInputConfiguration.equals(configuration)) {
+            if (textInputPlatform != null) {
+                textInputPlatform.setTextInputConfiguration(configuration);
+            }
+            lastTextInputConfiguration = configuration;
+        }
+    }
+
+    /**
+     * Whether the focused element registered an input handler accepting text input
+     * at the last draw (the platform text input session is active).
+     */
+    public inline function hasFocusedTextInput():Bool {
+        return focusedTextInput != -1;
+    }
+
+    /**
+     * Updates the IME panel position suggestions for languages like japanese, chinese.
+     */
+    public function invalidateCharacterCoordinates():Void {
+        onNextFrame((window, cx) -> {
+            final inputHandler = window.takeInputHandler();
+            if (inputHandler != null) {
+                final bounds = inputHandler.selectedBounds(window, cx);
+                if (bounds != null && window.textInputPlatform != null) {
+                    window.textInputPlatform.updateImePosition(bounds);
+                }
+                window.setInputHandler(inputHandler);
+            }
+        });
+    }
+
+    /**
+     * Requests the software keyboard (no-op: Ceramic shows it with text editing).
+     */
+    public function requestVirtualKeyboard():Void {}
+
+    /**
+     * Shows the system character palette (no-op on Ceramic).
+     */
+    public function showCharacterPalette():Void {}
+
+    /**
+     * Plays the system bell (no-op on Ceramic).
+     */
+    public function playSystemBell():Void {}
+
+/// Event dispatch
+
+    /**
+     * Dispatch a mouse or keyboard event on the window (Rust `dispatch_event`). Runs inside an
+     * app update with tracker capture disabled: handlers never subscribe a view.
+     */
+    public function dispatchEvent(event:PlatformInput, ?cx:App):DispatchEventResult {
+        if (cx == null) cx = app;
+        cx.startUpdate();
+        tracker.Autorun.unobserve();
+        var result:DispatchEventResult;
+        try {
+            result = dispatchEventInner(event, cx);
+        }
+        catch (e:haxe.Exception) {
+            tracker.Autorun.reobserve();
+            @:privateAccess cx.pendingUpdates--;
+            throw e;
+        }
+        tracker.Autorun.reobserve();
+        cx.finishUpdate();
+        return result;
+    }
+
+    function dispatchEventInner(event:PlatformInput, cx:App):DispatchEventResult {
+        // Track input modality for focus-visible styling and hover suppression.
+        // Hover is suppressed during keyboard modality so that keyboard navigation
+        // doesn't show hover highlights on the item under the mouse cursor.
+        final oldModality = lastInputModality;
+        switch event.kind {
+            case KeyDown: lastInputModality = Keyboard;
+            case MouseMove | MouseDown: lastInputModality = Mouse;
+            case _:
+        }
+        if (lastInputModality != oldModality) {
+            refresh();
+        }
+
+        // Handlers may set this to false by calling `stopPropagation`.
+        cx.propagateEvent = true;
+        // Handlers may set this to true by calling `preventDefault`.
+        _defaultPrevented = false;
+
+        switch event.kind {
+            case MouseMove:
+                final e:MouseMoveEvent = cast event;
+                _mousePosition = e.position;
+                _modifiers = e.modifiers;
+            case MouseDown:
+                final e:MouseDownEvent = cast event;
+                _mousePosition = e.position;
+                _modifiers = e.modifiers;
+            case MouseUp:
+                final e:MouseUpEvent = cast event;
+                _mousePosition = e.position;
+                _modifiers = e.modifiers;
+            case MouseExited:
+                final e:MouseExitEvent = cast event;
+                _modifiers = e.modifiers;
+            case ModifiersChanged:
+                final e:ModifiersChangedEvent = cast event;
+                _modifiers = e.modifiers;
+                _capslock = e.capslock;
+            case Scroll:
+                final e:ScrollEvent = cast event;
+                _mousePosition = e.position;
+                _modifiers = e.modifiers;
+            case KeyDown | KeyUp:
+        }
+
+        if (event.kind.isMouseEvent()) {
+            dispatchMouseEvent(event, cx);
+        }
+        else {
+            dispatchKeyEvent(event, cx);
+        }
+
+        return new DispatchEventResult(cx.propagateEvent, _defaultPrevented);
+    }
+
+    function dispatchMouseEvent(event:PlatformInput, cx:App):Void {
+        final hitTest = renderedFrame.hitTest(_mousePosition);
+        if (!hitTest.equals(mouseHitTest)) {
+            if (event.kind != MouseMove && viewCaching && !drawing) {
+                // Hover is painted from the hit test, and only mouse moves
+                // notify the views whose hover changed: after another event
+                // moved the mouse, the next frame (whenever it is drawn)
+                // renders every view, like uncached views would be.
+                refreshing = true;
+            }
+            mouseHitTest = hitTest;
+            resetCursorStyle();
+        }
+
+        #if gpui_inspector
+        if (isInspectorPicking(cx)) {
+            handleInspectorMouseEvent(event, cx);
+            // When inspector is picking, all other mouse handling is skipped.
+            return;
+        }
+        #end
+
+        final mouseListeners = renderedFrame.mouseListeners.copy();
+        final kind = event.kind;
+
+        // Capture phase, events bubble from back to front. Handlers for this phase are used for
+        // special purposes, such as detecting events outside of a given Bounds.
+        for (entry in mouseListeners) {
+            if (entry.kind != kind)
+                continue;
+            entry.listener(event, Capture, this, cx);
+            if (!cx.propagateEvent) {
+                break;
+            }
+        }
+
+        // Bubble phase, where most normal handlers do their work.
+        if (cx.propagateEvent) {
+            var i = mouseListeners.length - 1;
+            while (i >= 0) {
+                final entry = mouseListeners[i];
+                i--;
+                if (entry.kind != kind)
+                    continue;
+                entry.listener(event, Bubble, this, cx);
+                if (!cx.propagateEvent) {
+                    break;
+                }
+            }
+        }
+
+        if (cx.hasActiveDrag()) {
+            if (kind == MouseMove) {
+                // If this was a mouse move event, redraw the window so that the
+                // active drag can follow the mouse cursor.
+                refresh();
+            }
+            else if (kind == MouseUp) {
+                // If this was a mouse up event, cancel the active drag and redraw
+                // the window.
+                cx.activeDrag = null;
+                refresh();
+            }
+        }
+
+        // Auto-release pointer capture on mouse up
+        if (kind == MouseUp && _capturedHitbox != -1) {
+            _capturedHitbox = -1;
+        }
+    }
+
+    function dispatchKeyEvent(event:PlatformInput, cx:App):Void {
+        if (dirty) {
+            draw();
+        }
+
+        final nodeId = focusNodeIdInRenderedFrame(focusId());
+        final dispatchPath = renderedFrame.dispatchTree.dispatchPath(nodeId);
+
+        var keystroke:Null<Keystroke> = null;
+
+        if (event.kind == ModifiersChanged) {
+            final e:ModifiersChangedEvent = cast event;
+            if (e.modifiers.numberOfModifiers() == 0
+                && pendingModifierModifiers.numberOfModifiers() == 1
+                && !pendingModifierSawOtherInput) {
+                final m = pendingModifierModifiers;
+                final key = m.shift ? 'shift' : m.control ? 'control' : m.alt ? 'alt' : m.platform ? 'platform' : m.function_ ? 'function' : null;
+                if (key != null) {
+                    keystroke = new Keystroke(Modifiers.none(), key, null);
+                }
+            }
+
+            if (pendingModifierModifiers.numberOfModifiers() == 0 && e.modifiers.numberOfModifiers() == 1) {
+                pendingModifierSawOtherInput = false;
+            }
+            else if (e.modifiers.numberOfModifiers() > 1) {
+                pendingModifierSawOtherInput = true;
+            }
+            pendingModifierModifiers = e.modifiers;
+        }
+        else if (event.kind == KeyDown) {
+            final e:KeyDownEvent = cast event;
+            pendingModifierSawOtherInput = true;
+            keystroke = e.keystroke;
+        }
+
+        if (keystroke == null) {
+            finishDispatchKeyEvent(event, null, KeyBindings, dispatchPath, contextStack(), cx);
+            return;
+        }
+
+        var inputPreference = this.inputPreference(event, cx);
+
+        cx.propagateEvent = true;
+        cx.dispatchKeystrokeInterceptors(keystroke, inputPreference, contextStack(), this);
+        if (!cx.propagateEvent) {
+            finishDispatchKeyEvent(event, keystroke, inputPreference, dispatchPath, contextStack(), cx);
+            return;
+        }
+
+        var currentlyPending = pendingInput;
+        pendingInput = null;
+        if (currentlyPending == null) {
+            currentlyPending = new PendingInput();
+        }
+        if (currentlyPending.focus != -1 && currentlyPending.focus != focusId()) {
+            if (currentlyPending.timeout != null) currentlyPending.timeout.drop();
+            currentlyPending = new PendingInput();
+        }
+
+        final matchResult = renderedFrame.dispatchTree.dispatchKey(currentlyPending.keystrokes, keystroke, dispatchPath);
+
+        if (matchResult.toReplay.length > 0) {
+            replayPendingInput(matchResult.toReplay, cx);
+            cx.propagateEvent = true;
+        }
+
+        if (matchResult.pending.length > 0) {
+            final previousTimeout = currentlyPending.timeout;
+            currentlyPending.timeout = null;
+            currentlyPending.keystrokes = matchResult.pending;
+            currentlyPending.focus = focusId();
+
+            var textInputRequiresTimeout = false;
+            if (event.kind == KeyDown && (cast event : KeyDownEvent).keystroke.keyChar != null) {
+                final inputHandler = takeInputHandler();
+                if (inputHandler != null) {
+                    textInputRequiresTimeout = inputHandler.acceptsTextInput(this, cx);
+                    setInputHandler(inputHandler);
+                }
+            }
+
+            final needsTimeout = previousTimeout != null || matchResult.pendingHasBinding || textInputRequiresTimeout;
+            if (needsTimeout) {
+                if (previousTimeout != null && previousTimeout.isPaused()) {
+                    previousTimeout.resetDuration(PENDING_INPUT_TIMEOUT);
+                    currentlyPending.timeout = previousTimeout;
+                }
+                else {
+                    if (previousTimeout != null) previousTimeout.drop();
+                    currentlyPending.timeout = newPendingInputTimeout(PENDING_INPUT_TIMEOUT, cx);
+                }
+            }
+            else {
+                currentlyPending.timeout = null;
+            }
+            pendingInput = currentlyPending;
+            pendingInputChanged(cx);
+            cx.propagateEvent = false;
+            return;
+        }
+        else if (currentlyPending.timeout != null) {
+            currentlyPending.timeout.drop();
+        }
+
+        // Interceptors or replayed actions may have changed whether the input handler accepts text.
+        inputPreference = this.inputPreference(event, cx);
+        if (inputPreference == KeyBindings) {
+            for (binding in matchResult.bindings) {
+                dispatchActionOnNode(nodeId, binding.action, cx);
+                if (!cx.propagateEvent) {
+                    cx.dispatchKeystrokeObservers(keystroke, inputPreference, binding.action, matchResult.contextStack, this);
+                    pendingInputChanged(cx);
+                    return;
+                }
+            }
+        }
+
+        finishDispatchKeyEvent(event, keystroke, inputPreference, dispatchPath, matchResult.contextStack, cx);
+        pendingInputChanged(cx);
+    }
+
+    /**
+     * If modifiers are not excessive (e.g. AltGr), and the input handler is accepting
+     * text input, we prefer the text input over bindings.
+     */
+    function inputPreference(event:PlatformInput, cx:App):InputPreference {
+        final preferCharacterInput = event.kind == KeyDown && (cast event : KeyDownEvent).preferCharacterInput;
+        if (!preferCharacterInput) {
+            return KeyBindings;
+        }
+        final inputHandler = takeInputHandler();
+        if (inputHandler == null) {
+            return KeyBindings;
+        }
+        final acceptsTextInput = inputHandler.acceptsTextInput(this, cx);
+        setInputHandler(inputHandler);
+        return acceptsTextInput ? CharacterInput : KeyBindings;
+    }
+
+    /** Duration after which pending input is replayed, in seconds (Rust `PENDING_INPUT_TIMEOUT`, 1s) */
+    public static inline final PENDING_INPUT_TIMEOUT:Float = 1.0;
+
+    function newPendingInputTimeout(duration:Float, cx:App):PendingInputTimeout {
+        final timeout = new PendingInputTimeout(duration);
+        timeout.startedAt = cx.backgroundExecutor().now();
+        timeout.task = startPendingInputTimeout(duration, cx);
+        return timeout;
+    }
+
+    function startPendingInputTimeout(remaining:Float, cx:App):AnyTask {
+        final timer = cx.backgroundExecutor().timer(remaining);
+        timer.then(_ -> {
+            if (destroyed)
+                return;
+            cx.update(cx -> {
+                final currentlyPending = pendingInput;
+                if (currentlyPending == null || currentlyPending.focus != focusId()) {
+                    return;
+                }
+                pendingInput = null;
+
+                final nodeId = focusNodeIdInRenderedFrame(focusId());
+                final dispatchPath = renderedFrame.dispatchTree.dispatchPath(nodeId);
+
+                final toReplay = renderedFrame.dispatchTree.flushDispatch(currentlyPending.keystrokes, dispatchPath);
+
+                pendingInputChanged(cx);
+                replayPendingInput(toReplay, cx);
+            });
+        });
+        return timer;
+    }
+
+    function finishDispatchKeyEvent(event:PlatformInput, recognizedKeystroke:Null<Keystroke>, inputPreference:InputPreference, dispatchPath:Array<Int>, contextStack:Array<KeyContext>, cx:App):Void {
+        dispatchKeyDownUpEvent(event, dispatchPath, cx);
+        if (!cx.propagateEvent) {
+            return;
+        }
+
+        dispatchModifiersChangedEvent(event, dispatchPath, cx);
+        if (!cx.propagateEvent) {
+            return;
+        }
+
+        if (recognizedKeystroke != null) {
+            cx.dispatchKeystrokeObservers(recognizedKeystroke, inputPreference, null, contextStack, this);
+        }
+    }
+
+    @:allow(gpui)
+    function pendingInputChanged(cx:App):Void {
+        pendingInputObservers.retain(0, callback -> callback(this, cx));
+    }
+
+    function deferPendingInputChanged(cx:App):Void {
+        // Avoid re-entrant entity updates by deferring observer notifications to the end of the
+        // current effect cycle, and only for this window.
+        cx.defer(cx -> {
+            if (!destroyed) pendingInputChanged(cx);
+        });
+    }
+
+    function dispatchKeyDownUpEvent(event:PlatformInput, dispatchPath:Array<Int>, cx:App):Void {
+        final tree = renderedFrame.dispatchTree;
+        // Capture phase
+        for (nodeId in dispatchPath) {
+            final listeners = tree.node(nodeId).keyListeners.copy();
+            for (keyListener in listeners) {
+                keyListener(event, Capture, this, cx);
+                if (!cx.propagateEvent) {
+                    return;
+                }
+            }
+        }
+
+        // Bubble phase
+        var i = dispatchPath.length - 1;
+        while (i >= 0) {
+            // Handle low level key events
+            final listeners = tree.node(dispatchPath[i]).keyListeners.copy();
+            i--;
+            for (keyListener in listeners) {
+                keyListener(event, Bubble, this, cx);
+                if (!cx.propagateEvent) {
+                    return;
+                }
+            }
+        }
+    }
+
+    function dispatchModifiersChangedEvent(event:PlatformInput, dispatchPath:Array<Int>, cx:App):Void {
+        if (event.kind != ModifiersChanged)
+            return;
+        final e:ModifiersChangedEvent = cast event;
+        final tree = renderedFrame.dispatchTree;
+        var i = dispatchPath.length - 1;
+        while (i >= 0) {
+            final listeners = tree.node(dispatchPath[i]).modifiersChangedListeners.copy();
+            i--;
+            for (listener in listeners) {
+                listener(e, this, cx);
+                if (!cx.propagateEvent) {
+                    return;
+                }
+            }
+        }
+    }
+
+    /**
+     * Dispatch a given keystroke as though the user had typed it.
+     * You can create a keystroke with `Keystroke.parse("")`.
+     * When no handler consumes it, its character (`keyChar`, filled by
+     * `withSimulatedIme`) is inserted through the input handler, if any.
+     * Returns `true` if the keystroke was handled.
+     */
+    public function dispatchKeystroke(keystroke:Keystroke, ?cx:App):Bool {
+        if (cx == null) cx = app;
+        final keystroke = keystroke.withSimulatedIme();
+        final result = dispatchEvent(new KeyDownEvent(keystroke, false, false), cx);
+        if (!result.propagate) {
+            return true;
+        }
+
+        if (keystroke.keyChar != null) {
+            final inputHandler = takeInputHandler();
+            if (inputHandler != null) {
+                final input = keystroke.keyChar;
+                cx.update(cx -> inputHandler.dispatchInput(input, this, cx));
+                setInputHandler(inputHandler);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether a potential multi-stroke key binding is in progress on this window.
+     */
+    public function hasPendingKeystrokes():Bool {
+        return pendingInputKeystrokes() != null;
+    }
+
+    /**
+     * Returns the currently pending input keystrokes that might result in a multi-stroke key binding.
+     * Input left over from a previous focus can never complete one.
+     */
+    public function pendingInputKeystrokes():Null<Array<Keystroke>> {
+        if (pendingInput != null && pendingInput.focus == focusId()) {
+            return pendingInput.keystrokes;
+        }
+        return null;
+    }
+
+    /**
+     * Whether the pending input timeout is paused (`null` when there is no pending timeout).
+     */
+    public function isPendingInputTimeoutPaused():Null<Bool> {
+        if (pendingInput != null && pendingInput.focus == focusId() && pendingInput.timeout != null) {
+            return pendingInput.timeout.isPaused();
+        }
+        return null;
+    }
+
+    /**
+     * The full duration of the pending input timeout in seconds (`null` when there is none).
+     */
+    public function pendingInputTimeoutDuration():Null<Float> {
+        if (pendingInput != null && pendingInput.focus == focusId() && pendingInput.timeout != null) {
+            return pendingInput.timeout.duration;
+        }
+        return null;
+    }
+
+    /**
+     * Whether there is no pending input at all, even left over from a previous focus
+     * (Rust test helper `pending_input_is_none`).
+     */
+    public inline function pendingInputIsNone():Bool {
+        return pendingInput == null;
+    }
+
+    /**
+     * The remaining duration of the pending input timeout in seconds (`null` when there is none).
+     */
+    public function pendingInputTimeoutRemaining(cx:App):Null<Float> {
+        if (pendingInput != null && pendingInput.focus == focusId() && pendingInput.timeout != null) {
+            final timeout = pendingInput.timeout;
+            if (timeout.isPaused())
+                return timeout.remaining;
+            return Math.max(0, timeout.remaining - (cx.backgroundExecutor().now() - timeout.startedAt));
+        }
+        return null;
+    }
+
+    @:allow(gpui)
+    function clearPendingKeystrokes(?cx:App):Void {
+        if (pendingInput != null) {
+            if (pendingInput.timeout != null) pendingInput.timeout.drop();
+            pendingInput = null;
+            deferPendingInputChanged(cx != null ? cx : app);
+        }
+    }
+
+    function clearPendingInput():Void {
+        if (pendingInput != null) {
+            if (pendingInput.timeout != null) pendingInput.timeout.drop();
+            pendingInput = null;
+        }
+    }
+
+    /**
+     * Pauses or resumes the current pending input timeout on behalf of `owner`.
+     * A paused timeout resumes automatically if `owner` is released. Returns whether the timeout
+     * state changed. A timeout paused by one owner cannot be resumed by another.
+     */
+    public function setPendingInputTimeoutPaused<T:Model>(owner:Entity<T>, paused:Bool, cx:App):Bool {
+        final ownerId = owner.entityId();
+        if (!paused) {
+            return resumePendingInputTimeout(ownerId, cx);
+        }
+
+        if (pendingInput == null || pendingInput.focus != focusId() || pendingInput.timeout == null) {
+            return false;
+        }
+        final timeout = pendingInput.timeout;
+        if (timeout.isPaused()) {
+            return false;
+        }
+
+        final releaseSubscription = cx.observeRelease(owner, (_, cx) -> {
+            if (!destroyed) resumePendingInputTimeout(ownerId, cx);
+        });
+        final changed = timeout.pause(ownerId, releaseSubscription, cx.backgroundExecutor().now());
+
+        if (changed) {
+            deferPendingInputChanged(cx);
+        }
+        return changed;
+    }
+
+    function resumePendingInputTimeout(ownerId:Int, cx:App):Bool {
+        if (pendingInput == null || pendingInput.timeout == null || pendingInput.timeout.pauseOwnerId != ownerId) {
+            return false;
+        }
+        final timeout = pendingInput.timeout;
+        final startedAt = cx.backgroundExecutor().now();
+        final task = startPendingInputTimeout(timeout.remaining, cx);
+        final changed = timeout.resume(ownerId, startedAt, task);
+
+        if (changed) {
+            deferPendingInputChanged(cx);
+        }
+        return changed;
+    }
+
+    function replayPendingInput(replays:Array<gpui.keymap.Replay>, cx:App):Void {
+        final nodeId = focusNodeIdInRenderedFrame(focusId());
+        final dispatchPath = renderedFrame.dispatchTree.dispatchPath(nodeId);
+
+        for (replay in replays) {
+            final event = new KeyDownEvent(replay.keystroke, false, true);
+
+            cx.propagateEvent = true;
+            var handled = false;
+            for (binding in replay.bindings) {
+                dispatchActionOnNode(nodeId, binding.action, cx);
+                if (!cx.propagateEvent) {
+                    cx.dispatchKeystrokeObservers(replay.keystroke, KeyBindings, binding.action, [], this);
+                    handled = true;
+                    break;
+                }
+            }
+            if (handled)
+                continue;
+
+            dispatchKeyDownUpEvent(event, dispatchPath, cx);
+            if (!cx.propagateEvent)
+                continue;
+            final input = replay.keystroke.keyChar;
+            if (input != null) {
+                final inputHandler = takeInputHandler();
+                if (inputHandler != null) {
+                    inputHandler.dispatchInput(input, this, cx);
+                    setInputHandler(inputHandler);
+                }
+            }
+        }
+    }
+
+    function focusNodeIdInRenderedFrame(focusId:Int):Int {
+        if (focusId != -1) {
+            final nodeId = renderedFrame.dispatchTree.focusableNodeId(focusId);
+            if (nodeId != -1)
+                return nodeId;
+        }
+        return renderedFrame.dispatchTree.rootNodeId();
+    }
+
+    /**
+     * Dispatch the given action on the currently focused element, at the end of the current
+     * effect cycle.
+     */
+    public function dispatchAction(action:Action, ?cx:App):Void {
+        if (cx == null) cx = app;
+        final focusId = this.focusId();
+        cx.defer(cx -> {
+            if (destroyed)
+                return;
+            final nodeId = focusNodeIdInRenderedFrame(focusId);
+            dispatchActionOnNode(nodeId, action, cx);
+        });
+    }
+
+    @:allow(gpui)
+    function dispatchActionOnFocusHandle(handle:FocusHandle, action:Action, cx:App):Void {
+        final nodeId = renderedFrame.dispatchTree.focusableNodeId(handle.id);
+        if (nodeId != -1) {
+            dispatchActionOnNode(nodeId, action, cx);
+        }
+    }
+
+    function dispatchActionOnNode(nodeId:Int, action:Action, cx:App):Void {
+        final tree = renderedFrame.dispatchTree;
+        final dispatchPath = tree.dispatchPath(nodeId);
+        final actionType:Class<Dynamic> = Type.getClass(action);
+
+        // Capture phase for global actions.
+        cx.propagateEvent = true;
+        final globalListeners = cx.globalActionListenersFor(actionType);
+        if (globalListeners != null) {
+            for (listener in globalListeners) {
+                listener(action, Capture, cx);
+                if (!cx.propagateEvent) {
+                    break;
+                }
+            }
+        }
+
+        if (!cx.propagateEvent) {
+            return;
+        }
+
+        // Capture phase for window actions.
+        for (id in dispatchPath) {
+            final listeners = tree.node(id).actionListeners.copy();
+            for (entry in listeners) {
+                if (entry.actionType == actionType) {
+                    entry.listener(action, Capture, this, cx);
+                    if (!cx.propagateEvent) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Bubble phase for window actions.
+        var i = dispatchPath.length - 1;
+        while (i >= 0) {
+            final listeners = tree.node(dispatchPath[i]).actionListeners.copy();
+            i--;
+            for (entry in listeners) {
+                if (entry.actionType == actionType) {
+                    cx.propagateEvent = false; // Actions stop propagation by default during the bubble phase
+                    entry.listener(action, Bubble, this, cx);
+                    if (!cx.propagateEvent) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Bubble phase for global actions.
+        final globalListeners = cx.globalActionListenersFor(actionType);
+        if (globalListeners != null) {
+            var j = globalListeners.length - 1;
+            while (j >= 0) {
+                cx.propagateEvent = false; // Actions stop propagation by default during the bubble phase
+                globalListeners[j](action, Bubble, cx);
+                j--;
+                if (!cx.propagateEvent) {
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine whether the given action is available along the dispatch path to the currently focused element.
+     */
+    public function isActionAvailable(action:Action, ?cx:App):Bool {
+        final nodeId = focusNodeIdInRenderedFrame(focusId());
+        return renderedFrame.dispatchTree.isActionAvailable(action, nodeId);
+    }
+
+    /**
+     * Determine whether the given action is available along the dispatch path to the given focus handle.
+     */
+    public function isActionAvailableIn(action:Action, focusHandle:FocusHandle):Bool {
+        final nodeId = focusNodeIdInRenderedFrame(focusHandle.id);
+        return renderedFrame.dispatchTree.isActionAvailable(action, nodeId);
+    }
+
+    /**
+     * Returns the key context stack of the focused element, root first.
+     */
+    public function contextStack():Array<KeyContext> {
+        final nodeId = focusNodeIdInRenderedFrame(focusId());
+        final tree = renderedFrame.dispatchTree;
+        return tree.contextStackForPath(tree.dispatchPath(nodeId));
+    }
+
+    /**
+     * Returns all available actions for the focused element.
+     */
+    public function availableActions(cx:App):Array<Action> {
+        final nodeId = focusNodeIdInRenderedFrame(focusId());
+        return renderedFrame.dispatchTree.availableActions(nodeId, cx.actions);
+    }
+
+    /**
+     * Returns key bindings that invoke an action on the currently focused element. Bindings are
+     * returned in the order they were added. For display, the last binding should take precedence.
+     */
+    public function bindingsForAction(action:Action):Array<KeyBinding> {
+        return renderedFrame.dispatchTree.bindingsForAction(action, renderedFrame.dispatchTree.contextStack);
+    }
+
+    /**
+     * Returns the highest precedence key binding that invokes an action on the currently focused
+     * element.
+     */
+    public function highestPrecedenceBindingForAction(action:Action):Null<KeyBinding> {
+        return renderedFrame.dispatchTree.highestPrecedenceBindingForAction(action, renderedFrame.dispatchTree.contextStack);
+    }
+
+    /**
+     * Returns the key bindings for an action in a context.
+     */
+    public function bindingsForActionInContext(action:Action, context:KeyContext):Array<KeyBinding> {
+        return renderedFrame.dispatchTree.bindingsForAction(action, [context]);
+    }
+
+    /**
+     * Returns the key bindings that invoke an action on the given focus handle if it were focused,
+     * resolved in the previously rendered frame. Bindings are returned in the order they were added.
+     */
+    public function bindingsForActionIn(action:Action, focusHandle:FocusHandle):Array<KeyBinding> {
+        final contextStack = contextStackForFocusHandle(focusHandle);
+        if (contextStack == null)
+            return [];
+        return renderedFrame.dispatchTree.bindingsForAction(action, contextStack);
+    }
+
+    /**
+     * Returns the highest precedence key binding that would invoke an action on the given focus
+     * handle if it were focused.
+     */
+    public function highestPrecedenceBindingForActionIn(action:Action, focusHandle:FocusHandle):Null<KeyBinding> {
+        final contextStack = contextStackForFocusHandle(focusHandle);
+        if (contextStack == null)
+            return null;
+        return renderedFrame.dispatchTree.highestPrecedenceBindingForAction(action, contextStack);
+    }
+
+    function contextStackForFocusHandle(focusHandle:FocusHandle):Null<Array<KeyContext>> {
+        final dispatchTree = renderedFrame.dispatchTree;
+        final nodeId = dispatchTree.focusableNodeId(focusHandle.id);
+        if (nodeId == -1)
+            return null;
+        return dispatchTree.contextStackForPath(dispatchTree.dispatchPath(nodeId));
+    }
+
+    /**
+     * Return a key binding string for an action, to display in the UI. Uses the highest precedence
+     * binding for the action (last binding added to the keymap).
+     */
+    public function keystrokeTextFor(action:Action, ?os:OperatingSystem):String {
+        final binding = highestPrecedenceBindingForAction(action);
+        if (binding == null)
+            return action.name();
+        if (os == null) os = OperatingSystem.current;
+        return [for (keystroke in binding.keystrokes) keystroke.inner().display(os)].join(' ');
+    }
+
+/// Frame callbacks
+
+    /**
+     * Schedules the given function to be run at the end of the current effect cycle, allowing entities
+     * that are currently on the stack to be returned to the app.
+     */
+    public function defer(cx:App, f:(Window, App) -> Void):Void {
+        cx.defer(cx -> {
+            if (!destroyed) f(this, cx);
+        });
+    }
+
+    /**
+     * Schedule the given closure to be run directly after the current frame is rendered.
+     */
+    public function onNextFrame(callback:(Window, App) -> Void):Void {
+        nextFrameCallbacks.push(callback);
+    }
+
+    /**
+     * Schedule a frame to be drawn on the next animation frame.
+     *
+     * This is useful for elements that need to animate continuously, such as a video player or an animated GIF.
+     * It will cause the window to redraw on the next frame, even if no other changes have occurred.
+     */
+    public function requestAnimationFrame():Void {
+        final entity = currentView();
+        onNextFrame((_, cx) -> cx.notify(entity));
+    }
+
+    /**
+     * Whether callbacks were scheduled with `onNextFrame`.
+     */
+    public inline function hasNextFrameCallbacks():Bool {
+        return nextFrameCallbacks.length > 0;
+    }
+
+    /**
+     * Runs the callbacks scheduled with `onNextFrame` (called by the `GpuiSystem` before drawing).
+     * Returns how many ran.
+     */
+    public function runNextFrameCallbacks():Int {
+        if (nextFrameCallbacks.length == 0)
+            return 0;
+        final callbacks = nextFrameCallbacks;
+        nextFrameCallbacks = [];
+        app.update(cx -> {
+            for (callback in callbacks) {
+                callback(this, cx);
+            }
+        });
+        return callbacks.length;
+    }
+
+    /**
+     * Runs the next frame callbacks, like a platform frame request (Rust `simulate_next_frame`).
+     */
+    public inline function simulateNextFrame(?cx:App):Int {
+        return runNextFrameCallbacks();
+    }
+
+/// Observing entities from a window
+
+    /**
+     * Register a callback to be invoked when the given entity is notified, with this window.
+     */
+    public function observe<T:Model>(observed:Entity<T>, cx:App, onNotify:(Entity<T>, Window, App) -> Void):Subscription {
+        return cx.observe(observed, (entity, cx) -> {
+            if (!destroyed) onNotify(entity, this, cx);
+        });
+    }
+
+    /**
+     * Subscribe to events emitted by the given entity, with this window.
+     */
+    public function subscribe<T:Model, E>(entity:Entity<T>, eventType:EventType<E>, cx:App, onEvent:(Entity<T>, E, Window, App) -> Void):Subscription {
+        return cx.subscribe(entity, eventType, (entity, event, cx) -> {
+            if (!destroyed) onEvent(entity, event, this, cx);
+        });
+    }
+
+
+
+    #if gpui_inspector
+/// Inspector (Rust feature `inspector`, define `gpui_inspector`)
+
+    /**
+     * Toggles the inspector mode on this window.
+     */
+    public function toggleInspector(cx:App):Void {
+        if (inspector == null) {
+            inspector = cx.newEntity(_ -> new Inspector());
+        }
+        else {
+            renderedFrame.nextInspectorInstanceIds = new Map();
+            renderedFrame.inspectorHitboxes = new Map();
+            nextFrame.nextInspectorInstanceIds = new Map();
+            nextFrame.inspectorHitboxes = new Map();
+            inspector = null;
+        }
+        refresh();
+    }
+
+    @:allow(gpui)
+    static function activeWindowOf(app:App):Null<Window> {
+        var i = windows.length - 1;
+        while (i >= 0) {
+            final window = windows[i];
+            if (window.app == app && window._active && !window.destroyed) {
+                return window;
+            }
+            i--;
+        }
+        return null;
+    }
+
+    /**
+     * The inspector of this window while it is open (for tests and tools).
+     */
+    public inline function inspectorEntity():Null<Inspector> {
+        return inspector;
+    }
+
+    /**
+     * Returns true if the window is in inspector mode.
+     */
+    public function isInspectorPicking(_cx:App):Bool {
+        if (inspector != null) {
+            return inspector.isPicking();
+        }
+        return false;
+    }
+
+    /**
+     * Executes the provided function with mutable access to an inspector
+     * state of type `type` (the box holds `null` when there is none yet).
+     * Returns `null` when `inspectorId` is not the active element.
+     */
+    public function withInspectorState<T, R>(inspectorId:Null<InspectorElementId>, type:Class<T>, cx:App, f:(gpui.util.Ref<Null<T>>, Window) -> R):Null<R> {
+        if (inspectorId == null) return null;
+        final inspector = this.inspector;
+        if (inspector == null) return null;
+        if (!inspectorId.equals(inspector.activeElementId())) {
+            return null;
+        }
+        return cx.updateEntity(inspector, (inspector, _cx) -> {
+            return inspector.withActiveElementState(type, this, f);
+        });
+    }
+
+    @:allow(gpui)
+    function inspectorEnabled():Bool {
+        return inspector != null;
+    }
+
+    /**
+     * The global id of the current element id stack (Rust
+     * `element_id_stack.global_id()`).
+     */
+    @:allow(gpui)
+    function currentGlobalElementId():GlobalElementId {
+        return new GlobalElementId(elementIdStack.copy());
+    }
+
+    @:allow(gpui)
+    function buildInspectorElementId(path:InspectorElementId.InspectorElementPath):InspectorElementId {
+        var entry = nextFrame.nextInspectorInstanceIds.get(path.key);
+        if (entry == null) {
+            entry = new InspectorInstanceCount(path);
+            nextFrame.nextInspectorInstanceIds.set(path.key, entry);
+        }
+        final instanceId = entry.count;
+        entry.count++;
+        return new InspectorElementId(entry.path, instanceId);
+    }
+
+    function prepaintInspector(inspectorWidth:Float, cx:App):Null<AnyElement> {
+        final inspector = this.inspector;
+        if (inspector != null) {
+            this.inspector = null;
+            final inspectorElement = (inspector : AnyView).intoAnyElement();
+            inspectorElement.prepaintAsRoot(
+                new Point(_viewportSize.width - inspectorWidth, 0.0),
+                new SizeOf<AvailableSpace>(AvailableSpace.Definite(inspectorWidth), AvailableSpace.Definite(_viewportSize.height)),
+                this,
+                cx
+            );
+            this.inspector = inspector;
+            return inspectorElement;
+        }
+        else {
+            return null;
+        }
+    }
+
+    function paintInspector(inspectorElement:Null<AnyElement>, cx:App):Void {
+        if (inspectorElement != null) {
+            inspectorElement.paint(this, cx);
+        }
+    }
+
+    /**
+     * Registers a hitbox that can be used for inspector picking mode, allowing users to select and
+     * inspect UI elements by clicking on them.
+     */
+    public function insertInspectorHitbox(hitboxId:Int, inspectorId:Null<InspectorElementId>, cx:App):Void {
+        if (!isInspectorPicking(cx)) {
+            return;
+        }
+        if (inspectorId != null) {
+            nextFrame.inspectorHitboxes.set(hitboxId, inspectorId);
+        }
+    }
+
+    function paintInspectorHitbox(cx:App):Void {
+        final inspector = this.inspector;
+        if (inspector != null) {
+            final hovered = hoveredInspectorHitbox(inspector, nextFrame);
+            if (hovered != null) {
+                for (hitbox in nextFrame.hitboxes) {
+                    if (hitbox.id == hovered.hitboxId) {
+                        paintQuad(Prelude.fill(hitbox.bounds, Prelude.rgba(0x61afef4d)));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    function handleInspectorMouseEvent(event:PlatformInput, cx:App):Void {
+        final inspector = this.inspector;
+        if (inspector == null) {
+            return;
+        }
+        switch event.kind {
+            case MouseMove:
+                cx.updateEntity(inspector, (inspector, _cx) -> {
+                    final hovered = hoveredInspectorHitbox(inspector, renderedFrame);
+                    if (hovered != null) {
+                        inspector.hover(hovered.inspectorId, this);
+                    }
+                    return null;
+                });
+            case MouseDown:
+                cx.updateEntity(inspector, (inspector, _cx) -> {
+                    final hovered = hoveredInspectorHitbox(inspector, renderedFrame);
+                    if (hovered != null) {
+                        inspector.select(hovered.inspectorId, this);
+                    }
+                    return null;
+                });
+            case Scroll:
+                final event:ScrollEvent = cast event;
+                // This should be kept in sync with SCROLL_LINES in x11 platform.
+                final SCROLL_LINES:Float = 3.0;
+                final SCROLL_PIXELS_PER_LAYER:Float = 36.0;
+                final deltaY = event.delta.pixelDelta(SCROLL_PIXELS_PER_LAYER / SCROLL_LINES).y;
+                cx.updateEntity(inspector, (inspector, _cx) -> {
+                    if (inspector.pickDepth != null) {
+                        var depth:Float = inspector.pickDepth + deltaY / SCROLL_PIXELS_PER_LAYER;
+                        final maxDepth = mouseHitTest.ids.length - 0.5;
+                        if (depth < 0.0) {
+                            depth = 0.0;
+                        }
+                        else if (depth > maxDepth) {
+                            depth = maxDepth;
+                        }
+                        inspector.pickDepth = depth;
+                        final hovered = hoveredInspectorHitbox(inspector, renderedFrame);
+                        if (hovered != null) {
+                            inspector.setActiveElementId(hovered.inspectorId, this);
+                        }
+                    }
+                    return null;
+                });
+            case _:
+        }
+    }
+
+    function hoveredInspectorHitbox(inspector:Inspector, frame:Frame):Null<{hitboxId:Int, inspectorId:InspectorElementId}> {
+        final pickDepth = inspector.pickDepth;
+        if (pickDepth != null) {
+            // Rust `(pick_depth as i64).try_into().unwrap_or(0)`: truncation, negatives clamp to 0
+            final depth = pickDepth > 0 ? Std.int(pickDepth) : 0;
+            final ids = mouseHitTest.ids;
+            final maxSkipped = ids.length > 0 ? ids.length - 1 : 0;
+            final skipCount = depth < maxSkipped ? depth : maxSkipped;
+            for (i in skipCount...ids.length) {
+                final hitboxId = ids[i];
+                final inspectorId = frame.inspectorHitboxes.get(hitboxId);
+                if (inspectorId != null) {
+                    return {hitboxId: hitboxId, inspectorId: inspectorId};
+                }
+            }
+        }
+        return null;
+    }
+    #end
+
+}

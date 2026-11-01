@@ -1,0 +1,8 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "private": true,
+  "count": 42,
+  "ratio": -1.5e3,
+  "nested": { "list": [1, 2, null, "ünïcode é \n"] }
+}

@@ -1,0 +1,25 @@
+plugin:
+    name: Gpui
+    tools: tools.GpuiPlugin
+
+    runtime:
+        if plugin_gpui:
+            +libs:
+                - taffy
+                - plutovg
+                - ttf
+                - lunasvg
+                - ropey
+                - unicode-segmentation
+                - unicode-linebreak
+                # markdown, html5ever, oniguruma and textmate: move them here (and
+                # drop the four +paths lines below) once the Ceramic tools are rebuilt
+            +paths:
+                - '{plugin:cwd}/runtime/src'
+                - '{plugin:cwd}/../ceramic/git/markdown/src'
+                - '{plugin:cwd}/../ceramic/git/html5ever/src'
+                - '{plugin:cwd}/../ceramic/git/oniguruma/src'
+                - '{plugin:cwd}/../ceramic/git/textmate/src'
+                - '{plugin:cwd}/../ceramic/git/similar/src'
+            +assets:
+                - '{plugin:cwd}/assets'

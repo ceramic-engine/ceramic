@@ -1,0 +1,14 @@
+app:
+    package: gpui.examples
+    name: gpuiexamples
+    displayName: GPUI examples
+    author: gpui
+    version: '1.0'
+
+    plugins:
+        # GPUI port (linked through plugins/gpui.plugin)
+        - gpui
+
+    # The ported examples (shared with test/golden)
+    paths:
+        - shared

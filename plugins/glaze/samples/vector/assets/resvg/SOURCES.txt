@@ -1,0 +1,9 @@
+These SVG files come from the resvg test suite (https://github.com/linebender/resvg),
+as bundled with the Haxe lunasvg port (ceramic/git/lunasvg/test/svg/resvg):
+
+- radial-gradient-reflect.svg: paint-servers/radialGradient/spreadMethod=reflect.svg
+- nested-clip-path.svg: masking/clipPath/nested-clip-path.svg
+- mask-on-self.svg: masking/mask/mask-on-self.svg
+
+Copyright 2017 the Resvg Authors, dual licensed under Apache-2.0 (LICENSE-APACHE)
+or MIT (LICENSE-MIT). Only the file names were changed.

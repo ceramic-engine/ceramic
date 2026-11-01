@@ -1,0 +1,41 @@
+{
+    "compounds": [
+        {
+            "name": "Ceramic / Web",
+            "configurations": [
+                "Ceramic / Web (Attach)",
+                "Ceramic / Web (Build & Run)"
+            ]
+        }
+    ],
+    "configurations": [
+        {
+            "timeout": 30000,
+            "request": "attach",
+            "name": "Ceramic / Web (Attach)",
+            "port": 9223,
+            "type": "chrome",
+            "webRoot": "${workspaceFolder}/project/web",
+            "sourceMaps": true,
+            "smartStep": true
+        },
+        {
+            "runtimeArgs": [
+                "clay",
+                "run",
+                "web",
+                "--setup",
+                "--asset",
+                "--debug",
+                "--vscode-editor"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "runtimeExecutable": "ceramic",
+            "request": "launch",
+            "name": "Ceramic / Web (Build & Run)",
+            "type": "node"
+        }
+    ],
+    "version": "0.2.0"
+}

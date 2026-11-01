@@ -1,0 +1,16 @@
+app:
+    package: mycompany.bench
+    name: bench
+    displayName: bench
+    author: My Company
+    version: '1.0'
+
+    plugins:
+        # GPUI port (linked through plugins/gpui.plugin)
+        - gpui
+
+    defines:
+        # Native bench runs use a hidden SDL window (no window on screen)
+        - clay_sdl_headless
+        # Uncomment to count allocations of the main gpui objects (see gpui.util.AllocationCounters)
+        - gpui_count_allocations

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Embedded languages: CSS and JavaScript</title>
+    <style>
+        :root { --accent: #ff7b72; --gap: calc(1rem + 2px); }
+        body > main .card:not(.hidden)::before {
+            content: "\201C";
+            color: var(--accent);
+            margin: var(--gap) auto 0 !important;
+        }
+        @media (prefers-color-scheme: dark) {
+            body { background: rgb(32 32 32 / 90%); }
+        }
+        a[href^="https://"]:hover { text-decoration: underline wavy; }
+    </style>
+    <script type="module">
+        import { createHighlighter } from './shiki.js';
+        const re = /(?<year>\d{4})-(?<month>\d{2})/u;
+        class Card extends HTMLElement {
+            #count = 0;
+            static observedAttributes = ['title'];
+            connectedCallback() {
+                this.innerHTML = `<p>${this.getAttribute('title') ?? 'untitled'}: ${++this.#count}</p>`;
+            }
+        }
+        customElements.define('x-card', Card);
+        async function load(url) {
+            const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            return res.json();
+        }
+    </script>
+</head>
+<body class="theme-dark" data-count='3'>
+    <!-- A comment with <tags> inside -->
+    <main id="app">
+        <x-card title="First &amp; second"></x-card>
+        <a href="https://example.com/?q=1&amp;r=2" onclick="event.preventDefault(); load(this.href).then(console.log)">Link</a>
+        <img src="logo.svg" alt="Logo" width=32 height=32>
+        <button style="color: red; padding: 0 4px" disabled>Click</button>
+        <p>Entities: &lt; &gt; &#169; &#x1F600; &unknown;</p>
+        <svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4"/></svg>
+    </main>
+    <script>
+        document.querySelectorAll('x-card').forEach((el, i) => el.dataset.index = String(i));
+        // </script> inside a comment still ends the script in HTML
+    </script>
+</body>
+</html>

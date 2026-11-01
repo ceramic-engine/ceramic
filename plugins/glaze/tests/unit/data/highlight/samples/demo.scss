@@ -1,0 +1,7 @@
+$primary: #336699;
+@mixin rounded($r: 4px) { border-radius: $r; }
+.card {
+  @include rounded(8px);
+  color: darken($primary, 10%);
+  &:hover { color: $primary; }
+}

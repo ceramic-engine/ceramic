@@ -1,0 +1,14 @@
+app:
+    package: gpui.story
+    name: story
+    displayName: GPUI Component
+    author: gpui
+    version: '1.0'
+
+    plugins:
+        # GPUI port and gpui-kit components (linked through plugins/gpui.plugin)
+        - gpui
+
+    # The story gallery (shared with test/golden, which renders every story)
+    paths:
+        - shared
