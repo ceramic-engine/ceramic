@@ -192,6 +192,30 @@ class Bounds {
     }
 
     /**
+     * `intersect(other).contains(point)` without allocating (the same
+     * operations in the same order: `Point.max`, `Point.min`, `fromCorners`,
+     * `contains`).
+     */
+    public inline function intersectContains(other:Bounds, point:Point):Bool {
+
+        final right = origin.x + size.width;
+        final bottom = origin.y + size.height;
+        final otherRight = other.origin.x + other.size.width;
+        final otherBottom = other.origin.y + other.size.height;
+        final left = MathUtil.totalLess(other.origin.x, origin.x) ? origin.x : other.origin.x;
+        final top = MathUtil.totalLess(other.origin.y, origin.y) ? origin.y : other.origin.y;
+        final minRight = !MathUtil.totalLess(otherRight, right) ? right : otherRight;
+        final minBottom = !MathUtil.totalLess(otherBottom, bottom) ? bottom : otherBottom;
+        final width = (MathUtil.totalLess(left, minRight) ? minRight : left) - left;
+        final height = (MathUtil.totalLess(top, minBottom) ? minBottom : top) - top;
+        return point.x >= left
+            && point.x < left + width
+            && point.y >= top
+            && point.y < top + height;
+
+    }
+
+    /**
      * The smallest bounds that contains both `this` and `other`.
      */
     public function union(other:Bounds):Bounds {

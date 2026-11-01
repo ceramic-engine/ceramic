@@ -55,17 +55,24 @@ class TextStyle {
     /** The number of lines to display before truncating the text, `-1` for no limit */
     public var lineClamp:Int;
 
+    static final DEFAULT_COLOR:Hsla = Hsla.black();
+
+    static final DEFAULT_FONT_SIZE:AbsoluteLength = AbsoluteLength.Rems(1.0);
+
+    static final DEFAULT_LINE_HEIGHT:DefiniteLength = Prelude.phi();
+
     /**
      * Creates the default text style (Rust `TextStyle::default()`).
      */
     public function new() {
         #if gpui_count_allocations gpui.util.AllocationCounters.textStyles++; #end
-        color = Hsla.black();
+        // The default values are immutable: shared by every style
+        color = DEFAULT_COLOR;
         fontFamily = '.SystemUIFont';
         fontFeatures = FontFeatures.defaultValue();
         fontFallbacks = null;
-        fontSize = AbsoluteLength.Rems(1.0);
-        lineHeight = Prelude.phi();
+        fontSize = DEFAULT_FONT_SIZE;
+        lineHeight = DEFAULT_LINE_HEIGHT;
         fontWeight = FontWeight.NORMAL;
         fontStyle = Normal;
         backgroundColor = null;

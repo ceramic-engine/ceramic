@@ -141,13 +141,13 @@ class StyledText extends Element {
         var runs = this.runs;
         this.runs = null;
         if (runs == null && delayedHighlights != null) {
-            runs = computeRuns(textValue, window.textStyle(), delayedHighlights);
+            runs = computeRuns(textValue, window.currentTextStyle(), delayedHighlights);
             delayedHighlights = null;
         }
 
         if (fontFamilyOverrides != null) {
             if (runs == null)
-                runs = [window.textStyle().toRun(Utf8.byteLength(textValue))];
+                runs = [window.currentTextStyle().toRun(Utf8.byteLength(textValue))];
             else
                 runs = runs.copy();
             applyFontFamilyOverrides(runs, fontFamilyOverrides);

@@ -242,6 +242,13 @@ class Interactivity {
 
     static inline final DRAG_THRESHOLD:Float = 2.0;
 
+    static final ZERO_POINT:Point = new Point(0, 0);
+
+    static final ZERO_SIZE:Size = new Size(0, 0);
+
+    /** No click listener (never modified) */
+    static final NO_CLICK_LISTENERS:Array<(ClickEvent, Window, App) -> Void> = [];
+
     /** Default delay before showing a tooltip, in seconds (500ms). */
     public static inline final DEFAULT_TOOLTIP_SHOW_DELAY:Float = 0.5;
 
@@ -259,7 +266,7 @@ class Interactivity {
 
     public var tooltipId:Int = -1;
 
-    public var contentSize:Size = new Size(0, 0);
+    public var contentSize:Size = ZERO_SIZE;
 
     public var keyContext:Null<KeyContext> = null;
 
@@ -298,35 +305,35 @@ class Interactivity {
 
     public var groupActiveStyle:Null<GroupStyle> = null;
 
-    public final dragOverStyles:Array<{type:Class<Dynamic>, build:(Dynamic, Window, App) -> StyleRefinement}> = [];
+    public var dragOverStyles:Null<Array<{type:Class<Dynamic>, build:(Dynamic, Window, App) -> StyleRefinement}>> = null;
 
-    public final groupDragOverStyles:Array<{type:Class<Dynamic>, style:GroupStyle}> = [];
+    public var groupDragOverStyles:Null<Array<{type:Class<Dynamic>, style:GroupStyle}>> = null;
 
-    public final mouseDownListeners:Array<ElementMouseListener> = [];
+    public var mouseDownListeners:Null<Array<ElementMouseListener>> = null;
 
-    public final mouseUpListeners:Array<ElementMouseListener> = [];
+    public var mouseUpListeners:Null<Array<ElementMouseListener>> = null;
 
-    public final mouseMoveListeners:Array<ElementMouseListener> = [];
+    public var mouseMoveListeners:Null<Array<ElementMouseListener>> = null;
 
-    public final mouseExitListeners:Array<ElementMouseListener> = [];
+    public var mouseExitListeners:Null<Array<ElementMouseListener>> = null;
 
-    public final scrollListeners:Array<ElementMouseListener> = [];
+    public var scrollListeners:Null<Array<ElementMouseListener>> = null;
 
-    public final keyDownListeners:Array<(KeyDownEvent, DispatchPhase, Window, App) -> Void> = [];
+    public var keyDownListeners:Null<Array<(KeyDownEvent, DispatchPhase, Window, App) -> Void>> = null;
 
-    public final keyUpListeners:Array<(KeyUpEvent, DispatchPhase, Window, App) -> Void> = [];
+    public var keyUpListeners:Null<Array<(KeyUpEvent, DispatchPhase, Window, App) -> Void>> = null;
 
-    public final modifiersChangedListeners:Array<(ModifiersChangedEvent, Window, App) -> Void> = [];
+    public var modifiersChangedListeners:Null<Array<(ModifiersChangedEvent, Window, App) -> Void>> = null;
 
-    public final actionListeners:Array<{type:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void}> = [];
+    public var actionListeners:Null<Array<{type:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void}>> = null;
 
-    public final dropListeners:Array<{type:Class<Dynamic>, listener:(Dynamic, Window, App) -> Void}> = [];
+    public var dropListeners:Null<Array<{type:Class<Dynamic>, listener:(Dynamic, Window, App) -> Void}>> = null;
 
     public var canDropPredicate:Null<(Dynamic, Window, App) -> Bool> = null;
 
-    public final clickListeners:Array<(ClickEvent, Window, App) -> Void> = [];
+    public var clickListeners:Null<Array<(ClickEvent, Window, App) -> Void>> = null;
 
-    public final auxClickListeners:Array<(ClickEvent, Window, App) -> Void> = [];
+    public var auxClickListeners:Null<Array<(ClickEvent, Window, App) -> Void>> = null;
 
     public var dragListener:Null<DragListener> = null;
 
@@ -363,6 +370,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for the given mouse button, during the bubble phase.
      */
     public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):Void {
+        if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseDownEvent = cast event;
             if (phase == Bubble && event.button == button && hitbox.isHovered(window)) {
@@ -375,6 +383,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for any button, during the capture phase.
      */
     public function captureAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Void {
+        if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -386,6 +395,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event for any button, during the bubble phase.
      */
     public function onAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Void {
+        if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -397,6 +407,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for the given button, during the bubble phase.
      */
     public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Void {
+        if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseUpEvent = cast event;
             if (phase == Bubble && event.button == button && hitbox.isHovered(window)) {
@@ -409,6 +420,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for any button, during the capture phase.
      */
     public function captureAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Void {
+        if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -420,6 +432,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event for any button, during the bubble phase.
      */
     public function onAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Void {
+        if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -432,6 +445,7 @@ class Interactivity {
      * when the mouse is outside of the bounds of this element.
      */
     public function onMouseDownOut(listener:(MouseDownEvent, Window, App) -> Void):Void {
+        if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && !hitbox.contains(window.mousePosition())) {
                 listener(cast event, window, cx);
@@ -444,6 +458,7 @@ class Interactivity {
      * when the mouse is outside of the bounds of this element.
      */
     public function onMouseUpOut(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Void {
+        if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseUpEvent = cast event;
             if (phase == Capture && event.button == button && !hitbox.isHovered(window)) {
@@ -456,6 +471,7 @@ class Interactivity {
      * Bind the given callback to the mouse move event, during the bubble phase.
      */
     public function onMouseMove(listener:(MouseMoveEvent, Window, App) -> Void):Void {
+        if (mouseMoveListeners == null) mouseMoveListeners = [];
         mouseMoveListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -467,6 +483,7 @@ class Interactivity {
      * Bind the given callback to the mouse exit event, during the bubble phase.
      */
     public function onMouseExit(listener:(MouseExitEvent, Window, App) -> Void):Void {
+        if (mouseExitListeners == null) mouseExitListeners = [];
         mouseExitListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
                 listener(cast event, window, cx);
@@ -481,6 +498,7 @@ class Interactivity {
      * UIs that don't conform to a drag and drop style interaction, like resizing.
      */
     public function onDragMove<T>(type:Class<T>, listener:(DragMoveEvent<T>, Window, App) -> Void):Void {
+        if (mouseMoveListeners == null) mouseMoveListeners = [];
         mouseMoveListeners.push((event, phase, hitbox, window, cx) -> {
             final drag = cx.activeDrag;
             if (phase == Capture && drag != null && drag.valueIs(type)) {
@@ -493,6 +511,7 @@ class Interactivity {
      * Bind the given callback to scroll events (wheel and trackpad), during the bubble phase.
      */
     public function onScroll(listener:(ScrollEvent, Window, App) -> Void):Void {
+        if (scrollListeners == null) scrollListeners = [];
         scrollListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.shouldHandleScroll(window)) {
                 listener(cast event, window, cx);
@@ -511,6 +530,7 @@ class Interactivity {
      * Bind the given callback to an action dispatch during the capture phase.
      */
     public function captureAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
+        if (actionListeners == null) actionListeners = [];
         actionListeners.push({
             type: type,
             listener: (action, phase, window, cx) -> {
@@ -528,6 +548,7 @@ class Interactivity {
      * Bind the given callback to an action dispatch during the bubble phase.
      */
     public function onAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
+        if (actionListeners == null) actionListeners = [];
         actionListeners.push({
             type: type,
             listener: (action, phase, window, cx) -> {
@@ -545,6 +566,7 @@ class Interactivity {
      */
     public function onBoxedAction(action:Action, listener:(Action, Window, App) -> Void):Void {
         final action = action.boxedClone();
+        if (actionListeners == null) actionListeners = [];
         actionListeners.push({
             type: Type.getClass(action),
             listener: (_, phase, window, cx) -> {
@@ -559,6 +581,7 @@ class Interactivity {
      * Bind the given callback to a key down event, during the bubble phase.
      */
     public function onKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Void {
+        if (keyDownListeners == null) keyDownListeners = [];
         keyDownListeners.push((event, phase, window, cx) -> {
             if (phase == Bubble) {
                 listener(event, window, cx);
@@ -570,6 +593,7 @@ class Interactivity {
      * Bind the given callback to a key down event, during the capture phase.
      */
     public function captureKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Void {
+        if (keyDownListeners == null) keyDownListeners = [];
         keyDownListeners.push((event, phase, window, cx) -> {
             if (phase == Capture) {
                 listener(event, window, cx);
@@ -581,6 +605,7 @@ class Interactivity {
      * Bind the given callback to a key up event, during the bubble phase.
      */
     public function onKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Void {
+        if (keyUpListeners == null) keyUpListeners = [];
         keyUpListeners.push((event, phase, window, cx) -> {
             if (phase == Bubble) {
                 listener(event, window, cx);
@@ -592,6 +617,7 @@ class Interactivity {
      * Bind the given callback to a key up event, during the capture phase.
      */
     public function captureKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Void {
+        if (keyUpListeners == null) keyUpListeners = [];
         keyUpListeners.push((event, phase, window, cx) -> {
             if (phase == Capture) {
                 listener(event, window, cx);
@@ -603,6 +629,7 @@ class Interactivity {
      * Bind the given callback to modifiers changing events.
      */
     public function onModifiersChanged(listener:(ModifiersChangedEvent, Window, App) -> Void):Void {
+        if (modifiersChangedListeners == null) modifiersChangedListeners = [];
         modifiersChangedListeners.push(listener);
     }
 
@@ -610,6 +637,7 @@ class Interactivity {
      * Bind the given callback to drop events of the given type, whether or not the drag started on this element.
      */
     public function onDrop<T>(type:Class<T>, listener:(T, Window, App) -> Void):Void {
+        if (dropListeners == null) dropListeners = [];
         dropListeners.push({type: type, listener: (value, window, cx) -> listener(cast value, window, cx)});
     }
 
@@ -624,6 +652,7 @@ class Interactivity {
      * Bind the given callback to click events of this element.
      */
     public function onClick(listener:(ClickEvent, Window, App) -> Void):Void {
+        if (clickListeners == null) clickListeners = [];
         clickListeners.push(listener);
     }
 
@@ -631,6 +660,7 @@ class Interactivity {
      * Bind the given callback to non-primary click events of this element.
      */
     public function onAuxClick(listener:(ClickEvent, Window, App) -> Void):Void {
+        if (auxClickListeners == null) auxClickListeners = [];
         auxClickListeners.push(listener);
     }
 
@@ -687,10 +717,38 @@ class Interactivity {
      * Layout this element according to this interactivity state's configured styles.
      */
     public function requestLayout(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App, f:(Style, Window, App) -> LayoutId):LayoutId {
+        final style = requestLayoutStyle(globalId, #if gpui_inspector inspectorId, #end window, cx);
+        return f(style, window, cx);
+    }
+
+    static var interactiveStateTypeId:Int = -1;
+
+    /**
+     * The interactive element state of `globalId` for this frame (Rust
+     * `with_optional_element_state`), or null without an id.
+     */
+    static inline function interactiveElementState(globalId:Null<GlobalElementId>, window:Window):Null<InteractiveElementState> {
+        if (globalId == null) {
+            return null;
+        }
+        if (interactiveStateTypeId == -1) {
+            interactiveStateTypeId = ElementStateType.of(InteractiveElementState);
+        }
+        final box = window.elementStateBox(globalId, interactiveStateTypeId);
+        if (box.value == null) box.value = new InteractiveElementState();
+        return box.value;
+    }
+
+    /**
+     * The first half of `requestLayout()`: updates the element state and
+     * returns the style to request the layout with (no closure for `Div`).
+     */
+    public function requestLayoutStyle(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App):Style {
         #if gpui_inspector
         window.withInspectorState(inspectorId, DivInspectorState, cx, (inspectorState, _window) -> {
             if (inspectorState.value != null) {
                 baseStyle = inspectorState.value.baseStyle.clone();
+                computedStyle = null;
             }
             else {
                 inspectorState.value = new DivInspectorState(baseStyle.clone(), new Bounds(new Point(0, 0), new Size(0, 0)), new Size(0, 0));
@@ -699,12 +757,8 @@ class Interactivity {
         });
         #end
 
-        return window.withOptionalElementState(globalId, InteractiveElementState, (box, window) -> {
-            var elementState:Null<InteractiveElementState> = null;
-            if (box != null) {
-                if (box.value == null) box.value = new InteractiveElementState();
-                elementState = box.value;
-            }
+        {
+            final elementState = interactiveElementState(globalId, window);
 
             if (elementState != null && cx.hasActiveDrag()) {
                 if (elementState.pendingMouseDown != null) {
@@ -747,9 +801,8 @@ class Interactivity {
                 ongoingScroll = elementState.ongoingScroll;
             }
 
-            final style = computeStyleInternal(null, elementState, window, cx);
-            return f(style, window, cx);
-        });
+            return computeStyleInternal(null, elementState, window, cx);
+        }
     }
 
     /**
@@ -757,6 +810,29 @@ class Interactivity {
      * `f` gets the style, the scroll offset to apply to the children and the hitbox.
      */
     public function prepaint<R>(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App, f:(Style, Point, Null<Hitbox>, Window, App) -> R):R {
+        final style = prepaintBegin(globalId, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx);
+        final result = f(style, prepaintScrollOffset, prepaintHitbox, window, cx);
+        prepaintEnd(window);
+        return result;
+    }
+
+    /** The hitbox inserted by `prepaintBegin()`, or null */
+    public var prepaintHitbox(default, null):Null<Hitbox> = null;
+
+    /** The scroll offset to apply to the children, set by `prepaintBegin()` */
+    public var prepaintScrollOffset(default, null):Point = ZERO_POINT;
+
+    var prepaintTextStyle:Null<TextStyleRefinement> = null;
+    var prepaintMask:Null<ContentMask> = null;
+    var previousPrepaintOpacity:Float = 1.0;
+    var prepaintPushedGroup:Bool = false;
+
+    /**
+     * The first half of `prepaint()` (no closure for `Div`): returns the
+     * style and sets `prepaintScrollOffset` and `prepaintHitbox`. The
+     * children are prepainted between it and `prepaintEnd()`.
+     */
+    public function prepaintBegin(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App):Style {
         this.contentSize = contentSize;
 
         #if gpui_inspector
@@ -773,12 +849,8 @@ class Interactivity {
             window.setFocusHandle(trackedFocusHandle, cx);
         }
 
-        return window.withOptionalElementState(globalId, InteractiveElementState, (box, window) -> {
-            var elementState:Null<InteractiveElementState> = null;
-            if (box != null) {
-                if (box.value == null) box.value = new InteractiveElementState();
-                elementState = box.value;
-            }
+        {
+            final elementState = interactiveElementState(globalId, window);
             final style = computeStyleInternal(null, elementState, window, cx);
 
             if (elementState != null) {
@@ -820,17 +892,29 @@ class Interactivity {
                 window.prepaintGroupHitboxes.push(hitbox.id);
             }
 
-            final result = f(style, scrollOffset, hitbox, window, cx);
+            prepaintHitbox = hitbox;
+            prepaintScrollOffset = scrollOffset;
+            prepaintTextStyle = textStyle;
+            prepaintMask = mask;
+            this.previousPrepaintOpacity = previousPrepaintOpacity;
+            prepaintPushedGroup = pushedGroup;
+            return style;
+        }
+    }
 
-            if (pushedGroup) {
-                window.prepaintGroupHitboxes.pop();
-            }
-            window.prepaintOpacity = previousPrepaintOpacity;
+    /**
+     * The second half of `prepaint()`, after the children.
+     */
+    public function prepaintEnd(window:Window):Void {
+        if (prepaintPushedGroup) {
+            window.prepaintGroupHitboxes.pop();
+        }
+        window.prepaintOpacity = previousPrepaintOpacity;
 
-            if (mask != null) window.popContentMask();
-            if (textStyle != null) window.popTextStyle();
-            return result;
-        });
+        if (prepaintMask != null) window.popContentMask();
+        if (prepaintTextStyle != null) window.popTextStyle();
+        prepaintTextStyle = null;
+        prepaintMask = null;
     }
 
     function shouldInsertHitbox(style:Style, window:Window, cx:App):Bool {
@@ -847,16 +931,16 @@ class Interactivity {
             || hoverStyle != null
             || groupHoverStyle != null
             || hoverListener != null
-            || mouseUpListeners.length > 0
-            || mouseDownListeners.length > 0
-            || mouseMoveListeners.length > 0
-            || mouseExitListeners.length > 0
-            || clickListeners.length > 0
-            || auxClickListeners.length > 0
-            || scrollListeners.length > 0
+            || mouseUpListeners != null
+            || mouseDownListeners != null
+            || mouseMoveListeners != null
+            || mouseExitListeners != null
+            || clickListeners != null
+            || auxClickListeners != null
+            || scrollListeners != null
             || dragListener != null
-            || dropListeners.length > 0
-            || dragOverStyles.length > 0
+            || dropListeners != null
+            || dragOverStyles != null
             || tooltipBuilder != null;
     }
 
@@ -866,7 +950,7 @@ class Interactivity {
         }
 
         if (scrollOffset == null) {
-            return new Point(0, 0);
+            return ZERO_POINT;
         }
 
         var scrollToBottom = false;
@@ -919,94 +1003,141 @@ class Interactivity {
      * background and the border, inside its content mask.
      */
     public function paint(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App, paintContent:(Style, Window, App) -> Void):Void {
+        final style = paintBegin(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+        if (style == null) {
+            return;
+        }
+        paintContent(style, window, cx);
+        paintEnd(bounds, window, cx);
+    }
+
+    var paintStyle:Null<Style> = null;
+    var paintHitbox:Null<Hitbox> = null;
+    var paintCornerRadii:Null<Corners> = null;
+    var paintTextStyle:Null<TextStyleRefinement> = null;
+    var paintMask:Null<ContentMask> = null;
+    var paintTabGroup:Bool = false;
+    var paintHasOpacity:Bool = false;
+    var paintPreviousOpacity:Float = 0.0;
+    #if gpui_inspector
+    var paintInspectorId:Null<InspectorElementId> = null;
+    #end
+
+    /**
+     * The first half of `paint()` (no closure for `Div`): paints the
+     * background and binds the listeners, then returns the style, or null
+     * when the element is hidden (nothing else to paint, no `paintEnd()`).
+     * The content is painted between it and `paintEnd()`.
+     */
+    public function paintBegin(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App):Null<Style> {
         hovered = hitbox != null ? hitbox.isHovered(window) : null;
         // Port: an element scrolled from another view draws again (default view caching)
         if (trackedScrollHandle != null) {
             trackedScrollHandle.recordView(window);
         }
-        window.withOptionalElementState(globalId, InteractiveElementState, (box, window) -> {
-            var elementState:Null<InteractiveElementState> = null;
-            if (box != null) {
-                if (box.value == null) box.value = new InteractiveElementState();
-                elementState = box.value;
-            }
+        final elementState = interactiveElementState(globalId, window);
 
-            final style = computeStyleInternal(hitbox, elementState, window, cx);
+        final style = computeStyleInternal(hitbox, elementState, window, cx);
 
-            paintHoverGroupHandler(window, cx);
+        paintHoverGroupHandler(window, cx);
 
-            if (style.visibility == Visibility.Hidden) {
-                return null;
-            }
-
-            final tabGroupIndex:Null<Int> = tabGroup ? tabIndex : null;
-
-            final hasOpacity = style.isSome(StyleRefinement.OPACITY);
-            final previousOpacity = hasOpacity ? window.pushElementOpacity(style.opacity) : 0.0;
-
-            final cornerRadii = style.paintBackground(bounds, window, cx);
-
-            final textStyle = style.textStyle();
-            if (textStyle != null) window.pushTextStyle(textStyle);
-            final mask = style.overflowMask(bounds, window.remSize());
-            if (mask != null) window.pushContentMask(mask);
-
-            window.withTabGroup(tabGroupIndex, window -> {
-                // Register the container's own focus handle *inside* its tab group, so that
-                // focusing the container and then calling `focusNext` descends into this group's
-                // first item.
-                if (trackedFocusHandle != null) {
-                    window.insertTabStop(trackedFocusHandle);
-                }
-                if (hitbox != null) {
-                    final drag = cx.activeDrag;
-                    if (drag != null) {
-                        if (drag.cursorStyle != null) {
-                            window.setWindowCursorStyle(drag.cursorStyle);
-                        }
-                    }
-                    else {
-                        if (style.isSome(StyleRefinement.MOUSE_CURSOR)) {
-                            window.setCursorStyle(style.mouseCursor, hitbox);
-                        }
-                    }
-
-                    if (group != null) {
-                        GroupHitboxes.push(group, hitbox.id, cx);
-                    }
-
-                    if (windowControl != null) {
-                        window.insertWindowControlHitbox(windowControl, hitbox);
-                    }
-
-                    paintMouseListeners(hitbox, elementState, window, cx);
-                    paintScrollListener(hitbox, style, window, cx);
-                }
-
-                paintKeyboardListeners(window, cx);
-
-                paintContent(style, window, cx);
-
-                #if gpui_inspector
-                if (hitbox != null) {
-                    window.insertInspectorHitbox(hitbox.id, inspectorId, cx);
-                }
-                #end
-
-                if (hitbox != null && group != null) {
-                    GroupHitboxes.pop(group, cx);
-                }
-                return null;
-            });
-
-            if (mask != null) window.popContentMask();
-            if (textStyle != null) window.popTextStyle();
-
-            style.paintBorder(bounds, cornerRadii, window, cx);
-
-            if (hasOpacity) window.popElementOpacity(previousOpacity);
+        if (style.visibility == Visibility.Hidden) {
             return null;
-        });
+        }
+
+        final tabGroupIndex:Null<Int> = tabGroup ? tabIndex : null;
+
+        final hasOpacity = style.isSome(StyleRefinement.OPACITY);
+        paintHasOpacity = hasOpacity;
+        paintPreviousOpacity = hasOpacity ? window.pushElementOpacity(style.opacity) : 0.0;
+
+        paintCornerRadii = style.paintBackground(bounds, window, cx);
+
+        final textStyle = style.textStyle();
+        if (textStyle != null) window.pushTextStyle(textStyle);
+        final mask = style.overflowMask(bounds, window.remSize());
+        if (mask != null) window.pushContentMask(mask);
+
+        // Rust `window.with_tab_group(tab_group_index, ...)` around the listeners and the content
+        paintTabGroup = tabGroupIndex != null;
+        if (paintTabGroup) {
+            @:privateAccess window.nextFrame.tabStops.beginGroup(tabGroupIndex);
+        }
+
+        // Register the container's own focus handle *inside* its tab group, so that
+        // focusing the container and then calling `focusNext` descends into this group's
+        // first item.
+        if (trackedFocusHandle != null) {
+            window.insertTabStop(trackedFocusHandle);
+        }
+        if (hitbox != null) {
+            final drag = cx.activeDrag;
+            if (drag != null) {
+                if (drag.cursorStyle != null) {
+                    window.setWindowCursorStyle(drag.cursorStyle);
+                }
+            }
+            else {
+                if (style.isSome(StyleRefinement.MOUSE_CURSOR)) {
+                    window.setCursorStyle(style.mouseCursor, hitbox);
+                }
+            }
+
+            if (group != null) {
+                GroupHitboxes.push(group, hitbox.id, cx);
+            }
+
+            if (windowControl != null) {
+                window.insertWindowControlHitbox(windowControl, hitbox);
+            }
+
+            paintMouseListeners(hitbox, elementState, window, cx);
+            paintScrollListener(hitbox, style, window, cx);
+        }
+
+        paintKeyboardListeners(window, cx);
+
+        paintStyle = style;
+        paintHitbox = hitbox;
+        paintTextStyle = textStyle;
+        paintMask = mask;
+        #if gpui_inspector
+        paintInspectorId = inspectorId;
+        #end
+        return style;
+    }
+
+    /**
+     * The second half of `paint()`, after the content: the border.
+     */
+    public function paintEnd(bounds:Bounds, window:Window, cx:App):Void {
+        final style = paintStyle;
+        final hitbox = paintHitbox;
+        paintStyle = null;
+        paintHitbox = null;
+
+        #if gpui_inspector
+        if (hitbox != null) {
+            window.insertInspectorHitbox(hitbox.id, paintInspectorId, cx);
+        }
+        #end
+
+        if (hitbox != null && group != null) {
+            GroupHitboxes.pop(group, cx);
+        }
+
+        if (paintTabGroup) {
+            @:privateAccess window.nextFrame.tabStops.endGroup();
+        }
+
+        if (paintMask != null) window.popContentMask();
+        if (paintTextStyle != null) window.popTextStyle();
+        paintMask = null;
+        paintTextStyle = null;
+
+        style.paintBorder(bounds, paintCornerRadii, window, cx);
+
+        if (paintHasOpacity) window.popElementOpacity(paintPreviousOpacity);
     }
 
     function paintMouseListeners(hitbox:Hitbox, elementState:Null<InteractiveElementState>, window:Window, cx:App):Void {
@@ -1027,34 +1158,49 @@ class Interactivity {
             });
         }
 
-        for (listener in mouseDownListeners) {
-            window.onMouseEvent(MouseDown, (event, phase, window, cx) -> listener(event, phase, hitbox, window, cx));
+        final mouseDownListeners = this.mouseDownListeners;
+        if (mouseDownListeners != null) {
+            this.mouseDownListeners = null;
+            for (listener in mouseDownListeners) {
+                window.onElementMouseEvent(MouseDown, listener, hitbox);
+            }
         }
-        mouseDownListeners.resize(0);
 
-        for (listener in mouseUpListeners) {
-            window.onMouseEvent(MouseUp, (event, phase, window, cx) -> listener(event, phase, hitbox, window, cx));
+        final mouseUpListeners = this.mouseUpListeners;
+        if (mouseUpListeners != null) {
+            this.mouseUpListeners = null;
+            for (listener in mouseUpListeners) {
+                window.onElementMouseEvent(MouseUp, listener, hitbox);
+            }
         }
-        mouseUpListeners.resize(0);
 
-        for (listener in mouseMoveListeners) {
-            window.onMouseEvent(MouseMove, (event, phase, window, cx) -> listener(event, phase, hitbox, window, cx));
+        final mouseMoveListeners = this.mouseMoveListeners;
+        if (mouseMoveListeners != null) {
+            this.mouseMoveListeners = null;
+            for (listener in mouseMoveListeners) {
+                window.onElementMouseEvent(MouseMove, listener, hitbox);
+            }
         }
-        mouseMoveListeners.resize(0);
 
-        for (listener in mouseExitListeners) {
-            window.onMouseEvent(MouseExited, (event, phase, window, cx) -> listener(event, phase, hitbox, window, cx));
+        final mouseExitListeners = this.mouseExitListeners;
+        if (mouseExitListeners != null) {
+            this.mouseExitListeners = null;
+            for (listener in mouseExitListeners) {
+                window.onElementMouseEvent(MouseExited, listener, hitbox);
+            }
         }
-        mouseExitListeners.resize(0);
 
-        for (listener in scrollListeners) {
-            window.onMouseEvent(Scroll, (event, phase, window, cx) -> listener(event, phase, hitbox, window, cx));
+        final scrollListeners = this.scrollListeners;
+        if (scrollListeners != null) {
+            this.scrollListeners = null;
+            for (listener in scrollListeners) {
+                window.onElementMouseEvent(Scroll, listener, hitbox);
+            }
         }
-        scrollListeners.resize(0);
 
         if (hoverStyle != null
             || baseStyle.has(StyleRefinement.MOUSE_CURSOR)
-            || cx.activeDrag != null && dragOverStyles.length > 0) {
+            || cx.activeDrag != null && dragOverStyles != null) {
             final hoverState = hoverStyle != null && elementState != null ? elementState.hoverState : null;
             final currentView = window.currentView();
             // Difference with GPUI: with default view caching (GPUI's own
@@ -1109,16 +1255,17 @@ class Interactivity {
 
         final dragListener = this.dragListener;
         this.dragListener = null;
-        final dropListeners = this.dropListeners.copy();
-        this.dropListeners.resize(0);
-        final clickListeners = this.clickListeners.copy();
-        this.clickListeners.resize(0);
-        final auxClickListeners = this.auxClickListeners.copy();
-        this.auxClickListeners.resize(0);
+        // Taken (Rust `mem::take`): the listeners of an element are painted once
+        final dropListeners = this.dropListeners;
+        this.dropListeners = null;
+        final clickListeners = this.clickListeners != null ? this.clickListeners : NO_CLICK_LISTENERS;
+        this.clickListeners = null;
+        final auxClickListeners = this.auxClickListeners != null ? this.auxClickListeners : NO_CLICK_LISTENERS;
+        this.auxClickListeners = null;
         final canDropPredicate = this.canDropPredicate;
         this.canDropPredicate = null;
 
-        if (dropListeners.length > 0) {
+        if (dropListeners != null) {
             window.onMouseEvent(MouseUp, (_, phase, window, cx) -> {
                 final drag = cx.activeDrag;
                 if (drag != null && phase == Bubble && hitbox.isHovered(window)) {
@@ -1360,29 +1507,41 @@ class Interactivity {
             window.setKeyContext(keyContext);
         }
 
-        for (listener in keyDownListeners) {
-            window.onKeyEvent((event, phase, window, cx) -> {
-                if (event.kind == KeyDown) listener(cast event, phase, window, cx);
-            });
+        final keyDownListeners = this.keyDownListeners;
+        if (keyDownListeners != null) {
+            this.keyDownListeners = null;
+            for (listener in keyDownListeners) {
+                window.onKeyEvent((event, phase, window, cx) -> {
+                    if (event.kind == KeyDown) listener(cast event, phase, window, cx);
+                });
+            }
         }
-        keyDownListeners.resize(0);
 
-        for (listener in keyUpListeners) {
-            window.onKeyEvent((event, phase, window, cx) -> {
-                if (event.kind == KeyUp) listener(cast event, phase, window, cx);
-            });
+        final keyUpListeners = this.keyUpListeners;
+        if (keyUpListeners != null) {
+            this.keyUpListeners = null;
+            for (listener in keyUpListeners) {
+                window.onKeyEvent((event, phase, window, cx) -> {
+                    if (event.kind == KeyUp) listener(cast event, phase, window, cx);
+                });
+            }
         }
-        keyUpListeners.resize(0);
 
-        for (listener in modifiersChangedListeners) {
-            window.onModifiersChanged(listener);
+        final modifiersChangedListeners = this.modifiersChangedListeners;
+        if (modifiersChangedListeners != null) {
+            this.modifiersChangedListeners = null;
+            for (listener in modifiersChangedListeners) {
+                window.onModifiersChanged(listener);
+            }
         }
-        modifiersChangedListeners.resize(0);
 
-        for (entry in actionListeners) {
-            window.onAction(entry.type, entry.listener);
+        final actionListeners = this.actionListeners;
+        if (actionListeners != null) {
+            this.actionListeners = null;
+            for (entry in actionListeners) {
+                window.onAction(entry.type, entry.listener);
+            }
         }
-        actionListeners.resize(0);
     }
 
     function paintHoverGroupHandler(window:Window, cx:App):Void {
@@ -1461,31 +1620,60 @@ class Interactivity {
      * Compute the visual style for this element, based on the current bounds and the element's state.
      */
     public function computeStyle(globalId:Null<GlobalElementId>, hitbox:Null<Hitbox>, window:Window, cx:App):Style {
-        return window.withOptionalElementState(globalId, InteractiveElementState, (box, window) -> {
-            var elementState:Null<InteractiveElementState> = null;
-            if (box != null) {
-                if (box.value == null) box.value = new InteractiveElementState();
-                elementState = box.value;
-            }
-            return computeStyleInternal(hitbox, elementState, window, cx);
-        });
+        return computeStyleInternal(hitbox, interactiveElementState(globalId, window), window, cx);
     }
 
-    function computeStyleInternal(hitbox:Null<Hitbox>, elementState:Null<InteractiveElementState>, window:Window, cx:App):Style {
-        final style = new Style();
-        style.refine(baseStyle);
+    /** Bits of the refinements `computeStyleInternal` applies (`computedStyleKey`) */
+    static inline final STYLE_IN_FOCUS:Int = 1;
+    static inline final STYLE_FOCUS:Int = 2;
+    static inline final STYLE_FOCUS_VISIBLE:Int = 4;
+    static inline final STYLE_GROUP_HOVER:Int = 8;
+    static inline final STYLE_HOVER:Int = 16;
+    static inline final STYLE_GROUP_ACTIVE:Int = 32;
+    static inline final STYLE_ACTIVE:Int = 64;
 
+    /**
+     * The style computed last by `computeStyleInternal` (requested layout,
+     * prepaint and paint each compute one), reused while the same
+     * refinements apply, or null.
+     */
+    var computedStyle:Null<Style> = null;
+
+    /** The refinements applied to `computedStyle` (`STYLE_*` bits) */
+    var computedStyleKey:Int = 0;
+
+    /**
+     * Forgets the style computed by the last phase: an element that changes
+     * the style it was given (`Img` sizes itself from its image) calls it,
+     * so the next phase computes a fresh one like GPUI does.
+     */
+    @:allow(gpui)
+    inline function forgetComputedStyle():Void {
+        computedStyle = null;
+    }
+
+    /**
+     * Rust `compute_style_internal`. GPUI computes a new style in each phase
+     * (request layout, prepaint, paint), and its inputs can change between
+     * them (paint reads the hitbox prepaint just inserted). The port first
+     * evaluates which refinements apply, in GPUI's order, and returns the
+     * style of the previous phase when it applied the same ones (the
+     * refinements of an element do not change while it is drawn). The drag
+     * over styles (a style built by a closure) are always computed again.
+     */
+    function computeStyleInternal(hitbox:Null<Hitbox>, elementState:Null<InteractiveElementState>, window:Window, cx:App):Style {
+        var key = 0;
         if (trackedFocusHandle != null) {
             if (inFocusStyle != null && trackedFocusHandle.withinFocused(window, cx)) {
-                style.refine(inFocusStyle);
+                key |= STYLE_IN_FOCUS;
             }
 
             if (focusStyle != null && trackedFocusHandle.isFocused(window)) {
-                style.refine(focusStyle);
+                key |= STYLE_FOCUS;
             }
 
             if (focusVisibleStyle != null && trackedFocusHandle.isFocused(window) && window.lastInputWasKeyboard()) {
-                style.refine(focusVisibleStyle);
+                key |= STYLE_FOCUS_VISIBLE;
             }
         }
 
@@ -1503,7 +1691,7 @@ class Interactivity {
                 }
 
                 if (isGroupHovered) {
-                    style.refine(groupHoverStyle.style);
+                    key |= STYLE_GROUP_HOVER;
                 }
             }
 
@@ -1519,58 +1707,75 @@ class Interactivity {
                 }
 
                 if (isHovered) {
-                    style.refine(hoverStyle);
+                    key |= STYLE_HOVER;
                 }
             }
         }
 
-        if (hitbox != null) {
-            final drag = cx.activeDrag;
-            if (drag != null) {
-                cx.activeDrag = null;
-                var canDrop = true;
-                if (canDropPredicate != null) {
-                    canDrop = canDropPredicate(drag.value, window, cx);
-                }
-
-                if (canDrop) {
-                    for (entry in groupDragOverStyles) {
-                        final groupHitboxId = GroupHitboxes.get(entry.style.group, cx);
-                        if (groupHitboxId != -1 && drag.valueIs(entry.type) && window.isHitboxIdHovered(groupHitboxId)) {
-                            style.refine(entry.style.style);
-                        }
-                    }
-
-                    for (entry in dragOverStyles) {
-                        if (drag.valueIs(entry.type) && hitbox.isHovered(window)) {
-                            style.refine(entry.build(drag.value, window, cx));
-                        }
-                    }
-                }
-
-                if (drag.cursorStyle != null) {
-                    style.mouseCursor = drag.cursorStyle;
-                    style.optionMask |= StyleRefinement.MOUSE_CURSOR;
-                }
-                else {
-                    style.optionMask &= ~StyleRefinement.MOUSE_CURSOR;
-                }
-                cx.activeDrag = drag;
-            }
-        }
+        final drag = hitbox != null ? cx.activeDrag : null;
 
         if (elementState != null) {
             if (elementState.clickedState == null) elementState.clickedState = new ElementClickedState();
             final clickedState = elementState.clickedState;
             if (clickedState.group && groupActiveStyle != null) {
-                style.refine(groupActiveStyle.style);
+                key |= STYLE_GROUP_ACTIVE;
             }
 
             if (activeStyle != null && clickedState.element) {
-                style.refine(activeStyle);
+                key |= STYLE_ACTIVE;
             }
         }
 
+        if (drag == null && computedStyle != null && computedStyleKey == key) {
+            return computedStyle;
+        }
+
+        final style = new Style();
+        style.refine(baseStyle);
+
+        if (key & STYLE_IN_FOCUS != 0) style.refine(inFocusStyle);
+        if (key & STYLE_FOCUS != 0) style.refine(focusStyle);
+        if (key & STYLE_FOCUS_VISIBLE != 0) style.refine(focusVisibleStyle);
+        if (key & STYLE_GROUP_HOVER != 0) style.refine(groupHoverStyle.style);
+        if (key & STYLE_HOVER != 0) style.refine(hoverStyle);
+
+        if (drag != null) {
+            cx.activeDrag = null;
+            var canDrop = true;
+            if (canDropPredicate != null) {
+                canDrop = canDropPredicate(drag.value, window, cx);
+            }
+
+            if (canDrop) {
+                if (groupDragOverStyles != null) for (entry in groupDragOverStyles) {
+                    final groupHitboxId = GroupHitboxes.get(entry.style.group, cx);
+                    if (groupHitboxId != -1 && drag.valueIs(entry.type) && window.isHitboxIdHovered(groupHitboxId)) {
+                        style.refine(entry.style.style);
+                    }
+                }
+
+                if (dragOverStyles != null) for (entry in dragOverStyles) {
+                    if (drag.valueIs(entry.type) && hitbox.isHovered(window)) {
+                        style.refine(entry.build(drag.value, window, cx));
+                    }
+                }
+            }
+
+            if (drag.cursorStyle != null) {
+                style.mouseCursor = drag.cursorStyle;
+                style.optionMask |= StyleRefinement.MOUSE_CURSOR;
+            }
+            else {
+                style.optionMask &= ~StyleRefinement.MOUSE_CURSOR;
+            }
+            cx.activeDrag = drag;
+        }
+
+        if (key & STYLE_GROUP_ACTIVE != 0) style.refine(groupActiveStyle.style);
+        if (key & STYLE_ACTIVE != 0) style.refine(activeStyle);
+
+        computedStyle = drag == null ? style : null;
+        computedStyleKey = key;
         return style;
     }
 

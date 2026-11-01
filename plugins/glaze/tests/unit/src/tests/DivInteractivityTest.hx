@@ -153,6 +153,50 @@ class DivInteractivityTest extends TestCase {
         assertEquals(10.0, view.statefulWidth);
     }
 
+/// Computed styles
+
+    function testComputedStyleFollowsTheStateOfEachPhase() {
+        // GPUI computes a new style in each phase: the port reuses the style
+        // of the previous phase only while the same refinements apply
+        addWindow((_, _) -> new GroupHoverTestView());
+        cx.update((window, app) -> {
+            final element = div().w(px(10)).hover(style -> style.w(px(20))).active(style -> style.w(px(30)));
+            final interactivity = element.interactivity;
+            final state = new InteractiveElementState();
+            state.hoverState = new gpui.Interactivity.ElementHoverState();
+            inline function compute() {
+                return @:privateAccess interactivity.computeStyleInternal(null, state, window, app);
+            }
+            inline function width(style:gpui.Style):Float {
+                return switch style.sizeWidth {
+                    case Definite(Absolute(Pixels(value))): value;
+                    case _: Math.NaN;
+                }
+            }
+
+            final layout = compute();
+            assertEquals(10.0, width(layout));
+            final prepaint = compute();
+            assertTrue(prepaint == layout, 'same inputs: style reused');
+
+            state.hoverState.element = true;
+            final hovered = compute();
+            assertTrue(hovered != layout, 'hover changed: new style');
+            assertEquals(20.0, width(hovered));
+            assertEquals(10.0, width(layout), 'the previous style is not modified');
+
+            state.clickedState.element = true;
+            final active = compute();
+            assertEquals(30.0, width(active));
+
+            state.hoverState.element = false;
+            state.clickedState.element = false;
+            final again = compute();
+            assertTrue(again != active);
+            assertEquals(10.0, width(again));
+        });
+    }
+
 /// Hover listeners
 
     function testDefaultHoverListenerUpdatesWhenLayoutChangesUnderStationaryMouse() {

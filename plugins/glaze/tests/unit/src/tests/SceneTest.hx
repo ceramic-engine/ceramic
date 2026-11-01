@@ -170,6 +170,53 @@ class SceneTest extends TestCase {
 
     }
 
+    function testSpecializedSortsMatchTheComparators() {
+
+        // `Scene.finish()` sorts with specialized merge sorts: the result must
+        // be the stable sort by `compareByOrder` / `compareSprites`, also for
+        // unsorted, reversed and nearly sorted inputs of every size
+        var seed = 12345;
+        inline function random(n:Int):Int {
+            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            return seed % n;
+        }
+        for (size in [0, 1, 2, 5, 11, 12, 13, 40, 257, 1000]) {
+            for (mode in 0...4) {
+                final quads:Array<gpui.scene.Quad> = [];
+                final sprites:Array<gpui.scene.MonochromeSprite> = [];
+                for (i in 0...size) {
+                    final q = new gpui.scene.Quad();
+                    final s = new gpui.scene.MonochromeSprite();
+                    final order = switch mode {
+                        case 0: random(8);
+                        case 1: size - i;
+                        case 2: i + (random(10) == 0 ? -3 : 0);
+                        case _: random(size + 1);
+                    }
+                    q.order = order;
+                    q.seq = random(3) == 0 ? size - i : i;
+                    s.order = order;
+                    s.textureIndex = random(3);
+                    s.seq = q.seq;
+                    quads.push(q);
+                    sprites.push(s);
+                }
+                final expectedQuads = quads.copy();
+                haxe.ds.ArraySort.sort(expectedQuads, @:privateAccess Scene.compareByOrder);
+                final expectedSprites = sprites.copy();
+                haxe.ds.ArraySort.sort(expectedSprites, @:privateAccess Scene.compareSprites);
+                @:privateAccess Scene.sortByOrder(quads, []);
+                @:privateAccess Scene.sortSprites(sprites, []);
+                var same = true;
+                for (i in 0...size) {
+                    if (quads[i] != expectedQuads[i] || sprites[i] != expectedSprites[i]) same = false;
+                }
+                assertTrue(same, 'size $size mode $mode');
+            }
+        }
+
+    }
+
     function testPooledPrimitivesAreReset() {
 
         final scene = new Scene();

@@ -38,7 +38,7 @@ class TextLayout {
      * of the window (the runs default to one run of that style).
      */
     public function layout(text:String, runs:Null<Array<TextRun>>, window:Window, cx:App):LayoutId {
-        final textStyle = window.textStyle();
+        final textStyle = window.currentTextStyle();
         final fontSize = textStyle.fontSize.toPixels(window.remSize());
         final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixels(AbsoluteLength.Pixels(fontSize), window.remSize()));
 
@@ -207,7 +207,7 @@ class TextLayout {
 
         final lineHeight = _lineHeight;
         var originY = bounds.origin.y;
-        final textStyle = window.textStyle();
+        final textStyle = window.currentTextStyle();
         for (line in lines) {
             final lineOrigin = new Point(bounds.origin.x, originY);
             if (pass == All || pass == Background) {

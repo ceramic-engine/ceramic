@@ -382,6 +382,146 @@ class Scene {
 
 /// Sorting
 
+    final shadowsScratch:Array<Shadow> = [];
+    final quadsScratch:Array<Quad> = [];
+    final pathsScratch:Array<PathSprite> = [];
+    final underlinesScratch:Array<Underline> = [];
+    final monochromeSpritesScratch:Array<MonochromeSprite> = [];
+    final polychromeSpritesScratch:Array<PolychromeSprite> = [];
+
+    /** `compareByOrder(a, b) < 0` */
+    static inline function lessByOrder(a:Primitive, b:Primitive):Bool {
+
+        return a.order < b.order || (a.order == b.order && a.seq < b.seq);
+
+    }
+
+    /** `compareSprites(a, b) < 0` */
+    static inline function lessSprite(a:SpritePrimitive, b:SpritePrimitive):Bool {
+
+        return a.order < b.order
+            || (a.order == b.order && (a.textureIndex < b.textureIndex
+                || (a.textureIndex == b.textureIndex && a.seq < b.seq)));
+
+    }
+
+    static inline final SORT_RUN:Int = 12;
+
+    /**
+     * Sorts `a` with `compareByOrder` (stable merge sort, nothing to do when
+     * already sorted), `tmp` as scratch space.
+     */
+    @:generic static function sortByOrder<T:Primitive>(a:Array<T>, tmp:Array<T>):Void {
+
+        final n = a.length;
+        var i = 1;
+        while (i < n && !lessByOrder(a[i], a[i - 1])) i++;
+        if (i >= n) return;
+        if (tmp.length < n) tmp.resize(n);
+
+        // Bottom-up merge sort: insertion sort of runs, then merges of
+        // runs of doubling width (left run copied to `tmp`)
+        var from = 0;
+        while (from < n) {
+            final to = from + SORT_RUN < n ? from + SORT_RUN : n;
+            for (i in (from + 1)...to) {
+                final item = a[i];
+                var j = i;
+                while (j > from && lessByOrder(item, a[j - 1])) {
+                    a[j] = a[j - 1];
+                    j--;
+                }
+                a[j] = item;
+            }
+            from = to;
+        }
+        var width = SORT_RUN;
+        while (width < n) {
+            var from = 0;
+            while (from + width < n) {
+                final middle = from + width;
+                final to = middle + width < n ? middle + width : n;
+                if (lessByOrder(a[middle], a[middle - 1])) {
+                    for (k in from...middle) tmp[k] = a[k];
+                    var left = from;
+                    var right = middle;
+                    var k = from;
+                    while (left < middle && right < to) {
+                        if (lessByOrder(a[right], tmp[left])) {
+                            a[k++] = a[right++];
+                        }
+                        else {
+                            a[k++] = tmp[left++];
+                        }
+                    }
+                    while (left < middle) {
+                        a[k++] = tmp[left++];
+                    }
+                }
+                from = to;
+            }
+            width *= 2;
+        }
+
+    }
+
+    /**
+     * Sorts `a` with `compareSprites`, like `sortByOrder()`.
+     */
+    @:generic static function sortSprites<T:SpritePrimitive>(a:Array<T>, tmp:Array<T>):Void {
+
+        final n = a.length;
+        var i = 1;
+        while (i < n && !lessSprite(a[i], a[i - 1])) i++;
+        if (i >= n) return;
+        if (tmp.length < n) tmp.resize(n);
+
+        // Bottom-up merge sort: insertion sort of runs, then merges of
+        // runs of doubling width (left run copied to `tmp`)
+        var from = 0;
+        while (from < n) {
+            final to = from + SORT_RUN < n ? from + SORT_RUN : n;
+            for (i in (from + 1)...to) {
+                final item = a[i];
+                var j = i;
+                while (j > from && lessSprite(item, a[j - 1])) {
+                    a[j] = a[j - 1];
+                    j--;
+                }
+                a[j] = item;
+            }
+            from = to;
+        }
+        var width = SORT_RUN;
+        while (width < n) {
+            var from = 0;
+            while (from + width < n) {
+                final middle = from + width;
+                final to = middle + width < n ? middle + width : n;
+                if (lessSprite(a[middle], a[middle - 1])) {
+                    for (k in from...middle) tmp[k] = a[k];
+                    var left = from;
+                    var right = middle;
+                    var k = from;
+                    while (left < middle && right < to) {
+                        if (lessSprite(a[right], tmp[left])) {
+                            a[k++] = a[right++];
+                        }
+                        else {
+                            a[k++] = tmp[left++];
+                        }
+                    }
+                    while (left < middle) {
+                        a[k++] = tmp[left++];
+                    }
+                }
+                from = to;
+            }
+            width *= 2;
+        }
+
+    }
+
     static function compareByOrder(a:Primitive, b:Primitive):Int {
 
         if (a.order != b.order) return a.order < b.order ? -1 : 1;
@@ -403,12 +543,15 @@ class Scene {
      */
     public function finish():Void {
 
-        ArraySort.sort(shadows, compareByOrder);
-        ArraySort.sort(quads, compareByOrder);
-        ArraySort.sort(paths, compareByOrder);
-        ArraySort.sort(underlines, compareByOrder);
-        ArraySort.sort(monochromeSprites, compareSprites);
-        ArraySort.sort(polychromeSprites, compareSprites);
+        // Specialized merge sorts (no comparator closure, no allocation
+        // once the scratch arrays have grown): the keys (order, texture,
+        // seq) are unique, so the result is the one of any correct sort
+        sortByOrder(shadows, shadowsScratch);
+        sortByOrder(quads, quadsScratch);
+        sortByOrder(paths, pathsScratch);
+        sortByOrder(underlines, underlinesScratch);
+        sortSprites(monochromeSprites, monochromeSpritesScratch);
+        sortSprites(polychromeSprites, polychromeSpritesScratch);
         resetBatches();
 
     }

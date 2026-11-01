@@ -391,6 +391,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Apply the given style when the given data type is dragged over this element.
      */
     public function dragOver<S>(type:Class<S>, f:(StyleBuilder, S, Window, App) -> StyleBuilder):Div {
+        if (interactivity.dragOverStyles == null) interactivity.dragOverStyles = [];
         interactivity.dragOverStyles.push({
             type: type,
             build: (value, window, cx) -> f(new StyleBuilder(), cast value, window, cx).style()
@@ -402,6 +403,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Apply the given style when the given data type is dragged over this element's group.
      */
     public function groupDragOver<S>(type:Class<S>, groupName:String, f:StyleBuilder->StyleBuilder):Div {
+        if (interactivity.groupDragOverStyles == null) interactivity.groupDragOverStyles = [];
         interactivity.groupDragOverStyles.push({type: type, style: new Interactivity.GroupStyle(groupName, StyleBuilder.build(f))});
         return this;
     }
@@ -646,22 +648,23 @@ class Div extends Element implements Styled implements ParentElement {
 /// Element
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return interactivity.requestLayout(id, #if gpui_inspector inspectorId, #end window, cx, (style, window, cx) -> {
-            final textStyle = style.textStyle();
-            if (textStyle != null) window.pushTextStyle(textStyle);
-            childLayoutIds.resize(0);
-            for (child in childElements) {
-                childLayoutIds.push(child.requestLayout(window, cx));
-            }
-            final layoutId = window.requestLayout(style, childLayoutIds, cx);
-            if (textStyle != null) window.popTextStyle();
-            return layoutId;
-        });
+        // Rust `self.interactivity.request_layout(.., |style, window, cx| ..)`,
+        // without a closure
+        final style = interactivity.requestLayoutStyle(id, #if gpui_inspector inspectorId, #end window, cx);
+        final textStyle = style.textStyle();
+        if (textStyle != null) window.pushTextStyle(textStyle);
+        childLayoutIds.resize(0);
+        for (child in childElements) {
+            childLayoutIds.push(child.requestLayout(window, cx));
+        }
+        final layoutId = window.requestLayout(style, childLayoutIds, cx);
+        if (textStyle != null) window.popTextStyle();
+        return layoutId;
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hasPrepaintListener = prepaintListener != null;
-        final childrenBounds:Array<Bounds> = [];
+        final childrenBounds:Null<Array<Bounds>> = hasPrepaintListener ? [] : null;
 
         var childMinX = Math.POSITIVE_INFINITY;
         var childMinY = Math.POSITIVE_INFINITY;
@@ -704,40 +707,47 @@ class Div extends Element implements Styled implements ParentElement {
             interactivity.trackedScrollHandle.scrollToActiveItem();
         }
 
-        hitbox = interactivity.prepaint(id, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx, (style, scrollOffset, hitbox, window, cx) -> {
-            // skip children
-            if (style.display == Display.None) {
-                return hitbox;
+        // Rust `self.interactivity.prepaint(.., |style, scroll_offset, hitbox, window, cx| ..)`,
+        // without a closure
+        final style = interactivity.prepaintBegin(id, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx);
+        // skip children
+        if (style.display != Display.None) {
+            // Rust `window.with_element_offset(scroll_offset, ..)`
+            final scrollOffset = interactivity.prepaintScrollOffset;
+            final offset = !scrollOffset.isZero();
+            if (offset) {
+                window.pushAbsoluteElementOffset(window.elementOffset().add(scrollOffset));
             }
-
-            window.withElementOffset(scrollOffset, window -> {
-                for (child in childElements) {
-                    child.prepaint(window, cx);
-                }
-                return null;
-            });
+            for (child in childElements) {
+                child.prepaint(window, cx);
+            }
+            if (offset) {
+                window.popElementOffset();
+            }
 
             if (prepaintListener != null) {
                 prepaintListener(childrenBounds, window, cx);
             }
-
-            return hitbox;
-        });
+        }
+        hitbox = interactivity.prepaintHitbox;
+        interactivity.prepaintEnd(window);
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hitbox = this.hitbox;
         this.hitbox = null;
-        interactivity.paint(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (style, window, cx) -> {
-            // skip children
-            if (style.display == Display.None) {
-                return;
-            }
-
+        // Rust `self.interactivity.paint(.., |style, window, cx| ..)`, without a closure
+        final style = interactivity.paintBegin(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+        if (style == null) {
+            return;
+        }
+        // skip children
+        if (style.display != Display.None) {
             for (child in childElements) {
                 child.paint(window, cx);
             }
-        });
+        }
+        interactivity.paintEnd(bounds, window, cx);
     }
 
 }

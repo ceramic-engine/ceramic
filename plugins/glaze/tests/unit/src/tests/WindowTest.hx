@@ -87,6 +87,57 @@ class WindowTest extends TestCase {
         }
     }
 
+    function testTextStyleCompositionFollowsTheStack() {
+        // `textStyle()` composes the stack once per depth: pushes, pops and a
+        // replaced stack (deferred draws) compose again
+        open((window, cx) -> div());
+        inline function size(style:gpui.TextStyle):Float {
+            return switch style.fontSize {
+                case Pixels(value): value;
+                case _: Math.NaN;
+            }
+        }
+        function refinement(fontSize:Null<Float>, ?color:gpui.Hsla):gpui.TextStyleRefinement {
+            final result = new gpui.TextStyleRefinement();
+            if (fontSize != null) result.fontSize = gpui.AbsoluteLength.Pixels(fontSize);
+            if (color != null) result.color = color;
+            return result;
+        }
+        final a = refinement(10);
+        final b = refinement(20);
+        final c = refinement(null, red());
+        assertTrue(window.textStyle().equals(new gpui.TextStyle()), 'empty stack: default style');
+        window.pushTextStyle(a);
+        assertEquals(10.0, size(window.textStyle()));
+        window.pushTextStyle(c);
+        final ac = window.textStyle();
+        assertEquals(10.0, size(ac));
+        assertTrue(ac.color.equals(red()));
+        window.popTextStyle();
+        window.popTextStyle();
+        window.pushTextStyle(b);
+        window.pushTextStyle(c);
+        final bc = window.textStyle();
+        assertEquals(20.0, size(bc));
+        assertTrue(bc.color.equals(red()));
+        // The returned style is a copy that can be changed
+        bc.fontSize = gpui.AbsoluteLength.Pixels(99);
+        assertEquals(20.0, size(window.textStyle()));
+        window.popTextStyle();
+        assertEquals(20.0, size(window.textStyle()));
+        assertTrue(!window.textStyle().color.equals(red()));
+        window.popTextStyle();
+        // A stack replaced in place (like `prepaintDeferredDraws`)
+        final stack = @:privateAccess window.textStyleStack;
+        stack.push(a);
+        assertEquals(10.0, size(window.textStyle()));
+        stack.resize(0);
+        stack.push(b);
+        assertEquals(20.0, size(window.textStyle()));
+        stack.resize(0);
+        assertTrue(window.textStyle().equals(new gpui.TextStyle()));
+    }
+
     function testDashedBorderWithoutBackgroundIsSplitIntoStrips() {
         open((window, cx) -> div().child(div().w(px(100)).h(px(60)).border2().borderDashed().borderColor(red())));
         window.draw();

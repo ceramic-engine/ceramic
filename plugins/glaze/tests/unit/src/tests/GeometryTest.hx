@@ -18,6 +18,36 @@ class GeometryTest extends TestCase {
 
     // Rust #[cfg(test)]
 
+    function testIntersectContainsMatchesIntersectThenContains() {
+
+        // `Bounds.intersectContains` (hit testing without allocation) gives
+        // the result of `intersect(other).contains(point)`
+        var seed = 777;
+        function next():Float {
+            seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
+            final v = seed % 41;
+            // Edges, zeros (both signs), fractions and empty sizes
+            return switch v % 7 {
+                case 0: 0.0;
+                case 1: -1.0 * 0.0 * (seed > -1 ? 1 : 0);
+                case 2: v / 4.0 - 3.0;
+                case _: v - 20.0;
+            }
+        }
+        var checked = 0;
+        for (_ in 0...4000) {
+            final a = new gpui.Bounds(new gpui.Point(next(), next()), new gpui.Size(Math.abs(next()), Math.abs(next())));
+            final b = new gpui.Bounds(new gpui.Point(next(), next()), new gpui.Size(Math.abs(next()), Math.abs(next())));
+            final p = new gpui.Point(next(), next());
+            if (a.intersect(b).contains(p) != a.intersectContains(b, p)) {
+                fail('mismatch for $a $b $p');
+            }
+            checked++;
+        }
+        assertEquals(4000, checked);
+
+    }
+
     function testBoundsIntersects() {
 
         final bounds1 = b(0, 0, 5, 5);

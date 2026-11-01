@@ -128,11 +128,30 @@ private class MouseListenerEntry {
 
     public final kind:PlatformInputKind;
 
-    public final listener:(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App) -> Void;
+    public final listener:Null<(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App) -> Void>;
 
-    public function new(kind:PlatformInputKind, listener:(PlatformInput, DispatchPhase, Window, App) -> Void) {
+    /**
+     * Or an element listener called with `hitbox` (no closure binding the
+     * hitbox to the listener per element and per frame)
+     */
+    public final elementListener:Null<Interactivity.ElementMouseListener>;
+
+    public final hitbox:Null<Hitbox>;
+
+    public function new(kind:PlatformInputKind, listener:Null<(PlatformInput, DispatchPhase, Window, App) -> Void>, elementListener:Null<Interactivity.ElementMouseListener>, hitbox:Null<Hitbox>) {
         this.kind = kind;
         this.listener = listener;
+        this.elementListener = elementListener;
+        this.hitbox = hitbox;
+    }
+
+    public inline function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (elementListener != null) {
+            elementListener(event, phase, hitbox, window, cx);
+        }
+        else {
+            listener(event, phase, window, cx);
+        }
     }
 
 }
@@ -500,8 +519,7 @@ private class Frame {
         var i = hitboxes.length - 1;
         while (i >= 0) {
             final hitbox = hitboxes[i];
-            final bounds = hitbox.bounds.intersect(hitbox.contentMask.bounds);
-            if (bounds.contains(position)) {
+            if (hitbox.bounds.intersectContains(hitbox.contentMask.bounds, position)) {
                 hitTest.ids.push(hitbox.id);
                 if (!setHoverHitboxCount && hitbox.behavior == BlockMouseExceptScroll) {
                     hitTest.hoverHitboxCount = hitTest.ids.length;
@@ -1078,7 +1096,7 @@ class Window implements WindowInvalidator {
      * The line height of the current text style.
      */
     public function lineHeight():Pixels {
-        return textStyle().lineHeightInPixels(remSize());
+        return currentTextStyle().lineHeightInPixels(remSize());
     }
 
 /// Drawing
@@ -1695,41 +1713,71 @@ class Window implements WindowInvalidator {
      * The current text style. Which is composed of all the style refinements provided to `withTextStyle`.
      */
     public function textStyle():TextStyle {
-        final style = new TextStyle();
-        for (refinement in textStyleStack) {
-            style.refine(refinement);
-        }
-        return style;
+        return currentTextStyle().clone();
     }
 
-    final sharedTextStyleRefinements:Array<TextStyleRefinement> = [];
+    /**
+     * Composed text styles of the stack: entry `i` is the default style
+     * refined by `textStyleStack[0...i + 1]`. Entries are never modified once
+     * composed (they are shared by `currentTextStyle()`).
+     */
+    final textStyleCache:Array<TextStyle> = [];
 
-    var sharedTextStyle:Null<TextStyle> = null;
+    /** The refinement each entry of `textStyleCache` was composed with */
+    final textStyleCacheRefinements:Array<TextStyleRefinement> = [];
+
+    /**
+     * Number of valid entries of `textStyleCache` (lowered by every push and
+     * pop; entries whose refinement is no longer the one on the stack, after
+     * the stack was replaced, are also composed again).
+     */
+    var textStyleCacheValid:Int = 0;
+
+    static var defaultTextStyle:Null<TextStyle> = null;
 
     /**
      * The current text style, shared between calls while the text style
-     * stack holds the same refinements: must not be modified. Used for the
-     * cache keys of views (no allocation per view).
+     * stack holds the same refinements: must not be modified (`textStyle()`
+     * returns a copy to modify). Composed once per stack depth.
      */
     @:allow(gpui)
-    function sharedCurrentTextStyle():TextStyle {
+    function currentTextStyle():TextStyle {
         final stack = textStyleStack;
-        final cached = sharedTextStyleRefinements;
-        var same = sharedTextStyle != null && cached.length == stack.length;
-        if (same) {
-            for (i in 0...stack.length) {
-                if (stack[i] != cached[i]) {
-                    same = false;
-                    break;
-                }
+        final length = stack.length;
+        if (length == 0) {
+            var style = defaultTextStyle;
+            if (style == null) {
+                style = new TextStyle();
+                defaultTextStyle = style;
             }
+            return style;
         }
-        if (!same) {
-            sharedTextStyle = textStyle();
-            cached.resize(0);
-            for (refinement in stack) cached.push(refinement);
+        final cache = textStyleCache;
+        final refinements = textStyleCacheRefinements;
+        var index = 0;
+        final valid = textStyleCacheValid < length ? textStyleCacheValid : length;
+        while (index < valid && refinements[index] == stack[index]) {
+            index++;
         }
-        return sharedTextStyle;
+        while (index < length) {
+            final refinement = stack[index];
+            final style = index == 0 ? new TextStyle() : cache[index - 1].clone();
+            style.refine(refinement);
+            cache[index] = style;
+            refinements[index] = refinement;
+            index++;
+        }
+        textStyleCacheValid = length;
+        return cache[length - 1];
+    }
+
+    /**
+     * The current text style, shared (see `currentTextStyle()`). Used for
+     * the cache keys of views (no allocation per view).
+     */
+    @:allow(gpui)
+    inline function sharedCurrentTextStyle():TextStyle {
+        return currentTextStyle();
     }
 
     /**
@@ -1738,18 +1786,22 @@ class Window implements WindowInvalidator {
     public function withTextStyle<R>(style:Null<TextStyleRefinement>, f:Window->R):R {
         if (style == null)
             return f(this);
-        textStyleStack.push(style);
+        pushTextStyle(style);
         final result = f(this);
-        textStyleStack.pop();
+        popTextStyle();
         return result;
     }
 
     public inline function pushTextStyle(style:TextStyleRefinement):Void {
+        final length = textStyleStack.length;
+        if (textStyleCacheValid > length) textStyleCacheValid = length;
         textStyleStack.push(style);
     }
 
     public inline function popTextStyle():Void {
         textStyleStack.pop();
+        final length = textStyleStack.length;
+        if (textStyleCacheValid > length) textStyleCacheValid = length;
     }
 
     /**
@@ -3323,7 +3375,16 @@ class Window implements WindowInvalidator {
      * a specific need to register a global listener.
      */
     public function onMouseEvent(kind:PlatformInputKind, listener:(PlatformInput, DispatchPhase, Window, App) -> Void):Void {
-        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, listener));
+        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, listener, null, null));
+    }
+
+    /**
+     * Like `onMouseEvent()`, for a listener of an element called with its
+     * hitbox (the same as registering `(e, p, w, cx) -> listener(e, p, hitbox, w, cx)`).
+     */
+    @:allow(gpui)
+    function onElementMouseEvent(kind:PlatformInputKind, listener:Interactivity.ElementMouseListener, hitbox:Hitbox):Void {
+        nextFrame.mouseListeners.push(new MouseListenerEntry(kind, null, listener, hitbox));
     }
 
     /**
@@ -3832,7 +3893,7 @@ class Window implements WindowInvalidator {
         for (entry in mouseListeners) {
             if (entry.kind != kind)
                 continue;
-            entry.listener(event, Capture, this, cx);
+            entry.call(event, Capture, this, cx);
             if (!cx.propagateEvent) {
                 break;
             }
@@ -3846,7 +3907,7 @@ class Window implements WindowInvalidator {
                 i--;
                 if (entry.kind != kind)
                     continue;
-                entry.listener(event, Bubble, this, cx);
+                entry.call(event, Bubble, this, cx);
                 if (!cx.propagateEvent) {
                     break;
                 }

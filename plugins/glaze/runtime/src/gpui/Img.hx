@@ -240,6 +240,10 @@ class Img extends Element implements Styled {
 
                             final imageSize = data.renderSize(frameIndex);
 
+                            // This style is changed below (GPUI gets its own copy):
+                            // prepaint and paint compute theirs again
+                            interactivity.forgetComputedStyle();
+
                             if (!style.isSome(StyleRefinement.ASPECT_RATIO)) {
                                 style.aspectRatio = imageSize.width / imageSize.height;
                                 style.optionMask |= StyleRefinement.ASPECT_RATIO;
