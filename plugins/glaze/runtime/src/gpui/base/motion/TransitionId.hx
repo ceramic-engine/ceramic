@@ -75,7 +75,7 @@ abstract TransitionId(Array<ElementId>) {
     }
 
     public function toString():String {
-        return new GlobalElementId(this).key;
+        return GlobalElementId.keyOf(this);
     }
 
     /**

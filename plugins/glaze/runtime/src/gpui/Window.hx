@@ -62,7 +62,24 @@ class ElementStateBox<S> {
 
     public var value:Null<S> = null;
 
-    public function new() {}
+    /** The path of the element (Rust's `GlobalElementId` of the key) */
+    @:allow(gpui)
+    final node:GlobalElementId;
+
+    /** The id of the state type (Rust's `TypeId` of the key, see `ElementStateType`) */
+    @:allow(gpui)
+    final typeId:Int;
+
+    /** The frame whose element states hold this box (the box moves to the next frame when accessed) */
+    @:allow(gpui)
+    var owner:Frame;
+
+    @:allow(gpui)
+    function new(node:GlobalElementId, typeId:Int, owner:Frame) {
+        this.node = node;
+        this.typeId = typeId;
+        this.owner = owner;
+    }
 
 }
 
@@ -258,7 +275,8 @@ private class DeferredDraw {
 
     public var parentNode:Int;
 
-    public var elementIdStack:Array<ElementId>;
+    /** The element id path at the time of the call (Rust copies the id stack: the port keeps the interned node) */
+    public var elementIdNode:GlobalElementId;
 
     public var textStyleStack:Array<TextStyleRefinement>;
 
@@ -343,15 +361,22 @@ private class Frame {
 
     public final scene:Scene = new Scene();
 
-    public final elementStates:Map<String, ElementStateBox<Dynamic>> = new Map();
+    /**
+     * The element state boxes this frame owns (Rust `element_states`, a map
+     * by `(GlobalElementId, TypeId)`): the boxes hang on their path node
+     * (`GlobalElementId.states`) and record their owner, so this array may
+     * still list boxes that moved to the other frame since; `clear()` skips
+     * them.
+     */
+    public final elementStates:Array<ElementStateBox<Dynamic>> = [];
 
-    public final accessedElementStates:Array<String> = [];
+    public final accessedElementStates:Array<ElementStateBox<Dynamic>> = [];
 
     /**
-     * Keys of the element states accessed by reused prepaint and paint
-     * ranges: `finish()` moves them from the previous frame.
+     * Element states accessed by reused prepaint and paint ranges:
+     * `finish()` moves them from the previous frame.
      */
-    public final reusedElementStates:Array<String> = [];
+    public final reusedElementStates:Array<ElementStateBox<Dynamic>> = [];
 
     /** The focused handle when this frame was drawn */
     public var focus:Null<FocusHandle> = null;
@@ -395,7 +420,13 @@ private class Frame {
      * during the last frame: they are dropped, and models among them destroyed.
      */
     public function clear():Void {
-        for (key => state in elementStates) {
+        for (i in 0...elementStates.length) {
+            final state = elementStates[i];
+            if (state.owner != this) {
+                // Moved to the other frame when accessed
+                continue;
+            }
+            state.node.removeState(state);
             final value:Dynamic = state.value;
             if (value != null) {
                 if (Std.isOfType(value, Model)) {
@@ -409,7 +440,7 @@ private class Frame {
                 }
             }
         }
-        elementStates.clear();
+        elementStates.resize(0);
         accessedElementStates.resize(0);
         reusedElementStates.resize(0);
         scene.clear();
@@ -436,13 +467,11 @@ private class Frame {
      * accessed), then sorts the scene.
      */
     public function finish(previous:Frame):Void {
-        for (key in reusedElementStates) {
-            if (!elementStates.exists(key)) {
-                final state = previous.elementStates.get(key);
-                if (state != null) {
-                    previous.elementStates.remove(key);
-                    elementStates.set(key, state);
-                }
+        for (i in 0...reusedElementStates.length) {
+            final state = reusedElementStates[i];
+            if (state.owner == previous) {
+                state.owner = this;
+                elementStates.push(state);
             }
         }
         reusedElementStates.resize(0);
@@ -654,7 +683,11 @@ class Window implements WindowInvalidator {
 
     final elementOffsetStack:Array<Point> = [];
 
-    final elementIdStack:Array<ElementId> = [];
+    /** The root of the interned element id paths of this window (Rust `element_id_stack`, empty) */
+    final elementIdRoot:GlobalElementId = GlobalElementId.root();
+
+    /** The interned path of the current element id stack */
+    var elementIdNode:GlobalElementId;
 
     final remSizeOverrideStack:Array<Float> = [];
 
@@ -789,6 +822,7 @@ class Window implements WindowInvalidator {
         _isMinimizable = options.isMinimizable;
         renderedFrame = new Frame(app.keymap);
         nextFrame = new Frame(app.keymap);
+        elementIdNode = elementIdRoot;
 
         renderable = new SceneRenderable();
         renderable.size(options.width, options.height);
@@ -1485,27 +1519,29 @@ class Window implements WindowInvalidator {
 
     @:allow(gpui)
     inline function pushElementId(id:ElementId):Void {
-        elementIdStack.push(id);
+        elementIdNode = elementIdNode.child(id);
     }
 
     @:allow(gpui)
     inline function popElementId():Void {
-        elementIdStack.pop();
+        elementIdNode = elementIdNode.parent;
     }
 
     @:allow(gpui)
     function prepareElementId(id:ElementId):GlobalElementId {
-        elementIdStack.push(id);
-        return new GlobalElementId(elementIdStack.copy());
+        final node = elementIdNode.child(id);
+        elementIdNode = node;
+        return node;
     }
 
     /**
-     * Push a text style onto the stack, and call a function with that style active.
+     * Push an element id onto the stack, and call a function with that id active.
      */
     public function withId<R>(elementId:ElementIdArg, f:Window->R):R {
-        elementIdStack.push(elementId);
+        final node = elementIdNode;
+        elementIdNode = node.child(elementId);
         final result = f(this);
-        elementIdStack.pop();
+        elementIdNode = node;
         return result;
     }
 
@@ -1513,9 +1549,11 @@ class Window implements WindowInvalidator {
      * Calls the provided function with the `GlobalElementId` of the given element id appended to the current path.
      */
     public function withGlobalId<R>(elementId:ElementIdArg, f:(GlobalElementId, Window) -> R):R {
-        elementIdStack.push(elementId);
-        final result = f(new GlobalElementId(elementIdStack.copy()), this);
-        elementIdStack.pop();
+        final node = elementIdNode;
+        final child = node.child(elementId);
+        elementIdNode = child;
+        final result = f(child, this);
+        elementIdNode = node;
         return result;
     }
 
@@ -1533,41 +1571,40 @@ class Window implements WindowInvalidator {
      * Rust keys states by type: here `type` is that key.
      */
     public function withElementState<S, R>(globalId:GlobalElementId, type:Class<S>, f:(ElementStateBox<S>, Window) -> R):R {
-        final box = elementStateBox(globalId.key + '#' + Type.getClassName(type));
+        final box = elementStateBox(globalId, ElementStateType.of(type));
         return f(cast box, this);
     }
 
     /**
-     * The state box of the given element state key for this frame, moved
-     * from the last frame or created (the key is marked as accessed).
+     * The state box of the given path and state type for this frame, moved
+     * from the last frame or created (the state is marked as accessed; Rust
+     * `take_element_state` + `insert_element_state`).
      */
     @:allow(gpui)
-    function elementStateBox(key:String):ElementStateBox<Dynamic> {
-        nextFrame.accessedElementStates.push(key);
-        var box:ElementStateBox<Dynamic> = nextFrame.elementStates.get(key);
+    function elementStateBox(globalId:GlobalElementId, typeId:Int):ElementStateBox<Dynamic> {
+        final next = nextFrame;
+        var box = globalId.findState(typeId);
         if (box == null) {
-            box = renderedFrame.elementStates.get(key);
-            if (box != null) {
-                renderedFrame.elementStates.remove(key);
-            }
-            else {
-                box = new ElementStateBox<Dynamic>();
-            }
-            nextFrame.elementStates.set(key, box);
+            box = new ElementStateBox<Dynamic>(globalId, typeId, next);
+            globalId.addState(box);
+            next.elementStates.push(box);
         }
+        else if (box.owner != next) {
+            // Held by the rendered frame: moved to this one
+            box.owner = next;
+            next.elementStates.push(box);
+        }
+        next.accessedElementStates.push(box);
         return box;
     }
 
     /**
-     * The value of the given element state key, from this frame or the last
+     * The value of the given element state, from this frame or the last
      * one, without accessing it.
      */
     @:allow(gpui)
-    function peekElementState(key:String):Dynamic {
-        var box:ElementStateBox<Dynamic> = nextFrame.elementStates.get(key);
-        if (box == null) {
-            box = renderedFrame.elementStates.get(key);
-        }
+    function peekElementState(globalId:GlobalElementId, typeId:Int):Dynamic {
+        final box = globalId.findState(typeId);
         return box != null ? box.value : null;
     }
 
@@ -2393,7 +2430,7 @@ class Window implements WindowInvalidator {
         final draw = new DeferredDraw();
         draw.currentView = renderedEntityStack[renderedEntityStack.length - 1];
         draw.parentNode = nextFrame.dispatchTree.activeNodeId();
-        draw.elementIdStack = elementIdStack.copy();
+        draw.elementIdNode = elementIdNode;
         draw.textStyleStack = textStyleStack.copy();
         draw.contentMask = contentMask;
         draw.remSize = remSize();
@@ -2436,8 +2473,7 @@ class Window implements WindowInvalidator {
 
             for (index in deferredDrawOrder(roundStart, roundEnd)) {
                 final draw = nextFrame.deferredDraws[index];
-                elementIdStack.resize(0);
-                for (id in draw.elementIdStack) elementIdStack.push(id);
+                elementIdNode = draw.elementIdNode;
                 textStyleStack.resize(0);
                 for (style in draw.textStyleStack) textStyleStack.push(style);
                 nextFrame.dispatchTree.setActiveNode(draw.parentNode);
@@ -2460,7 +2496,7 @@ class Window implements WindowInvalidator {
                 draw.prepaintStart.copyFrom(prepaintStart);
             }
 
-            elementIdStack.resize(0);
+            elementIdNode = elementIdRoot;
             textStyleStack.resize(0);
             roundStart = roundEnd;
         }
@@ -2475,8 +2511,7 @@ class Window implements WindowInvalidator {
         final paintStart = scratchPaintIndex;
         for (index in deferredDrawOrder(0, draws.length)) {
             final draw = draws[index];
-            elementIdStack.resize(0);
-            for (id in draw.elementIdStack) elementIdStack.push(id);
+            elementIdNode = draw.elementIdNode;
             nextFrame.dispatchTree.setActiveNode(draw.parentNode);
 
             paintIndexInto(paintStart);
@@ -2496,7 +2531,7 @@ class Window implements WindowInvalidator {
             paintIndexInto(draw.paintEnd);
             draw.paintStart.copyFrom(paintStart);
         }
-        elementIdStack.resize(0);
+        elementIdNode = elementIdRoot;
     }
 
 /// View caching (Rust `prepaint_index`, `reuse_prepaint`, `paint_index`, `reuse_paint`)
@@ -2549,7 +2584,7 @@ class Window implements WindowInvalidator {
             final draw = new DeferredDraw();
             draw.currentView = source.currentView;
             draw.parentNode = source.parentNode - oldStart + newStart;
-            draw.elementIdStack = source.elementIdStack;
+            draw.elementIdNode = source.elementIdNode;
             draw.textStyleStack = source.textStyleStack;
             draw.contentMask = source.contentMask;
             draw.remSize = source.remSize;
@@ -4550,7 +4585,7 @@ class Window implements WindowInvalidator {
      */
     @:allow(gpui)
     function currentGlobalElementId():GlobalElementId {
-        return new GlobalElementId(elementIdStack.copy());
+        return elementIdNode;
     }
 
     @:allow(gpui)

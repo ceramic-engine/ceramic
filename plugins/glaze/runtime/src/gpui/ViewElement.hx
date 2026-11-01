@@ -121,9 +121,9 @@ class ViewElement extends Element {
     static inline final MODE_RETAINED_LAYOUT = 2;
 
     /**
-     * Element state key suffix of `ViewElementState`.
+     * Element state type id of `ViewElementState`.
      */
-    static inline final STATE_KEY = '#gpui.ViewElementState';
+    static final STATE_TYPE:Int = ElementStateType.of(ViewElementState);
 
     static final scratchPrepaintStart:PrepaintStateIndex = new PrepaintStateIndex();
 
@@ -151,7 +151,8 @@ class ViewElement extends Element {
 
     var state:Null<ViewElementState> = null;
 
-    var stateKey:Null<String> = null;
+    /** The path of this view's `ViewElementState`, `null` when it has none */
+    var stateId:Null<GlobalElementId> = null;
 
     var layoutAccessedStart:Int = 0;
 
@@ -269,10 +270,10 @@ class ViewElement extends Element {
         }
 
         if (defaultCaching(window)) {
-            stateKey = id.key + STATE_KEY;
+            stateId = id;
             layoutTextStyle = window.sharedCurrentTextStyle();
             if (!window.refreshing && !window.drawingClean && !window.isViewDirty(entityId)) {
-                final state:Null<ViewElementState> = window.peekElementState(stateKey);
+                final state:Null<ViewElementState> = window.peekElementState(stateId, STATE_TYPE);
                 final previousFrame = window.layoutFrame() - 1;
                 if (state != null
                     && state.layoutId != -1
@@ -317,8 +318,8 @@ class ViewElement extends Element {
             case MODE_RETAINED_LAYOUT:
                 prepaintRetainedLayout(id, bounds, window, cx);
             case _:
-                if (stateKey != null) {
-                    final box = window.elementStateBox(stateKey);
+                if (stateId != null) {
+                    final box = window.elementStateBox(stateId, STATE_TYPE);
                     if (box.value == null) {
                         box.value = new ViewElementState();
                     }
@@ -388,7 +389,7 @@ class ViewElement extends Element {
     }
 
     function prepaintRetainedLayout(id:GlobalElementId, bounds:Bounds, window:Window, cx:App):Void {
-        final box = window.elementStateBox(stateKey);
+        final box = window.elementStateBox(stateId, STATE_TYPE);
         final state:ViewElementState = box.value;
         this.state = state;
         final textStyle = window.sharedCurrentTextStyle();
@@ -440,8 +441,8 @@ class ViewElement extends Element {
      * GPUI's `prepaint_view` for a view cached with a style.
      */
     function prepaintCachedStyle(id:GlobalElementId, bounds:Bounds, window:Window, cx:App):Void {
-        stateKey = id.key + STATE_KEY;
-        final box = window.elementStateBox(stateKey);
+        stateId = id;
+        final box = window.elementStateBox(stateId, STATE_TYPE);
         final contentMask = window.contentMask();
         final textStyle = window.sharedCurrentTextStyle();
         final existing:Null<ViewElementState> = box.value;

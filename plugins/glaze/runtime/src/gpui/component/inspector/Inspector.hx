@@ -242,7 +242,7 @@ class Inspector {
 
     /** Rust `Display` of a `GlobalElementId`: the ids joined by `.` */
     public static function globalIdDisplay(id:GlobalElementId):String {
-        return [for (elementId in id.ids) elementIdDisplay(elementId)].join('.');
+        return [for (elementId in id.ids()) elementIdDisplay(elementId)].join('.');
     }
 
     #if gpui_inspector
