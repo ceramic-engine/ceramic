@@ -1019,9 +1019,15 @@ class Draw #if !completion implements spec.Draw #end {
                 untyped __cs__('cmd.SetRenderTarget(UnityEngine.Rendering.BuiltinRenderTextureType.CameraTarget)');
                 #end
 
+                // Project the actual pixels of the screen (the logical screen size,
+                // rounded up, may overflow it), so that one pixel is exactly one unit
+                // like in the camera, and textures rendered at screen density map 1:1
+                final pixelWidth = @:privateAccess ceramic.App.app.backend.screen.pixelWidth;
+                final pixelHeight = @:privateAccess ceramic.App.app.backend.screen.pixelHeight;
+
                 updateProjectionMatrix(
-                    ceramic.App.app.backend.screen.getWidth() * ceramic.App.app.backend.screen.getDensity(),
-                    ceramic.App.app.backend.screen.getHeight() * ceramic.App.app.backend.screen.getDensity()
+                    pixelWidth,
+                    pixelHeight
                 );
                 updateViewMatrix(
                     1,//ceramic.App.app.backend.screen.getDensity(),
@@ -1031,8 +1037,8 @@ class Draw #if !completion implements spec.Draw #end {
                 );
 
                 _viewportDensity = ceramic.App.app.backend.screen.getDensity();
-                _viewportWidth = ceramic.App.app.backend.screen.getWidth() * _viewportDensity;
-                _viewportHeight = ceramic.App.app.backend.screen.getHeight() * _viewportDensity;
+                _viewportWidth = pixelWidth;
+                _viewportHeight = pixelHeight;
 
                 updateCurrentMatrix();
             }

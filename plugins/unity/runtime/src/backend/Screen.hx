@@ -34,8 +34,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         isEditor = untyped __cs__('UnityEngine.Application.isEditor');
 
-        width = untyped __cs__('UnityEngine.Screen.width');
-        height = untyped __cs__('UnityEngine.Screen.height');
+        pixelWidth = untyped __cs__('UnityEngine.Screen.width');
+        pixelHeight = untyped __cs__('UnityEngine.Screen.height');
 
         if (!isEditor) {
             var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
@@ -47,10 +47,40 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         else {
             density = 1;
         }
-        width = Math.round(width / density);
-        height = Math.round(height / density);
+        width = toLogicalSize(pixelWidth, density);
+        height = toLogicalSize(pixelHeight, density);
 
     }
+
+    #if !no_backend_docs
+    /**
+     * Converts a size in pixels to a logical size, rounded up so that
+     * the logical area always covers every pixel of the screen
+     * (slightly overflowing it if needed), with a small tolerance
+     * for density values that are not exact as floats.
+     */
+    #end
+    inline static function toLogicalSize(pixelSize:Int, density:Float):Int {
+
+        return Math.ceil(pixelSize / density - 0.0001);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Current screen width in actual pixels.
+     */
+    #end
+    @:allow(backend.Draw)
+    var pixelWidth:Int = 0;
+
+    #if !no_backend_docs
+    /**
+     * Current screen height in actual pixels.
+     */
+    #end
+    @:allow(backend.Draw)
+    var pixelHeight:Int = 0;
 
     #if !no_backend_docs
     /**
@@ -259,8 +289,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @:allow(backend.Backend)
     function update() {
 
-        var newWidth = untyped __cs__('UnityEngine.Screen.width');
-        var newHeight = untyped __cs__('UnityEngine.Screen.height');
+        pixelWidth = untyped __cs__('UnityEngine.Screen.width');
+        pixelHeight = untyped __cs__('UnityEngine.Screen.height');
 
         var newDensity:Float = 1;
         if (!isEditor) {
@@ -269,9 +299,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             if (newDensity < 1) {
                 newDensity = 1;
             }
-            newWidth = Math.round(newWidth / newDensity);
-            newHeight = Math.round(newHeight / newDensity);
         }
+        var newWidth = toLogicalSize(pixelWidth, newDensity);
+        var newHeight = toLogicalSize(pixelHeight, newDensity);
 
         var didResize = (width != newWidth) || (height != newHeight) || (density != newDensity);
 
@@ -337,7 +367,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         if (mouse != null) {
 
             var newMouseX = mouse.position.x.ReadValue() / density;
-            var newMouseY = height - mouse.position.y.ReadValue() / density;
+            var newMouseY = (pixelHeight - mouse.position.y.ReadValue()) / density;
 
             // Use a factor to try to get a consistent value with other targets
             var mouseScrollX = Math.floor(mouse.scroll.x.ReadValue());
@@ -519,7 +549,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
                         // Emit touch down
                         var x = positionX;
-                        var y = height - positionY;
+                        var y = pixelHeight / density - positionY;
                         emitTouchDown(index - 1, x, y);
                     }
                     processedTouchIndexes[i] = index;
@@ -532,7 +562,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                         if (deltaX != 0 || deltaY != 0) {
                             // Emit touch move
                             var x = positionX;
-                            var y = height - positionY;
+                            var y = pixelHeight / density - positionY;
                             emitTouchMove(index - 1, x, y);
                         }
                     }
@@ -540,7 +570,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     else if (phase == TouchPhase.Ended || phase == TouchPhase.Canceled) {
                         // Emit touch up
                         var x = positionX;
-                        var y = height - positionY;
+                        var y = pixelHeight / density - positionY;
                         emitTouchUp(index - 1, x, y);
 
                         usedTouchIndexes.remove(index);
@@ -572,7 +602,7 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
                     // and emit touch up
 
                     var x = prevProcessedTouchPositions[i * 2];
-                    var y = prevProcessedTouchPositions[i * 2 + 1];
+                    var y = pixelHeight / density - prevProcessedTouchPositions[i * 2 + 1];
                     emitTouchUp(prevIndex - 1, x, y);
 
                     var touchId = usedTouchIndexes.get(prevIndex);
