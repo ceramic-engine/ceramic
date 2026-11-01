@@ -400,9 +400,19 @@ class Filter extends Layer implements Observable {
 
         var texture = mesh != null ? mesh.texture : this.texture;
 
+        // Size of the filter before any texture assignment (which resets the frame, thus the size)
+        var prevWidth = width;
+        var prevHeight = height;
+
+        // Compare render texture sizes in pixels: the logical size of the texture (pixels / density)
+        // is not an integer when filter size * density isn't, and would never match the filter size
+        var textureDensity = density != -1 ? density : screen.texturesDensity;
+        var texturePixelWidth = Math.round(filterWidth * textureDensity);
+        var texturePixelHeight = Math.round(filterHeight * textureDensity);
+
         if (enabled) {
             if (meshDirty || renderTexture == null ||
-                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.width != filterWidth || renderTexture.height != filterHeight || (density != -1 && renderTexture.density != density) || renderTexture.depth != depthBuffer || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
+                ((textureTilePacker == null || !textureTilePacker.managesTexture(renderTexture)) && (renderTexture.nativeWidth != texturePixelWidth || renderTexture.nativeHeight != texturePixelHeight || (density != -1 && renderTexture.density != density) || renderTexture.depth != depthBuffer || renderTexture.stencil != stencil || renderTexture.antialiasing != antialiasing)) ||
                 (textureTilePacker != null && !textureTilePacker.managesTexture(renderTexture)) ||
                 (textureTile != null && (textureTile.frameWidth != filterWidth || textureTile.frameHeight != filterHeight))
                 ) {
@@ -454,6 +464,14 @@ class Filter extends Layer implements Observable {
         }
         else {
             this.texture = texture;
+            if (texture != null && tile == null) {
+                // Display exactly the filter area of the render texture, at the filter size:
+                // texels then map 1:1 to pixels, and assigning the texture doesn't resize the filter
+                frameX = 0;
+                frameY = 0;
+                frameWidth = prevWidth;
+                frameHeight = prevHeight;
+            }
         }
         meshDirty = false;
 
