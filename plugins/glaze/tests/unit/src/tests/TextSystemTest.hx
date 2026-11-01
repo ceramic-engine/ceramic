@@ -69,8 +69,18 @@ class TextSystemTest extends TestCase {
         // Same descriptor, same id; another descriptor of the same face, another id (like cosmic)
         assertEquals((ts.resolveFont(Font.of('Inter')):Int), (ts.resolveFont(Font.of('Inter')):Int));
         assertTrue((ts.resolveFont(Font.of('.SystemUIFont')):Int) != (ts.resolveFont(Font.of('Inter')):Int));
-        // No fallback family is available: GPUI panics, the port throws
-        assertRaises(() -> ts.resolveFont(Font.of('Missing Family')));
+        // An unknown family resolves through GPUI's fallback stack, whose
+        // first entry is `.ZedMono` (Lilex, standing in for the monospace
+        // font), like GPUI on a machine that has those fonts; it only throws
+        // when the stack fails too
+        assertEquals('JetBrains Mono', TextFixtures.familyOf(ts.resolveFont(Font.of('Missing Family'))));
+        // A well known family that is not loaded stands in for a loaded one of
+        // the same kind (the role of fontconfig substitutions on GPUI's Linux
+        // platform): gpui-kit themes ask for Menlo, the bundled fonts answer
+        assertEquals('JetBrains Mono', TextFixtures.familyOf(ts.resolveFont(Font.of('Menlo'))));
+        assertEquals('JetBrains Mono', TextFixtures.familyOf(ts.resolveFont(Font.of('monospace'))));
+        assertEquals('Inter', TextFixtures.familyOf(ts.resolveFont(Font.of('Helvetica'))));
+        assertEquals('Inter', TextFixtures.familyOf(ts.resolveFont(Font.of('sans-serif'))));
         assertEquals(['Inter', 'JetBrains Mono'].join(','), ts.allFontNames().join(','));
     }
 

@@ -19,10 +19,25 @@ import gpui.Window.ElementStateBox;
  *
  * Segments compare by value like Rust's `ElementId: Hash + Eq`: `View(5)` and
  * `Integer(5)` are different, `Name('a')` equals another `Name('a')`.
+ *
+ * GPUI does not intern its ids, so it has no growth: here ids that change
+ * every frame would grow the trie without bound. `ElementIdTrie.endFrame()`
+ * stamps the frame on each visited node and, once the trie is large and has
+ * doubled since the last sweep, drops the nodes not visited for two frames
+ * that hold no element state and have no live child (bottom up, so a node
+ * with a state or with a descendant holding one is always kept).
  */
 class GlobalElementId {
 
     static var nextId:Int = 1;
+
+    /** The trie this node belongs to (frame counter and node count) */
+    @:allow(gpui)
+    final trie:ElementIdTrie;
+
+    /** The last frame of the trie that reached this node through `child()` */
+    @:allow(gpui)
+    var lastVisit:Int = 0;
 
     /** Stable integer id of this path (unique within the process). */
     public final id:Int;
@@ -57,32 +72,41 @@ class GlobalElementId {
     @:allow(gpui)
     var states:Null<Array<ElementStateBox<Dynamic>>> = null;
 
-    function new(parent:Null<GlobalElementId>, segment:Null<ElementId>) {
+    function new(trie:ElementIdTrie, parent:Null<GlobalElementId>, segment:Null<ElementId>) {
         #if gpui_count_allocations gpui.util.AllocationCounters.globalElementIds++; #end
         this.id = nextId++;
+        this.trie = trie;
         this.parent = parent;
         this.segment = segment;
         this.depth = parent != null ? parent.depth + 1 : 0;
+        this.lastVisit = trie.frame;
+        trie.nodeCount++;
     }
 
     /**
-     * The root of a trie (the empty path).
+     * The root of a new trie (the empty path).
      */
     public static function root():GlobalElementId {
-        return new GlobalElementId(null, null);
+        return new GlobalElementId(new ElementIdTrie(), null, null);
     }
 
     /**
      * The interned node of this path followed by `id`.
      */
     public function child(id:ElementId):GlobalElementId {
+        final node = lookupChild(id);
+        node.lastVisit = trie.frame;
+        return node;
+    }
+
+    function lookupChild(id:ElementId):GlobalElementId {
         switch id {
             case View(entityId):
                 var map = viewChildren;
                 if (map == null) map = viewChildren = new IntMap();
                 var node = map.get(entityId);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     map.set(entityId, node);
                 }
                 return node;
@@ -91,7 +115,7 @@ class GlobalElementId {
                 if (map == null) map = integerChildren = new IntMap();
                 var node = map.get(value);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     map.set(value, node);
                 }
                 return node;
@@ -100,7 +124,7 @@ class GlobalElementId {
                 if (map == null) map = nameChildren = new Map();
                 var node = map.get(name);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     map.set(name, node);
                 }
                 return node;
@@ -114,7 +138,7 @@ class GlobalElementId {
                 }
                 var node = byInt.get(value);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     byInt.set(value, node);
                 }
                 return node;
@@ -128,20 +152,20 @@ class GlobalElementId {
                 }
                 var node = byInt.get(line);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     byInt.set(line, node);
                 }
                 return node;
             case NamedChild(parentId, name):
                 var base = namedChildBase;
-                if (base == null) base = namedChildBase = new GlobalElementId(null, null);
-                // `base.child(parentId)` is a helper node too: it is never a path
-                final helper = base.child(parentId);
+                if (base == null) base = namedChildBase = new GlobalElementId(trie, null, null);
+                // `base.lookupChild(parentId)` is a helper node too: it is never a path
+                final helper = base.lookupChild(parentId);
                 var map = helper.nameChildren;
                 if (map == null) map = helper.nameChildren = new Map();
                 var node = map.get(name);
                 if (node == null) {
-                    node = new GlobalElementId(this, id);
+                    node = new GlobalElementId(trie, this, id);
                     map.set(name, node);
                 }
                 return node;
@@ -176,6 +200,97 @@ class GlobalElementId {
     @:allow(gpui)
     function removeState(box:ElementStateBox<Dynamic>):Void {
         if (states != null) states.remove(box);
+    }
+
+    /**
+     * Drops the stale descendants of this node (not visited since `minVisit`,
+     * without element state, without a kept child) and returns whether this
+     * node is stale itself (the caller detaches it).
+     */
+    @:allow(gpui)
+    function sweep(minVisit:Int):Bool {
+        var live = false;
+        if (viewChildren != null && !sweepIntMap(viewChildren, minVisit)) live = true;
+        if (integerChildren != null && !sweepIntMap(integerChildren, minVisit)) live = true;
+        if (nameChildren != null && !sweepStringMap(nameChildren, minVisit)) live = true;
+        if (namedIntegerChildren != null && !sweepNestedMap(namedIntegerChildren, minVisit)) live = true;
+        if (codeLocationChildren != null && !sweepNestedMap(codeLocationChildren, minVisit)) live = true;
+        if (namedChildBase != null) {
+            if (namedChildBase.sweep(minVisit)) {
+                namedChildBase.detach();
+                namedChildBase = null;
+            }
+            else {
+                live = true;
+            }
+        }
+        if (live || lastVisit >= minVisit || (states != null && states.length > 0)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** Sweeps the nodes of a map; returns true when the map is empty afterwards */
+    static function sweepIntMap(map:IntMap<GlobalElementId>, minVisit:Int):Bool {
+        var empty = true;
+        var swept:Null<Array<Int>> = null;
+        for (key => node in map) {
+            if (node.sweep(minVisit)) {
+                if (swept == null) swept = [];
+                swept.push(key);
+                node.detach();
+            }
+            else {
+                empty = false;
+            }
+        }
+        // Removed after the iteration: maps are not changed while iterated
+        if (swept != null) {
+            for (key in swept) map.remove(key);
+        }
+        return empty;
+    }
+
+    static function sweepStringMap(map:Map<String, GlobalElementId>, minVisit:Int):Bool {
+        var empty = true;
+        var swept:Null<Array<String>> = null;
+        for (key => node in map) {
+            if (node.sweep(minVisit)) {
+                if (swept == null) swept = [];
+                swept.push(key);
+                node.detach();
+            }
+            else {
+                empty = false;
+            }
+        }
+        if (swept != null) {
+            for (key in swept) map.remove(key);
+        }
+        return empty;
+    }
+
+    static function sweepNestedMap(map:Map<String, IntMap<GlobalElementId>>, minVisit:Int):Bool {
+        var empty = true;
+        var swept:Null<Array<String>> = null;
+        for (key => byInt in map) {
+            if (sweepIntMap(byInt, minVisit)) {
+                if (swept == null) swept = [];
+                swept.push(key);
+            }
+            else {
+                empty = false;
+            }
+        }
+        if (swept != null) {
+            for (key in swept) map.remove(key);
+        }
+        return empty;
+    }
+
+    /** Called on a swept node: it is no longer counted (its children were swept before it) */
+    function detach():Void {
+        trie.nodeCount--;
     }
 
     /**
@@ -233,6 +348,51 @@ class GlobalElementId {
 
     public function toString():String {
         return key;
+    }
+
+}
+
+/**
+ * The bookkeeping shared by the nodes of one trie (one per window): the
+ * frame counter stamped on visited nodes, the node count and the sweep
+ * thresholds.
+ */
+class ElementIdTrie {
+
+    /** Sweep only above this many nodes */
+    public static inline final MIN_SWEEP_NODES = 4096;
+
+    /** A node not visited for this many frames is stale */
+    public static inline final STALE_FRAMES = 2;
+
+    /** The current frame (advanced by `endFrame()`) */
+    public var frame:Int = 0;
+
+    /** Live nodes (the root, the paths and the `NamedChild` helper nodes) */
+    public var nodeCount:Int = 0;
+
+    /** Node count after the last sweep (or at the start) */
+    public var lastSweepCount:Int = 0;
+
+    /** Number of sweeps run (tests) */
+    public var sweeps:Int = 0;
+
+    public function new() {}
+
+    /**
+     * Ends the frame drawn with `root` as the empty path: nodes created or
+     * reached from now on carry the next frame, and the trie is swept when
+     * it holds more than `MIN_SWEEP_NODES` nodes and twice the nodes it had
+     * after the last sweep.
+     */
+    public function endFrame(root:GlobalElementId):Void {
+        frame++;
+        if (nodeCount > MIN_SWEEP_NODES && nodeCount > lastSweepCount * 2) {
+            // The frame just drawn is `frame - 1`: stale means not visited by it nor by the one before
+            root.sweep(frame - STALE_FRAMES);
+            lastSweepCount = nodeCount;
+            sweeps++;
+        }
     }
 
 }

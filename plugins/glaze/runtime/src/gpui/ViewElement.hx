@@ -31,6 +31,13 @@ class ViewElementState {
 
     /** The layout subtree of the view (default caching), and the layout frame it was recorded in */
     public var layoutId:Int = -1;
+
+    /**
+     * The layout nodes the view requested when it last rendered, in request
+     * order (nested views excluded): adopted when it renders again while
+     * its layout is retained (see `TaffyLayoutEngine.beginViewNodes`)
+     */
+    public var layoutNodes:Null<Array<Int>> = null;
     public var layoutFrame:Int = -1;
 
     /**
@@ -102,8 +109,10 @@ class ViewElementState {
  *   during the previous frame (so it is laid out exactly as if it had
  *   rendered, mostly from taffy's cache), then reuses its prepaint and paint
  *   when its context didn't change (bounds, content mask, text styles, rem
- *   size, opacity, group hitboxes, image cache). If the context changed, it
- *   renders in prepaint and its new layout subtree replaces the retained one.
+ *   size, opacity, group hitboxes, image cache). If the context changed (it
+ *   moved), it renders in prepaint: its layout requests adopt the retained
+ *   nodes (same layout, nothing laid out again), or if they don't match,
+ *   its new layout subtree replaces the retained one.
  *   Nested views are reused independently of their parent: a dirty view
  *   renders again, its clean descendants are reused.
  * - `.uncached()`: the view renders every frame.
@@ -157,6 +166,9 @@ class ViewElement extends Element {
     var layoutAccessedStart:Int = 0;
 
     var layoutAccessedEnd:Int = 0;
+
+    /** The layout nodes requested by the last render (see `ViewElementState.layoutNodes`) */
+    var layoutNodes:Null<Array<Int>> = null;
 
     function new() {
         #if gpui_count_allocations gpui.util.AllocationCounters.viewElements++; #end
@@ -231,17 +243,20 @@ class ViewElement extends Element {
      * Renders the view and requests the layout of its element, in the view's
      * tracker capture.
      */
-    function renderAndRequestLayout(window:Window, cx:App):LayoutId {
+    function renderAndRequestLayout(window:Window, cx:App, ?adopt:Array<Int>):LayoutId {
         window.beginRenderedView(view, true);
+        window.beginViewLayoutNodes(adopt);
         var layoutId:LayoutId = 0;
         try {
             rendered = renderView(window, cx);
             layoutId = rendered.requestLayout(window, cx);
         }
         catch (e:haxe.Exception) {
+            layoutNodes = window.endViewLayoutNodes();
             window.endRenderedView();
             throw e;
         }
+        layoutNodes = window.endViewLayoutNodes();
         window.endRenderedView();
         return layoutId;
     }
@@ -332,6 +347,7 @@ class ViewElement extends Element {
                     state.layoutTextStyle = layoutTextStyle;
                     state.layoutAccessedStart = layoutAccessedStart;
                     state.layoutAccessedEnd = layoutAccessedEnd;
+                    state.layoutNodes = layoutNodes;
                 }
                 else {
                     window.beginRenderedView(view, false);
@@ -408,21 +424,15 @@ class ViewElement extends Element {
             return;
         }
 
-        // The context changed: render again (the view is clean, so its new
-        // layout subtree has the same layout as the retained one).
+        // The context changed (it moved, scrolling): render again. The view
+        // is clean, so it requests the same nodes as last time: they adopt
+        // the retained ones, already laid out, and nothing is laid out again.
+        // Otherwise its new subtree replaces the retained one, laid out again.
         final oldRoot = layoutId;
-        window.beginRenderedView(view, true);
-        var newRoot:LayoutId = 0;
-        try {
-            rendered = renderView(window, cx);
-            newRoot = rendered.requestLayout(window, cx);
-        }
-        catch (e:haxe.Exception) {
-            window.endRenderedView();
-            throw e;
-        }
-        window.endRenderedView();
-        if (!window.replaceRetainedLayout(oldRoot, newRoot)) {
+        final newRoot = renderAndRequestLayout(window, cx, state.layoutNodes);
+        final adopted = window.viewLayoutNodesAdopted() && newRoot == oldRoot;
+        state.layoutNodes = layoutNodes;
+        if (!adopted && !window.replaceRetainedLayout(oldRoot, newRoot)) {
             ceramic.Shortcuts.log.warning('View ${Type.getClassName(Type.getClass(view))} rendered a different layout without being notified: it will render again on the next frame');
             window.invalidateViewForNextFrame(entityId);
         }
@@ -476,16 +486,19 @@ class ViewElement extends Element {
         window.refreshing = true;
         window.prepaintIndexInto(state.prepaintStart);
         window.beginRenderedView(view, true);
+        window.viewDependencies.cachedStyleDepth++;
         try {
             rendered = renderView(window, cx);
             rendered.layoutAsRoot(new SizeOf<AvailableSpace>(AvailableSpace.Definite(bounds.size.width), AvailableSpace.Definite(bounds.size.height)), window, cx);
             rendered.prepaintAt(bounds.origin, window, cx);
         }
         catch (e:haxe.Exception) {
+            window.viewDependencies.cachedStyleDepth--;
             window.endRenderedView();
             window.refreshing = refreshing;
             throw e;
         }
+        window.viewDependencies.cachedStyleDepth--;
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
         window.refreshing = refreshing;
@@ -512,13 +525,16 @@ class ViewElement extends Element {
             if (mode == MODE_CACHED_STYLE) {
                 final refreshing = window.refreshing;
                 window.refreshing = true;
+                window.viewDependencies.cachedStyleDepth++;
                 try {
                     paintRendered(window, cx);
                 }
                 catch (e:haxe.Exception) {
+                    window.viewDependencies.cachedStyleDepth--;
                     window.refreshing = refreshing;
                     throw e;
                 }
+                window.viewDependencies.cachedStyleDepth--;
                 window.refreshing = refreshing;
             }
             else {

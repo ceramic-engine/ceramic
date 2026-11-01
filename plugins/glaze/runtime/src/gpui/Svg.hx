@@ -71,8 +71,31 @@ class Svg extends Element implements Styled {
     /** Set the SVG data directly (a deterministic path derived from it is used as the atlas key). */
     public function data(data:Bytes):Svg {
         dataValue = data;
-        dataPath = '__binary_svg__' + haxe.crypto.Md5.make(data).toHex();
+        dataPath = dataPathOf(data);
         return this;
+    }
+
+    /**
+     * The atlas key of SVG data, an MD5 of the bytes, cached per `Bytes`
+     * instance: elements are rebuilt every frame, usually from the same
+     * static bytes, and hashing them each time showed in the profiles.
+     */
+    static final dataPaths = new haxe.ds.ObjectMap<Bytes, String>();
+
+    static var dataPathCount = 0;
+
+    static function dataPathOf(data:Bytes):String {
+        var path = dataPaths.get(data);
+        if (path == null) {
+            if (dataPathCount >= 1024) {
+                dataPaths.clear();
+                dataPathCount = 0;
+            }
+            path = '__binary_svg__' + haxe.crypto.Md5.make(data).toHex();
+            dataPaths.set(data, path);
+            dataPathCount++;
+        }
+        return path;
     }
 
     /** Transform the SVG element with the given transformation. */

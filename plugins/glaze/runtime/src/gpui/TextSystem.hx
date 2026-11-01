@@ -45,7 +45,8 @@ class TextSystem {
 
     final rasterBoundsCache:GlyphCache<Bounds> = new GlyphCache();
 
-    final wrapperPool:Map<String, LineWrapper> = new Map();
+    /** Line wrappers by font id, then by exact font size (few sizes per font) */
+    final wrapperPool:haxe.ds.IntMap<Array<LineWrapper>> = new haxe.ds.IntMap();
 
     /**
      * Families tried, in order, when a font cannot be resolved.
@@ -331,12 +332,20 @@ class TextSystem {
      */
     public function lineWrapper(font:Font, fontSize:Pixels):LineWrapper {
         final fontId = resolveFont(font);
-        final key = (fontId:Int) + ':' + (fontSize:Float);
-        var wrapper = wrapperPool.get(key);
-        if (wrapper == null) {
-            wrapper = new LineWrapper(fontId, fontSize, this);
-            wrapperPool.set(key, wrapper);
+        var wrappers = wrapperPool.get(fontId);
+        if (wrappers == null) {
+            wrappers = [];
+            wrapperPool.set(fontId, wrappers);
         }
+        final size:Float = fontSize;
+        for (i in 0...wrappers.length) {
+            final wrapper = wrappers[i];
+            if ((wrapper.fontSize:Float) == size) {
+                return wrapper;
+            }
+        }
+        final wrapper = new LineWrapper(fontId, fontSize, this);
+        wrappers.push(wrapper);
         return wrapper;
     }
 

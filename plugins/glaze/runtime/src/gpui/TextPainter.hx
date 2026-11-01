@@ -272,7 +272,10 @@ class TextPainter {
             tile = atlas.getOrInsertWith(AtlasKey.Glyph(key), () -> {
                 final bytes = textSystem.rasterizeGlyph(key);
                 final bounds = textSystem.rasterBounds(key);
-                return new AtlasTileSource(Std.int(bounds.size.width), Std.int(bounds.size.height), bytes);
+                final source = new AtlasTileSource(Std.int(bounds.size.width), Std.int(bounds.size.height), bytes);
+                // Color glyphs are straight alpha BGRA, like GPUI's
+                source.straightAlpha = true;
+                return source;
             });
             if (tile == null)
                 throw 'Callback above only errors or returns Some';

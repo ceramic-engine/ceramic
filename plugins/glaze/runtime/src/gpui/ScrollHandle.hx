@@ -192,6 +192,21 @@ class ScrollHandle {
     }
 
     /**
+     * Port (default view caching): records that the view being drawn shows
+     * the element tracking this handle as it is now (see `ViewDependencies`).
+     */
+    @:allow(gpui)
+    function recordView(window:Window):Void {
+        final state = this.state;
+        final offset = state.offset.value;
+        final activeItemIndex = state.activeItemIndex;
+        final scrollToBottom = state.scrollToBottom;
+        window.viewDependencies.record(window, state, () -> !state.offset.value.equals(offset)
+            || state.activeItemIndex != activeItemIndex
+            || state.scrollToBottom != scrollToBottom);
+    }
+
+    /**
      * Scrolls to the bottom.
      */
     public function scrollToBottom():Void {

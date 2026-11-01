@@ -1020,6 +1020,17 @@ class ListState {
 
 /// Element support
 
+    /**
+     * Port (default view caching): records that the view being drawn shows
+     * this list as it is now (see `ViewDependencies`).
+     */
+    @:allow(gpui)
+    function recordView(window:Window):Void {
+        final anchor = scrollAnchor;
+        final items = this.items;
+        window.viewDependencies.record(window, this, () -> scrollAnchor != anchor || this.items != items || resetPending);
+    }
+
     @:allow(gpui)
     inline function getLastLayoutBounds():Null<Bounds> {
         return lastLayoutBounds;

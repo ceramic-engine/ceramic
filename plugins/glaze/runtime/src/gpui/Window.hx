@@ -647,6 +647,10 @@ class Window implements WindowInvalidator {
     /** Views notified since the last frame (Rust: the invalidator's dirty views) */
     final pendingDirtyViews:IntMap<Bool> = new IntMap();
 
+    /** Shared scroll states read by the views cached by default (port, see `ViewDependencies`) */
+    @:allow(gpui)
+    final viewDependencies:ViewDependencies = new ViewDependencies();
+
     /** Hitbox ids of the groups being prepainted (see `ViewElement` cache keys) */
     @:allow(gpui)
     final prepaintGroupHitboxes:Array<Int> = [];
@@ -666,6 +670,9 @@ class Window implements WindowInvalidator {
     var _remSize:Float;
 
     var _viewportSize:Size;
+
+    /** The content mask of the whole window (`contentMask()` when the stack is empty), rebuilt on resize */
+    var windowContentMask:ContentMask;
 
     final layoutEngine:TaffyLayoutEngine = new TaffyLayoutEngine();
 
@@ -817,6 +824,7 @@ class Window implements WindowInvalidator {
         _scaleFactor = options.scaleFactor != null ? options.scaleFactor : ceramic.App.app.screen.density;
         _remSize = options.remSize;
         _viewportSize = new Size(options.width, options.height);
+        windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
         _active = options.active;
         _isResizable = options.isResizable;
         _isMinimizable = options.isMinimizable;
@@ -1014,6 +1022,7 @@ class Window implements WindowInvalidator {
      */
     public function resize(width:Float, height:Float):Void {
         _viewportSize = new Size(width, height);
+        windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
         renderable.size(width, height);
         refresh();
     }
@@ -1123,6 +1132,8 @@ class Window implements WindowInvalidator {
             markViewDirty(entityId);
         }
         pendingDirtyViews.clear();
+        // Default view caching: views whose scroll states changed render again
+        viewDependencies.invalidateChanged(renderedFrame.dispatchTree, markViewDirty);
 
         dirty = false;
         renderedViews.clear();
@@ -1189,6 +1200,8 @@ class Window implements WindowInvalidator {
         renderedFrame = nextFrame;
         nextFrame = previous;
         nextFrame.clear();
+        // Dropped states are detached from their id nodes: the trie can be swept
+        elementIdRoot.trie.endFrame(elementIdRoot);
         renderable.scene = renderedFrame.scene;
         final currentFocusPath = renderedFrame.focusPath();
         final currentWindowActive = renderedFrame.windowActive;
@@ -1509,10 +1522,38 @@ class Window implements WindowInvalidator {
      * GPUI itself automatically in order to pass your element its `Bounds` automatically.
      */
     public function layoutBounds(layoutId:LayoutId):Bounds {
+        computeLayoutBounds(layoutId);
+        return new Bounds(new Point(layoutBoundsX, layoutBoundsY), layoutBoundsSize);
+    }
+
+    // Result of `computeLayoutBounds()`: the bounds of a layout id without a `Bounds`
+    @:allow(gpui) var layoutBoundsX:Float = 0;
+    @:allow(gpui) var layoutBoundsY:Float = 0;
+    @:allow(gpui) var layoutBoundsSize:Size = null;
+
+    /**
+     * Computes the bounds of the given `LayoutId` relative to the window into
+     * `layoutBoundsX`, `layoutBoundsY` and `layoutBoundsSize` (what
+     * `layoutBounds()` returns, without allocating): for callers that only
+     * read them.
+     */
+    @:allow(gpui)
+    function computeLayoutBounds(layoutId:LayoutId):Void {
         final bounds = layoutEngine.layoutBounds(layoutId, _scaleFactor);
-        // Always add the offset like GPUI does, even when it is zero:
+        final offset = elementOffset();
+        // Always add the snapped offset like GPUI does, even when it is zero:
         // `-0.0 + 0.0` is `+0.0`, so skipping it would keep a negative zero
-        return bounds.add(pixelSnapPoint(elementOffset()));
+        layoutBoundsX = bounds.origin.x + pixelSnap(offset.x);
+        layoutBoundsY = bounds.origin.y + pixelSnap(offset.y);
+        layoutBoundsSize = bounds.size;
+    }
+
+    /**
+     * A `Bounds` of the last `computeLayoutBounds()` result.
+     */
+    @:allow(gpui)
+    inline function computedLayoutBounds():Bounds {
+        return new Bounds(new Point(layoutBoundsX, layoutBoundsY), layoutBoundsSize);
     }
 
 /// Element ids and element state
@@ -1718,7 +1759,7 @@ class Window implements WindowInvalidator {
         if (contentMaskStack.length > 0) {
             return contentMaskStack[contentMaskStack.length - 1];
         }
-        return new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
+        return windowContentMask;
     }
 
     /**
@@ -2670,6 +2711,14 @@ class Window implements WindowInvalidator {
 /// View caching: debugging
 
     /**
+     * Number of layout runs (a layout root computed by taffy) since the
+     * window was opened, for tests and benchmarks.
+     */
+    public function layoutRunCount():Int {
+        return layoutEngine.runCount;
+    }
+
+    /**
      * A text summary of the last frame besides its scene (hitboxes, mouse
      * listeners, cursor styles, tooltips, deferred draws, input handlers,
      * dispatch nodes with their contexts, focus and view ids, tab order),
@@ -2735,6 +2784,32 @@ class Window implements WindowInvalidator {
     @:allow(gpui)
     inline function retainLayout(layoutId:LayoutId, recordedFrame:Int):Bool {
         return layoutEngine.retain(layoutId, recordedFrame);
+    }
+
+    /**
+     * Starts recording the layout nodes a view requests while it renders,
+     * adopting `adopt` (its retained nodes) when they match (see
+     * `TaffyLayoutEngine.beginViewNodes`).
+     */
+    @:allow(gpui)
+    inline function beginViewLayoutNodes(adopt:Null<Array<Int>>):Void {
+        layoutEngine.beginViewNodes(adopt);
+    }
+
+    /**
+     * Ends `beginViewLayoutNodes()`: the nodes the view requested, in order.
+     */
+    @:allow(gpui)
+    inline function endViewLayoutNodes():Array<Int> {
+        return layoutEngine.endViewNodes();
+    }
+
+    /**
+     * Whether the last `endViewLayoutNodes()` adopted every node it was given.
+     */
+    @:allow(gpui)
+    inline function viewLayoutNodesAdopted():Bool {
+        return layoutEngine.lastViewNodesAdopted;
     }
 
     /**

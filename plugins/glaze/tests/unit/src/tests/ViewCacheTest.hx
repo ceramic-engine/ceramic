@@ -295,6 +295,43 @@ class ViewCacheTest extends TestCase {
         }
     }
 
+    /**
+     * Scrolling moves clean views: they render again (their hitboxes and
+     * paint move) but their layout does not change, so their nodes adopt
+     * the retained ones and no layout runs again. The cached window lays out
+     * exactly as often as the uncached one (GPUI: one layout per frame),
+     * not once more per moved view (the combobox story page stuttered).
+     */
+    function testScrolledCleanViewsAreNotLaidOutAgain() {
+        final inner = [for (i in 0...6) view((_, _) -> div().flex().gap1().child('inner $i').child(div().size(px(8)).bg(blue())))];
+        final cards = [for (i in 0...6) view((_, _) -> div().flex().flexCol().p1().bg(hsla(i / 6, 0.5, 0.8, 1))
+            .child('Card $i with some text')
+            .child((inner[i] : AnyView))
+            .child(div().h(px(30 + i * 3)).w(px(40 + i)).bg(red())))];
+        final root = view((_, _) -> div().sizeFull().child(div().id('scroll').size(px(200)).overflowYScroll().flex().flexCol().gap2()
+            .children([for (card in cards) (card : AnyView)])));
+        final cached = openWindow(root, true);
+        final reference = openWindow(root, false);
+        frame();
+        assertSameFrames(cached, reference, 'first frame');
+        for (step in 0...6) {
+            final dy = step < 3 ? -30 : 20;
+            final cachedRuns = cached.layoutRunCount();
+            final referenceRuns = reference.layoutRunCount();
+            for (window in windows) window.dispatchEvent(new ScrollEvent(point(px(100), px(100)), ScrollDelta.Pixels(point(px(0), px(dy)))));
+            frame();
+            assertSameFrames(cached, reference, 'scroll $step');
+            // The moved views render again, none is laid out again
+            assertTrue(cached.renderedViewCount > 6, 'scroll $step: moved views render again');
+            assertEquals(reference.layoutRunCount() - referenceRuns, cached.layoutRunCount() - cachedRuns, 'scroll $step: layout runs');
+        }
+        // A moved view rendered after a notification still lays out
+        cards[2].update(app, (_, cx) -> cx.notify());
+        for (window in windows) window.dispatchEvent(new ScrollEvent(point(px(100), px(100)), ScrollDelta.Pixels(point(px(0), px(-10)))));
+        frame();
+        assertSameFrames(cached, reference, 'notified and scrolled');
+    }
+
 /// GPUI's `.cached(style)`
 
     function testCachedWithStyleFollowsGpui() {

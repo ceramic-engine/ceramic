@@ -920,6 +920,10 @@ class Interactivity {
      */
     public function paint(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App, paintContent:(Style, Window, App) -> Void):Void {
         hovered = hitbox != null ? hitbox.isHovered(window) : null;
+        // Port: an element scrolled from another view draws again (default view caching)
+        if (trackedScrollHandle != null) {
+            trackedScrollHandle.recordView(window);
+        }
         window.withOptionalElementState(globalId, InteractiveElementState, (box, window) -> {
             var elementState:Null<InteractiveElementState> = null;
             if (box != null) {

@@ -7,7 +7,8 @@ package gpui;
  * The configuration details for identifying a specific font.
  *
  * Fonts are compared by value with `equals()`, and `key()` returns a string
- * that identifies them in maps (Rust derives `Hash` / `Eq`).
+ * that identifies them in maps (Rust derives `Hash` / `Eq`). The key is
+ * computed once: assigning a field resets it.
  */
 class Font {
 
@@ -16,19 +17,47 @@ class Font {
      *
      * The special name ".SystemUIFont" is used to identify the system UI font, which varies based on platform.
      */
-    public var family:String;
+    public var family(default, set):String;
 
     /** The font features to use. */
-    public var features:FontFeatures;
+    public var features(default, set):FontFeatures;
 
     /** The fallbacks fonts to use. */
-    public var fallbacks:Null<FontFallbacks>;
+    public var fallbacks(default, set):Null<FontFallbacks>;
 
     /** The font weight. */
-    public var weight:FontWeight;
+    public var weight(default, set):FontWeight;
 
     /** The font style. */
-    public var style:FontStyle;
+    public var style(default, set):FontStyle;
+
+    /** `key()`, computed on first use */
+    var _key:Null<String> = null;
+
+    inline function set_family(value:String):String {
+        _key = null;
+        return family = value;
+    }
+
+    inline function set_features(value:FontFeatures):FontFeatures {
+        _key = null;
+        return features = value;
+    }
+
+    inline function set_fallbacks(value:Null<FontFallbacks>):Null<FontFallbacks> {
+        _key = null;
+        return fallbacks = value;
+    }
+
+    inline function set_weight(value:FontWeight):FontWeight {
+        _key = null;
+        return weight = value;
+    }
+
+    inline function set_style(value:FontStyle):FontStyle {
+        _key = null;
+        return style = value;
+    }
 
     public function new(family:String, ?features:FontFeatures, ?fallbacks:FontFallbacks, ?weight:FontWeight, ?style:FontStyle) {
         this.family = family;
@@ -71,7 +100,12 @@ class Font {
      * fallbacks, weight and style).
      */
     public function key():String {
-        return family + '\x00' + features.key() + '\x00' + (fallbacks != null ? fallbacks.key() : '-') + '\x00' + (weight:Float) + '\x00' + (cast style:Int);
+        var key = _key;
+        if (key == null) {
+            key = family + '\x00' + features.key() + '\x00' + (fallbacks != null ? fallbacks.key() : '-') + '\x00' + (weight:Float) + '\x00' + (cast style:Int);
+            _key = key;
+        }
+        return key;
     }
 
     public function equals(other:Font):Bool {

@@ -74,6 +74,9 @@ app:
     defines:
         # Native test runs use a hidden SDL window (no window on screen)
         - clay_sdl_headless
+        # Native runs keep the fonts of the reference only (no system font fallback
+        # in App.defaultTextSystem); SystemFontFallbackTest enables it explicitly
+        - gpui_no_system_fonts
         #- some_define
         #- some_define: 'some value'
 

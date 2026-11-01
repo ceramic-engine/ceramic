@@ -30,6 +30,8 @@ class Tests {
         runner.add(new tests.TextSystemTest());
         runner.add(new tests.LineLayoutTest());
         runner.add(new tests.LineWrapperTest());
+        runner.add(new tests.SystemFontFallbackTest());
+        runner.add(new tests.CanvasFallbackTest());
         runner.add(new tests.TabStopTest());
         runner.add(new tests.KeyDispatchWindowTest());
         runner.add(new tests.DivInteractivityTest());
@@ -164,6 +166,7 @@ class Tests {
         runner.add(new tests.kit.BaseTextSelectionTest());
         runner.add(new tests.kit.TextSelectionTest());
         runner.add(new tests.kit.TextViewTest());
+        runner.add(new tests.kit.ScrollRedrawTest());
         runner.add(new tests.kit.TextStreamFadeTest());
         runner.add(new tests.kit.TextRangeHighlightTest());
         runner.add(new tests.kit.TextEditorHostTest());

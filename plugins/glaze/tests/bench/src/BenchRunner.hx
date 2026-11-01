@@ -588,9 +588,22 @@ class BenchRunner {
         #end
     }
 
+    /** The Ceramic Electron runner when the web build runs under it (`ceramic web project --run`), null otherwise. */
+    static function electronRunner():Dynamic {
+        #if (web && clay && !completion)
+        return backend.ElectronRunner.electronRunner;
+        #else
+        return null;
+        #end
+    }
+
     public static function print(line:String):Void {
         #if js
-        js.Syntax.code('console.log({0})', line);
+        final runner = electronRunner();
+        if (runner != null)
+            runner.consoleLog(line);
+        else
+            js.Syntax.code('console.log({0})', line);
         #else
         Sys.println(line);
         #end
@@ -605,6 +618,12 @@ class BenchRunner {
         #if js
         if (isNode()) {
             js.Syntax.code('process.exit({0})', code);
+        }
+        else {
+            // Under the Electron runner: quit it, so scripted web runs end
+            final runner = electronRunner();
+            if (runner != null && runner.app != null)
+                runner.app.quit();
         }
         #elseif sys
         Sys.exit(code);

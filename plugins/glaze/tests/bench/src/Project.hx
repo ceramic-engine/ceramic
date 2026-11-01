@@ -31,8 +31,11 @@ class Project extends Entity {
 
     function ready() {
         final app = new App(new TestDispatcher());
-        // The editor scenarios need their TextMate grammar, loaded asynchronously
-        scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run());
+        // The editor scenarios need their TextMate grammar, loaded
+        // asynchronously, and the icons are preloaded like the story gallery
+        // does (samples/story MainScene): without them, targets with no
+        // synchronous file access (node, web) draw no icon
+        gpui.component.IconName.preload(_ -> scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run()));
     }
 
 }

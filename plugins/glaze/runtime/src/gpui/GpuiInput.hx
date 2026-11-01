@@ -128,7 +128,7 @@ class GpuiInput extends ceramic.Entity {
         screen.onMouseMove(this, handleMouseMove);
         screen.onMouseDown(this, handleMouseDown);
         screen.onMouseUp(this, handleMouseUp);
-        screen.onMouseWheel(this, handleMouseWheel);
+        screen.onMouseScroll(this, handleMouseScroll);
         app.input.onKeyDown(this, key -> handleKey(key, true));
         app.input.onKeyUp(this, key -> handleKey(key, false));
         app.input.onTextCommit(this, text -> {
@@ -263,13 +263,30 @@ class GpuiInput extends ceramic.Entity {
         updateHovered(windowAt(x, y), x, y);
     }
 
-    function handleMouseWheel(x:Float, y:Float):Void {
+    /**
+     * Ceramic's `mouseScroll` carries the deltas as the device reports them,
+     * which is what GPUI's platforms hand to `ScrollWheelEvent`: pixels for
+     * a precise device (`ScrollDelta::Pixels`, trackpads, the browser's
+     * `deltaMode` 0) and lines for a notched wheel (`ScrollDelta::Lines`,
+     * converted with the line height where the scroll is applied). GPUI's
+     * deltas are positive when the content moves down or right, the opposite
+     * of the browser sign Ceramic uses, hence the negation (like the web
+     * platform of GPUI).
+     */
+    function handleMouseScroll(deltaX:Float, deltaY:Float, unit:ceramic.ScrollUnit):Void {
         final screen = ceramic.App.app.screen;
         final window = windowAt(screen.mouseX, screen.mouseY);
         if (window == null)
             return;
         final position = toWindow(window, screen.mouseX, screen.mouseY);
-        window.dispatchEvent(new ScrollEvent(position, ScrollDelta.Pixels(new Point(-x, -y)), currentModifiers(), Moved));
+        window.dispatchEvent(new ScrollEvent(position, scrollDeltaOf(deltaX, deltaY, unit), currentModifiers(), Moved));
+    }
+
+    /** GPUI's `ScrollDelta` for a Ceramic `mouseScroll` (see `handleMouseScroll`). */
+    public static function scrollDeltaOf(deltaX:Float, deltaY:Float, unit:ceramic.ScrollUnit):ScrollDelta {
+        return unit == ceramic.ScrollUnit.LINES
+            ? ScrollDelta.Lines(new Point(-deltaX, -deltaY))
+            : ScrollDelta.Pixels(new Point(-deltaX, -deltaY));
     }
 
 /// Keyboard

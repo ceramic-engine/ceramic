@@ -266,6 +266,61 @@ class WindowTest extends TestCase {
         assertEquals(42, state.read(app).value);
     }
 
+    function testChangingElementIdsKeepTheIdTrieBounded() {
+        // Ids that change every frame would intern a new path each frame:
+        // the trie is swept so that it stays bounded (GPUI has no trie)
+        var frame = 0;
+        open((window, cx) -> {
+            final root = div();
+            for (i in 0...8) {
+                root.child(div().id(gpui.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
+            }
+            return root;
+        });
+        final trie = @:privateAccess window.elementIdRoot.trie;
+        var maxNodes = 0;
+        for (_ in 0...10000) {
+            frame++;
+            window.refresh();
+            window.draw();
+            if (trie.nodeCount > maxNodes) maxNodes = trie.nodeCount;
+        }
+        assertTrue(trie.sweeps > 0);
+        // 80000 paths were interned: at most about two sweep thresholds survive at once
+        assertTrue(maxNodes < 3 * gpui.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
+        assertTrue(trie.nodeCount < 3 * gpui.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
+    }
+
+    function testElementStateOnStableIdSurvivesTheSweep() {
+        var frame = 0;
+        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        final view = open((window, cx) -> {
+            state = window.useKeyedState('counter', cx.app, _ -> 42);
+            final root = div().child(div().id('stable').w(px(state.read(cx).value)).h(px(1)));
+            for (i in 0...8) {
+                root.child(div().id(gpui.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
+            }
+            return root;
+        });
+        final trie = @:privateAccess window.elementIdRoot.trie;
+        window.draw();
+        final first = state;
+        final viewId = gpui.ElementId.View(view.entityId());
+        final stableNode = @:privateAccess window.elementIdRoot.child(viewId);
+        for (_ in 0...10000) {
+            frame++;
+            window.refresh();
+            window.draw();
+        }
+        assertTrue(trie.sweeps > 0);
+        // The keyed state (on the view's path) is the same entity, never dropped
+        assertTrue(first == state);
+        assertFalse((first : Model).destroyed);
+        assertEquals(42, state.read(app).value);
+        // Its node is still the interned one for that path
+        assertTrue(stableNode == @:privateAccess window.elementIdRoot.child(viewId));
+    }
+
     function testComponentReadsSubscribeTheEnclosingView() {
         final counter:Entity<TestCounter> = app.newEntity(_ -> new TestCounter());
         open((window, cx) -> div().child(new TestComponent(counter)));

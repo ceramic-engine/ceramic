@@ -3,15 +3,18 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import haxe.ds.IntMap;
 
 /**
  * Caches line layouts for the current and the previous frame: a layout
  * used during a frame is kept for the next one, and dropped if the next
  * frame doesn't use it (`finishFrame()`).
  *
- * Keys are strings made of the text and the layout parameters (Rust hashes
- * the same fields). Layouts by hash (`layoutLineByHash()`) use the caller's
- * hash instead of the text.
+ * Like Rust (which hashes a borrowed key), an entry is found by an integer
+ * hash of the text, the font size, the runs and the wrap width, then
+ * confirmed by comparing those fields: no key string is built on a lookup.
+ * Layouts by hash (`layoutLineByHash()`) use the caller's hash instead of
+ * the text.
  */
 class LineLayoutCache {
 
@@ -62,44 +65,43 @@ class LineLayoutCache {
             return;
         }
 
+        final previous = previousFrame;
+        final current = currentFrame;
+
         for (i in start.linesIndex...end.linesIndex) {
-            final key = previousFrame.usedLines[i];
-            final line = previousFrame.lines.get(key);
-            if (line != null) {
-                previousFrame.lines.remove(key);
-                currentFrame.lines.set(key, line);
+            final entry = previous.usedLines[i];
+            if (entry.owner == previous) {
+                previous.remove(previous.lines, entry);
+                current.insert(current.lines, entry);
             }
-            currentFrame.usedLines.push(key);
+            current.usedLines.push(entry);
         }
 
         for (i in start.wrappedLinesIndex...end.wrappedLinesIndex) {
-            final key = previousFrame.usedWrappedLines[i];
-            final line = previousFrame.wrappedLines.get(key);
-            if (line != null) {
-                previousFrame.wrappedLines.remove(key);
-                currentFrame.wrappedLines.set(key, line);
+            final entry = previous.usedWrappedLines[i];
+            if (entry.owner == previous) {
+                previous.remove(previous.wrappedLines, entry);
+                current.insert(current.wrappedLines, entry);
             }
-            currentFrame.usedWrappedLines.push(key);
+            current.usedWrappedLines.push(entry);
         }
 
         for (i in start.linesByHashIndex...end.linesByHashIndex) {
-            final key = previousFrame.usedLinesByHash[i];
-            final line = previousFrame.linesByHash.get(key);
-            if (line != null) {
-                previousFrame.linesByHash.remove(key);
-                currentFrame.linesByHash.set(key, line);
+            final entry = previous.usedLinesByHash[i];
+            if (entry.owner == previous) {
+                previous.remove(previous.linesByHash, entry);
+                current.insert(current.linesByHash, entry);
             }
-            currentFrame.usedLinesByHash.push(key);
+            current.usedLinesByHash.push(entry);
         }
 
         for (i in start.wrappedLinesByHashIndex...end.wrappedLinesByHashIndex) {
-            final key = previousFrame.usedWrappedLinesByHash[i];
-            final line = previousFrame.wrappedLinesByHash.get(key);
-            if (line != null) {
-                previousFrame.wrappedLinesByHash.remove(key);
-                currentFrame.wrappedLinesByHash.set(key, line);
+            final entry = previous.usedWrappedLinesByHash[i];
+            if (entry.owner == previous) {
+                previous.remove(previous.wrappedLinesByHash, entry);
+                current.insert(current.wrappedLinesByHash, entry);
             }
-            currentFrame.usedWrappedLinesByHash.push(key);
+            current.usedWrappedLinesByHash.push(entry);
         }
     }
 
@@ -123,44 +125,59 @@ class LineLayoutCache {
         currentFrame.clear();
     }
 
-    static function runsKey(buf:StringBuf, runs:Array<FontRun>):Void {
-        for (run in runs) {
-            buf.add(run.len);
-            buf.add(':');
-            buf.add((run.fontId:Int));
-            buf.add(',');
+/// Hashing (an integer per key; equal keys hash equal, a collision is resolved by `LineCacheEntry.matches*`)
+
+    static inline function mix(h:Int, v:Int):Int {
+        return ((h << 5) - h + v) & 0x7FFFFFFF;
+    }
+
+    static function hashFloat(h:Int, value:Null<Float>):Int {
+        if (value == null) {
+            return mix(h, 0x5bd1e995);
         }
+        final v:Float = value;
+        if (!Math.isFinite(v)) {
+            return mix(h, v > 0 ? 1 : (v < 0 ? 2 : 3));
+        }
+        // Lossy on purpose: a hash, confirmed by an exact comparison
+        final clamped = Math.max(-1e6, Math.min(1e6, v));
+        return mix(mix(h, Std.int(clamped)), Std.int((clamped - Math.ffloor(clamped)) * 1048576));
     }
 
-    static function cacheKey(text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):String {
-        final buf = new StringBuf();
-        buf.add(fontSize);
-        buf.add('|');
-        buf.add(wrapWidth == null ? 'n' : Std.string(wrapWidth));
-        buf.add('|');
-        buf.add(forceWidth == null ? 'n' : Std.string(forceWidth));
-        buf.add('|');
-        runsKey(buf, runs);
-        buf.add('|');
-        buf.add(text);
-        return buf.toString();
+    static function hashRuns(h:Int, runs:Array<FontRun>):Int {
+        h = mix(h, runs.length);
+        for (i in 0...runs.length) {
+            final run = runs[i];
+            h = mix(mix(h, run.len), (run.fontId:Int));
+        }
+        return h;
     }
 
-    static function hashedCacheKey(textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):String {
-        final buf = new StringBuf();
-        buf.add(textHash);
-        buf.add('|');
-        buf.add(textLen);
-        buf.add('|');
-        buf.add(fontSize);
-        buf.add('|');
-        buf.add(wrapWidth == null ? 'n' : Std.string(wrapWidth));
-        buf.add('|');
-        buf.add(forceWidth == null ? 'n' : Std.string(forceWidth));
-        buf.add('|');
-        runsKey(buf, runs);
-        return buf.toString();
+    static function hashText(h:Int, text:String):Int {
+        h = mix(h, text.length);
+        for (i in 0...text.length) {
+            h = mix(h, StringTools.fastCodeAt(text, i));
+        }
+        return h;
     }
+
+    static function cacheHash(text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Int {
+        var h = hashFloat(17, fontSize);
+        h = hashFloat(h, wrapWidth);
+        h = hashFloat(h, forceWidth);
+        h = hashRuns(h, runs);
+        return hashText(h, text);
+    }
+
+    static function hashedCacheHash(textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Int {
+        var h = mix(mix(23, textHash), textLen);
+        h = hashFloat(h, fontSize);
+        h = hashFloat(h, wrapWidth);
+        h = hashFloat(h, forceWidth);
+        return hashRuns(h, runs);
+    }
+
+/// Lookups
 
     /**
      * Layout of a line wrapped at `wrapWidth` (cached). `maxLines` is -1
@@ -169,26 +186,30 @@ class LineLayoutCache {
     public function layoutWrappedLine(text:String, fontSize:Pixels, runs:Array<FontRun>, wrapWidth:Null<Float>, maxLines:Int = -1):WrappedLineLayout {
         clearIfFontGenerationChanged();
         // Rust leaves max_lines out of the key: same behavior here
-        final key = cacheKey(text, fontSize, runs, wrapWidth, null);
+        final hash = cacheHash(text, fontSize, runs, wrapWidth, null);
+        final current = currentFrame;
 
-        final cached = currentFrame.wrappedLines.get(key);
+        final cached = current.findText(current.wrappedLines, hash, text, fontSize, runs, wrapWidth, null);
         if (cached != null) {
-            return cached;
+            return cached.wrapped;
         }
 
-        final previous = previousFrame.wrappedLines.get(key);
-        if (previous != null) {
-            previousFrame.wrappedLines.remove(key);
-            currentFrame.wrappedLines.set(key, previous);
-            currentFrame.usedWrappedLines.push(key);
-            return previous;
+        final previous = previousFrame;
+        final entry = previous.findText(previous.wrappedLines, hash, text, fontSize, runs, wrapWidth, null);
+        if (entry != null) {
+            previous.remove(previous.wrappedLines, entry);
+            current.insert(current.wrappedLines, entry);
+            current.usedWrappedLines.push(entry);
+            return entry.wrapped;
         }
         else {
             final unwrappedLayout = layoutLine(text, fontSize, runs, null);
             final wrapBoundaries = wrapWidth != null ? unwrappedLayout.computeWrapBoundaries(text, wrapWidth, maxLines) : [];
             final layout = new WrappedLineLayout(unwrappedLayout, wrapBoundaries, wrapWidth);
-            currentFrame.wrappedLines.set(key, layout);
-            currentFrame.usedWrappedLines.push(key);
+            final entry = LineCacheEntry.ofText(hash, text, fontSize, runs, wrapWidth, null);
+            entry.wrapped = layout;
+            current.insert(current.wrappedLines, entry);
+            current.usedWrappedLines.push(entry);
             return layout;
         }
     }
@@ -199,19 +220,21 @@ class LineLayoutCache {
      */
     public function layoutLine(text:String, fontSize:Pixels, runs:Array<FontRun>, forceWidth:Null<Float>):LineLayout {
         clearIfFontGenerationChanged();
-        final key = cacheKey(text, fontSize, runs, null, forceWidth);
+        final hash = cacheHash(text, fontSize, runs, null, forceWidth);
+        final current = currentFrame;
 
-        final cached = currentFrame.lines.get(key);
+        final cached = current.findText(current.lines, hash, text, fontSize, runs, null, forceWidth);
         if (cached != null) {
-            return cached;
+            return cached.layout;
         }
 
-        final previous = previousFrame.lines.get(key);
-        if (previous != null) {
-            previousFrame.lines.remove(key);
-            currentFrame.lines.set(key, previous);
-            currentFrame.usedLines.push(key);
-            return previous;
+        final previous = previousFrame;
+        final entry = previous.findText(previous.lines, hash, text, fontSize, runs, null, forceWidth);
+        if (entry != null) {
+            previous.remove(previous.lines, entry);
+            current.insert(current.lines, entry);
+            current.usedLines.push(entry);
+            return entry.layout;
         }
         else {
             final layout = platformTextSystem.layoutLine(text, fontSize, runs);
@@ -220,8 +243,10 @@ class LineLayoutCache {
                 applyForceWidthToLayout(layout, forceWidth);
             }
 
-            currentFrame.lines.set(key, layout);
-            currentFrame.usedLines.push(key);
+            final entry = LineCacheEntry.ofText(hash, text, fontSize, runs, null, forceWidth);
+            entry.layout = layout;
+            current.insert(current.lines, entry);
+            current.usedLines.push(entry);
             return layout;
         }
     }
@@ -235,11 +260,12 @@ class LineLayoutCache {
      */
     public function tryLayoutLineByHash(textHash:Int, textLen:Int, fontSize:Pixels, runs:Array<FontRun>, forceWidth:Null<Float>):Null<LineLayout> {
         clearIfFontGenerationChanged();
-        final key = hashedCacheKey(textHash, textLen, fontSize, runs, null, forceWidth);
-        final current = currentFrame.linesByHash.get(key);
+        final hash = hashedCacheHash(textHash, textLen, fontSize, runs, null, forceWidth);
+        final current = currentFrame.findHashed(currentFrame.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
         if (current != null)
-            return current;
-        return previousFrame.linesByHash.get(key);
+            return current.layout;
+        final previous = previousFrame.findHashed(previousFrame.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        return previous != null ? previous.layout : null;
     }
 
     /**
@@ -248,19 +274,21 @@ class LineLayoutCache {
      */
     public function layoutLineByHash(textHash:Int, textLen:Int, fontSize:Pixels, runs:Array<FontRun>, forceWidth:Null<Float>, materializeText:() -> String):LineLayout {
         clearIfFontGenerationChanged();
-        final key = hashedCacheKey(textHash, textLen, fontSize, runs, null, forceWidth);
+        final hash = hashedCacheHash(textHash, textLen, fontSize, runs, null, forceWidth);
+        final current = currentFrame;
 
-        final cached = currentFrame.linesByHash.get(key);
+        final cached = current.findHashed(current.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
         if (cached != null) {
-            return cached;
+            return cached.layout;
         }
 
-        final previous = previousFrame.linesByHash.get(key);
-        if (previous != null) {
-            previousFrame.linesByHash.remove(key);
-            currentFrame.linesByHash.set(key, previous);
-            currentFrame.usedLinesByHash.push(key);
-            return previous;
+        final previous = previousFrame;
+        final entry = previous.findHashed(previous.linesByHash, hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        if (entry != null) {
+            previous.remove(previous.linesByHash, entry);
+            current.insert(current.linesByHash, entry);
+            current.usedLinesByHash.push(entry);
+            return entry.layout;
         }
 
         final text = materializeText();
@@ -270,8 +298,10 @@ class LineLayoutCache {
             applyForceWidthToLayout(layout, forceWidth);
         }
 
-        currentFrame.linesByHash.set(key, layout);
-        currentFrame.usedLinesByHash.push(key);
+        final newEntry = LineCacheEntry.ofHash(hash, textHash, textLen, fontSize, runs, null, forceWidth);
+        newEntry.layout = layout;
+        current.insert(current.linesByHash, newEntry);
+        current.usedLinesByHash.push(newEntry);
         return layout;
     }
 
@@ -324,19 +354,160 @@ class LineLayoutCache {
 
 }
 
+/**
+ * A cached layout with the key it was shaped for (Rust `CacheKey`): the
+ * text (or the caller's text hash and length), the font size, the font
+ * runs, the wrap width and the force width.
+ */
+private class LineCacheEntry {
+
+    public final hash:Int;
+
+    public final text:Null<String>;
+
+    public final textHash:Int;
+
+    public final textLen:Int;
+
+    public final fontSize:Float;
+
+    /** The runs, as given (callers pass a fresh array that is not changed afterwards) */
+    public final runs:Array<FontRun>;
+
+    public final wrapWidth:Null<Float>;
+
+    public final forceWidth:Null<Float>;
+
+    public var layout:Null<LineLayout> = null;
+
+    public var wrapped:Null<WrappedLineLayout> = null;
+
+    /** The frame cache holding this entry */
+    public var owner:Null<FrameCache> = null;
+
+    /** Next entry of the same bucket */
+    public var next:Null<LineCacheEntry> = null;
+
+    function new(hash:Int, text:Null<String>, textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>) {
+        this.hash = hash;
+        this.text = text;
+        this.textHash = textHash;
+        this.textLen = textLen;
+        this.fontSize = fontSize;
+        this.runs = runs;
+        this.wrapWidth = wrapWidth;
+        this.forceWidth = forceWidth;
+    }
+
+    public static function ofText(hash:Int, text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):LineCacheEntry {
+        return new LineCacheEntry(hash, text, 0, 0, fontSize, runs, wrapWidth, forceWidth);
+    }
+
+    public static function ofHash(hash:Int, textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):LineCacheEntry {
+        return new LineCacheEntry(hash, null, textHash, textLen, fontSize, runs, wrapWidth, forceWidth);
+    }
+
+    static inline function sameOptional(a:Null<Float>, b:Null<Float>):Bool {
+        return a == null ? b == null : (b != null && (a:Float) == (b:Float));
+    }
+
+    static function sameRuns(a:Array<FontRun>, b:Array<FontRun>):Bool {
+        if (a.length != b.length)
+            return false;
+        for (i in 0...a.length) {
+            final ra = a[i];
+            final rb = b[i];
+            if (ra.len != rb.len || (ra.fontId:Int) != (rb.fontId:Int))
+                return false;
+        }
+        return true;
+    }
+
+    public function matchesText(text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Bool {
+        return this.fontSize == fontSize
+            && sameOptional(this.wrapWidth, wrapWidth)
+            && sameOptional(this.forceWidth, forceWidth)
+            && sameRuns(this.runs, runs)
+            && this.text == text;
+    }
+
+    public function matchesHash(textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Bool {
+        return this.textHash == textHash
+            && this.textLen == textLen
+            && this.fontSize == fontSize
+            && sameOptional(this.wrapWidth, wrapWidth)
+            && sameOptional(this.forceWidth, forceWidth)
+            && sameRuns(this.runs, runs);
+    }
+
+}
+
+/**
+ * The layouts of one frame: buckets by hash (chained entries) and the
+ * order in which they were used (for the view cache ranges).
+ */
 private class FrameCache {
 
-    public final lines:Map<String, LineLayout> = new Map();
-    public final wrappedLines:Map<String, WrappedLineLayout> = new Map();
-    public final usedLines:Array<String> = [];
-    public final usedWrappedLines:Array<String> = [];
+    public final lines:IntMap<LineCacheEntry> = new IntMap();
+    public final wrappedLines:IntMap<LineCacheEntry> = new IntMap();
+    public final usedLines:Array<LineCacheEntry> = [];
+    public final usedWrappedLines:Array<LineCacheEntry> = [];
 
-    public final linesByHash:Map<String, LineLayout> = new Map();
-    public final wrappedLinesByHash:Map<String, WrappedLineLayout> = new Map();
-    public final usedLinesByHash:Array<String> = [];
-    public final usedWrappedLinesByHash:Array<String> = [];
+    public final linesByHash:IntMap<LineCacheEntry> = new IntMap();
+    public final wrappedLinesByHash:IntMap<LineCacheEntry> = new IntMap();
+    public final usedLinesByHash:Array<LineCacheEntry> = [];
+    public final usedWrappedLinesByHash:Array<LineCacheEntry> = [];
 
     public function new() {}
+
+    public function findText(map:IntMap<LineCacheEntry>, hash:Int, text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Null<LineCacheEntry> {
+        var entry = map.get(hash);
+        while (entry != null) {
+            if (entry.text != null && entry.matchesText(text, fontSize, runs, wrapWidth, forceWidth))
+                return entry;
+            entry = entry.next;
+        }
+        return null;
+    }
+
+    public function findHashed(map:IntMap<LineCacheEntry>, hash:Int, textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):Null<LineCacheEntry> {
+        var entry = map.get(hash);
+        while (entry != null) {
+            if (entry.text == null && entry.matchesHash(textHash, textLen, fontSize, runs, wrapWidth, forceWidth))
+                return entry;
+            entry = entry.next;
+        }
+        return null;
+    }
+
+    public function insert(map:IntMap<LineCacheEntry>, entry:LineCacheEntry):Void {
+        entry.owner = this;
+        entry.next = map.get(entry.hash);
+        map.set(entry.hash, entry);
+    }
+
+    public function remove(map:IntMap<LineCacheEntry>, entry:LineCacheEntry):Void {
+        var head = map.get(entry.hash);
+        if (head == entry) {
+            if (entry.next != null) {
+                map.set(entry.hash, entry.next);
+            }
+            else {
+                map.remove(entry.hash);
+            }
+        }
+        else {
+            var prev = head;
+            while (prev != null && prev.next != entry) {
+                prev = prev.next;
+            }
+            if (prev != null) {
+                prev.next = entry.next;
+            }
+        }
+        entry.next = null;
+        entry.owner = null;
+    }
 
     public function clear():Void {
         lines.clear();

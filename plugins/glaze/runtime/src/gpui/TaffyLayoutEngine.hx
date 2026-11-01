@@ -19,6 +19,7 @@ import taffy.style.MinTrackSizingFunction;
 import taffy.style.TrackSizingFunction;
 import taffy.tree.NodeId;
 import taffy.tree.TaffyTree;
+import taffy.util.OptionalFloat;
 
 /**
  * Measures a leaf node: given its known dimensions (`null` when unknown) and
@@ -27,10 +28,29 @@ import taffy.tree.TaffyTree;
 typedef MeasureFn = (knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App) -> Size;
 
 private class NodeContext {
-    public final measure:MeasureFn;
+    public var measure:MeasureFn;
+    /** The arguments of the last call to `measure`, null before the first one */
+    public var lastKnown:Null<SizeOf<Null<Float>>> = null;
+    public var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
     public function new(measure:MeasureFn) {
         this.measure = measure;
     }
+}
+
+/**
+ * The layout nodes requested by one view while it renders (see
+ * `TaffyLayoutEngine.beginViewNodes()`).
+ */
+private class ViewNodes {
+    /** Ids of the nodes the view requested (created or adopted), in request order */
+    public var nodes:Array<Int> = [];
+    /** Retained nodes to adopt, in the order the view requested them last time, or null */
+    public var adopt:Null<Array<Int>> = null;
+    /** Index of the next node of `adopt` */
+    public var index:Int = 0;
+    /** Whether a request did not match `adopt` (the next nodes are created) */
+    public var failed:Bool = false;
+    public function new() {}
 }
 
 /**
@@ -49,8 +69,10 @@ private class NodeContext {
  * A cached view that is not rendered retains the subtree it requested
  * during the previous frame (`retain()`), with the layout cache of its
  * nodes, so laying it out again is mostly cache hits. When such a view must
- * render after all (its bounds changed), its new subtree replaces the
- * retained one (`replaceRetained()`).
+ * render after all (its bounds changed), its requests adopt the nodes of
+ * the retained subtree when they match (`beginViewNodes()`), so nothing has
+ * to be laid out again; otherwise its new subtree replaces the retained one
+ * (`replaceRetained()`).
  */
 class TaffyLayoutEngine {
 
@@ -67,7 +89,7 @@ class TaffyLayoutEngine {
     final layoutBoundsScratchSpace:Array<LayoutId> = [];
 
     /** Available space of the roots laid out during the current frame, in device pixels */
-    final rootAvailableSpaces:IntMap<TaffySizeOf<taffy.style.AvailableSpace>> = new IntMap();
+    final rootAvailableSpaces:IntMap<taffy.geometry.SizeAvail> = new IntMap();
 
     /** The frame number, advanced by `finishFrame()` */
     var frame:Int = 1;
@@ -82,6 +104,14 @@ class TaffyLayoutEngine {
     var previousLiveNodes:Array<Int> = [];
 
     final retainStack:Array<Int> = [];
+
+    /** Node requests of the views rendering, innermost last (see `beginViewNodes()`) */
+    final viewNodesStack:Array<ViewNodes> = [];
+
+    final viewNodesPool:Array<ViewNodes> = [];
+
+    /** Whether the last `endViewNodes()` adopted every node it was given */
+    public var lastViewNodesAdopted(default, null):Bool = false;
 
     /** State of the measure function (no closure allocated per layout or per measured leaf) */
     var measureWindow:Null<Window> = null;
@@ -111,6 +141,7 @@ class TaffyLayoutEngine {
         nodeFrames.resize(0);
         liveNodes.resize(0);
         previousLiveNodes.resize(0);
+        viewNodesStack.resize(0);
         frame++;
     }
 
@@ -153,6 +184,107 @@ class TaffyLayoutEngine {
         #if gpui_count_allocations gpui.util.AllocationCounters.layoutNodes++; #end
         nodeFrames[id] = frame;
         liveNodes.push(id);
+        if (viewNodesStack.length > 0) {
+            viewNodesStack[viewNodesStack.length - 1].nodes.push(id);
+        }
+        return id;
+    }
+
+    /**
+     * Starts recording the nodes a view requests while it renders and
+     * requests its layout (nested views record their own). With `adopt` (the
+     * nodes the same view requested last time, all retained during this
+     * frame), each request takes the next of these nodes instead of creating
+     * one, as long as it matches: a node with the same children, or a
+     * measured leaf for a measured leaf (its measure function is replaced).
+     * The style of an adopted node is kept: a view that renders again
+     * without being notified renders the same elements (the contract that
+     * already lets a clean view keep its retained layout without rendering).
+     * At the first request that does not match, the next nodes are created.
+     * When every node is adopted, the tree is unchanged and so is its layout:
+     * a clean view that renders again only because it moved (scrolling)
+     * costs no layout at all, like GPUI where its elements are part of the
+     * single layout of the frame.
+     */
+    public function beginViewNodes(adopt:Null<Array<Int>>):Void {
+        final viewNodes = viewNodesPool.length > 0 ? viewNodesPool.pop() : new ViewNodes();
+        viewNodes.nodes = [];
+        viewNodes.adopt = adopt;
+        viewNodes.index = 0;
+        viewNodes.failed = adopt == null;
+        viewNodesStack.push(viewNodes);
+    }
+
+    /**
+     * Ends `beginViewNodes()`: returns the nodes the view requested, in
+     * request order, and sets `lastViewNodesAdopted` (whether every node to
+     * adopt was adopted and nothing else was requested).
+     */
+    public function endViewNodes():Array<Int> {
+        final viewNodes = viewNodesStack.pop();
+        lastViewNodesAdopted = viewNodes.adopt != null && !viewNodes.failed && viewNodes.index == viewNodes.adopt.length;
+        final nodes = viewNodes.nodes;
+        viewNodes.nodes = null;
+        viewNodes.adopt = null;
+        viewNodesPool.push(viewNodes);
+        return nodes;
+    }
+
+    /**
+     * The next node to adopt for a request of the innermost view (children,
+     * or a measure function for a measured leaf), or -1 to create one.
+     */
+    function adoptNode(children:Null<Array<LayoutId>>, measure:Null<MeasureFn>):Int {
+        if (viewNodesStack.length == 0) {
+            return -1;
+        }
+        final viewNodes = viewNodesStack[viewNodesStack.length - 1];
+        if (viewNodes.failed) {
+            return -1;
+        }
+        final adopt = viewNodes.adopt;
+        if (viewNodes.index >= adopt.length) {
+            viewNodes.failed = true;
+            return -1;
+        }
+        final id = adopt[viewNodes.index];
+        final data = @:privateAccess tree.nodes[id];
+        var matches = data != null && nodeFrames[id] == frame && data.hasContext == (measure != null);
+        if (matches) {
+            final current = data.children;
+            final count = children != null ? children.length : 0;
+            if (current.length != count) {
+                matches = false;
+            }
+            else {
+                for (i in 0...count) {
+                    if (current[i] != (children[i]:Int)) {
+                        matches = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!matches) {
+            viewNodes.failed = true;
+            return -1;
+        }
+        viewNodes.index++;
+        if (measure != null) {
+            // The new element measures like the one it replaces did last:
+            // its state (text lines...) is the one its prepaint expects
+            final context = data.context;
+            context.measure = measure;
+            if (context.lastKnown != null) {
+                measure(context.lastKnown, context.lastAvailable, measureWindow, measureCx);
+            }
+        }
+        // A retained nested view detached its root when it retained it again
+        final nodes = @:privateAccess tree.nodes;
+        for (child in data.children) {
+            nodes[child].parent = id;
+        }
+        viewNodes.nodes.push(id);
         return id;
     }
 
@@ -220,7 +352,7 @@ class TaffyLayoutEngine {
         }
         var available = rootAvailableSpaces.get(top == newRoot ? oldRoot : top);
         if (available == null) {
-            available = new TaffySizeOf<taffy.style.AvailableSpace>(
+            available = new taffy.geometry.SizeAvail(
                 taffy.style.AvailableSpace.Definite(oldLayout.size.width),
                 taffy.style.AvailableSpace.Definite(oldLayout.size.height)
             );
@@ -244,6 +376,10 @@ class TaffyLayoutEngine {
     }
 
     public function requestLayout(style:Style, remSize:Pixels, scaleFactor:Float, children:Array<LayoutId>):LayoutId {
+        final adopted = adoptNode(children, null);
+        if (adopted != -1) {
+            return adopted;
+        }
         final taffyStyle = toTaffy(style, remSize, scaleFactor);
         if (children == null || children.length == 0) {
             return created(tree.newLeaf(taffyStyle));
@@ -255,6 +391,10 @@ class TaffyLayoutEngine {
     }
 
     public function requestMeasuredLayout(style:Style, remSize:Pixels, scaleFactor:Float, measure:MeasureFn):LayoutId {
+        final adopted = adoptNode(null, measure);
+        if (adopted != -1) {
+            return adopted;
+        }
         final taffyStyle = toTaffy(style, remSize, scaleFactor);
         return created(tree.newLeafWithContext(taffyStyle, new NodeContext(measure)));
     }
@@ -303,7 +443,7 @@ class TaffyLayoutEngine {
                 case MaxContent: taffy.style.AvailableSpace.MaxContent;
             }
         }
-        final available = new TaffySizeOf<taffy.style.AvailableSpace>(transform(availableSpace.width), transform(availableSpace.height));
+        final available = new taffy.geometry.SizeAvail(transform(availableSpace.width), transform(availableSpace.height));
         rootAvailableSpaces.set(id, available);
 
         measureWindow = window;
@@ -311,7 +451,11 @@ class TaffyLayoutEngine {
         runLayout(id, available);
     }
 
-    function runLayout(id:LayoutId, available:TaffySizeOf<taffy.style.AvailableSpace>):Void {
+    /** Number of layout runs (a root laid out by taffy) since the engine was created, for tests and benchmarks */
+    public var runCount(default, null):Int = 0;
+
+    function runLayout(id:LayoutId, available:taffy.geometry.SizeAvail):Void {
+        runCount++;
         final window = measureWindow;
         measureScaleFactor = window != null ? window.scaleFactor() : 1.0;
         tree.computeLayoutWithMeasure(id, available, taffyMeasure);
@@ -325,29 +469,31 @@ class TaffyLayoutEngine {
         return output;
     }
 
-    function measureLeaf(knownDimensions:TaffySizeOf<Null<Float>>, availableSpace:TaffySizeOf<taffy.style.AvailableSpace>):taffy.geometry.Size {
+    function measureLeaf(knownDimensions:taffy.geometry.SizeOpt, availableSpace:taffy.geometry.SizeAvail):taffy.geometry.Size {
         final nodeContext = measureNodeContext;
         if (nodeContext == null) {
             return taffy.geometry.Size.ZERO;
         }
         final scaleFactor = measureScaleFactor;
 
-        final knownWidth:Null<Float> = knownDimensions.width;
-        final knownHeight:Null<Float> = knownDimensions.height;
+        final knownWidth = knownDimensions.width;
+        final knownHeight = knownDimensions.height;
         final known = new SizeOf<Null<Float>>(
-            knownWidth != null ? knownWidth / scaleFactor : null,
-            knownHeight != null ? knownHeight / scaleFactor : null
+            knownWidth.isSome() ? knownWidth.unwrap() / scaleFactor : null,
+            knownHeight.isSome() ? knownHeight.unwrap() / scaleFactor : null
         );
 
         inline function untransform(ev:taffy.style.AvailableSpace):AvailableSpace {
             return switch ev {
-                case Definite(value): AvailableSpace.Definite(value / scaleFactor);
-                case MinContent: AvailableSpace.MinContent;
-                case MaxContent: AvailableSpace.MaxContent;
+                case taffy.style.AvailableSpace.MinContent: AvailableSpace.MinContent;
+                case taffy.style.AvailableSpace.MaxContent: AvailableSpace.MaxContent;
+                case definite: AvailableSpace.Definite(definite.definiteValue() / scaleFactor);
             }
         }
         final available = new SizeOf<AvailableSpace>(untransform(availableSpace.width), untransform(availableSpace.height));
 
+        nodeContext.lastKnown = known;
+        nodeContext.lastAvailable = available;
         final measured = nodeContext.measure(known, available, measureWindow, measureCx);
         return new taffy.geometry.Size(
             ceilToDevicePixel(Math.max(measured.width, 0.0), scaleFactor),
@@ -591,7 +737,7 @@ class TaffyLayoutEngine {
             lengthToLengthPercentageAuto(style.maxSizeWidth, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.maxSizeHeight, remSize, scaleFactor)
         );
-        result.aspectRatio = style.isSome(StyleRefinement.ASPECT_RATIO) ? style.aspectRatio : null;
+        result.aspectRatio = style.isSome(StyleRefinement.ASPECT_RATIO) ? OptionalFloat.some(style.aspectRatio) : OptionalFloat.NONE;
         result.margin = new TaffyRectOf<LengthPercentageAuto>(
             lengthToLengthPercentageAuto(style.marginLeft, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.marginRight, remSize, scaleFactor),

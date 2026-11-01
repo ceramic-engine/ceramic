@@ -12,6 +12,8 @@ This project contains Haxe translations ("ports") of third party code. The origi
 - License: Apache License 2.0, see [LICENSES/Apache-2.0-GPUI.txt](LICENSES/Apache-2.0-GPUI.txt)
 - Ported into (the shaders follow the Metal shaders of gpui-pre-apple 0.3.10, which the reference renders with, where they differ from the WGSL ones): `runtime/src/gpui/**` (including `ContainerQuery.hx` from `src/elements/container_query.rs`) and `runtime/src/shaders/Gpui*.hx` (the shaders are translated from GPUI's WGSL shaders), `samples/textfield` (GPUI's `examples/input.rs`), and the tests of `test/unit` ported from GPUI's tests. `reference/src/text_input.rs` adapts `examples/input.rs` too.
 
+- Canvas2D font fallback of the web text system: `runtime/src/gpui/platform/{CanvasFontFallback,CanvasFallback,CanvasGlyphCache,RunReplacements,CanvasText,CanvasFallbackText}.hx` port gpui-pre-web 0.3.10 `src/{canvas_fallback,glyph_cache,run_replacements,canvas_text,text_system}.rs`. `CanvasFallbackTables.hx` holds Unicode properties extracted from unicode-properties 0.1.3 (emoji status, general category) and unicode-script 0.5.8 (The Rust Project Developers, MIT OR Apache-2.0; data from the Unicode Character Database, Unicode License v3), the crates gpui-pre-web uses.
+
 ### GPUI examples
 
 - The examples of gpui-pre 0.3.10 (`examples/`: hello_world, uniform_list, text_wrapper, tab_stop, drag_drop, shadow, animation), Copyright 2022-2025 Zed Industries, Inc., Apache-2.0: copied unmodified apart from their entry point into `reference/src/examples/`, and translated to Haxe in `samples/gpui-examples/shared/examples/`.

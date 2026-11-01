@@ -681,16 +681,20 @@ class Div extends Element implements Styled implements ParentElement {
                 scrollHandle.state.childBounds.resize(0);
             }
             for (childLayoutId in childLayoutIds) {
-                final childBounds = window.layoutBounds(childLayoutId);
-                childMinX = Math.min(childMinX, childBounds.origin.x);
-                childMinY = Math.min(childMinY, childBounds.origin.y);
-                childMaxX = Math.max(childMaxX, childBounds.origin.x + childBounds.size.width);
-                childMaxY = Math.max(childMaxY, childBounds.origin.y + childBounds.size.height);
+                // Read without allocating a `Bounds` (only kept when a scroll handle or a prepaint listener needs it)
+                window.computeLayoutBounds(childLayoutId);
+                final childX = window.layoutBoundsX;
+                final childY = window.layoutBoundsY;
+                final childSize = window.layoutBoundsSize;
+                childMinX = Math.min(childMinX, childX);
+                childMinY = Math.min(childMinY, childY);
+                childMaxX = Math.max(childMaxX, childX + childSize.width);
+                childMaxY = Math.max(childMaxY, childY + childSize.height);
                 if (scrollHandle != null) {
-                    scrollHandle.state.childBounds.push(childBounds);
+                    scrollHandle.state.childBounds.push(window.computedLayoutBounds());
                 }
                 else if (hasPrepaintListener) {
-                    childrenBounds.push(childBounds);
+                    childrenBounds.push(window.computedLayoutBounds());
                 }
             }
             contentSize = new Size(childMaxX - childMinX, childMaxY - childMinY);

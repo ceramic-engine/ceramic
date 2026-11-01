@@ -121,10 +121,27 @@ class App {
      * `CeramicTextSystem` where `.SystemUIFont` is Inter. The gpui plugin
      * adds its bundled fonts (Inter and JetBrains Mono) to it once the
      * default assets are loaded (unless `gpui_no_default_fonts` is defined).
+     * On native desktop targets, characters missing from every added font
+     * are taken from the fonts of the operating system
+     * (`gpui.platform.SystemFontFallback`, loaded on first use; define
+     * `gpui_no_system_fonts` to skip). In browsers (clay web, Electron),
+     * graphemes missing from the added fonts are drawn by the browser like
+     * gpui-pre-web's Canvas fallback, with GPUI's default policy
+     * (`CanvasFontFallback.Emoji`; change it with
+     * `CeramicTextSystem.canvasFontFallback`, define
+     * `gpui_no_canvas_fallback` to skip).
      */
     public static function defaultTextSystem():TextSystem {
         if (_defaultTextSystem == null) {
-            _defaultTextSystem = new TextSystem(new gpui.platform.CeramicTextSystem('Inter'));
+            final platform = new gpui.platform.CeramicTextSystem('Inter');
+            #if (sys && !gpui_no_system_fonts && !ios && !android && !tvos)
+            platform.systemFallback = new gpui.platform.SystemFontFallback();
+            #end
+            #if (js && !gpui_no_canvas_fallback)
+            if (gpui.platform.CanvasText.BrowserCanvasText.available())
+                platform.canvasText = new gpui.platform.CanvasText.BrowserCanvasText();
+            #end
+            _defaultTextSystem = new TextSystem(platform);
         }
         return _defaultTextSystem;
     }

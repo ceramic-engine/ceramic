@@ -273,6 +273,12 @@ class UniformList extends Element implements Styled {
     public function paint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hitbox = this.hitbox;
         this.hitbox = null;
+        // Port: a scroll request from another view draws the list again (default view caching)
+        if (scrollHandle != null) {
+            final scrollState = scrollHandle.state;
+            final deferred = scrollState.deferredScrollToItem;
+            window.viewDependencies.record(window, scrollState, () -> scrollState.deferredScrollToItem != deferred);
+        }
         interactivity.paint(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (_, window, cx) -> {
             for (item in frameItems) {
                 item.paint(window, cx);

@@ -314,6 +314,53 @@ class DivInteractivityTest extends TestCase {
         assertTrue(isPositiveZero(content.origin.y));
     }
 
+    /**
+     * Ceramic's `mouseScroll` (browser sign: positive moves the content up or
+     * left) becomes GPUI's `ScrollDelta` with the opposite sign, in pixels or
+     * in lines like GPUI's platforms (`hasPreciseScrollingDeltas` on macOS,
+     * `deltaMode` on the web).
+     */
+    function testCeramicScrollMapsToGpuiScrollDelta() {
+        switch gpui.GpuiInput.scrollDeltaOf(3, 12.5, ceramic.ScrollUnit.PIXELS) {
+            case Pixels(delta):
+                assertEquals(-3.0, (delta.x : Float));
+                assertEquals(-12.5, (delta.y : Float));
+            case _:
+                fail('expected a pixel delta');
+        }
+        switch gpui.GpuiInput.scrollDeltaOf(0, 2, ceramic.ScrollUnit.LINES) {
+            case Lines(delta):
+                assertEquals(0.0, delta.x);
+                assertEquals(-2.0, delta.y);
+            case _:
+                fail('expected a line delta');
+        }
+    }
+
+    /**
+     * A line scroll moves a scrollable div by the line height (GPUI's
+     * `ScrollDelta::pixel_delta`), a pixel scroll by the pixels as they are:
+     * the speed of a notched wheel and of a trackpad match GPUI.
+     */
+    function testLineAndPixelScrollSpeeds() {
+        final scrollHandle = new ScrollHandle();
+        final prepainted:Array<Array<Bounds>> = [];
+        addWindow((_, _) -> new ScrolledContent(scrollHandle, prepainted));
+        draw();
+
+        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), gpui.GpuiInput.scrollDeltaOf(0, 7, ceramic.ScrollUnit.PIXELS)), cx));
+        draw();
+        assertEquals(-7.0, scrollHandle.offset().y);
+
+        final before = scrollHandle.offset().y;
+        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), gpui.GpuiInput.scrollDeltaOf(0, 1, ceramic.ScrollUnit.LINES)), cx));
+        draw();
+        final moved = before - scrollHandle.offset().y;
+        // One line is the line height of the window's text style (GPUI's default text style)
+        assertTrue(moved > 10 && moved < 40, 'one line scrolled $moved px');
+        assertEquals(-prepainted[prepainted.length - 1][1].origin.y, -scrollHandle.offset().y);
+    }
+
     static function isPositiveZero(value:Float):Bool {
         return value == 0 && 1 / value > 0;
     }

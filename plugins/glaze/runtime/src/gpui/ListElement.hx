@@ -119,6 +119,8 @@ class ListElement extends Element implements Styled {
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final currentView = window.currentView();
+        // Port: a list scrolled from another view draws again (default view caching)
+        state.recordView(window);
 
         // Register the scroll listener before painting children so that, in
         // the bubble phase (which runs in reverse registration order),

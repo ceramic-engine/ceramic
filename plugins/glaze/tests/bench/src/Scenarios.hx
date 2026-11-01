@@ -20,6 +20,12 @@ class Scenarios {
             new scenarios.EditorScroll(),
             new scenarios.ScrollTable(),
             new scenarios.Hover(),
+            new scenarios.StoryScroll(() -> story.StoryMeta.of(story.stories.ComboboxStory), 'story-combobox-scroll'),
+            new scenarios.StoryScroll(() -> story.StoryMeta.of(story.stories.ButtonStory), 'story-button-scroll'),
+            new scenarios.StoryScroll(() -> story.StoryMeta.of(story.stories.InputStory), 'story-input-scroll'),
+            new scenarios.StoryScroll(null, 'gallery-combobox-scroll', 40, 'Combobox'),
+            new scenarios.StoryScroll(null, 'gallery-button-scroll', 40, 'Button'),
+            new scenarios.StoryScroll(null, 'gallery-input-scroll', 40, 'Input'),
         ];
     }
 

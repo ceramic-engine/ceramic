@@ -20,7 +20,12 @@ import ttf.shape.Shaper;
  * (`test/unit/data/gpui-text-reference.json`):
  *
  * - fonts are only the ones added with `addFonts()` (no system fonts);
- *   `.SystemUIFont` maps to `systemFontFallback` (Inter by default);
+ *   `.SystemUIFont` maps to `systemFontFallback` (Inter by default), and a
+ *   well known family that is not loaded maps to a loaded one of the same
+ *   kind (`Menlo`, `Consolas`, `monospace`... to the first monospace face,
+ *   `Helvetica`, `Segoe UI`, `sans-serif`... to the system font), the role
+ *   fontconfig substitutions play on GPUI's Linux platform; a family that
+ *   is neither loaded nor known still fails, like GPUI;
  * - one font id per face and descriptor (family, features, fallbacks),
  *   faces without an `m` glyph cannot be primary fonts, the face closest
  *   to the requested weight and style is picked;
@@ -30,7 +35,10 @@ import ttf.shape.Shaper;
  * - lines are split into words at whitespace and each word is shaped on
  *   its own (like cosmic-text), user fallbacks (`Font.fallbacks`) are
  *   applied per grapheme, then every other loaded face can supply missing
- *   characters; tabs advance to the next multiple of 4 spaces;
+ *   characters, then the fonts of the operating system when
+ *   `systemFallback` is set (see `SystemFontFallback`, the role of
+ *   CoreText's cascade on macOS and of fontdb's system fonts on Linux);
+ *   tabs advance to the next multiple of 4 spaces;
  * - glyphs are rasterized without hinting, with the horizontal subpixel
  *   offset `variant / 4 / scaleFactor` used by GPUI's swash rasterizer.
  *   GPUI's swash path hints glyphs (`.hint(true)`), but GPUI's primary
@@ -41,8 +49,13 @@ import ttf.shape.Shaper;
  *   swash's unhinted rendering (the reference harness renders text that way,
  *   see `reference/src/unhinted_text.rs`).
  *
- * Not supported: color glyphs (emoji), subpixel (LCD) masks, glyph dilation,
- * complex scripts and bidirectional text (see the `ttf` library).
+ * On the web, graphemes missing from every loaded face (or emoji without a
+ * color glyph) are drawn by the browser, like gpui-pre-web's `WebTextSystem`:
+ * see `canvasFontFallback` and `canvasText` (`CanvasFallbackText`).
+ *
+ * Not supported: color glyphs of font files (emoji), subpixel (LCD) masks,
+ * glyph dilation, complex scripts and bidirectional text (see the `ttf`
+ * library).
  */
 class CeramicTextSystem implements PlatformTextSystem {
 
@@ -74,14 +87,70 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     final decoded:Utf8Text = new Utf8Text();
 
+    /**
+     * Fonts of the operating system tried, after every added face, for the
+     * characters no added face covers (null: only the added fonts, like
+     * GPUI's `new_without_system_fonts`). `App.defaultTextSystem()` sets it
+     * on native targets unless `gpui_no_system_fonts` is defined.
+     */
+    public var systemFallback(default, set):Null<SystemFontFallback> = null;
+
+    /**
+     * Which graphemes missing from the loaded fonts the browser draws
+     * (gpui-pre-web's `CanvasFontFallback`): `Emoji` (the default, like
+     * GPUI), `EmojiAndCjk` (also approximate horizontal CJK) or `Disabled`.
+     * Only used when `canvasText` is set; set it before laying out text
+     * (GPUI fixes it when the platform is created).
+     */
+    public var canvasFontFallback(get, set):CanvasFontFallback;
+
+    /**
+     * The browser canvas used for the Canvas fallback (null: no fallback,
+     * like a native GPUI platform). `App.defaultTextSystem()` sets a
+     * `BrowserCanvasText` on the web, unless `gpui_no_canvas_fallback` is
+     * defined.
+     */
+    public var canvasText(get, set):Null<CanvasText.CanvasTextBackend>;
+
+    /** The Canvas fallback state (descriptors, canvas fonts and glyphs) */
+    public final canvas:CanvasFallbackText;
+
     public function new(systemFontFallback:String = 'Inter') {
         this.systemFontFallback = systemFontFallback;
+        canvas = new CanvasFallbackText(this, null, Emoji);
+    }
+
+    inline function get_canvasFontFallback():CanvasFontFallback {
+        return canvas.policy;
+    }
+
+    function set_canvasFontFallback(policy:CanvasFontFallback):CanvasFontFallback {
+        return canvas.policy = policy;
+    }
+
+    inline function get_canvasText():Null<CanvasText.CanvasTextBackend> {
+        return canvas.backend;
+    }
+
+    function set_canvasText(backend:Null<CanvasText.CanvasTextBackend>):Null<CanvasText.CanvasTextBackend> {
+        canvas.clearMeasurements();
+        return canvas.backend = backend;
+    }
+
+    function set_systemFallback(fallback:Null<SystemFontFallback>):Null<SystemFontFallback> {
+        systemFallback = fallback;
+        coverageChecked.clear();
+        fallbackGeneration++;
+        return fallback;
     }
 
 /// Fonts
 
     public function addFonts(fonts:Array<Bytes>):Void {
         fontIdsByFamilyCache.clear();
+        coverageChecked.clear();
+        fallbackGeneration++;
+        canvas.clearMeasurements();
         for (bytes in fonts) {
             final count = ttf.Font.faceCount(bytes);
             if (count == 0)
@@ -147,7 +216,12 @@ class CeramicTextSystem implements PlatformTextSystem {
         }
 
         final ix = findBestMatch(font, candidates);
-        return candidates[ix];
+        final fontId = candidates[ix];
+        if (CanvasFallbackText.isCanvasFontId(fontId))
+            throw 'native font ID space exhausted';
+        final face = loadedFonts[fontId].face;
+        canvas.recordDescriptor(fontId, font, face.weight, face.italic ? Italic : Normal);
+        return fontId;
     }
 
     function loadFamily(name:String, features:FontFeatures, fallbacks:Null<FontFallbacks>):Array<Int> {
@@ -171,7 +245,10 @@ class CeramicTextSystem implements PlatformTextSystem {
             }
         }
 
-        final resolvedName = Font.fontNameWithFallbacks(name, systemFontFallback);
+        var resolvedName = Font.fontNameWithFallbacks(name, systemFontFallback);
+        if (!hasFamily(resolvedName)) {
+            resolvedName = substituteFamily(resolvedName);
+        }
 
         final ttfFeatures = featuresFor(features);
 
@@ -202,6 +279,49 @@ class CeramicTextSystem implements PlatformTextSystem {
         }
 
         return loadedFontIds;
+    }
+
+    /**
+     * Well known monospace and sans serif families (the defaults of gpui-kit
+     * themes, GPUI's fallback stack, the generic CSS families, common system
+     * fonts) that stand in for the loaded fonts of the same kind when they
+     * are not loaded themselves.
+     */
+    static final MONOSPACE_FAMILIES = [
+        'monospace', 'Menlo', 'Monaco', 'Consolas', 'Courier', 'Courier New', 'SF Mono',
+        'Lilex', 'IBM Plex Mono', 'JetBrains Mono', 'Fira Code', 'Fira Mono', 'Source Code Pro',
+        'Ubuntu Mono', 'DejaVu Sans Mono', 'Noto Sans Mono', 'Liberation Mono', 'Cascadia Code',
+        'Cascadia Mono', 'Roboto Mono', 'Hack', 'Inconsolata',
+    ];
+
+    static final SANS_FAMILIES = [
+        'sans-serif', 'system-ui', 'serif', 'Helvetica', 'Helvetica Neue', 'Arial', 'Segoe UI',
+        'Ubuntu', 'Adwaita Sans', 'Cantarell', 'Noto Sans', 'DejaVu Sans', 'IBM Plex Sans',
+        'Inter', 'Roboto', 'Liberation Sans', 'SF Pro', 'SF Pro Text', 'SF Pro Display',
+        '.AppleSystemUIFont', 'Open Sans', 'Lato', 'Verdana', 'Tahoma',
+    ];
+
+    function hasFamily(name:String):Bool {
+        for (face in faces) {
+            if (face.familyName == name)
+                return true;
+        }
+        return false;
+    }
+
+    /** The loaded family standing in for a well known one that is not loaded, or the name itself. */
+    function substituteFamily(name:String):String {
+        if (MONOSPACE_FAMILIES.indexOf(name) != -1) {
+            for (face in faces) {
+                if (face.isMonospace)
+                    return face.familyName;
+            }
+            return systemFontFallback;
+        }
+        if (SANS_FAMILIES.indexOf(name) != -1) {
+            return systemFontFallback;
+        }
+        return name;
     }
 
     /** ttf shaper features for GPUI font features (applied over the defaults) */
@@ -278,7 +398,7 @@ class CeramicTextSystem implements PlatformTextSystem {
 /// Metrics
 
     public function fontMetrics(fontId:FontId):FontMetrics {
-        final face = loadedFonts[fontId].face;
+        final face = loadedFonts[canvas.nativeFontId(fontId)].face;
         final m = face.metrics;
         final ascent = m.ascent;
         final descent = -m.descent;
@@ -310,16 +430,24 @@ class CeramicTextSystem implements PlatformTextSystem {
     }
 
     public function typographicBounds(fontId:FontId, glyphId:GlyphId):Bounds {
+        final canvasFont = canvas.canvasFont(fontId);
+        if (canvasFont != null)
+            return canvas.typographicBounds(canvasFont, fontId, glyphId);
         final face = loadedFonts[fontId].face;
         return new Bounds(new Point(0.0, 0.0), new Size(face.advance(glyphId), advanceHeight(face)));
     }
 
     public function advance(fontId:FontId, glyphId:GlyphId):Size {
+        final canvasFont = canvas.canvasFont(fontId);
+        if (canvasFont != null)
+            return canvas.advance(canvasFont, fontId, glyphId);
         final face = loadedFonts[fontId].face;
         return new Size(face.advance(glyphId), advanceHeight(face));
     }
 
     public function glyphForChar(fontId:FontId, ch:Int):Null<GlyphId> {
+        if (canvas.canvasFont(fontId) != null)
+            return canvas.glyphForChar(fontId, ch);
         final glyphId = loadedFonts[fontId].face.glyphForChar(ch);
         return glyphId == 0 ? null : glyphId;
     }
@@ -327,6 +455,8 @@ class CeramicTextSystem implements PlatformTextSystem {
 /// Rasterization
 
     public function glyphRasterBounds(params:RenderGlyphParams):Bounds {
+        if (canvas.canvasFont(params.fontId) != null)
+            return canvas.glyphRasterBounds(params);
         final face = loadedFonts[params.fontId].face;
         final b = rasterizer.rasterBounds(face, params.glyphId, params.fontSize * params.scaleFactor, subpixelOffsetX(params), subpixelOffsetY(params), bitmap);
         if (b.width <= 0 || b.height <= 0)
@@ -343,6 +473,9 @@ class CeramicTextSystem implements PlatformTextSystem {
     }
 
     public function rasterizeGlyph(params:RenderGlyphParams, rasterBounds:Bounds):Bytes {
+        final canvasFont = canvas.canvasFont(params.fontId);
+        if (canvasFont != null)
+            return canvas.rasterizeGlyph(canvasFont, params, rasterBounds);
         if (rasterBounds.size.width == 0 || rasterBounds.size.height == 0)
             throw 'glyph bounds are empty';
         if (params.subpixelRendering)
@@ -373,6 +506,23 @@ class CeramicTextSystem implements PlatformTextSystem {
 /// Layout
 
     public function layoutLine(text:String, fontSize:Pixels, runs:Array<FontRun>):LineLayout {
+        if (canvas.backend == null)
+            return nativeLayoutLine(text, fontSize, runs);
+        // Rust `WebTextSystem::layout_line`: shape with the native fonts, then
+        // replace eligible graphemes with canvas glyphs
+        var nativeRuns = runs;
+        for (run in runs) {
+            if (CanvasFallbackText.isCanvasFontId(run.fontId)) {
+                nativeRuns = [for (r in runs) new FontRun(r.len, canvas.nativeFontId(r.fontId))];
+                break;
+            }
+        }
+        final layout = nativeLayoutLine(text, fontSize, nativeRuns);
+        canvas.applyFallback(text, nativeRuns, layout);
+        return layout;
+    }
+
+    function nativeLayoutLine(text:String, fontSize:Pixels, runs:Array<FontRun>):LineLayout {
         if (containsParagraphSeparator(text)) {
             return layoutLineWithSeparators(text, fontSize, runs);
         }
@@ -467,22 +617,98 @@ class CeramicTextSystem implements PlatformTextSystem {
     final shapeRuns:Array<ttf.shape.FontRun> = [];
     final fallbackLists:Map<Int, Array<ttf.Font>> = new Map();
 
+    final fallbackListGenerations:Map<Int, Int> = new Map();
+
+    /** Advanced when the faces or the system fallback faces change */
+    var fallbackGeneration:Int = 0;
+
     /**
      * Faces tried for characters missing from `face`: every other face, in
-     * the order fonts were added (cosmic-text falls back on its database).
+     * the order fonts were added (cosmic-text falls back on its database),
+     * then the system fallback faces loaded so far, file by file, the faces
+     * of a file ordered by how close they are to the weight and style of
+     * `face`.
      */
     function databaseFallbacks(face:ttf.Font):Array<ttf.Font> {
         final faceIndex = faces.indexOf(face);
         var list = fallbackLists.get(faceIndex);
-        if (list == null || list.length != faces.length - 1) {
+        if (list == null || fallbackListGenerations.get(faceIndex) != fallbackGeneration) {
             list = [for (f in faces) if (f != face) f];
+            final system = systemFallback;
+            if (system != null && system.faces.length > 0) {
+                final order = [for (i in 0...system.faces.length) i];
+                inline function distance(f:ttf.Font):Int {
+                    return Std.int(Math.abs(f.weight - face.weight)) + (f.italic != face.italic ? 1000 : 0);
+                }
+                // Stable: insertion sort on (file rank, distance)
+                for (i in 1...order.length) {
+                    final v = order[i];
+                    final rank = system.fileRanks[v];
+                    final dist = distance(system.faces[v]);
+                    var j = i - 1;
+                    while (j >= 0) {
+                        final o = order[j];
+                        final oRank = system.fileRanks[o];
+                        if (oRank < rank || (oRank == rank && distance(system.faces[o]) <= dist))
+                            break;
+                        order[j + 1] = o;
+                        j--;
+                    }
+                    order[j + 1] = v;
+                }
+                for (i in order) {
+                    final f = system.faces[i];
+                    if (f != face)
+                        list.push(f);
+                }
+            }
             fallbackLists.set(faceIndex, list);
+            fallbackListGenerations.set(faceIndex, fallbackGeneration);
         }
         return list;
     }
 
+    /** Code points whose coverage was checked (covered, or covered by no system font) */
+    final coverageChecked:Map<Int, Bool> = new Map();
+
+    /**
+     * Loads the system fallback fonts needed by the characters of a line
+     * that no face covers yet (before shaping, so the shaper can use them).
+     */
+    function ensureSystemCoverage(d:Utf8Text):Void {
+        final system = systemFallback;
+        if (system == null)
+            return;
+        for (k in 0...d.count) {
+            final c = d.codePoints[k];
+            if (c <= 0x7F || coverageChecked.exists(c))
+                continue;
+            coverageChecked.set(c, true);
+            if (anyFaceCovers(c, system))
+                continue;
+            final count = system.faces.length;
+            system.loadFaceFor(c);
+            if (system.faces.length != count)
+                fallbackGeneration++;
+        }
+    }
+
+    function anyFaceCovers(c:Int, system:SystemFontFallback):Bool {
+        for (f in faces) {
+            if (f.glyphForChar(c) != 0)
+                return true;
+        }
+        for (f in system.faces) {
+            if (f.glyphForChar(c) != 0)
+                return true;
+        }
+        return false;
+    }
+
     function layoutLineNoSeparators(text:String, fontSize:Pixels, fontRuns:Array<FontRun>):LineLayout {
         final d = decoded.reset(text);
+        if (systemFallback != null)
+            ensureSystemCoverage(d);
         spanStarts.resize(0);
         spanEnds.resize(0);
         spanFontIds.resize(0);
