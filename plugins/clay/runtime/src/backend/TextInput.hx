@@ -64,6 +64,16 @@ class TextInput implements spec.TextInput {
 
         if (inputActive) return;
 
+        #if (clay_sdl && (windows || mac || linux))
+        // Convert from logical native coordinates to SDL window coordinates
+        // (pixels on windows/x11, logical points on mac/wayland)
+        final toWindowCoords = clay.Clay.app.screenDensity / clay.Clay.app.runtime.windowPixelDensity();
+        x *= toWindowCoords;
+        y *= toWindowCoords;
+        w *= toWindowCoords;
+        h *= toWindowCoords;
+        #end
+
         inputRectX = Std.int(x);
         inputRectY = Std.int(y);
 
