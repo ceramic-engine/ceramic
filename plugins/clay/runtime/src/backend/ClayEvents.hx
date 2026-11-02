@@ -440,7 +440,7 @@ class ClayEvents extends clay.Events {
 
         #if web
         // Inside the browser's handler (taps that open the virtual keyboard)
-        @:privateAccess backend.textInput.handleWebTouchDown(touchId, x * lastWidth, y * lastHeight);
+        @:privateAccess backend.textInput.handleWebTouchDown(touchId, touchX(x), touchY(y));
         #end
 
         backend.screen.emitTouchDown(
@@ -476,7 +476,7 @@ class ClayEvents extends clay.Events {
         #if web
         // Inside the browser's handler: a tap on an editable area focuses
         // the hidden textarea now, so that the virtual keyboard opens
-        @:privateAccess backend.textInput.handleWebTouchUp(touchId, x * lastWidth, y * lastHeight);
+        @:privateAccess backend.textInput.handleWebTouchUp(touchId, touchX(x), touchY(y));
         #end
 
         backend.screen.emitTouchUp(
@@ -513,7 +513,7 @@ class ClayEvents extends clay.Events {
         var index = touches.get(touchId);
 
         #if web
-        @:privateAccess backend.textInput.handleWebTouchMove(touchId, x * lastWidth, y * lastHeight);
+        @:privateAccess backend.textInput.handleWebTouchMove(touchId, touchX(x), touchY(y));
         #end
 
         backend.screen.emitTouchMove(
