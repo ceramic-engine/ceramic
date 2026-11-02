@@ -48,7 +48,13 @@ Environment variables: `GPUI_BENCH_SCENARIOS` (comma list, default all),
 result per run), `GPUI_BENCH_RESULTS` (results directory), `GPUI_BENCH_SCREEN`
 (`1`: through the real update loop with the window on screen, adds the
 Ceramic draw time per frame), `GPUI_BENCH_RT` (`1` or `0`: force the render to
-texture mode of the windows), `GPUI_BENCH_ATLAS` (`1`: atlas upload micro
+texture mode of the windows), `GPUI_BENCH_PARTIAL` (`1` or `0`: force the
+partial rendering of the windows' render textures, see
+`SceneRenderable.partialRendering`), `GPUI_BENCH_VERIFY_PARTIAL` (`1`, on
+screen: compare each partially drawn frame byte for byte with a full redraw),
+`GPUI_BENCH_GPU` (`1`, on screen: wait for the GPU after each Ceramic draw,
+`glFinish()` natively and a one pixel read back on the web, and report that
+wait as a proxy of the frame's GPU time), `GPUI_BENCH_ATLAS` (`1`: atlas upload micro
 benchmark instead of the scenarios).
 
 For timings, measure without `gpui_count_allocations` (it is instrumentation)

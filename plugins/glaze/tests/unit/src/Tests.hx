@@ -13,6 +13,7 @@ class Tests {
         runner.add(new tests.GeometryTest());
         runner.add(new tests.ColorTest());
         runner.add(new tests.SceneTest());
+        runner.add(new tests.SceneDamageTest());
         runner.add(new tests.AppTest());
         runner.add(new tests.ReactivityTest());
         runner.add(new tests.EffectsOrderTest());

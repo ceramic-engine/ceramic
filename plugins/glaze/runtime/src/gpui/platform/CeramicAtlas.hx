@@ -128,6 +128,16 @@ class CeramicAtlas extends ceramic.Entity implements PlatformAtlas {
         }
     }
 
+    /**
+     * Count of the times tiles were released (removed, evicted path pages,
+     * atlas cleared): their room can then hold other pixels under the same
+     * tile coordinates (see `SceneDamage`).
+     */
+    public var releaseCount(get, never):Int;
+    inline function get_releaseCount():Int {
+        return state.backend.releaseCount;
+    }
+
     public inline function getGlyph(params:RenderGlyphParams):Null<AtlasTile> {
         return state.getGlyph(params);
     }
@@ -333,6 +343,9 @@ class CeramicAtlasBackend implements AtlasBackend {
     /** Frames drawn with this atlas (see `CeramicAtlas.markSceneUsed()`) */
     public var drawIndex:Int = 0;
 
+    /** See `CeramicAtlas.releaseCount` */
+    public var releaseCount:Int = 0;
+
     var nextTileId:Int = 0;
 
     /** Whether the tile being inserted is a path mask, which gets its own pages. */
@@ -371,6 +384,7 @@ class CeramicAtlasBackend implements AtlasBackend {
         }
         if (oldest == null)
             return null;
+        releaseCount++;
         if (onEvictPage != null)
             onEvictPage(oldest.index);
         if (oldest.allocator != null)
@@ -496,6 +510,7 @@ class CeramicAtlasBackend implements AtlasBackend {
     }
 
     public function remove(tile:AtlasTile):Void {
+        releaseCount++;
         final index = tile.textureId.index;
         if (index >= 0 && index < textures.length && pages[index] == null && textures[index] != null) {
             // External texture: release its slot
@@ -540,6 +555,7 @@ class CeramicAtlasBackend implements AtlasBackend {
     }
 
     public function reset():Void {
+        releaseCount++;
         for (page in pages) {
             if (page == null) continue;
             if (page.allocator != null)

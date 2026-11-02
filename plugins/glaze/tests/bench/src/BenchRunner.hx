@@ -42,7 +42,19 @@ import gpui.util.FrameProfiler;
  * - `GPUI_BENCH_ATLAS`: `1` runs the atlas upload micro benchmark instead;
  * - `GPUI_BENCH_RT`: `1` or `0` forces the `renderToTexture` mode of the
  *   windows' renderables (`SceneRenderable.renderToTexture`), otherwise the
- *   default (`SceneRenderable.defaultRenderToTexture`).
+ *   default (`SceneRenderable.defaultRenderToTexture`);
+ * - `GPUI_BENCH_GPU`: `1` (on screen, clay) calls `glFinish()` (on the web:
+ *   reads one pixel back, `finish()` does not wait there) after each
+ *   Ceramic draw and measures how long it waits: the GPU work left for the
+ *   frame, a proxy of its GPU time (it serializes CPU and GPU, so compare
+ *   runs that both use it);
+ * - `GPUI_BENCH_VERIFY_PARTIAL`: `1` (on screen, clay) also draws every frame
+ *   entirely into a second texture and compares it byte for byte with the
+ *   partially drawn one (`SceneRenderable.verifyPartialRendering`), printing
+ *   the counts after each block (a check, not a measure);
+ * - `GPUI_BENCH_PARTIAL`: `1` or `0` forces the `partialRendering` mode of
+ *   the windows' renderables (`SceneRenderable.partialRendering`), otherwise
+ *   the default (`SceneRenderable.defaultPartialRendering`).
  */
 class BenchRunner {
 
@@ -72,6 +84,8 @@ class BenchRunner {
     final screen:Bool;
 
     final renderToTexture:Null<Bool>;
+
+    final partialRendering:Null<Bool>;
 
     final scenarios:Array<Scenario>;
 
@@ -112,6 +126,11 @@ class BenchRunner {
         screen = env('GPUI_BENCH_SCREEN') == '1';
         final rtEnv = env('GPUI_BENCH_RT');
         renderToTexture = rtEnv == '1' ? true : rtEnv == '0' ? false : null;
+        final partialEnv = env('GPUI_BENCH_PARTIAL');
+        partialRendering = partialEnv == '1' ? true : partialEnv == '0' ? false : null;
+        if (env('GPUI_BENCH_VERIFY_PARTIAL') == '1') {
+            gpui.platform.SceneRenderable.verifyPartialRendering = true;
+        }
         timestamp = DateTools.format(Date.now(), '%Y%m%d-%H%M%S');
         scenarios = select(Scenarios.all());
     }
@@ -174,13 +193,22 @@ class BenchRunner {
     }
 
     public function run():Void {
+        #if js
+        // `web-run.js --profile`: wait until it has enabled the DevTools
+        // profiler, which records the `console.profile` blocks
+        if (env('GPUI_BENCH_PROFILE') == '1' && isElectron() && !isNode() && js.Syntax.code("window.gpuiBenchProfilerReady") != true) {
+            haxe.Timer.delay(run, 100);
+            return;
+        }
+        #end
         if (env('GPUI_BENCH_ATLAS') == '1') {
             atlasBench();
             exit(0);
             return;
         }
         print('gpui benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : '')
-            + (renderToTexture != null ? ', renderToTexture $renderToTexture' : ''));
+            + (renderToTexture != null ? ', renderToTexture $renderToTexture' : '')
+            + (partialRendering != null ? ', partialRendering $partialRendering' : ''));
         final tasks:Array<(Void->Void)->Void> = [];
         for (scenario in scenarios) {
             for (caching in scenario.cachedModes) {
@@ -213,6 +241,9 @@ class BenchRunner {
         final window = scenario.setup(app, caching);
         if (renderToTexture != null) {
             window.renderable.renderToTexture = renderToTexture;
+        }
+        if (partialRendering != null) {
+            window.renderable.partialRendering = partialRendering;
         }
         AllocationCounters.reset();
         window.draw();
@@ -259,12 +290,35 @@ class BenchRunner {
         final drawTimes:Array<Float> = [];
         var drawStart = 0.0;
         var measuringDraws = false;
+        var cpuBefore = 0.0;
         final onBeginDraw = () -> drawStart = now();
+        final gpuTimes:Array<Float> = [];
+        final measureGpu = env('GPUI_BENCH_GPU') == '1';
         final onFinishDraw = () -> {
             if (measuringDraws) drawTimes.push(now() - drawStart);
+            #if clay
+            if (measureGpu) {
+                final start = now();
+                #if web
+                // `finish()` does not wait in browsers: reading a pixel back does
+                clay.opengl.GL.readPixels(0, 0, 1, 1, clay.opengl.GL.RGBA, clay.opengl.GL.UNSIGNED_BYTE, gpuProbe);
+                #else
+                clay.opengl.GL.finish();
+                #end
+                if (measuringDraws) gpuTimes.push(now() - start);
+            }
+            #end
         };
         function frameBody(frame:Int):Void {
             measuringDraws = frame > WARMUP_FRAMES;
+            if (frame == WARMUP_FRAMES + 1) {
+                cpuBefore = cpuTime();
+                gpui.platform.SceneRenderable.partialStatsDraws = 0;
+                gpui.platform.SceneRenderable.partialStatsPartialDraws = 0;
+                gpui.platform.SceneRenderable.partialStatsFullDraws = 0;
+                gpui.platform.SceneRenderable.partialStatsArea = 0;
+                gpui.platform.SceneRenderable.partialStatsTotalArea = 0;
+            }
             final measured = frame >= WARMUP_FRAMES;
             if (frame == WARMUP_FRAMES) {
                 FrameProfiler.reset();
@@ -316,19 +370,41 @@ class BenchRunner {
         ceramic.App.app.onFinishDraw(owner, onFinishDraw);
         handler = _ -> {
             if (frame < total) {
+                if (frame == WARMUP_FRAMES) webMark('begin', label);
                 frameBody(frame++);
                 return;
             }
+            webMark('end', label);
             ceramic.App.app.offUpdate(handler);
             ceramic.App.app.offBeginDraw(onBeginDraw);
             ceramic.App.app.offFinishDraw(onFinishDraw);
             drawTimes.sort(Reflect.compare);
             if (drawTimes.length > 0) {
-                print('  ceramic draw per frame: ${fmt(drawTimes[drawTimes.length >> 1])} ms median, p99 ${fmt(percentile(drawTimes, 0.99))} ms');
+                print('  ceramic draw per frame: ${fmt(drawTimes[drawTimes.length >> 1])} ms median, p99 ${fmt(percentile(drawTimes, 0.99))} ms, max ${fmt(drawTimes[drawTimes.length - 1])} ms');
+                if (gpui.platform.SceneRenderable.verifyPartialRendering) {
+                    print('  partial rendering check: ${gpui.platform.SceneRenderable.partialVerifiedFrames} frames compared, '
+                        + '${gpui.platform.SceneRenderable.partialMismatchedFrames} differ'
+                        + (gpui.platform.SceneRenderable.partialFirstMismatch != null ? ' (${gpui.platform.SceneRenderable.partialFirstMismatch})' : ''));
+                }
+                if (window.renderable.partialRendering) {
+                    print('  partial rendering: ${gpui.platform.SceneRenderable.partialStatsDraws} texture draws, ${gpui.platform.SceneRenderable.partialStatsPartialDraws} partial, ${gpui.platform.SceneRenderable.partialStatsFullDraws} full, redrawn area '
+                        + fmt(gpui.platform.SceneRenderable.partialStatsTotalArea > 0 ? 100 * gpui.platform.SceneRenderable.partialStatsArea / gpui.platform.SceneRenderable.partialStatsTotalArea : 0) + ' %');
+                }
             }
             lastPathRasterizations = pathRasterizations;
             lastDrawMedian = drawTimes.length > 0 ? drawTimes[drawTimes.length >> 1] : 0.0;
             lastDrawP99 = drawTimes.length > 0 ? percentile(drawTimes, 0.99) : 0.0;
+            lastDrawMax = drawTimes.length > 0 ? drawTimes[drawTimes.length - 1] : 0.0;
+            lastCpuPerFrame = (cpuTime() - cpuBefore) / (frames - 1);
+            gpuTimes.sort(Reflect.compare);
+            lastGpuFinishMedian = gpuTimes.length > 0 ? gpuTimes[gpuTimes.length >> 1] : 0.0;
+            lastGpuFinishP99 = gpuTimes.length > 0 ? percentile(gpuTimes, 0.99) : 0.0;
+            if (gpuTimes.length > 0) {
+                print('  glFinish wait per frame: ${fmt(lastGpuFinishMedian)} ms median, p99 ${fmt(lastGpuFinishP99)} ms');
+            }
+            #if cpp
+            print('  process CPU per frame: ${fmt(lastCpuPerFrame)} ms');
+            #end
             finishMeasure(scenario, window, caching, elementCount, run, times, wallTimes, renderedViews, reusedViews, counters, anyElements, minorPausesBefore, minorPauseTotalBefore, gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore);
             done();
         };
@@ -430,7 +506,12 @@ class BenchRunner {
             drawMedianMs: screen ? lastDrawMedian : 0.0,
             pathRasterizationsPerFrame: lastPathRasterizations / frames,
             drawP99Ms: screen ? lastDrawP99 : 0.0,
+            drawMaxMs: screen ? lastDrawMax : 0.0,
+            cpuMsPerFrame: screen ? lastCpuPerFrame : 0.0,
+            gpuFinishMedianMs: screen ? lastGpuFinishMedian : 0.0,
+            gpuFinishP99Ms: screen ? lastGpuFinishP99 : 0.0,
             renderToTexture: window.renderable.renderToTexture,
+            partialRendering: window.renderable.partialRendering,
             phasesMsPerFrame: phases,
             phaseCounts: phaseCounts,
             gc: {

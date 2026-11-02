@@ -35,7 +35,12 @@ import gpui.scene.Underline;
  * scene, a new scale, size or gamma), and a child `Quad` shows that texture
  * without filtering. Ceramic then draws a single quad per frame while the
  * window is idle.
+ *
+ * With `partialRendering` too, only the region that changed since the
+ * scene the texture holds is cleared and drawn again (see `SceneDamage`),
+ * with a scissor, which gives the same bytes as a full redraw.
  */
+@:allow(gpui.platform.SceneTargetDrawer)
 class SceneRenderable extends Renderable {
 
     /**
@@ -46,10 +51,71 @@ class SceneRenderable extends Renderable {
     public static var defaultRenderToTexture:Bool = #if gpui_no_render_to_texture false #else true #end;
 
     /**
+     * Whether new renderables draw only the changed region of their render
+     * texture (see `partialRendering`). On by default: every frame of the
+     * golden scenes (scripts replayed frame by frame) gives the same bytes
+     * as a full redraw. The `gpui_no_partial_rendering` define turns it off.
+     */
+    public static var defaultPartialRendering:Bool = #if gpui_no_partial_rendering false #else true #end;
+
+    /**
+     * Test aid: with `partialRendering`, also draw every frame entirely into
+     * a second render texture and compare both textures byte for byte after
+     * Ceramic's draw (see `partialVerifiedFrames` and the counters next to
+     * it). Must be set before the renderables create their texture.
+     */
+    public static var verifyPartialRendering:Bool = false;
+
+    /**
+     * Test aid: when not null, a copy of each new scene given to a renderable
+     * is appended to it, so that a sequence of scenes drawn without Ceramic
+     * frames in between (scripted golden scenes) can be played back frame by
+     * frame with `verifyPartialRendering`.
+     */
+    public static var recordedScenes:Null<Array<Scene>> = null;
+
+    /**
+     * Statistics of the texture draws in `partialRendering` mode, for
+     * benchmarks: draws, of which partial and full ones, and the sum of the
+     * redrawn areas over the sum of the texture areas (reset them freely).
+     */
+    public static var partialStatsDraws:Int = 0;
+    public static var partialStatsPartialDraws:Int = 0;
+    public static var partialStatsFullDraws:Int = 0;
+    public static var partialStatsArea:Float = 0;
+    public static var partialStatsTotalArea:Float = 0;
+
+    /** Frames compared by `verifyPartialRendering` */
+    public static var partialVerifiedFrames:Int = 0;
+
+    /** Of these, frames drawn partially (the others were full redraws or had no change) */
+    public static var partialDrawnFrames:Int = 0;
+
+    /** Of these, frames drawn entirely (no previous scene, atlas changes, everything changed) */
+    public static var partialFullFrames:Int = 0;
+
+    /** Of these, frames whose textures differed */
+    public static var partialMismatchedFrames:Int = 0;
+
+    /** Description of the first mismatch, if any */
+    public static var partialFirstMismatch:Null<String> = null;
+
+    /** Sum of the redrawn areas of the compared frames, over the sum of the texture areas */
+    public static var partialRedrawnArea:Float = 0;
+    public static var partialTotalArea:Float = 0;
+
+    /**
      * Scene to draw. Not owned: the window replaces it every frame.
      */
     public var scene(default, set):Scene = null;
     function set_scene(scene:Scene):Scene {
+        if (recordedScenes != null && scene != null && scene != this.scene) {
+            // Copy: the window reuses its two scenes
+            final copy = new Scene();
+            copy.replay(0, scene.paintIndex(), scene);
+            copy.finish();
+            recordedScenes.push(copy);
+        }
         this.scene = scene;
         if (atlas != null && scene != null) {
             atlas.markSceneUsed(scene);
@@ -115,6 +181,52 @@ class SceneRenderable extends Renderable {
         return renderToTexture;
     }
 
+    /**
+     * In `renderToTexture` mode, clear and draw again only the region of the
+     * texture that changed since its last draw, instead of all of it.
+     * Defaults to `defaultPartialRendering`. Needs the clay backend (other
+     * backends always draw the whole texture).
+     */
+    public var partialRendering(default, set):Bool = false;
+    function set_partialRendering(partialRendering:Bool):Bool {
+        if (this.partialRendering != partialRendering) {
+            this.partialRendering = partialRendering;
+            damage.invalidate();
+            targetLayoutDirty();
+            markRenderDirty();
+        }
+        return partialRendering;
+    }
+
+    /** Changed region between two scenes (`partialRendering`) */
+    final damage:SceneDamage = new SceneDamage();
+
+    /**
+     * Partial rendering of the frame being drawn: only the primitives whose
+     * rectangle (see `SceneDamage`) intersects `regionX0, regionY0` to
+     * `regionX1, regionY1` are drawn.
+     */
+    var regionClip:Bool = false;
+    var regionX0:Int = 0;
+    var regionY0:Int = 0;
+    var regionX1:Int = 0;
+    var regionY1:Int = 0;
+
+    /** Index (in draw order) of the first primitive of the batch being drawn */
+    var batchBase:Int = 0;
+
+    /** Full redraws of `verifyPartialRendering` */
+    var verifyTexture:Null<ceramic.RenderTexture> = null;
+    var verifyDrawer:Null<SceneTargetDrawer> = null;
+
+    /** Set by the partial drawer when it draws (`verifyPartialRendering`) */
+    var verifyPending:Bool = false;
+    var verifyPendingArea:Float = 0;
+    var verifyPendingPartial:Bool = false;
+    var verifyPendingFull:Bool = false;
+    var verifyPixels:Null<ceramic.UInt8Array> = null;
+    var verifyReferencePixels:Null<ceramic.UInt8Array> = null;
+
     /** Render texture of `renderToTexture` (null until the first update) */
     public var targetTexture(default, null):Null<ceramic.RenderTexture> = null;
 
@@ -136,6 +248,7 @@ class SceneRenderable extends Renderable {
     function set_fontsGamma(fontsGamma:Float):Float {
         this.fontsGamma = Math.max(1.0, Math.min(2.2, fontsGamma));
         gammaRatiosDirty = true;
+        damage.invalidate();
         markRenderDirty();
         return this.fontsGamma;
     }
@@ -147,6 +260,7 @@ class SceneRenderable extends Renderable {
     public var grayscaleEnhancedContrast(default, set):Float = 0.0;
     function set_grayscaleEnhancedContrast(grayscaleEnhancedContrast:Float):Float {
         this.grayscaleEnhancedContrast = grayscaleEnhancedContrast;
+        damage.invalidate();
         markRenderDirty();
         return grayscaleEnhancedContrast;
     }
@@ -195,6 +309,9 @@ class SceneRenderable extends Renderable {
         if (defaultRenderToTexture) {
             renderToTexture = true;
         }
+        if (defaultPartialRendering) {
+            partialRendering = true;
+        }
 
     }
 
@@ -235,6 +352,23 @@ class SceneRenderable extends Renderable {
         if (targetTexture != null) {
             targetTexture.renderDirty = true;
         }
+        if (verifyTexture != null) {
+            verifyTexture.renderDirty = true;
+        }
+
+    }
+
+    /**
+     * Whether the texture is drawn partially (`partialRendering` on a
+     * backend that supports it).
+     */
+    inline function partialActive():Bool {
+
+        #if clay
+        return partialRendering;
+        #else
+        return false;
+        #end
 
     }
 
@@ -274,6 +408,8 @@ class SceneRenderable extends Renderable {
             && targetTexture.density == density
             && Math.round(targetTexture.width * density) == textureWidth
             && Math.round(targetTexture.height * density) == textureHeight) {
+            targetTexture.clearOnRender = !partialActive();
+            updateVerifyTarget();
             layoutTargetQuad();
             return;
         }
@@ -288,10 +424,12 @@ class SceneRenderable extends Renderable {
         // their primitives themselves, nothing clips with the stencil
         final texture = new ceramic.RenderTexture(width, height, density, false, false, 0);
         texture.autoRender = false;
-        texture.clearOnRender = true;
+        // In partial mode, the drawer clears what it draws again
+        texture.clearOnRender = !partialActive();
         texture.filter = NEAREST;
         texture.renderDirty = true;
         targetTexture = texture;
+        damage.invalidate();
 
         if (targetDrawer == null) {
             targetDrawer = new SceneTargetDrawer(this);
@@ -309,6 +447,96 @@ class SceneRenderable extends Renderable {
         }
         targetQuad.texture = texture;
         layoutTargetQuad();
+        updateVerifyTarget();
+
+    }
+
+    /**
+     * Creates, resizes or destroys the reference texture of
+     * `verifyPartialRendering`.
+     */
+    function updateVerifyTarget():Void {
+
+        if (!verifyPartialRendering || !partialActive() || targetTexture == null) {
+            destroyVerifyTarget();
+            return;
+        }
+        if (verifyTexture != null
+            && verifyTexture.density == targetTexture.density
+            && verifyTexture.width == targetTexture.width
+            && verifyTexture.height == targetTexture.height) {
+            return;
+        }
+        destroyVerifyTarget();
+        final texture = new ceramic.RenderTexture(targetTexture.width, targetTexture.height, targetTexture.density, false, false, 0);
+        texture.autoRender = false;
+        texture.clearOnRender = true;
+        texture.renderDirty = true;
+        verifyTexture = texture;
+        verifyDrawer = new SceneTargetDrawer(this, true);
+        verifyDrawer.usedTexturesDirty = true;
+        texture.add(verifyDrawer);
+        ceramic.App.app.onFinishDraw(this, verifyAfterDraw);
+
+    }
+
+    function destroyVerifyTarget():Void {
+
+        if (verifyDrawer != null) {
+            verifyDrawer.destroy();
+            verifyDrawer = null;
+        }
+        if (verifyTexture != null) {
+            verifyTexture.destroy();
+            verifyTexture = null;
+            ceramic.App.app.offFinishDraw(verifyAfterDraw);
+        }
+        verifyPending = false;
+
+    }
+
+    /**
+     * Compares the partially drawn texture with the full redraw of the same
+     * scene (`verifyPartialRendering`), after Ceramic drew both.
+     */
+    function verifyAfterDraw():Void {
+
+        if (!verifyPending || targetTexture == null || verifyTexture == null) return;
+        verifyPending = false;
+
+        final pixelCount = Std.int(targetTexture.nativeWidthActual * targetTexture.nativeHeightActual * 4);
+        if (verifyPixels == null || verifyPixels.length != pixelCount) {
+            verifyPixels = new ceramic.UInt8Array(pixelCount);
+            verifyReferencePixels = new ceramic.UInt8Array(pixelCount);
+        }
+        targetTexture.fetchPixels(verifyPixels);
+        verifyTexture.fetchPixels(verifyReferencePixels);
+
+        partialVerifiedFrames++;
+        if (verifyPendingPartial) partialDrawnFrames++;
+        if (verifyPendingFull) partialFullFrames++;
+        partialRedrawnArea += verifyPendingArea;
+        partialTotalArea += targetTexture.nativeWidthActual * targetTexture.nativeHeightActual;
+
+        var differing = 0;
+        var first = -1;
+        for (i in 0...pixelCount) {
+            if (verifyPixels[i] != verifyReferencePixels[i]) {
+                if (first < 0) first = i;
+                differing++;
+            }
+        }
+        if (differing > 0) {
+            partialMismatchedFrames++;
+            if (partialFirstMismatch == null) {
+                final width = Std.int(targetTexture.nativeWidthActual);
+                final pixel = Std.int(first / 4);
+                partialFirstMismatch = 'frame ${partialVerifiedFrames}: $differing bytes differ, first at texel '
+                    + '(${pixel % width}, ${Std.int(pixel / width)}) ${verifyPixels[first]} instead of ${verifyReferencePixels[first]}'
+                    + ', region ${damage.x0},${damage.y0} to ${damage.x1},${damage.y1}'
+                    + (verifyPendingPartial ? ' (partial)' : ' (full)');
+            }
+        }
 
     }
 
@@ -321,6 +549,8 @@ class SceneRenderable extends Renderable {
 
     function destroyTarget():Void {
 
+        destroyVerifyTarget();
+        damage.invalidate();
         if (targetQuad != null) {
             targetQuad.destroy();
             targetQuad = null;
@@ -378,19 +608,22 @@ class SceneRenderable extends Renderable {
         // In `renderToTexture` mode, `targetDrawer` draws the scene into the
         // texture shown by `targetQuad`
         if (renderToTexture) return;
+        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
         renderScene(draw, matA, matB, matC, matD, matTX, matTY);
+        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
 
     }
 
     /**
      * Draws the scene with the given local (logical units) to world matrix.
      */
-    @:allow(gpui.platform.SceneTargetDrawer)
     function renderScene(draw:backend.Draw, a:Float, b:Float, c:Float, d:Float, tx:Float, ty:Float):Void {
 
         if (scene == null || scene.len() == 0) return;
-        if (!ensureShaders()) return;
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
+        if (!ensureShaders()) {
+            damage.invalidate();
+            return;
+        }
 
         if (gammaRatiosDirty) {
             gammaRatiosDirty = false;
@@ -413,7 +646,10 @@ class SceneRenderable extends Renderable {
 
         scene.resetBatches();
         var batch = scene.nextBatch();
+        var nextBase = 0;
         while (batch != null) {
+            batchBase = nextBase;
+            nextBase += batch.end - batch.start;
             switch batch.kind {
                 case Shadow:
                     drawShadows(draw, batch);
@@ -433,7 +669,6 @@ class SceneRenderable extends Renderable {
         }
 
         draw.flush();
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
 
     }
 
@@ -478,6 +713,22 @@ class SceneRenderable extends Renderable {
         }
 
         a = alpha;
+
+    }
+
+    /**
+     * Whether the primitive at `index` (in draw order) of a batch is left
+     * out of a partial redraw: its rectangle misses the redrawn region, so
+     * it changes none of its pixels.
+     */
+    inline function outsideRegion(index:Int):Bool {
+
+        return regionClip && (
+            damage.drawnRectX0(index) >= regionX1
+            || damage.drawnRectX1(index) <= regionX0
+            || damage.drawnRectY0(index) >= regionY1
+            || damage.drawnRectY1(index) <= regionY0
+        );
 
     }
 
@@ -531,6 +782,7 @@ class SceneRenderable extends Renderable {
         final quads = scene.quads;
 
         for (q in batch.start...batch.end) {
+            if (outsideRegion(batchBase + q - batch.start)) continue;
             final quad = quads[q];
             ensureCapacity(draw, quadShader);
             final base = draw.getNumPos();
@@ -624,6 +876,7 @@ class SceneRenderable extends Renderable {
         final shadows = scene.shadows;
 
         for (s in batch.start...batch.end) {
+            if (outsideRegion(batchBase + s - batch.start)) continue;
             final shadow = shadows[s];
             ensureCapacity(draw, shadowShader);
             final base = draw.getNumPos();
@@ -707,6 +960,7 @@ class SceneRenderable extends Renderable {
         final underlines = scene.underlines;
 
         for (u in batch.start...batch.end) {
+            if (outsideRegion(batchBase + u - batch.start)) continue;
             final underline = underlines[u];
             ensureCapacity(draw, underlineShader);
             final base = draw.getNumPos();
@@ -772,6 +1026,7 @@ class SceneRenderable extends Renderable {
         final sprites = scene.monochromeSprites;
 
         for (si in batch.start...batch.end) {
+            if (outsideRegion(batchBase + si - batch.start)) continue;
             final sprite:MonochromeSprite = sprites[si];
             ensureCapacity(draw, monoSpriteShader);
             final base = draw.getNumPos();
@@ -837,6 +1092,7 @@ class SceneRenderable extends Renderable {
         final paths = scene.paths;
 
         for (si in batch.start...batch.end) {
+            if (outsideRegion(batchBase + si - batch.start)) continue;
             final path = paths[si];
             ensureCapacity(draw, pathSpriteShader);
             final base = draw.getNumPos();
@@ -977,6 +1233,7 @@ class SceneRenderable extends Renderable {
         final sprites = scene.polychromeSprites;
 
         for (si in batch.start...batch.end) {
+            if (outsideRegion(batchBase + si - batch.start)) continue;
             final sprite:PolychromeSprite = sprites[si];
             ensureCapacity(draw, polySpriteShader);
             final base = draw.getNumPos();
@@ -1081,10 +1338,14 @@ class SceneTargetDrawer extends Renderable {
 
     final owner:SceneRenderable;
 
-    function new(owner:SceneRenderable) {
+    /** Always draws the whole scene (reference of `verifyPartialRendering`) */
+    final reference:Bool;
+
+    function new(owner:SceneRenderable, reference:Bool = false) {
 
         super();
         this.owner = owner;
+        this.reference = reference;
         pos(0, 0);
 
     }
@@ -1109,9 +1370,90 @@ class SceneTargetDrawer extends Renderable {
         // GPU rasterizes and interpolates exactly like on the screen, with
         // the texture rows bottom up (`targetQuad` shows them mirrored back)
         final height = owner.targetTexture != null ? owner.targetTexture.height : owner.height;
-        owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+
+        // The reference drawer of `verifyPartialRendering` is left out
+        if (!reference) gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
+        #if clay
+        if (!reference && owner.partialRendering && owner.targetTexture != null) {
+            renderPartial(draw, height);
+        }
+        else
+        #end
+        {
+            owner.regionClip = false;
+            owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+        }
+        if (!reference) gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
 
     }
+
+    #if clay
+    /**
+     * `partialRendering`: clears and draws again the region that changed
+     * since the last draw (see `SceneDamage`), with a scissor. The texture
+     * is not cleared by Ceramic in this mode (`clearOnRender` is off).
+     */
+    function renderPartial(draw:backend.Draw, height:Float):Void {
+
+        final texture = owner.targetTexture;
+        final pixelWidth = Std.int(texture.nativeWidthActual);
+        final pixelHeight = Std.int(texture.nativeHeightActual);
+        final damage = owner.damage;
+
+        if (!owner.ensureShaders()) {
+            damage.invalidate();
+            draw.batcher.clear(0, 0, 0, 0, false);
+            return;
+        }
+
+        damage.record(owner.scene, owner.atlasTextures, owner.atlas != null ? owner.atlas.releaseCount : -1);
+        damage.diff(pixelWidth, pixelHeight);
+
+        final x0 = damage.x0;
+        final y0 = damage.y0;
+        final x1 = damage.x1;
+        final y1 = damage.y1;
+        final area = (x1 - x0) * (y1 - y0);
+
+        SceneRenderable.partialStatsDraws++;
+        if (damage.full) SceneRenderable.partialStatsFullDraws++;
+        else if (area > 0) SceneRenderable.partialStatsPartialDraws++;
+        SceneRenderable.partialStatsArea += area;
+        SceneRenderable.partialStatsTotalArea += pixelWidth * pixelHeight;
+
+        if (SceneRenderable.verifyPartialRendering) {
+            owner.verifyPending = true;
+            owner.verifyPendingArea = area;
+            owner.verifyPendingPartial = !damage.full && area > 0;
+            owner.verifyPendingFull = damage.full;
+        }
+
+        if (area <= 0) return;
+
+        if (damage.full) {
+            owner.regionClip = false;
+            draw.batcher.clear(0, 0, 0, 0, false);
+            owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+            return;
+        }
+
+        // Scene rows are drawn where the screen would have them (see
+        // `render()`): scene row y is framebuffer row `pixelHeight - 1 - y`
+        draw.flush();
+        draw.batcher.enableScissor(x0, pixelHeight - y1, x1 - x0, y1 - y0);
+        draw.batcher.clear(0, 0, 0, 0, false);
+        owner.regionClip = true;
+        owner.regionX0 = x0;
+        owner.regionY0 = y0;
+        owner.regionX1 = x1;
+        owner.regionY1 = y1;
+        owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+        owner.regionClip = false;
+        draw.flush();
+        draw.batcher.disableScissor();
+
+    }
+    #end
 
 }
 
