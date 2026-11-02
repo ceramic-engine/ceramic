@@ -76,6 +76,44 @@ interface Screen {
     function setWindowFullscreen(fullscreen:Bool):Void;
 
     /**
+     * Minimizes the window (does nothing where windows cannot be minimized:
+     * web, mobile, headless).
+     */
+    function minimizeWindow():Void;
+
+    /**
+     * Maximizes the window (does nothing where windows cannot be maximized).
+     */
+    function maximizeWindow():Void;
+
+    /**
+     * Restores a minimized or maximized window to its normal size.
+     */
+    function restoreWindow():Void;
+
+    /**
+     * Whether the window is maximized (always false where windows cannot be
+     * maximized).
+     */
+    function isWindowMaximized():Bool;
+
+    /**
+     * Opens the system menu of the window at the given position, in native
+     * window coordinates (points), where the platform has one.
+     */
+    function showWindowMenu(x:Float, y:Float):Void;
+
+    /**
+     * Sets the regions of the window that move or resize it when the pointer
+     * drags them, for windows that draw their own title bar and borders: a
+     * flat list of `x, y, width, height, kind` in native window coordinates
+     * (points), the last matching region wins (`kind` is a
+     * `ceramic.WindowHitKind`). An empty list removes them. Does nothing
+     * where the platform has no such regions (web, mobile, headless).
+     */
+    function setWindowHitRegions(regions:Array<Float>):Void;
+
+    /**
      * Shows or hides the mouse cursor while it is over the app.
      * Has no effect on platforms without a mouse cursor.
      * 

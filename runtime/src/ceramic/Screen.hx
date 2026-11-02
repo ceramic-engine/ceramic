@@ -1836,4 +1836,97 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
     }
 
+
+/// Window
+
+    /**
+     * Minimizes the window. Does nothing where windows cannot be minimized
+     * (web, mobile, headless).
+     */
+    public function minimizeWindow():Void {
+
+        app.backend.screen.minimizeWindow();
+
+    }
+
+    /**
+     * Maximizes the window. Does nothing where windows cannot be maximized.
+     */
+    public function maximizeWindow():Void {
+
+        app.backend.screen.maximizeWindow();
+
+    }
+
+    /**
+     * Restores a minimized or maximized window to its normal size.
+     */
+    public function restoreWindow():Void {
+
+        app.backend.screen.restoreWindow();
+
+    }
+
+    /**
+     * Whether the window is maximized (always false where windows cannot be
+     * maximized).
+     */
+    public var windowMaximized(get, never):Bool;
+    function get_windowMaximized():Bool {
+        return app.backend.screen.isWindowMaximized();
+    }
+
+    /**
+     * Opens the system menu of the window (move, size, minimize, close...)
+     * at the given position in screen coordinates, where the platform has
+     * one (Windows, some Linux desktops).
+     */
+    public function showWindowMenu(x:Float, y:Float):Void {
+
+        app.backend.screen.showWindowMenu(screenToNativeX(x, y), screenToNativeY(x, y));
+
+    }
+
+    /**
+     * Sets the regions of the window that move or resize it when the pointer
+     * drags them, for apps that draw their own title bar and borders: a flat
+     * list of `x, y, width, height, kind` in screen coordinates (`kind` is a
+     * `WindowHitKind`), the last matching region wins. An empty list removes
+     * them. Does nothing where the platform has no such regions (web,
+     * mobile, headless).
+     */
+    public function setWindowHitRegions(regions:Array<Float>):Void {
+
+        final native:Array<Float> = [];
+        var i = 0;
+        while (i + 4 < regions.length) {
+            final x0 = regions[i];
+            final y0 = regions[i + 1];
+            final x1 = x0 + regions[i + 2];
+            final y1 = y0 + regions[i + 3];
+            final nx0 = screenToNativeX(x0, y0);
+            final ny0 = screenToNativeY(x0, y0);
+            final nx1 = screenToNativeX(x1, y1);
+            final ny1 = screenToNativeY(x1, y1);
+            native.push(Math.min(nx0, nx1));
+            native.push(Math.min(ny0, ny1));
+            native.push(Math.abs(nx1 - nx0));
+            native.push(Math.abs(ny1 - ny0));
+            native.push(regions[i + 4]);
+            i += 5;
+        }
+        app.backend.screen.setWindowHitRegions(native);
+
+    }
+
+    /** Screen (logical) coordinates to native window coordinates (points). */
+    inline function screenToNativeX(x:Float, y:Float):Float {
+        return matrix.transformX(x, y) / nativeDensity;
+    }
+
+    /** Screen (logical) coordinates to native window coordinates (points). */
+    inline function screenToNativeY(x:Float, y:Float):Float {
+        return matrix.transformY(x, y) / nativeDensity;
+    }
+
 }

@@ -266,6 +266,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    public function minimizeWindow():Void {}
+
+    public function maximizeWindow():Void {}
+
+    public function restoreWindow():Void {}
+
+    public function isWindowMaximized():Bool {
+        return false;
+    }
+
+    public function showWindowMenu(x:Float, y:Float):Void {}
+
+    public function setWindowHitRegions(regions:Array<Float>):Void {}
+
     #if !no_backend_docs
     /**
      * Shows or hides the mouse cursor.

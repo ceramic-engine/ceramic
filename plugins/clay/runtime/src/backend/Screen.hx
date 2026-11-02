@@ -205,6 +205,42 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    public function minimizeWindow():Void {
+
+        Clay.app.runtime.minimizeWindow();
+
+    }
+
+    public function maximizeWindow():Void {
+
+        Clay.app.runtime.maximizeWindow();
+
+    }
+
+    public function restoreWindow():Void {
+
+        Clay.app.runtime.restoreWindow();
+
+    }
+
+    public function isWindowMaximized():Bool {
+
+        return Clay.app.runtime.isWindowMaximized();
+
+    }
+
+    public function showWindowMenu(x:Float, y:Float):Void {
+
+        Clay.app.runtime.showWindowMenu(x, y);
+
+    }
+
+    public function setWindowHitRegions(regions:Array<Float>):Void {
+
+        Clay.app.runtime.setWindowHitRegions(regions);
+
+    }
+
     public function setCursorVisible(visible:Bool):Void {
 
         Clay.app.runtime.setCursorVisible(visible);
