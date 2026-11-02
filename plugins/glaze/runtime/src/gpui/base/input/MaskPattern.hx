@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/mask_pattern.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deliberate deviation DEV-018 (a comma is a decimal separator in a number mask). See DEVIATIONS.md.
 package gpui.base.input;
 
 /**
@@ -197,6 +198,10 @@ class MaskPatternTools {
                     return true;
                 }
 
+                // Modified for ceramic-gpui (DEV-018): a comma is a decimal
+                // separator, unless the mask groups digits with it.
+                final maskText = commaIsDecimal(separator) ? StringTools.replace(maskText, ',', '.') : maskText;
+
                 // check if the text is valid number
                 final parts = maskText.split('.');
                 final intPart = parts[0];
@@ -283,6 +288,9 @@ class MaskPatternTools {
 
         switch self {
             case Number(separator, fraction):
+                // Modified for ceramic-gpui (DEV-018): a comma typed or pasted
+                // as the decimal separator becomes a dot.
+                final text = commaIsDecimal(separator) ? StringTools.replace(text, ',', '.') : text;
                 if (separator != null) {
                     final sep:Int = separator;
                     // Remove the existing group separator
@@ -465,6 +473,16 @@ class MaskPatternTools {
 
     static inline function isSign(ch:Int):Bool {
         return ch == '+'.code || ch == '-'.code;
+    }
+
+    /**
+     * Deliberate deviation DEV-018: whether a number mask takes a comma as the
+     * decimal separator (the one software keypads show in regions that write
+     * decimals with a comma). Not when the mask groups digits with a comma (or
+     * a dot), where the comma keeps its meaning of group separator.
+     */
+    public static function commaIsDecimal(separator:Null<Int>):Bool {
+        return separator != ','.code && separator != '.'.code;
     }
 
     /** The code points of a string (Rust `str::chars`). */

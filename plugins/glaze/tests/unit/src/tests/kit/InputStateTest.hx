@@ -586,19 +586,35 @@ class InputStateTest extends InputStateTestCase {
     function testNumberInputEscapeInvalidText() {
         // A pre-existing invalid text (e.g. a `default_value` that does not
         // conform) must not trap the user, the edit is allowed to fix it.
+        //
+        // Deliberate deviation DEV-018: the comma is a decimal separator in
+        // this mask, so gpui-kit's "1,234" (invalid there) is the valid 1.234
+        // here, and the edit gives "1.23" where gpui-kit keeps "1,23". The
+        // escape itself is covered with a text invalid on both sides below.
         final view = build(state -> state.withMaskPattern(Number(null, null)).defaultValue("1,234"));
         view.update((state, window, cx) -> {
-            // Delete the last char, the pending text "1,23" is still
-            // invalid, but the edit is allowed since the old text was
-            // already invalid.
             state.replaceTextInRange(state.rangeToUtf16(range(4, 5)), "", window, cx);
-            assertEquals("1,23", state.value());
+            assertEquals("1.23", state.value());
 
-            // Once the text becomes valid, the validation works as usual.
             state.replaceTextInRange(state.rangeToUtf16(range(1, 2)), "", window, cx);
             assertEquals("123", state.value());
             state.replaceTextInRange(null, "a", window, cx);
             assertEquals("123", state.value());
+        });
+
+        final view = build(state -> state.withMaskPattern(Number(null, null)).defaultValue("1,2,34"));
+        view.update((state, window, cx) -> {
+            // Delete the last char, the pending text "1,2,3" is still
+            // invalid (two decimal separators), but the edit is allowed since
+            // the old text was already invalid.
+            state.replaceTextInRange(state.rangeToUtf16(range(5, 6)), "", window, cx);
+            assertEquals("1.2.3", state.value());
+
+            // Once the text becomes valid, the validation works as usual.
+            state.replaceTextInRange(state.rangeToUtf16(range(1, 2)), "", window, cx);
+            assertEquals("12.3", state.value());
+            state.replaceTextInRange(null, "a", window, cx);
+            assertEquals("12.3", state.value());
         });
     }
 
