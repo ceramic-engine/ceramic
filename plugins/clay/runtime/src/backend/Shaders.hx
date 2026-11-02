@@ -384,6 +384,24 @@ class Shaders implements spec.Shaders {
     }
 
     /**
+     * Returns the maximum number of vertex attributes of the GPU.
+     *
+     * @return `MAX_VERTEX_ATTRIBS`
+     */
+    public function maxVertexAttributes():Int {
+        return clay.Clay.app.graphics.getMaxVertexAttributes();
+    }
+
+    /**
+     * Returns the maximum number of varying vectors of the GPU.
+     *
+     * @return `MAX_VARYING_VECTORS`
+     */
+    public function maxVaryingVectors():Int {
+        return clay.Clay.app.graphics.getMaxVaryingVectors();
+    }
+
+    /**
      * Checks if a shader supports multi-texture batching.
      * Multi-texture shaders can render multiple textures in a single draw call.
      *

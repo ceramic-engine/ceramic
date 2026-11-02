@@ -200,6 +200,32 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
+     * Gets the maximum number of vertex attributes.
+     *
+     * @return 16 in headless mode (no shader is compiled)
+     */
+    #end
+    public function maxVertexAttributes():Int {
+
+        return 16;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Gets the maximum number of varying vectors.
+     *
+     * @return 32 in headless mode (no shader is compiled)
+     */
+    #end
+    public function maxVaryingVectors():Int {
+
+        return 32;
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Determines if a shader can batch multiple textures in a single draw call.
      * 
      * @param shader The shader to check

@@ -174,6 +174,24 @@ interface Shaders {
     function maxIfStatementsByFragmentShader():Int;
 
     /**
+     * Gets the maximum number of vertex attributes a shader can read
+     * (`MAX_VERTEX_ATTRIBS` on OpenGL and WebGL). Some configurations give
+     * the minimum of the specification (8 on WebGL with Firefox's
+     * fingerprinting resistance), so a shader can check it before loading.
+     * @return The maximum vertex attribute count
+     */
+    function maxVertexAttributes():Int;
+
+    /**
+     * Gets the maximum number of varying vectors (4 floats each) from the
+     * vertex shader to the fragment shader (`MAX_VARYING_VECTORS` on OpenGL
+     * ES and WebGL, where the varyings are packed with the rules of GLSL ES
+     * 1.0, appendix A).
+     * @return The maximum varying vector count
+     */
+    function maxVaryingVectors():Int;
+
+    /**
      * Checks if the shader supports batching with multiple textures.
      * When true, the shader can render geometry using different textures
      * in a single draw call by using texture arrays or multi-texturing.

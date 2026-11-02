@@ -312,6 +312,32 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
+     * Gets the maximum number of vertex attributes.
+     * Unity shaders are written per platform, not limited like WebGL.
+     * @return 16
+     */
+    #end
+    inline public function maxVertexAttributes():Int {
+
+        return 16;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Gets the maximum number of varying vectors.
+     * Unity shaders are written per platform, not limited like WebGL.
+     * @return 32
+     */
+    #end
+    inline public function maxVaryingVectors():Int {
+
+        return 32;
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Checks if a shader supports multi-texture batching.
      * Multi-texture shaders can render with up to 8 textures in one draw call.
      * @param shader Shader to check
