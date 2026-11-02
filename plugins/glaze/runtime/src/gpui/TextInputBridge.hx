@@ -2,6 +2,7 @@
 // handling) and gpui-pre 0.3.10 src/window.rs (IME position)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: rewritten in Haxe on top of Ceramic's text editing events. See NOTICE.md.
+// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
 package gpui;
 
 /**
@@ -200,12 +201,30 @@ class TextInputBridge implements PlatformTextInput {
     }
 
     /**
+     * Where `applyConfiguration` sends the Ceramic arguments (`inputMode`,
+     * `enterKeyHint`, `autocapitalize`, `autocorrect`, `spellcheck`). Tests
+     * replace it to see what reaches Ceramic, and restore it.
+     */
+    public static var sendConfiguration:(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool) -> Void = sendToCeramic;
+
+    static function sendToCeramic(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {
+        ceramic.App.app.input.setTextEditingConfiguration(inputMode, enterKeyHint, autocapitalize, autocorrect, spellcheck);
+    }
+
+    /**
      * Gives the text assistance preferences to Ceramic, which maps them onto
      * its hidden editable element on the web like GPUI's web platform
-     * (`ime_mirror.rs` `apply_configuration`). GPUI has no input purpose, so
-     * the input mode is always `text`.
+     * (`ime_mirror.rs` `apply_configuration`). The input mode is the one the
+     * field asks for (deliberate deviation DEV-017: `decimal` or `numeric`
+     * for a number field that cannot hold a negative value, `text` otherwise;
+     * GPUI has no input mode and always asks for `text`).
      */
     public static function applyConfiguration(configuration:TextInputConfiguration):Void {
+        final inputMode = switch configuration.inputMode {
+            case Text: 'text';
+            case Decimal: 'decimal';
+            case Numeric: 'numeric';
+        }
         final enterKeyHint = switch configuration.inputAction {
             case Unspecified: null;
             case Enter: 'enter';
@@ -222,7 +241,7 @@ class TextInputBridge implements PlatformTextInput {
             case Sentences: 'sentences';
             case Characters: 'characters';
         }
-        ceramic.App.app.input.setTextEditingConfiguration('text', enterKeyHint, autocapitalize, configuration.autocorrect, configuration.suggestions);
+        sendConfiguration(inputMode, enterKeyHint, autocapitalize, configuration.autocorrect, configuration.suggestions);
     }
 
     public function textInputStateChanged(change:TextInputStateChange):Void {

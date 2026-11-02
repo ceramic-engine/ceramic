@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-009 (no Change event when the value did not change). See DEVIATIONS.md.
 // Also modified: deliberate deviation DEV-015 (typing over a selection undoes in one step). See DEVIATIONS.md.
+// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
 package gpui.base.input;
 
 import gpui.Action;
@@ -1019,7 +1020,31 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // opt-in for structured fields such as passwords, email and URLs.
         final autocorrect = this.autocorrect != null ? this.autocorrect : false;
         final inputAction = this.inputAction != null ? this.inputAction : (isMultiLine() && !submitOnEnter ? TextInputAction.Enter : TextInputAction.Done);
-        return new TextInputConfiguration(autocorrect, autocapitalize != null ? autocapitalize : Autocapitalize.None, autocorrect, inputAction);
+        // Modified for ceramic-gpui (DEV-017): the input mode
+        return new TextInputConfiguration(autocorrect, autocapitalize != null ? autocapitalize : Autocapitalize.None, autocorrect, inputAction, numberInputMode());
+    }
+
+    /**
+     * Deliberate deviation DEV-017: the software keyboard suited to what a
+     * number field (a single-line input with a number mask, which
+     * `NumberInput` sets) accepts. The numeric and decimal keypads of iOS
+     * have no minus sign, so a field that may hold a negative value (no
+     * `min`, or a negative one) keeps the text keyboard. A field whose mask
+     * drops the fraction (a group separator with `fraction` 0) takes digits
+     * only; any other takes a decimal separator too. A `pattern` or
+     * `validate` check can only narrow what the mask accepts.
+     */
+    function numberInputMode():TextInputMode {
+        switch maskPattern {
+            case Number(separator, fraction):
+                final min = numberMin;
+                if (!isSingleLine() || min == null || !(min >= 0)) {
+                    return TextInputMode.Text;
+                }
+                return separator != null && fraction == 0 ? TextInputMode.Numeric : TextInputMode.Decimal;
+            case _:
+                return TextInputMode.Text;
+        }
     }
 
     /** Set whether to show whitespace characters. */

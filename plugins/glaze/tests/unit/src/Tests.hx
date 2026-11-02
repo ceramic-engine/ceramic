@@ -122,6 +122,7 @@ class Tests {
         runner.add(new tests.kit.InputLspTest());
         runner.add(new tests.kit.InputStateTest());
         runner.add(new tests.kit.InputMoveNotifyTest());
+        runner.add(new tests.kit.NumberInputKeyboardTest());
         runner.add(new tests.kit.InputStateEditingTest());
         runner.add(new tests.kit.InputEmojiTest());
         // gpui-kit (wave 6: styled input components)

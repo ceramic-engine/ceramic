@@ -1,6 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
 package gpui;
 
 /**
@@ -26,11 +27,18 @@ class TextInputConfiguration {
     /** The action advertised on a software keyboard's confirm ("enter") key. */
     public final inputAction:TextInputAction;
 
-    public function new(autocorrect:Bool = false, ?autocapitalize:Autocapitalize, suggestions:Bool = false, ?inputAction:TextInputAction) {
+    /**
+     * The kind of software keyboard suited to what the field accepts
+     * (deliberate deviation DEV-017; GPUI has no such field).
+     */
+    public final inputMode:TextInputMode;
+
+    public function new(autocorrect:Bool = false, ?autocapitalize:Autocapitalize, suggestions:Bool = false, ?inputAction:TextInputAction, ?inputMode:TextInputMode) {
         this.autocorrect = autocorrect;
         this.autocapitalize = autocapitalize != null ? autocapitalize : Autocapitalize.None;
         this.suggestions = suggestions;
         this.inputAction = inputAction != null ? inputAction : TextInputAction.Unspecified;
+        this.inputMode = inputMode != null ? inputMode : TextInputMode.Text;
     }
 
     /** Rust `TextInputConfiguration::default()` */
@@ -39,22 +47,23 @@ class TextInputConfiguration {
     }
 
     /** A copy with some fields replaced (Rust `TextInputConfiguration { ..other }`). */
-    public function with(?autocorrect:Bool, ?autocapitalize:Autocapitalize, ?suggestions:Bool, ?inputAction:TextInputAction):TextInputConfiguration {
+    public function with(?autocorrect:Bool, ?autocapitalize:Autocapitalize, ?suggestions:Bool, ?inputAction:TextInputAction, ?inputMode:TextInputMode):TextInputConfiguration {
         return new TextInputConfiguration(
             autocorrect != null ? autocorrect : this.autocorrect,
             autocapitalize != null ? autocapitalize : this.autocapitalize,
             suggestions != null ? suggestions : this.suggestions,
-            inputAction != null ? inputAction : this.inputAction
+            inputAction != null ? inputAction : this.inputAction,
+            inputMode != null ? inputMode : this.inputMode
         );
     }
 
     public function equals(other:Null<TextInputConfiguration>):Bool {
         return other != null && autocorrect == other.autocorrect && autocapitalize == other.autocapitalize
-            && suggestions == other.suggestions && inputAction == other.inputAction;
+            && suggestions == other.suggestions && inputAction == other.inputAction && inputMode == other.inputMode;
     }
 
     public function toString():String {
-        return 'TextInputConfiguration(autocorrect: $autocorrect, autocapitalize: $autocapitalize, suggestions: $suggestions, inputAction: $inputAction)';
+        return 'TextInputConfiguration(autocorrect: $autocorrect, autocapitalize: $autocapitalize, suggestions: $suggestions, inputAction: $inputAction, inputMode: $inputMode)';
     }
 
 }
@@ -108,5 +117,23 @@ enum abstract TextInputAction(Int) {
 
     /** Sending a message. */
     var Send = 7;
+
+}
+
+/**
+ * The kind of software keyboard a field asks for (deliberate deviation
+ * DEV-017). The values are those of the HTML `inputmode` attribute; only a
+ * field whose accepted text fits the smaller keyboard asks for it.
+ */
+enum abstract TextInputMode(Int) {
+
+    /** The full text keyboard. */
+    var Text = 0;
+
+    /** Digits and a decimal separator. */
+    var Decimal = 1;
+
+    /** Digits only. */
+    var Numeric = 2;
 
 }
