@@ -27,9 +27,25 @@ import gpui.scene.Underline;
  * keep their relative order, every other primitive (removed, added or
  * modified) damages its rectangle. Outside the union of these rectangles,
  * each pixel is covered by the same unchanged primitives in the same order
- * in both scenes, so it keeps its value. Inside it, the renderer clears the
- * pixels and draws again, in scene order, every primitive whose rectangle
- * intersects the region, which gives the bytes of a full redraw there.
+ * in both scenes, so it keeps its value.
+ *
+ * The damaged rectangles are merged into a few damage rectangles (at most
+ * `MAX_RECTS`, see `addDamage()`), each one containing some of them
+ * (while scrolling, their bounds when splitting them saved nothing, see
+ * `addMany()`). The renderer handles each damage rectangle in its own
+ * pass, with a scissor on that rectangle: it clears the pixels and draws
+ * again, in scene order,
+ * every primitive whose rectangle intersects it. A pixel p of a damage
+ * rectangle R ends with the bytes of a full redraw: every primitive that
+ * can change p has a rectangle containing p, so it intersects R and is
+ * drawn, in scene order, after the clear; the other primitives drawn leave
+ * p as is. The scissor only discards fragments outside R, so it changes
+ * neither the geometry nor the interpolation of what is drawn inside, and
+ * a later pass on another rectangle either leaves p alone (outside its
+ * scissor) or gives it the same bytes again (the same reasoning). A single
+ * pass with one scissor over several rectangles would not be exact: the
+ * primitives drawn for one rectangle would blend a second time over the
+ * pixels kept between them.
  */
 class SceneDamage {
 
@@ -63,11 +79,82 @@ class SceneDamage {
     /** Whether the previous records describe the texture's content */
     public var valid(default, null):Bool = false;
 
-    /** Damaged region of the last `diff()`, in device pixels (exclusive ends) */
+    /**
+     * Bounds of the damaged region of the last `diff()`, in device pixels
+     * (exclusive ends): the union of its damage rectangles.
+     */
     public var x0(default, null):Int = 0;
     public var y0(default, null):Int = 0;
     public var x1(default, null):Int = 0;
     public var y1(default, null):Int = 0;
+
+    /** Most damage rectangles of a `diff()` */
+    public static inline final MAX_RECTS:Int = 8;
+
+    /**
+     * Two disjoint damage rectangles are merged when their bounding
+     * rectangle has at most this many more pixels than both together, plus
+     * a quarter of them: a pass costs about as much as redrawing such an
+     * area, and the scene is walked once per pass.
+     */
+    public static inline final MERGE_SLACK:Int = 4096;
+
+    /** Damage rectangles of the last `diff()`: x0, y0, x1, y1 (exclusive ends) */
+    final rects:Array<Int> = [];
+
+    /** Number of damage rectangles of the last `diff()` (0: nothing to draw) */
+    public var rectCount(default, null):Int = 0;
+
+    /** Damage rectangle `i` of the last `diff()`, in device pixels (exclusive ends) */
+    public inline function rectX0(i:Int):Int return rects[i * 4];
+    public inline function rectY0(i:Int):Int return rects[i * 4 + 1];
+    public inline function rectX1(i:Int):Int return rects[i * 4 + 2];
+    public inline function rectY1(i:Int):Int return rects[i * 4 + 3];
+
+    /** Damage rectangle the last added rectangle fell in or became */
+    var lastHit:Int = 0;
+
+    /** Whether a damage rectangle grew in place since the last `normalize()` */
+    var grown:Bool = false;
+
+    /**
+     * Merges the damage rectangles that should be (see `shouldMerge()`)
+     * after some grew in place, until none is left.
+     */
+    function normalize():Void {
+
+        if (!grown) return;
+        grown = false;
+        var merged = true;
+        while (merged) {
+            merged = false;
+            var i = 0;
+            while (i < rectCount && !merged) {
+                var j = i + 1;
+                while (j < rectCount) {
+                    final a = i * 4;
+                    final b = j * 4;
+                    if (shouldMerge(rects[a], rects[a + 1], rects[a + 2], rects[a + 3], rects[b], rects[b + 1], rects[b + 2], rects[b + 3])) {
+                        final mx0 = rects[a] < rects[b] ? rects[a] : rects[b];
+                        final my0 = rects[a + 1] < rects[b + 1] ? rects[a + 1] : rects[b + 1];
+                        final mx1 = rects[a + 2] > rects[b + 2] ? rects[a + 2] : rects[b + 2];
+                        final my1 = rects[a + 3] > rects[b + 3] ? rects[a + 3] : rects[b + 3];
+                        setRect(i, mx0, my0, mx1, my1);
+                        removeRect(j);
+                        merged = true;
+                        break;
+                    }
+                    j++;
+                }
+                i++;
+            }
+        }
+
+    }
+
+    /** Texture size of the running `diff()` */
+    var limitWidth:Int = 0;
+    var limitHeight:Int = 0;
 
     /** Whether the last `diff()` must redraw the whole texture */
     public var full(default, null):Bool = true;
@@ -162,7 +249,13 @@ class SceneDamage {
         y0 = 0;
         x1 = 0;
         y1 = 0;
+        rectCount = 0;
+        lastHit = 0;
+        grown = false;
+        splitEvaluated = false;
         full = !valid;
+        limitWidth = width;
+        limitHeight = height;
 
         if (valid) {
             final common = prevCount < curCount ? prevCount : curCount;
@@ -172,33 +265,60 @@ class SceneDamage {
             final maxSuffix = common - prefix;
             while (suffix < maxSuffix && same(prevCount - 1 - suffix, curCount - 1 - suffix)) suffix++;
 
-            ux0 = width;
-            uy0 = height;
-            ux1 = 0;
-            uy1 = 0;
-            // While everything changes at each frame (scrolling), the middle
-            // is not searched for unchanged primitives: it would find none
-            if (lastDamageCovered || !matchMiddle(prefix, prevCount - suffix, prefix, curCount - suffix)) {
+            if (lastDamageCovered) {
+                // While everything changes at each frame (scrolling), the
+                // middle is not searched for unchanged primitives (it would
+                // find none), and the bounds of the changed primitives are
+                // checked first: when they cover the texture, it is drawn
+                // again entirely without splitting the damage
+                ux0 = width;
+                uy0 = height;
+                ux1 = 0;
+                uy1 = 0;
                 for (i in prefix...prevCount - suffix) unite(prevRects, i);
                 for (i in prefix...curCount - suffix) unite(curRects, i);
-            }
-            var rx0 = ux0;
-            var ry0 = uy0;
-            var rx1 = ux1;
-            var ry1 = uy1;
-            if (rx0 < 0) rx0 = 0;
-            if (ry0 < 0) ry0 = 0;
-            if (rx1 > width) rx1 = width;
-            if (ry1 > height) ry1 = height;
-            if (rx1 > rx0 && ry1 > ry0) {
-                x0 = rx0;
-                y0 = ry0;
-                x1 = rx1;
-                y1 = ry1;
-                if (rx0 == 0 && ry0 == 0 && rx1 == width && ry1 == height) {
+                if (ux0 <= 0 && uy0 <= 0 && ux1 >= width && uy1 >= height) {
                     full = true;
                 }
+                else {
+                    addMany(prefix, prevCount - suffix, curCount - suffix, false);
+                }
             }
+            else if (!matchMiddle(prefix, prevCount - suffix, prefix, curCount - suffix)) {
+                addMany(prefix, prevCount - suffix, curCount - suffix, true);
+            }
+
+            normalize();
+            if (!full && rectCount > 0) {
+                var bx0 = width;
+                var by0 = height;
+                var bx1 = 0;
+                var by1 = 0;
+                for (r in 0...rectCount) {
+                    final rx0 = rects[r * 4];
+                    final ry0 = rects[r * 4 + 1];
+                    final rx1 = rects[r * 4 + 2];
+                    final ry1 = rects[r * 4 + 3];
+                    if (rx0 == 0 && ry0 == 0 && rx1 == width && ry1 == height) full = true;
+                    if (rx0 < bx0) bx0 = rx0;
+                    if (ry0 < by0) by0 = ry0;
+                    if (rx1 > bx1) bx1 = rx1;
+                    if (ry1 > by1) by1 = ry1;
+                }
+                x0 = bx0;
+                y0 = by0;
+                x1 = bx1;
+                y1 = by1;
+                if (splitEvaluated) {
+                    // Whether the split saved at least a tenth of its bounds
+                    var area = 0.0;
+                    for (r in 0...rectCount) {
+                        area += (rects[r * 4 + 2] - rects[r * 4]) * 1.0 * (rects[r * 4 + 3] - rects[r * 4 + 1]);
+                    }
+                    splitUseful = area * 10 < (bx1 - bx0) * 1.0 * (by1 - by0) * 9;
+                }
+            }
+            splitEvaluated = false;
             lastDamageCovered = full;
         }
         else {
@@ -210,6 +330,8 @@ class SceneDamage {
             y0 = 0;
             x1 = width;
             y1 = height;
+            rectCount = width > 0 && height > 0 ? 1 : 0;
+            if (rectCount > 0) setRect(0, 0, 0, width, height);
         }
 
         // The recorded scene becomes the previous one, the old previous
@@ -220,15 +342,62 @@ class SceneDamage {
         final starts = prevStarts;
         prevStarts = curStarts;
         curStarts = starts;
-        final rects = prevRects;
+        final primitiveRects = prevRects;
         prevRects = curRects;
-        curRects = rects;
+        curRects = primitiveRects;
         prevCount = curCount;
         valid = true;
 
     }
 
-    /** Union of the damaged rectangles while `diff()` runs */
+    /**
+     * Frames of many changes (scrolling) drawn with the bounds of the
+     * changed primitives instead of splitting them, since the last split.
+     */
+    var splitSkips:Int = 0;
+
+    /** Whether the last split of many changes saved room (see `addMany()`) */
+    var splitUseful:Bool = true;
+
+    /** Set while `diff()` runs when `addMany()` split many changes */
+    var splitEvaluated:Bool = false;
+
+    /** Frames of many changes using the bounds before trying to split again */
+    public static inline final SPLIT_RETRY:Int = 16;
+
+    /**
+     * Adds the rectangles of the primitives `prefix...prevEnd` of the
+     * previous scene and `prefix...curEnd` of the recorded one, all
+     * changed: more edits than `matchMiddle()` searches (`searched`) or a
+     * frame after a full one (the bounds `ux0, uy0` to `ux1, uy1` are then
+     * already known). Splitting them costs a little more than their bounds
+     * and, while scrolling, often saves nothing: when the last split saved
+     * less than a tenth of its bounds, the bounds are used for the next
+     * `SPLIT_RETRY - 1` such frames. Both contain every changed rectangle.
+     */
+    function addMany(prefix:Int, prevEnd:Int, curEnd:Int, searched:Bool):Void {
+
+        if (!splitUseful && splitSkips < SPLIT_RETRY - 1) {
+            splitSkips++;
+            if (searched) {
+                ux0 = limitWidth;
+                uy0 = limitHeight;
+                ux1 = 0;
+                uy1 = 0;
+                for (i in prefix...prevEnd) unite(prevRects, i);
+                for (i in prefix...curEnd) unite(curRects, i);
+            }
+            addDamage(ux0, uy0, ux1, uy1);
+            return;
+        }
+        splitSkips = 0;
+        splitEvaluated = true;
+        addPrimitives(prevRects, prefix, prevEnd);
+        addPrimitives(curRects, prefix, curEnd);
+
+    }
+
+    /** Bounds of the changed primitives while `diff()` runs (scrolling) */
     var ux0:Int = 0;
     var uy0:Int = 0;
     var ux1:Int = 0;
@@ -253,6 +422,275 @@ class SceneDamage {
     }
 
     /**
+     * Adds the rectangles of primitives `from...to` of `primitiveRects` to
+     * the damage. The damage rectangle the last one fell in is kept in
+     * locals: while scrolling, most primitives fall in it.
+     */
+    @:noDebug
+    function addPrimitives(primitiveRects:Array<Int>, from:Int, to:Int):Void {
+
+        var hx0 = 1;
+        var hy0 = 1;
+        var hx1 = 0;
+        var hy1 = 0;
+        if (lastHit < rectCount) {
+            final b = lastHit * 4;
+            hx0 = rect(rects, b);
+            hy0 = rect(rects, b + 1);
+            hx1 = rect(rects, b + 2);
+            hy1 = rect(rects, b + 3);
+        }
+        var i = from;
+        while (i < to) {
+            final r = i * 4;
+            // Clamped to the texture like the damage rectangles (the margin
+            // puts the primitives along an edge one pixel out)
+            var ax0 = rect(primitiveRects, r);
+            var ay0 = rect(primitiveRects, r + 1);
+            var ax1 = rect(primitiveRects, r + 2);
+            var ay1 = rect(primitiveRects, r + 3);
+            if (ax0 < 0) ax0 = 0;
+            if (ay0 < 0) ay0 = 0;
+            if (ax1 > limitWidth) ax1 = limitWidth;
+            if (ay1 > limitHeight) ay1 = limitHeight;
+            if (ax0 >= hx0 && ay0 >= hy0 && ax1 <= hx1 && ay1 <= hy1) {
+                // Inside the cached rectangle
+            }
+            else if (ax1 <= ax0 || ay1 <= ay0) {
+                // Clipped out or off the texture (scrolled out): no pixel
+            }
+            else if (lastHit < rectCount && ax0 <= hx1 && hx0 <= ax1 && ay0 <= hy1 && hy0 <= ay1) {
+                // Overlapping or touching the cached rectangle: it grows in
+                // place (see `addDamage()`)
+                if (ax0 < hx0) hx0 = ax0;
+                if (ay0 < hy0) hy0 = ay0;
+                if (ax1 > hx1) hx1 = ax1;
+                if (ay1 > hy1) hy1 = ay1;
+                final b = lastHit * 4;
+                setInt(rects, b, hx0);
+                setInt(rects, b + 1, hy0);
+                setInt(rects, b + 2, hx1);
+                setInt(rects, b + 3, hy1);
+                grown = true;
+            }
+            else if (!containedSwitch(ax0, ay0, ax1, ay1)) {
+                // In no damage rectangle (`containedSwitch()` caches the one
+                // holding it otherwise)
+                addDamage(ax0, ay0, ax1, ay1);
+                switched = true;
+            }
+            if (switched) {
+                switched = false;
+                if (lastHit < rectCount) {
+                    final b = lastHit * 4;
+                    hx0 = rect(rects, b);
+                    hy0 = rect(rects, b + 1);
+                    hx1 = rect(rects, b + 2);
+                    hy1 = rect(rects, b + 3);
+                }
+            }
+            i++;
+        }
+
+    }
+
+    /** Set when `lastHit` changed during `addPrimitives()` */
+    var switched:Bool = false;
+
+    /**
+     * Whether `ax0, ay0` to `ax1, ay1` is inside a damage rectangle, which
+     * becomes `lastHit` (and sets `switched`).
+     */
+    @:noDebug
+    function containedSwitch(ax0:Int, ay0:Int, ax1:Int, ay1:Int):Bool {
+
+        for (r in 0...rectCount) {
+            final b = r * 4;
+            if (ax0 >= rect(rects, b) && ay0 >= rect(rects, b + 1) && ax1 <= rect(rects, b + 2) && ay1 <= rect(rects, b + 3)) {
+                lastHit = r;
+                switched = true;
+                return true;
+            }
+        }
+        return false;
+
+    }
+
+    /** Adds the rectangle of primitive `i` of `rects` to the damage */
+    inline function addPrimitive(primitiveRects:Array<Int>, i:Int):Void {
+
+        final ax0 = rect(primitiveRects, i * 4);
+        final ay0 = rect(primitiveRects, i * 4 + 1);
+        final ax1 = rect(primitiveRects, i * 4 + 2);
+        final ay1 = rect(primitiveRects, i * 4 + 3);
+        // Inside the damage rectangle the previous one fell in (most
+        // primitives while scrolling): nothing to do, without a call
+        final b = lastHit * 4;
+        if (lastHit >= rectCount
+            || ax0 < rect(rects, b) || ay0 < rect(rects, b + 1) || ax1 > rect(rects, b + 2) || ay1 > rect(rects, b + 3)) {
+            addDamage(ax0, ay0, ax1, ay1);
+        }
+
+    }
+
+    /**
+     * Adds the rectangle `ax0, ay0` to `ax1, ay1` (exclusive ends) to the
+     * damage rectangles, clamped to the texture. A damage rectangle that
+     * overlaps or touches it, or whose merge with it wastes little room
+     * (see `MERGE_SLACK`), is merged with it, again until none is left.
+     * Beyond `MAX_RECTS` rectangles, the pair whose merge wastes the least
+     * room is merged. The damage rectangles always contain every added one.
+     */
+    @:noDebug
+    function addDamage(ax0:Int, ay0:Int, ax1:Int, ay1:Int):Void {
+
+        if (ax0 < 0) ax0 = 0;
+        if (ay0 < 0) ay0 = 0;
+        if (ax1 > limitWidth) ax1 = limitWidth;
+        if (ay1 > limitHeight) ay1 = limitHeight;
+        if (ax1 <= ax0 || ay1 <= ay0) return;
+
+        // Most added rectangles fall inside a damage rectangle (the glyphs
+        // of a changed line), often the one the previous rectangle fell in:
+        // nothing to do
+        if (lastHit < rectCount) {
+            final b = lastHit * 4;
+            final bx0 = rect(rects, b);
+            final by0 = rect(rects, b + 1);
+            final bx1 = rect(rects, b + 2);
+            final by1 = rect(rects, b + 3);
+            if (ax0 >= bx0 && ay0 >= by0 && ax1 <= bx1 && ay1 <= by1) return;
+            // Overlapping or touching it (content scrolled in order): it
+            // grows in place, `normalize()` merges what it now overlaps
+            if (ax0 <= bx1 && bx0 <= ax1 && ay0 <= by1 && by0 <= ay1) {
+                if (ax0 < bx0) setInt(rects, b, ax0);
+                if (ay0 < by0) setInt(rects, b + 1, ay0);
+                if (ax1 > bx1) setInt(rects, b + 2, ax1);
+                if (ay1 > by1) setInt(rects, b + 3, ay1);
+                grown = true;
+                return;
+            }
+        }
+        for (r in 0...rectCount) {
+            final b = r * 4;
+            if (ax0 >= rect(rects, b) && ay0 >= rect(rects, b + 1) && ax1 <= rect(rects, b + 2) && ay1 <= rect(rects, b + 3)) {
+                lastHit = r;
+                return;
+            }
+        }
+
+        var r = 0;
+        while (r < rectCount) {
+            final b = r * 4;
+            final bx0 = rect(rects, b);
+            final by0 = rect(rects, b + 1);
+            final bx1 = rect(rects, b + 2);
+            final by1 = rect(rects, b + 3);
+            if (shouldMerge(ax0, ay0, ax1, ay1, bx0, by0, bx1, by1)) {
+                if (bx0 < ax0) ax0 = bx0;
+                if (by0 < ay0) ay0 = by0;
+                if (bx1 > ax1) ax1 = bx1;
+                if (by1 > ay1) ay1 = by1;
+                removeRect(r);
+                // The larger rectangle may now merge with ones already passed
+                r = 0;
+            }
+            else {
+                r++;
+            }
+        }
+
+        setRect(rectCount, ax0, ay0, ax1, ay1);
+        lastHit = rectCount;
+        rectCount++;
+
+        if (rectCount > MAX_RECTS) {
+            // Merge the pair that wastes the least room, then add their
+            // bounds again (it may merge with others)
+            var bestI = 0;
+            var bestJ = 1;
+            var bestWaste = Math.POSITIVE_INFINITY;
+            for (i in 0...rectCount) {
+                for (j in i + 1...rectCount) {
+                    final waste = mergeWaste(i, j);
+                    if (waste < bestWaste) {
+                        bestWaste = waste;
+                        bestI = i;
+                        bestJ = j;
+                    }
+                }
+            }
+            final bi = bestI * 4;
+            final bj = bestJ * 4;
+            final mx0 = rects[bi] < rects[bj] ? rects[bi] : rects[bj];
+            final my0 = rects[bi + 1] < rects[bj + 1] ? rects[bi + 1] : rects[bj + 1];
+            final mx1 = rects[bi + 2] > rects[bj + 2] ? rects[bi + 2] : rects[bj + 2];
+            final my1 = rects[bi + 3] > rects[bj + 3] ? rects[bi + 3] : rects[bj + 3];
+            // Remove the higher index first so that the lower one stays valid
+            removeRect(bestJ);
+            removeRect(bestI);
+            addDamage(mx0, my0, mx1, my1);
+        }
+
+    }
+
+    /** Whether the rectangles `a` and `b` are better drawn in one pass */
+    static inline function shouldMerge(ax0:Int, ay0:Int, ax1:Int, ay1:Int, bx0:Int, by0:Int, bx1:Int, by1:Int):Bool {
+
+        // Overlapping or touching
+        if (ax0 <= bx1 && bx0 <= ax1 && ay0 <= by1 && by0 <= ay1) return true;
+        final sum = (ax1 - ax0) * 1.0 * (ay1 - ay0) + (bx1 - bx0) * 1.0 * (by1 - by0);
+        final ux0 = ax0 < bx0 ? ax0 : bx0;
+        final uy0 = ay0 < by0 ? ay0 : by0;
+        final ux1 = ax1 > bx1 ? ax1 : bx1;
+        final uy1 = ay1 > by1 ? ay1 : by1;
+        final union = (ux1 - ux0) * 1.0 * (uy1 - uy0);
+        return union - sum <= MERGE_SLACK + sum * 0.25;
+
+    }
+
+    /** Pixels of the bounds of damage rectangles `i` and `j` covered by neither */
+    function mergeWaste(i:Int, j:Int):Float {
+
+        final a = i * 4;
+        final b = j * 4;
+        final ux0 = rects[a] < rects[b] ? rects[a] : rects[b];
+        final uy0 = rects[a + 1] < rects[b + 1] ? rects[a + 1] : rects[b + 1];
+        final ux1 = rects[a + 2] > rects[b + 2] ? rects[a + 2] : rects[b + 2];
+        final uy1 = rects[a + 3] > rects[b + 3] ? rects[a + 3] : rects[b + 3];
+        return (ux1 - ux0) * 1.0 * (uy1 - uy0)
+            - (rects[a + 2] - rects[a]) * 1.0 * (rects[a + 3] - rects[a + 1])
+            - (rects[b + 2] - rects[b]) * 1.0 * (rects[b + 3] - rects[b + 1]);
+
+    }
+
+    inline function setRect(r:Int, rx0:Int, ry0:Int, rx1:Int, ry1:Int):Void {
+
+        final b = r * 4;
+        if (rects.length < b + 4) rects.resize(b + 4);
+        rects[b] = rx0;
+        rects[b + 1] = ry0;
+        rects[b + 2] = rx1;
+        rects[b + 3] = ry1;
+
+    }
+
+    /** Removes damage rectangle `r` (the last one takes its place) */
+    inline function removeRect(r:Int):Void {
+
+        rectCount--;
+        if (r != rectCount) {
+            final b = r * 4;
+            final l = rectCount * 4;
+            rects[b] = rects[l];
+            rects[b + 1] = rects[l + 1];
+            rects[b + 2] = rects[l + 2];
+            rects[b + 3] = rects[l + 3];
+        }
+
+    }
+
+    /**
      * Most edits between two scenes searched for in their middle section.
      * Each modified primitive counts as two (removed, added).
      */
@@ -266,8 +704,8 @@ class SceneDamage {
      * one `c0...c1` that changed with Myers' diff ("An O(ND) Difference
      * Algorithm and Its Variations", 1986): the others form a longest
      * common subsequence (unchanged primitives, same relative order), and
-     * unites the rectangles of the changed ones. Returns false, uniting
-     * nothing, when they differ by more than `MAX_EDITS` edits.
+     * adds the rectangles of the changed ones to the damage. Returns false,
+     * adding nothing, when they differ by more than `MAX_EDITS` edits.
      */
     @:noDebug
     function matchMiddle(p0:Int, p1:Int, c0:Int, c1:Int):Bool {
@@ -275,8 +713,8 @@ class SceneDamage {
         final n = p1 - p0;
         final m = c1 - c0;
         if (n == 0 || m == 0) {
-            for (i in p0...p1) unite(prevRects, i);
-            for (i in c0...c1) unite(curRects, i);
+            for (i in p0...p1) addPrimitive(prevRects, i);
+            for (i in c0...c1) addPrimitive(curRects, i);
             return true;
         }
 
@@ -338,11 +776,11 @@ class SceneDamage {
             }
             if (x == prevX) {
                 // Added: primitive y - 1 of the recorded scene
-                unite(curRects, c0 + y - 1);
+                addPrimitive(curRects, c0 + y - 1);
             }
             else {
                 // Removed: primitive x - 1 of the previous scene
-                unite(prevRects, p0 + x - 1);
+                addPrimitive(prevRects, p0 + x - 1);
             }
             x = prevX;
             y = prevY;

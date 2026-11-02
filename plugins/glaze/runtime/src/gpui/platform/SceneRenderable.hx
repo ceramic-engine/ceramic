@@ -38,7 +38,8 @@ import gpui.scene.Underline;
  *
  * With `partialRendering` too, only the region that changed since the
  * scene the texture holds is cleared and drawn again (see `SceneDamage`),
- * with a scissor, which gives the same bytes as a full redraw.
+ * one pass with a scissor per damage rectangle, which gives the same bytes
+ * as a full redraw.
  */
 @:allow(gpui.platform.SceneTargetDrawer)
 class SceneRenderable extends Renderable {
@@ -84,6 +85,9 @@ class SceneRenderable extends Renderable {
     public static var partialStatsFullDraws:Int = 0;
     public static var partialStatsArea:Float = 0;
     public static var partialStatsTotalArea:Float = 0;
+
+    /** Damage rectangles (one pass each) of the partial draws */
+    public static var partialStatsRects:Int = 0;
 
     /** Frames compared by `verifyPartialRendering` */
     public static var partialVerifiedFrames:Int = 0;
@@ -533,7 +537,7 @@ class SceneRenderable extends Renderable {
                 final pixel = Std.int(first / 4);
                 partialFirstMismatch = 'frame ${partialVerifiedFrames}: $differing bytes differ, first at texel '
                     + '(${pixel % width}, ${Std.int(pixel / width)}) ${verifyPixels[first]} instead of ${verifyReferencePixels[first]}'
-                    + ', region ${damage.x0},${damage.y0} to ${damage.x1},${damage.y1}'
+                    + ', region ${damage.x0},${damage.y0} to ${damage.x1},${damage.y1} in ${damage.rectCount} rectangle(s)'
                     + (verifyPendingPartial ? ' (partial)' : ' (full)');
             }
         }
@@ -650,6 +654,12 @@ class SceneRenderable extends Renderable {
         while (batch != null) {
             batchBase = nextBase;
             nextBase += batch.end - batch.start;
+            // A partial pass skips the batches it draws nothing of (no
+            // shader switch, no flush)
+            if (regionClip && batchOutsideRegion(batchBase, nextBase)) {
+                batch = scene.nextBatch();
+                continue;
+            }
             switch batch.kind {
                 case Shadow:
                     drawShadows(draw, batch);
@@ -729,6 +739,17 @@ class SceneRenderable extends Renderable {
             || damage.drawnRectY0(index) >= regionY1
             || damage.drawnRectY1(index) <= regionY0
         );
+
+    }
+
+    /** Whether every primitive `start...end` (in draw order) is outside the redrawn region */
+    @:noDebug
+    function batchOutsideRegion(start:Int, end:Int):Bool {
+
+        for (i in start...end) {
+            if (!outsideRegion(i)) return false;
+        }
+        return true;
 
     }
 
@@ -1390,8 +1411,9 @@ class SceneTargetDrawer extends Renderable {
     #if clay
     /**
      * `partialRendering`: clears and draws again the region that changed
-     * since the last draw (see `SceneDamage`), with a scissor. The texture
-     * is not cleared by Ceramic in this mode (`clearOnRender` is off).
+     * since the last draw (see `SceneDamage`), one damage rectangle at a
+     * time with a scissor. The texture is not cleared by Ceramic in this
+     * mode (`clearOnRender` is off).
      */
     function renderPartial(draw:backend.Draw, height:Float):Void {
 
@@ -1409,17 +1431,17 @@ class SceneTargetDrawer extends Renderable {
         damage.record(owner.scene, owner.atlasTextures, owner.atlas != null ? owner.atlas.releaseCount : -1);
         damage.diff(pixelWidth, pixelHeight);
 
-        final x0 = damage.x0;
-        final y0 = damage.y0;
-        final x1 = damage.x1;
-        final y1 = damage.y1;
-        final area = (x1 - x0) * (y1 - y0);
+        var area = 0;
+        for (r in 0...damage.rectCount) {
+            area += (damage.rectX1(r) - damage.rectX0(r)) * (damage.rectY1(r) - damage.rectY0(r));
+        }
 
         SceneRenderable.partialStatsDraws++;
         if (damage.full) SceneRenderable.partialStatsFullDraws++;
         else if (area > 0) SceneRenderable.partialStatsPartialDraws++;
         SceneRenderable.partialStatsArea += area;
         SceneRenderable.partialStatsTotalArea += pixelWidth * pixelHeight;
+        if (!damage.full) SceneRenderable.partialStatsRects += damage.rectCount;
 
         if (SceneRenderable.verifyPartialRendering) {
             owner.verifyPending = true;
@@ -1437,19 +1459,27 @@ class SceneTargetDrawer extends Renderable {
             return;
         }
 
+        // One pass per damage rectangle, each with its own scissor (see
+        // `SceneDamage` for why this gives the bytes of a full redraw).
         // Scene rows are drawn where the screen would have them (see
         // `render()`): scene row y is framebuffer row `pixelHeight - 1 - y`
         draw.flush();
-        draw.batcher.enableScissor(x0, pixelHeight - y1, x1 - x0, y1 - y0);
-        draw.batcher.clear(0, 0, 0, 0, false);
-        owner.regionClip = true;
-        owner.regionX0 = x0;
-        owner.regionY0 = y0;
-        owner.regionX1 = x1;
-        owner.regionY1 = y1;
-        owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
-        owner.regionClip = false;
-        draw.flush();
+        for (r in 0...damage.rectCount) {
+            final x0 = damage.rectX0(r);
+            final y0 = damage.rectY0(r);
+            final x1 = damage.rectX1(r);
+            final y1 = damage.rectY1(r);
+            draw.batcher.enableScissor(x0, pixelHeight - y1, x1 - x0, y1 - y0);
+            draw.batcher.clear(0, 0, 0, 0, false);
+            owner.regionClip = true;
+            owner.regionX0 = x0;
+            owner.regionY0 = y0;
+            owner.regionX1 = x1;
+            owner.regionY1 = y1;
+            owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+            owner.regionClip = false;
+            draw.flush();
+        }
         draw.batcher.disableScissor();
 
     }
