@@ -51,6 +51,14 @@ class ViewTracker extends Autorun {
      */
     public var capturing(default, null):Bool = false;
 
+    /**
+     * The entities read, updated or created while the view rendered,
+     * prepainted and painted since its last render (Rust: the accessed
+     * entities of a view, kept while a cached view is reused). Cleared by
+     * `beginCapture()`. See `Window.recordEntitiesAccessed`.
+     */
+    public final accessed:AccessedEntities = new AccessedEntities();
+
     var reacted:Bool = false;
 
     var writeReported:Bool = false;
@@ -75,6 +83,7 @@ class ViewTracker extends Autorun {
             throw 'ViewTracker $name is already capturing';
         }
         unbindFromAllAutorunArrays();
+        accessed.clear();
         @:privateAccess invalidated = false;
         reacted = false;
         writeReported = false;

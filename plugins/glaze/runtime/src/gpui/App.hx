@@ -493,15 +493,30 @@ class App {
     /**
      * Tell GPUI that an entity has changed and observers of it should be notified.
      * Windows displaying the entity mark its view dirty.
+     *
+     * Like GPUI (`App::notify`, `WindowInvalidator::invalidate_view`), an
+     * entity accessed during the last draw of a window (a view it rendered,
+     * an entity read or updated while it drew) is invalidated in that window,
+     * and the `Notify` effect is pushed only by a window that is not drawing:
+     * a notify sent while that window draws reaches no observer (the view is
+     * rendered again on the next frame, whatever causes it). An entity no
+     * window accessed only pushes the effect.
      */
     public function notify(entityId:Int):Void {
         final invalidators = windowInvalidatorsByEntity.get(entityId);
+        var live = false;
+        var effect = false;
         if (invalidators != null) {
             for (invalidator in invalidators) {
-                invalidator.invalidateView(entityId, this);
+                live = true;
+                if (invalidator.invalidateView(entityId, this)) {
+                    effect = true;
+                }
             }
         }
-        pushEffect(Notify(entityId));
+        if (effect || !live) {
+            pushEffect(Notify(entityId));
+        }
     }
 
 /// Window invalidators
@@ -547,6 +562,7 @@ class App {
         try {
             entity = build(cx);
             attach(entity, cx, parent);
+            Window.recordAccess(cx.id);
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
@@ -591,6 +607,7 @@ class App {
      */
     public function updateEntity<T:Model, R>(entity:T, update:(T, Context<T>) -> R):R {
         final cx:Context<T> = cast entity.slot();
+        Window.recordAccess(cx.id);
         startUpdate();
         var result:R;
         try {

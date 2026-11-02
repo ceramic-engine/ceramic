@@ -34,6 +34,7 @@ abstract Entity<T:Model>(T) from T to T {
      * Grab a reference to this entity from the context.
      */
     public inline function read(cx:AppContext):T {
+        Window.recordModelAccess(this);
         return this;
     }
 
@@ -41,6 +42,7 @@ abstract Entity<T:Model>(T) from T to T {
      * Read the entity referenced by this handle with the given function.
      */
     public function readWith<R>(cx:AppContext, f:(T, App) -> R):R {
+        Window.recordModelAccess(this);
         return f(this, cx);
     }
 

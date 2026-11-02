@@ -59,6 +59,7 @@ class Tests {
         runner.add(new tests.ViewCacheTest());
         // gpui-kit (waves 1 and 2)
         runner.add(new tests.kit.BaseRootTest());
+        runner.add(new tests.kit.FrameScheduleTest());
         runner.add(new tests.kit.BaseFoundationsTest());
         runner.add(new tests.kit.EasingsTest());
         runner.add(new tests.kit.EasingTest());

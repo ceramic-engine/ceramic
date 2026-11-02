@@ -72,6 +72,7 @@ abstract WeakEntity<T:Model>(EntitySlot) {
         if (entity == null) {
             throw new EntityReleasedError(this.id);
         }
+        Window.recordModelAccess(entity);
         return f(entity, cx);
     }
 

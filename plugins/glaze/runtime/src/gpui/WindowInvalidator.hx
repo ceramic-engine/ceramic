@@ -6,15 +6,17 @@ package gpui;
 /**
  * Marks views of a window dirty. Registered per entity on `App` with
  * `App.addWindowInvalidator` (GPUI's `window_invalidators_by_entity`), so that
- * `cx.notify()` and tracker reactions reach the windows displaying the entity.
+ * `cx.notify()` and tracker reactions reach the windows displaying the entity
+ * (the entities each window accessed during its last draw).
  * Implemented by `Window` (step 7).
  */
 interface WindowInvalidator {
 
     /**
-     * Marks the view of the given entity dirty. `App.notify` pushes the
-     * `Notify` effect itself, the invalidator only has to record the dirty view.
+     * Marks the view of the given entity dirty. Returns `false` while the
+     * window draws (Rust `invalidate_view`): `App.notify` then pushes no
+     * `Notify` effect for this window.
      */
-    function invalidateView(entityId:Int, cx:App):Void;
+    function invalidateView(entityId:Int, cx:App):Bool;
 
 }

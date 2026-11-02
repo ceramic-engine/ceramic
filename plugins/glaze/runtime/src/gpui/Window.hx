@@ -732,6 +732,31 @@ class Window implements WindowInvalidator {
 
     final trackers:IntMap<ViewTracker> = new IntMap();
 
+    /**
+     * The window drawing a frame, whose views record the entities accessed
+     * (read, updated or created) while it draws (Rust: `accessed_entities`
+     * of the entity map, cleared when a draw starts).
+     */
+    @:allow(gpui)
+    static var accessRecorder:Null<Window> = null;
+
+    /** Where accesses are recorded: the accessed set of the view drawing, or `frameAccessed` */
+    @:allow(gpui)
+    var currentAccessed:AccessedEntities;
+
+    final accessedStack:Array<AccessedEntities> = [];
+
+    /** Entities accessed during this draw outside of any view (focus listeners...) */
+    final frameAccessed:AccessedEntities = new AccessedEntities();
+
+    /**
+     * The entities accessed during the last draw (Rust `tracked_entities`):
+     * this window is their invalidator in `App` (`window_invalidators_by_entity`).
+     */
+    var liveEntities:AccessedEntities = new AccessedEntities();
+
+    var nextLiveEntities:AccessedEntities = new AccessedEntities();
+
     final renderedViews:IntMap<Bool> = new IntMap();
 
     final dirtyViews:IntMap<Bool> = new IntMap();
@@ -878,6 +903,7 @@ class Window implements WindowInvalidator {
         windowTextSystem = new WindowTextSystem(app.textSystem());
         painter = new TextPainter(nextFrame.scene, spriteAtlas, app.textSystem(), _scaleFactor);
         painter.quadPainter = paintQuad;
+        currentAccessed = frameAccessed;
 
         windows.push(this);
         if (app.onRefreshWindows == null) {
@@ -938,11 +964,14 @@ class Window implements WindowInvalidator {
         }
         GpuiInput.unbind(this);
         clearPendingInput();
-        for (entityId => tracker in trackers) {
+        for (tracker in trackers) {
             tracker.destroy();
-            app.removeWindowInvalidator(entityId, id);
         }
         trackers.clear();
+        for (entityId in liveEntities.ids) {
+            app.removeWindowInvalidator(entityId, id);
+        }
+        liveEntities.clear();
         nextFrame.clear();
         renderedFrame.clear();
         renderable.destroy();
@@ -962,16 +991,19 @@ class Window implements WindowInvalidator {
      * Marks the view of the given entity dirty (called by `App.notify`, which
      * tracker reactions go through too).
      */
-    public function invalidateView(entityId:Int, cx:App):Void {
+    public function invalidateView(entityId:Int, cx:App):Bool {
         pendingDirtyViews.set(entityId, true);
         // Like GPUI's `WindowInvalidator::invalidate_view`, a view notified
         // while the window draws is recorded for the next frame but does not
         // make the window dirty (otherwise a view that notifies from its own
         // render, like gpui-kit's list syncing its search placeholder, would
-        // be drawn again forever by the effect flush).
+        // be drawn again forever by the effect flush), and its observers are
+        // not notified (`App.notify` pushes no effect).
         if (!drawing) {
             dirty = true;
+            return true;
         }
+        return false;
     }
 
     /**
@@ -1129,17 +1161,24 @@ class Window implements WindowInvalidator {
             return;
         drawing = true;
         drawingClean = !dirty;
+        final previousRecorder = accessRecorder;
+        accessRecorder = this;
+        accessedStack.resize(0);
+        currentAccessed = frameAccessed;
+        frameAccessed.clear();
         app.startUpdate();
         try {
             drawFrame();
         }
         catch (e:haxe.Exception) {
+            accessRecorder = previousRecorder;
             drawing = false;
             drawingClean = false;
             AnyElement.clearArena();
             @:privateAccess app.pendingUpdates--;
             throw gpui.util.Exceptions.rethrow(e);
         }
+        accessRecorder = previousRecorder;
         drawing = false;
         drawingClean = false;
         // Focus listeners may move focus: draw again to render the new focus
@@ -1247,7 +1286,6 @@ class Window implements WindowInvalidator {
             for (entityId in stale) {
                 trackers.get(entityId).destroy();
                 trackers.remove(entityId);
-                app.removeWindowInvalidator(entityId, id);
             }
         }
 
@@ -1269,6 +1307,7 @@ class Window implements WindowInvalidator {
             focusListeners.retain(0, listener -> listener(event, this, app));
         }
 
+        recordEntitiesAccessed();
         resetCursorStyle();
         refreshing = false;
         focusMovedWhileDrawing = _focus != focusBeforeListeners;
@@ -1449,7 +1488,6 @@ class Window implements WindowInvalidator {
         if (tracker == null) {
             tracker = new ViewTracker(() -> app.notify(entityId), view);
             trackers.set(entityId, tracker);
-            app.addWindowInvalidator(entityId, id, this);
         }
         if (firstPhase) {
             if (!renderedViews.exists(entityId)) {
@@ -1461,6 +1499,66 @@ class Window implements WindowInvalidator {
         else {
             tracker.resumeCapture();
         }
+        accessedStack.push(currentAccessed);
+        currentAccessed = tracker.accessed;
+    }
+
+    /**
+     * Records an access to the given entity while this window draws (Rust
+     * `EntityMap::read` / `lease` / `insert` mark the entity accessed).
+     */
+    @:allow(gpui)
+    static inline function recordAccess(entityId:Int):Void {
+        final window = accessRecorder;
+        if (window != null) {
+            window.currentAccessed.add(entityId);
+        }
+    }
+
+    /**
+     * `recordAccess` for a model, whose id is only read while a window draws.
+     */
+    @:allow(gpui)
+    static inline function recordModelAccess(model:Model):Void {
+        final window = accessRecorder;
+        if (window != null) {
+            window.currentAccessed.add(model.entityId);
+        }
+    }
+
+    /**
+     * Makes this window the invalidator of the entities accessed during the
+     * draw (Rust `record_entities_accessed`, after the focus listeners): the
+     * views rendered or reused, and the entities their last render, prepaint
+     * and paint accessed (a reused cached view keeps them, like Rust's
+     * `extend_accessed`), and those accessed outside any view.
+     */
+    function recordEntitiesAccessed():Void {
+        final next = nextLiveEntities;
+        for (entityId => tracker in trackers) {
+            next.add(entityId);
+            for (accessed in tracker.accessed.ids) {
+                next.add(accessed);
+            }
+        }
+        for (accessed in frameAccessed.ids) {
+            next.add(accessed);
+        }
+        frameAccessed.clear();
+        final previous = liveEntities;
+        for (entityId in previous.ids) {
+            if (!next.contains(entityId)) {
+                app.removeWindowInvalidator(entityId, id);
+            }
+        }
+        for (entityId in next.ids) {
+            if (!previous.contains(entityId)) {
+                app.addWindowInvalidator(entityId, id, this);
+            }
+        }
+        previous.clear();
+        liveEntities = next;
+        nextLiveEntities = previous;
     }
 
     /**
@@ -1481,6 +1579,8 @@ class Window implements WindowInvalidator {
         if (tracker != null) {
             tracker.endCapture();
         }
+        final outer = accessedStack.pop();
+        currentAccessed = outer != null ? outer : frameAccessed;
     }
 
     /**
