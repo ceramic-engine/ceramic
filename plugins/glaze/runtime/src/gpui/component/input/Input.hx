@@ -439,6 +439,61 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         return element.child(div().relative().flex1().child(inputState.state));
     }
 
+    /**
+     * The handles and the edit menu of the selection a long press made.
+     *
+     * The menu offers what the native context menu would: Cut, Copy, Paste
+     * and Select All, leaving out what cannot apply right now rather than
+     * disabling it. Cut, Copy and Paste go through the input's actions, so a
+     * custom key binding or an open completion menu sees them the same way.
+     */
+    static function renderTouchSelection(state:TextInputState, window:Window, cx:App):Array<AnyElement> {
+        final engine = state.state;
+        if (gpui.base.input.InputTouch.touchSelection(engine.read(cx)) == null) {
+            return [];
+        }
+        final capabilities = engine.read(cx).contextMenuCapabilities();
+        final editable = capabilities.isEditable();
+        final copyable = capabilities.isCopyable();
+        // Offered whenever the text can change, without peeking at the
+        // clipboard: on iOS every read of it shows the system's paste banner,
+        // and an empty clipboard pastes nothing.
+        final pasteable = editable;
+        final selectable = state.text(cx).len() > 0 && !state.isAllSelected(cx);
+        final focusHandle = state.presentation(cx).focusHandle();
+
+        final dispatch = (action:gpui.Action, window:Window, cx:App) -> focusHandle.dispatchAction(action, window, cx);
+        final items:Array<gpui.component.touchselection.EditMenu.EditMenuItem> = [];
+        if (editable && copyable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Cut"), (window, cx) -> dispatch(new Cut(), window, cx)));
+        }
+        if (copyable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Copy"), (window, cx) -> {
+                dispatch(new Copy(), window, cx);
+                engine.update(cx, (state, cx) -> state.closeEditMenu(cx));
+            }));
+        }
+        if (pasteable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Paste"), (window, cx) -> dispatch(new Paste(), window, cx)));
+        }
+        if (selectable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Select All"), (window, cx) -> {
+                engine.update(cx, (state, cx) -> state.selectAllFromEditMenu(window, cx));
+            }));
+        }
+
+        return new gpui.component.touchselection.TouchSelectionOverlay(NamedInteger('input-touch-selection', state.entityId()), (_, cx) -> gpui.base.input.InputTouch.touchSelection(engine.read(cx)))
+            .handles((edge, phase, position, _, cx) -> {
+                engine.update(cx, (state, cx) -> switch phase {
+                    case Started: state.beginEdgeDrag(edge, position, cx);
+                    case Moved: state.updateEdgeDrag(position, cx);
+                    case Ended | Cancelled: state.endEdgeDrag(cx);
+                });
+            })
+            .items(items)
+            .intoElements(window, cx);
+    }
+
     public function render(window:Window, cx:App):IntoElement {
         final LINE_HEIGHT = rems(1.25);
         final textAlign:TextAlign = inputStyle.text != null && inputStyle.text.has(TextStyleRefinement.TEXT_ALIGN) ? inputStyle.text.textAlign : Left;
@@ -519,9 +574,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         // must not see a paste the input itself would refuse.
         final pasteHandler = this.pasteHandler != null && state.presentation(cx).isEditable() ? this.pasteHandler : null;
         final overlays = InputOverlays.renderOverlays(state.state, window, cx);
-        // Rust `render_touch_selection`: the handles and the edit menu of a
-        // long press selection. Touch input is not ported (no touch events),
-        // so there is never a touch selection to show.
+        for (element in renderTouchSelection(state, window, cx)) overlays.floating.push(element);
 
         final presentation = state.presentation(cx);
         final contentType = contentTypeValue;

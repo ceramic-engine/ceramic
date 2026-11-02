@@ -31,8 +31,7 @@ import gpui.Prelude.*;
 
 /**
  * The tests of gpui-base's `scrollbar.rs` (and the scrollbar part of
- * `theme.rs`). Instants are `Float` seconds; the touch drag halves of the
- * drag tests are left out (the port has no touch input).
+ * `theme.rs`). Instants are `Float` seconds.
  */
 class BaseScrollbarTest extends TestCase {
 
@@ -604,8 +603,8 @@ class BaseScrollbarTest extends TestCase {
      * The mouse half of `repeated_touch_and_mouse_drags_keep_the_painted_grab_point`
      * (the port has no touch input).
      */
-    function testRepeatedMouseDragsKeepThePaintedGrabPoint() {
-        for (vertical in [true, false]) {
+    function testRepeatedTouchAndMouseDragsKeepThePaintedGrabPoint() {
+        for (touch in [true, false]) for (vertical in [true, false]) {
             for (config in [{origin: new Point(), viewport: 200., content: 1000.}, {origin: new Point(30., 40.), viewport: 240., content: 500.}]) {
                 final handle = new TestHandle(new Size(config.content, config.content));
                 handle.setOffset(new Point(-100., -100.));
@@ -629,15 +628,25 @@ class BaseScrollbarTest extends TestCase {
                 inline function axisValue(point:Point):Float {
                     return vertical ? point.y : point.x;
                 }
-                final startedPosition = start;
-                cx.simulateMouseDown(start, Left);
+                final startedPosition = touch ? start.add(axisDelta(5.)) : start;
+                if (touch) {
+                    cx.simulateEvent(new gpui.TouchDragEvent(Started, start, startedPosition));
+                }
+                else {
+                    cx.simulateMouseDown(start, Left);
+                }
                 draw(cx);
                 assertTrue(Math.abs(axisValue(painted.bounds.origin) + grab - axisValue(startedPosition)) < 0.1, 'starting must preserve the grab point and first displacement');
                 var referenceOffset = 0.;
                 var offsetPerPixel = 0.;
                 for (delta in [0., 24., -8., 32., -10., 8., 0.]) {
                     final position = start.add(axisDelta(delta));
-                    cx.simulateMouseMove(position, Left);
+                    if (touch) {
+                        cx.simulateEvent(new gpui.TouchDragEvent(Moved, start, position));
+                    }
+                    else {
+                        cx.simulateMouseMove(position, Left);
+                    }
                     draw(cx);
                     if (delta == 0.) {
                         referenceOffset = axisValue(handle.offset());
@@ -647,17 +656,34 @@ class BaseScrollbarTest extends TestCase {
                     }
                     final actual = (vertical ? painted.bounds.origin.y : painted.bounds.origin.x) + grab;
                     final expected = vertical ? position.y : position.x;
-                    assertTrue(Math.abs(actual - expected) < 0.1, 'vertical=$vertical delta=$delta: painted grab $actual, pointer $expected');
+                    assertTrue(Math.abs(actual - expected) < 0.1, 'touch=$touch vertical=$vertical delta=$delta: painted grab $actual, pointer $expected');
                 }
                 // Release contains a final displacement without an intervening move.
                 final expectedOffset = referenceOffset + 12. * offsetPerPixel;
-                cx.simulateMouseUp(start.add(axisDelta(12.)), Left);
+                if (touch) {
+                    cx.simulateEvent(new gpui.TouchDragEvent(Ended, start, start.add(axisDelta(12.))));
+                }
+                else {
+                    cx.simulateMouseUp(start.add(axisDelta(12.)), Left);
+                }
                 assertTrue(Math.abs(axisValue(handle.offset()) - expectedOffset) < 0.1, 'release must flush the last displacement');
                 final releasedOffset = handle.offset();
                 draw(cx);
                 assertTrue(handle.offset().equals(releasedOffset), 'leaving active styling must not scroll');
             }
         }
+    }
+
+    function testTouchThumbDragMovesDownAndCancelReleasesHandle() {
+        final h = harness(Vertical, Always, new Size(100., 500.));
+        final startPosition = new Point(95., 20.);
+        h.cx.simulateEvent(new gpui.TouchDragEvent(Started, startPosition, startPosition));
+        h.cx.simulateEvent(new gpui.TouchDragEvent(Moved, startPosition, new Point(95., 45.)));
+        h.cx.simulateEvent(new gpui.TouchDragEvent(Cancelled, startPosition, new Point(95., 45.)));
+        assertTrue(h.handle.offset().y < 0., 'thumb down must scroll toward later content');
+        assertEquals(0., h.handle.offset().x);
+        assertEquals(1, h.handle.dragStarts);
+        assertEquals(1, h.handle.dragEnds);
     }
 
     function testThumbDragNotifiesHandleStartAndEnd() {

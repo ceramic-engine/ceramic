@@ -16,6 +16,7 @@ class PaintIndex {
     public var sceneIndex:Int = 0;
     public var mouseListenersIndex:Int = 0;
     public var inputHandlersIndex:Int = 0;
+    public var textInputRegionsIndex:Int = 0;
     public var cursorStylesIndex:Int = 0;
     public var accessedElementStatesIndex:Int = 0;
     public var tabHandleIndex:Int = 0;
@@ -27,6 +28,7 @@ class PaintIndex {
         sceneIndex = other.sceneIndex;
         mouseListenersIndex = other.mouseListenersIndex;
         inputHandlersIndex = other.inputHandlersIndex;
+        textInputRegionsIndex = other.textInputRegionsIndex;
         cursorStylesIndex = other.cursorStylesIndex;
         accessedElementStatesIndex = other.accessedElementStatesIndex;
         tabHandleIndex = other.tabHandleIndex;

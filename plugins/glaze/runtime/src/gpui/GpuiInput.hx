@@ -24,6 +24,18 @@ import ceramic.KeyModifiers;
  *   the previous one increments the count.
  * - Wheel deltas are pixels; Ceramic's positive y scrolls down, GPUI's
  *   positive y scrolls up, so deltas are negated.
+ * - Touches become raw `TouchEvent`s, like GPUI's web platform turns touch
+ *   pointer events into `PlatformInput::Touch` (events.rs:236-600): GPUI's
+ *   gesture recognizer in the window makes taps, pans with momentum, long
+ *   presses and touch drags of them. Each touch gets an identifier that is
+ *   never reused and goes to the window it started on. A cancelled touch
+ *   (Ceramic `touchCancel`, followed by its `touchUp`) is `Cancelled`.
+ * - Virtual keyboard: Ceramic asks, inside the browser's touch release
+ *   handler, whether a tap lands on a text input
+ *   (`input.textEditingTapFilter`); the answer comes from the text inputs
+ *   painted in the last frame (`Window.textInputRegionAt`), so that the web
+ *   backend can focus its hidden field within the gesture, as mobile
+ *   browsers require (GPUI web events.rs:357-370, 497-530).
  * - Keyboard events go to the active window: the last window pressed with
  *   the mouse, or the last bound window. Modifier changes are sent as
  *   `ModifiersChangedEvent` first; modifier only keys are not sent as key
@@ -121,6 +133,15 @@ class GpuiInput extends ceramic.Entity {
 
     final point:ceramic.Point = new ceramic.Point();
 
+    /** Next touch identifier (never reused) */
+    var nextTouchId:Int = 1;
+
+    /** Active touches: Ceramic touch index to GPUI touch identifier */
+    final touchIds:Map<Int, Int> = new Map();
+
+    /** Active touches: Ceramic touch index to the window the touch started on */
+    final touchWindows:Map<Int, Window> = new Map();
+
     function new() {
         super();
         final app = ceramic.App.app;
@@ -129,6 +150,11 @@ class GpuiInput extends ceramic.Entity {
         screen.onMouseDown(this, handleMouseDown);
         screen.onMouseUp(this, handleMouseUp);
         screen.onMouseScroll(this, handleMouseScroll);
+        screen.onTouchDown(this, handleTouchDown);
+        screen.onTouchMove(this, handleTouchMove);
+        screen.onTouchUp(this, handleTouchUp);
+        screen.onTouchCancel(this, handleTouchCancel);
+        app.input.textEditingTapFilter = textEditingTapFilter;
         app.input.onKeyDown(this, key -> handleKey(key, true));
         app.input.onKeyUp(this, key -> handleKey(key, false));
         app.input.onTextCommit(this, text -> {
@@ -287,6 +313,69 @@ class GpuiInput extends ceramic.Entity {
         return unit == ceramic.ScrollUnit.LINES
             ? ScrollDelta.Lines(new Point(-deltaX, -deltaY))
             : ScrollDelta.Pixels(new Point(-deltaX, -deltaY));
+    }
+
+/// Touch
+
+    function handleTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+        final window = windowAt(x, y);
+        if (window == null)
+            return;
+        final id = nextTouchId++;
+        touchIds.set(touchIndex, id);
+        touchWindows.set(touchIndex, window);
+        if (activeWindow != window) {
+            if (activeWindow != null && !activeWindow.isDestroyed()) activeWindow.setActive(false);
+            activeWindow = window;
+        }
+        window.setActive(true);
+        window.dispatchEvent(new TouchEvent(id, Started, toWindow(window, x, y)));
+    }
+
+    function handleTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+        dispatchTouch(touchIndex, Moved, x, y, false);
+    }
+
+    function handleTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+        dispatchTouch(touchIndex, Ended, x, y, true);
+    }
+
+    function handleTouchCancel(touchIndex:Int, x:Float, y:Float):Void {
+        dispatchTouch(touchIndex, Cancelled, x, y, true);
+    }
+
+    function dispatchTouch(touchIndex:Int, phase:TouchPhase, x:Float, y:Float, ends:Bool):Void {
+        final id = touchIds.get(touchIndex);
+        if (id == null)
+            return;
+        final window = touchWindows.get(touchIndex);
+        if (ends) {
+            touchIds.remove(touchIndex);
+            touchWindows.remove(touchIndex);
+        }
+        if (window == null || window.isDestroyed())
+            return;
+        window.dispatchEvent(new TouchEvent(id, phase, toWindow(window, x, y)));
+    }
+
+    /**
+     * Ceramic's `textEditingTapFilter`: whether a tap at (x, y) (screen
+     * coordinates) lands on a text input accepting text in the last frame of
+     * the window under it. When it does, that input's text assistance
+     * preferences are applied first, so the keyboard opens configured for it.
+     */
+    function textEditingTapFilter(x:Float, y:Float):Bool {
+        final window = windowAt(x, y);
+        if (window == null)
+            return false;
+        final position = toWindow(window, x, y);
+        return window.app.update(cx -> {
+            final region = window.textInputRegionAt(position, cx);
+            if (region == null)
+                return false;
+            TextInputBridge.applyConfiguration(region.handler.textInputConfiguration(window, cx));
+            return true;
+        });
     }
 
 /// Keyboard

@@ -948,6 +948,84 @@ class ComponentControlsTest extends TestCase {
         assertEquals('release 80', events.join(', '));
     }
 
+    /** `touch_drag` (integration/disclosure.rs): a finger drag reaches elements as `TouchDragEvent`s. */
+    static function touchDrag(cx:VisualTestContext, from:Point, to:Point):Void {
+        cx.update((window, app) -> {
+            window.dispatchEvent(new gpui.TouchDragEvent(Started, from, from), app);
+            window.dispatchEvent(new gpui.TouchDragEvent(Moved, from, to), app);
+            window.dispatchEvent(new gpui.TouchDragEvent(Ended, from, to), app);
+            window.refresh();
+            window.draw();
+        });
+    }
+
+    /**
+     * `slider_touch_drag_moves_the_actual_thumb` (integration/disclosure.rs),
+     * read on the value: the thumb follows a touch drag both ways.
+     */
+    function testSliderTouchDragMovesTheActualThumb() {
+        final state = app.newEntity((_:Context<SliderState>) -> new SliderState().defaultValue(20.));
+        final track:Array<Bounds> = [null];
+        final cx = volume(state, false, track);
+        final thumb = new Point(track[0].left() + track[0].size.width * 0.2, track[0].center().y);
+        final right = new Point(track[0].left() + track[0].size.width * 0.8, track[0].center().y);
+        touchDrag(cx, thumb, right);
+        final after = state.read(app).value().end();
+        assertTrue(after > 20., 'moved right to $after');
+        final left = new Point(track[0].left() + track[0].size.width * 0.3, track[0].center().y);
+        touchDrag(cx, right, left);
+        assertTrue(state.read(app).value().end() < after);
+    }
+
+    /**
+     * `slider_drops_a_touch_drag_whose_end_never_arrived`
+     * (integration/disclosure.rs): disabled mid-drag, the slider never sees
+     * the end; a later drag another element claimed must not move it.
+     */
+    function testSliderDropsATouchDragWhoseEndNeverArrived() {
+        final state = app.newEntity((_:Context<SliderState>) -> new SliderState().defaultValue(20.));
+        final track:Array<Bounds> = [null];
+        final disabled = [false];
+        final cx = open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(new Slider(state).disabled(disabled[0]))), 400, 240);
+        final thumb = new Point(track[0].left() + track[0].size.width * 0.2, track[0].center().y);
+        function dispatch(phase:gpui.TouchPhase, from:Point, to:Point) {
+            cx.update((window, app) -> {
+                window.dispatchEvent(new gpui.TouchDragEvent(phase, from, to), app);
+                window.refresh();
+                window.draw();
+            });
+        }
+        function setDisabled(value:Bool) {
+            disabled[0] = value;
+            cx.update((window, _) -> {
+                window.refresh();
+                window.draw();
+            });
+        }
+        dispatch(Started, thumb, thumb);
+        setDisabled(true);
+        dispatch(Ended, thumb, thumb);
+        setDisabled(false);
+
+        final before = state.read(app).value().end();
+        final elsewhere = new Point(track[0].left(), track[0].bottom() + 200.);
+        dispatch(Moved, elsewhere, new Point(track[0].right(), track[0].center().y));
+        assertEquals(before, state.read(app).value().end());
+    }
+
+    /**
+     * `disabled_slider_ignores_pointer_changes` (integration/disclosure.rs),
+     * its touch drag.
+     */
+    function testDisabledSliderIgnoresTouchDrags() {
+        final state = app.newEntity((_:Context<SliderState>) -> new SliderState().defaultValue(20.));
+        final track:Array<Bounds> = [null];
+        final cx = volume(state, true, track);
+        final thumb = new Point(track[0].left() + track[0].size.width * 0.2, track[0].center().y);
+        touchDrag(cx, thumb, new Point(track[0].right(), track[0].center().y));
+        assertEquals(20., state.read(app).value().end());
+    }
+
     /**
      * `slider_steps.rs`: a disabled slider's gesture neither changes the
      * value nor emits events.

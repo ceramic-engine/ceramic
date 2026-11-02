@@ -30,8 +30,10 @@ import gpui.Prelude.relative;
  * A plot becomes an element through this type (`Plot.render` makes one, like
  * Rust's `#[derive(IntoPlot)]`).
  *
- * Touch input (the long press of iOS and Android) is not ported, like the
- * rest of the port's touch gestures: the pointer hover path is used.
+ * On iOS and Android (Ceramic's `ios` and `android` targets, like the
+ * original's `target_os`), a long press shows the tooltip instead of hover;
+ * elsewhere, the web on a touch screen included, the pointer hover path is
+ * used.
  */
 class PlotElement extends Element {
 
@@ -139,6 +141,35 @@ class PlotElement extends Element {
             // movement.
             final view = window.currentView();
 
+            #if (ios || android)
+            // A finger has no hover: only a long press opens the tooltip,
+            // drags the crosshair, and closes it on lift.
+            window.onMouseEvent(LongPress, (e, phase, window, cx) -> {
+                final e:gpui.LongPressEvent = cast e;
+                if (!phase.bubble()) {
+                    return;
+                }
+                final next:Null<Point> = switch e.phase {
+                    case Started:
+                        if (window.defaultPrevented() || !hitbox.isHovered(window)) {
+                            return;
+                        }
+                        window.preventDefault();
+                        relativeTo(e.startPosition, bounds.origin);
+                    case Moved:
+                        if (cell.value == null) {
+                            return;
+                        }
+                        relativeTo(e.position, bounds.origin);
+                    case Ended | Cancelled:
+                        null;
+                };
+                if (!samePoint(cell.value, next)) {
+                    cell.value = next;
+                    cx.notify(view);
+                }
+            });
+            #else
             // Relayout can move the plot under a still cursor without a move
             // event, so re-derive hover each frame; only a visibility flip
             // needs a corrective frame.
@@ -159,6 +190,7 @@ class PlotElement extends Element {
                     cx.notify(view);
                 }
             });
+            #end
         }
 
         // Crosshair and dots paint above the plot; the deferred box paints

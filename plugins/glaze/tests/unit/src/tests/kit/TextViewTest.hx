@@ -645,6 +645,95 @@ class TextViewTest extends KitTestCase {
         assertEquals("quick", StringTools.trim(selectedOf(result.view.read(app).textView)));
     }
 
+    static function longPressEvent(cx:VisualTestContext, phase:gpui.TouchPhase, start:Point, position:Point):Void {
+        cx.simulateEvent(new gpui.LongPressEvent(phase, start, position));
+    }
+
+    function testLongPressSelectsWordThenDragExtendsSelection() {
+        initApp();
+        final result = addWindowView((_, cx) -> new LayerRoot(cx.newEntity(cx -> TextViewState.markdown("quick select value", cx)), 300.));
+        final cx = result.cx;
+        drawn(cx);
+        final startPosition = new Point(10., 16.);
+        longPressEvent(cx, Started, startPosition, startPosition);
+        draw(cx);
+        assertEquals("quick", StringTools.trim(selectedOf(result.view.read(app).textView)));
+        for (phase in [gpui.TouchPhase.Moved, gpui.TouchPhase.Ended]) {
+            longPressEvent(cx, phase, startPosition, new Point(220., 16.));
+        }
+        draw(cx);
+        assertEquals("quick select value", StringTools.trim(selectedOf(result.view.read(app).textView)));
+    }
+
+    function testLongPressReleaseKeepsHandlesWhichDragTheSelection() {
+        initApp();
+        final result = addWindowView((_, cx) -> new LayerRoot(cx.newEntity(cx -> TextViewState.markdown("quick select value", cx)), 300.));
+        final cx = result.cx;
+        final view = result.view;
+        function selected():String {
+            return StringTools.trim(selectedOf(view.read(app).textView));
+        }
+        drawn(cx);
+
+        final startPosition = new Point(70., 16.);
+        for (phase in [gpui.TouchPhase.Started, gpui.TouchPhase.Ended]) {
+            longPressEvent(cx, phase, startPosition, startPosition);
+            draw(cx);
+        }
+        assertEquals("select", selected());
+        var snapshot = cx.update((window, app) -> TextSelection.touchSelection(window, app));
+        assertNotNull(snapshot, "a released long press keeps its handles");
+        assertTrue(snapshot.isMenuOpen());
+        assertFalse(snapshot.isEmpty());
+        assertTrue(snapshot.start().left() < snapshot.end().left());
+
+        // Drag the end handle to the end of the line. The finger holds the
+        // knob below the line, the selection follows along the line.
+        final end = snapshot.end();
+        final finger = new Point(end.left(), end.bottom() + 20.);
+        cx.update((window, app) -> TextSelection.beginEdgeDrag(gpui.base.input.SelectionEdge.End, finger, window, app));
+        draw(cx);
+        snapshot = cx.update((window, app) -> TextSelection.touchSelection(window, app));
+        assertEquals(gpui.base.input.SelectionEdge.End, snapshot.dragging());
+        assertFalse(snapshot.isMenuOpen());
+        cx.update((window, app) -> TextSelection.updateEdgeDrag(new Point(290., finger.y), window, app));
+        draw(cx);
+        assertEquals("select value", selected());
+        cx.update((window, app) -> TextSelection.endEdgeDrag(window, app));
+        draw(cx);
+        snapshot = cx.update((window, app) -> TextSelection.touchSelection(window, app));
+        assertTrue(snapshot.isMenuOpen());
+        assertNull(snapshot.dragging());
+        final selectStart = snapshot.start().left();
+
+        // Select All from the menu is a view-local selection; its handles
+        // still drag, turning it back into a point selection.
+        cx.update((_, app) -> view.read(app).textView.update(app, (state, cx) -> state.selectAll(cx)));
+        draw(cx);
+        assertEquals("quick select value", selected());
+        snapshot = cx.update((window, app) -> TextSelection.touchSelection(window, app));
+        assertNotNull(snapshot, "select all keeps the touch selection");
+        final start = snapshot.start();
+        cx.update((window, app) -> {
+            TextSelection.beginEdgeDrag(gpui.base.input.SelectionEdge.Start, start.origin, window, app);
+            TextSelection.updateEdgeDrag(new Point(selectStart, start.origin.y), window, app);
+            TextSelection.endEdgeDrag(window, app);
+        });
+        draw(cx);
+        assertEquals("select value", selected());
+
+        // A press on the menu leaves the selection alone; one on the text
+        // clears it.
+        final menu = new gpui.Bounds(new Point(0., 200.), new gpui.Size(120., 32.));
+        cx.update((window, app) -> TextSelection.registerTouchUi(menu, window, app));
+        cx.simulateEvent(new MouseDownEvent(Left, new Point(10., 210.), Modifiers.none(), 1, false));
+        assertEquals("select value", selected());
+        cx.simulateEvent(new MouseDownEvent(Left, new Point(10., 16.), Modifiers.none(), 1, false));
+        cx.simulateEvent(new MouseUpEvent(Left, new Point(10., 16.), Modifiers.none(), 1));
+        draw(cx);
+        assertNull(cx.update((window, app) -> TextSelection.touchSelection(window, app)));
+    }
+
     function testTripleClickSelectsParagraph() {
         final result = addRoot("quick select value");
         final cx = result.cx;

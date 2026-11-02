@@ -430,6 +430,12 @@ private class Frame {
     /** Input handlers registered with `handleInput` (only the last one is used) */
     public final inputHandlers:Array<Null<PlatformInputHandler>> = [];
 
+    /**
+     * Every text input painted in the frame, focused or not (port addition,
+     * see `Window.textInputRegionAt`).
+     */
+    public final textInputRegions:Array<TextInputRegion> = [];
+
     #if gpui_inspector
     /** Next instance id of each inspector element path, by path key (Rust `next_inspector_instance_ids`) */
     public var nextInspectorInstanceIds:Map<String, InspectorInstanceCount> = new Map();
@@ -481,6 +487,7 @@ private class Frame {
         tabStops.clear();
         deferredDraws.resize(0);
         inputHandlers.resize(0);
+        textInputRegions.resize(0);
 
         #if gpui_inspector
         nextInspectorInstanceIds.clear();
@@ -2845,6 +2852,7 @@ class Window implements WindowInvalidator {
         index.sceneIndex = frame.scene.paintIndex();
         index.mouseListenersIndex = frame.mouseListeners.length;
         index.inputHandlersIndex = frame.inputHandlers.length;
+        index.textInputRegionsIndex = frame.textInputRegions.length;
         index.cursorStylesIndex = frame.cursorStyles.length;
         index.accessedElementStatesIndex = frame.accessedElementStates.length;
         index.tabHandleIndex = frame.tabStops.paintIndex();
@@ -2870,6 +2878,9 @@ class Window implements WindowInvalidator {
         }
         for (i in start.mouseListenersIndex...end.mouseListenersIndex) {
             next.mouseListeners.push(rendered.mouseListeners[i]);
+        }
+        for (i in start.textInputRegionsIndex...end.textInputRegionsIndex) {
+            next.textInputRegions.push(rendered.textInputRegions[i]);
         }
         for (i in start.accessedElementStatesIndex...end.accessedElementStatesIndex) {
             final key = rendered.accessedElementStates[i];
@@ -3788,9 +3799,41 @@ class Window implements WindowInvalidator {
      */
     public function handleInput(focusHandle:FocusHandle, inputHandler:InputHandler, ?cx:App):Void {
         if (cx == null) cx = app;
+        // Port addition: where text inputs are, so that a platform which can
+        // only show its virtual keyboard from inside the tap that asks for it
+        // (the web) can tell, before the tap reaches GPUI, whether it lands
+        // on a text input. GPUI's web platform dispatches the tap first, then
+        // checks the focused input's bounds (events.rs:357-370).
+        final elementBounds = inputHandler.elementBounds(this, cx);
+        if (elementBounds != null) {
+            final visible = elementBounds.intersect(contentMask().bounds);
+            if (visible.size.width > 0 && visible.size.height > 0) {
+                nextFrame.textInputRegions.push(new TextInputRegion(visible, inputHandler));
+            }
+        }
         if (focusHandle.isFocused(this)) {
             nextFrame.inputHandlers.push(new PlatformInputHandler(this, cx, inputHandler).withFocus(focusHandle.id));
         }
+    }
+
+    /**
+     * The topmost text input painted in the last frame whose visible bounds
+     * contain `position` (window coordinates), if it accepts text input
+     * (port addition: lets the web platform decide, inside the tap that
+     * focuses an input, whether to open the virtual keyboard).
+     */
+    public function textInputRegionAt(position:Point, ?cx:App):Null<TextInputRegion> {
+        if (cx == null) cx = app;
+        final regions = renderedFrame.textInputRegions;
+        var i = regions.length - 1;
+        while (i >= 0) {
+            final region = regions[i];
+            if (region.bounds.contains(position)) {
+                return region.handler.acceptsTextInput(this, cx) ? region : null;
+            }
+            i--;
+        }
+        return null;
     }
 
     /**
@@ -3890,7 +3933,9 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * Requests the software keyboard (no-op: Ceramic shows it with text editing).
+     * Requests the software keyboard (no-op: Ceramic's native backends show
+     * it with text editing, and on the web the tap that focuses a text input
+     * opens it from inside the browser's touch handler, see `GpuiInput`).
      */
     public function requestVirtualKeyboard():Void {}
 

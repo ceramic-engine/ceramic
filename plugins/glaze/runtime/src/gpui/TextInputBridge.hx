@@ -196,7 +196,33 @@ class TextInputBridge implements PlatformTextInput {
 /// PlatformTextInput
 
     public function setTextInputConfiguration(configuration:TextInputConfiguration):Void {
-        // Ceramic text editing has no text assistance settings
+        applyConfiguration(configuration);
+    }
+
+    /**
+     * Gives the text assistance preferences to Ceramic, which maps them onto
+     * its hidden editable element on the web like GPUI's web platform
+     * (`ime_mirror.rs` `apply_configuration`). GPUI has no input purpose, so
+     * the input mode is always `text`.
+     */
+    public static function applyConfiguration(configuration:TextInputConfiguration):Void {
+        final enterKeyHint = switch configuration.inputAction {
+            case Unspecified: null;
+            case Enter: 'enter';
+            case Done: 'done';
+            case Go: 'go';
+            case Next: 'next';
+            case Previous: 'previous';
+            case Search: 'search';
+            case Send: 'send';
+        }
+        final autocapitalize = switch configuration.autocapitalize {
+            case None: 'off';
+            case Words: 'words';
+            case Sentences: 'sentences';
+            case Characters: 'characters';
+        }
+        ceramic.App.app.input.setTextEditingConfiguration('text', enterKeyHint, autocapitalize, configuration.autocorrect, configuration.suggestions);
     }
 
     public function textInputStateChanged(change:TextInputStateChange):Void {

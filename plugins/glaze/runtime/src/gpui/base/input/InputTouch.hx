@@ -5,6 +5,7 @@ package gpui.base.input;
 
 import gpui.Bounds;
 import gpui.Context;
+import gpui.LongPressEvent;
 import gpui.Pixels;
 import gpui.Point;
 import gpui.Range;
@@ -13,6 +14,7 @@ import gpui.Window;
 import gpui.base.AutoScroll;
 
 using gpui.base.input.InputMovement;
+using gpui.base.input.InputWordSelection;
 
 /**
  * Touch selection for the input engine: grab handles and the edit menu (the
@@ -24,12 +26,6 @@ using gpui.base.input.InputMovement;
  * added) the handles and the menu are gone, without anyone having to hide
  * them. Only the touch gesture and the menu's own actions move the range and
  * carry the touch selection along.
- *
- * Not ported: `on_long_press` (the long press that starts a touch
- * selection), since the GPUI port has no `LongPressEvent` yet. Its Rust
- * signature is `fn on_long_press(&mut self, event: &LongPressEvent, window:
- * &mut Window, cx: &mut Context<Self>) -> bool`. A double tap still keeps a
- * word selection (`keepTouchSelection`).
  */
 class InputTouch {
 
@@ -170,6 +166,80 @@ class InputTouch {
             retainTouchSelection(self);
             self.touchSelection.menuOpen = true;
             cx.notify();
+        }
+    }
+
+    /** Rust `text.chars().all(char::is_whitespace)`. */
+    static function allWhitespace(text:String):Bool {
+        final codePoints:Array<Int> = [];
+        final byteOffsets:Array<Int> = [];
+        final count = gpui.util.Utf8.decode(text, codePoints, byteOffsets);
+        for (i in 0...count) {
+            if (!gpui.util.Utf8.isWhitespace(codePoints[i])) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Handles one phase of a long press inside the input.
+     *
+     * Returns whether the started phase was claimed; the caller then
+     * captures the gesture so the moves keep coming even after the finger
+     * leaves the input.
+     */
+    public static function onLongPress(self:InputBaseState, event:LongPressEvent, window:Window, cx:Context<InputBaseState>):Bool {
+        switch event.phase {
+            case Started:
+                if (self.disabled) {
+                    return false;
+                }
+                if (!self.focusHandle.isFocused(window)) {
+                    window.focus(self.focusHandle, cx.app);
+                }
+                // The input selects on its own; keep the window text
+                // selection from starting a drag under it.
+                gpui.base.GlobalState.suppressTextSelection(cx.app);
+                self.undoManager.breakTransactionCoalescing();
+                self.modeKind.clearInlineCompletion(self, cx);
+                self.touchSelection = new TouchSelection();
+
+                final resolved = self.resolveMousePosition(event.startPosition);
+                final offset = resolved.offset;
+                final lineEndAffinity = resolved.lineEndAffinity;
+                self.selections.removeAllButActive();
+                self.setCursorTo(offset);
+                self.selectWord(offset, window, cx);
+                final pressedWord = !self.activeSelection().isEmpty() && !allWhitespace(self.selectedText().toString());
+                if (!pressedWord) {
+                    // Whitespace or an empty field: the press places the
+                    // caret, and the menu offers Paste and Select All.
+                    self.moveToWithAffinity(offset, null, lineEndAffinity, cx);
+                    self.selectedWordRange = null;
+                }
+                self.selecting = true;
+                retainTouchSelection(self);
+                cx.notify();
+                return true;
+            case Moved:
+                final resolved = self.resolveMousePosition(event.position);
+                if (self.selectedWordRange != null) {
+                    // The press took a word; the sweep grows it a word at a time.
+                    self.selectToWithAffinity(resolved.offset, resolved.lineEndAffinity, cx);
+                }
+                else {
+                    // The press placed the caret; the sweep carries it.
+                    self.moveToWithAffinity(resolved.offset, null, resolved.lineEndAffinity, cx);
+                }
+                retainTouchSelection(self);
+                return true;
+            case Ended | Cancelled:
+                self.selecting = false;
+                self.selectedWordRange = null;
+                if (self.touchSelection.range != null) {
+                    self.touchSelection.menuOpen = true;
+                }
+                cx.notify();
+                return true;
         }
     }
 

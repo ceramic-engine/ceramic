@@ -62,10 +62,8 @@ class ContextMenuExt {
 }
 
 /**
- * A context menu that can be shown on right-click.
- *
- * The long press of touch input (`LongPressEvent`) is not ported: the port
- * has no touch input.
+ * A context menu that can be shown on right-click, or on a long press on a
+ * touch screen.
  */
 class ContextMenu<E:ParentElement & Styled> extends Element implements ParentElement implements Styled {
 
@@ -198,9 +196,21 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
         final sharedState = this.sharedState;
         final hitbox = this.hitbox;
 
-        // A finger has no right button, so the original opens the menu on a
-        // long press too (`LongPressEvent`, before the children paint): not
-        // ported, the port has no touch input.
+        // A finger has no right button, so a long press opens the menu. This
+        // listener goes in before the children paint, so an input inside the
+        // trigger claims its long press first. Rich-text selection is handled
+        // by the window layer, which runs later; yield over its text geometry.
+        window.onMouseEvent(LongPress, (event, phase, window, cx) -> {
+            final event:gpui.LongPressEvent = cast event;
+            if (phase.bubble()
+                && event.phase == Started
+                && !window.defaultPrevented()
+                && hitbox.isHovered(window)
+                && !gpui.base.TextSelection.isSelectableAt(event.startPosition, window, cx)) {
+                window.preventDefault();
+                openMenu(sharedState, builder, event.startPosition, window, cx);
+            }
+        });
 
         // Register before child paint so bubbling reaches the innermost
         // trigger first, after its input has had a chance to take focus.

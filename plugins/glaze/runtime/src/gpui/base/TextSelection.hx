@@ -7,6 +7,7 @@ import gpui.App;
 import gpui.Bounds;
 import gpui.Entity;
 import gpui.IntoElement;
+import gpui.LongPressEvent;
 import gpui.MouseButton;
 import gpui.MouseDownEvent;
 import gpui.MouseMoveEvent;
@@ -15,6 +16,7 @@ import gpui.Range;
 import gpui.ScrollEvent;
 import gpui.Subscription;
 import gpui.TextLayout;
+import gpui.TouchDragEvent;
 import gpui.Window;
 import gpui.base.SelectableTextState;
 import gpui.base.TextSelectionRegistration.BoundsPair;
@@ -595,10 +597,92 @@ class TextSelection {
             }
         });
 
-        // Rust also listens to `TouchDragEvent` (noting touches, and moving a
-        // handle drag with the finger) and to `LongPressEvent` (selecting the
-        // word under a long press, then extending it): the GPUI port has no
-        // touch input.
+        // Every touch is offered as a drag first; that is how a tap's mouse
+        // events are later told apart from a mouse's.
+        window.onMouseEvent(TouchDrag, (event, phase, _, cx) -> {
+            final event:TouchDragEvent = cast event;
+            if (phase.capture() && event.phase == Started) {
+                GlobalState.noteTouch(cx);
+            }
+        });
+
+        // Touch panning remains scrolling until a long press actually hits
+        // text. Claiming the gesture keeps subsequent moves out of the pan
+        // recognizer.
+        final longPressState = state.downgrade();
+        window.onMouseEvent(LongPress, (event, phase, window, cx) -> {
+            final event:LongPressEvent = cast event;
+            if (!phase.bubble()) {
+                return;
+            }
+            final state = longPressState.upgrade();
+            if (state == null) {
+                return;
+            }
+            if (event.phase == Started) {
+                if (window.defaultPrevented()
+                    || state.read(cx).touch.covers(event.startPosition)
+                    || !state.update(cx, (state, cx) -> state.endpoint(event.startPosition, window, cx.app).insideText)) {
+                    return;
+                }
+                GlobalState.init(cx);
+                GlobalState.resetTextSelectionSuppression(cx);
+                final handlers = state.update(cx, (state, cx) -> state.prepareForMouseDown(false, cx.app));
+                dispatchClearHandlers(handlers, cx);
+                final selected = state.update(cx, (state, cx) -> {
+                    state.selectAt(event.startPosition, 2, window, cx.app);
+                    return state.anchor != null;
+                });
+                if (!selected) {
+                    return;
+                }
+                window.captureLongPress(state);
+            }
+            else if (!window.hasLongPressCapture(state)) {
+                return;
+            }
+            else {
+                state.update(cx, (state, cx) -> {
+                    switch event.phase {
+                        case Moved:
+                            state.isSelecting = true;
+                            state.updateInWindow(event.position, window, cx);
+                        case Ended | Cancelled:
+                            state.end(cx.app);
+                            // The finger is up; the selection it made gets
+                            // its handles and the edit menu.
+                            state.keepTouchSelection(cx.app);
+                        case _:
+                    }
+                });
+            }
+            window.preventDefault();
+            cx.stopPropagation();
+            WindowSelectionState.resolveContentKeys(state, cx);
+        });
+
+        // A handle drag in progress follows the finger or the pointer
+        // wherever it goes, whether or not the handle it took is laid out
+        // this frame.
+        final touchDragState = state.downgrade();
+        window.onMouseEvent(TouchDrag, (event, phase, window, cx) -> {
+            final event:TouchDragEvent = cast event;
+            if (!phase.bubble() || event.phase == Started) {
+                return;
+            }
+            final state = touchDragState.upgrade();
+            if (state == null || state.read(cx).touch.drag == null) {
+                return;
+            }
+            cx.stopPropagation();
+            state.update(cx, (state, cx) -> {
+                switch event.phase {
+                    case Moved: state.updateEdgeDrag(event.position, window, cx);
+                    case _: state.endEdgeDrag(cx.app);
+                }
+            });
+            WindowSelectionState.resolveContentKeys(state, cx);
+        });
 
         // A handle drag in progress follows the pointer wherever it goes,
         // whether or not the handle it took is laid out this frame.

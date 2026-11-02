@@ -242,8 +242,6 @@ enum abstract SliderScale(Int) {
  * slider re-render when they change. Rust's `Range<f32>` percentage is
  * `percentageStart` / `percentageEnd`; in single value mode only the end is
  * used and the start is always 0.
- *
- * Touch drags (`TouchDragEvent`) are not ported: the port has no touch input.
  */
 class SliderState extends Model {
 
@@ -269,6 +267,10 @@ class SliderState extends Model {
      * only emit `SliderEvent.Release` after a real press/drag.
      */
     var dragging:Bool = false;
+
+    /** The touch drag this slider claimed, while one is live. */
+    @:allow(gpui.base)
+    var touchDrag:Null<SliderTouchDrag> = null;
 
     /**
      * Create a new `SliderState`.
@@ -456,6 +458,7 @@ class SliderState extends Model {
     /**
      * Whether `position` is closer to the range start thumb than to the end thumb.
      */
+    @:allow(gpui.base)
     function isNearerStart(axis:Axis, position:Point):Bool {
         final size = f32(stateBounds.size.along(axis));
         final along = axis == Axis.Horizontal ? f32(position.x - stateBounds.left()) : f32(stateBounds.bottom() - position.y);
@@ -725,11 +728,51 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
         final element = base.id('slider-bar-container');
         element.extend(childElements);
         // Touch: GPUI routes a finger drag to `TouchDragEvent` (claimed with
-        // `prevent_default`) or to scrolling. The port has no touch input:
-        // only the hitbox of the touch layer is kept, so hit testing matches.
+        // `preventDefault`) or to scrolling; `onDrag` below is mouse-only.
+        // Claim drags that start on the track, as the scrollbar thumb does.
         if (!disabledValue) {
             element.extend([
-                canvas((bounds, window, _) -> window.insertHitbox(bounds, HitboxBehavior.Normal), (_, _, _, _) -> {})
+                canvas((bounds, window, _) -> window.insertHitbox(bounds, HitboxBehavior.Normal), (_, hitbox, window, _) -> {
+                    window.onMouseEvent(TouchDrag, (e, phase, window, cx) -> {
+                        final event:gpui.TouchDragEvent = cast e;
+                        if (!phase.bubble()) {
+                            return;
+                        }
+                        sliderState.update(cx, (state, cx) -> {
+                            if (event.phase == Started) {
+                                // A drag whose end never arrived (the slider was
+                                // disabled or not painted) ends when another begins.
+                                if (state.touchDrag != null) {
+                                    state.touchDrag = null;
+                                    state.handleRelease(cx);
+                                }
+                                // The hitbox, not the bounds, so a layer covering
+                                // the track keeps its own drags.
+                                if (window.defaultPrevented() || !hitbox.isHovered(window)) {
+                                    return;
+                                }
+                                window.preventDefault();
+                                final isStart = isRange && state.isNearerStart(axis, event.startPosition);
+                                state.touchDrag = new SliderTouchDrag(event.startPosition, isStart);
+                            }
+                            final drag = state.touchDrag;
+                            if (drag == null) {
+                                return;
+                            }
+                            if (!drag.startPosition.equals(event.startPosition)) {
+                                return;
+                            }
+                            cx.stopPropagation();
+                            switch event.phase {
+                                case Started | Moved:
+                                    state.updateValueByPosition(axis, event.position, drag.isStart, window, cx);
+                                case Ended | Cancelled:
+                                    state.touchDrag = null;
+                                    state.handleRelease(cx);
+                            }
+                        });
+                    });
+                })
                     .absolute()
                     .sizeFull()
                     .intoAnyElement()
@@ -891,6 +934,25 @@ class SliderThumb implements RenderOnce implements Styled implements ParentEleme
                 });
         }
         return element;
+    }
+
+}
+
+/**
+ * A touch drag claimed by a slider.
+ */
+@:allow(gpui.base)
+class SliderTouchDrag {
+
+    /** Identifies the gesture: every event of one drag carries the same start. */
+    public final startPosition:Point;
+
+    /** Whether it moves the range start thumb. */
+    public final isStart:Bool;
+
+    public function new(startPosition:Point, isStart:Bool) {
+        this.startPosition = startPosition;
+        this.isStart = isStart;
     }
 
 }

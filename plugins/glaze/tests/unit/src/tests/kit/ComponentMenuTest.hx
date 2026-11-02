@@ -56,8 +56,7 @@ using gpui.component.button.Button.ButtonVariantTools;
  * Not ported: the menu steps
  * of the integration tests that need inputs (`context_menu_preserves_only_its_inputs_selection...`,
  * `right_click_on_unfocused_input_keeps_selection`, `submenu_select_all_uses_the_parent_input_action_target`,
- * `hovering_away_from_a_keyboard_entered_submenu_refocuses_its_parent`, the long press tests:
- * inputs, text views and touch come later).
+ * `hovering_away_from_a_keyboard_entered_submenu_refocuses_its_parent`: inputs come later).
  */
 class ComponentMenuTest extends TestCase {
 
@@ -798,6 +797,85 @@ class ComponentMenuTest extends TestCase {
     }
 
 
+    /** `long_press`: a recognized long press, started and ended, a frame after each. */
+    static function longPress(window:Window, cx:App, position:Point):Void {
+        for (phase in [gpui.TouchPhase.Started, gpui.TouchPhase.Ended]) {
+            window.dispatchEvent(new gpui.LongPressEvent(phase, position, position), cx);
+            renderFrame(window);
+        }
+    }
+
+    /** `long_press_menus`: a row, an input and a selectable text, each a context menu trigger. */
+    function longPressMenus():{cx:VisualTestContext, view:Entity<LongPressMenus>, rowMenu:Array<WeakEntity<PopupMenu>>} {
+        final menus:Array<WeakEntity<PopupMenu>> = [];
+        final opened = openRoot((window, cx) -> new LongPressMenus(window, cx, menus), 640, 480);
+        return {cx: opened.cx, view: opened.content, rowMenu: menus};
+    }
+
+    /** `long_press_opens_the_context_menu`: a finger has no right button, so a long press opens the same menu. */
+    function testLongPressOpensTheContextMenu() {
+        final opened = longPressMenus();
+        final cx = opened.cx;
+        cx.update((window, app) -> {
+            renderFrame(window);
+            longPress(window, app, Probe.bounds.get('row').center());
+        });
+        cx.runUntilParked();
+        draw(cx);
+        assertTrue(opened.rowMenu.length > 0 && isShown(cx, opened.rowMenu[opened.rowMenu.length - 1]));
+    }
+
+    /** `long_press_on_an_input_in_a_context_menu_trigger_selects`: an input inside the trigger keeps its own long press. */
+    function testLongPressOnAnInputInAContextMenuTriggerSelects() {
+        final opened = longPressMenus();
+        final cx = opened.cx;
+        cx.update((window, app) -> {
+            renderFrame(window);
+            final bounds = Probe.bounds.get('row-input');
+            longPress(window, app, new Point(bounds.left() + 24., bounds.center().y));
+        });
+        cx.runUntilParked();
+        draw(cx);
+        final input = opened.view.read(app).input;
+        final range = input.read(app).selectedRange();
+        assertEquals(0, range.start);
+        assertEquals(5, range.end);
+        assertEquals(0, opened.rowMenu.length);
+    }
+
+    /** `long_press_on_text_in_a_context_menu_trigger_selects`: window-level text selection takes priority over the trigger's menu. */
+    function testLongPressOnTextInAContextMenuTriggerSelects() {
+        final opened = longPressMenus();
+        final cx = opened.cx;
+        cx.update((window, app) -> {
+            renderFrame(window);
+            final bounds = Probe.bounds.get('text-row');
+            longPress(window, app, new Point(bounds.left() + 24., bounds.top() + 10.));
+        });
+        cx.runUntilParked();
+        draw(cx);
+        cx.update((window, app) -> {
+            assertEquals('quick', StringTools.trim(gpui.base.TextSelection.selectedText(window, app)));
+            assertNotNull(gpui.base.TextSelection.touchSelection(window, app));
+        });
+        assertEquals(0, opened.rowMenu.length);
+    }
+
+    /** `long_press_on_blank_space_in_a_text_trigger_opens_the_menu`: blank space in a selectable text row still opens the object's menu. */
+    function testLongPressOnBlankSpaceInATextTriggerOpensTheMenu() {
+        final opened = longPressMenus();
+        final cx = opened.cx;
+        cx.update((window, app) -> {
+            renderFrame(window);
+            final bounds = Probe.bounds.get('text-row');
+            longPress(window, app, new Point(bounds.right() - 12., bounds.bottom() - 12.));
+        });
+        cx.runUntilParked();
+        draw(cx);
+        cx.update((window, app) -> assertEquals('', gpui.base.TextSelection.selectedText(window, app)));
+        assertTrue(opened.rowMenu.length > 0 && isShown(cx, opened.rowMenu[opened.rowMenu.length - 1]));
+    }
+
     /**
      * `nested_context_menu_uses_the_innermost_right_click_target`.
      */
@@ -1087,6 +1165,62 @@ private class ScrollableCommands extends Model implements Render {
                         more = cx.weakEntity();
                         return menu.menu('Save copy', new Save());
                     });
+                })));
+    }
+
+}
+
+private class LongPressMenus extends Model implements Render {
+
+    public final input:Entity<gpui.base.input.InputState>;
+
+    public final text:Entity<gpui.base.text.TextViewState>;
+
+    final menus:Array<WeakEntity<PopupMenu>>;
+
+    public function new(window:Window, cx:Context<LongPressMenus>, menus:Array<WeakEntity<PopupMenu>>) {
+        super();
+        this.menus = menus;
+        input = cx.newEntity((c:Context<gpui.base.input.InputState>) -> {
+            final state = new gpui.base.input.InputState(window, c);
+            state.defaultValue("quick select");
+            return state;
+        });
+        text = cx.newEntity((c:Context<gpui.base.text.TextViewState>) -> gpui.base.text.TextViewState.markdown("quick select", c));
+    }
+
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+        final menus = this.menus;
+        return div()
+            .sizeFull()
+            .p4()
+            .flex()
+            .flexCol()
+            .gap4()
+            .child(new Probe('row', div()
+                .id('row')
+                .w(px(320.))
+                .h(px(40.))
+                .child('Long press me')
+                .contextMenu((menu, _, cx) -> {
+                    menus.push(cx.weakEntity());
+                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
+                })))
+            .child(div()
+                .w(px(320.))
+                .child(new Probe('row-input', new gpui.component.input.Input(input).id('row-input')))
+                .contextMenu((menu, _, cx) -> {
+                    menus.push(cx.weakEntity());
+                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
+                }))
+            .child(new Probe('text-row', div()
+                .id('text-row')
+                .w(px(320.))
+                .h(px(80.))
+                .child(gpui.component.text.TextView.create(text).selectable(true))
+                .contextMenu((menu, _, cx) -> {
+                    menus.push(cx.weakEntity());
+                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
                 })));
     }
 

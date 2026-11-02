@@ -52,7 +52,12 @@ import ropey.Rope;
 
 import gpui.Prelude.*;
 
+import gpui.LongPressEvent;
+import gpui.TouchDragEvent;
+import gpui.base.GlobalState;
+
 using gpui.ScrollDelta.ScrollDeltaTools;
+using gpui.base.input.InputTouch;
 using gpui.base.input.InputTokenPresentation;
 using gpui.base.input.InputTokens;
 using gpui.base.input.RopeExt;
@@ -69,10 +74,8 @@ using gpui.base.input.RopeExt;
  * Rust keeps the state of `prepaint` in a `PrepaintState` value handed to
  * `paint`; the port keeps it in `prepaintState` (an element is drawn once).
  *
- * Not ported: the touch listeners of `paint_mouse_listeners`
- * (`TouchDragEvent`, `LongPressEvent`: the GPUI port has no touch input) and
- * the accessibility role, label and click action of inline tokens (the GPUI
- * port has no accessibility tree).
+ * Not ported: the accessibility role, label and click action of inline
+ * tokens (the GPUI port has no accessibility tree).
  */
 @:access(gpui.base.input.InputBaseState)
 @:access(gpui.base.input.LayoutMode)
@@ -649,9 +652,46 @@ class TextElement extends Element {
             });
         }
 
-        // Not ported: the `TouchDragEvent` listener noting touches
-        // (`GlobalState::note_touch`) and the `LongPressEvent` listener
-        // selecting by long press. The GPUI port has no touch input.
+        // Every touch is offered as a drag first; that is how a tap's mouse
+        // events are later told apart from a mouse's.
+        window.onMouseEvent(TouchDrag, (event, phase, _, cx) -> {
+            final event:TouchDragEvent = cast event;
+            if (phase.capture() && event.phase == Started) {
+                GlobalState.noteTouch(cx);
+            }
+        });
+
+        // A long press is touch's way to select: the word under the finger,
+        // then whatever the finger sweeps over. Claiming it keeps the moves
+        // out of the pan recognizer, so the input does not scroll instead.
+        {
+            final state = this.state;
+            window.onMouseEvent(LongPress, (event, phase, window, cx) -> {
+                final event:LongPressEvent = cast event;
+                if (!phase.bubble()) {
+                    return;
+                }
+                if (event.phase == Started) {
+                    if (window.defaultPrevented() || !hitbox.isHovered(window)) {
+                        return;
+                    }
+                    if (!state.update(cx, (state, cx) -> state.onLongPress(event, window, cx))) {
+                        return;
+                    }
+                    window.captureLongPress(state);
+                }
+                else if (!window.hasLongPressCapture(state)) {
+                    return;
+                }
+                else {
+                    state.update(cx, (state, cx) -> {
+                        state.onLongPress(event, window, cx);
+                    });
+                }
+                window.preventDefault();
+                cx.stopPropagation();
+            });
+        }
 
         {
             final state = this.state;

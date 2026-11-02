@@ -1069,8 +1069,7 @@ class AxisPrepaintState {
  * Scrollbar control for scroll-area or a uniform-list.
  *
  * Differences with gpui-kit: times come from `cx.backgroundExecutor().now()`
- * (seconds) instead of `Instant::now()`, so tests can drive them; touch
- * drags (`TouchDragEvent`) are not ported, the port has no touch input.
+ * (seconds) instead of `Instant::now()`, so tests can drive them.
  */
 class Scrollbar extends Element {
 
@@ -1593,6 +1592,40 @@ class Scrollbar extends Element {
                             scrollbarState.withLastScroll(scrollHandle.offset(), cx.backgroundExecutor().now());
                             cx.notify(viewId);
                         }
+                    }
+                });
+
+                // A thumb follows the finger, unlike content panning. Claim
+                // this touch before the window turns it into wheel deltas.
+                window.onMouseEvent(TouchDrag, (event, phase, window, cx) -> {
+                    final event:gpui.TouchDragEvent = cast event;
+                    if (!phase.bubble()) {
+                        return;
+                    }
+                    if (event.phase == Started) {
+                        if (!isVisible || window.defaultPrevented() || !thumbBounds.contains(event.startPosition)) {
+                            return;
+                        }
+                        scrollHandle.startDrag();
+                        scrollbarState.withDragPos(axis, event.startPosition.sub(thumbBounds.origin), cx.backgroundExecutor().now());
+                    }
+                    else if (scrollbarState.draggedAxis != axis) {
+                        return;
+                    }
+                    if (event.phase != Cancelled) {
+                        scrollHandle.setOffset(activeGeometry.dragOffset(axis, event.position, scrollbarState.dragPos, scrollHandle.offset()));
+                    }
+                    if (event.phase == Ended || event.phase == Cancelled) {
+                        scrollHandle.endDrag();
+                        scrollbarState.withUnsetDragPos(cx.backgroundExecutor().now());
+                    }
+                    window.preventDefault();
+                    cx.stopPropagation();
+                    if (event.phase == Moved) {
+                        scrollbarState.notifyDrag(cx.backgroundExecutor().now(), maxFpsDuration, viewId, window, cx);
+                    }
+                    else {
+                        cx.notify(viewId);
                     }
                 });
 

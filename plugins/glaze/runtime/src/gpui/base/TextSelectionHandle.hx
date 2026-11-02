@@ -8,6 +8,7 @@ import gpui.Bounds;
 import gpui.Entity;
 import gpui.HitboxBehavior;
 import gpui.Hsla;
+import gpui.TouchDragEvent;
 import gpui.MouseButton;
 import gpui.MouseDownEvent;
 import gpui.Point;
@@ -250,10 +251,24 @@ class TextSelectionHandle {
         for (handle in layout.hitboxes) {
             final edge = handle.edge;
             final hitbox = handle.hitbox;
-            // Rust also offers the drag to a finger (`TouchDragEvent`): the
-            // GPUI port has no touch input.
-            // Mouse: the same drag for a pointer.
             final weakState = windowState.downgrade();
+            // Touch: the drag is offered on the first touch, before it can
+            // become a tap, a long press or a pan.
+            window.onMouseEvent(TouchDrag, (event, phase, window, cx) -> {
+                final event:TouchDragEvent = cast event;
+                if (!phase.bubble() || event.phase != Started || window.defaultPrevented() || !hitbox.isHovered(window)) {
+                    return;
+                }
+                final windowState = weakState.upgrade();
+                if (windowState == null) {
+                    return;
+                }
+                window.preventDefault();
+                cx.stopPropagation();
+                windowState.update(cx, (state, cx) -> state.beginEdgeDrag(edge, event.position, window, cx.app));
+                WindowSelectionState.resolveContentKeys(windowState, cx);
+            });
+            // Mouse: the same drag for a pointer.
             window.onMouseEvent(MouseDown, (event, phase, window, cx) -> {
                 final event:MouseDownEvent = cast event;
                 if (!phase.bubble() || event.button != MouseButton.Left || !hitbox.isHovered(window)) {

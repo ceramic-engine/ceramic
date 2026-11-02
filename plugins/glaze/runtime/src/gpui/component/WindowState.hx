@@ -75,6 +75,8 @@ class WindowState extends RootPlugin {
     @:allow(tests)
     final tooltipOverlayEntity:Entity<TooltipOverlay>;
 
+    final touchSelectionOverlay:Entity<gpui.component.touchselection.WindowTouchSelectionOverlay>;
+
     var tooltipHoveredTrigger:Null<GlobalElementId> = null;
 
     var tooltipTriggerLifetime:Null<TooltipLifetime> = null;
@@ -100,6 +102,7 @@ class WindowState extends RootPlugin {
         super();
         notification = cx.newEntity((notificationCx:Context<NotificationList>) -> new NotificationList(window, notificationCx));
         tooltipOverlayEntity = cx.newEntity((_:Context<TooltipOverlay>) -> new TooltipOverlay().renderWith(gpui.component.tooltip.Tooltip.renderTooltip));
+        touchSelectionOverlay = cx.newEntity((cx:Context<gpui.component.touchselection.WindowTouchSelectionOverlay>) -> new gpui.component.touchselection.WindowTouchSelectionOverlay(window, cx));
     }
 
     static inline final ROOT_MISSING = 'component window state is missing; call gpui.component.Component.init before opening the window';
@@ -672,8 +675,7 @@ class WindowState extends RootPlugin {
             .absolute()
             .inset0()
             .child(new WindowStateLayers(this));
-        // The touch selection overlay (Rust `touch_selection_overlay`) is not
-        // ported (no touch input).
+        layers.child(touchSelectionOverlay);
         layers.child(tooltipOverlayEntity);
         final pressListener = tooltipPressListener();
         if (pressListener != null) layers.child(pressListener);
