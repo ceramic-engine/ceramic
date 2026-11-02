@@ -15,6 +15,24 @@ using StringTools;
 
 class Web extends tools.Task {
 
+    override public function help(cwd:String):Array<Array<String>> {
+
+        return [
+            ['--run', 'Run the project in the Electron runner'],
+            ['--watch', 'Reload the runner when the js file changes'],
+            ['--minify', 'Minify the js file and use it'],
+            ['--native-bridge', 'Enable the native bridge in the runner'],
+            ['--electron-errors', 'Print the runner errors (stderr)'],
+            ['--hidden', 'Keep the runner window hidden (offscreen), for automated captures'],
+            ['--screenshot <png path>', 'Save a capture of the runner window to this file'],
+            ['--screenshot-delay <seconds>', 'Wait this long before the capture'],
+            ['--screenshot-on-signal', 'Capture when the app asks for it instead of after a delay'],
+            ['--screenshot-then-quit', 'Quit the runner once the capture is saved'],
+            ['--device-scale-factor <factor>', 'Device pixel ratio of the runner window, whatever the display it is on (Chromium --force-device-scale-factor)']
+        ];
+
+    }
+
     override public function info(cwd:String):String {
 
         return "Generate or update Web/HTML5 project to run or debug it";
@@ -43,6 +61,15 @@ class Web extends tools.Task {
         var screenshotThenQuit = extractArgFlag(args, 'screenshot-then-quit');
         var screenshotOnSignal = extractArgFlag(args, 'screenshot-on-signal');
         var hidden = extractArgFlag(args, 'hidden');
+        // Fixed device pixel ratio for the runner window, whatever the displays
+        // (automated captures): Chromium only honors it on the command line
+        var deviceScaleFactor = extractArgValue(args, 'device-scale-factor');
+        if (deviceScaleFactor != null) {
+            var factor = Std.parseFloat(deviceScaleFactor);
+            if (Math.isNaN(factor) || factor <= 0) {
+                fail('Invalid device scale factor: $deviceScaleFactor (expected a positive number)');
+            }
+        }
         var audioFilters = extractArgFlag(args, 'audio-filters');
 
         // Check that project didn't change name
@@ -257,6 +284,10 @@ class Web extends tools.Task {
 
         if (hidden) {
             cmdArgs.push('--hidden');
+        }
+
+        if (deviceScaleFactor != null) {
+            cmdArgs.push('--force-device-scale-factor=' + deviceScaleFactor);
         }
 
         cmdArgs = ['.', '--scripts-prepend-node-path'].concat(cmdArgs);
