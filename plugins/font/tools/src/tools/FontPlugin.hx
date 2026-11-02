@@ -59,6 +59,11 @@ class FontPlugin {
 
                 result.push(new tools.Asset(fntName, transformedAssetsPath));
                 result.push(new tools.Asset(pngName, transformedAssetsPath));
+
+                // The ttf plugin loads font files at runtime: keep the original too
+                if (context.defines.exists('plugin_ttf')) {
+                    result.push(asset);
+                }
             }
             else {
                 result.push(asset);

@@ -1,0 +1,10 @@
+plugin:
+    name: Ttf
+
+    runtime:
+        if plugin_ttf:
+            +libs:
+                - plutovg
+                - ttf
+            +paths:
+                - '{plugin:cwd}/runtime/src'
