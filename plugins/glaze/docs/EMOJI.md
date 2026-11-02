@@ -99,8 +99,15 @@ tiles), used by the web fallback today.
    tones and flags), and the line height must not grow (GPUI keeps the line
    height of the primary font). Tests on the editor with emoji text.
 7. **Optional bundled emoji font** for identical output everywhere and for
-   golden coverage (the reference harness can load the same file): a
-   COLRv0 emoji font as an opt-in asset of the plugin.
+   golden coverage (the reference harness can load the same file).
+   DECIDED by the owner 2026-11-02: **Noto Color Emoji**, behind a flag (a
+   define of the plugin) that ships the font with the app; without the
+   flag, emoji keep coming from the system emoji font (the current
+   fallback), and with it the bundled font comes first, the system font
+   staying the fallback for what it lacks. The CBDT build
+   (`NotoColorEmoji.ttf`, read by `ttf`) unless the COLRv1 build is
+   supported by then; license OFL (font) and Apache 2.0 (images), credited
+   in NOTICE.md.
 
 ## Tests
 
