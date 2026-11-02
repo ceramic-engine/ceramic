@@ -142,6 +142,13 @@ class BitmapFont extends Entity {
      */
     public var asset:Asset;
 
+    /**
+     * When true, characters missing from `chars` are requested with `requestChar()`
+     * (fonts that create their glyphs on demand). False for regular bitmap fonts,
+     * which then pay no extra cost.
+     */
+    public var providesMissingChars(default, null):Bool = false;
+
 /// Lifecycle
 
     /**
@@ -234,6 +241,37 @@ class BitmapFont extends Entity {
     }
 
 /// Public API
+
+    /**
+     * Gets the glyph data of a character.
+     * If the character is missing and this font provides missing characters
+     * (see `providesMissingChars`), it is requested with `requestChar()`.
+     * @param code The character code
+     * @return The glyph data, or null if the font has no glyph for this character
+     */
+    public inline function getChar(code:Int):BitmapFontCharacter {
+
+        var char = fontData.chars.get(code);
+        if (char == null && providesMissingChars) {
+            char = requestChar(code);
+        }
+        return char;
+
+    }
+
+    /**
+     * Called by `getChar()` for characters missing from `chars` when
+     * `providesMissingChars` is true. Subclasses that create glyphs on demand
+     * (for instance from a TrueType font) override this method, add the new
+     * glyph to `chars` (and its texture to `pages` if needed) and return it.
+     * @param code The character code
+     * @return The new glyph data, or null if no glyph can be provided
+     */
+    function requestChar(code:Int):BitmapFontCharacter {
+
+        return null;
+
+    }
 
     /**
      * Checks if the font needs to be pre-rendered at a specific pixel size.

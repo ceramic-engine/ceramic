@@ -487,7 +487,7 @@ class Text extends Visual {
                             prevChar = null;
                             prevCode = -1;
                         }
-                        glyph = font.chars.get(code);
+                        glyph = font.getChar(code);
                         if (prevChar != null) {
                             x -= font.kerning(prevCode, code) * sizeFactor;
                         }
@@ -503,7 +503,7 @@ class Text extends Visual {
                         }
                         if (char == ' ') {
                             char = "\n";
-                            glyph = font.chars.get("\n".code);
+                            glyph = font.getChar("\n".code);
                             code = char.charCodeAt(0);
                             hasSpaceInLine--;
                             isLineBreak = true;
@@ -531,7 +531,7 @@ class Text extends Visual {
                 continue;
             }
 
-            glyph = font.chars.get(code);
+            glyph = font.getChar(code);
             if (glyph == null) {
                 i++;
                 continue;
