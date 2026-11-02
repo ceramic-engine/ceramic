@@ -1,6 +1,6 @@
 package ceramic;
 
-import ceramic.App.app;
+import ceramic.Shortcuts.*;
 import ceramic.Platform;
 
 using StringTools;

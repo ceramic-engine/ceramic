@@ -1,0 +1,6 @@
+app:
+    package: ceramic.tests.bare
+    name: bare
+    displayName: bare
+    author: Ceramic
+    version: '1.0'

@@ -1,6 +1,6 @@
 package ceramic;
 
-import ceramic.App.app;
+import ceramic.Shortcuts.*;
 
 /**
  * Controls an individual sound playback instance.
