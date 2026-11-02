@@ -213,6 +213,16 @@ class TextInput implements spec.TextInput {
         if (!textEditing) return;
 
 #if clay_sdl
+        #if (windows || mac || linux)
+        // Convert from logical native coordinates to SDL window coordinates,
+        // like start() does (pixels on windows/x11, logical points on mac/wayland)
+        final toWindowCoords = clay.Clay.app.screenDensity / clay.Clay.app.runtime.windowPixelDensity();
+        x *= toWindowCoords;
+        y *= toWindowCoords;
+        w *= toWindowCoords;
+        h *= toWindowCoords;
+        cursor *= toWindowCoords;
+        #end
         untyped __cpp__(
             'const SDL_Rect sdlRect_ = { {0}, {1}, {2}, {3} }',
             Std.int(x), Std.int(y), Std.int(Math.max(1, w)), Std.int(Math.max(1, h))
