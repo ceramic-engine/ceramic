@@ -948,6 +948,18 @@ class Helpers {
         ensureHaxelibDevToCeramicGit('linc_rtmidi', cwd);
         ensureHaxelibDevToCeramicGit('fuzzaldrin', cwd);
         ensureHaxelibDevToCeramicGit('shade', cwd);
+        ensureHaxelibDevToCeramicGit('taffy', cwd);
+        ensureHaxelibDevToCeramicGit('plutovg', cwd);
+        ensureHaxelibDevToCeramicGit('ttf', cwd);
+        ensureHaxelibDevToCeramicGit('lunasvg', cwd);
+        ensureHaxelibDevToCeramicGit('ropey', cwd);
+        ensureHaxelibDevToCeramicGit('unicode-segmentation', cwd);
+        ensureHaxelibDevToCeramicGit('unicode-linebreak', cwd);
+        ensureHaxelibDevToCeramicGit('markdown', cwd);
+        ensureHaxelibDevToCeramicGit('html5ever', cwd);
+        ensureHaxelibDevToCeramicGit('oniguruma', cwd);
+        ensureHaxelibDevToCeramicGit('textmate', cwd);
+        ensureHaxelibDevToCeramicGit('similar', cwd);
 
     }
 

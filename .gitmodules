@@ -122,3 +122,39 @@
 [submodule "git/ldtk-haxe-api"]
 	path = git/ldtk-haxe-api
 	url = https://github.com/jeremyfa/ldtk-haxe-api.git
+[submodule "git/plutovg"]
+	path = git/plutovg
+	url = https://github.com/jeremyfa/plutovg.git
+[submodule "git/lunasvg"]
+	path = git/lunasvg
+	url = https://github.com/jeremyfa/lunasvg.git
+[submodule "git/ttf"]
+	path = git/ttf
+	url = https://github.com/jeremyfa/ttf.git
+[submodule "git/taffy"]
+	path = git/taffy
+	url = https://github.com/jeremyfa/taffy.git
+[submodule "git/ropey"]
+	path = git/ropey
+	url = https://github.com/jeremyfa/ropey.git
+[submodule "git/unicode-segmentation"]
+	path = git/unicode-segmentation
+	url = https://github.com/jeremyfa/unicode-segmentation.git
+[submodule "git/unicode-linebreak"]
+	path = git/unicode-linebreak
+	url = https://github.com/jeremyfa/unicode-linebreak.git
+[submodule "git/markdown"]
+	path = git/markdown
+	url = https://github.com/jeremyfa/markdown.git
+[submodule "git/html5ever"]
+	path = git/html5ever
+	url = https://github.com/jeremyfa/html5ever.git
+[submodule "git/oniguruma"]
+	path = git/oniguruma
+	url = https://github.com/jeremyfa/oniguruma.git
+[submodule "git/textmate"]
+	path = git/textmate
+	url = https://github.com/jeremyfa/textmate.git
+[submodule "git/similar"]
+	path = git/similar
+	url = https://github.com/jeremyfa/similar.git
