@@ -29,6 +29,15 @@ interface Backend {
     function setTargetFps(fps:Int):Void;
 
     /**
+     * Opens a URL with the platform's default handler: the system browser
+     * on desktop and mobile, a new tab on the web. Does nothing where no
+     * handler exists (headless).
+     *
+     * @param url The URL to open
+     */
+    function openUrl(url:String):Void;
+
+    /**
      * File system and asset loading operations.
      * Handles reading/writing files and loading assets from various sources.
      */

@@ -175,6 +175,23 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function openUrl(url:String):Void {
+
+        #if (clay_sdl && !macro)
+        clay.sdl.SDL.openURL(url);
+        #elseif (js && web)
+        #if ceramic_use_electron
+        final electron = ceramic.Platform.resolveElectron();
+        if (electron != null && electron.shell != null) {
+            electron.shell.openExternal(url);
+            return;
+        }
+        #end
+        js.Browser.window.open(url, '_blank');
+        #end
+
+    }
+
 /// Events
 
     /**

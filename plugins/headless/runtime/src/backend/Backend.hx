@@ -168,6 +168,12 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function openUrl(url:String):Void {
+
+        // Nothing to do in headless
+
+    }
+
 /// Events
 
     #if !no_backend_docs

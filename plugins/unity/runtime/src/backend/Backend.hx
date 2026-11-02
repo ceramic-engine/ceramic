@@ -181,6 +181,12 @@ class Backend implements tracker.Events implements spec.Backend {
 
     }
 
+    public function openUrl(url:String):Void {
+
+        unityengine.Application.OpenURL(url);
+
+    }
+
 /// Events
 
     #if !no_backend_docs

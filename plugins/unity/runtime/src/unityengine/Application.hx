@@ -27,4 +27,9 @@ extern class Application {
      */
     static var targetFrameRate:Int;
 
+    /**
+     * Opens a URL with the platform's default handler.
+     */
+    static function OpenURL(url:String):Void;
+
 }
