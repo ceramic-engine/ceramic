@@ -222,6 +222,18 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     #if !no_backend_docs
     /**
+     * Sets the mouse cursor shape. No-op in headless mode.
+     * @param cursor The cursor shape
+     */
+    #end
+    public function setCursor(cursor:ceramic.MouseCursor):Void {
+
+        //
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Captures a screenshot and returns it as a texture.
      * 
      * In headless mode, this always returns null since there's no visual content to capture.

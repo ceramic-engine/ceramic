@@ -122,6 +122,15 @@ interface Screen {
     function setCursorVisible(visible:Bool):Void;
 
     /**
+     * Sets the shape of the mouse cursor while it is over the app.
+     * Backends without a matching shape use the closest one, or do nothing.
+     * Hiding the cursor with `setCursorVisible(false)` takes precedence.
+     *
+     * @param cursor The cursor shape
+     */
+    function setCursor(cursor:ceramic.MouseCursor):Void;
+
+    /**
      * Captures the current screen content as a texture.
      * This is useful for post-processing effects or transitions.
      * 

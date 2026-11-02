@@ -288,7 +288,28 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     public function setCursorVisible(visible:Bool):Void {
 
-        untyped __cs__('UnityEngine.Cursor.visible = {0}', visible);
+        cursorVisible = visible;
+        untyped __cs__('UnityEngine.Cursor.visible = {0}', visible && cursor != ceramic.MouseCursor.NONE);
+
+    }
+
+    var cursorVisible:Bool = true;
+
+    var cursor:ceramic.MouseCursor = ceramic.MouseCursor.ARROW;
+
+    #if !no_backend_docs
+    /**
+     * Sets the mouse cursor shape.
+     * Unity only supports custom cursor textures (`Cursor.SetCursor`), not system
+     * cursor shapes, so this only handles `NONE` (hidden cursor). Other shapes
+     * keep the default cursor.
+     * @param cursor The cursor shape
+     */
+    #end
+    public function setCursor(cursor:ceramic.MouseCursor):Void {
+
+        this.cursor = cursor;
+        untyped __cs__('UnityEngine.Cursor.visible = {0}', cursorVisible && cursor != ceramic.MouseCursor.NONE);
 
     }
 

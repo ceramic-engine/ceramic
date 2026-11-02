@@ -208,6 +208,19 @@ class Screen extends Entity implements Observable implements RenderTarget {
     public var mouseWheelDeltaY(default, null):Float = 0;
 
     /**
+     * Shape of the mouse cursor while it is over the app.
+     * `settings.cursorVisible = false` still hides the cursor whatever its shape.
+     * @see MouseCursor for what each backend supports
+     */
+    public var cursor(default, set):MouseCursor = MouseCursor.ARROW;
+    function set_cursor(cursor:MouseCursor):MouseCursor {
+        if (this.cursor == cursor) return cursor;
+        this.cursor = cursor;
+        app.backend.screen.setCursor(cursor);
+        return cursor;
+    }
+
+    /**
      * Touches x and y coordinates by touch index.
      */
     public var touches(default,null):Touches = new Touches();

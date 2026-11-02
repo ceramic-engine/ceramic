@@ -25,6 +25,9 @@ import clay.sdl.SDL;
  * - Desktop (SDL): Direct OpenGL framebuffer reading for screenshots
  * - Mobile: Touch input event handling and audio context management
  */
+#if clay_sdl
+@:cppFileCode('#include <SDL3/SDL.h>')
+#end
 class Screen implements tracker.Events #if !completion implements spec.Screen #end {
 
     /**
@@ -243,7 +246,82 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     public function setCursorVisible(visible:Bool):Void {
 
-        Clay.app.runtime.setCursorVisible(visible);
+        cursorVisible = visible;
+        if (cursor == ceramic.MouseCursor.ARROW) {
+            // Default shape: unchanged behaviour
+            Clay.app.runtime.setCursorVisible(visible);
+        }
+        else {
+            applyCursor();
+        }
+
+    }
+
+/// Cursor shape
+
+    /** Visibility requested with `setCursorVisible()` */
+    var cursorVisible:Bool = true;
+
+    /** Shape requested with `setCursor()` */
+    var cursor:ceramic.MouseCursor = ceramic.MouseCursor.ARROW;
+
+    public function setCursor(cursor:ceramic.MouseCursor):Void {
+
+        if (this.cursor == cursor) return;
+        this.cursor = cursor;
+        applyCursor();
+
+    }
+
+    function applyCursor():Void {
+
+        final hidden = !cursorVisible || cursor == ceramic.MouseCursor.NONE;
+
+        #if web
+
+        Clay.app.runtime.setCursorVisible(cursorVisible);
+        final canvas:js.html.Element = cast Clay.app.runtime.window;
+        if (canvas != null) {
+            // Empty value when using the default shape, so that the canvas
+            // keeps inheriting the visibility set on the document body
+            canvas.style.cursor = hidden ? 'none' : (cursor == ceramic.MouseCursor.ARROW ? '' : cursor.toCss());
+        }
+
+        #elseif clay_sdl
+
+        Clay.app.runtime.setCursorVisible(!hidden);
+        if (!hidden) {
+            final id:Int = switch cursor {
+                case IBEAM: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_TEXT');
+                case CROSSHAIR: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_CROSSHAIR');
+                case CLOSED_HAND: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_GRABBING');
+                case OPEN_HAND: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_GRAB');
+                case POINTING_HAND: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_POINTER');
+                case RESIZE_LEFT: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_W_RESIZE');
+                case RESIZE_RIGHT: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_E_RESIZE');
+                case RESIZE_LEFT_RIGHT: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_EW_RESIZE');
+                case RESIZE_UP: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_N_RESIZE');
+                case RESIZE_DOWN: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_S_RESIZE');
+                case RESIZE_UP_DOWN: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_NS_RESIZE');
+                case RESIZE_UP_LEFT_DOWN_RIGHT: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_NWSE_RESIZE');
+                case RESIZE_UP_RIGHT_DOWN_LEFT: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_NESW_RESIZE');
+                case RESIZE_COLUMN: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_COL_RESIZE');
+                case RESIZE_ROW: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_ROW_RESIZE');
+                case IBEAM_VERTICAL: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_VERTICAL_TEXT');
+                case OPERATION_NOT_ALLOWED: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_NOT_ALLOWED');
+                case DRAG_LINK: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_ALIAS');
+                case DRAG_COPY: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_COPY');
+                case CONTEXTUAL_MENU: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_CONTEXT_MENU');
+                case _: untyped __cpp__('(int)SDL_SYSTEM_CURSOR_DEFAULT');
+            }
+            // System cursors are created once, then reused
+            untyped __cpp__(
+                '{ static SDL_Cursor* ceramicSystemCursors_[SDL_SYSTEM_CURSOR_COUNT] = { NULL }; int id_ = {0}; if (id_ >= 0 && id_ < SDL_SYSTEM_CURSOR_COUNT) { if (ceramicSystemCursors_[id_] == NULL) ceramicSystemCursors_[id_] = SDL_CreateSystemCursor((SDL_SystemCursor)id_); if (ceramicSystemCursors_[id_] == NULL) ceramicSystemCursors_[id_] = SDL_GetDefaultCursor(); if (ceramicSystemCursors_[id_] != NULL) SDL_SetCursor(ceramicSystemCursors_[id_]); } }',
+                id
+            );
+        }
+
+        #end
 
     }
 
