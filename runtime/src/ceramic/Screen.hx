@@ -1669,6 +1669,9 @@ class Screen extends Entity implements Observable implements RenderTarget {
             touch.deltaX += (x - prevX);
             touch.deltaY += (y - prevY);
         }
+        // The next move of this touch is measured from here
+        prevTouchPositions.set(keyX, x);
+        prevTouchPositions.set(keyY, y);
 
     }
 
