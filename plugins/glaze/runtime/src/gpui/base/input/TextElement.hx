@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/element.rs, crates/base/src/input/mod.rs (`MASK_CHAR`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deliberate deviation DEV-016 (no notify when the input only moved). See DEVIATIONS.md.
 package gpui.base.input;
 
 import gpui.AnyElement;
@@ -2693,6 +2694,15 @@ class TextElement extends Element {
                 || state.lastLayout == null
                 || !sameBounds(state.lastLayout.cursorBounds, prepaint.lastLayout.cursorBounds)
                 || (state.lastLayout.lineHeight : Float) != (prepaint.lastLayout.lineHeight : Float);
+            // Deviation DEV-016: when the input only moved (a scrolled page),
+            // its own render reads nothing that changed, and the caret,
+            // selection, completion menu and IME bounds follow from this paint
+            // and prepaint. Only the hover and diagnostic popovers read the
+            // position when they lay out, so they keep the notify.
+            final movedOnly = geometryChanged
+                && onlyMoved(state, bounds, inputBounds, prepaint)
+                && state.extras.hoverSymbolRange() == null
+                && state.diagnosticPopover == null;
             state.lastLayout = prepaint.lastLayout.clone();
             state.lastBounds = bounds;
             state.lastCursor = state.cursor();
@@ -2704,7 +2714,7 @@ class TextElement extends Element {
 
             // Layout consumers need changed geometry, not another notification
             // for every paint of an unchanged input.
-            if (geometryChanged) {
+            if (geometryChanged && !movedOnly) {
                 cx.notify();
             }
         });
@@ -2740,6 +2750,42 @@ class TextElement extends Element {
         }
 
         paintMouseListeners(prepaint.hitbox, window, cx);
+    }
+
+    /**
+     * Deviation DEV-016: whether the geometry painted last time and the new
+     * one differ only by their place in the window: same sizes, same scroll
+     * size and line height, and the text bounds and the caret at the same
+     * offset (within 0.01 px of float rounding) from the input bounds.
+     */
+    static function onlyMoved(state:InputBaseState, bounds:Bounds, inputBounds:Bounds, prepaint:TextElementPrepaintState):Bool {
+        final oldBounds = state.lastBounds;
+        final oldLayout = state.lastLayout;
+        if (oldBounds == null || oldLayout == null) {
+            return false;
+        }
+        final oldInput = state.inputBounds;
+        final newLayout = prepaint.lastLayout;
+        if (!oldBounds.size.equals(bounds.size)
+            || !oldInput.size.equals(inputBounds.size)
+            || !state.scrollSize.equals(prepaint.scrollSize)
+            || (oldLayout.lineHeight : Float) != (newLayout.lineHeight : Float)
+            || !sameOffset(oldBounds.origin.x - oldInput.origin.x, oldBounds.origin.y - oldInput.origin.y,
+                bounds.origin.x - inputBounds.origin.x, bounds.origin.y - inputBounds.origin.y)) {
+            return false;
+        }
+        final oldCursor = oldLayout.cursorBounds;
+        final newCursor = newLayout.cursorBounds;
+        if (oldCursor == null || newCursor == null) {
+            return oldCursor == null && newCursor == null;
+        }
+        return oldCursor.size.equals(newCursor.size)
+            && sameOffset(oldCursor.origin.x - oldInput.origin.x, oldCursor.origin.y - oldInput.origin.y,
+                newCursor.origin.x - inputBounds.origin.x, newCursor.origin.y - inputBounds.origin.y);
+    }
+
+    static inline function sameOffset(ax:Float, ay:Float, bx:Float, by:Float):Bool {
+        return Math.abs(ax - bx) < 0.01 && Math.abs(ay - by) < 0.01;
     }
 
     static inline function sameBounds(a:Null<Bounds>, b:Null<Bounds>):Bool {
