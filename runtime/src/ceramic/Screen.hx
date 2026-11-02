@@ -307,6 +307,15 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function mouseDown(buttonId:Int, x:Float, y:Float);
     @event function mouseUp(buttonId:Int, x:Float, y:Float);
     @event function mouseWheel(x:Float, y:Float);
+    /**
+     * Scrolling as the device reports it: `deltaX` and `deltaY` are positive
+     * when the content should move up or left (the browser `wheel` sign),
+     * in logical pixels when `unit` is `PIXELS` (trackpads, smooth scrolling)
+     * or in lines when it is `LINES` (notched mouse wheels). Unlike
+     * `mouseWheel`, nothing is scaled or rounded, so an app can match the
+     * system's native scrolling speed. Desktop and web backends emit it.
+     */
+    @event function mouseScroll(deltaX:Float, deltaY:Float, unit:ScrollUnit);
     @event function mouseMove(x:Float, y:Float);
 
     // Touch events
@@ -488,6 +497,11 @@ class Screen extends Entity implements Observable implements RenderTarget {
         app.backend.screen.onMouseWheel(this, function(x, y) {
             app.beginUpdateCallbacks.push(function() {
                 emitMouseWheel(x, y);
+            });
+        });
+        app.backend.screen.onMouseScroll(this, function(deltaX, deltaY, unit) {
+            app.beginUpdateCallbacks.push(function() {
+                emitMouseScroll(deltaX, deltaY, unit);
             });
         });
 

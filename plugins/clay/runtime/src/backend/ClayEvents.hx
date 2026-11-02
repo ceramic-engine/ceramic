@@ -399,6 +399,16 @@ class ClayEvents extends clay.Events {
 
     }
 
+    /**
+     * Handles scroll events with the deltas as the device reports them
+     * (see `ceramic.Screen.mouseScroll`).
+     */
+    override function mouseScroll(deltaX:Float, deltaY:Float, unit:Int, timestamp:Float, windowId:Int) {
+
+        backend.screen.emitMouseScroll(deltaX, deltaY, unit);
+
+    }
+
     #end
 
     // Don't handle touch on desktop, for now

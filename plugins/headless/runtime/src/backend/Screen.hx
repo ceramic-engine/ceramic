@@ -64,6 +64,17 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     #end
     @event function mouseWheel(x:Float, y:Float);
+
+    /**
+     * Fired when the user scrolls, with the deltas as the device reports
+     * them: logical pixels (`ceramic.ScrollUnit.PIXELS`, trackpads and smooth
+     * scrolling) or lines (`LINES`, notched mouse wheels), positive when the
+     * content should move up or left. Nothing is scaled or rounded.
+     * @param deltaX Horizontal delta
+     * @param deltaY Vertical delta
+     * @param unit Unit of the deltas
+     */
+    @event function mouseScroll(deltaX:Float, deltaY:Float, unit:ceramic.ScrollUnit);
     
     #if !no_backend_docs
     /**
