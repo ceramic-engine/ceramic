@@ -243,6 +243,18 @@ class InitSettings {
     }
 
     /**
+     * Web only: deliver smooth scrolling on the beat of the frames when the browser
+     * dispatches it unevenly (Safari). See `Settings.webWheelResampling`.
+     */
+    public var webWheelResampling(get,set):Bool;
+    inline function get_webWheelResampling():Bool {
+        return settings.webWheelResampling;
+    }
+    inline function set_webWheelResampling(webWheelResampling:Bool):Bool {
+        return settings.webWheelResampling = webWheelResampling;
+    }
+
+    /**
      * If set to `true` (default). Default touch events
      * will be prevented. This is relevant when running the ceramic
      * app from an `iframe` inside a page that can scroll,

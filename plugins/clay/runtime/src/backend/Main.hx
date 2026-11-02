@@ -289,6 +289,11 @@ class Main {
         app.settings.onPreventDefaultMouseWheelChange(app, (preventDefaultMouseWheel, _) -> {
             config.runtime.preventDefaultMouseWheel = preventDefaultMouseWheel || app.numBlockingDefaultScroll > 0;
         });
+        // Smooth scrolling on the beat of the frames (see Settings.webWheelResampling)
+        config.runtime.wheelResampling = settings.webWheelResampling;
+        app.settings.onWebWheelResamplingChange(app, (webWheelResampling, _) -> {
+            config.runtime.wheelResampling = webWheelResampling;
+        });
         config.runtime.preventDefaultTouches = settings.preventDefaultTouches;
         app.settings.onPreventDefaultTouchesChange(app, (preventDefaultTouches, _) -> {
             config.runtime.preventDefaultTouches = preventDefaultTouches || app.numBlockingDefaultScroll > 0;

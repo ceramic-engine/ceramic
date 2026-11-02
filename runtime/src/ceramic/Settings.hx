@@ -202,6 +202,26 @@ class Settings implements Observable {
     @observe public var preventDefaultTouches:Bool = #if ceramic_allow_default_mouse_wheel false #else true #end;
 
     /**
+     * Web only: deliver smooth scrolling on the beat of the frames when the browser
+     * dispatches it unevenly.
+     *
+     * Some browsers (Safari) dispatch wheel events on a clock of their own instead of
+     * aligning them with the animation frames: a frame now and then receives no
+     * `mouseScroll` / `mouseWheel` event and the next one receives two, so content that
+     * follows the deltas stops for a frame and then jumps twice as far. When this is
+     * enabled, pixel deltas (trackpads, smooth wheels) of such browsers are resampled at
+     * each frame from the event times, a little behind the newest event (about one event
+     * interval plus the delivery delay of the browser, measured: about one frame), so each
+     * frame gets an even step. The total distance stays exactly the sum of the deltas.
+     * Line and page deltas (notched mouse wheels) are never changed. While the browser
+     * delivers wheel input aligned with the frames (Chromium), events go through as they
+     * come and no latency is added. See `clay.WheelResampler`.
+     *
+     * Default: `false` (enabled by plugins that need it, for example GPUI).
+     */
+    @observe public var webWheelResampling:Bool = false;
+
+    /**
      * Supported screen orientations for mobile devices.
      *
      * Controls which orientations the app supports on mobile platforms.
