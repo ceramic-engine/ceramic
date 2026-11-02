@@ -68,4 +68,11 @@ interface TextInput {
      */
     function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float):Void;
 
+    /**
+     * Sets how virtual keyboards should present themselves for the edited
+     * text (see `ceramic.Input.setTextEditingConfiguration()`). Backends
+     * without such settings ignore it.
+     */
+    function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void;
+
 }

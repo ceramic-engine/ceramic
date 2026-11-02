@@ -262,6 +262,12 @@ class TextInput implements spec.TextInput {
 
     }
 
+    public function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {
+
+        // No virtual keyboard settings with Unity's text editing yet
+
+    }
+
     @:keep function handleImeComposition(text:String):Void {
 
         ceramic.App.app.onceImmediate(function() {

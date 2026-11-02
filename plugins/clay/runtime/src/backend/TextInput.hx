@@ -232,6 +232,30 @@ class TextInput implements spec.TextInput {
 
     }
 
+    /** Virtual keyboard settings (see `ceramic.Input.setTextEditingConfiguration()`) */
+    var configInputMode:String = 'text';
+    var configEnterKeyHint:Null<String> = null;
+    var configAutocapitalize:String = 'off';
+    var configAutocorrect:Bool = false;
+    var configSpellcheck:Bool = false;
+
+    /**
+     * Sets how virtual keyboards should present themselves for the edited text.
+     * Applied to the hidden editable element on the web; SDL has no such settings.
+     */
+    public function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {
+
+        configInputMode = inputMode != null ? inputMode : 'text';
+        configEnterKeyHint = enterKeyHint;
+        configAutocapitalize = autocapitalize != null ? autocapitalize : 'off';
+        configAutocorrect = autocorrect;
+        configSpellcheck = spellcheck;
+#if web
+        applyWebConfiguration();
+#end
+
+    }
+
     /**
      * Called from `ClayEvents.text()` with the text events from clay.
      */
@@ -378,6 +402,10 @@ class TextInput implements spec.TextInput {
         });
 
         textArea.addEventListener('blur', function(_) {
+            // On a touch device a blur usually means the user dismissed the
+            // virtual keyboard: focusing again must not bring it back until
+            // the next tap on an editable area
+            if (webTouchInput && !webRefocusing) setWebKeyboardEnabled(false);
             if (!textEditing) return;
             // Keep the focus while text editing, unless another editable element took it
             js.Browser.window.setTimeout(function() {
@@ -392,6 +420,7 @@ class TextInput implements spec.TextInput {
 
         js.Browser.document.body.appendChild(textArea);
         webTextArea = textArea;
+        applyWebConfiguration();
 
     }
 
@@ -477,6 +506,185 @@ class TextInput implements spec.TextInput {
         style.left = Math.round(offsetX + webAreaX + webAreaCursor) + 'px';
         style.top = Math.round(offsetY + webAreaY) + 'px';
         style.height = Math.round(Math.max(1, webAreaH)) + 'px';
+
+    }
+
+    /** Whether the device has a touch screen (GPUI web `touch_input`) */
+    var webTouchInput:Bool = js.Syntax.code("(typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || (typeof window !== 'undefined' && 'ontouchstart' in window)");
+
+    /** Whether the virtual keyboard may show for the focused textarea (its `inputmode` is not `none`) */
+    var webKeyboardEnabled:Bool = false;
+
+    /** Tells taps apart (GPUI web `touch_tap_candidate`) */
+    final webTaps:ceramic.TouchTapTracker = new ceramic.TouchTapTracker();
+
+    /** Set while the textarea is blurred to be focused again at once */
+    var webRefocusing:Bool = false;
+
+    function applyWebConfiguration():Void {
+
+        if (webTextArea == null) return;
+        final element = webTextArea;
+        element.setAttribute('autocomplete', configSpellcheck ? 'on' : 'off');
+        element.setAttribute('autocorrect', configAutocorrect ? 'on' : 'off');
+        element.setAttribute('autocapitalize', configAutocapitalize);
+        element.setAttribute('spellcheck', configSpellcheck ? 'true' : 'false');
+        if (configEnterKeyHint != null) {
+            element.setAttribute('enterkeyhint', configEnterKeyHint);
+        }
+        else {
+            element.removeAttribute('enterkeyhint');
+        }
+        // Until an editable tap, a touch device keeps the keyboard hidden:
+        // a focused editable element invites the browser to show it on the
+        // next gesture, a scroll included (GPUI web `ImeMirror::new`)
+        element.setAttribute('inputmode', !webTouchInput || webKeyboardEnabled ? configInputMode : 'none');
+
+    }
+
+    function setWebKeyboardEnabled(enabled:Bool):Void {
+
+        if (webKeyboardEnabled == enabled) return;
+        webKeyboardEnabled = enabled;
+        applyWebConfiguration();
+
+    }
+
+    function webTextAreaFocused():Bool {
+
+        return webTextArea != null && js.Browser.document.activeElement == webTextArea;
+
+    }
+
+    function webVisualViewportHeight():Float {
+
+        final viewport:Dynamic = untyped js.Browser.window.visualViewport;
+        return viewport != null ? viewport.height * viewport.scale : 0;
+
+    }
+
+    /**
+     * Infers that the user dismissed the virtual keyboard: the visual viewport
+     * fills the layout viewport (GPUI web `keyboard_likely_dismissed`). Makes
+     * no inference while zoomed, or when the page opts into another resize
+     * policy than `interactive-widget=resizes-visual`.
+     */
+    function webKeyboardLikelyDismissed():Bool {
+
+        if (!webTouchInput) return false;
+        final viewport:Dynamic = untyped js.Browser.window.visualViewport;
+        if (viewport == null) return false;
+        final document = js.Browser.document;
+        final meta = document.querySelector('meta[name=viewport]');
+        if (meta != null) {
+            final content = meta.getAttribute('content');
+            if (content != null) {
+                for (directive in content.split(',')) {
+                    final parts = directive.split('=');
+                    if (parts.length == 2 && StringTools.trim(parts[0]).toLowerCase() == 'interactive-widget'
+                        && StringTools.trim(parts[1]).toLowerCase() != 'resizes-visual') {
+                        return false;
+                    }
+                }
+            }
+        }
+        final root = document.documentElement;
+        if (root == null) return false;
+        return Math.abs(viewport.scale - 1) < 0.001
+            && Math.abs(viewport.offsetTop) < 1
+            && Math.abs(viewport.offsetLeft) < 1
+            && Math.abs(viewport.height - root.clientHeight) < 1
+            && Math.abs(viewport.width - root.clientWidth) < 1;
+
+    }
+
+    /**
+     * Called by `ClayEvents` when a touch starts, inside the browser's event
+     * handler. Coordinates are native (CSS pixels relative to the canvas).
+     */
+    function handleWebTouchDown(touchId:Int, x:Float, y:Float):Void {
+
+        if (!webTouchInput) {
+            // A touch screen that did not say so at startup (an attached
+            // device, emulation)
+            webTouchInput = true;
+            applyWebConfiguration();
+        }
+        // Android can reopen a manually dismissed keyboard on the next touch:
+        // disarm the still focused textarea before the browser handles it
+        if (webKeyboardLikelyDismissed()) {
+            setWebKeyboardEnabled(false);
+        }
+        webTaps.touchDown(touchId, x, y, webVisualViewportHeight());
+
+    }
+
+    function handleWebTouchMove(touchId:Int, x:Float, y:Float):Void {
+
+        webTaps.touchMove(touchId, x, y);
+
+    }
+
+    function handleWebTouchCancel(touchId:Int):Void {
+
+        webTaps.touchCancel(touchId);
+
+    }
+
+    /**
+     * Called by `ClayEvents` when a touch ends, inside the browser's touch
+     * release handler: mobile browsers only show the virtual keyboard when an
+     * editable element is focused from within the user gesture, so a tap on
+     * an editable area (`ceramic.Input.textEditingTapFilter`) focuses the
+     * textarea right here (GPUI web `register_pointer_up` and
+     * `show_virtual_keyboard`).
+     */
+    function handleWebTouchUp(touchId:Int, x:Float, y:Float):Void {
+
+        if (!webTaps.touchUp(touchId, x, y, webVisualViewportHeight())) return;
+        if (!ceramic.App.app.input.textEditingTapTargets(x, y)) return;
+        showWebKeyboard(x, y);
+
+    }
+
+    function showWebKeyboard(x:Float, y:Float):Void {
+
+        if (webTextArea == null) {
+            createWebTextArea();
+        }
+        final wasEnabled = webKeyboardEnabled;
+        setWebKeyboardEnabled(true);
+        if (!textEditing) {
+            // Until text editing places it at the caret
+            webAreaX = x;
+            webAreaY = y;
+            webAreaW = 1;
+            webAreaH = 1;
+            webAreaCursor = 0;
+            updateWebTextAreaPosition();
+        }
+        // Focus only when the keyboard needs summoning: cycling the focus on
+        // every tap restarts the IME connection. A dismissed keyboard over a
+        // still focused textarea needs a fresh focus event.
+        if (!wasEnabled || !webTextAreaFocused() || webKeyboardLikelyDismissed()) {
+            webRefocusing = true;
+            if (webTextAreaFocused()) {
+                webTextArea.blur();
+            }
+            focusWebTextArea();
+            webRefocusing = false;
+        }
+        if (!textEditing) {
+            // The tap is handled by the app at its next update: if it did not
+            // start text editing after all, give the focus back to the canvas
+            js.Browser.window.setTimeout(function() {
+                if (textEditing || !webTextAreaFocused()) return;
+                setWebKeyboardEnabled(false);
+                webTextArea.blur();
+                final canvas:js.html.Element = cast clay.Clay.app.runtime.window;
+                if (canvas != null) canvas.focus();
+            }, 500);
+        }
 
     }
 

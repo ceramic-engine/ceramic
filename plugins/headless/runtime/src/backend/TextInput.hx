@@ -67,4 +67,6 @@ class TextInput implements spec.TextInput {
     #end
     public function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float):Void {}
 
+    public function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {}
+
 }

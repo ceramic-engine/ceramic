@@ -152,6 +152,21 @@ class Input extends Entity {
     public var textComposing(default, null):Bool = false;
 
     /**
+     * Tells whether a tap at the given position (screen coordinates) lands on
+     * an editable text area. Some platforms only show their virtual keyboard
+     * when an editable element gets the focus from inside the user gesture
+     * (mobile browsers): their backend calls this synchronously from the
+     * touch release that completes a tap (released within 8 px of where it
+     * started, without the visual viewport changing during the gesture),
+     * before the touch events reach the app, and focuses its text editing
+     * element right away when it returns `true`. Text editing should then be
+     * started for that area (`startTextEditing()`), the keyboard stays hidden
+     * otherwise. Backends that show the keyboard with text editing (native)
+     * never call it.
+     */
+    public var textEditingTapFilter:Null<(x:Float, y:Float)->Bool> = null;
+
+    /**
      * List of currently connected gamepad IDs.
      * Updated automatically when gamepads are connected or disconnected.
      */
@@ -339,6 +354,39 @@ class Input extends Entity {
         if (textComposing) {
             emitTextComposition('', 0, 0);
         }
+
+    }
+
+    /**
+     * Sets how virtual keyboards should present themselves for the edited
+     * text (the attributes of the hidden editable element on the web). Kept
+     * until changed; applies to the next and the current text editing.
+     *
+     * @param inputMode HTML `inputmode`: `text`, `numeric`, `decimal`, `tel`, `email`, `url`, `search`
+     * @param enterKeyHint HTML `enterkeyhint` (`enter`, `done`, `go`, `next`, `previous`, `search`, `send`), or null for none
+     * @param autocapitalize HTML `autocapitalize`: `off`, `words`, `sentences`, `characters`
+     * @param autocorrect Whether the platform may correct the entered text
+     * @param spellcheck Whether the platform may offer suggestions and spellcheck
+     */
+    public function setTextEditingConfiguration(inputMode:String = 'text', ?enterKeyHint:String, autocapitalize:String = 'off', autocorrect:Bool = false, spellcheck:Bool = false):Void {
+
+        ceramic.App.app.backend.textInput.setTextEditingConfiguration(inputMode, enterKeyHint, autocapitalize, autocorrect, spellcheck);
+
+    }
+
+    /**
+     * Called by backends with a tap position in native coordinates: converts
+     * it to screen coordinates and asks `textEditingTapFilter`.
+     */
+    @:noCompletion public function textEditingTapTargets(nativeX:Float, nativeY:Float):Bool {
+
+        final filter = textEditingTapFilter;
+        if (filter == null) return false;
+        final screen = ceramic.App.app.screen;
+        final reverseMatrix = @:privateAccess screen.reverseMatrix;
+        final x0 = nativeX * screen.nativeDensity;
+        final y0 = nativeY * screen.nativeDensity;
+        return filter(reverseMatrix.transformX(x0, y0), reverseMatrix.transformY(x0, y0));
 
     }
 
