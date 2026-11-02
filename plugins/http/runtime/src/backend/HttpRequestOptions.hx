@@ -48,4 +48,12 @@ typedef HttpRequestOptions = {
     /** Request timeout in seconds. If not specified, uses platform-specific default timeout. */
     @:optional var timeout:Int;
 
+    /**
+     * When `true`, the backend gives the response body as raw bytes in
+     * `binaryContent` whatever its content type, and keeps the body of error
+     * responses (status outside 2xx). Backends that do not handle it give
+     * text content, which `ceramic.Http` converts back to bytes.
+     */
+    @:optional var binary:Bool;
+
 }

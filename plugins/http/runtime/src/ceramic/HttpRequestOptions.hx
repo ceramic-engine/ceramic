@@ -69,4 +69,14 @@ typedef HttpRequestOptions = {
      */
     @:optional var params:Map<String, String>;
 
+    /**
+     * When `true`, the response body is always given as raw bytes in
+     * `HttpResponse.binaryContent` (`content` stays null), whatever its
+     * content type, and the body of error responses (status outside 2xx) is
+     * kept as well. Use it to read files whose type is decided by their
+     * content (images, SVG documents served as text...).
+     * Defaults to `false`.
+     */
+    @:optional var binary:Bool;
+
 }

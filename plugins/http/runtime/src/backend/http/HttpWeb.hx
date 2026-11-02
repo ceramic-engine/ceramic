@@ -130,7 +130,7 @@ class HttpWeb {
             }
 
             var textContent:String = null;
-            if (binaryContent != null && ceramic.MimeType.isText(contentType)) {
+            if (binaryContent != null && options.binary != true && ceramic.MimeType.isText(contentType)) {
                 // Treat text as utf-8. Could be improved
                 textContent = binaryContent.toString();
                 binaryContent = null;
@@ -175,7 +175,9 @@ class HttpWeb {
                 content: null,
                 binaryContent: null,
                 headers: headers,
-                error: xhr.statusText
+                // A network error (or a cross-origin response without CORS
+                // headers) has an empty status text
+                error: xhr.statusText != null && xhr.statusText != '' ? xhr.statusText : 'Network error'
             };
 
             var _done = done;

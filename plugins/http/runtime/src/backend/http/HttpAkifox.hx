@@ -46,25 +46,33 @@ class HttpAkifox {
             timeout: options.timeout != null && options.timeout > 0 ? options.timeout : null,
             callback: function(res:com.akifox.asynchttp.HttpResponse) {
 
-                if (done == null) return;
+                // Asynchronous requests call back from their worker thread:
+                // the response is handled on the main thread (as the timeout)
+                ceramic.Runner.runInMain(function() {
 
-                var headers:Array<String> = [];
-                for (key in res.headers.keys()) {
-                    headers.push(key);
-                    headers.push(res.headers.get(key));
-                }
+                    if (done == null) return;
 
-                var response:HttpResponse = {
-                    status: res.status,
-                    content: res.contentIsBinary ? null : res.content,
-                    binaryContent: res.contentIsBinary ? res.contentRaw : null,
-                    headers: headers,
-                    error: null // TODO
-                };
+                    var headers:Array<String> = [];
+                    for (key in res.headers.keys()) {
+                        headers.push(key);
+                        headers.push(res.headers.get(key));
+                    }
 
-                var _done = done;
-                done = null;
-                _done(response);
+                    var binary = options.binary == true;
+                    var response:HttpResponse = {
+                        status: res.status,
+                        content: binary || res.contentIsBinary ? null : res.content,
+                        binaryContent: binary || res.contentIsBinary ? res.contentRaw : null,
+                        headers: headers,
+                        // Status 0: the connection or the transfer failed
+                        error: res.status == 0 ? (res.error != null && res.error != '' ? res.error : 'Request failed') : null
+                    };
+
+                    var _done = done;
+                    done = null;
+                    _done(response);
+
+                });
 
             }
         };

@@ -20,7 +20,8 @@ class HttpNodejs {
         var requestOptions:Dynamic = {};
         requestOptions.host = url.hostname;
         requestOptions.port = url.port != null ? url.port : (isSSL ? 443 : 80);
-        requestOptions.path = url.pathname;
+        // Keep the query string
+        requestOptions.path = url.pathname + (url.search != null ? url.search : '');
         requestOptions.method = options.method != null ? options.method : 'GET';
 
         if (options.timeout != null && options.timeout > 0) {
@@ -82,6 +83,7 @@ class HttpNodejs {
                     redirectedOptions.method = GET;
                     redirectedOptions.content = null;
                 }
+                redirectedOptions.binary = options.binary;
                 request(redirectedOptions, done, numRedirects + 1);
                 return;
             }
@@ -109,15 +111,13 @@ class HttpNodejs {
                     if (resContentType == null)
                         resContentType = 'application/octet-stream';
 
-                    if (ceramic.MimeType.isText(resContentType)) {
+                    if (options.binary != true && ceramic.MimeType.isText(resContentType)) {
                         textContent = buffer.toString('utf8');
                     }
                     else {
                         // Copy data and get rid of nodejs buffer
                         var bufferData = new js.lib.Uint8Array(buffer.length);
-                        for (i in 0...buffer.length) {
-                            bufferData[i] = js.Syntax.code("{0}[{1}]", buffer, i);
-                        }
+                        bufferData.set(buffer);
                         binaryContent = haxe.io.Bytes.ofData(bufferData.buffer);
                     }
                 }
@@ -132,10 +132,12 @@ class HttpNodejs {
 
         req.on('close', function() {
             if (!didRedirect) {
+                // Binary requests keep the body of error responses
+                var keepContent = options.binary == true || (resStatus >= 200 && resStatus < 300);
                 done({
                     status: resStatus,
-                    content: resStatus < 200 || resStatus >= 300 ? null : textContent,
-                    binaryContent: resStatus < 200 || resStatus >= 300 ? null : binaryContent,
+                    content: keepContent ? textContent : null,
+                    binaryContent: keepContent ? binaryContent : null,
                     headers: resHeaders,
                     error: resError
                 });

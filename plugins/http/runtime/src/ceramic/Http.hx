@@ -155,7 +155,8 @@ class Http {
             method: method,
             headers: headersArray,
             content: content,
-            timeout: timeout
+            timeout: timeout,
+            binary: options.binary == true
         };
 
         app.backend.http.request(backendOptions, function(backendResponse) {
@@ -166,6 +167,21 @@ class Http {
                     resHeaders.set(formatHeaderKey(backendResponse.headers[i]), backendResponse.headers[i + 1]);
                     i += 2;
                 }
+            }
+
+            if (options.binary == true) {
+                // Binary responses: the body as bytes, whatever the backend gave
+                var binaryContent = backendResponse.binaryContent;
+                if (binaryContent == null && backendResponse.content != null)
+                    binaryContent = haxe.io.Bytes.ofString(backendResponse.content);
+                done({
+                    status: backendResponse.status,
+                    content: null,
+                    binaryContent: binaryContent,
+                    error: backendResponse.error,
+                    headers: resHeaders
+                });
+                return;
             }
 
             // Remove any trailing line break (which may be inconsistent between implementations)
