@@ -59,8 +59,15 @@ import ttf.shape.Shaper;
  * renders them like swash's `ColorOutline(0)` then `ColorBitmap(BestFit)`
  * sources of GPUI's `render_glyph_image`). Emoji sequences (emoji
  * presentation, variation selector 16, skin tones, regional indicators,
- * keycaps) prefer the fonts with color glyphs, and the system fallback
- * loads the emoji font of the platform for them.
+ * keycaps) prefer the fonts with color glyphs, unless the primary font
+ * maps the whole cluster (cosmic-text keeps it there: `❤️` after Inter text
+ * is Inter's heart), and the system fallback loads the emoji font of the
+ * platform for them. With the define
+ * `gpui_bundled_emoji`, the gpui plugin ships Noto Color Emoji and adds it
+ * to the default text system (`BundledEmojiFont`, `addBundledEmojiFace()`):
+ * it is a face of the font database, so it comes first for emoji, before
+ * the system emoji font and the browser canvas, which keep the graphemes it
+ * lacks.
  *
  * Not supported: subpixel (LCD) masks, glyph dilation, complex scripts and
  * bidirectional text (see the `ttf` library).
@@ -86,8 +93,13 @@ class CeramicTextSystem implements PlatformTextSystem {
         final shaper = new Shaper();
         // Advances and metrics in f32, like cosmic-text
         shaper.singlePrecision = true;
-        // Emoji prefer the color fonts
+        // Emoji prefer the color fonts, except where the primary font
+        // already shapes the whole cluster: cosmic-text keeps a cluster on
+        // the first font that has no notdef glyph for it (variation
+        // selector 16 is default ignorable), so GPUI draws `❤️` with Inter's
+        // `❤` (golden scene kit-emoji-bundled)
         shaper.isEmojiPresentation = isEmojiPresentation;
+        shaper.primaryKeepsCoveredEmoji = true;
         shaper;
     };
 
@@ -171,6 +183,35 @@ class CeramicTextSystem implements PlatformTextSystem {
                 faces.push(ttf.Font.fromBytes(bytes, i));
             }
         }
+    }
+
+    /**
+     * Adds an already parsed face to the font database, like `addFonts()`
+     * (for faces read piece by piece with `ttf.Font.fromSource()`, such as
+     * the bundled emoji font, see `BundledEmojiFont`).
+     */
+    public function addFace(face:ttf.Font):Void {
+        fontIdsByFamilyCache.clear();
+        coverageChecked.clear();
+        fallbackGeneration++;
+        canvas.clearMeasurements();
+        faces.push(face);
+    }
+
+    /**
+     * The bundled emoji font once added (`BundledEmojiFont.addTo()`), null
+     * otherwise.
+     */
+    public var bundledEmojiFace(default, null):Null<ttf.Font> = null;
+
+    /**
+     * Adds the bundled emoji font (`BundledEmojiFont`): a face of the font
+     * database like the added fonts, so it comes before the fonts of the
+     * operating system and the browser canvas for emoji.
+     */
+    public function addBundledEmojiFace(face:ttf.Font):Void {
+        addFace(face);
+        bundledEmojiFace = face;
     }
 
     /**

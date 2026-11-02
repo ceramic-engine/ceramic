@@ -228,14 +228,18 @@ class SystemFontFallbackTest extends TestCase {
         if (!ceramic.Files.exists(APPLE_EMOJI))
             return;
         final p = platform(true);
-        // Variation selector 16 on a text default character, a keycap, a skin
-        // tone
-        final text = 'a ❤️ 1️⃣ 👍🏽';
+        // Variation selector 16 on a text default character Inter lacks, a
+        // keycap, a skin tone
+        final text = 'a ☺️ 1️⃣ 👍🏽';
         final line = layout(p, text);
         assertColorEmoji(p, line, 2);
-        assertColorEmoji(p, line, Utf8.byteLength('a ❤️ '), false);
-        final thumb = Utf8.byteLength('a ❤️ 1️⃣ ');
+        assertColorEmoji(p, line, Utf8.byteLength('a ☺️ '), false);
+        final thumb = Utf8.byteLength('a ☺️ 1️⃣ ');
         assertColorEmoji(p, line, thumb);
+        // Inter maps ❤: like cosmic-text (golden scene kit-emoji-bundled),
+        // ❤️ stays on it (variation selector 16 is default ignorable)
+        final heart = glyphAt(layout(p, 'a ❤️'), 2);
+        assertEquals('Inter', p.ttfFont(heart.fontId).familyName);
         // Sequences are one glyph (morx ligatures): a family, a flag, a skin
         // tone with a profession
         for (sequence in ['👨‍👩‍👧', '🇫🇷', '👩🏽‍💻']) {

@@ -131,6 +131,8 @@ Test data shipped with these libraries keeps its own license, documented in each
 
 They are used by the `ttf` library tests and by `samples/ttf`, and bundled with the plugin in `assets/gpui/fonts` (as `.ttf.bin`, so that Ceramic's font converter leaves them alone), always with their OFL license files next to them.
 
+- Noto Color Emoji 2.057 (`CBDT` bitmap build), <https://github.com/googlefonts/noto-emoji> (`2D/fonts/NotoColorEmoji.ttf`, commit `99701e0`), Copyright 2013 Google LLC: the font is under the SIL Open Font License 1.1, the emoji images under the Apache License 2.0, the flag images (region-flags) in the public domain or exempt from copyright. Copied unmodified into `emoji-font/assets/gpui/emoji/NotoColorEmoji.ttf.bin` with the three license files next to it (see `emoji-font/README.md`); shipped with an app only when the define `gpui_bundled_emoji` is set. The golden scenes of the bundled emoji font (`reference/src/kit_scenes14_emoji.rs`) load the same file on both sides.
+
 ## Icons and SVG test files
 
 - Lucide icons, <https://lucide.dev>, Copyright Lucide Contributors, ISC License; icons derived from Feather, Copyright Cole Bemis, MIT License. Some are copied in `samples/vector/assets/icons`, `samples/basic/assets/icons`, `test/golden/assets/icons` and `test/bench/assets/icons`, each time with the license file; gpui-kit will use more of them later.

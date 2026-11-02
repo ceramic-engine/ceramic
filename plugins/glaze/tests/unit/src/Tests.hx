@@ -33,6 +33,7 @@ class Tests {
         runner.add(new tests.LineWrapperTest());
         runner.add(new tests.SystemFontFallbackTest());
         runner.add(new tests.CanvasFallbackTest());
+        runner.add(new tests.BundledEmojiFontTest());
         runner.add(new tests.TabStopTest());
         runner.add(new tests.KeyDispatchWindowTest());
         runner.add(new tests.DivInteractivityTest());

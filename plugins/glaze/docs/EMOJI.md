@@ -6,9 +6,30 @@ render in color on macOS through the system fallback (Apple Color Emoji,
 `CBLC`, and the fallback lists Segoe UI Emoji (Windows) and Noto Color
 Emoji (Linux), not tested on those systems yet. On the web, emoji still come
 from the Canvas2D fallback ported from gpui-pre-web. Step 7 (optional
-bundled font) is left.
+bundled font) is done (2026-11-02, see below).
 
 ## Done
+
+- Step 7, bundled emoji font: the define `gpui_bundled_emoji` ships Noto
+  Color Emoji 2.057 (the `CBDT` build, 10.7 MB, `emoji-font/assets`, see
+  `emoji-font/README.md`) through the plugin's `ceramic.yml`, and the
+  plugin adds it to the default text system right after Inter and
+  JetBrains Mono, before the app is ready (`gpui.platform.BundledEmojiFont`,
+  `CeramicTextSystem.addBundledEmojiFace()`). Native targets and Node.js read
+  only its tables (92 KB) through `ceramic.Files.getBytesRange()`;
+  browsers load the whole file as a binary asset. It is a face of the font
+  database, so it comes before the system emoji font and the browser
+  canvas, which keep the graphemes it lacks (CJK keeps its canvas policy).
+  The golden scenes `kit-emoji-bundled-light` / `-dark`
+  (`reference/src/kit_scenes14_emoji.rs`, `GPUI_GOLDEN_VARIANT=gpui_bundled_emoji`)
+  compare emoji text at 12 to 40 px, an input and the editor with the real
+  GPUI loading the same file: they found one rule of cosmic-text the port
+  did not follow, a cluster stays on the primary font when that font maps
+  it without a notdef (variation selector 16 is default ignorable), so
+  `❤️` after Inter text is Inter's monochrome heart in GPUI (ttf
+  `Shaper.primaryKeepsCoveredEmoji`, on in `CeramicTextSystem`). The
+  COLRv1 build (5.0 MB) is not used: swash 0.2.10, GPUI's rasterizer, only
+  reads `COLR` version 0, so GPUI would draw it without color.
 
 - `ttf` (pure Haxe, no Ceramic): `ttf.color.ColorGlyphs` (`Font.color()`)
   renders color glyphs like swash's `ColorOutline(0)` then
