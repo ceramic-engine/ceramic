@@ -701,6 +701,17 @@ class Window implements WindowInvalidator {
 
     var _scaleFactor:Float;
 
+    /**
+     * The scale factor the platform window reports (Rust
+     * `platform_window.scale_factor()`): fixed by `WindowOptions.scaleFactor`
+     * or `setScaleFactor()`, the screen density when null (the window then
+     * follows the display, see `handleScreenResize()`).
+     */
+    var fixedScaleFactor:Null<Float> = null;
+
+    /** Rust `bounds_observers`, called by `boundsChanged()` */
+    final boundsObservers:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
+
     var _remSize:Float;
 
     var _viewportSize:Size;
@@ -890,7 +901,8 @@ class Window implements WindowInvalidator {
         this.platformOperations = new gpui.platform.CeramicWindowOperations(this);
         this.autoDraw = options.autoDraw;
         this.viewCaching = options.viewCaching != null ? options.viewCaching : defaultViewCaching;
-        _scaleFactor = options.scaleFactor != null ? options.scaleFactor : ceramic.App.app.screen.density;
+        fixedScaleFactor = options.scaleFactor;
+        _scaleFactor = platformScaleFactor();
         _remSize = options.remSize;
         _viewportSize = new Size(options.width, options.height);
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
@@ -934,6 +946,10 @@ class Window implements WindowInvalidator {
         if (options.bindInput) {
             GpuiInput.bind(this);
         }
+        // The platform window reports its new scale factor (Rust `on_resize`
+        // callback, wired in `Window::new`): Ceramic emits `resize` when the
+        // screen density changes (browser zoom, another display)
+        ceramic.App.app.screen.onResize(renderable, handleScreenResize);
     }
 
     static function refreshWindowsOf(app:App):Void {
@@ -1080,12 +1096,50 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * Changes the scale factor and redraws.
+     * Fixes the scale factor and redraws (Rust test-support
+     * `set_scale_factor`): the window stops following the screen density.
      */
     public function setScaleFactor(scaleFactor:Float):Void {
+        fixedScaleFactor = scaleFactor;
         _scaleFactor = scaleFactor;
-        renderable.sceneScale = scaleFactor;
         refresh();
+    }
+
+    /**
+     * The scale factor of the platform window (Rust
+     * `platform_window.scale_factor()`): the fixed one, or the density of
+     * the Ceramic screen.
+     */
+    function platformScaleFactor():Float {
+        return fixedScaleFactor != null ? fixedScaleFactor : ceramic.App.app.screen.density;
+    }
+
+    /**
+     * Ceramic screen resize (size or density). The size of the window comes
+     * from `resize()` (its owner lays it out); a new density is a new scale
+     * factor of the platform window, which goes through `boundsChanged()`
+     * like GPUI's `on_resize` callback.
+     */
+    function handleScreenResize():Void {
+        if (!destroyed && platformScaleFactor() != _scaleFactor) {
+            boundsChanged();
+        }
+    }
+
+    /**
+     * Notify the window that its bounds have changed (Rust `bounds_changed`):
+     * takes the scale factor of the platform window and the viewport size,
+     * redraws everything (`refresh()`), then calls the bounds observers.
+     * The next frame is laid out (device pixel snapping), rasterized (glyph
+     * and SVG tiles are keyed by device size and scale) and presented at the
+     * new scale; the renderable takes the scale of a frame when it shows it.
+     */
+    public function boundsChanged():Void {
+        _scaleFactor = platformScaleFactor();
+        windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
+        renderable.size(_viewportSize.width, _viewportSize.height);
+        refresh();
+        boundsObservers.retain(0, callback -> callback(this, app));
     }
 
     /**
@@ -1100,9 +1154,7 @@ class Window implements WindowInvalidator {
      */
     public function resize(width:Float, height:Float):Void {
         _viewportSize = new Size(width, height);
-        windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
-        renderable.size(width, height);
-        refresh();
+        boundsChanged();
     }
 
     /**
@@ -1287,6 +1339,10 @@ class Window implements WindowInvalidator {
         nextFrame.clear();
         // Dropped states are detached from their id nodes: the trie can be swept
         elementIdRoot.trie.endFrame(elementIdRoot);
+        // The scene is in device pixels at the scale it was drawn at: the
+        // renderable takes both together, so a frame drawn before a scale
+        // change is never shown at the new scale
+        renderable.sceneScale = _scaleFactor;
         renderable.scene = renderedFrame.scene;
         final currentFocusPath = renderedFrame.focusPath();
         final currentWindowActive = renderedFrame.windowActive;
@@ -3194,6 +3250,7 @@ class Window implements WindowInvalidator {
             return;
         _active = active;
         activationObservers.retain(0, callback -> callback(this, app));
+        boundsChanged();
         refresh();
     }
 
@@ -3721,6 +3778,16 @@ class Window implements WindowInvalidator {
     @:allow(gpui)
     function newFocusListener(listener:(WindowFocusEvent, Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
         final subscriber = focusListeners.insert(0, listener);
+        return {subscription: subscriber.subscription, activate: subscriber.activate};
+    }
+
+    /**
+     * Registers a callback called when the bounds of the window change
+     * (Rust `window.bounds_observers.insert`).
+     */
+    @:allow(gpui)
+    function newBoundsObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+        final subscriber = boundsObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
     }
 

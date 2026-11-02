@@ -422,6 +422,22 @@ class Context<T:Model> extends EntitySlot {
     }
 
     /**
+     * Register a callback to be invoked when the window is resized (or its
+     * scale factor changes, see `Window.boundsChanged`).
+     */
+    public function observeWindowBounds(window:Window, callback:(T, Window, Context<T>) -> Void):Subscription {
+        final self = this;
+        final result = window.newBoundsObserver((window, cx) -> {
+            if (!self.isAlive())
+                return false;
+            cx.updateEntity((cast self.model : T), (view, cx) -> callback(view, window, cx));
+            return true;
+        });
+        result.activate();
+        return ownSubscription(result.subscription);
+    }
+
+    /**
      * Register a callback to be invoked when the window is activated or deactivated.
      */
     public function observeWindowActivation(window:Window, callback:(T, Window, Context<T>) -> Void):Subscription {
