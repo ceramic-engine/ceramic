@@ -205,6 +205,10 @@ class Textures implements spec.Textures {
 
     }
 
+    inline public function submitTexturePixelsRegion(texture:Texture, x:Int, y:Int, width:Int, height:Int, pixels:ceramic.UInt8Array):Void {
+
+    }
+
     inline public function setTextureFilter(texture:Texture, filter:ceramic.TextureFilter):Void {
 
         //

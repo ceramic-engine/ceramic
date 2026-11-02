@@ -170,6 +170,25 @@ interface Textures {
     function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void;
 
     /**
+     * Updates a rectangular region of a texture with new pixel data.
+     *
+     * Only the given region is uploaded, which is much cheaper than
+     * `submitTexturePixels()` when a small part of a large texture changes
+     * (glyph atlases, dynamic sprite sheets...).
+     *
+     * Coordinates are in texture pixels, with the origin at the top left corner.
+     * The region must be fully inside the texture.
+     *
+     * @param texture The texture to update
+     * @param x Left of the region, in pixels
+     * @param y Top of the region, in pixels
+     * @param width Width of the region, in pixels
+     * @param height Height of the region, in pixels
+     * @param pixels The RGBA pixel data of the region only (width*height*4 bytes)
+     */
+    function submitTexturePixelsRegion(texture:Texture, x:Int, y:Int, width:Int, height:Int, pixels:ceramic.UInt8Array):Void;
+
+    /**
      * Sets the filtering mode for a texture.
      * 
      * Filtering determines how pixels are sampled when the texture is scaled:

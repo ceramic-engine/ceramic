@@ -322,6 +322,23 @@ class Texture extends Entity {
 
     }
 
+    /**
+     * Update a rectangular region of this texture with new pixel data.
+     * Only the region is uploaded to GPU memory.
+     * Coordinates are in texture pixels (not affected by `density`),
+     * with the origin at the top left corner.
+     * @param x Left of the region, in pixels
+     * @param y Top of the region, in pixels
+     * @param width Width of the region, in pixels
+     * @param height Height of the region, in pixels
+     * @param pixels RGBA pixel data of the region (width * height * 4 bytes)
+     */
+    public function submitPixelsRegion(x:Int, y:Int, width:Int, height:Int, pixels:ceramic.UInt8Array):Void {
+
+        app.backend.textures.submitTexturePixelsRegion(backendItem, x, y, width, height, pixels);
+
+    }
+
 /// PNG
 
     /**

@@ -497,6 +497,40 @@ class Textures implements spec.Textures {
 
     #if !no_backend_docs
     /**
+     * Updates a region of a texture with new pixel data.
+     * Rows are copied into the CPU copy of the texture (flipped vertically,
+     * like in `submitTexturePixels()`), then the texture is applied.
+     * Only works for regular textures, not render targets.
+     * @param texture Target texture to update
+     * @param x Left of the region, in pixels
+     * @param y Top of the region, in pixels (top-to-bottom)
+     * @param width Width of the region, in pixels
+     * @param height Height of the region, in pixels
+     * @param pixels RGBA pixel data of the region in top-to-bottom order
+     */
+    #end
+    public function submitTexturePixelsRegion(texture:Texture, x:Int, y:Int, width:Int, height:Int, pixels:ceramic.UInt8Array):Void {
+
+        var unityTexture = (texture:TextureImpl).unityTexture;
+        if (unityTexture == null)
+            return;
+
+        var textureWidth = (texture:TextureImpl).width;
+        var textureHeight = (texture:TextureImpl).height;
+        var rowLength = width * 4;
+
+        untyped __cs__('var rawData = {0}.GetRawTextureData<byte>()', unityTexture);
+        for (row in 0...height) {
+            var dst = ((textureHeight - 1 - (y + row)) * textureWidth + x) * 4;
+            var src = row * rowLength;
+            untyped __cs__('Unity.Collections.NativeArray<byte>.Copy({0}, {1}, rawData, {2}, {3})', pixels, src, dst, rowLength);
+        }
+        unityTexture.Apply(false, false);
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Sets the filtering mode for a texture.
      * @param texture Target texture
      * @param filter Filter mode (LINEAR or NEAREST)

@@ -28,6 +28,9 @@ using StringTools;
  * @see ceramic.Texture
  * @see clay.graphics.Texture
  */
+#if (clay_native && linc_opengl)
+@:cppInclude('linc_opengl.h') // GL declarations for submitTexturePixelsRegion()
+#end
 class Textures implements spec.Textures {
 
     public function new() {}
@@ -388,6 +391,34 @@ class Textures implements spec.Textures {
     public function submitTexturePixels(texture:Texture, pixels:ceramic.UInt8Array):Void {
 
         (texture:clay.graphics.Texture).submit(pixels);
+
+    }
+
+    /**
+     * Updates a region of a texture with new pixel data (`texSubImage2D`).
+     * The texture is bound through the graphics driver so that its
+     * texture binding cache stays valid.
+     *
+     * @param texture The texture to update
+     * @param x Left of the region, in pixels
+     * @param y Top of the region, in pixels
+     * @param width Width of the region, in pixels
+     * @param height Height of the region, in pixels
+     * @param pixels RGBA pixel data of the region (width*height*4 bytes)
+     */
+    public function submitTexturePixelsRegion(texture:Texture, x:Int, y:Int, width:Int, height:Int, pixels:ceramic.UInt8Array):Void {
+
+        var clayTexture:clay.graphics.Texture = texture;
+        clayTexture.bind();
+
+        #if web
+        clay.opengl.GL.pixelStorei(clay.opengl.GL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, clayTexture.premultiplyAlpha ? 1 : 0);
+        #end
+
+        clay.opengl.GL.texSubImage2D(
+            clay.opengl.GL.TEXTURE_2D, 0, x, y, width, height,
+            clay.opengl.GL.RGBA, clay.opengl.GL.UNSIGNED_BYTE, pixels
+        );
 
     }
 
