@@ -9,8 +9,6 @@ import gpui.util.Ref;
 /**
  * A text element that can be interacted with: clicks on byte ranges,
  * hover of characters, and tooltips per character.
- *
- * Differences with GPUI: no touch long press tooltips.
  */
 @:access(gpui.Interactivity)
 class InteractiveText extends Element {
@@ -97,6 +95,7 @@ class InteractiveText extends Element {
                 }
                 else {
                     // If there is no longer a tooltip builder, remove the active tooltip.
+                    interactiveState.longPressTooltipActive.value = false;
                     interactiveState.activeTooltip.take();
                 }
             }
@@ -211,7 +210,7 @@ class InteractiveText extends Element {
                         && pendingMouseDown.value == null;
                 };
 
-                Interactivity.registerTooltipMouseHandlers(activeTooltip, tooltipId, buildTooltip, checkIsHovered, checkIsHoveredDuringPrepaint, null, window);
+                Interactivity.registerTooltipMouseHandlers(activeTooltip, tooltipId, buildTooltip, checkIsHovered, checkIsHoveredDuringPrepaint, interactiveState.longPressTooltipActive, null, window);
             }
 
             styledText.paint(null, bounds, window, cx);
@@ -231,6 +230,8 @@ class InteractiveTextState {
     public final hoveredIndex:Ref<Null<Int>> = new Ref(null);
 
     public final activeTooltip:ActiveTooltipCell = new ActiveTooltipCell();
+
+    public final longPressTooltipActive:Ref<Bool> = new Ref(false);
 
     public function new() {}
 

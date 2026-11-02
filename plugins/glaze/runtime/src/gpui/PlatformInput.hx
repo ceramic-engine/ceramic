@@ -10,8 +10,8 @@ package gpui;
  * Differences with GPUI: Rust wraps each event struct in an enum variant and
  * listeners downcast `&dyn Any`. Here every event class extends this one and
  * carries its `kind`: the event object is the platform input
- * (`to_platform_input()` is the identity). Touch, pinch, pressure, long
- * press and file drop events are not ported.
+ * (`to_platform_input()` is the identity). Pinch, pressure, back gesture
+ * and file drop events are not ported.
  */
 abstract class PlatformInput {
 

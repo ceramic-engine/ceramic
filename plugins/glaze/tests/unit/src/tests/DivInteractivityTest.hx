@@ -42,9 +42,10 @@ import gpui.Prelude.*;
  * Tests of `div.rs`: group hover, hover listeners, scroll handle alignment,
  * tooltips, keyboard activation, tab groups and scrollability.
  *
- * Not ported: touch and long press tests (`long_press_shows_tooltip_until_touch_ends`,
- * `touch_tap_out_fires_once_after_release`, `touch_pan_and_cancel_do_not_fire_mouse_down_out`:
- * touch input is not ported), accessibility tests (`test_accessibility_id_builder_writes_author_id`,
+ * The touch tests `touch_tap_out_fires_once_after_release` and
+ * `touch_pan_and_cancel_do_not_fire_mouse_down_out` are in `TouchWindowTest`.
+ *
+ * Not ported: accessibility tests (`test_accessibility_id_builder_writes_author_id`,
  * `test_write_a11y_info_string_and_numeric_properties`), `mouse_down_out_is_suppressed_while_window_prompt_is_active`
  * (window prompts are not ported) and `grid_cols_max_content_sizes_columns_to_their_content`
  * (grid layout and debug selectors are not ported).
@@ -439,6 +440,34 @@ class DivInteractivityTest extends TestCase {
         cx.runUntilParked();
 
         assertFalse(activeTooltip.alive);
+    }
+
+    function testLongPressShowsTooltipUntilTouchEnds() {
+        final owner = createTooltipOwnerTest(null);
+        final activeTooltip = owner.capturedActiveTooltip;
+        assertNotNull(activeTooltip);
+        final touchPosition = point(px(49), px(10));
+
+        cx.update((window, cx) -> {
+            window.dispatchEvent(new gpui.TouchEvent(1, Started, touchPosition), cx);
+        });
+        cx.advanceClock(gpui.GestureTuning.defaults().longPressDuration + 0.001);
+        cx.runUntilParked();
+
+        assertTrue(isVisible(activeTooltip));
+
+        final movedPosition = point(px(55), px(10));
+        cx.update((window, cx) -> {
+            window.dispatchEvent(new gpui.TouchEvent(1, Moved, movedPosition), cx);
+            window.draw();
+        });
+        assertTrue(isVisible(activeTooltip));
+
+        cx.update((window, cx) -> {
+            window.dispatchEvent(new gpui.TouchEvent(1, Ended, movedPosition), cx);
+        });
+
+        assertNull(activeTooltip.value);
     }
 
     function testTooltipRespectsCustomShowDelay() {

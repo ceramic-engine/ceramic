@@ -242,6 +242,9 @@ class InteractiveElementState {
 
     public var activeTooltip:Null<ActiveTooltipCell> = null;
 
+    /** Whether the active tooltip was shown by a touch long press that has not ended. */
+    public var longPressTooltipActive:Null<Ref<Bool>> = null;
+
     public function new() {}
 
     /**
@@ -284,7 +287,7 @@ enum abstract HoverListenerMode(Int) {
  * Differences with GPUI: listeners filter events by `PlatformInput.kind`
  * instead of downcasting; action, drag and drop types are classes
  * (`onAction(MyAction, ...)`, `onDrop(MyValue, ...)`) compared exactly like
- * Rust `TypeId`s. Touch, pinch, pressure, back gesture, file drop,
+ * Rust `TypeId`s. Pinch, pressure, back gesture, file drop,
  * accessibility, inspector and window control areas are not ported.
  * `restrictScrollToAxis` locks precise deltas with `OngoingScroll`, whose
  * gesture separation reads the executor clock instead of the wall clock.
@@ -919,6 +922,9 @@ class Interactivity {
                     }
                     else {
                         // If there is no longer a tooltip builder, remove the active tooltip.
+                        if (elementState.longPressTooltipActive != null) {
+                            elementState.longPressTooltipActive.value = false;
+                        }
                         elementState.activeTooltip.take();
                     }
                 }
@@ -1512,6 +1518,8 @@ class Interactivity {
                 final activeTooltip = elementState.activeTooltip;
                 if (elementState.pendingMouseDown == null) elementState.pendingMouseDown = new Ref(null);
                 final pendingMouseDown = elementState.pendingMouseDown;
+                if (elementState.longPressTooltipActive == null) elementState.longPressTooltipActive = new Ref(false);
+                final longPressTooltipActive = elementState.longPressTooltipActive;
 
                 final tooltipIsHoverable = tooltipBuilder.hoverable;
                 final buildTooltip = (window:Window, cx:App) -> {view: tooltipBuilder.build(window, cx), hoverable: tooltipIsHoverable};
@@ -1523,7 +1531,7 @@ class Interactivity {
                 final checkIsHovered = (window:Window) -> {
                     return pendingMouseDown.value == null && hitbox.isHovered(window);
                 };
-                registerTooltipMouseHandlers(activeTooltip, tooltipId, buildTooltip, checkIsHovered, checkIsHoveredDuringPrepaint, tooltipShowDelay, window);
+                registerTooltipMouseHandlers(activeTooltip, tooltipId, buildTooltip, checkIsHovered, checkIsHoveredDuringPrepaint, longPressTooltipActive, tooltipShowDelay, window);
             }
 
             // We unconditionally bind both the mouse up and mouse down active state handlers
@@ -1872,6 +1880,7 @@ class Interactivity {
         buildTooltip:(Window, App) -> {view:AnyView, hoverable:Bool},
         checkIsHovered:Window->Bool,
         checkIsHoveredDuringPrepaint:Window->Bool,
+        longPressTooltipActive:Ref<Bool>,
         showDelay:Null<Float>,
         window:Window
     ):Void {
@@ -1885,6 +1894,27 @@ class Interactivity {
         window.onMouseEvent(MouseDown, (_, _, window, _) -> {
             if (!(tooltipId != -1 && window.isTooltipHovered(tooltipId))) {
                 clearActiveTooltipIfNotHoverable(activeTooltip, window);
+            }
+        });
+
+        // Touch long presses show the tooltip immediately once the gesture
+        // is recognized, until the finger lifts.
+        window.onMouseEvent(LongPress, (e, phase, window, cx) -> {
+            if (!phase.bubble())
+                return;
+            final event:LongPressEvent = cast e;
+            switch event.phase {
+                case Started if (!window.defaultPrevented() && checkIsHovered(window)):
+                    if (showTooltip(activeTooltip, buildTooltip, checkIsHoveredDuringPrepaint, longPressTooltipActive, window, cx)) {
+                        longPressTooltipActive.value = true;
+                        window.preventDefault();
+                        cx.stopPropagation();
+                    }
+                case Ended | Cancelled if (longPressTooltipActive.value):
+                    longPressTooltipActive.value = false;
+                    clearActiveTooltip(activeTooltip, window);
+                    cx.stopPropagation();
+                case _:
             }
         });
 
@@ -1934,7 +1964,7 @@ class Interactivity {
                     if (!activeTooltip.alive || window.isDestroyed())
                         return;
                     cx.update(cx -> {
-                        showTooltip(activeTooltip, buildTooltip, checkIsHoveredDuringPrepaint, window, cx);
+                        showTooltip(activeTooltip, buildTooltip, checkIsHoveredDuringPrepaint, null, window, cx);
                     });
                 });
                 activeTooltip.set(WaitingForShow(timer));
@@ -1948,6 +1978,7 @@ class Interactivity {
         activeTooltip:ActiveTooltipCell,
         buildTooltip:(Window, App) -> {view:AnyView, hoverable:Bool},
         checkIsHoveredDuringPrepaint:Window->Bool,
+        longPressTooltipActive:Null<Ref<Bool>>,
         window:Window,
         cx:App
     ):Bool {
@@ -1956,6 +1987,9 @@ class Interactivity {
         if (built != null) {
             final tooltipIsHoverable = built.hoverable;
             newTooltip = Visible(new AnyTooltip(built.view, window.mousePosition(), (tooltipBounds, window, cx) -> {
+                if (longPressTooltipActive != null && longPressTooltipActive.value) {
+                    return true;
+                }
                 if (!activeTooltip.alive) {
                     return false;
                 }

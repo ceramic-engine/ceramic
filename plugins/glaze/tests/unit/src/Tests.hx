@@ -36,6 +36,8 @@ class Tests {
         runner.add(new tests.TabStopTest());
         runner.add(new tests.KeyDispatchWindowTest());
         runner.add(new tests.DivInteractivityTest());
+        runner.add(new tests.TouchGestureTest());
+        runner.add(new tests.TouchWindowTest());
         runner.add(new tests.WindowFocusTest());
         // GPUI's inspector (define gpui_inspector)
         #if gpui_inspector

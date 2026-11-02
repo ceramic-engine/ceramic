@@ -4,12 +4,15 @@
 package gpui;
 
 /**
- * A mouse wheel or trackpad scroll event (Rust `ScrollEvent`, formerly
- * `ScrollWheelEvent`).
+ * One step of scrolling from a mouse wheel, trackpad, or touch pan (Rust
+ * `ScrollEvent`, formerly `ScrollWheelEvent`).
  */
 class ScrollEvent extends PlatformInput {
 
-    /** The position of the mouse on the window. */
+    /**
+     * The position the scroll targets. For touch pans this is where the pan
+     * started, so the whole gesture stays with the container it began on.
+     */
     public var position:Point;
 
     /** The change in scroll. */
@@ -18,15 +21,19 @@ class ScrollEvent extends PlatformInput {
     /** The modifiers that were held down when the mouse was moved. */
     public var modifiers:Modifiers;
 
-    /** The phase of the touch event. */
+    /** The phase of the scroll gesture. */
     public var touchPhase:TouchPhase;
 
-    public function new(position:Point, delta:ScrollDelta, ?modifiers:Modifiers, touchPhase:TouchPhase = Moved) {
+    /** The kind of input that produced this scroll. */
+    public var source:ScrollSource;
+
+    public function new(position:Point, delta:ScrollDelta, ?modifiers:Modifiers, touchPhase:TouchPhase = Moved, source:ScrollSource = Pointer) {
         super(Scroll);
         this.position = position;
         this.delta = delta;
         this.modifiers = modifiers != null ? modifiers : Modifiers.none();
         this.touchPhase = touchPhase;
+        this.source = source;
     }
 
 }

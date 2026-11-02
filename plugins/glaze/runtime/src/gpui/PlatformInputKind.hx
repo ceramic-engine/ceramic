@@ -25,11 +25,20 @@ enum abstract PlatformInputKind(Int) to Int {
 
     var Scroll = 7;
 
+    /** A long-press gesture recognized from touch input. */
+    var LongPress = 8;
+
+    /** A direct touch drag claimed by an element. */
+    var TouchDrag = 9;
+
+    /** A raw touch event on a touch screen (not a mouse event). */
+    var Touch = 10;
+
     /**
      * Whether events of this kind are dispatched to mouse listeners.
      */
     public inline function isMouseEvent():Bool {
-        return this >= 3;
+        return this >= 3 && this != 10;
     }
 
     /**

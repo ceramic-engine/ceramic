@@ -769,9 +769,8 @@ class TextView extends Element implements Styled {
         else if (switch event {
             case Mouse(click): click.up.button == MouseButton.Left || click.up.button == MouseButton.Middle;
             case Keyboard(_): true;
+            case Touch(click): !click.longPress;
         }) {
-            // Rust also opens on a touch click that is not a long press: the
-            // GPUI port has no touch input.
             cx.openUrl(url);
         }
     }

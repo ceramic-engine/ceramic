@@ -4,6 +4,7 @@
 package gpui;
 
 import gpui.platform.SceneRenderable;
+import gpui.TouchGestureRecognizer.RecognizedTouchGesture;
 import gpui.scene.Scene;
 import haxe.ds.IntMap;
 
@@ -579,8 +580,9 @@ private class Frame {
  * Differences with GPUI: no platform window (the window is a Ceramic visual
  * of the given size, `setActive()` stands for platform activation; the
  * platform's text input side is `textInputPlatform` plus the input handler
- * slot of `takeInputHandler()` / `setInputHandler()`), no touch, prompts,
- * inspector or accessibility. Focus handles are stored, not referenced by id.
+ * slot of `takeInputHandler()` / `setInputHandler()`), no prompts,
+ * inspector or accessibility. Focus handles are stored, not referenced by
+ * id. Touch gestures read the executor clock instead of the wall clock.
  */
 class Window implements WindowInvalidator {
 
@@ -784,6 +786,16 @@ class Window implements WindowInvalidator {
     var _capslock:Bool = false;
 
     var lastInputModality:InputModality = Mouse;
+
+    /** The portable recognizer of raw touch input (Rust `touch_gestures`). */
+    final touchGestures:TouchGestureRecognizer = new TouchGestureRecognizer(GestureTuning.defaults());
+
+    var _touchPredictionEnabled:Bool = true;
+
+    var longPressTimer:Null<AnyTask> = null;
+
+    /** The entity that claimed the current long press (Rust `long_press_capture`), or -1. */
+    var longPressCapture:Int = -1;
 
     var nextHitboxId:Int = 0;
 
@@ -3924,6 +3936,7 @@ class Window implements WindowInvalidator {
         switch event.kind {
             case KeyDown: lastInputModality = Keyboard;
             case MouseMove | MouseDown: lastInputModality = Mouse;
+            case Touch: lastInputModality = Touch;
             case _:
         }
         if (lastInputModality != oldModality) {
@@ -3959,17 +3972,220 @@ class Window implements WindowInvalidator {
                 final e:ScrollEvent = cast event;
                 _mousePosition = e.position;
                 _modifiers = e.modifiers;
+            case Touch:
+            case LongPress:
+                final e:LongPressEvent = cast event;
+                _mousePosition = e.phase == Started ? e.startPosition : e.position;
+                if (e.phase == Started) {
+                    longPressCapture = -1;
+                }
+            case TouchDrag:
+                final e:TouchDragEvent = cast event;
+                _mousePosition = e.startPosition;
             case KeyDown | KeyUp:
         }
 
         if (event.kind.isMouseEvent()) {
             dispatchMouseEvent(event, cx);
         }
+        else if (event.kind == Touch) {
+            dispatchTouchEvent(cast event, cx);
+        }
         else {
             dispatchKeyEvent(event, cx);
         }
+        if (event.kind == LongPress) {
+            final e:LongPressEvent = cast event;
+            switch e.phase {
+                case Started if (!_defaultPrevented):
+                    longPressCapture = -1;
+                case Ended | Cancelled:
+                    longPressCapture = -1;
+                case _:
+            }
+        }
 
         return new DispatchEventResult(cx.propagateEvent, _defaultPrevented);
+    }
+
+    /**
+     * Whether recognized touch pans may use the platform's predicted touch
+     * positions (`TouchEvent.predictedPosition`) to compensate for input
+     * latency. Defaults to true.
+     */
+    public inline function touchPredictionEnabled():Bool {
+        return _touchPredictionEnabled;
+    }
+
+    /**
+     * Sets whether recognized touch pans may use the platform's predicted
+     * touch positions. Disabling drops `TouchEvent.predictedPosition` before
+     * gesture recognition, so pans track only raw touch positions.
+     */
+    public function setTouchPredictionEnabled(enabled:Bool):Void {
+        _touchPredictionEnabled = enabled;
+    }
+
+    /**
+     * Routes the rest of the current long press to the given entity: call it
+     * from a `LongPressEvent` listener of the started phase that claims the
+     * gesture. The capture is released when the gesture ends or is
+     * cancelled, or when a replacement touch begins. A listener must also
+     * call `preventDefault` on the started event to claim the gesture.
+     */
+    public function captureLongPress<T:Model>(entity:Entity<T>):Void {
+        longPressCapture = entity.entityId();
+    }
+
+    /**
+     * Whether the given entity captured the current long press.
+     */
+    public function hasLongPressCapture<T:Model>(entity:Entity<T>):Bool {
+        return longPressCapture != -1 && longPressCapture == entity.entityId();
+    }
+
+    /**
+     * Runs the portable gesture recognizer over a raw touch event and
+     * dispatches whatever it resolves (scroll steps, synthesized taps)
+     * through the ordinary mouse-event path (Rust `dispatch_touch_event`).
+     */
+    function dispatchTouchEvent(event:TouchEvent, cx:App):Void {
+        event = event.copy();
+        if (!_touchPredictionEnabled) {
+            event.predictedPosition = null;
+        }
+        final now = cx.backgroundExecutor().now();
+        final recognizedGestures = touchGestures.handleEvent(event, now);
+        if (event.phase == Started) {
+            final touchDrag = touchGestures.offerTouchDrag(event.id);
+            if (touchDrag != null) {
+                dispatchRecognizedTouchGesture(touchDrag, cx);
+            }
+        }
+        if (event.phase == Started && touchGestures.pendingLongPress(now) != null) {
+            longPressCapture = -1;
+        }
+        var tapped = false;
+        for (gesture in recognizedGestures) {
+            if (gesture.match(Tap(_, _))) tapped = true;
+            dispatchRecognizedTouchGesture(gesture, cx);
+        }
+        if (event.phase == Started) {
+            scheduleLongPressTimer(cx);
+        }
+        else if (touchGestures.pendingLongPress(cx.backgroundExecutor().now()) == null) {
+            cancelLongPressTimer();
+        }
+        // The platform's touch-release handler may inspect the input handler
+        // as soon as this dispatch returns (the web platform decides virtual
+        // keyboard visibility there, inside the user gesture). Input handlers
+        // are registered during draw, so draw now to make them reflect any
+        // focus change the tap just caused.
+        if (tapped && dirty) {
+            draw();
+        }
+        if (touchGestures.hasMomentum()) {
+            scheduleTouchMomentumTick();
+        }
+    }
+
+    function dispatchRecognizedTouchGesture(gesture:RecognizedTouchGesture, cx:App):Void {
+        switch gesture {
+            case Scroll(scroll):
+                _mousePosition = scroll.position;
+                cx.propagateEvent = true;
+                dispatchMouseEvent(scroll, cx);
+            case Tap(down, up):
+                _mousePosition = up.position;
+                cx.propagateEvent = true;
+                dispatchMouseEvent(down, cx);
+                cx.propagateEvent = true;
+                dispatchMouseEvent(up, cx);
+            case TouchDrag(touchDrag):
+                _mousePosition = touchDrag.startPosition;
+                cx.propagateEvent = true;
+                _defaultPrevented = false;
+                final started = touchDrag.phase == Started;
+                dispatchMouseEvent(touchDrag, cx);
+                if (started) {
+                    touchGestures.resolveTouchDrag(_defaultPrevented);
+                }
+            case LongPress(longPress):
+                _mousePosition = longPress.phase == Started ? longPress.startPosition : longPress.position;
+                cx.propagateEvent = true;
+                _defaultPrevented = false;
+                final started = longPress.phase == Started;
+                final ended = longPress.phase == Ended || longPress.phase == Cancelled;
+                dispatchMouseEvent(longPress, cx);
+                if (started) {
+                    final claimed = _defaultPrevented;
+                    touchGestures.resolveLongPress(claimed);
+                    if (!claimed) {
+                        longPressCapture = -1;
+                    }
+                }
+                if (ended) {
+                    longPressCapture = -1;
+                }
+        }
+    }
+
+    /**
+     * Dispatches a gesture recognized outside of `dispatchEvent` (the long
+     * press timer, a momentum frame): handlers never subscribe a view, like
+     * in `dispatchEvent`.
+     */
+    function dispatchRecognizedTouchGestureLater(gesture:RecognizedTouchGesture, cx:App):Void {
+        if (destroyed)
+            return;
+        tracker.Autorun.unobserve();
+        try {
+            dispatchRecognizedTouchGesture(gesture, cx);
+        }
+        catch (e:haxe.Exception) {
+            tracker.Autorun.reobserve();
+            throw gpui.util.Exceptions.rethrow(e);
+        }
+        tracker.Autorun.reobserve();
+    }
+
+    function cancelLongPressTimer():Void {
+        final timer = longPressTimer;
+        longPressTimer = null;
+        if (timer != null) timer.cancel();
+    }
+
+    function scheduleLongPressTimer(cx:App):Void {
+        cancelLongPressTimer();
+        final pending = touchGestures.pendingLongPress(cx.backgroundExecutor().now());
+        if (pending == null)
+            return;
+        final touchId = pending.id;
+        final timer = cx.backgroundExecutor().timer(pending.remaining);
+        final task = timer.then(_ -> {
+            if (destroyed)
+                return;
+            cx.update(cx -> {
+                longPressTimer = null;
+                final gesture = touchGestures.offerLongPress(touchId);
+                if (gesture != null) {
+                    dispatchRecognizedTouchGestureLater(gesture, cx);
+                }
+            });
+        });
+        longPressTimer = task;
+    }
+
+    function scheduleTouchMomentumTick():Void {
+        onNextFrame((window, cx) -> {
+            final gesture = touchGestures.tickMomentum(cx.backgroundExecutor().now());
+            if (gesture != null) {
+                dispatchRecognizedTouchGestureLater(gesture, cx);
+            }
+            if (touchGestures.hasMomentum()) {
+                scheduleTouchMomentumTick();
+            }
+        });
     }
 
     function dispatchMouseEvent(event:PlatformInput, cx:App):Void {
