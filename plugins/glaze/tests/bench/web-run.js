@@ -25,6 +25,8 @@
 //   GPUI_BENCH_SCENARIOS=cards,scroll-table GPUI_BENCH_FRAMES=200 \
 //   GPUI_BENCH_RESULTS=/some/dir node web-run.js [--profile] [--top 40]
 //
+// Soak runs (GPUI_BENCH_SOAK_SECONDS) write their series as `-soak.json`;
+// V8 runs with --expose-gc for their live memory samples.
 // Every GPUI_BENCH_* variable of BenchRunner applies (the page reads them from
 // process.env). Results: one JSON per block like the other targets, with a
 // `webGc` object, in GPUI_BENCH_RESULTS (printed only when it is not set).
@@ -56,7 +58,7 @@ delete env.ELECTRON_RUN_AS_NODE;
 if (profile || alloc) env.GPUI_BENCH_PROFILE = '1';
 
 const electronArgs = ['.', '--scripts-prepend-node-path', '--app-files', appFiles, '--hidden',
-    '--js-flags=--trace-gc', '--enable-precise-memory-info'];
+    '--js-flags=--trace-gc --expose-gc', '--enable-precise-memory-info'];
 if (profile || alloc) electronArgs.push('--remote-debugging-port=' + port);
 if (process.platform === 'linux') electronArgs.push('--no-sandbox');
 
@@ -234,6 +236,16 @@ function selfTimes(profile) {
 child.on('exit', code => {
     const byLabel = {};
     for (const json of jsons) {
+        if (json.soak != null) {
+            // Endurance run (GPUI_BENCH_SOAK_SECONDS): written as is
+            const s = json.soak.summary;
+            console.log(`${json.scenario}-${json.mode} soak: live ${s.live.mbPerMinute.toFixed(3)} MB/min (mean ${s.live.meanMb.toFixed(1)} MB), V8 used ${s.jsUsed.mbPerMinute.toFixed(3)} MB/min, leak suspected: ${s.leakSuspected}`);
+            if (resultsDir) {
+                fs.mkdirSync(resultsDir, { recursive: true });
+                fs.writeFileSync(path.join(resultsDir, `${json.timestamp}-web-${json.scenario}-${json.mode}-soak.json`), JSON.stringify(json, null, 2) + '\n');
+            }
+            continue;
+        }
         if (json.metrics == null) continue;
         const label = `${json.scenario}-${json.mode}-r${json.run + 1}`;
         byLabel[label] = json;

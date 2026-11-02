@@ -60,6 +60,30 @@ benchmark instead of the scenarios).
 For timings, measure without `gpui_count_allocations` (it is instrumentation)
 in `ceramic.yml`; add `gpui_profile_frames` for the per-phase times.
 
+## Endurance (leak check)
+
+`GPUI_BENCH_SOAK_SECONDS=N` runs each selected scenario and mode for N seconds
+instead of the measured blocks (pick one with `GPUI_BENCH_SCENARIOS` and
+`GPUI_BENCH_ONLY`), through the real update loop in slices of about 100 ms.
+Every `GPUI_BENCH_SOAK_SAMPLE_SECONDS` (default 5) it records the hxcpp heap
+(used, reserved, current, large, minor and full collections, concurrent
+cycles, allocation volume), the V8 heap on node and the web, and the frame
+times of the interval; every `GPUI_BENCH_SOAK_LIVE_SECONDS` (default 60, 0 for
+never) the live memory right after a full collection (`Gc.run(true)` and
+hxcpp's exact live object bytes, memInfo 120; V8's `gc()` on node and the
+web). The series are stored in arrays allocated up front, so the recording
+does not show up as growth. The result is
+`<timestamp>-<target>-<scenario>-<mode>-soak.json` with a summary: least
+squares slopes (MB per minute) after `GPUI_BENCH_SOAK_WARMUP_SECONDS`
+(default 180) of the live, reserved and used memory, and `leakSuspected` (a
+significant live slope and a rising live floor, above 1 MB and 2 % over the
+span). `node ../../scratchpad/soak-report.js <file>` prints a report.
+
+```sh
+GPUI_BENCH_SCENARIOS=cards GPUI_BENCH_ONLY=full GPUI_BENCH_SOAK_SECONDS=1800 project/mac/bench.app/Contents/MacOS/bench
+GPUI_BENCH_SCENARIOS=cards GPUI_BENCH_ONLY=full GPUI_BENCH_SOAK_SECONDS=900 GPUI_BENCH_RESULTS=/some/dir node web-run.js
+```
+
 ## Results
 
 Each run writes `results/<yyyymmdd-HHMMSS>-<target>-<scenario>-<mode>.json`

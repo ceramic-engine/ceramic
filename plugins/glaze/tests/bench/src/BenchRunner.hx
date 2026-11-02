@@ -54,7 +54,13 @@ import gpui.util.FrameProfiler;
  *   the counts after each block (a check, not a measure);
  * - `GPUI_BENCH_PARTIAL`: `1` or `0` forces the `partialRendering` mode of
  *   the windows' renderables (`SceneRenderable.partialRendering`), otherwise
- *   the default (`SceneRenderable.defaultPartialRendering`).
+ *   the default (`SceneRenderable.defaultPartialRendering`);
+ * - `GPUI_BENCH_SOAK_SECONDS`: endurance (leak check) run instead of the
+ *   measured blocks: each selected scenario and mode runs that many seconds
+ *   and its memory is sampled (see `soak`), with
+ *   `GPUI_BENCH_SOAK_SAMPLE_SECONDS` (default 5), `GPUI_BENCH_SOAK_LIVE_SECONDS`
+ *   (live memory after a full collection, default 60, 0 for never) and
+ *   `GPUI_BENCH_SOAK_WARMUP_SECONDS` (left out of the slopes, default 180).
  */
 class BenchRunner {
 
@@ -70,6 +76,20 @@ class BenchRunner {
     static inline final MEM_INFO_MAX_MINOR_PAUSE_MS = 109;
     static inline final MEM_INFO_TOTAL_MINOR_PAUSE_MS = 110;
     static inline final MEM_INFO_ALLOCATION_VOLUME = 117;
+    static inline final MEM_INFO_FULL_COUNT = 115;
+    static inline final MEM_INFO_CYCLE_COUNT = 100;
+    static inline final MEM_INFO_CYCLE_ACTIVE = 104;
+    /** Object bytes in blocks found live by the last full collection (exact, without line fragmentation) */
+    static inline final MEM_INFO_FULL_LIVE_BYTES = 120;
+
+    /** `cpp.vm.Gc.MEM_INFO_*` (usage, reserved, current, large) */
+    static inline final cpp_MEM_INFO_USAGE = 0;
+    static inline final cpp_MEM_INFO_RESERVED = 1;
+    static inline final cpp_MEM_INFO_CURRENT = 2;
+    static inline final cpp_MEM_INFO_LARGE = 3;
+
+    /** Frames of a soak run go by slices of about this long per update tick (ms) */
+    public static inline final SOAK_SLICE_MS = 100.0;
 
     final owner:ceramic.Entity;
 
@@ -90,6 +110,18 @@ class BenchRunner {
     final scenarios:Array<Scenario>;
 
     final timestamp:String;
+
+    /** `GPUI_BENCH_SOAK_SECONDS`: endurance run length per mode (0: regular bench) */
+    final soakSeconds:Int;
+
+    /** `GPUI_BENCH_SOAK_SAMPLE_SECONDS`: memory sample period of a soak run */
+    final soakSampleSeconds:Float;
+
+    /** `GPUI_BENCH_SOAK_LIVE_SECONDS`: live memory (after a full collection) period, 0 for never */
+    final soakLiveSeconds:Float;
+
+    /** `GPUI_BENCH_SOAK_WARMUP_SECONDS`: samples left out of the slopes */
+    final soakWarmupSeconds:Float;
 
     var resultsDir:Null<String> = null;
 
@@ -131,6 +163,10 @@ class BenchRunner {
         if (env('GPUI_BENCH_VERIFY_PARTIAL') == '1') {
             gpui.platform.SceneRenderable.verifyPartialRendering = true;
         }
+        soakSeconds = envInt('GPUI_BENCH_SOAK_SECONDS', 0);
+        soakSampleSeconds = envFloat('GPUI_BENCH_SOAK_SAMPLE_SECONDS', 5);
+        soakLiveSeconds = envFloat('GPUI_BENCH_SOAK_LIVE_SECONDS', 60);
+        soakWarmupSeconds = envFloat('GPUI_BENCH_SOAK_WARMUP_SECONDS', 180);
         timestamp = DateTools.format(Date.now(), '%Y%m%d-%H%M%S');
         scenarios = select(Scenarios.all());
     }
@@ -250,6 +286,14 @@ class BenchRunner {
         final elementCount = AllocationCounters.divs + AllocationCounters.texts + AllocationCounters.svgs + AllocationCounters.viewElements;
         if (Std.isOfType(scenario, IdleScenario)) {
             idle(cast scenario, window, caching, elementCount, () -> {
+                scenario.teardown();
+                window.destroy();
+                done();
+            });
+            return;
+        }
+        if (soakSeconds > 0) {
+            soak(scenario, window, caching, () -> {
                 scenario.teardown();
                 window.destroy();
                 done();
@@ -411,6 +455,264 @@ class BenchRunner {
         ceramic.App.app.onUpdate(owner, handler);
     }
 
+    /**
+     * Endurance run (`GPUI_BENCH_SOAK_SECONDS`): the scenario's frames for
+     * that long, through the real update loop in slices of about
+     * `SOAK_SLICE_MS` (so timers and other deferred work run between them
+     * like in an app). Every `soakSampleSeconds` it records the GC state
+     * (hxcpp usage, reserved, current and large memory, minor and full
+     * collection counts, concurrent cycles, allocation volume; on node and
+     * the web the V8 heap) and the frame times of the interval; every
+     * `soakLiveSeconds` the live memory right after a full collection. The
+     * series and a summary (least squares slopes after `soakWarmupSeconds`)
+     * go to `<timestamp>-<target>-<scenario>-<mode>-soak.json`.
+     */
+    /** Fields of a soak sample, in `soak.samples` of the result */
+    static final SOAK_SAMPLE_FIELDS = ['t', 'frames', 'usage', 'reserved', 'current', 'large', 'minorCount', 'minorMaxMs', 'minorTotalMs', 'fullCount',
+        'cycles', 'cycleActive', 'volume', 'jsUsed', 'jsTotal', 'intervalFrames', 'frameMedianMs', 'frameP99Ms', 'frameMaxMs'];
+
+    /** Fields of a live memory sample, in `soak.lives` of the result */
+    static final SOAK_LIVE_FIELDS = ['t', 'frames', 'live', 'liveBytes', 'large', 'usageBefore', 'reservedBefore', 'reservedAfter', 'jsLive', 'jsTotal', 'collectMs'];
+
+    function soak(scenario:Scenario, window:Window, caching:Bool, done:Void->Void):Void {
+        final label = '${scenario.name}-${caching ? 'cached' : 'full'}';
+        print('soak $label: ${soakSeconds} s, samples every ${soakSampleSeconds} s, live memory every ${soakLiveSeconds} s, warmup ${soakWarmupSeconds} s');
+        // The series are stored in flat arrays allocated up front: records
+        // added during the run would themselves show up as a slow growth of
+        // the live memory
+        final sampleCapacity = Std.int(soakSeconds / Math.max(soakSampleSeconds, 0.1)) + 4;
+        final liveCapacity = soakLiveSeconds > 0 ? Std.int(soakSeconds / soakLiveSeconds) + 4 : 0;
+        final sampleData:Array<Float> = [for (_ in 0...sampleCapacity * SOAK_SAMPLE_FIELDS.length) 0.0];
+        final liveData:Array<Float> = [for (_ in 0...liveCapacity * SOAK_LIVE_FIELDS.length) 0.0];
+        var sampleCount = 0;
+        var liveCount = 0;
+        final intervalTimes:Array<Float> = [for (_ in 0...200000) 0.0];
+        var intervalCount = 0;
+        final start = now();
+        var frame = 0;
+        var nextSample = start + soakSampleSeconds * 1000;
+        var nextLive = soakLiveSeconds > 0 ? start + soakLiveSeconds * 1000 : Math.POSITIVE_INFINITY;
+        var maxReserved = 0.0;
+        var lastLiveAt = -1.0;
+        var handler:Null<Float->Void> = null;
+        function seconds(at:Float):Float return (at - start) / 1000;
+        function sample(at:Float):Void {
+            if (sampleCount >= sampleCapacity) return;
+            final reserved = gcInfo(cpp_MEM_INFO_RESERVED);
+            if (reserved > maxReserved) maxReserved = reserved;
+            final heap = jsHeap();
+            // Frame times of the interval: partial sort of the used range
+            final n = intervalCount;
+            final times = intervalTimes.slice(0, n);
+            times.sort(Reflect.compare);
+            final values = [seconds(at), frame, gcInfo(cpp_MEM_INFO_USAGE), reserved, gcInfo(cpp_MEM_INFO_CURRENT), gcInfo(cpp_MEM_INFO_LARGE),
+                gcInfo(MEM_INFO_MINOR_PAUSE_COUNT), gcInfo(MEM_INFO_MAX_MINOR_PAUSE_MS), gcInfo(MEM_INFO_TOTAL_MINOR_PAUSE_MS), gcInfo(MEM_INFO_FULL_COUNT),
+                gcInfo(MEM_INFO_CYCLE_COUNT), gcInfo(MEM_INFO_CYCLE_ACTIVE), gcInfo(MEM_INFO_ALLOCATION_VOLUME), heap[0], heap[1], n,
+                n > 0 ? times[n >> 1] : 0.0, percentile(times, 0.99), n > 0 ? times[n - 1] : 0.0];
+            final base = sampleCount * SOAK_SAMPLE_FIELDS.length;
+            for (i in 0...values.length) sampleData[base + i] = values[i];
+            sampleCount++;
+            intervalCount = 0;
+        }
+        function live(at:Float):Void {
+            if (liveCount >= liveCapacity) return;
+            final reservedBefore = gcInfo(cpp_MEM_INFO_RESERVED);
+            final usageBefore = gcInfo(cpp_MEM_INFO_USAGE);
+            final collectStart = now();
+            final heap = fullCollect();
+            final collectMs = now() - collectStart;
+            final liveBytes = gcInfo(MEM_INFO_FULL_LIVE_BYTES) + gcInfo(cpp_MEM_INFO_LARGE);
+            final values = [seconds(at), frame, gcInfo(cpp_MEM_INFO_USAGE), liveBytes, gcInfo(cpp_MEM_INFO_LARGE), usageBefore, reservedBefore,
+                gcInfo(cpp_MEM_INFO_RESERVED), heap[0], heap[1], collectMs];
+            final base = liveCount * SOAK_LIVE_FIELDS.length;
+            for (i in 0...values.length) liveData[base + i] = values[i];
+            liveCount++;
+            lastLiveAt = seconds(at);
+            print('  soak $label t=${Math.round(seconds(at))} s frames=$frame live ${mb(gcInfo(cpp_MEM_INFO_USAGE))} MB, objects ${mb(liveBytes)} MB (reserved before ${mb(reservedBefore)} MB)'
+                + #if js ' js live ${mb(heap[0])} MB' + #end '');
+        }
+        function records(data:Array<Float>, count:Int, fields:Array<String>):Array<Dynamic> {
+            return [for (r in 0...count) {
+                final record:haxe.DynamicAccess<Float> = {};
+                for (i in 0...fields.length) record.set(fields[i], data[r * fields.length + i]);
+                (record : Dynamic);
+            }];
+        }
+        function finishSoak():Void {
+            ceramic.App.app.offUpdate(handler);
+            final end = now();
+            final samples = records(sampleData, sampleCount, SOAK_SAMPLE_FIELDS);
+            final lives = records(liveData, liveCount, SOAK_LIVE_FIELDS);
+            final result = baseResult(scenario, caching, 0, frame, 0);
+            final summary = soakSummary(samples, lives, maxReserved);
+            result.set('soak', {
+                seconds: seconds(end),
+                sampleSeconds: soakSampleSeconds,
+                liveSeconds: soakLiveSeconds,
+                warmupSeconds: soakWarmupSeconds,
+                summary: summary,
+                samples: samples,
+                lives: lives
+            });
+            print('soak $label summary: ' + haxe.Json.stringify(summary));
+            writeResult(result, scenario.name, caching, 0, '-soak');
+            done();
+        }
+        handler = _ -> {
+            final sliceEnd = now() + SOAK_SLICE_MS;
+            while (true) {
+                final frameStart = now();
+                scenario.step(WARMUP_FRAMES + frame);
+                ceramic.App.app.flushImmediate();
+                window.drawIfDirty();
+                final t = now();
+                if (intervalCount < intervalTimes.length) intervalTimes[intervalCount++] = t - frameStart;
+                frame++;
+                if (t >= nextSample) {
+                    sample(t);
+                    nextSample += soakSampleSeconds * 1000;
+                    if (nextSample < t) nextSample = t + soakSampleSeconds * 1000;
+                }
+                if (t >= nextLive) {
+                    live(t);
+                    nextLive += soakLiveSeconds * 1000;
+                    if (nextLive < now()) nextLive = now() + soakLiveSeconds * 1000;
+                }
+                if (seconds(now()) >= soakSeconds) {
+                    if (soakLiveSeconds > 0 && (lastLiveAt < 0 || seconds(now()) - lastLiveAt > 1)) {
+                        live(now());
+                    }
+                    finishSoak();
+                    return;
+                }
+                if (now() >= sliceEnd) break;
+            }
+        };
+        ceramic.App.app.onUpdate(owner, handler);
+    }
+
+    /**
+     * Least squares slopes (MB per minute) of the soak series after the
+     * warmup: live memory (after a full collection), reserved and used
+     * memory, and the V8 heap on node and the web. A leak is suspected when
+     * the live memory slope is significant (above twice its standard error)
+     * and both it and the floor of the live memory (minimum of the second
+     * half against the first half) grow by more than 1 MB and 2 % over the
+     * measured span: the live samples are noisy (what the conservative stack
+     * scan keeps, line fragmentation without memInfo 120).
+     */
+    function soakSummary(samples:Array<Dynamic>, lives:Array<Dynamic>, maxReserved:Float):Dynamic {
+        function slope(series:Array<Dynamic>, field:String):Dynamic {
+            final xs:Array<Float> = [];
+            final ys:Array<Float> = [];
+            for (s in series) {
+                final t:Float = s.t;
+                if (t < soakWarmupSeconds) continue;
+                xs.push(t / 60);
+                ys.push((Reflect.field(s, field) : Float) / (1024 * 1024));
+            }
+            final n = xs.length;
+            if (n < 2) return {points: n, mbPerMinute: 0.0, stderr: 0.0, meanMb: n == 1 ? ys[0] : 0.0, firstMb: n == 1 ? ys[0] : 0.0, lastMb: n == 1 ? ys[0] : 0.0,
+                spanMinutes: 0.0, floorFirstHalfMb: n == 1 ? ys[0] : 0.0, floorSecondHalfMb: n == 1 ? ys[0] : 0.0};
+            var mx = 0.0, my = 0.0;
+            for (i in 0...n) { mx += xs[i]; my += ys[i]; }
+            mx /= n;
+            my /= n;
+            var sxy = 0.0, sxx = 0.0;
+            for (i in 0...n) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) * (xs[i] - mx); }
+            final k = sxx > 0 ? sxy / sxx : 0.0;
+            var residuals = 0.0;
+            for (i in 0...n) {
+                final r = ys[i] - (my + k * (xs[i] - mx));
+                residuals += r * r;
+            }
+            final stderr = n > 2 && sxx > 0 ? Math.sqrt(residuals / (n - 2) / sxx) : 0.0;
+            var floor1 = Math.POSITIVE_INFINITY, floor2 = Math.POSITIVE_INFINITY;
+            for (i in 0...n) {
+                if (i < n >> 1) floor1 = Math.min(floor1, ys[i]) else floor2 = Math.min(floor2, ys[i]);
+            }
+            return {points: n, mbPerMinute: k, stderr: stderr, meanMb: my, firstMb: ys[0], lastMb: ys[n - 1], spanMinutes: xs[n - 1] - xs[0],
+                floorFirstHalfMb: floor1, floorSecondHalfMb: floor2};
+        }
+        // hxcpp: the exact object bytes when this hxcpp counts them (memInfo
+        // 120), otherwise the used lines (fragmentation included)
+        final exact = lives.length > 0 && (lives[lives.length - 1].liveBytes : Float) > (lives[lives.length - 1].large : Float);
+        final live:Dynamic = slope(lives, #if js 'jsLive' #else exact ? 'liveBytes' : 'live' #end);
+        final growth:Float = live.mbPerMinute * live.spanMinutes;
+        final floorGrowth:Float = live.floorSecondHalfMb - live.floorFirstHalfMb;
+        final threshold = Math.max(1.0, 0.02 * (live.meanMb : Float));
+        final leak = live.points >= 4 && live.mbPerMinute > 2 * live.stderr && growth > threshold && floorGrowth > threshold;
+        final last:Dynamic = samples.length > 0 ? samples[samples.length - 1] : null;
+        final first:Dynamic = samples.length > 0 ? samples[0] : null;
+        return {
+            live: live,
+            liveLines: slope(lives, 'live'),
+            liveBytes: slope(lives, 'liveBytes'),
+            jsLive: slope(lives, 'jsLive'),
+            reserved: slope(samples, 'reserved'),
+            usage: slope(samples, 'usage'),
+            jsUsed: slope(samples, 'jsUsed'),
+            maxReservedMb: maxReserved / (1024 * 1024),
+            frames: last != null ? last.frames : 0,
+            minorCollections: last != null ? (last.minorCount : Float) - (first.minorCount : Float) : 0,
+            fullCollections: last != null ? (last.fullCount : Float) : 0,
+            concurrentCycles: last != null ? (last.cycles : Float) - (first.cycles : Float) : 0,
+            leakSuspected: leak
+        };
+    }
+
+    static function mb(bytes:Float):String {
+        return fmt(bytes / (1024 * 1024));
+    }
+
+    /** V8 heap used and total (node and web), zeros elsewhere */
+    static function jsHeap():Array<Float> {
+        #if js
+        if (isNode()) {
+            final usage:Dynamic = js.Syntax.code("process.memoryUsage()");
+            return [usage.heapUsed, usage.heapTotal];
+        }
+        final used:Float = js.Syntax.code("(performance.memory != null ? performance.memory.usedJSHeapSize : 0)");
+        final total:Float = js.Syntax.code("(performance.memory != null ? performance.memory.totalJSHeapSize : 0)");
+        return [used, total];
+        #else
+        return [0.0, 0.0];
+        #end
+    }
+
+    /**
+     * A full collection: `Gc.run(true)` on hxcpp (a classic, compacting
+     * collection), V8's `gc()` on node and the web (exposed at run time
+     * through `v8.setFlagsFromString` when the engine was not started with
+     * `--expose-gc`). Returns the V8 heap afterwards.
+     */
+    static function fullCollect():Array<Float> {
+        #if cpp
+        cpp.vm.Gc.run(true);
+        #elseif js
+        js.Syntax.code("(function() {
+            var g = typeof gc === 'function' ? gc : null;
+            if (g == null && typeof require === 'function') {
+                try {
+                    require('v8').setFlagsFromString('--expose-gc');
+                    g = require('vm').runInNewContext('gc');
+                } catch (e) {}
+            }
+            if (g != null) { g(); g(); }
+        })()");
+        #end
+        return jsHeap();
+    }
+
+    static function envFloat(name:String, defaultValue:Float):Float {
+        final value = env(name);
+        if (value == null || value == '') {
+            return defaultValue;
+        }
+        final parsed = Std.parseFloat(value);
+        return Math.isNaN(parsed) || parsed < 0 ? defaultValue : parsed;
+    }
+
     function finishMeasure(scenario:Scenario, window:Window, caching:Bool, elementCount:Int, run:Int, times:Array<Float>, wallTimes:Array<Float>,
         renderedViews:Int, reusedViews:Int, counters:Int, anyElements:Int, minorPausesBefore:Float, minorPauseTotalBefore:Float, allocatedVolume:Float):Void {
         var bytes = 0.0;
@@ -468,7 +770,7 @@ class BenchRunner {
         }
         #if cpp
         if (minorPauses > 0 || minorPauseTotal > 0) {
-            print('  minor GC pauses: $minorPauses, total ${fmt(minorPauseTotal)} ms, max ${fmt(minorPauseMax)} ms');
+            print('  minor GC pauses: $minorPauses, total ${fmt(minorPauseTotal)} ms, max ${fmt(minorPauseMax)} ms, heap reserved ${mb(gcInfo(cpp_MEM_INFO_RESERVED))} MB');
         }
         #end
         AllocationCounters.reset();
@@ -518,7 +820,9 @@ class BenchRunner {
                 minorPauses: minorPauses,
                 lastMinorPauseMs: minorPauseLast,
                 maxMinorPauseMs: minorPauseMax,
-                totalMinorPauseMs: minorPauseTotal
+                totalMinorPauseMs: minorPauseTotal,
+                reservedBytes: gcInfo(cpp_MEM_INFO_RESERVED),
+                usedBytes: gcInfo(cpp_MEM_INFO_USAGE)
             }
         });
         result.set('fullFrameAllocations', allocation);
@@ -630,10 +934,10 @@ class BenchRunner {
         };
     }
 
-    function writeResult(result:haxe.DynamicAccess<Dynamic>, scenario:String, caching:Bool, run:Int):Void {
+    function writeResult(result:haxe.DynamicAccess<Dynamic>, scenario:String, caching:Bool, run:Int, ?kind:String):Void {
         final json = haxe.Json.stringify(result);
         print('BENCH_JSON ' + json);
-        final suffix = runs > 1 ? '-r${run + 1}' : '';
+        final suffix = (runs > 1 ? '-r${run + 1}' : '') + (kind != null ? kind : '');
         final fileName = '$timestamp-$target-$scenario-${caching ? 'cached' : 'full'}$suffix.json';
         final dir = resultsDirectory();
         if (dir == null) {
