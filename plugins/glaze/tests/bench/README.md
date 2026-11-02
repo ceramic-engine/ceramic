@@ -23,6 +23,25 @@ ceramic headless run node --setup --assets            # Node
 ceramic clay build mac --setup --assets && project/mac/bench.app/Contents/MacOS/bench   # native
 ```
 
+On the web, the build runs under Ceramic's Electron runner with a hidden
+window (the page reads the variables below from Node's `process.env`; the
+project does not set `ceramic_use_electron`, so asset reads behave like in a
+browser):
+
+```sh
+ceramic clay build web --setup --assets --variant perf     # perf: no allocation counters
+GPUI_BENCH_SCENARIOS=cards GPUI_BENCH_RESULTS=/some/dir node web-run.js [--profile] [--alloc]
+```
+
+`web-run.js` adds what the page cannot measure: V8's collections per measured
+block (`--js-flags=--trace-gc`: minor and major counts and pauses, allocation
+volume per frame) in a `webGc` object of each result, a CPU profile per block
+with `--profile` (`<scenario>-<mode>-rN.cpuprofile`, top self times printed)
+and V8's sampling heap profile with `--alloc` (from the start of the block
+with `GPUI_BENCH_SCREEN=1`). `GPUI_BENCH_WEB_DIR` runs another copy of
+`project/web` (A/B on frozen builds). `--variant perf_onig` builds the perf
+web bench with onig.wasm as the highlighter's regex engine (`gpui_onig_wasm`).
+
 Environment variables: `GPUI_BENCH_SCENARIOS` (comma list, default all),
 `GPUI_BENCH_FRAMES` (default 300), `GPUI_BENCH_ONLY` (`full` or `cached`),
 `GPUI_BENCH_RUNS` (repeat the measured block N times in one process, one

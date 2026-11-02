@@ -613,6 +613,43 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         }
     }
 
+    /** The folds kept from the changed lines only equal a scan of the whole text (Rust `brace_fold_ranges`) after every edit. */
+    function testRandomEditsKeepTheFoldsOfAWholeTextScan() {
+        final samples:haxe.DynamicAccess<String> = haxe.Json.parse(samplesJson());
+        var seed = 4242;
+        function next(max:Int):Int {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            return max <= 0 ? 0 : seed % max;
+        }
+        final inserts = ["\n", "{", "}", "{\n", "\n}", "}\n{", "\"", "'", "`", "\\", "//", "#", "\r\n", "\r", "{}", "\n\n\n", "x", "é😀", "{\"a\": {\n"];
+        var compared = 0;
+        var nonEmpty = 0;
+        for (pair in [["rope.rs", "rust"], ["grammar.ts", "ts"], ["demo.py", "python"], ["embedded.html", "html"]]) {
+            final rope = Rope.fromStr(samples.get(pair[0]));
+            final highlighter = new TextMateInputHighlighter(pair[1], TextMateBackend.findSyntax(pair[1]));
+            highlighter.update(null, rope, true, null, null);
+            for (step in 0...120) {
+                final start = rope.charIndexToOffset(next(rope.lenChars() + 1));
+                final end = rope.charIndexToOffset(Std.int(Math.min(rope.lenChars(), rope.offsetToCharIndex(start) + next(next(4) == 0 ? 400 : 6))));
+                highlighter.update(edit(rope, start, end, next(4) == 0 ? "" : inserts[next(inserts.length)]), rope, true, null, null);
+                final expected = TextMateBackend.braceFoldRanges(rope.toString());
+                final actual = highlighter.foldRanges(rope);
+                assertEquals([for (f in expected) '${f.startLine}-${f.endLine}'].join(','), [for (f in actual) '${f.startLine}-${f.endLine}'].join(','),
+                    '${pair[0]} step $step');
+                compared++;
+                if (expected.length > 0)
+                    nonEmpty++;
+            }
+            // Replacing everything, and emptying
+            highlighter.update(edit(rope, 0, rope.len(), "a {\n{\n}\n\n}\n"), rope, true, null, null);
+            assertEquals('0-4', [for (f in highlighter.foldRanges(rope)) '${f.startLine}-${f.endLine}'].join(','));
+            highlighter.update(edit(rope, 0, rope.len(), ""), rope, true, null, null);
+            assertEquals(0, highlighter.foldRanges(rope).length);
+        }
+        assertEquals(480, compared);
+        assertTrue(nonEmpty > 100, 'edits with folds: $nonEmpty');
+    }
+
     #end
 
     static macro function truthJson():haxe.macro.Expr {

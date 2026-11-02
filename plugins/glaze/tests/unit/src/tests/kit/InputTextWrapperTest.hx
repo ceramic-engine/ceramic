@@ -55,6 +55,57 @@ class InputTextWrapperTest extends TestCase {
         return Utf8.byteLength(s);
     }
 
+    /**
+     * `WidthRange.nextUp` / `nextDown` (Rust `f64::next_up` / `next_down`)
+     * equal the 64 bit pattern arithmetic through `Int64` on every target
+     * (JavaScript takes another path, without `Int64`): signs, zeros,
+     * subnormals, infinities, NaN, and carries between the 32 bit words.
+     */
+    function testNextUpAndNextDownFollowTheBitPattern() {
+        function reference(value:Float, up:Bool):Float {
+            if (!up)
+                return -reference(-value, true);
+            if (value != value || value == Math.POSITIVE_INFINITY)
+                return value;
+            if (value == 0.0)
+                return haxe.io.FPHelper.i64ToDouble(1, 0);
+            final bits = haxe.io.FPHelper.doubleToI64(value);
+            final next = value > 0 ? haxe.Int64.add(bits, 1) : haxe.Int64.sub(bits, 1);
+            return haxe.io.FPHelper.i64ToDouble(next.low, next.high);
+        }
+        function bits(value:Float):String {
+            final b = haxe.io.FPHelper.doubleToI64(value);
+            return StringTools.hex(b.high, 8) + StringTools.hex(b.low, 8);
+        }
+        final values:Array<Float> = [
+            0.0, -0.0, 1.0, -1.0, 0.5, 1.5, 100.25, -3.75, 1e-300, -1e300, Math.POSITIVE_INFINITY, Math.NEGATIVE_INFINITY, Math.NaN,
+            haxe.io.FPHelper.i64ToDouble(1, 0), haxe.io.FPHelper.i64ToDouble(1, 0x80000000), // smallest subnormals
+            haxe.io.FPHelper.i64ToDouble(-1, 0x7FEFFFFF), haxe.io.FPHelper.i64ToDouble(-1, 0xFFEFFFFF), // largest finite
+            haxe.io.FPHelper.i64ToDouble(-1, 0x000FFFFF), haxe.io.FPHelper.i64ToDouble(0, 0x00100000), // subnormal and normal edges
+            haxe.io.FPHelper.i64ToDouble(-1, 0x3FF00000), haxe.io.FPHelper.i64ToDouble(0, 0xBFF00001), // low word carries and borrows
+            haxe.io.FPHelper.i64ToDouble(0x7FFFFFFF, 0x40000000), haxe.io.FPHelper.i64ToDouble(0x80000000, 0xC0000000)
+        ];
+        var seed = 99;
+        function next():Int {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            return seed;
+        }
+        for (_ in 0...2000) {
+            // Random patterns, and random low words around the carry
+            final low = next() % 4 == 0 ? [0, -1, 0x7FFFFFFF, 0x80000000][next() % 4] : (next() << 1) ^ next();
+            values.push(haxe.io.FPHelper.i64ToDouble(low, (next() << 1) ^ next()));
+        }
+        var checked = 0;
+        for (value in values) {
+            assertEquals(bits(reference(value, true)), bits(WidthRange.nextUp(value)), 'nextUp(' + bits(value) + ')');
+            assertEquals(bits(reference(value, false)), bits(WidthRange.nextDown(value)), 'nextDown(' + bits(value) + ')');
+            checked++;
+        }
+        assertEquals(2023, checked);
+        // Two calls in a row do not share state
+        assertEquals(1.0, WidthRange.nextDown(WidthRange.nextUp(1.0)));
+    }
+
     function testMeasuredWrapKeepsCjkLatinBoundaryStableDuringEdits() {
         final measure = (text:String) -> {
             var width = 0.0;

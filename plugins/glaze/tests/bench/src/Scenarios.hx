@@ -17,6 +17,8 @@ class Scenarios {
             new scenarios.StoryDense(),
             new scenarios.StoryDense(() -> story.StoryMeta.of(story.stories.ButtonStory), 'story-button'),
             new scenarios.EditorType(),
+            new scenarios.EditorType('editor-type-sync', 3000),
+            new scenarios.EditorOpen(),
             new scenarios.EditorScroll(),
             new scenarios.ScrollTable(),
             new scenarios.Hover(),

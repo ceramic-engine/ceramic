@@ -19,7 +19,7 @@ app:
         - clay_sdl_headless
 
     # Count the allocations of the main gpui objects (see gpui.util.AllocationCounters)
-    if !perf:
+    if !perf && !perf_onig:
         +defines:
             - gpui_count_allocations
 
@@ -29,6 +29,12 @@ app:
     if perf:
         +defines:
             - ceramic_no_hxcpp_checks
+
+    # `--variant perf_onig` (web): the perf build with vscode-oniguruma's
+    # onig.wasm as the regex engine of the code highlighter (gpui_onig_wasm)
+    if perf_onig:
+        +defines:
+            - gpui_onig_wasm
 
     # `--variant prof`: the perf build with its symbols kept, for profilers
     # (Instruments, sample)

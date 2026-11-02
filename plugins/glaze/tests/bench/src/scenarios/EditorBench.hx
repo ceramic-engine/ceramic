@@ -21,7 +21,8 @@ import gpui.Prelude.*;
 /**
  * Base of the code editor scenarios: a gpui-kit `EditorState` with the JSON
  * language and TextMate highlighting on (`Highlighter.enable`, like the
- * `kit-highlight-editor` scene), loaded with 5000 lines of JSON, in an
+ * `kit-highlight-editor` scene), loaded with 5000 lines of JSON (or the
+ * `lineCount` given), in an
  * editor filling the standard window (12 px padding), focused by a click at
  * the first line like `kit-editor-typing`.
  *
@@ -48,7 +49,10 @@ class EditorBench extends BaseScenario {
     /** The center of the editor, where scroll events are dispatched. */
     var center:Point;
 
-    static var code:Null<String> = null;
+    static var codes:Map<Int, String> = new Map();
+
+    /** Lines of JSON of this scenario (`LINE_COUNT` by default). */
+    final lineCount:Int;
 
     public static inline final LANGUAGE = 'json';
 
@@ -63,19 +67,21 @@ class EditorBench extends BaseScenario {
         return info != null && TextMateGrammars.grammar(info) != null;
     }
 
-    public function new(name:String) {
+    public function new(name:String, lineCount:Int = LINE_COUNT) {
         super(name);
+        this.lineCount = lineCount;
     }
 
-    /** 5000 lines of deterministic JSON (an array of objects, one object field per line). */
-    public static function jsonCode():String {
-        if (code != null)
-            return code;
+    /** `lineCount` lines of deterministic JSON (an array of objects, one object field per line). */
+    public static function jsonCode(lineCount:Int = LINE_COUNT):String {
+        final cached = codes.get(lineCount);
+        if (cached != null)
+            return cached;
         final buf = new StringBuf();
         buf.add('[\n');
         var line = 1;
         var item = 0;
-        while (line < LINE_COUNT - 1) {
+        while (line < lineCount - 1) {
             switch (line % 8) {
                 case 1: buf.add('  {\n');
                 case 2: buf.add('    "id": $item,\n');
@@ -90,7 +96,8 @@ class EditorBench extends BaseScenario {
         }
         buf.add('  {}\n');
         buf.add(']');
-        code = buf.toString();
+        final code = buf.toString();
+        codes.set(lineCount, code);
         return code;
     }
 
@@ -103,7 +110,7 @@ class EditorBench extends BaseScenario {
         });
         if (!grammarReady())
             ceramic.Shortcuts.log.warning('$name: the $LANGUAGE grammar is not loaded, call EditorBench.preload before setup (the editor renders without highlighting)');
-        final text = jsonCode();
+        final text = jsonCode(lineCount);
         window = KitBench.openWindow(app, caching, (window, cx) -> {
             state = cx.newEntity((c:Context<EditorState>) -> new EditorState(window, c).language(LANGUAGE).defaultValue(text));
             final state = this.state;

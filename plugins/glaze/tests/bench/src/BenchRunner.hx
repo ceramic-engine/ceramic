@@ -89,6 +89,18 @@ class BenchRunner {
     /** Path tiles rasterized during the last measure */
     var lastPathRasterizations:Int = 0;
     var lastDrawP99:Float = 0.0;
+    var lastDrawMax:Float = 0.0;
+
+    /** Process CPU time per frame of the last on screen measure (native, ms) */
+    var lastCpuPerFrame:Float = 0.0;
+
+    /** `GPUI_BENCH_GPU`: glFinish wait of the last on screen measure (median and p99, ms) */
+    var lastGpuFinishMedian:Float = 0.0;
+    var lastGpuFinishP99:Float = 0.0;
+
+    #if (clay && web)
+    final gpuProbe = new js.lib.Uint8Array(4);
+    #end
 
     public function new(owner:ceramic.Entity, app:App) {
         this.owner = owner;
@@ -284,10 +296,13 @@ class BenchRunner {
             }
         }
         final total = WARMUP_FRAMES + frames;
+        final label = '${scenario.name}-${caching ? 'cached' : 'full'}-r${run + 1}';
         if (!screen) {
             for (frame in 0...total) {
+                if (frame == WARMUP_FRAMES) webMark('begin', label);
                 frameBody(frame);
             }
+            webMark('end', label);
             lastPathRasterizations = pathRasterizations;
             finishMeasure(scenario, window, caching, elementCount, run, times, wallTimes, renderedViews, reusedViews, counters, anyElements, minorPausesBefore, minorPauseTotalBefore, gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore);
             done();
@@ -460,8 +475,10 @@ class BenchRunner {
                 bytesBefore = heapBytes();
                 cpuBefore = cpuTime();
                 wallBefore = now();
+                webMark('begin', '${scenario.name}-${caching ? 'cached' : 'full'}-r1');
             }
             else if (ticks == 10 + idleFrames) {
+                webMark('end', '${scenario.name}-${caching ? 'cached' : 'full'}-r1');
                 final bytes = heapBytes() - bytesBefore;
                 final cpuMs = (cpuTime() - cpuBefore) / idleFrames;
                 final wallMs = (now() - wallBefore) / idleFrames;
@@ -651,13 +668,51 @@ class BenchRunner {
     }
 
     #if js
+    /** Node, not the renderer of the Electron runner (which has `process` too) */
     static function isNode():Bool {
-        return js.Syntax.code("(typeof process !== 'undefined' && process.versions != null && process.versions.node != null)");
+        return js.Syntax.code("(typeof process !== 'undefined' && process.versions != null && process.versions.node != null && process.versions.electron == null)");
+    }
+
+    /** The web build under the Electron runner (Node integration in the renderer) */
+    static function isElectron():Bool {
+        return js.Syntax.code("(typeof process !== 'undefined' && process.versions != null && process.versions.electron != null)");
     }
     #end
 
+    /**
+     * Web under Electron: marks the measured block on the renderer's stdout,
+     * where V8 also prints its `--trace-gc` lines, so `web-run.js` can sum
+     * the collections of each block; with `GPUI_BENCH_PROFILE=1`, also a
+     * `console.profile` around the block (recorded by `web-run.js --profile`
+     * through the DevTools protocol).
+     */
+    static function webMark(kind:String, label:String):Void {
+        #if js
+        if (isNode() || !isElectron()) {
+            return;
+        }
+        final profile = env('GPUI_BENCH_PROFILE') == '1';
+        if (kind == 'end' && profile) {
+            js.Syntax.code('console.profileEnd({0})', label);
+        }
+        final heap:Float = js.Syntax.code("(performance.memory != null ? performance.memory.usedJSHeapSize : 0)");
+        js.Syntax.code("process.stdout.write({0})", 'GPUI_BENCH_MARK $kind $label ${js.Syntax.code("process.pid")} $heap\n');
+        if (kind == 'begin' && profile) {
+            js.Syntax.code('console.profile({0})', label);
+        }
+        #end
+    }
+
     static function env(name:String):Null<String> {
+        #if web
+        // Under the Electron runner the page has Node's process.env. Read it
+        // here rather than through `ceramic_use_electron`, which would also
+        // send Ceramic's file reads (asset misses) to the main process over
+        // synchronous IPC, a cost a browser does not have
+        return js.Syntax.code("((typeof process !== 'undefined' && process.env != null) ? process.env[{0}] : null)", name);
+        #else
         return ceramic.Platform.getEnv(name);
+        #end
     }
 
     static function envInt(name:String, defaultValue:Int):Int {
@@ -753,9 +808,23 @@ class BenchRunner {
         }
         else {
             // Under the Electron runner: quit it, so scripted web runs end
+            // (when profiling, once web-run.js has its profiles, at most a
+            // minute later)
             final runner = electronRunner();
-            if (runner != null && runner.app != null)
-                runner.app.quit();
+            if (runner != null && runner.app != null) {
+                if (env('GPUI_BENCH_PROFILE') == '1') {
+                    var waited = 0;
+                    function quitWhenDone() {
+                        if (js.Syntax.code("window.gpuiBenchMayQuit") == true || waited++ > 600)
+                            runner.app.quit();
+                        else
+                            haxe.Timer.delay(quitWhenDone, 100);
+                    }
+                    haxe.Timer.delay(quitWhenDone, 500);
+                }
+                else
+                    runner.app.quit();
+            }
         }
         #elseif sys
         Sys.exit(code);

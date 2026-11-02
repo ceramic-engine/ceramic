@@ -546,6 +546,93 @@ class TextMateBackend {
         return result;
     }
 
+    /**
+     * What `braceFoldRanges` does with one line, reduced: the braces that
+     * close a block of an earlier line (`braceCloses`), then the blocks left
+     * open at its end (`braceOpens`). A block opened and closed on the same
+     * line spans 0 lines and never folds, so only these two counts matter.
+     * `line` is the text of the line without its `\n` (a trailing `\r` is
+     * ignored like Rust `str::lines`).
+     */
+    @:allow(gpui.component.highlighter)
+    static function scanLineBraces(line:String, info:LineInfo):Void {
+        var length = line.length;
+        if (length > 0 && line.charCodeAt(length - 1) == '\r'.code)
+            length--;
+        var closes = 0;
+        var opens = 0;
+        var quote:Int = -1;
+        var escaped = false;
+        var i = 0;
+        while (i < length) {
+            final character = line.charCodeAt(i);
+            i++;
+            if (quote >= 0) {
+                if (escaped) {
+                    escaped = false;
+                }
+                else if (character == '\\'.code) {
+                    escaped = true;
+                }
+                else if (character == quote) {
+                    quote = -1;
+                }
+            }
+            else {
+                if (character == '/'.code && i < length && line.charCodeAt(i) == '/'.code) {
+                    break;
+                }
+                else if (character == '#'.code) {
+                    break;
+                }
+                else if (character == '"'.code || character == '\''.code || character == '`'.code) {
+                    quote = character;
+                }
+                else if (character == '{'.code) {
+                    opens++;
+                }
+                else if (character == '}'.code) {
+                    if (opens > 0)
+                        opens--;
+                    else
+                        closes++;
+                }
+            }
+        }
+        info.braceCloses = closes;
+        info.braceOpens = opens;
+    }
+
+    /**
+     * `braceFoldRanges` of the whole text from the reduced braces of its
+     * lines (`scanLineBraces`): the same ranges, without converting the
+     * text to a string or scanning the lines that did not change.
+     */
+    @:allow(gpui.component.highlighter)
+    static function braceFoldRangesOfLines(lines:Array<LineInfo>):Array<FoldRange> {
+        final starts:Array<Int> = [];
+        final ranges:Array<FoldRange> = [];
+        for (lineNumber in 0...lines.length) {
+            final line = lines[lineNumber];
+            for (_ in 0...line.braceCloses) {
+                final start = starts.pop();
+                if (start != null && lineNumber - start >= 2) {
+                    ranges.push(new FoldRange(start, lineNumber));
+                }
+            }
+            for (_ in 0...line.braceOpens)
+                starts.push(lineNumber);
+        }
+        // Rust `sort_by_key` (stable) then `dedup_by_key` on the start line.
+        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine - b.startLine);
+        final result:Array<FoldRange> = [];
+        for (range in ranges) {
+            if (result.length == 0 || result[result.length - 1].startLine != range.startLine)
+                result.push(range);
+        }
+        return result;
+    }
+
     /** The UTF-8 length of a string. */
     public static function utf8Length(text:String):Int {
         var bytes = 0;
@@ -654,6 +741,12 @@ private class LineInfo {
 
     public var highlights:Array<Highlight> = [];
 
+    /** Braces of the line closing blocks of earlier lines (`TextMateBackend.scanLineBraces`), valid with `highlights`. */
+    public var braceCloses:Int = 0;
+
+    /** Blocks the line leaves open, valid with `highlights`. */
+    public var braceOpens:Int = 0;
+
     public function new(bytes:Int) {
         this.bytes = bytes;
     }
@@ -704,7 +797,9 @@ class TextMateInputHighlighter extends InputHighlighterBase {
             // first line whose start state did not change.
             cancelTask();
             tokenize(text);
-            folds = folding ? TextMateBackend.braceFoldRanges(text.toString()) : [];
+            // Rust scans the whole text again (`syntect_backend.rs:367`);
+            // the reduced braces of the lines give the same ranges
+            folds = folding ? TextMateBackend.braceFoldRangesOfLines(lines) : [];
             return;
         }
 
@@ -713,7 +808,7 @@ class TextMateInputHighlighter extends InputHighlighterBase {
         cancelTask();
         parseTask = cx.spawn((entity, acx) -> acx.backgroundExecutor().timer(TextMateBackend.PARSE_DEBOUNCE).then(_ -> {
             tokenize(snapshot);
-            final folded = folding ? TextMateBackend.braceFoldRanges(snapshot.toString()) : [];
+            final folded = folding ? TextMateBackend.braceFoldRangesOfLines(lines) : [];
             folds = folded;
             entity.tryUpdate(acx, (state, cx) -> {
                 state.applyHighlighterFoldCandidates(folded, cx);
@@ -849,6 +944,7 @@ class TextMateInputHighlighter extends InputHighlighterBase {
             line.startState = state;
             line.endState = result.endState;
             line.highlights = result.highlights;
+            TextMateBackend.scanLineBraces(lineText, line);
             line.valid = true;
             state = result.endState;
             tokenized++;

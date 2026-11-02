@@ -80,6 +80,57 @@ class SceneTest extends TestCase {
 
     }
 
+    /**
+     * One tree cleared and filled again like a scene's, past the initial
+     * capacity of its node arrays (they grow on JavaScript), against the
+     * brute force ordering.
+     */
+    function testBoundsTreeGrowsAndIsReusedAfterClear() {
+
+        var state = 7;
+        inline function nextRandom():Float {
+            state = (state * 1103515245 + 12345) & 0x7FFFFFFF;
+            return state / 0x7FFFFFFF;
+        }
+
+        final tree = new BoundsTree();
+        for (count in [3000, 40, 1200, 4000]) {
+            tree.clear();
+            final xs:Array<Float> = [];
+            final ys:Array<Float> = [];
+            final ws:Array<Float> = [];
+            final hs:Array<Float> = [];
+            final orders:Array<Int> = [];
+            for (n in 0...count) {
+                // Rows of UI-like boxes with some large overlapping panels
+                final large = n % 50 == 0;
+                final x = large ? nextRandom() * 400 : (n % 40) * 20 + nextRandom() * 4;
+                final y = large ? nextRandom() * 400 : Std.int(n / 40) * 12 + nextRandom() * 4;
+                final w = large ? 100 + nextRandom() * 300 : 4 + nextRandom() * 30;
+                final h = large ? 100 + nextRandom() * 300 : 4 + nextRandom() * 14;
+                var expected = 0;
+                for (i in 0...xs.length) {
+                    if (x < xs[i] + ws[i] && x + w > xs[i] && y < ys[i] + hs[i] && y + h > ys[i]) {
+                        if (orders[i] > expected) expected = orders[i];
+                    }
+                }
+                expected++;
+                xs.push(x);
+                ys.push(y);
+                ws.push(w);
+                hs.push(h);
+                orders.push(expected);
+                final actual = tree.insert(x, y, w, h);
+                if (actual != expected) {
+                    fail('$count bounds, insert $n: expected order $expected but got $actual');
+                    return;
+                }
+            }
+        }
+        assertTrue(true);
+
+    }
+
     function testClippedPrimitivesAreDropped() {
 
         final scene = new Scene();

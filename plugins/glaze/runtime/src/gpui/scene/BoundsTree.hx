@@ -4,6 +4,19 @@
 package gpui.scene;
 
 /**
+ * The node arrays: typed arrays on JavaScript (V8 keeps the plain arrays in
+ * a slow mode once children are written at sparse indices, which made the
+ * tree about 4 times slower), Haxe arrays elsewhere.
+ */
+#if js
+private typedef FloatStore = js.lib.Float64Array;
+private typedef IntStore = js.lib.Int32Array;
+#else
+private typedef FloatStore = Array<Float>;
+private typedef IntStore = Array<Int>;
+#end
+
+/**
  * R-tree of axis aligned bounds used to compute the draw order of scene
  * primitives: inserting bounds returns `1 + the max order of all previously
  * inserted bounds that intersect them`, so primitives that don't overlap
@@ -25,26 +38,77 @@ class BoundsTree {
     /** Number of nodes in use */
     var numNodes:Int = 0;
 
-    var nodeX:Array<Float> = [];
-    var nodeY:Array<Float> = [];
-    var nodeW:Array<Float> = [];
-    var nodeH:Array<Float> = [];
-    var nodeMaxOrder:Array<Int> = [];
+    var nodeX:FloatStore = floats(INITIAL_CAPACITY);
+    var nodeY:FloatStore = floats(INITIAL_CAPACITY);
+    var nodeW:FloatStore = floats(INITIAL_CAPACITY);
+    var nodeH:FloatStore = floats(INITIAL_CAPACITY);
+    var nodeMaxOrder:IntStore = ints(INITIAL_CAPACITY);
     /** Leaf order, or `NONE` for internal nodes */
-    var nodeLeafOrder:Array<Int> = [];
-    var nodeChildrenLen:Array<Int> = [];
+    var nodeLeafOrder:IntStore = ints(INITIAL_CAPACITY);
+    var nodeChildrenLen:IntStore = ints(INITIAL_CAPACITY);
     /** Child indices, `MAX_CHILDREN` slots per node */
-    var nodeChildren:Array<Int> = [];
+    var nodeChildren:IntStore = ints(INITIAL_CAPACITY * MAX_CHILDREN);
+
+    /** Nodes the arrays can hold (JavaScript, where they do not grow by themselves) */
+    var capacity:Int = INITIAL_CAPACITY;
+
+    static inline final INITIAL_CAPACITY:Int = 256;
 
     var root:Int = NONE;
     var maxLeaf:Int = NONE;
 
-    var insertPath:Array<Int> = [];
+    /** At most one entry per node, like `searchStack` (each node is pushed once per search) */
+    var insertPath:IntStore = ints(INITIAL_CAPACITY);
     var insertPathLen:Int = 0;
 
-    var searchStack:Array<Int> = [];
+    var searchStack:IntStore = ints(INITIAL_CAPACITY);
 
     public function new() {}
+
+    static inline function floats(length:Int):FloatStore {
+        #if js
+        return new js.lib.Float64Array(length);
+        #else
+        return [];
+        #end
+    }
+
+    static inline function ints(length:Int):IntStore {
+        #if js
+        return new js.lib.Int32Array(length);
+        #else
+        return [];
+        #end
+    }
+
+    #if js
+    /** Doubles the capacity of every node array (JavaScript). */
+    function grow():Void {
+        capacity *= 2;
+        nodeX = growFloats(nodeX, capacity);
+        nodeY = growFloats(nodeY, capacity);
+        nodeW = growFloats(nodeW, capacity);
+        nodeH = growFloats(nodeH, capacity);
+        nodeMaxOrder = growInts(nodeMaxOrder, capacity);
+        nodeLeafOrder = growInts(nodeLeafOrder, capacity);
+        nodeChildrenLen = growInts(nodeChildrenLen, capacity);
+        nodeChildren = growInts(nodeChildren, capacity * MAX_CHILDREN);
+        insertPath = growInts(insertPath, capacity);
+        searchStack = growInts(searchStack, capacity);
+    }
+
+    static function growFloats(array:FloatStore, length:Int):FloatStore {
+        final grown = new js.lib.Float64Array(length);
+        grown.set(array);
+        return grown;
+    }
+
+    static function growInts(array:IntStore, length:Int):IntStore {
+        final grown = new js.lib.Int32Array(length);
+        grown.set(array);
+        return grown;
+    }
+    #end
 
     /** Rounds to `f32`: GPUI's bounds are `Bounds<ScaledPixels>` (f32). */
     static inline function f(v:Float):Float {
@@ -57,7 +121,16 @@ class BoundsTree {
      * `addNode()`), child slots below `nodeChildrenLen` and stack entries
      * below their length.
      */
-    static inline function at<T>(array:Array<T>, index:Int):T {
+    static inline function at(array:IntStore, index:Int):Int {
+        #if cpp
+        return cpp.NativeArray.unsafeGet(array, index);
+        #else
+        return array[index];
+        #end
+    }
+
+    /** `at()` for the bounds arrays. */
+    static inline function atF(array:FloatStore, index:Int):Float {
         #if cpp
         return cpp.NativeArray.unsafeGet(array, index);
         #else
@@ -95,12 +168,12 @@ class BoundsTree {
 
     inline function intersectsNode(x:Float, y:Float, w:Float, h:Float, node:Int):Bool {
 
-        final nx = at(nodeX, node);
-        final ny = at(nodeY, node);
+        final nx = atF(nodeX, node);
+        final ny = atF(nodeY, node);
         // GPUI adds in f32 (`Bounds<ScaledPixels>::bottom_right`)
-        return x < f(nx + at(nodeW, node))
+        return x < f(nx + atF(nodeW, node))
             && f(x + w) > nx
-            && y < f(ny + at(nodeH, node))
+            && y < f(ny + atF(nodeH, node))
             && f(y + h) > ny;
 
     }
@@ -160,6 +233,10 @@ class BoundsTree {
     function addNode(x:Float, y:Float, w:Float, h:Float, maxOrder:Int, leafOrder:Int):Int {
 
         final idx = numNodes++;
+        #if js
+        if (idx >= capacity)
+            grow();
+        #end
         nodeX[idx] = x;
         nodeY[idx] = y;
         nodeW[idx] = w;
@@ -191,10 +268,10 @@ class BoundsTree {
     /** Grows the node bounds to include the given bounds */
     inline function unionInto(node:Int, x:Float, y:Float, w:Float, h:Float):Void {
 
-        final nx = at(nodeX, node);
-        final ny = at(nodeY, node);
-        final right = Math.max(f(nx + at(nodeW, node)), f(x + w));
-        final bottom = Math.max(f(ny + at(nodeH, node)), f(y + h));
+        final nx = atF(nodeX, node);
+        final ny = atF(nodeY, node);
+        final right = Math.max(f(nx + atF(nodeW, node)), f(x + w));
+        final bottom = Math.max(f(ny + atF(nodeH, node)), f(y + h));
         final left = Math.min(nx, x);
         final top = Math.min(ny, y);
         nodeX[node] = left;
@@ -207,10 +284,10 @@ class BoundsTree {
     /** Half perimeter of the union of a node bounds and the given bounds */
     inline function unionHalfPerimeter(node:Int, x:Float, y:Float, w:Float, h:Float):Float {
 
-        final nx = at(nodeX, node);
-        final ny = at(nodeY, node);
-        final right = Math.max(f(nx + at(nodeW, node)), f(x + w));
-        final bottom = Math.max(f(ny + at(nodeH, node)), f(y + h));
+        final nx = atF(nodeX, node);
+        final ny = atF(nodeY, node);
+        final right = Math.max(f(nx + atF(nodeW, node)), f(x + w));
+        final bottom = Math.max(f(ny + atF(nodeH, node)), f(y + h));
         return f(f(right - Math.min(nx, x)) + f(bottom - Math.min(ny, y)));
 
     }
@@ -228,7 +305,7 @@ class BoundsTree {
         // If root is a leaf, create a new internal node with both
         if (at(nodeLeafOrder, root) != NONE) {
             final rootOrder = at(nodeMaxOrder, root);
-            final newRootIdx = addNode(at(nodeX, root), at(nodeY, root), at(nodeW, root), at(nodeH, root), rootOrder > order ? rootOrder : order, NONE);
+            final newRootIdx = addNode(atF(nodeX, root), atF(nodeY, root), atF(nodeW, root), atF(nodeH, root), rootOrder > order ? rootOrder : order, NONE);
             unionInto(newRootIdx, x, y, w, h);
             if (order > rootOrder) {
                 pushChild(newRootIdx, root);
@@ -287,7 +364,7 @@ class BoundsTree {
                     final siblingOrder = at(nodeMaxOrder, bestChildIdx);
                     final newInternalMax = siblingOrder > order ? siblingOrder : order;
                     final newInternalIdx = addNode(
-                        at(nodeX, bestChildIdx), at(nodeY, bestChildIdx), at(nodeW, bestChildIdx), at(nodeH, bestChildIdx),
+                        atF(nodeX, bestChildIdx), atF(nodeY, bestChildIdx), atF(nodeW, bestChildIdx), atF(nodeH, bestChildIdx),
                         newInternalMax, NONE
                     );
                     unionInto(newInternalIdx, x, y, w, h);

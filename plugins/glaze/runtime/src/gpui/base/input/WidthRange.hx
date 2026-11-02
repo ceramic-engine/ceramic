@@ -93,10 +93,44 @@ class WidthRange {
             return value;
         if (value == 0.0)
             return FPHelper.i64ToDouble(1, 0);
+        #if js
+        // The bit pattern through views on one shared buffer: `Int64` and
+        // `FPHelper.doubleToI64` allocate on JavaScript. One more (less) on
+        // the 64 bit pattern, as two 32 bit words with the carry (borrow).
+        final words = BITS_WORDS;
+        BITS_DOUBLE[0] = value;
+        final low = words[BITS_LOW];
+        if (value > 0) {
+            words[BITS_LOW] = low + 1;
+            if (low == -1)
+                words[BITS_HIGH] = words[BITS_HIGH] + 1;
+        }
+        else {
+            words[BITS_LOW] = low - 1;
+            if (low == 0)
+                words[BITS_HIGH] = words[BITS_HIGH] - 1;
+        }
+        return BITS_DOUBLE[0];
+        #else
         final bits = FPHelper.doubleToI64(value);
         final next = value > 0 ? Int64.add(bits, 1) : Int64.sub(bits, 1);
         return FPHelper.i64ToDouble(next.low, next.high);
+        #end
     }
+
+    #if js
+    static final BITS_DOUBLE = new js.lib.Float64Array(1);
+
+    static final BITS_WORDS = new js.lib.Int32Array(BITS_DOUBLE.buffer);
+
+    /** The word holding the low 32 bits (the platform's byte order) */
+    static final BITS_LOW:Int = {
+        BITS_DOUBLE[0] = 1.0;
+        BITS_WORDS[1] == 0x3FF00000 ? 0 : 1;
+    };
+
+    static final BITS_HIGH:Int = 1 - BITS_LOW;
+    #end
 
     /** Rust `f64::next_down`. */
     public static function nextDown(value:Float):Float {
