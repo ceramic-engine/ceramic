@@ -70,6 +70,15 @@ class TextInput implements spec.TextInput {
     #end
     @:keep function _handleTextInput(csChar:Char16):Void {
 
+        if (textEditing) {
+            var text:String = Std.string(csChar);
+            var code:Int = text.charCodeAt(0);
+            // Skip control characters and the private use codes unity gives for arrows and function keys
+            if (code >= 32 && code != 127 && !(code >= 63232 && code <= 63254)) {
+                @:privateAccess ceramic.App.app.backend.input.emitTextCommit(text);
+            }
+        }
+
         if (textInputActive) {
             var char:String = Std.string(csChar);
             var code:Int = char.charCodeAt(0);
@@ -183,6 +192,83 @@ class TextInput implements spec.TextInput {
     public function stop():Void {
 
         textInputActive = false;
+
+    }
+
+/// Text editing (independent from start/stop)
+
+    #if !no_backend_docs
+    /**
+     * Whether text editing is active (see `ceramic.Input.startTextEditing()`).
+     */
+    #end
+    var textEditing:Bool = false;
+
+    var imeCompositionBound:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Enables IME input on the current keyboard and forwards its composition.
+     * Committed text comes from `Keyboard.onTextInput`. Unity doesn't give the
+     * cursor position inside the composition: it is reported at the end.
+     */
+    #end
+    public function startTextEditing(x:Float, y:Float, w:Float, h:Float):Void {
+
+        textEditing = true;
+
+        if (Keyboard.current != null) {
+            if (!imeCompositionBound) {
+                imeCompositionBound = true;
+                untyped __cs__('UnityEngine.InputSystem.Keyboard.current.onIMECompositionChange += (s) => handleImeComposition(s.ToString())');
+            }
+            untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMEEnabled(true)');
+        }
+        setTextEditingArea(x, y, w, h, 0);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Disables IME input enabled with `startTextEditing()`.
+     */
+    #end
+    public function stopTextEditing():Void {
+
+        if (!textEditing) return;
+        textEditing = false;
+
+        if (Keyboard.current != null) {
+            untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMEEnabled(false)');
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Moves the IME candidate window next to the cursor (best effort: Unity expects
+     * screen pixels with a bottom-left origin).
+     */
+    #end
+    public function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float):Void {
+
+        if (!textEditing || Keyboard.current == null) return;
+
+        final density = ceramic.App.app.backend.screen.getDensity();
+        final screenHeight = ceramic.App.app.backend.screen.getHeight();
+        final posX:Single = (x + cursor) * density;
+        final posY:Single = (screenHeight - (y + h)) * density;
+        untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMECursorPosition(new UnityEngine.Vector2({0}, {1}))', posX, posY);
+
+    }
+
+    @:keep function handleImeComposition(text:String):Void {
+
+        ceramic.App.app.onceImmediate(function() {
+            if (!textEditing) return;
+            final value = text != null ? text : '';
+            @:privateAccess ceramic.App.app.backend.input.emitTextComposition(value, value.length, 0);
+        });
 
     }
 

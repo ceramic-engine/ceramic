@@ -45,4 +45,26 @@ class TextInput implements spec.TextInput {
     #end
     public function stop():Void {}
 
+    #if !no_backend_docs
+    /**
+     * No-op in headless mode. Tests can emit `textCommit` / `textComposition`
+     * on `app.backend.input` directly.
+     */
+    #end
+    public function startTextEditing(x:Float, y:Float, w:Float, h:Float):Void {}
+
+    #if !no_backend_docs
+    /**
+     * No-op in headless mode.
+     */
+    #end
+    public function stopTextEditing():Void {}
+
+    #if !no_backend_docs
+    /**
+     * No-op in headless mode.
+     */
+    #end
+    public function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float):Void {}
+
 }

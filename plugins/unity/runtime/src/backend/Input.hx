@@ -61,6 +61,26 @@ class Input implements tracker.Events implements spec.Input {
 
     #if !no_backend_docs
     /**
+     * Fired when text is committed while text editing is active (see `ceramic.Input.startTextEditing()`):
+     * typed characters, or the final text of an IME composition.
+     * @param text The committed text
+     */
+    #end
+    @event function textCommit(text:String);
+
+    #if !no_backend_docs
+    /**
+     * Fired when the IME composition (preedit / marked text) changes while text editing is active.
+     * An empty `text` means the composition ended or was cancelled.
+     * @param text The text being composed
+     * @param start Cursor position (or selection start) inside the composed text, in characters
+     * @param length Selection length inside the composed text, in characters
+     */
+    #end
+    @event function textComposition(text:String, start:Int, length:Int);
+
+    #if !no_backend_docs
+    /**
      * Fired when a gamepad analog stick or trigger value changes.
      * @param gamepadId The gamepad index (0-based)
      * @param axisId The axis index (0-3: left X/Y, right X/Y)

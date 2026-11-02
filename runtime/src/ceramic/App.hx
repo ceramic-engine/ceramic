@@ -1342,6 +1342,14 @@ class App extends Entity {
             beginUpdateCallbacks.push(function() input.emitKeyUp(key));
         });
 
+        // Forward text editing events (same queue as key events, to keep their order)
+        backend.input.onTextCommit(this, function(text) {
+            beginUpdateCallbacks.push(function() input.emitTextCommit(text));
+        });
+        backend.input.onTextComposition(this, function(text, start, length) {
+            beginUpdateCallbacks.push(function() input.emitTextComposition(text, start, length));
+        });
+
         // Forward gamepad events
         backend.input.onGamepadEnable(this, function(gamepadId, name) {
             beginUpdateCallbacks.push(function() input.emitGamepadEnable(gamepadId, name));

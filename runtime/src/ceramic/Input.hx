@@ -45,6 +45,27 @@ class Input extends Entity {
     @event function keyUp(key:Key);
 
     /**
+     * Triggered when text is committed while text editing is active
+     * (see `startTextEditing()`): typed characters, or the final text of an IME composition.
+     * Unlike `app.textInput`, the text is given as is (spaces and line breaks included).
+     * @param text The committed text
+     * @event textCommit
+     */
+    @event function textCommit(text:String);
+
+    /**
+     * Triggered when the IME composition (also called preedit or marked text) changes
+     * while text editing is active (see `startTextEditing()`). The composed text is not
+     * committed yet: it should be displayed (usually underlined) in place of the selection
+     * until a `textCommit` event, or until a composition with an empty `text`.
+     * @param text The text being composed, empty when the composition ended or was cancelled
+     * @param start Cursor position (or selection start) inside the composed text, in characters
+     * @param length Selection length inside the composed text, in characters
+     * @event textComposition
+     */
+    @event function textComposition(text:String, start:Int, length:Int);
+
+    /**
      * Triggered when a gamepad analog axis value changes.
      * @param gamepadId The ID of the gamepad (0-based index)
      * @param axis The axis that changed (e.g., LEFT_X, RIGHT_TRIGGER)
@@ -117,6 +138,18 @@ class Input extends Entity {
      * seen with the next key event.
      */
     public var modifiers(default, null):KeyModifiers = KeyModifiers.NONE;
+
+    /**
+     * Whether text editing is active (see `startTextEditing()`).
+     */
+    public var textEditing(default, null):Bool = false;
+
+    /**
+     * Whether an IME composition is in progress: a non empty `textComposition`
+     * was received and not committed or cancelled yet. Key events received during
+     * a composition are usually handled by the IME and should not edit the text.
+     */
+    public var textComposing(default, null):Bool = false;
 
     /**
      * List of currently connected gamepad IDs.
@@ -237,6 +270,98 @@ class Input extends Entity {
                 }
             });
         }
+
+    }
+
+    function willEmitTextCommit(text:String):Void {
+
+        textComposing = false;
+
+    }
+
+    function willEmitTextComposition(text:String, start:Int, length:Int):Void {
+
+        textComposing = text != null && text.length > 0;
+
+    }
+
+/// Text editing
+
+    /**
+     * Starts receiving text from the system (keyboard and IME) through `textCommit`
+     * and `textComposition` events, independently of `app.textInput`.
+     *
+     * Use it to implement a custom text field: the app handles the text itself,
+     * while editing keys (arrows, backspace, enter...) still come from `keyDown`.
+     * The area tells the system where the text is edited, so that it can place
+     * the IME candidate window and avoid covering the text with a virtual keyboard.
+     *
+     * ```haxe
+     * input.onTextCommit(this, text -> insert(text));
+     * input.onTextComposition(this, (text, start, length) -> setMarkedText(text, start, length));
+     * input.startTextEditing(field.x, field.y, field.width, field.height);
+     * ```
+     *
+     * Backend support:
+     * - Clay native (SDL): `SDL_StartTextInput`, composition from `SDL_EVENT_TEXT_EDITING`.
+     * - Clay web: a hidden `<textarea>` gets the focus and its composition events.
+     * - Unity: `Keyboard.onTextInput` and `Keyboard.onIMECompositionChange` (no selection
+     *   inside the composition).
+     * - Headless: no-op.
+     *
+     * @param x X position of the edited text area, in screen coordinates
+     * @param y Y position of the edited text area, in screen coordinates
+     * @param w Width of the edited text area
+     * @param h Height of the edited text area
+     */
+    public function startTextEditing(x:Float = 0, y:Float = 0, w:Float = 0, h:Float = 0):Void {
+
+        textEditing = true;
+        final screen = ceramic.App.app.screen;
+        final matrix = @:privateAccess screen.matrix;
+        final nativeX = matrix.transformX(x, y) / screen.nativeDensity;
+        final nativeY = matrix.transformY(x, y) / screen.nativeDensity;
+        final nativeW = matrix.transformX(x + w, y + h) / screen.nativeDensity - nativeX;
+        final nativeH = matrix.transformY(x + w, y + h) / screen.nativeDensity - nativeY;
+        ceramic.App.app.backend.textInput.startTextEditing(nativeX, nativeY, nativeW, nativeH);
+
+    }
+
+    /**
+     * Stops text editing started with `startTextEditing()`.
+     * A composition in progress is cancelled.
+     */
+    public function stopTextEditing():Void {
+
+        if (!textEditing) return;
+        textEditing = false;
+        ceramic.App.app.backend.textInput.stopTextEditing();
+        if (textComposing) {
+            emitTextComposition('', 0, 0);
+        }
+
+    }
+
+    /**
+     * Updates the area of the edited text, usually when the cursor moves,
+     * so that the IME candidate window follows it.
+     *
+     * @param x X position of the edited text area, in screen coordinates
+     * @param y Y position of the edited text area, in screen coordinates
+     * @param w Width of the edited text area
+     * @param h Height of the edited text area
+     * @param cursor Cursor position inside the area, as an offset from `x`
+     */
+    public function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float = 0):Void {
+
+        final screen = ceramic.App.app.screen;
+        final matrix = @:privateAccess screen.matrix;
+        final nativeX = matrix.transformX(x, y) / screen.nativeDensity;
+        final nativeY = matrix.transformY(x, y) / screen.nativeDensity;
+        final nativeW = matrix.transformX(x + w, y + h) / screen.nativeDensity - nativeX;
+        final nativeH = matrix.transformY(x + w, y + h) / screen.nativeDensity - nativeY;
+        final nativeCursor = matrix.transformX(x + cursor, y) / screen.nativeDensity - nativeX;
+        ceramic.App.app.backend.textInput.setTextEditingArea(nativeX, nativeY, nativeW, nativeH, nativeCursor);
 
     }
 

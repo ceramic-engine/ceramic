@@ -563,6 +563,12 @@ class ClayEvents extends clay.Events {
             keyChar: char
         });
 
+        #if web
+        if (backend.textInput.textEditing) {
+            backend.textInput.handleWebKeyDown(char);
+        }
+        #end
+
         backend.textInput.handleKeyDown(keyCode, scanCode);
 
     }
@@ -1006,9 +1012,12 @@ class ClayEvents extends clay.Events {
      * This is separate from keyboard events and provides the actual character input
      * including support for international keyboards, input methods, and composed text.
      *
+     * When text editing is active (`ceramic.Input.startTextEditing()`), these events are
+     * also forwarded as `textComposition` (EDIT) and `textCommit` (INPUT) events.
+     *
      * @param text The text string that was input (may be multiple characters)
-     * @param start Starting position for text editing (not used)
-     * @param length Length of text selection/replacement (not used)
+     * @param start Cursor position inside the composed text (EDIT events)
+     * @param length Selection length inside the composed text (EDIT events)
      * @param type Type of text event (input, editing, etc.)
      * @param timestamp Event timestamp in seconds
      * @param windowId ID of the window that received the event
@@ -1017,6 +1026,11 @@ class ClayEvents extends clay.Events {
 
         if (backend.textInput.inputActive) {
             backend.textInput.handleTextInput(text);
+        }
+
+        if (backend.textInput.textEditing) {
+            // Composition (EDIT) and committed text (INPUT), kept apart
+            backend.textInput.handleTextEditingEvent(text, start, length, type);
         }
 
     }

@@ -39,4 +39,33 @@ interface TextInput {
      */
     function stop():Void;
 
+    /**
+     * Enables system text input (keyboard text and IME composition) independently
+     * of `start()` / `stop()`. While enabled, the backend emits `textCommit` and
+     * `textComposition` events on its input object.
+     *
+     * @param x The X position of the text area in native screen coordinates
+     * @param y The Y position of the text area in native screen coordinates
+     * @param w The width of the text area
+     * @param h The height of the text area
+     */
+    function startTextEditing(x:Float, y:Float, w:Float, h:Float):Void;
+
+    /**
+     * Disables text input enabled with `startTextEditing()`.
+     * Text input started with `start()` keeps working.
+     */
+    function stopTextEditing():Void;
+
+    /**
+     * Updates the area where the IME should show its candidate window.
+     *
+     * @param x The X position of the text area in native screen coordinates
+     * @param y The Y position of the text area in native screen coordinates
+     * @param w The width of the text area
+     * @param h The height of the text area
+     * @param cursor The cursor position, as an offset from `x`
+     */
+    function setTextEditingArea(x:Float, y:Float, w:Float, h:Float, cursor:Float):Void;
+
 }
