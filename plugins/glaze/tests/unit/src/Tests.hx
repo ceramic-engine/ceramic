@@ -58,6 +58,9 @@ class Tests {
         runner.add(new tests.UniformListTest());
         runner.add(new tests.AnchoredTest());
         runner.add(new tests.ImgTest());
+        #if plugin_http
+        runner.add(new tests.CeramicHttpClientTest());
+        #end
         runner.add(new tests.AtlasAllocatorTest());
         runner.add(new tests.RenderCacheTest());
         runner.add(new tests.InputHandlerTest());

@@ -335,6 +335,140 @@ class ImgTest extends TestCase {
         assertEquals(1, cx.window.renderedScene().quads.length);
     }
 
+/// Uri resources (Rust `ImageAssetLoader::load`, `Resource::Uri` branch)
+
+    static final URI = 'https://example.com/image.png';
+
+    /** PNG bytes of a `width` x `height` opaque red image */
+    static function pngBytes(width:Int, height:Int):Bytes {
+        final bgra = Bytes.alloc(width * height * 4);
+        for (i in 0...width * height) {
+            bgra.set(i * 4 + 2, 255);
+            bgra.set(i * 4 + 3, 255);
+        }
+        final output = new haxe.io.BytesOutput();
+        new format.png.Writer(output).write(format.png.Tools.build32BGRA(width, height, bgra));
+        return output.getBytes();
+    }
+
+    /** Loads `resource` with `ImageAssetLoader` and runs the dispatcher until it is done. */
+    function loadNow(resource:Resource):ImageLoadResult {
+        final task = gpui.ImageAssetLoader.load(resource, app);
+        dispatcher.runUntilParked();
+        assertFalse(task.isPending, 'the load should be done');
+        return task.value;
+    }
+
+    function useHttp(handler:gpui.HttpClient.HttpRequest->gpui.HttpClient.HttpResponse):gpui.FakeHttpClient {
+        final client = gpui.FakeHttpClient.create(request -> gpui.Task.ready(handler(request)));
+        app.setHttpClient(client);
+        return client;
+    }
+
+    function errorOf(result:ImageLoadResult):Null<gpui.ImageCacheError> {
+        return switch result {
+            case Failed(error): error;
+            case Loaded(_): null;
+        }
+    }
+
+    function testUriWithoutHttpClientFails() {
+        // GPUI's default client (`NullHttpClient`)
+        final error = errorOf(loadNow(Resource.Uri(URI)));
+        assertNotNull(error);
+        assertEquals('error: loading image asset from "$URI": No HttpClient available', error.toString());
+    }
+
+    function testUriLoadsPngThroughHttpClient() {
+        final client = useHttp(_ -> new gpui.HttpClient.HttpResponse(200, ['content-type', 'image/png'], pngBytes(3, 2)));
+        switch loadNow(Resource.Uri(URI)) {
+            case Loaded(image):
+                assertEquals(3.0, image.size(0).width);
+                assertEquals(2.0, image.size(0).height);
+            case Failed(error):
+                fail('unexpected failure: ' + error.toString());
+        }
+        // Rust `client.get(uri, ().into(), true)`: a GET that follows redirects
+        assertEquals(1, client.requests.length);
+        assertEquals('GET', client.requests[0].method);
+        assertEquals(URI, client.requests[0].uri);
+        assertTrue(client.requests[0].redirectPolicy.match(FollowAll));
+        assertNull(client.requests[0].body);
+    }
+
+    function testUriSvgIsDetectedByContent() {
+        // Not a raster format: rendered as SVG, whatever the URL or content type
+        useHttp(_ -> new gpui.HttpClient.HttpResponse(200, ['content-type', 'application/octet-stream'], Bytes.ofString(SVG_10x5)));
+        addEmptyWindow();
+        draw(new Point(0, 0), new Size(100, 100), () -> div().flex().child(img(URI)));
+        assertEquals(0, sprites().length);
+        cx.runUntilParked();
+        final sprite = lastSprite();
+        assertNotNull(sprite);
+        assertEquals(20.0, sprite.boundsWidth);
+        assertEquals(10.0, sprite.boundsHeight);
+    }
+
+    function testUriBadStatusKeepsFirstLineOfBody() {
+        useHttp(_ -> new gpui.HttpClient.HttpResponse(404, [], Bytes.ofString('Not Found  \r\nsecond line\n')));
+        final error = errorOf(loadNow(Resource.Uri(URI)));
+        assertNotNull(error);
+        switch error {
+            case BadStatus(uri, status, body):
+                assertEquals(URI, uri);
+                assertEquals(404, status);
+                assertEquals('Not Found', body);
+            case _:
+                fail('expected BadStatus, got ' + error.toString());
+        }
+        assertEquals('unexpected http status for $URI: 404 Not Found, body: Not Found', error.toString());
+    }
+
+    function testUriBadStatusShowsFallback() {
+        app.setHttpClient(gpui.FakeHttpClient.with404Response());
+        addEmptyWindow();
+        draw(new Point(0, 0), new Size(100, 100), () -> img(URI)
+            .withFallback(() -> div().size(px(10)).bg(red()).intoAnyElement())
+        );
+        cx.runUntilParked();
+        assertEquals(1, cx.window.renderedScene().quads.length);
+        final error = errorOf(loadNow(Resource.Uri(URI + '?again')));
+        assertEquals('unexpected http status for $URI?again: 404 Not Found, body: ', error.toString());
+    }
+
+    function testUriRequestFailureIsOtherError() {
+        app.setHttpClient(gpui.FakeHttpClient.create(_ -> gpui.Task.failed('connection refused')));
+        final error = errorOf(loadNow(Resource.Uri(URI)));
+        assertNotNull(error);
+        assertTrue(error.match(Other(_)));
+        assertEquals('error: loading image asset from "$URI": connection refused', error.toString());
+    }
+
+    function testUriLoadIsCached() {
+        final client = useHttp(_ -> new gpui.HttpClient.HttpResponse(200, [], pngBytes(4, 4)));
+        addEmptyWindow();
+        draw(new Point(0, 0), new Size(100, 100), () -> div().flex().child(img(URI)).child(img(URI)));
+        cx.runUntilParked();
+        redraw();
+        assertEquals(2, sprites().length);
+        assertEquals(1, client.requests.length);
+        assertTrue(gpui.ImageSource.Resource(Resource.Uri(URI)).isAssetCached(app));
+        // Removing the asset loads it again
+        gpui.ImageSource.Resource(Resource.Uri(URI)).removeAsset(app);
+        redraw();
+        cx.runUntilParked();
+        redraw();
+        assertEquals(2, client.requests.length);
+        assertEquals(2, sprites().length);
+    }
+
+    function testHttpStatusDisplay() {
+        // Rust `http::StatusCode` display
+        assertEquals('404 Not Found', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(404));
+        assertEquals('503 Service Unavailable', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(503));
+        assertEquals('299 <unknown status code>', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(299));
+    }
+
     function testLoadingElementAfterDelay() {
         addEmptyWindow();
         final source:gpui.ImageSource = gpui.ImageSource.Custom((_, _) -> null);

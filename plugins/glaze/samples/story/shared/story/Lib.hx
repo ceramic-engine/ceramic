@@ -112,8 +112,9 @@ class Lib {
         Themes.init(cx);
         story.stories.Stories.init(cx);
 
-        // Rust sets a reqwest HTTP client here: the port loads images through
-        // the Ceramic asset source.
+        #if (plugin_http && !web)
+        cx.setHttpClient(gpui.CeramicHttpClient.withUserAgent('gpui-component/story'));
+        #end
 
         cx.bindKeys([
             new KeyBinding('/', new ToggleSearch(), null),

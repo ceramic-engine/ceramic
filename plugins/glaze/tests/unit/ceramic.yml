@@ -27,8 +27,9 @@ app:
         # LDtk support (requires tilemap and ase plugins)
         #- ldtk
 
-        # HTTP client
-        #- http
+        # HTTP client (img() Uri resources through CeramicHttpClient, tested by
+        # CeramicHttpClientTest against a local server)
+        - http
 
         # UI-related classes
         #- ui

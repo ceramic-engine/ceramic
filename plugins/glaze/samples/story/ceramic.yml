@@ -8,6 +8,8 @@ app:
     plugins:
         # GPUI port and gpui-kit components (linked through plugins/gpui.plugin)
         - gpui
+        # HTTP client: img() loads http(s) images through CeramicHttpClient
+        - http
 
     # The story gallery (shared with test/golden, which renders every story)
     paths:

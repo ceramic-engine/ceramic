@@ -230,6 +230,41 @@ class App {
         _svgRenderer = null;
     }
 
+    var _httpClient:Null<HttpClient> = null;
+
+    /**
+     * The HTTP client of this app (Rust `cx.http_client()`), used by `img()`
+     * to load `Resource.Uri` images.
+     *
+     * By default, an app of the Ceramic platform (`CeramicDispatcher`) built
+     * with Ceramic's `http` plugin gets a `CeramicHttpClient`, like a GPUI web
+     * app gets `FetchHttpClient` from `gpui_platform::application()`. Other
+     * apps (test dispatchers, or no `http` plugin) get GPUI's default
+     * `NullHttpClient`, whose requests fail.
+     */
+    public function httpClient():HttpClient {
+        if (_httpClient == null) {
+            _httpClient = defaultHttpClient();
+        }
+        return _httpClient;
+    }
+
+    /**
+     * Replaces the HTTP client of this app (Rust `set_http_client`,
+     * `Application::with_http_client`).
+     */
+    public function setHttpClient(httpClient:HttpClient):Void {
+        _httpClient = httpClient;
+    }
+
+    function defaultHttpClient():HttpClient {
+        #if plugin_http
+        if (Std.isOfType(dispatcher, CeramicDispatcher))
+            return new CeramicHttpClient();
+        #end
+        return new HttpClient.NullHttpClient();
+    }
+
     /**
      * The SVG renderer of this app.
      */

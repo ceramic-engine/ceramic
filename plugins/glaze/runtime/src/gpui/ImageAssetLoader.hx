@@ -26,8 +26,10 @@ import haxe.io.Bytes;
  *   `RenderImage`, edges clamped to the texture: no atlas neighbours);
  * - bytes of an unknown format are rendered as SVG (like GPUI), through
  *   `App.svgRenderer()`;
- * - `Uri` resources: `file://` URIs are read like paths, other schemes are
- *   not supported and fail (the `img()` fallback is shown);
+ * - `Uri` resources are loaded like GPUI's, through the app's HTTP client
+ *   (`App.httpClient()`: `CeramicHttpClient` when Ceramic's `http` plugin is
+ *   enabled, otherwise GPUI's `NullHttpClient`, whose requests fail);
+ *   `file://` URIs are read like paths instead;
  * - `Path` resources need a file system (native, or web under Electron).
  */
 class ImageAssetLoader {
@@ -44,9 +46,11 @@ class ImageAssetLoader {
 
     /** Load an image resource: read its bytes, then decode them. */
     public static function load(source:Resource, cx:App):Task<ImageLoadResult> {
+        final client = cx.httpClient();
         final svgRenderer = cx.svgRenderer();
         final assetSource = cx.assetSource();
-        return cx.backgroundExecutor().spawn(() -> readBytes(source, assetSource))
+        return cx.backgroundExecutor().spawn(() -> Unit.unit)
+            .andThen(_ -> readBytes(source, assetSource, client))
             .andThen(bytes -> decode(bytes, svgRenderer))
             .catchError(errorToResult);
     }
@@ -68,24 +72,58 @@ class ImageAssetLoader {
         }
     }
 
-    /** Reads the bytes of a resource, throws an `ImageCacheError`. */
-    static function readBytes(source:Resource, assetSource:AssetSource):Bytes {
+    /** Reads the bytes of a resource, fails with an `ImageCacheError`. */
+    static function readBytes(source:Resource, assetSource:AssetSource, client:HttpClient):Task<Bytes> {
         return switch source {
             case Path(path):
-                readFile(path);
+                Task.ready(readFile(path));
             case Uri(uri):
                 if (StringTools.startsWith(uri, 'file://')) {
-                    readFile(StringTools.urlDecode(uri.substr('file://'.length)));
+                    Task.ready(readFile(StringTools.urlDecode(uri.substr('file://'.length))));
                 }
                 else {
-                    throw ImageCacheError.Other('loading image asset from "$uri": uri loading is not supported');
+                    fetchUri(uri, client);
                 }
             case Embedded(path):
                 final data = assetSource.load(path);
                 if (data == null)
                     throw ImageCacheError.Asset('Embedded resource not found: $path');
-                data;
+                Task.ready(data);
         }
+    }
+
+    /**
+     * Rust `Resource::Uri` branch of `ImageAssetLoader::load`: a GET request
+     * following redirects; a failed request is an `Other` error (with the
+     * context `loading image asset from "uri"`), a response whose status is
+     * not a success is a `BadStatus` error with the first line of its body.
+     */
+    static function fetchUri(uri:String, client:HttpClient):Task<Bytes> {
+        final context = 'loading image asset from "$uri"';
+        final request = try {
+            client.get(uri, null, true);
+        }
+        catch (e:Dynamic) {
+            Task.failed(e);
+        }
+        return request
+            .catchError(error -> throw ImageCacheError.Other(context + ': ' + errorMessage(error)))
+            .map(response -> {
+                if (!response.isSuccess()) {
+                    var body = response.body.getString(0, response.body.length, UTF8);
+                    final newline = body.indexOf('\n');
+                    if (newline != -1)
+                        body = body.substr(0, newline);
+                    throw ImageCacheError.BadStatus(uri, response.status, StringTools.rtrim(body));
+                }
+                response.body;
+            });
+    }
+
+    static function errorMessage(error:Dynamic):String {
+        if (Std.isOfType(error, haxe.Exception))
+            return (error : haxe.Exception).message;
+        return Std.string(error);
     }
 
     static function readFile(path:String):Bytes {
