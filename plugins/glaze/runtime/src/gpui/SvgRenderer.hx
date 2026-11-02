@@ -32,6 +32,9 @@ class SvgRenderer {
 
     static var fontProviderInstalled:Bool = false;
 
+    /** How many bitmaps this renderer rasterized. For tests. */
+    public var rasterizations(default, null):Int = 0;
+
     public function new(assetSource:AssetSource, ?textSystem:TextSystem) {
         this.assetSource = assetSource;
         // SVG <text> uses the fonts of the GPUI text system
@@ -170,6 +173,7 @@ class SvgRenderer {
         final pixmapHeight = Std.int(height);
         if (pixmapWidth <= 0 || pixmapHeight <= 0)
             throw 'Invalid SVG size';
+        rasterizations++;
         final bitmap = lunasvg.Bitmap.create(pixmapWidth, pixmapHeight);
         document.render(bitmap, new lunasvg.Matrix(f32(width / svgWidth), 0, 0, f32(height / svgHeight), 0, 0));
         return bitmap;

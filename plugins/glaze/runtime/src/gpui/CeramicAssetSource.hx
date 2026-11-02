@@ -17,18 +17,43 @@ using StringTools;
  *   target, the way to go on the web);
  * - on targets with a file system, the file read synchronously from the
  *   assets directory, then cached.
+ *
+ * A path that resolves to nothing is remembered as missing until the assets
+ * change (`add()`, a completed `preload()` or `invalidate()`): GPUI asks the
+ * asset source for a missing SVG on every frame it paints it
+ * (`svg_renderer.rs` `render_alpha_mask`, nothing is cached by the sprite
+ * atlas when the build returns `None`), so the miss has to stay cheap (on
+ * the web under Electron, a file check is a synchronous IPC).
  */
 class CeramicAssetSource implements AssetSource {
 
     final entries:Map<String, Bytes> = new Map();
 
+    /** Paths (as given to `load()`) known to resolve to nothing */
+    final missing:Map<String, Bool> = new Map();
+
+    /**
+     * How many times `load()` resolved a path not cached yet (present or
+     * missing). For tests.
+     */
+    public var resolutions(default, null):Int = 0;
+
     public function new() {}
+
+    /**
+     * Forgets the paths known to be missing (call it when files were added to
+     * the assets directory at run time).
+     */
+    public function invalidate():Void {
+        missing.clear();
+    }
 
     /**
      * Registers the bytes of an asset path.
      */
     public function add(path:String, bytes:Bytes):Void {
         entries.set(normalize(path), bytes);
+        invalidate();
     }
 
     /**
@@ -56,12 +81,15 @@ class CeramicAssetSource implements AssetSource {
                 if (entry.asset.bytes != null)
                     entries.set(entry.path, entry.asset.bytes);
             }
+            invalidate();
             done(success);
         });
         assets.load();
     }
 
     public function load(path:String):Null<Bytes> {
+        if (missing.exists(path))
+            return null;
         final normalized = normalize(path);
         // An empty path (an `Icon.empty()`) or a folder names no asset
         if (normalized.length == 0 || normalized.endsWith('/'))
@@ -69,6 +97,7 @@ class CeramicAssetSource implements AssetSource {
         final bytes = entries.get(normalized);
         if (bytes != null)
             return bytes;
+        resolutions++;
         #if (sys || (web && ceramic_use_electron))
         final fullPath = ceramic.Path.join([ceramic.App.app.settings.assetsPath, normalized]);
         if (ceramic.Files.exists(fullPath)) {
@@ -79,6 +108,7 @@ class CeramicAssetSource implements AssetSource {
             }
         }
         #end
+        missing.set(path, true);
         return null;
     }
 

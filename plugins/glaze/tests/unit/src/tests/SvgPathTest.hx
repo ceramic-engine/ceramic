@@ -79,6 +79,60 @@ class SvgPathTest extends TestCase {
         assertEquals(null, app.svgRenderer().renderAlphaMask(new gpui.RenderSvgParams('icons/missing.svg', 48, 48), null));
     }
 
+    /**
+     * A missing icon paints nothing, a present one paints a sprite. Like
+     * GPUI, the renderer asks the asset source for the missing one on every
+     * frame (`svg_renderer.rs` `render_alpha_mask`, the atlas caches no
+     * failure: `platform.rs` `AtlasState::get_or_insert_with`), but the
+     * default asset source resolves it once (no file check per frame) until
+     * the assets change, and each icon is rasterized once.
+     */
+    function testMissingIconIsResolvedOnceAndIconsAreRasterizedOnce() {
+        final assets = new gpui.CeramicAssetSource();
+        assets.add('icons/heart.svg', Bytes.ofString(HEART));
+        final counting = new CountingAssetSource(assets);
+        app.setAssetSource(counting);
+        var renders = 0;
+        var root:Null<Entity<TextElementTest.TextTestView>> = null;
+        window = Window.open(app, {width: 200, height: 200, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
+            root = cx.newEntity((_:Context<TextElementTest.TextTestView>) -> new TextElementTest.TextTestView((window, cx) -> {
+                renders++;
+                return div()
+                    .child(svg().path('icons/missing.svg').size(px(24)).textColor(red()))
+                    .child(svg().path('icons/heart.svg').size(px(24)).textColor(red()));
+            }));
+            return root;
+        });
+        final renderer = app.svgRenderer();
+        window.draw();
+        assertEquals(1, renders);
+        assertEquals(1, window.renderedScene().monochromeSprites.length);
+        assertEquals(1, counting.count('icons/missing.svg'));
+        assertEquals(1, counting.count('icons/heart.svg'));
+        assertEquals(1, assets.resolutions);
+        assertEquals(1, renderer.rasterizations);
+
+        for (_ in 0...4) {
+            root.update(app, (_, cx) -> cx.notify());
+            window.draw();
+            assertEquals(1, window.renderedScene().monochromeSprites.length);
+        }
+        assertEquals(5, renders);
+        // Asked again on every frame, like GPUI, but resolved once
+        assertEquals(5, counting.count('icons/missing.svg'));
+        assertEquals(1, assets.resolutions);
+        // The present icon: parsed once, its tile reused
+        assertEquals(1, counting.count('icons/heart.svg'));
+        assertEquals(1, renderer.rasterizations);
+
+        // The asset appears: the missing path is resolved again and painted
+        assets.add('icons/missing.svg', Bytes.ofString(HEART));
+        root.update(app, (_, cx) -> cx.notify());
+        window.draw();
+        assertEquals(2, window.renderedScene().monochromeSprites.length);
+        assertEquals(2, renderer.rasterizations);
+    }
+
     function testSvgTextUsesTheFontsOfTheTextSystem() {
         final renderer = app.svgRenderer();
         final source = renderer.renderAlphaMask(new gpui.RenderSvgParams('text', 100, 30), Bytes.ofString('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="30"><text x="2" y="20" font-family="Inter" font-size="16">Hello</text></svg>'));
@@ -189,6 +243,33 @@ class SvgPathTest extends TestCase {
         assertEquals(0.0, rect.colorH);
         assertEquals(3, paths[1].vertexCount);
         assertEquals(200.0, paths[1].boundsX);
+    }
+
+}
+
+/** Counts the loads of each path, delegating to another asset source */
+private class CountingAssetSource implements gpui.AssetSource {
+
+    final inner:gpui.AssetSource;
+
+    final counts:Map<String, Int> = new Map();
+
+    public function new(inner:gpui.AssetSource) {
+        this.inner = inner;
+    }
+
+    public function count(path:String):Int {
+        final count = counts.get(path);
+        return count != null ? count : 0;
+    }
+
+    public function load(path:String):Null<Bytes> {
+        counts.set(path, count(path) + 1);
+        return inner.load(path);
+    }
+
+    public function list(path:String):Array<String> {
+        return inner.list(path);
     }
 
 }
