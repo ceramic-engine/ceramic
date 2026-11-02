@@ -17,9 +17,29 @@ class InstanceManager {
     private static var onQuitCallback:()->Void;
     private static var checkInterval:Float;
 
+    /**
+     * Whether single instance enforcement is disabled for this process:
+     * `--allow-multiple` on the command line, or the environment variable
+     * `CERAMIC_ALLOW_MULTIPLE_INSTANCES=1`. Useful for benchmarks, test
+     * suites and tools that run several `ceramic ... run` commands on the
+     * same project at once; the default keeps one running instance per
+     * project (a new `run` makes the previous one quit).
+     */
+    public static function allowMultiple():Bool {
+
+        final env = Sys.getEnv('CERAMIC_ALLOW_MULTIPLE_INSTANCES');
+        if (env != null && env != '' && env != '0' && env != 'false') {
+            return true;
+        }
+        return context.args != null && context.args.indexOf('--allow-multiple') != -1;
+
+    }
+
     public static function makeUnique(identifier:String):Void {
 
         if (InstanceManager.lockFile != null) return;
+
+        if (allowMultiple()) return;
 
         InstanceManager.init(
             identifier,
