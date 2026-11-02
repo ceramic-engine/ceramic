@@ -26,7 +26,11 @@ ceramic clay build mac --setup --assets && project/mac/bench.app/Contents/MacOS/
 Environment variables: `GPUI_BENCH_SCENARIOS` (comma list, default all),
 `GPUI_BENCH_FRAMES` (default 300), `GPUI_BENCH_ONLY` (`full` or `cached`),
 `GPUI_BENCH_RUNS` (repeat the measured block N times in one process, one
-result per run), `GPUI_BENCH_RESULTS` (results directory).
+result per run), `GPUI_BENCH_RESULTS` (results directory), `GPUI_BENCH_SCREEN`
+(`1`: through the real update loop with the window on screen, adds the
+Ceramic draw time per frame), `GPUI_BENCH_RT` (`1` or `0`: force the render to
+texture mode of the windows), `GPUI_BENCH_ATLAS` (`1`: atlas upload micro
+benchmark instead of the scenarios).
 
 For timings, measure without `gpui_count_allocations` (it is instrumentation)
 in `ceramic.yml`; add `gpui_profile_frames` for the per-phase times.
@@ -53,3 +57,32 @@ candidate, delta in percent) and exits with 1 when the median frame time
 regresses by more than the median threshold, the p99 by more than the p99
 threshold, or the bytes per frame or the total minor GC pause by more than
 the median threshold.
+
+## Boxing report
+
+`boxing-report.js` scans the C++ that hxcpp generated for the port, taffy and
+ttf (`out/clay/mac/cpp` after a native build of this project) and counts, per
+Haxe module and per function, what boxes values or allocates behind the
+code's back (step 5 of `docs/perf/PLAN.md`):
+
+- `dynLocal`: `::Dynamic` locals and parameters (`Null<Float>`, `Null<Int>`,
+  `Null<Bool>`, function values, anonymous structures);
+- `dynCall`: calls through a function value (Float arguments are boxed);
+- `field`: field reads and writes on anonymous structures and `Dynamic`
+  (`__Field` / `__SetField`, a lookup by name);
+- `anon`: anonymous structures created;
+- `closure`: local functions (one allocation each time the code runs);
+- `member`: methods taken as values (`obj->method_dyn()`);
+- `dynCtor`: other explicit `::Dynamic(...)` constructions;
+- `fields`: `::Dynamic` fields of the module's classes (from the headers).
+
+```sh
+node boxing-report.js                         # hot modules (Window, Div, Interactivity, Style, taffy...)
+node boxing-report.js --all --functions 0     # every module, totals only
+node boxing-report.js --json before.json      # save the counts
+node boxing-report.js --compare before.json   # difference with saved counts
+```
+
+It is static: it says where boxing can happen, not how often. Pair it with a
+profile (`--variant prof_checked` and macOS `sample`) to find the hot ones,
+and rerun it after each lot: the counts of the modules touched must go down.

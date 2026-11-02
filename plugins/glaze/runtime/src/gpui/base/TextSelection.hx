@@ -427,7 +427,7 @@ class TextSelection {
         }
         catch (e:Dynamic) {
             popTextSelectionScope(windowId, cx);
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
     }
 

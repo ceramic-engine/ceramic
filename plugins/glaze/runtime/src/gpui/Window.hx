@@ -1138,7 +1138,7 @@ class Window implements WindowInvalidator {
             drawingClean = false;
             AnyElement.clearArena();
             @:privateAccess app.pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         drawing = false;
         drawingClean = false;
@@ -1495,7 +1495,7 @@ class Window implements WindowInvalidator {
         }
         catch (e:haxe.Exception) {
             endRenderedView();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         endRenderedView();
         return result;
@@ -3809,7 +3809,7 @@ class Window implements WindowInvalidator {
         catch (e:haxe.Exception) {
             tracker.Autorun.reobserve();
             @:privateAccess cx.pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         tracker.Autorun.reobserve();
         cx.finishUpdate();

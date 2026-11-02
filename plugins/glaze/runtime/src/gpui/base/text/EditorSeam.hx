@@ -36,7 +36,7 @@ class EditorSeam {
         }
         catch (e:Dynamic) {
             EditorSeam.sink = previous;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
     }
 

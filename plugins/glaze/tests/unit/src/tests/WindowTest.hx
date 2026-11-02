@@ -426,6 +426,86 @@ class WindowTest extends TestCase {
         assertTrue(color.equals(red()));
     }
 
+
+    #if cpp
+    @:noInline
+    static function failInRender():IntoElement {
+        throw 'render failed';
+    }
+
+    @:noInline
+    static function failAndRethrowPlainly():Void {
+        try {
+            failInRender();
+        }
+        catch (e:haxe.Exception) {
+            throw e;
+        }
+    }
+
+    static function hasFrame(stack:Array<haxe.CallStack.StackItem>, className:String, method:String):Bool {
+        for (item in stack) {
+            var current = item;
+            while (current != null) {
+                switch current {
+                    case FilePos(s, _, _, _):
+                        current = s;
+                    case Method(c, m):
+                        if (c == className && m == method) return true;
+                        current = null;
+                    case _:
+                        current = null;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * A crash inside a view's render is reported from the render, not from
+     * the `catch` blocks of `ViewElement` and `Window.draw` that clean up
+     * and rethrow it (they rethrow with `cpp.Lib.rethrow`, see
+     * `gpui.util.Exceptions`).
+     */
+    function testRenderCrashKeepsTheRenderFrame() {
+        open((window, cx) -> failInRender());
+        var caught:Dynamic = null;
+        try {
+            window.draw();
+        }
+        catch (e:Dynamic) {
+            caught = e;
+        }
+        assertTrue(caught != null);
+        assertTrue(hasFrame(haxe.CallStack.exceptionStack(), 'tests.WindowTest', 'failInRender'));
+        final stack = @:privateAccess ceramic.Errors.uncaughtErrorStack(caught);
+        assertTrue(hasFrame(stack, 'tests.WindowTest', 'failInRender'));
+        assertTrue(hasFrame(stack, 'gpui.ViewElement', 'renderAndRequestLayout'));
+        assertTrue(hasFrame(stack, 'gpui.Window', 'draw'));
+    }
+
+    /**
+     * `ceramic.Errors` reports an exception rethrown with a plain `throw e`
+     * from its original frames (kept by the `haxe.Exception`), followed by
+     * the frames of the rethrow.
+     */
+    function testUncaughtErrorStackOfPlainRethrow() {
+        var caught:Dynamic = null;
+        try {
+            failAndRethrowPlainly();
+        }
+        catch (e:Dynamic) {
+            caught = e;
+        }
+        assertTrue(Std.isOfType(caught, haxe.Exception));
+        // The global stack starts at the rethrow
+        assertFalse(hasFrame(haxe.CallStack.exceptionStack(), 'tests.WindowTest', 'failInRender'));
+        final stack = @:privateAccess ceramic.Errors.uncaughtErrorStack(caught);
+        assertTrue(hasFrame(stack, 'tests.WindowTest', 'failInRender'));
+        assertTrue(hasFrame(stack, 'tests.WindowTest', 'failAndRethrowPlainly'));
+    }
+    #end
+
 }
 
 class TestView extends Model implements Render {

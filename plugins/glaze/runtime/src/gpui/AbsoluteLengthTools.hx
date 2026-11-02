@@ -35,6 +35,7 @@ class AbsoluteLengthTools {
     /**
      * Converts to `Pixels` based on a given `remSize`.
      */
+    @:noDebug
     public static function toPixels(self:AbsoluteLength, remSize:gpui.Pixels):gpui.Pixels {
 
         return switch self {

@@ -124,7 +124,7 @@ class ViewTracker extends Autorun {
         }
         catch (e:haxe.Exception) {
             endCapture();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         endCapture();
         return result;
@@ -145,7 +145,7 @@ class ViewTracker extends Autorun {
             }
             catch (e:haxe.Exception) {
                 Autorun.reobserve();
-                throw e;
+                throw gpui.util.Exceptions.rethrow(e);
             }
             Autorun.reobserve();
         }

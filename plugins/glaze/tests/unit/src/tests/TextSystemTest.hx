@@ -204,4 +204,48 @@ class TextSystemTest extends TestCase {
             trace('TextSystemTest: max difference with GPUI, $k: ${maxErrors.get(k)}');
     }
 
+    /**
+     * `GlyphCache` keeps every field of `RenderGlyphParams` apart (its inner
+     * key is rotated so that hxcpp's IntMap spreads the glyph ids).
+     */
+    function testGlyphCacheKeepsEveryParamApart() {
+        final cache = new gpui.GlyphCache<Int>();
+        var expected = 0;
+        for (glyph in [0, 1, 2, 255, 256, 257, 65535, 70000]) {
+            for (variantX in 0...4) {
+                for (variantY in 0...2) {
+                    for (flags in 0...4) {
+                        for (dilation in [0, 1, 15]) {
+                            final params = new RenderGlyphParams(3, glyph, 14, variantX, variantY, 2, (flags & 1) != 0, (flags & 2) != 0, dilation);
+                            cache.set(params, expected);
+                            expected++;
+                        }
+                    }
+                }
+            }
+        }
+        assertEquals(expected, cache.size);
+        var index = 0;
+        for (glyph in [0, 1, 2, 255, 256, 257, 65535, 70000]) {
+            for (variantX in 0...4) {
+                for (variantY in 0...2) {
+                    for (flags in 0...4) {
+                        for (dilation in [0, 1, 15]) {
+                            final params = new RenderGlyphParams(3, glyph, 14, variantX, variantY, 2, (flags & 1) != 0, (flags & 2) != 0, dilation);
+                            assertEquals(index, cache.get(params));
+                            index++;
+                        }
+                    }
+                }
+            }
+        }
+        assertEquals(null, cache.get(new RenderGlyphParams(3, 1, 15, 0, 0, 2)));
+        assertEquals(null, cache.get(new RenderGlyphParams(3, 1, 14, 0, 0, 1)));
+        assertEquals(null, cache.get(new RenderGlyphParams(4, 1, 14, 0, 0, 2)));
+        assertTrue(cache.remove(new RenderGlyphParams(3, 256, 14, 1, 0, 2)));
+        assertFalse(cache.remove(new RenderGlyphParams(3, 256, 14, 1, 0, 2)));
+        assertEquals(null, cache.get(new RenderGlyphParams(3, 256, 14, 1, 0, 2)));
+        assertEquals(expected - 1, cache.size);
+    }
+
 }

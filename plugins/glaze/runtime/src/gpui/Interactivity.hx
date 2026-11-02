@@ -16,6 +16,57 @@ typedef ElementMouseListener = (event:PlatformInput, phase:DispatchPhase, hitbox
 /**
  * A style applied when a group is hovered, active or dragged over.
  */
+/*
+ * Entries of the typed listener lists of `Interactivity`. Classes rather
+ * than anonymous structures: on hxcpp reading a field of an anonymous
+ * structure is a lookup by name. `@:structInit`, so the `{type: ..., ...}`
+ * literals still build them.
+ */
+
+/** A style applied while a value of the given type is dragged over */
+@:structInit
+class DragOverStyle {
+    public final type:Class<Dynamic>;
+    public final build:(Dynamic, Window, App) -> StyleRefinement;
+    public function new(type:Class<Dynamic>, build:(Dynamic, Window, App) -> StyleRefinement) {
+        this.type = type;
+        this.build = build;
+    }
+}
+
+/** A group style applied while a value of the given type is dragged over */
+@:structInit
+class GroupDragOverStyle {
+    public final type:Class<Dynamic>;
+    public final style:GroupStyle;
+    public function new(type:Class<Dynamic>, style:GroupStyle) {
+        this.type = type;
+        this.style = style;
+    }
+}
+
+/** An action listener and the action type it handles */
+@:structInit
+class TypedActionListener {
+    public final type:Class<Dynamic>;
+    public final listener:(Action, DispatchPhase, Window, App) -> Void;
+    public function new(type:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void) {
+        this.type = type;
+        this.listener = listener;
+    }
+}
+
+/** A drop listener and the dragged value type it handles */
+@:structInit
+class TypedDropListener {
+    public final type:Class<Dynamic>;
+    public final listener:(Dynamic, Window, App) -> Void;
+    public function new(type:Class<Dynamic>, listener:(Dynamic, Window, App) -> Void) {
+        this.type = type;
+        this.listener = listener;
+    }
+}
+
 class GroupStyle {
 
     /** The identifier for the group. */
@@ -305,9 +356,9 @@ class Interactivity {
 
     public var groupActiveStyle:Null<GroupStyle> = null;
 
-    public var dragOverStyles:Null<Array<{type:Class<Dynamic>, build:(Dynamic, Window, App) -> StyleRefinement}>> = null;
+    public var dragOverStyles:Null<Array<DragOverStyle>> = null;
 
-    public var groupDragOverStyles:Null<Array<{type:Class<Dynamic>, style:GroupStyle}>> = null;
+    public var groupDragOverStyles:Null<Array<GroupDragOverStyle>> = null;
 
     public var mouseDownListeners:Null<Array<ElementMouseListener>> = null;
 
@@ -325,9 +376,9 @@ class Interactivity {
 
     public var modifiersChangedListeners:Null<Array<(ModifiersChangedEvent, Window, App) -> Void>> = null;
 
-    public var actionListeners:Null<Array<{type:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void}>> = null;
+    public var actionListeners:Null<Array<TypedActionListener>> = null;
 
-    public var dropListeners:Null<Array<{type:Class<Dynamic>, listener:(Dynamic, Window, App) -> Void}>> = null;
+    public var dropListeners:Null<Array<TypedDropListener>> = null;
 
     public var canDropPredicate:Null<(Dynamic, Window, App) -> Bool> = null;
 

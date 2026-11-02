@@ -23,7 +23,13 @@ class GlyphCache<T> {
     public function new() {}
 
     static inline function innerKey(params:RenderGlyphParams):Int {
-        return ((((((params.glyphId:Int) * 4 + params.subpixelVariantX) * 2 + params.subpixelVariantY) * 2 + (params.isEmoji ? 1 : 0)) * 2 + (params.subpixelRendering ? 1 : 0)) * 16) + params.dilation;
+        final key = ((((((params.glyphId:Int) * 4 + params.subpixelVariantX) * 2 + params.subpixelVariantY) * 2 + (params.isEmoji ? 1 : 0)) * 2 + (params.subpixelRendering ? 1 : 0)) * 16) + params.dilation;
+        // Rotated right by 8 bits (a bijection, so keys stay distinct): the
+        // glyph id ends up in the low bits. hxcpp's IntMap uses the key as
+        // its own hash and picks the bucket from the low bits, where the
+        // variant fields are almost always the same, so every glyph of a
+        // font size fell in a few buckets (a long chain walk per lookup).
+        return (key >>> 8) | (key << 24);
     }
 
     public function get(params:RenderGlyphParams):Null<T> {

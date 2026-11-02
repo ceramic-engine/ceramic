@@ -162,4 +162,54 @@ class LayoutTest extends TestCase {
         assertEquals(300.0, bounds.size.height);
     }
 
+    /**
+     * The per node layout bounds of a frame (dense arrays stamped with the
+     * frame) are dropped when their root is laid out again in the same
+     * frame, and when the frame ends, including for reused node ids.
+     */
+    function testLayoutBoundsCacheFollowsLayoutsAndFrames() {
+        final engine = new TaffyLayoutEngine();
+        function leaf(width:Float):LayoutId {
+            final style = new Style();
+            style.refine(div().w(px(width)).h(px(10)).style());
+            return engine.requestLayout(style, 16, 1.0, null);
+        }
+        function row(children:Array<LayoutId>, width:Float):LayoutId {
+            final style = new Style();
+            style.refine(div().flex().w(px(width)).style());
+            return engine.requestLayout(style, 16, 1.0, children);
+        }
+        final a = leaf(10);
+        final b = leaf(20);
+        final root = row([a, b], 100);
+        engine.computeLayout(root, new SizeOf<AvailableSpace>(Definite(100), Definite(100)), window, app);
+        final first = engine.layoutBounds(b, 1.0);
+        assertEquals(10.0, first.origin.x);
+        // Cached during the frame
+        assertTrue(first == engine.layoutBounds(b, 1.0));
+
+        // Laid out again in the same frame with another style: recomputed
+        engine.stretchAutoSizeToFill(root, size(100, 100), 1.0);
+        final style = engine.taffyStyle(a);
+        style.size = new taffy.geometry.SizeOf<taffy.style.Dimension>(taffy.style.Dimension.length(30), style.size.height);
+        @:privateAccess engine.tree.setStyle(a, style);
+        engine.computeLayout(root, new SizeOf<AvailableSpace>(Definite(100), Definite(100)), window, app);
+        final second = engine.layoutBounds(b, 1.0);
+        assertTrue(first != second);
+        assertEquals(30.0, second.origin.x);
+
+        // Next frame: the nodes of the previous frame are freed after one
+        // more frame, their ids reused by new nodes with other bounds
+        engine.finishFrame();
+        engine.finishFrame();
+        final c = leaf(40);
+        final d = leaf(50);
+        final root2 = row([c, d], 200);
+        engine.computeLayout(root2, new SizeOf<AvailableSpace>(Definite(200), Definite(100)), window, app);
+        assertEquals(40.0, engine.layoutBounds(d, 1.0).origin.x);
+        assertEquals(50.0, engine.layoutBounds(d, 1.0).size.width);
+        assertEquals(0.0, engine.layoutBounds(c, 1.0).origin.x);
+        assertEquals(200.0, engine.layoutBounds(root2, 1.0).size.width);
+    }
+
 }

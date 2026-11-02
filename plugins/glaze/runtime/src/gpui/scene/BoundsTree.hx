@@ -11,6 +11,10 @@ package gpui.scene;
  *
  * Nodes are stored in flat arrays (no allocation per insertion once the
  * arrays have grown), indexed by node index.
+ *
+ * Its methods are `@:noDebug` on hxcpp (no stack frame and no line
+ * bookkeeping): they run for every primitive of every frame, and a crash
+ * report would show the caller (`Scene.insert*`) anyway.
  */
 class BoundsTree {
 
@@ -47,6 +51,20 @@ class BoundsTree {
         return gpui.SpringMath.f32(v);
     }
 
+    /**
+     * Reads `array[index]` without the bounds check of hxcpp. Only used for
+     * indices below `numNodes` (every node array is written up to it by
+     * `addNode()`), child slots below `nodeChildrenLen` and stack entries
+     * below their length.
+     */
+    static inline function at<T>(array:Array<T>, index:Int):T {
+        #if cpp
+        return cpp.NativeArray.unsafeGet(array, index);
+        #else
+        return array[index];
+        #end
+    }
+
     public function clear():Void {
 
         numNodes = 0;
@@ -59,6 +77,7 @@ class BoundsTree {
     /**
      * Inserts the given bounds and returns their draw order.
      */
+    @:noDebug
     public function insert(x:Float, y:Float, w:Float, h:Float):Int {
 
         final maxIntersecting = findMaxOrdering(x, y, w, h);
@@ -66,7 +85,7 @@ class BoundsTree {
 
         final newLeafIdx = insertLeaf(x, y, w, h, ordering);
 
-        if (maxLeaf == NONE || nodeMaxOrder[maxLeaf] < ordering) {
+        if (maxLeaf == NONE || at(nodeMaxOrder, maxLeaf) < ordering) {
             maxLeaf = newLeafIdx;
         }
 
@@ -76,16 +95,17 @@ class BoundsTree {
 
     inline function intersectsNode(x:Float, y:Float, w:Float, h:Float, node:Int):Bool {
 
-        final nx = nodeX[node];
-        final ny = nodeY[node];
+        final nx = at(nodeX, node);
+        final ny = at(nodeY, node);
         // GPUI adds in f32 (`Bounds<ScaledPixels>::bottom_right`)
-        return x < f(nx + nodeW[node])
+        return x < f(nx + at(nodeW, node))
             && f(x + w) > nx
-            && y < f(ny + nodeH[node])
+            && y < f(ny + at(nodeH, node))
             && f(y + h) > ny;
 
     }
 
+    @:noDebug
     function findMaxOrdering(x:Float, y:Float, w:Float, h:Float):Int {
 
         if (root == NONE) {
@@ -94,7 +114,7 @@ class BoundsTree {
 
         // Fast path: if the query intersects the max ordered leaf, nothing can be higher
         if (maxLeaf != NONE && intersectsNode(x, y, w, h, maxLeaf)) {
-            return nodeMaxOrder[maxLeaf];
+            return at(nodeMaxOrder, maxLeaf);
         }
 
         var stackLen = 0;
@@ -103,10 +123,10 @@ class BoundsTree {
         var maxFound = 0;
 
         while (stackLen > 0) {
-            final node = searchStack[--stackLen];
+            final node = at(searchStack, --stackLen);
 
             // Skip if this subtree can't improve our result
-            if (nodeMaxOrder[node] <= maxFound) {
+            if (at(nodeMaxOrder, node) <= maxFound) {
                 continue;
             }
 
@@ -114,7 +134,7 @@ class BoundsTree {
                 continue;
             }
 
-            final leafOrder = nodeLeafOrder[node];
+            final leafOrder = at(nodeLeafOrder, node);
             if (leafOrder != NONE) {
                 if (leafOrder > maxFound) {
                     maxFound = leafOrder;
@@ -122,10 +142,10 @@ class BoundsTree {
             }
             else {
                 final base = node * MAX_CHILDREN;
-                final len = nodeChildrenLen[node];
+                final len = at(nodeChildrenLen, node);
                 for (i in 0...len) {
-                    final child = nodeChildren[base + i];
-                    if (nodeMaxOrder[child] > maxFound) {
+                    final child = at(nodeChildren, base + i);
+                    if (at(nodeMaxOrder, child) > maxFound) {
                         searchStack[stackLen++] = child;
                     }
                 }
@@ -136,6 +156,7 @@ class BoundsTree {
 
     }
 
+    @:noDebug
     function addNode(x:Float, y:Float, w:Float, h:Float, maxOrder:Int, leafOrder:Int):Int {
 
         final idx = numNodes++;
@@ -152,7 +173,7 @@ class BoundsTree {
 
     inline function pushChild(node:Int, child:Int):Void {
 
-        final len = nodeChildrenLen[node];
+        final len = at(nodeChildrenLen, node);
         nodeChildren[node * MAX_CHILDREN + len] = child;
         nodeChildrenLen[node] = len + 1;
 
@@ -161,8 +182,8 @@ class BoundsTree {
     inline function swapChildren(node:Int, a:Int, b:Int):Void {
 
         final base = node * MAX_CHILDREN;
-        final tmp = nodeChildren[base + a];
-        nodeChildren[base + a] = nodeChildren[base + b];
+        final tmp = at(nodeChildren, base + a);
+        nodeChildren[base + a] = at(nodeChildren, base + b);
         nodeChildren[base + b] = tmp;
 
     }
@@ -170,10 +191,10 @@ class BoundsTree {
     /** Grows the node bounds to include the given bounds */
     inline function unionInto(node:Int, x:Float, y:Float, w:Float, h:Float):Void {
 
-        final nx = nodeX[node];
-        final ny = nodeY[node];
-        final right = Math.max(f(nx + nodeW[node]), f(x + w));
-        final bottom = Math.max(f(ny + nodeH[node]), f(y + h));
+        final nx = at(nodeX, node);
+        final ny = at(nodeY, node);
+        final right = Math.max(f(nx + at(nodeW, node)), f(x + w));
+        final bottom = Math.max(f(ny + at(nodeH, node)), f(y + h));
         final left = Math.min(nx, x);
         final top = Math.min(ny, y);
         nodeX[node] = left;
@@ -186,14 +207,15 @@ class BoundsTree {
     /** Half perimeter of the union of a node bounds and the given bounds */
     inline function unionHalfPerimeter(node:Int, x:Float, y:Float, w:Float, h:Float):Float {
 
-        final nx = nodeX[node];
-        final ny = nodeY[node];
-        final right = Math.max(f(nx + nodeW[node]), f(x + w));
-        final bottom = Math.max(f(ny + nodeH[node]), f(y + h));
+        final nx = at(nodeX, node);
+        final ny = at(nodeY, node);
+        final right = Math.max(f(nx + at(nodeW, node)), f(x + w));
+        final bottom = Math.max(f(ny + at(nodeH, node)), f(y + h));
         return f(f(right - Math.min(nx, x)) + f(bottom - Math.min(ny, y)));
 
     }
 
+    @:noDebug
     function insertLeaf(x:Float, y:Float, w:Float, h:Float, order:Int):Int {
 
         final newLeafIdx = addNode(x, y, w, h, order, order);
@@ -204,9 +226,9 @@ class BoundsTree {
         }
 
         // If root is a leaf, create a new internal node with both
-        if (nodeLeafOrder[root] != NONE) {
-            final rootOrder = nodeMaxOrder[root];
-            final newRootIdx = addNode(nodeX[root], nodeY[root], nodeW[root], nodeH[root], rootOrder > order ? rootOrder : order, NONE);
+        if (at(nodeLeafOrder, root) != NONE) {
+            final rootOrder = at(nodeMaxOrder, root);
+            final newRootIdx = addNode(at(nodeX, root), at(nodeY, root), at(nodeW, root), at(nodeH, root), rootOrder > order ? rootOrder : order, NONE);
             unionInto(newRootIdx, x, y, w, h);
             if (order > rootOrder) {
                 pushChild(newRootIdx, root);
@@ -229,13 +251,13 @@ class BoundsTree {
 
             // Find the best child using the SAH heuristic (minimize the union's half perimeter)
             final base = currentIdx * MAX_CHILDREN;
-            final childrenLen = nodeChildrenLen[currentIdx];
-            var bestChildIdx = nodeChildren[base];
+            final childrenLen = at(nodeChildrenLen, currentIdx);
+            var bestChildIdx = at(nodeChildren, base);
             var bestChildPos = 0;
             var bestCost = unionHalfPerimeter(bestChildIdx, x, y, w, h);
 
             for (pos in 1...childrenLen) {
-                final childIdx = nodeChildren[base + pos];
+                final childIdx = at(nodeChildren, base + pos);
                 final cost = unionHalfPerimeter(childIdx, x, y, w, h);
                 if (cost < bestCost) {
                     bestCost = cost;
@@ -244,28 +266,28 @@ class BoundsTree {
                 }
             }
 
-            if (nodeLeafOrder[bestChildIdx] != NONE) {
+            if (at(nodeLeafOrder, bestChildIdx) != NONE) {
                 // Best child is a leaf
                 if (childrenLen < MAX_CHILDREN) {
                     // Add the new leaf to this internal node
                     pushChild(currentIdx, newLeafIdx);
-                    if (order <= nodeMaxOrder[currentIdx]) {
+                    if (order <= at(nodeMaxOrder, currentIdx)) {
                         // Keep the child with the highest max order at the end
                         final last = childrenLen;
                         swapChildren(currentIdx, last - 1, last);
                     }
                     unionInto(currentIdx, x, y, w, h);
-                    if (order > nodeMaxOrder[currentIdx]) {
+                    if (order > at(nodeMaxOrder, currentIdx)) {
                         nodeMaxOrder[currentIdx] = order;
                     }
                     break;
                 }
                 else {
                     // Node is full: replace the best leaf with a new internal node holding both
-                    final siblingOrder = nodeMaxOrder[bestChildIdx];
+                    final siblingOrder = at(nodeMaxOrder, bestChildIdx);
                     final newInternalMax = siblingOrder > order ? siblingOrder : order;
                     final newInternalIdx = addNode(
-                        nodeX[bestChildIdx], nodeY[bestChildIdx], nodeW[bestChildIdx], nodeH[bestChildIdx],
+                        at(nodeX, bestChildIdx), at(nodeY, bestChildIdx), at(nodeW, bestChildIdx), at(nodeH, bestChildIdx),
                         newInternalMax, NONE
                     );
                     unionInto(newInternalIdx, x, y, w, h);
@@ -282,7 +304,7 @@ class BoundsTree {
                     nodeChildren[base + bestChildPos] = newInternalIdx;
 
                     // If the new internal node has the highest max order, swap it to the end
-                    if (newInternalMax > nodeMaxOrder[currentIdx]) {
+                    if (newInternalMax > at(nodeMaxOrder, currentIdx)) {
                         swapChildren(currentIdx, bestChildPos, childrenLen - 1);
                     }
                     break;
@@ -298,19 +320,19 @@ class BoundsTree {
         var updatedChildIdx = NONE;
         var i = insertPathLen - 1;
         while (i >= 0) {
-            final nodeIdx = insertPath[i];
+            final nodeIdx = at(insertPath, i);
             unionInto(nodeIdx, x, y, w, h);
 
-            if (nodeMaxOrder[nodeIdx] < order) {
+            if (at(nodeMaxOrder, nodeIdx) < order) {
                 nodeMaxOrder[nodeIdx] = order;
 
                 // Swap the updated child to the end (the first iteration is
                 // already handled by the cases above)
                 if (updatedChildIdx != NONE) {
                     final base = nodeIdx * MAX_CHILDREN;
-                    final len = nodeChildrenLen[nodeIdx];
+                    final len = at(nodeChildrenLen, nodeIdx);
                     for (pos in 0...len) {
-                        if (nodeChildren[base + pos] == updatedChildIdx) {
+                        if (at(nodeChildren, base + pos) == updatedChildIdx) {
                             if (pos != len - 1) {
                                 swapChildren(nodeIdx, pos, len - 1);
                             }

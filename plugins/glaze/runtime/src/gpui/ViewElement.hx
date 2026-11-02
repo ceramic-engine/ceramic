@@ -254,7 +254,7 @@ class ViewElement extends Element {
         catch (e:haxe.Exception) {
             layoutNodes = window.endViewLayoutNodes();
             window.endRenderedView();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         layoutNodes = window.endViewLayoutNodes();
         window.endRenderedView();
@@ -356,7 +356,7 @@ class ViewElement extends Element {
                     }
                     catch (e:haxe.Exception) {
                         window.endRenderedView();
-                        throw e;
+                        throw gpui.util.Exceptions.rethrow(e);
                     }
                     window.endRenderedView();
                 }
@@ -374,7 +374,7 @@ class ViewElement extends Element {
         }
         catch (e:haxe.Exception) {
             window.endRenderedView();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
@@ -499,7 +499,7 @@ class ViewElement extends Element {
             window.viewDependencies.cachedStyleDepth--;
             window.endRenderedView();
             window.refreshing = refreshing;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         window.viewDependencies.cachedStyleDepth--;
         window.endRenderedView();
@@ -535,7 +535,7 @@ class ViewElement extends Element {
                 catch (e:haxe.Exception) {
                     window.viewDependencies.cachedStyleDepth--;
                     window.refreshing = refreshing;
-                    throw e;
+                    throw gpui.util.Exceptions.rethrow(e);
                 }
                 window.viewDependencies.cachedStyleDepth--;
                 window.refreshing = refreshing;
@@ -573,7 +573,7 @@ class ViewElement extends Element {
         }
         catch (e:haxe.Exception) {
             window.endRenderedView();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         window.endRenderedView();
     }

@@ -126,6 +126,7 @@ class MathUtil {
      * Rust's float to `u8` cast (`value as u8`): truncates toward zero
      * and saturates to the `0..=255` range.
      */
+    @:noDebug
     public static function toU8(value:Float):Int {
 
         if (Math.isNaN(value) || value <= 0) return 0;

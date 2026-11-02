@@ -262,7 +262,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         finishUpdate();
         return result;
@@ -281,7 +281,7 @@ class App {
             }
             catch (e:haxe.Exception) {
                 pendingUpdates--;
-                throw e;
+                throw gpui.util.Exceptions.rethrow(e);
             }
         }
         pendingUpdates--;
@@ -379,7 +379,7 @@ class App {
                     }
                     catch (e:haxe.Exception) {
                         Autorun.reobserve();
-                        throw e;
+                        throw gpui.util.Exceptions.rethrow(e);
                     }
                     Autorun.reobserve();
                 }
@@ -407,7 +407,7 @@ class App {
                 }
                 catch (e:haxe.Exception) {
                     Autorun.reobserve();
-                    throw e;
+                    throw gpui.util.Exceptions.rethrow(e);
                 }
                 Autorun.reobserve();
                 return keep;
@@ -441,7 +441,7 @@ class App {
             }
             catch (e:haxe.Exception) {
                 Autorun.reobserve();
-                throw e;
+                throw gpui.util.Exceptions.rethrow(e);
             }
             Autorun.reobserve();
             return true;
@@ -456,7 +456,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             Autorun.reobserve();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         Autorun.reobserve();
         return keep;
@@ -469,7 +469,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             Autorun.reobserve();
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         Autorun.reobserve();
     }
@@ -550,7 +550,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         final typeId = typeIdOf(Type.getClass(entity));
         if (newEntityObservers.hasSubscribers(typeId)) {
@@ -598,7 +598,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         finishUpdate();
         return result;
@@ -865,7 +865,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw e;
+            throw gpui.util.Exceptions.rethrow(e);
         }
         pushEffect(NotifyGlobalObservers(typeId));
         cell.invalidateValue();

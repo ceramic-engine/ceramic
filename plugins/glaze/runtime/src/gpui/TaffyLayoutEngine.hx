@@ -6,9 +6,6 @@ package gpui;
 import haxe.ds.IntMap;
 import taffy.compute.Leaf;
 import taffy.geometry.LineOf;
-import taffy.geometry.PointOf as TaffyPointOf;
-import taffy.geometry.RectOf as TaffyRectOf;
-import taffy.geometry.SizeOf as TaffySizeOf;
 import taffy.style.Dimension;
 import taffy.style.GridHelpers;
 import taffy.style.GridTemplateComponent;
@@ -78,13 +75,24 @@ class TaffyLayoutEngine {
 
     final tree:TaffyTree<NodeContext>;
 
-    final absoluteLayoutBounds:IntMap<Bounds> = new IntMap();
+    /*
+     * Per node caches of the current frame, dense arrays indexed by node id
+     * (an `IntMap<Float>` boxes every value it returns on hxcpp). An entry
+     * is valid when its stamp is the current `frame`, so advancing the frame
+     * clears them all; 0 (never a frame number) marks a removed entry.
+     */
 
-    final absoluteOuterOriginsX:IntMap<Float> = new IntMap();
+    /** Frame of the cached `layoutBounds()` of each node (also stamps the outer origins) */
+    final layoutBoundsFrames:Array<Int> = [];
 
-    final absoluteOuterOriginsY:IntMap<Float> = new IntMap();
+    final absoluteLayoutBounds:Array<Bounds> = [];
 
-    final computedLayouts:IntMap<Bool> = new IntMap();
+    final absoluteOuterOriginsX:Array<Float> = [];
+
+    final absoluteOuterOriginsY:Array<Float> = [];
+
+    /** Frame in which each root was last laid out by `computeLayout()` */
+    final computedLayoutFrames:Array<Int> = [];
 
     final layoutBoundsScratchSpace:Array<LayoutId> = [];
 
@@ -133,10 +141,11 @@ class TaffyLayoutEngine {
      */
     public function clear():Void {
         tree.clear();
-        absoluteLayoutBounds.clear();
-        absoluteOuterOriginsX.clear();
-        absoluteOuterOriginsY.clear();
-        computedLayouts.clear();
+        layoutBoundsFrames.resize(0);
+        absoluteLayoutBounds.resize(0);
+        absoluteOuterOriginsX.resize(0);
+        absoluteOuterOriginsY.resize(0);
+        computedLayoutFrames.resize(0);
         rootAvailableSpaces.clear();
         nodeFrames.resize(0);
         liveNodes.resize(0);
@@ -164,11 +173,8 @@ class TaffyLayoutEngine {
         previousLiveNodes = liveNodes;
         liveNodes = previous;
         liveNodes.resize(0);
+        // Advancing the frame also invalidates the per node caches
         frame++;
-        absoluteLayoutBounds.clear();
-        absoluteOuterOriginsX.clear();
-        absoluteOuterOriginsY.clear();
-        computedLayouts.clear();
         rootAvailableSpaces.clear();
     }
 
@@ -412,26 +418,28 @@ class TaffyLayoutEngine {
         }
         final width = stretchWidth ? Dimension.length(roundToDevicePixel(size.width, scaleFactor)) : style.size.width;
         final height = stretchHeight ? Dimension.length(roundToDevicePixel(size.height, scaleFactor)) : style.size.height;
-        style.size = new TaffySizeOf<Dimension>(width, height);
+        style.size = new taffy.geometry.SizeOf<Dimension>(width, height);
         tree.setStyle(id, style);
     }
 
     public function computeLayout(id:LayoutId, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Void {
-        if (computedLayouts.exists(id)) {
+        if (computedLayoutFrames[id] == frame) {
             final stack = layoutBoundsScratchSpace;
+            final boundsFrames = layoutBoundsFrames;
             stack.push(id);
             while (stack.length > 0) {
                 final id = stack.pop();
-                absoluteLayoutBounds.remove(id);
-                absoluteOuterOriginsX.remove(id);
-                absoluteOuterOriginsY.remove(id);
+                if (boundsFrames[id] == frame) {
+                    boundsFrames[id] = 0;
+                    absoluteLayoutBounds[id] = null;
+                }
                 for (child in tree.children(id)) {
                     stack.push(child);
                 }
             }
         }
         else {
-            computedLayouts.set(id, true);
+            computedLayoutFrames[id] = frame;
         }
 
         final scaleFactor = window.scaleFactor();
@@ -506,29 +514,29 @@ class TaffyLayoutEngine {
      * with outer edges snapped to device pixels in absolute coordinates.
      */
     public function layoutBounds(id:LayoutId, scaleFactor:Float):Bounds {
-        final cached = absoluteLayoutBounds.get(id);
-        if (cached != null) {
-            return cached;
+        if (layoutBoundsFrames[id] == frame) {
+            return absoluteLayoutBounds[id];
         }
 
         final layout = tree.layout(id);
-        final parent:Null<NodeId> = tree.parent(id);
+        // The parent id without `tree.parent()`, whose `Null<NodeId>` is boxed on hxcpp
+        final parent:Int = @:privateAccess tree.node(id).parent;
 
         var originX:Float;
         var originY:Float;
-        if (parent != null) {
-            final parentId:LayoutId = (parent : NodeId);
+        if (parent != -1) {
+            final parentId:LayoutId = parent;
             layoutBounds(parentId, scaleFactor);
             // GPUI adds `Pixels` (f32)
-            originX = SpringMath.f32(absoluteOuterOriginsX.get(parentId) + layout.location.x);
-            originY = SpringMath.f32(absoluteOuterOriginsY.get(parentId) + layout.location.y);
+            originX = SpringMath.f32(absoluteOuterOriginsX[parentId] + layout.location.x);
+            originY = SpringMath.f32(absoluteOuterOriginsY[parentId] + layout.location.y);
         }
         else {
             originX = layout.location.x;
             originY = layout.location.y;
         }
-        absoluteOuterOriginsX.set(id, originX);
-        absoluteOuterOriginsY.set(id, originY);
+        absoluteOuterOriginsX[id] = originX;
+        absoluteOuterOriginsY[id] = originY;
 
         final farX = SpringMath.f32(originX + layout.size.width);
         final farY = SpringMath.f32(originY + layout.size.height);
@@ -541,7 +549,8 @@ class TaffyLayoutEngine {
             new Point(left / scaleFactor, top / scaleFactor),
             new Size((right - left) / scaleFactor, (bottom - top) / scaleFactor)
         );
-        absoluteLayoutBounds.set(id, bounds);
+        absoluteLayoutBounds[id] = bounds;
+        layoutBoundsFrames[id] = frame;
         return bounds;
     }
 
@@ -715,42 +724,42 @@ class TaffyLayoutEngine {
     public static function toTaffy(style:Style, remSize:Pixels, scaleFactor:Float):taffy.style.Style {
         final result = new taffy.style.Style();
         result.display = displayToTaffy(style.display);
-        result.overflow = new TaffyPointOf<taffy.style.Overflow>(overflowToTaffy(style.overflowX), overflowToTaffy(style.overflowY));
+        result.overflow = new taffy.geometry.PointOf<taffy.style.Overflow>(overflowToTaffy(style.overflowX), overflowToTaffy(style.overflowY));
         result.scrollbarWidth = absoluteToTaffy(style.scrollbarWidth, remSize, scaleFactor);
         result.position = style.position == Absolute ? taffy.style.Position.Absolute : taffy.style.Position.Relative;
         // Taffy's RectOf constructor takes (left, right, top, bottom)
-        result.inset = new TaffyRectOf<LengthPercentageAuto>(
+        result.inset = new taffy.geometry.RectOf<LengthPercentageAuto>(
             lengthToLengthPercentageAuto(style.insetLeft, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.insetRight, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.insetTop, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.insetBottom, remSize, scaleFactor)
         );
-        result.size = new TaffySizeOf<Dimension>(
+        result.size = new taffy.geometry.SizeOf<Dimension>(
             lengthToDimension(style.sizeWidth, remSize, scaleFactor),
             lengthToDimension(style.sizeHeight, remSize, scaleFactor)
         );
-        result.minSize = new TaffySizeOf<LengthPercentageAuto>(
+        result.minSize = new taffy.geometry.SizeOf<LengthPercentageAuto>(
             lengthToLengthPercentageAuto(style.minSizeWidth, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.minSizeHeight, remSize, scaleFactor)
         );
-        result.maxSize = new TaffySizeOf<LengthPercentageAuto>(
+        result.maxSize = new taffy.geometry.SizeOf<LengthPercentageAuto>(
             lengthToLengthPercentageAuto(style.maxSizeWidth, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.maxSizeHeight, remSize, scaleFactor)
         );
         result.aspectRatio = style.isSome(StyleRefinement.ASPECT_RATIO) ? OptionalFloat.some(style.aspectRatio) : OptionalFloat.NONE;
-        result.margin = new TaffyRectOf<LengthPercentageAuto>(
+        result.margin = new taffy.geometry.RectOf<LengthPercentageAuto>(
             lengthToLengthPercentageAuto(style.marginLeft, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.marginRight, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.marginTop, remSize, scaleFactor),
             lengthToLengthPercentageAuto(style.marginBottom, remSize, scaleFactor)
         );
-        result.padding = new TaffyRectOf<LengthPercentage>(
+        result.padding = new taffy.geometry.RectOf<LengthPercentage>(
             definiteToLengthPercentage(style.paddingLeft, remSize, scaleFactor),
             definiteToLengthPercentage(style.paddingRight, remSize, scaleFactor),
             definiteToLengthPercentage(style.paddingTop, remSize, scaleFactor),
             definiteToLengthPercentage(style.paddingBottom, remSize, scaleFactor)
         );
-        result.border = new TaffyRectOf<LengthPercentage>(
+        result.border = new taffy.geometry.RectOf<LengthPercentage>(
             borderWidthToTaffy(style.borderWidthLeft, remSize, scaleFactor),
             borderWidthToTaffy(style.borderWidthRight, remSize, scaleFactor),
             borderWidthToTaffy(style.borderWidthTop, remSize, scaleFactor),
@@ -760,7 +769,7 @@ class TaffyLayoutEngine {
         result.alignSelf = style.isSome(StyleRefinement.ALIGN_SELF) ? alignItemsToTaffy(style.alignSelf) : null;
         result.alignContent = style.isSome(StyleRefinement.ALIGN_CONTENT) ? alignContentToTaffy(style.alignContent) : taffy.style.AlignContent.NORMAL;
         result.justifyContent = style.isSome(StyleRefinement.JUSTIFY_CONTENT) ? alignContentToTaffy(style.justifyContent) : taffy.style.AlignContent.NORMAL;
-        result.gap = new TaffySizeOf<LengthPercentage>(
+        result.gap = new taffy.geometry.SizeOf<LengthPercentage>(
             definiteToLengthPercentage(style.gapWidth, remSize, scaleFactor),
             definiteToLengthPercentage(style.gapHeight, remSize, scaleFactor)
         );
