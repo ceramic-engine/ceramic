@@ -54,6 +54,17 @@ class Info #if !completion implements spec.Info #end {
      * @return Path to the persistent storage directory
      */
     #end
+    public function operatingSystem():String {
+        final name = Std.string(unityengine.Application.platform);
+        if (name.indexOf('OSX') == 0) return 'mac';
+        if (name.indexOf('Windows') == 0) return 'windows';
+        if (name.indexOf('Linux') == 0) return 'linux';
+        if (name == 'IPhonePlayer') return 'ios';
+        if (name == 'tvOS') return 'tvos';
+        if (name == 'Android') return 'android';
+        return '';
+    }
+
     public function storageDirectory():String {
 
         return _storageDirectory;

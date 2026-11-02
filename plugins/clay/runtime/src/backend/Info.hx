@@ -41,6 +41,35 @@ class Info #if !completion implements spec.Info #end {
      * 
      * @return Array of extensions: ['png', 'jpg', 'jpeg']
      */
+    public function operatingSystem():String {
+        #if (clay_sdl && !macro)
+        return switch clay.sdl.SDL.getPlatform() {
+            case 'macOS': 'mac';
+            case 'Windows': 'windows';
+            case 'Linux': 'linux';
+            case 'iOS': 'ios';
+            case 'tvOS': 'tvos';
+            case 'Android': 'android';
+            case _: '';
+        }
+        #elseif (js && web)
+        // Electron exposes the host platform through node's process,
+        // browsers through navigator
+        final name:String = js.Syntax.code(
+            "(typeof process !== 'undefined' && process.platform) ? process.platform : ((typeof navigator !== 'undefined') ? (((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '') + ' ' + (navigator.userAgent || '')) : '')"
+        );
+        final lower = name.toLowerCase();
+        if (lower.indexOf('android') != -1) return 'android';
+        if (lower.indexOf('iphone') != -1 || lower.indexOf('ipad') != -1 || lower.indexOf('ipod') != -1) return 'ios';
+        if (lower.indexOf('darwin') == 0 || lower.indexOf('mac') == 0) return 'mac';
+        if (lower.indexOf('win') == 0) return 'windows';
+        if (lower.indexOf('linux') != -1 || lower.indexOf('cros') != -1 || lower.indexOf('x11') != -1) return 'linux';
+        return '';
+        #else
+        return '';
+        #end
+    }
+
     inline public function imageExtensions():Array<String> {
         return ['png', 'jpg', 'jpeg'];
     }

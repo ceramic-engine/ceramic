@@ -29,6 +29,16 @@ interface Info {
      */
     function storageDirectory():String;
 
+    /**
+     * Gets the operating system the application runs on. On the web, this
+     * is the operating system of the browser's host, as far as the browser
+     * reports it.
+     *
+     * @return One of `mac`, `windows`, `linux`, `ios`, `tvos`, `android`,
+     *         or an empty string when unknown
+     */
+    function operatingSystem():String;
+
 /// Assets
 
     /**

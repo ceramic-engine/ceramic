@@ -34,6 +34,28 @@ class Info #if !completion implements spec.Info #end {
      * @return Always null in headless mode
      */
     #end
+    public function operatingSystem():String {
+        #if js
+        final platform:String = js.Syntax.code("(typeof process !== 'undefined' && process.platform) ? process.platform : ''");
+        return switch platform {
+            case 'darwin': 'mac';
+            case 'win32': 'windows';
+            case 'linux': 'linux';
+            case 'android': 'android';
+            case _: '';
+        }
+        #elseif sys
+        return switch Sys.systemName() {
+            case 'Mac': 'mac';
+            case 'Windows': 'windows';
+            case 'Linux': 'linux';
+            case _: '';
+        }
+        #else
+        return '';
+        #end
+    }
+
     inline public function storageDirectory():String {
         return null;
     }
