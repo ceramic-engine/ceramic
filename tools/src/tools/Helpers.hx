@@ -58,7 +58,8 @@ class Helpers {
             }
         }
 
-        // Required for crash dumps
+        // Required for crash dumps and for the bounds safety of object arrays
+        // (a project can opt out with `ceramic_no_hxcpp_checks`, see Project.hx)
         context.defines.set('HXCPP_CHECK_POINTER', '');
         context.defines.set('safeMode', '');
 

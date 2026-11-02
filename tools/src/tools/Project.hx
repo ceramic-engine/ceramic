@@ -415,6 +415,15 @@ class ProjectLoader {
                     }
                 }
             }
+            // Benchmark and profiling builds: `ceramic_no_hxcpp_checks` drops
+            // the hxcpp pointer checks, safe mode and stack bookkeeping that
+            // the tools add for crash dumps (see Helpers.extractDefines)
+            if (defines.exists('ceramic_no_hxcpp_checks')) {
+                defines.remove('HXCPP_CHECK_POINTER');
+                defines.remove('safeMode');
+                defines.remove('HXCPP_STACK_LINE');
+                defines.remove('HXCPP_STACK_TRACE');
+            }
             app.defines = {};
             for (key in defines.keys()) {
                 var val = defines.get(key);
