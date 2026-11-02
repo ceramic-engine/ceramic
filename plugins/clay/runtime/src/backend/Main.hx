@@ -466,6 +466,8 @@ class Main {
                 appEl.style.height = containerHeight + 'px';
                 appEl.width = Math.round(containerWidth * js.Browser.window.devicePixelRatio);
                 appEl.height = Math.round(containerHeight * js.Browser.window.devicePixelRatio);
+                // clay reads the bounds of the canvas only when they may have changed
+                (cast Clay.app.runtime:clay.web.WebRuntime).invalidateWindowBounds();
 
                 // Hide weird intermediate state behind a black overlay.
                 // That's not the best option but let's get away with this for now.
