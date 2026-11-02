@@ -104,6 +104,19 @@ class GpuiInputTouchTest extends TestCase {
         return new Point(point.x, point.y);
     }
 
+    /**
+     * GPUI asks Ceramic for frame aligned smooth scrolling on the web (Safari dispatches
+     * wheel events on its own clock: frames without motion, then double steps). The
+     * resampler itself is tested in clay (`test/WheelResamplerTest.hx`).
+     */
+    function testBindingInputEnablesWebWheelResampling() {
+        final settings = ceramic.App.app.settings;
+        @:privateAccess if (GpuiInput.instance != null) GpuiInput.instance.destroy();
+        settings.webWheelResampling = false;
+        open((_, _) -> new TouchLogView([]));
+        assertTrue(settings.webWheelResampling);
+    }
+
     function testTapsBecomeMouseClicksWithTheirCount() {
         final log:Array<String> = [];
         open((_, _) -> new TouchLogView(log));
