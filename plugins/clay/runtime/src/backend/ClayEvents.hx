@@ -554,9 +554,13 @@ class ClayEvents extends clay.Events {
      */
     override function keyDown(keyCode:KeyCode, scanCode:ScanCode, repeat:Bool, mod:ModState, timestamp:Float, windowId:Int) {
 
+        final modifiers = keyModifiers(mod);
+        final char = keyChar(scanCode, mod, modifiers);
         backend.input.emitKeyDown({
             keyCode: (keyCode:Int),
-            scanCode: (scanCode:Int)
+            scanCode: (scanCode:Int),
+            modifiers: modifiers,
+            keyChar: char
         });
 
         backend.textInput.handleKeyDown(keyCode, scanCode);
@@ -576,12 +580,81 @@ class ClayEvents extends clay.Events {
      */
     override function keyUp(keyCode:KeyCode, scanCode:ScanCode, repeat:Bool, mod:ModState, timestamp:Float, windowId:Int) {
 
+        final modifiers = keyModifiers(mod);
         backend.input.emitKeyUp({
             keyCode: (keyCode:Int),
-            scanCode: (scanCode:Int)
+            scanCode: (scanCode:Int),
+            modifiers: modifiers,
+            keyChar: keyChar(scanCode, mod, modifiers)
         });
 
         backend.textInput.handleKeyUp(keyCode, scanCode);
+
+    }
+
+    /**
+     * Converts clay modifier state to ceramic key modifiers.
+     * @param mod Modifier key state from clay
+     * @return The matching `KeyModifiers` flags
+     */
+    function keyModifiers(mod:ModState):ceramic.KeyModifiers {
+
+        if (mod == null) return ceramic.KeyModifiers.NONE;
+
+        var result:Int = 0;
+        if (mod.shift || mod.lshift || mod.rshift) result |= ceramic.KeyModifiers.SHIFT;
+        if (mod.ctrl || mod.lctrl || mod.rctrl) result |= ceramic.KeyModifiers.CTRL;
+        if (mod.alt || mod.lalt || mod.ralt) result |= ceramic.KeyModifiers.ALT;
+        if (mod.meta || mod.lmeta || mod.rmeta) result |= ceramic.KeyModifiers.META;
+        if (mod.caps) result |= ceramic.KeyModifiers.CAPS_LOCK;
+        if (mod.num) result |= ceramic.KeyModifiers.NUM_LOCK;
+        return result;
+
+    }
+
+    /**
+     * Character produced by the given key with the current keyboard layout and
+     * modifiers, or `null` if the key doesn't produce any (see `ceramic.Key.keyChar`).
+     */
+    function keyChar(scanCode:ScanCode, mod:ModState, modifiers:ceramic.KeyModifiers):String {
+
+        // Control and meta shortcuts are not text, except control + alt (AltGr on windows)
+        if ((modifiers.meta || modifiers.ctrl) && !(modifiers.ctrl && modifiers.alt)) return null;
+
+        #if web
+
+        final ev = Clay.app.runtime.currentKeyEvent;
+        if (ev == null) return null;
+        final key:String = ev.key;
+        if (key == null || key.length == 0) return null;
+        // A single code point (one or two UTF-16 units): a printable character.
+        // Named keys ('Enter', 'ArrowLeft', 'Dead'...) are longer.
+        final code = key.charCodeAt(0);
+        if (key.length == 1 || (key.length == 2 && code >= 0xD800 && code <= 0xDBFF)) {
+            return key;
+        }
+        return null;
+
+        #elseif clay_sdl
+
+        // Rebuild the SDL modifier mask that matters for the produced character
+        var sdlMod:Int = 0;
+        if (modifiers.shift) sdlMod |= SDL.SDL_KMOD_LSHIFT;
+        if (modifiers.alt) sdlMod |= SDL.SDL_KMOD_LALT;
+        if (modifiers.ctrl) sdlMod |= SDL.SDL_KMOD_LCTRL;
+        if (modifiers.capsLock) sdlMod |= SDL.SDL_KMOD_CAPS;
+        if (modifiers.numLock) sdlMod |= SDL.SDL_KMOD_NUM;
+        if (mod != null && mod.mode) sdlMod |= SDL.SDL_KMOD_MODE;
+        final code:Int = untyped __cpp__('(int)SDL_GetKeyFromScancode((SDL_Scancode){0}, (SDL_Keymod){1}, false)', (scanCode:Int), sdlMod);
+        // Non printable keys have SDLK_SCANCODE_MASK (1 << 30) set, or are control characters
+        if (code < 0x20 || code == 0x7F || (code & 0x40000000) != 0) return null;
+        return String.fromCharCode(code);
+
+        #else
+
+        return null;
+
+        #end
 
     }
 

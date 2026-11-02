@@ -220,6 +220,8 @@ class Input implements tracker.Events implements spec.Input {
         var keyboard = Keyboard.current;
         if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame || keyboard.anyKey.isPressed)) {
 
+            updateKeyModifiers(keyboard);
+
             testKey(keyboard, 1, ScanCode.SPACE, KeyCode.SPACE);
 
             testKey(keyboard, 2, ScanCode.ENTER, KeyCode.ENTER);
@@ -350,6 +352,27 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
+    /**
+     * Modifier keys held during the current keyboard update.
+     * Unity's Input System doesn't expose caps lock / num lock states.
+     */
+    var keyModifiers:ceramic.KeyModifiers = ceramic.KeyModifiers.NONE;
+
+    function updateKeyModifiers(keyboard:Keyboard):Void {
+
+        final shift:Bool = untyped __cs__('{0}.shiftKey.isPressed', keyboard);
+        final ctrl:Bool = untyped __cs__('{0}.ctrlKey.isPressed', keyboard);
+        final alt:Bool = untyped __cs__('{0}.altKey.isPressed', keyboard);
+        final meta:Bool = untyped __cs__('({0}.leftMetaKey.isPressed || {0}.rightMetaKey.isPressed)', keyboard);
+        var result:Int = 0;
+        if (shift) result |= ceramic.KeyModifiers.SHIFT;
+        if (ctrl) result |= ceramic.KeyModifiers.CTRL;
+        if (alt) result |= ceramic.KeyModifiers.ALT;
+        if (meta) result |= ceramic.KeyModifiers.META;
+        keyModifiers = result;
+
+    }
+
     inline function testKey(keyboard:Keyboard, value:Int, scanCode:Int, ?keyCode:Null<Int>):Void {
 
         var key:KeyControl = untyped __cs__('{0}[{1}]', keyboard.allKeys, value-1);
@@ -367,7 +390,8 @@ class Input implements tracker.Events implements spec.Input {
             }
             emitKeyDown({
                 keyCode: keyCode != null ? keyCode : (key.displayName != null ? key.displayName.charCodeAt(0) : KeyCode.UNKNOWN),
-                scanCode: scanCode
+                scanCode: scanCode,
+                modifiers: keyModifiers
             });
         }
         if (key.wasReleasedThisFrame) {
@@ -384,7 +408,8 @@ class Input implements tracker.Events implements spec.Input {
             }
             emitKeyUp({
                 keyCode: keyCode != null ? keyCode : KeyCode.UNKNOWN,
-                scanCode: scanCode
+                scanCode: scanCode,
+                modifiers: keyModifiers
             });
         }
 

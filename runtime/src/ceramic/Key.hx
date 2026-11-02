@@ -21,11 +21,15 @@ package ceramic;
      * Creates a new Key instance with the specified key code and scan code.
      * @param keyCode The layout-dependent key code
      * @param scanCode The layout-independent scan code
+     * @param modifiers The modifier keys held when the event happened
+     * @param keyChar The character this key produces, if any
      */
-    public function new(keyCode:KeyCode, scanCode:ScanCode) {
+    public function new(keyCode:KeyCode, scanCode:ScanCode, modifiers:KeyModifiers = KeyModifiers.NONE, keyChar:String = null) {
 
         this.keyCode = keyCode;
         this.scanCode = scanCode;
+        this.modifiers = modifiers;
+        this.keyChar = keyChar;
 
     }
 
@@ -56,13 +60,33 @@ package ceramic;
     }
 
     /**
+     * Modifier keys held (and lock states) when this key event happened.
+     * Always `NONE` on backends that don't report modifiers.
+     */
+    public var modifiers(default, null):KeyModifiers;
+
+    /**
+     * The character this key produces with the current keyboard layout, taking
+     * shift, caps lock and alt (option) into account, or `null` if the key doesn't
+     * produce a character (arrows, function keys, enter, backspace...) or if
+     * control or meta are held (except control + alt, used as AltGr on windows).
+     * Dead keys and IME composition are not resolved here: use `Input.onTextCommit`
+     * and `Input.onTextComposition` for actual text entry.
+     *
+     * Available on clay native (SDL) and clay web, `null` on Unity and headless.
+     */
+    public var keyChar(default, null):String;
+
+    /**
      * Returns a string representation of this key.
      * Format: "Key(keyCode keyCodeName / scanCode scanCodeName)"
      * @return String representation of the key
      */
     function toString() {
 
-        return 'Key(${(keyCode:Int)} $keyCodeName / ${(scanCode:Int)} $scanCodeName)';
+        if (modifiers == KeyModifiers.NONE && keyChar == null)
+            return 'Key(${(keyCode:Int)} $keyCodeName / ${(scanCode:Int)} $scanCodeName)';
+        return 'Key(${(keyCode:Int)} $keyCodeName / ${(scanCode:Int)} $scanCodeName / ${modifiers.toString()}${keyChar != null ? ' ' + haxe.Json.stringify(keyChar) : ''})';
 
     }
 

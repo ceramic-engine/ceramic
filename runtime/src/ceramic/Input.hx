@@ -111,6 +111,14 @@ class Input extends Entity {
     var gamepadLabelsById:IntIntMap = new IntIntMap();
 
     /**
+     * Modifier keys held, as of the last key event received.
+     * Useful to know the modifiers during pointer events.
+     * Note that modifier changes happening while the app doesn't have focus are only
+     * seen with the next key event.
+     */
+    public var modifiers(default, null):KeyModifiers = KeyModifiers.NONE;
+
+    /**
      * List of currently connected gamepad IDs.
      * Updated automatically when gamepads are connected or disconnected.
      */
@@ -183,6 +191,8 @@ class Input extends Entity {
 
     function willEmitKeyDown(key:Key):Void {
 
+        modifiers = key.modifiers;
+
         var prevScan = pressedScanCodes.get(key.scanCode);
         var prevKey = pressedKeyCodes.get(key.keyCode);
 
@@ -209,6 +219,8 @@ class Input extends Entity {
     }
 
     function willEmitKeyUp(key:Key):Void {
+
+        modifiers = key.modifiers;
 
         var prevScan = pressedScanCodes.get(key.scanCode);
 
