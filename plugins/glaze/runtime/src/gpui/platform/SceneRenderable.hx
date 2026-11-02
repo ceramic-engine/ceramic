@@ -284,6 +284,57 @@ class SceneRenderable extends Renderable {
     static final contrastUniform = new UniformCache('grayscaleEnhancedContrast');
     static final pathCoverageUniform = new UniformCache('pathCoverage');
     static final straightAlphaUniform = new UniformCache('straightAlpha');
+    static final gradientColor1Uniform = new UniformCache('gradientColor1');
+    static final gradientStopsUniform = new UniformCache('gradientStops');
+
+    /**
+     * Vertex attributes and varying rows (GLSL ES 1.0 appendix A packing)
+     * the default shaders need: `shaders.GpuiQuad` reads 12 attributes and
+     * 10 varying rows.
+     */
+    public static inline final DEFAULT_SHADERS_VERTEX_ATTRIBUTES = 12;
+    public static inline final DEFAULT_SHADERS_VARYING_VECTORS = 10;
+
+    /**
+     * Whether quads, shadows and paths are drawn with the compact shaders
+     * (`shaders.GpuiQuadCompact`, `shaders.GpuiShadowCompact`,
+     * `shaders.GpuiPathSpriteCompact`), which fit in 8 vertex attributes
+     * and 8 varying rows: only when the GPU gives less than the default
+     * shaders need, like WebGL in Firefox with fingerprinting resistance
+     * or `webgl.min_capability_mode`. Chosen once by `chooseShaders()`,
+     * before the shaders are loaded (define `gpui_compact_shaders` to
+     * force them, for tests).
+     */
+    public static var useCompactShaders(default, null):Bool = false;
+
+    /**
+     * Whether a GPU with these limits needs the compact shaders (the
+     * default ones need `DEFAULT_SHADERS_VERTEX_ATTRIBUTES` attributes and
+     * `DEFAULT_SHADERS_VARYING_VECTORS` varying vectors).
+     */
+    public static function needsCompactShaders(maxVertexAttributes:Int, maxVaryingVectors:Int):Bool {
+
+        return maxVertexAttributes < DEFAULT_SHADERS_VERTEX_ATTRIBUTES
+            || maxVaryingVectors < DEFAULT_SHADERS_VARYING_VECTORS;
+
+    }
+
+    /**
+     * Sets `useCompactShaders` from the limits of the GPU and returns it.
+     * Called by `ceramic.GpuiPlugin` before it adds the shaders to the
+     * default assets.
+     */
+    public static function chooseShaders():Bool {
+
+        #if gpui_compact_shaders
+        useCompactShaders = true;
+        #else
+        final backendShaders = ceramic.App.app.backend.shaders;
+        useCompactShaders = needsCompactShaders(backendShaders.maxVertexAttributes(), backendShaders.maxVaryingVectors());
+        #end
+        return useCompactShaders;
+
+    }
 
     var quadShader:Shader = null;
     var shadowShader:Shader = null;
@@ -407,6 +458,19 @@ class SceneRenderable extends Renderable {
             destroyTarget();
             return;
         }
+
+        #if clay
+        // A texture larger than the GPU allows (2048 or 1024 pixels with
+        // WebGL in Firefox with fingerprinting resistance or
+        // `webgl.min_capability_mode`) cannot be created: draw the scene
+        // directly instead (same bytes, see `defaultRenderToTexture`)
+        final backendTextures = ceramic.App.app.backend.textures;
+        if (textureWidth > backendTextures.maxTextureWidth() || textureHeight > backendTextures.maxTextureHeight()) {
+            ceramic.Shortcuts.log.warning('Scene of ${textureWidth}x${textureHeight} pixels larger than the maximum texture size (${backendTextures.maxTextureWidth()}x${backendTextures.maxTextureHeight()}): drawn without render texture');
+            renderToTexture = false;
+            return;
+        }
+        #end
 
         if (targetTexture != null
             && targetTexture.density == density
@@ -590,12 +654,19 @@ class SceneRenderable extends Renderable {
 
         if (quadShader == null) {
             final assets = ceramic.App.app.assets;
-            quadShader = assets.shader(shaders.GpuiQuad);
-            shadowShader = assets.shader(shaders.GpuiShadow);
+            if (useCompactShaders) {
+                quadShader = assets.shader(shaders.GpuiQuadCompact);
+                shadowShader = assets.shader(shaders.GpuiShadowCompact);
+                pathSpriteShader = assets.shader(shaders.GpuiPathSpriteCompact);
+            }
+            else {
+                quadShader = assets.shader(shaders.GpuiQuad);
+                shadowShader = assets.shader(shaders.GpuiShadow);
+                pathSpriteShader = assets.shader(shaders.GpuiPathSprite);
+            }
             underlineShader = assets.shader(shaders.GpuiUnderline);
             monoSpriteShader = assets.shader(shaders.GpuiMonoSprite);
             polySpriteShader = assets.shader(shaders.GpuiPolySprite);
-            pathSpriteShader = assets.shader(shaders.GpuiPathSprite);
         }
 
         return quadShader != null
@@ -662,11 +733,14 @@ class SceneRenderable extends Renderable {
             }
             switch batch.kind {
                 case Shadow:
-                    drawShadows(draw, batch);
+                    if (useCompactShaders) drawShadowsCompact(draw, batch);
+                    else drawShadows(draw, batch);
                 case Quad:
-                    drawQuads(draw, batch);
+                    if (useCompactShaders) drawQuadsCompact(draw, batch);
+                    else drawQuads(draw, batch);
                 case Path:
-                    drawPaths(draw, batch);
+                    if (useCompactShaders) drawPathsCompact(draw, batch);
+                    else drawPaths(draw, batch);
                 case Underline:
                     drawUnderlines(draw, batch);
                 case MonochromeSprite:
@@ -1223,6 +1297,318 @@ class SceneRenderable extends Renderable {
 
     }
 
+/// Compact shaders
+
+    /**
+     * `drawQuads()` with `shaders.GpuiQuadCompact` (see `useCompactShaders`).
+     */
+    function drawQuadsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
+
+        // Order barrier of the dash code (see `GpuiQuadCompact_Frag.dashOne`)
+        dashOneUniform.setFloat(quadShader, 1);
+        useShader(draw, quadShader);
+        final quads = scene.quads;
+
+        for (q in batch.start...batch.end) {
+            if (outsideRegion(batchBase + q - batch.start)) continue;
+            final quad = quads[q];
+            // The second stop of a linear gradient and its stop percentages
+            // are uniforms (the vertex attributes and varyings must fit in
+            // WebGL's minimum limits): a draw call holds the gradient quads
+            // of one value. Switched before taking the base vertex, as a
+            // flush restarts the vertex buffers.
+            final gradient = quad.backgroundTag == 1;
+            if (gradient) {
+                hslaToRgba(quad.backgroundColor1H, quad.backgroundColor1S, quad.backgroundColor1L, quad.backgroundColor1A);
+                if (!gradientColor1Uniform.hasVec4(quadShader, r, g, b, a)
+                    || !gradientStopsUniform.hasVec2(quadShader, quad.backgroundColor0Percentage, quad.backgroundColor1Percentage)) {
+                    draw.flush();
+                    gradientColor1Uniform.setVec4(quadShader, r, g, b, a);
+                    gradientStopsUniform.setVec2(quadShader, quad.backgroundColor0Percentage, quad.backgroundColor1Percentage);
+                    draw.useShader(quadShader.backendItem);
+                }
+            }
+            ensureCapacity(draw, quadShader);
+            final base = draw.getNumPos();
+
+            // Background color: the solid color, or the first stop of a
+            // linear gradient (the shader reads one or the other)
+            if (gradient) {
+                hslaToRgba(quad.backgroundColor0H, quad.backgroundColor0S, quad.backgroundColor0L, quad.backgroundColor0A);
+            }
+            else {
+                hslaToRgba(quad.backgroundSolidH, quad.backgroundSolidS, quad.backgroundSolidL, quad.backgroundSolidA);
+            }
+            final solidR = r;
+            final solidG = g;
+            final solidB = b;
+            final solidA = a;
+            hslaToRgba(quad.borderColorH, quad.borderColorS, quad.borderColorL, quad.borderColorA);
+            final borderR = r;
+            final borderG = g;
+            final borderB = b;
+            final borderA = a;
+            // Unit vertex and flags (see `GpuiQuadCompact_Vert.vertexTCoord`)
+            final flags = (4.0 * (quad.backgroundTag + 4 * quad.backgroundColorSpace + 8 * quad.borderStyle));
+            final value = quad.backgroundGradientAngleOrPatternHeight;
+
+            for (i in 0...4) {
+                final ux = unitX(i);
+                final uy = unitY(i);
+                putPos(draw, quad.boundsX + ux * quad.boundsWidth, quad.boundsY + uy * quad.boundsHeight);
+
+                draw.beginFloatAttributes();
+                // vertexBounds
+                draw.putFloatAttribute(0, quad.boundsX);
+                draw.putFloatAttribute(1, quad.boundsY);
+                draw.putFloatAttribute(2, quad.boundsWidth);
+                draw.putFloatAttribute(3, quad.boundsHeight);
+                // vertexContentMask
+                draw.putFloatAttribute(4, quad.contentMaskX);
+                draw.putFloatAttribute(5, quad.contentMaskY);
+                draw.putFloatAttribute(6, quad.contentMaskWidth);
+                draw.putFloatAttribute(7, quad.contentMaskHeight);
+                // vertexCornerRadii
+                draw.putFloatAttribute(8, quad.cornerRadiusTopLeft);
+                draw.putFloatAttribute(9, quad.cornerRadiusTopRight);
+                draw.putFloatAttribute(10, quad.cornerRadiusBottomRight);
+                draw.putFloatAttribute(11, quad.cornerRadiusBottomLeft);
+                // vertexBorderWidths
+                draw.putFloatAttribute(12, quad.borderWidthTop);
+                draw.putFloatAttribute(13, quad.borderWidthRight);
+                draw.putFloatAttribute(14, quad.borderWidthBottom);
+                draw.putFloatAttribute(15, quad.borderWidthLeft);
+                // vertexBorderColor
+                draw.putFloatAttribute(16, borderR);
+                draw.putFloatAttribute(17, borderG);
+                draw.putFloatAttribute(18, borderB);
+                draw.putFloatAttribute(19, borderA);
+                draw.endFloatAttributes();
+
+                draw.putUVs(ux + 2.0 * uy + flags, value);
+                draw.putColor(solidR, solidG, solidB, solidA);
+            }
+
+            putQuadIndices(draw, base);
+        }
+
+    }
+
+    /**
+     * `drawShadows()` with `shaders.GpuiShadowCompact` (see `useCompactShaders`).
+     */
+    function drawShadowsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
+
+        useShader(draw, shadowShader);
+        final shadows = scene.shadows;
+
+        for (s in batch.start...batch.end) {
+            if (outsideRegion(batchBase + s - batch.start)) continue;
+            final shadow = shadows[s];
+            ensureCapacity(draw, shadowShader);
+            final base = draw.getNumPos();
+
+            hslaToRgba(shadow.colorH, shadow.colorS, shadow.colorL, shadow.colorA);
+
+            // Geometry covered by the shadow
+            var gx:Float;
+            var gy:Float;
+            var gw:Float;
+            var gh:Float;
+            if (shadow.inset) {
+                gx = shadow.elementBoundsX;
+                gy = shadow.elementBoundsY;
+                gw = shadow.elementBoundsWidth;
+                gh = shadow.elementBoundsHeight;
+            }
+            else {
+                final margin = 3.0 * shadow.blurRadius;
+                gx = shadow.boundsX - margin;
+                gy = shadow.boundsY - margin;
+                gw = shadow.boundsWidth + 2.0 * margin;
+                gh = shadow.boundsHeight + 2.0 * margin;
+            }
+
+            // Unit vertex and inset flag, blur radius (see `GpuiShadowCompact_Vert.vertexTCoord`)
+            final insetFlag = shadow.inset ? 4.0 : 0.0;
+
+            for (i in 0...4) {
+                final ux = unitX(i);
+                final uy = unitY(i);
+                putPos(draw, gx + ux * gw, gy + uy * gh);
+
+                draw.beginFloatAttributes();
+                // vertexGeometry
+                draw.putFloatAttribute(0, gx);
+                draw.putFloatAttribute(1, gy);
+                draw.putFloatAttribute(2, gw);
+                draw.putFloatAttribute(3, gh);
+                // vertexContentMask
+                draw.putFloatAttribute(4, shadow.contentMaskX);
+                draw.putFloatAttribute(5, shadow.contentMaskY);
+                draw.putFloatAttribute(6, shadow.contentMaskWidth);
+                draw.putFloatAttribute(7, shadow.contentMaskHeight);
+                // vertexBounds
+                draw.putFloatAttribute(8, shadow.boundsX);
+                draw.putFloatAttribute(9, shadow.boundsY);
+                draw.putFloatAttribute(10, shadow.boundsWidth);
+                draw.putFloatAttribute(11, shadow.boundsHeight);
+                // vertexCornerRadii
+                draw.putFloatAttribute(12, shadow.cornerRadiusTopLeft);
+                draw.putFloatAttribute(13, shadow.cornerRadiusTopRight);
+                draw.putFloatAttribute(14, shadow.cornerRadiusBottomRight);
+                draw.putFloatAttribute(15, shadow.cornerRadiusBottomLeft);
+                // vertexElementCornerRadii (the element bounds of an inset
+                // shadow are its geometry)
+                draw.putFloatAttribute(16, shadow.elementCornerRadiusTopLeft);
+                draw.putFloatAttribute(17, shadow.elementCornerRadiusTopRight);
+                draw.putFloatAttribute(18, shadow.elementCornerRadiusBottomRight);
+                draw.putFloatAttribute(19, shadow.elementCornerRadiusBottomLeft);
+                draw.endFloatAttributes();
+
+                draw.putUVs(ux + 2.0 * uy + insetFlag, shadow.blurRadius);
+                draw.putColor(r, g, b, a);
+            }
+
+            putQuadIndices(draw, base);
+        }
+
+    }
+
+    /**
+     * `drawPaths()` with `shaders.GpuiPathSpriteCompact` (see `useCompactShaders`).
+     */
+    function drawPathsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
+
+        // RGBA (polychrome) pages hold the tiles of paths with Loop-Blinn
+        // curves, monochrome pages coverage masks (see `PathRasterizer`)
+        final batchTexture = batch.textureIndex >= 0 && batch.textureIndex < atlasTextures.length ? atlasTextures[batch.textureIndex] : null;
+        final curves = batchTexture != null && CeramicAtlas.isStraightAlpha(batchTexture);
+        pathCoverageUniform.setFloat(pathSpriteShader, curves ? 2 : 1);
+        useShader(draw, pathSpriteShader);
+
+        final texture = bindAtlasTexture(draw, batch.textureIndex);
+        if (texture == null) return;
+
+        final texWidth:Float = texture.nativeWidthActual;
+        final texHeight:Float = texture.nativeHeightActual;
+        final paths = scene.paths;
+
+        for (si in batch.start...batch.end) {
+            if (outsideRegion(batchBase + si - batch.start)) continue;
+            final path = paths[si];
+            ensureCapacity(draw, pathSpriteShader);
+            final base = draw.getNumPos();
+
+            // Background, prepared like `Window.paintQuad()` prepares quads
+            final background = path.background;
+            var tag:Float = 0;
+            var colorSpace:Float = 0;
+            var angleOrHeight:Float = 0;
+            var c0R:Float = 0;
+            var c0G:Float = 0;
+            var c0B:Float = 0;
+            var c0A:Float = 0;
+            var c1R:Float = 0;
+            var c1G:Float = 0;
+            var c1B:Float = 0;
+            var c1A:Float = 0;
+            var stop0:Float = 0;
+            var stop1:Float = 0;
+            if (background != null) {
+                tag = cast(background.tag, Int);
+                colorSpace = cast(background.colorSpace, Int);
+                angleOrHeight = background.gradientAngleOrPatternHeight;
+                final c0 = background.colors0;
+                hslaToRgba(c0.color.h, c0.color.s, c0.color.l, c0.color.a);
+                c0R = r;
+                c0G = g;
+                c0B = b;
+                c0A = a;
+                stop0 = c0.percentage;
+                final c1 = background.colors1;
+                hslaToRgba(c1.color.h, c1.color.s, c1.color.l, c1.color.a);
+                c1R = r;
+                c1G = g;
+                c1B = b;
+                c1A = a;
+                stop1 = c1.percentage;
+            }
+            // Solid color, or the first stop of a linear gradient (the
+            // shader reads one or the other)
+            if (tag != 1) {
+                hslaToRgba(path.colorH, path.colorS, path.colorL, path.colorA);
+            }
+            else {
+                r = c0R;
+                g = c0G;
+                b = c0B;
+                a = c0A;
+            }
+
+            // Gradient and pattern bounds: GPUI's Metal renderer gives the
+            // path rasterization vertices `path.bounds.intersect(&path.content_mask.bounds)`
+            // (scaled pixels, f32)
+            final boundsLeft = f32(path.boundsX);
+            final boundsTop = f32(path.boundsY);
+            final boundsRight = f32(boundsLeft + f32(path.boundsWidth));
+            final boundsBottom = f32(boundsTop + f32(path.boundsHeight));
+            final maskLeft = f32(path.contentMaskX);
+            final maskTop = f32(path.contentMaskY);
+            final maskRight = f32(maskLeft + f32(path.contentMaskWidth));
+            final maskBottom = f32(maskTop + f32(path.contentMaskHeight));
+            final clipLeft = Math.max(boundsLeft, maskLeft);
+            final clipTop = Math.max(boundsTop, maskTop);
+            final clipWidth = f32(Math.max(Math.min(boundsRight, maskRight), clipLeft) - clipLeft);
+            final clipHeight = f32(Math.max(Math.min(boundsBottom, maskBottom), clipTop) - clipTop);
+
+            for (i in 0...4) {
+                final ux = unitX(i);
+                final uy = unitY(i);
+                final sx = path.spriteX + ux * path.spriteWidth;
+                final sy = path.spriteY + uy * path.spriteHeight;
+
+                putPos(draw, sx, sy);
+
+                draw.beginFloatAttributes();
+                // vertexScenePosition (xy) and gradient stops (zw)
+                draw.putFloatAttribute(0, sx);
+                draw.putFloatAttribute(1, sy);
+                draw.putFloatAttribute(2, stop0);
+                draw.putFloatAttribute(3, stop1);
+                // vertexContentMask
+                draw.putFloatAttribute(4, path.contentMaskX);
+                draw.putFloatAttribute(5, path.contentMaskY);
+                draw.putFloatAttribute(6, path.contentMaskWidth);
+                draw.putFloatAttribute(7, path.contentMaskHeight);
+                // vertexBounds
+                draw.putFloatAttribute(8, clipLeft);
+                draw.putFloatAttribute(9, clipTop);
+                draw.putFloatAttribute(10, clipWidth);
+                draw.putFloatAttribute(11, clipHeight);
+                // vertexParams
+                draw.putFloatAttribute(12, tag);
+                draw.putFloatAttribute(13, colorSpace);
+                draw.putFloatAttribute(14, angleOrHeight);
+                // vertexColor1
+                draw.putFloatAttribute(15, c1R);
+                draw.putFloatAttribute(16, c1G);
+                draw.putFloatAttribute(17, c1B);
+                draw.putFloatAttribute(18, c1A);
+                draw.endFloatAttributes();
+
+                draw.putUVs(
+                    (path.tileX + ux * path.tileWidth) / texWidth,
+                    (path.tileY + uy * path.tileHeight) / texHeight
+                );
+                draw.putColor(r, g, b, a);
+            }
+
+            putQuadIndices(draw, base);
+        }
+
+    }
+
     static inline function f32(value:Float):Float {
         return gpui.SpringMath.f32(value);
     }
@@ -1511,6 +1897,25 @@ class UniformCache {
             x = value;
             target.setFloat(name, value);
         }
+    }
+
+    public inline function setVec2(target:Shader, x:Float, y:Float):Void {
+        if (shader != target || this.x != x || this.y != y) {
+            shader = target;
+            this.x = x;
+            this.y = y;
+            target.setVec2(name, x, y);
+        }
+    }
+
+    /** Whether `target` already has this value */
+    public inline function hasVec2(target:Shader, x:Float, y:Float):Bool {
+        return shader == target && this.x == x && this.y == y;
+    }
+
+    /** Whether `target` already has this value */
+    public inline function hasVec4(target:Shader, x:Float, y:Float, z:Float, w:Float):Bool {
+        return shader == target && this.x == x && this.y == y && this.z == z && this.w == w;
     }
 
     public inline function setVec4(target:Shader, x:Float, y:Float, z:Float, w:Float):Void {

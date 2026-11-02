@@ -30,12 +30,26 @@ class GpuiPlugin {
             // GPUI scene shaders are loaded with the default assets,
             // so they are ready before the first scene is created
             App.app.onceDefaultAssetsLoad(null, function(assets) {
-                assets.add(shaders.GpuiQuad);
-                assets.add(shaders.GpuiShadow);
-                assets.add(shaders.GpuiUnderline);
-                assets.add(shaders.GpuiMonoSprite);
-                assets.add(shaders.GpuiPolySprite);
-                assets.add(shaders.GpuiPathSprite);
+                // The compact variants of the quad, shadow and path shaders
+                // when the GPU limits are too low for the default ones
+                if (gpui.platform.SceneRenderable.chooseShaders()) {
+                    final backendShaders = App.app.backend.shaders;
+                    log.info('GPUI uses its compact shaders (max vertex attributes: ${backendShaders.maxVertexAttributes()}, max varying vectors: ${backendShaders.maxVaryingVectors()})');
+                    assets.add(shaders.GpuiQuadCompact);
+                    assets.add(shaders.GpuiShadowCompact);
+                    assets.add(shaders.GpuiUnderline);
+                    assets.add(shaders.GpuiMonoSprite);
+                    assets.add(shaders.GpuiPolySprite);
+                    assets.add(shaders.GpuiPathSpriteCompact);
+                }
+                else {
+                    assets.add(shaders.GpuiQuad);
+                    assets.add(shaders.GpuiShadow);
+                    assets.add(shaders.GpuiUnderline);
+                    assets.add(shaders.GpuiMonoSprite);
+                    assets.add(shaders.GpuiPolySprite);
+                    assets.add(shaders.GpuiPathSprite);
+                }
 
                 #if gpui_bundled_emoji
                 // Bundled emoji font (Noto Color Emoji, define
