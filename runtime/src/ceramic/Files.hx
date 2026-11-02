@@ -619,6 +619,126 @@ class Files {
     }
 
     /**
+     * Gets the size of a file.
+     *
+     * @param path Path to the file
+     * @return The size in bytes, or -1 if unavailable
+     */
+    public static function getSize(path:String):Float {
+
+        #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
+
+        try {
+            var stat = sys.FileSystem.stat(path);
+            return stat != null ? stat.size : -1;
+        }
+        catch (e:Dynamic) {
+            return -1;
+        }
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = Platform.nodeRequire('fs');
+        if (fs == null)
+            return -1;
+        try {
+            var stat = fs.statSync(path);
+            return stat != null ? stat.size : -1;
+        }
+        catch (e:Dynamic) {
+            return -1;
+        }
+
+        #else
+
+        return -1;
+
+        #end
+
+    }
+
+    /**
+     * Reads a range of a file without reading the rest of it (for large
+     * files read piece by piece, like font files).
+     *
+     * @param path Path to the file to read
+     * @param offset Position of the first byte to read
+     * @param length Number of bytes to read
+     * @return The bytes read (fewer than `length` at the end of the file), or null if unavailable
+     */
+    public static function getBytesRange(path:String, offset:Float, length:Int):Null<Bytes> {
+
+        if (offset < 0 || length < 0)
+            return null;
+
+        #if ((node || nodejs || hxnodejs) && !no_filesystem)
+
+        try {
+            var fd = Fs.openSync(path, 'r');
+            var buffer = js.node.Buffer.alloc(length);
+            var read = Fs.readSync(fd, buffer, 0, length, Std.int(offset));
+            Fs.closeSync(fd);
+            return Bytes.ofData(buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + read));
+        }
+        catch (e:Dynamic) {
+            return null;
+        }
+
+        #elseif ((cs || sys) && !no_filesystem)
+
+        var input:sys.io.FileInput = null;
+        try {
+            input = sys.io.File.read(path, true);
+            input.seek(Std.int(offset), SeekBegin);
+            var bytes = Bytes.alloc(length);
+            var total = 0;
+            while (total < length) {
+                var n = input.readBytes(bytes, total, length - total);
+                if (n <= 0)
+                    break;
+                total += n;
+            }
+            input.close();
+            return total == length ? bytes : bytes.sub(0, total);
+        }
+        catch (e:haxe.io.Eof) {
+            if (input != null)
+                input.close();
+            return Bytes.alloc(0);
+        }
+        catch (e:Dynamic) {
+            if (input != null)
+                input.close();
+            return null;
+        }
+
+        #elseif (web && ceramic_use_electron)
+
+        var fs = Platform.nodeRequire('fs');
+        if (fs == null)
+            return null;
+        try {
+            var fd = fs.openSync(path, 'r');
+            var data:UInt8Array = new UInt8Array(length);
+            var read:Int = fs.readSync(fd, data, 0, length, offset);
+            fs.closeSync(fd);
+            var bytes = data.toBytes();
+            return read == length ? bytes : bytes.sub(0, read);
+        }
+        catch (e:Dynamic) {
+            return null;
+        }
+
+        #else
+
+        log.warning('getBytesRange() is not supported on this target');
+        return null;
+
+        #end
+
+    }
+
+    /**
      * Writes a string to a file, replacing any existing content.
      * 
      * @param path Path to the file to write
