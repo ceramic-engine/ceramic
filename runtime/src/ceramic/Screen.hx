@@ -323,6 +323,13 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function touchDown(touchIndex:Int, x:Float, y:Float);
     @event function touchUp(touchIndex:Int, x:Float, y:Float);
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
+    /**
+     * The system took over a touch (a native gesture, the touch was removed):
+     * the gesture should be unwound rather than completed. Emitted just
+     * before the `touchUp` that ends the touch, so listeners that only track
+     * downs and ups still see it end.
+     */
+    @event function touchCancel(touchIndex:Int, x:Float, y:Float);
 
     // Generic (unified) events
     //
@@ -549,6 +556,36 @@ class Screen extends Entity implements Observable implements RenderTarget {
                     y: y1,
                     hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
                 }
+                prepareMultiTouchPointerUp(info);
+
+                emitTouchUp(touchIndex, x1, y1);
+                _numPointerDown--;
+                emitMultiTouchPointerUp(info);
+                if (_numPointerDown == 0) {
+                    emitPointerUp(info);
+                }
+            });
+        });
+        app.backend.screen.onTouchCancel(this, function(touchIndex, x, y) {
+            app.beginUpdateCallbacks.push(function() {
+                app.flushImmediate();
+
+                var x0 = x * nativeDensity;
+                var y0 = y * nativeDensity;
+                var x1 = reverseMatrix.transformX(x0, y0);
+                var y1 = reverseMatrix.transformY(x0, y0);
+
+                var info:TouchInfo = {
+                    touchIndex: touchIndex,
+                    buttonId: -1,
+                    x: x1,
+                    y: y1,
+                    hits: x1 >= 0 && x1 <= width && y1 >= 0 && y1 <= height
+                }
+
+                // The cancel, then the up that ends the touch
+                emitTouchCancel(touchIndex, x1, y1);
+
                 prepareMultiTouchPointerUp(info);
 
                 emitTouchUp(touchIndex, x1, y1);

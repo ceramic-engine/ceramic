@@ -119,6 +119,15 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     @event function touchMove(touchIndex:Int, x:Float, y:Float);
 
+    /**
+     * Fired when the system takes over a touch (native gesture, touch
+     * removed): no `touchUp` follows from the platform for that touch.
+     * @param touchIndex Touch point index for multi-touch
+     * @param x Touch X coordinate
+     * @param y Touch Y coordinate
+     */
+    @event function touchCancel(touchIndex:Int, x:Float, y:Float);
+
 /// Public API
 
     #if !no_backend_docs

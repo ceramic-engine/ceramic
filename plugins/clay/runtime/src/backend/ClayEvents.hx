@@ -509,6 +509,35 @@ class ClayEvents extends clay.Events {
 
     }
 
+    /**
+     * Handles touches taken over by the system (native gesture, touch removed):
+     * no touch up follows for them. Frees the touch index like `touchUp`.
+     *
+     * @param x Normalized X coordinate (0.0 to 1.0)
+     * @param y Normalized Y coordinate (0.0 to 1.0)
+     * @param dx Not used
+     * @param dy Not used
+     * @param touchId Platform-specific touch identifier
+     * @param timestamp Event timestamp in seconds
+     */
+    override function touchCancel(x:Float, y:Float, dx:Float, dy:Float, touchId:Int, timestamp:Float) {
+
+        if (!touches.exists(touchId)) {
+            return;
+        }
+        var index = touches.get(touchId);
+
+        backend.screen.emitTouchCancel(
+            index,
+            touchX(x),
+            touchY(y)
+        );
+
+        touches.remove(touchId);
+        touchIndexes.remove(index);
+
+    }
+
     #end
 
     /**
