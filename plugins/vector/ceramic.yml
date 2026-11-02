@@ -1,0 +1,10 @@
+plugin:
+    name: Vector
+
+    runtime:
+        if plugin_vector:
+            +libs:
+                - plutovg
+                - lunasvg
+            +paths:
+                - '{plugin:cwd}/runtime/src'
