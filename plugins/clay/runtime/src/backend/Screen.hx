@@ -124,6 +124,25 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /**
+     * Fired when an item of the menu bar is chosen (macOS native builds).
+     * @param id The `id` of the item
+     */
+    @event function menuAction(id:Int);
+
+    /**
+     * Fired right after the key down of a keystroke that matches the
+     * shortcut of a menu bar item (macOS native builds): the menu let the
+     * app have the key first.
+     * @param id The `id` of the item
+     */
+    @event function menuKeyEquivalent(id:Int);
+
+    /**
+     * Fired when a menu of the menu bar opens (macOS native builds).
+     */
+    @event function menuWillOpen();
+
 #if (web && !no_resume_audio_context)
 
 /// Resume audio context after first click/touch on web
@@ -281,6 +300,43 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function isWindowFocused():Bool {
 
         return Clay.app.runtime.isWindowFocused();
+
+    }
+
+    var menuItemEnabled:(id:Int)->Bool = null;
+
+    /**
+     * Native menu bar on macOS (`Clay.app.runtime.setMenuBar`, an `NSMenu`
+     * set as the main menu); nothing on the web, Windows and Linux.
+     */
+    public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+
+        menuItemEnabled = isEnabled;
+        Clay.app.runtime.setMenuBar([for (menu in menus) toClayMenuItem(menu)]);
+
+    }
+
+    static function toClayMenuItem(item:ceramic.MenuItem):clay.MenuItemSpec {
+
+        return {
+            id: item.id,
+            kind: (item.kind:Int),
+            title: item.title,
+            key: item.key,
+            modifiers: (item.modifiers:Int) & (ceramic.KeyModifiers.SHIFT | ceramic.KeyModifiers.CTRL | ceramic.KeyModifiers.ALT | ceramic.KeyModifiers.META),
+            role: (item.role:Int),
+            enabled: item.enabled,
+            checked: item.checked,
+            items: item.items != null ? [for (child in item.items) toClayMenuItem(child)] : null
+        };
+
+    }
+
+    /** Asked by the system when it validates a menu bar item. */
+    @:allow(backend.ClayEvents)
+    function isMenuItemEnabled(id:Int):Bool {
+
+        return menuItemEnabled != null && menuItemEnabled(id);
 
     }
 

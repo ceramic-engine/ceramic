@@ -216,6 +216,25 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /**
+     * Fired when an item of the menu bar is chosen. Not fired by the Unity
+     * backend (no menu bar).
+     * @param id The `id` of the item
+     */
+    @event function menuAction(id:Int);
+
+    /**
+     * Fired right after the key down of a keystroke matching the shortcut
+     * of a menu bar item. Not fired by the Unity backend.
+     * @param id The `id` of the item
+     */
+    @event function menuKeyEquivalent(id:Int);
+
+    /**
+     * Fired when a menu of the menu bar opens. Not fired by the Unity backend.
+     */
+    @event function menuWillOpen();
+
 /// Public API
 
     #if !no_backend_docs
@@ -314,6 +333,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function isWindowFocused():Bool {
         return true;
     }
+
+    /** No menu bar on Unity: does nothing. */
+    public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {}
 
     #if !no_backend_docs
     /**

@@ -1073,6 +1073,47 @@ class ClayEvents extends clay.Events {
      * @param x X coordinate data (usage depends on event type)
      * @param y Y coordinate data (usage depends on event type)
      */
+    /**
+     * An item of the native menu bar was chosen.
+     * @param id The `id` of the `ceramic.MenuItem`
+     */
+    override function menuAction(id:Int) {
+
+        backend.screen.emitMenuAction(id);
+
+    }
+
+    /**
+     * The key down just emitted matches the shortcut of a native menu bar
+     * item: the screen runs the item if the app did not handle the key.
+     * @param id The `id` of the `ceramic.MenuItem`
+     */
+    override function menuKeyEquivalent(id:Int) {
+
+        backend.screen.emitMenuKeyEquivalent(id);
+
+    }
+
+    /**
+     * A menu of the native menu bar opens.
+     */
+    override function menuWillOpen() {
+
+        backend.screen.emitMenuWillOpen();
+
+    }
+
+    /**
+     * The system validates a native menu bar item (synchronous).
+     * @param id The `id` of the `ceramic.MenuItem`
+     * @return Whether the item can be chosen
+     */
+    override function menuItemEnabled(id:Int):Bool {
+
+        return @:privateAccess backend.screen.isMenuItemEnabled(id);
+
+    }
+
     override function windowEvent(type:WindowEventType, timestamp:Float, windowId:Int, x:Int, y:Int) {
 
         switch type {

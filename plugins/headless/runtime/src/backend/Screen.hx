@@ -135,6 +135,27 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function windowFocusChange(focused:Bool);
 
+    /**
+     * Fired when an item of the menu bar is chosen. Never fired by the
+     * headless backend: tests emit it to simulate a click in a native menu.
+     * @param id The `id` of the item
+     */
+    @event function menuAction(id:Int);
+
+    /**
+     * Fired right after the key down of a keystroke matching the shortcut
+     * of a menu bar item. Never fired by the headless backend: tests emit it
+     * to simulate a native menu shortcut.
+     * @param id The `id` of the item
+     */
+    @event function menuKeyEquivalent(id:Int);
+
+    /**
+     * Fired when a menu of the menu bar opens. Never fired by the headless
+     * backend.
+     */
+    @event function menuWillOpen();
+
 /// Public API
 
     #if !no_backend_docs
@@ -253,6 +274,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     function willEmitWindowFocusChange(focused:Bool):Void {
         windowFocused = focused;
+    }
+
+    /** The menus last installed (nothing is shown). */
+    public var menuBar(default, null):Array<ceramic.MenuItem> = null;
+
+    var menuItemEnabled:(id:Int)->Bool = null;
+
+    /** No menu bar: keeps the menus for tests (`menuBar`, `isMenuItemEnabled`). */
+    public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+        menuBar = menus;
+        menuItemEnabled = isEnabled;
+    }
+
+    /** What the system would ask to validate the item with the given id. */
+    public function isMenuItemEnabled(id:Int):Bool {
+        return menuItemEnabled != null && menuItemEnabled(id);
     }
 
     public function setCursorVisible(visible:Bool):Void {

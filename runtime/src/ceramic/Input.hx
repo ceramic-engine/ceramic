@@ -140,6 +140,15 @@ class Input extends Entity {
     public var modifiers(default, null):KeyModifiers = KeyModifiers.NONE;
 
     /**
+     * Set to `true` by a `keyDown` listener that handled the key being
+     * pressed. Reset to `false` right before each `keyDown` event. A key
+     * down that is not handled can then trigger the menu bar item with the
+     * same shortcut (see `screen.setMenuBar`): the app sees each keystroke
+     * first, like a native window before the menus.
+     */
+    public var keyDownHandled:Bool = false;
+
+    /**
      * Whether text editing is active (see `startTextEditing()`).
      */
     public var textEditing(default, null):Bool = false;
@@ -240,6 +249,7 @@ class Input extends Entity {
     function willEmitKeyDown(key:Key):Void {
 
         modifiers = key.modifiers;
+        keyDownHandled = false;
 
         var prevScan = pressedScanCodes.get(key.scanCode);
         var prevKey = pressedKeyCodes.get(key.keyCode);

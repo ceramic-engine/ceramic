@@ -128,6 +128,18 @@ interface Screen {
     function isWindowFocused():Bool;
 
     /**
+     * Installs the application menu bar (macOS native builds), replacing the
+     * current one. Every item has its `id` set. Backends emit `menuAction(id)`
+     * when an item is chosen, `menuKeyEquivalent(id)` right after the key
+     * down of a keystroke that matches the shortcut of an item (the app sees
+     * the key first and decides whether the item runs), and `menuWillOpen()`
+     * when a menu opens. `isEnabled(id)` is asked when the system validates
+     * an item. Does nothing where the platform has no menu bar for the app
+     * (web, Windows and Linux windows, mobile, headless, Unity).
+     */
+    function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void;
+
+    /**
      * Shows or hides the mouse cursor while it is over the app.
      * Has no effect on platforms without a mouse cursor.
      * 

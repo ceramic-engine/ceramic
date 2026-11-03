@@ -357,6 +357,20 @@ class Screen extends Entity implements Observable implements RenderTarget {
      */
     @event function windowFocusChange(focused:Bool);
 
+    /**
+     * An item of the menu bar (`setMenuBar`) was chosen: clicked in the
+     * menu, or its shortcut was pressed and no `keyDown` listener handled
+     * the key (`input.keyDownHandled`). Emitted at the start of a frame, in
+     * order with the input events.
+     */
+    @event function menuAction(item:MenuItem);
+
+    /**
+     * A menu of the menu bar opens (emitted at the start of the next frame:
+     * the app does not run while the system tracks the menu).
+     */
+    @event function menuWillOpen();
+
 /// Lifecycle
 
     /**
@@ -628,6 +642,30 @@ class Screen extends Entity implements Observable implements RenderTarget {
                 if (_numPointerDown > 0) {
                     emitPointerMove(info);
                 }
+            });
+        });
+
+        // Menu bar
+        app.backend.screen.onMenuAction(this, function(id) {
+            app.beginUpdateCallbacks.push(function() {
+                final item = menuItemsById.get(id);
+                if (item != null) {
+                    emitMenuAction(item);
+                }
+            });
+        });
+        app.backend.screen.onMenuKeyEquivalent(this, function(id) {
+            // Queued right after the key down of the same keystroke
+            app.beginUpdateCallbacks.push(function() {
+                final item = menuItemsById.get(id);
+                if (item != null && !app.input.keyDownHandled && isMenuItemEnabled(item)) {
+                    emitMenuAction(item);
+                }
+            });
+        });
+        app.backend.screen.onMenuWillOpen(this, function() {
+            app.beginUpdateCallbacks.push(function() {
+                emitMenuWillOpen();
             });
         });
 
@@ -1981,6 +2019,80 @@ class Screen extends Entity implements Observable implements RenderTarget {
     public function activateWindow():Void {
 
         app.backend.screen.activateWindow();
+
+    }
+
+/// Menu bar
+
+    /**
+     * The menus last given to `setMenuBar` (`null` before).
+     */
+    public var menuBar(default, null):Null<Array<MenuItem>> = null;
+
+    /**
+     * Decides whether an item of the menu bar can be chosen, asked when the
+     * system validates the items (when a menu opens, and before the item of
+     * an unhandled shortcut runs). Without a validator, `item.enabled`
+     * decides. Called synchronously, outside of the frame update.
+     */
+    public var menuItemValidator:Null<(item:MenuItem)->Bool> = null;
+
+    var menuItemsById:IntMap<MenuItem> = new IntMap();
+
+    static var nextMenuItemId:Int = 1;
+
+    /**
+     * Installs the application menu bar, replacing the current one: a list
+     * of submenus (`MenuItem.submenu`), the first one being the application
+     * menu on macOS. Choosing an item emits `menuAction`.
+     *
+     * Shortcuts shown in the menus (`item.key`, `item.modifiers`) follow the
+     * order of a native window: the keystroke is first delivered as a
+     * regular `input.keyDown`, and the item only runs if no listener set
+     * `input.keyDownHandled` (and the item is enabled, see
+     * `menuItemValidator`).
+     *
+     * Native menu bar on macOS (clay native builds). Elsewhere (web,
+     * Windows and Linux, mobile, headless, Unity) the menus are kept in
+     * `menuBar` and nothing is shown: apps that want menus there draw them
+     * in their window.
+     *
+     * @param menus The submenus of the menu bar
+     */
+    public function setMenuBar(menus:Array<MenuItem>):Void {
+
+        if (menus == null) menus = [];
+        menuBar = menus;
+        menuItemsById = new IntMap();
+        for (menu in menus) {
+            assignMenuItemIds(menu);
+        }
+        app.backend.screen.setMenuBar(menus, function(id) {
+            final item = menuItemsById.get(id);
+            return item != null && isMenuItemEnabled(item);
+        });
+
+    }
+
+    function assignMenuItemIds(item:MenuItem):Void {
+
+        item.assignId(nextMenuItemId++);
+        menuItemsById.set(item.id, item);
+        if (item.items != null) {
+            for (child in item.items) {
+                assignMenuItemIds(child);
+            }
+        }
+
+    }
+
+    /**
+     * Whether the given menu bar item can be chosen: `menuItemValidator`
+     * when set, `item.enabled` otherwise.
+     */
+    public function isMenuItemEnabled(item:MenuItem):Bool {
+
+        return menuItemValidator != null ? menuItemValidator(item) : item.enabled;
 
     }
 
