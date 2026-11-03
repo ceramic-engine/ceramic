@@ -116,6 +116,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function touchCancel(touchIndex:Int, x:Float, y:Float);
 
+    /**
+     * Fired when the app window gains or loses the keyboard focus of the
+     * system (on the web: when the page becomes visible and focused, or
+     * stops being so).
+     * @param focused Whether the window now has the focus
+     */
+    @event function windowFocusChange(focused:Bool);
+
 #if (web && !no_resume_audio_context)
 
 /// Resume audio context after first click/touch on web
@@ -261,6 +269,18 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function setWindowHitRegions(regions:Array<Float>):Void {
 
         Clay.app.runtime.setWindowHitRegions(regions);
+
+    }
+
+    public function activateWindow():Void {
+
+        Clay.app.runtime.activateWindow();
+
+    }
+
+    public function isWindowFocused():Bool {
+
+        return Clay.app.runtime.isWindowFocused();
 
     }
 

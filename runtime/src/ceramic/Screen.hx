@@ -348,6 +348,15 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function focus(visual:Visual);
     @event function blur(visual:Visual);
 
+    /**
+     * The app window gained (`focused` true) or lost the keyboard focus of
+     * the system: another app or window became active, or this one came
+     * back. On the web, the page counts as focused while it is visible and
+     * has the browser's focus. Emitted at the start of a frame, in order
+     * with the input events. See `windowFocused`.
+     */
+    @event function windowFocusChange(focused:Bool);
+
 /// Lifecycle
 
     /**
@@ -618,6 +627,17 @@ class Screen extends Entity implements Observable implements RenderTarget {
                 emitMultiTouchPointerMove(info);
                 if (_numPointerDown > 0) {
                     emitPointerMove(info);
+                }
+            });
+        });
+
+        // Window focus
+        windowFocused = app.backend.screen.isWindowFocused();
+        app.backend.screen.onWindowFocusChange(this, function(focused) {
+            app.beginUpdateCallbacks.push(function() {
+                if (windowFocused != focused) {
+                    windowFocused = focused;
+                    emitWindowFocusChange(focused);
                 }
             });
         });
@@ -1941,6 +1961,27 @@ class Screen extends Entity implements Observable implements RenderTarget {
     public var windowMaximized(get, never):Bool;
     function get_windowMaximized():Bool {
         return app.backend.screen.isWindowMaximized();
+    }
+
+    /**
+     * Whether the app window has the keyboard focus of the system (true
+     * where the platform does not tell). Updated at the start of a frame,
+     * right before `windowFocusChange` is emitted.
+     */
+    public var windowFocused(default, null):Bool = true;
+
+    /**
+     * Brings the app window to the front and gives it the keyboard focus,
+     * activating the app on desktop platforms (SDL's raise window: on macOS
+     * the app is activated, like `activateIgnoringOtherApps`). Does nothing
+     * where an app cannot activate its window: web (the browser decides
+     * which page has the focus), mobile, headless, and windows that are
+     * hidden or minimized.
+     */
+    public function activateWindow():Void {
+
+        app.backend.screen.activateWindow();
+
     }
 
     /**

@@ -114,6 +114,20 @@ interface Screen {
     function setWindowHitRegions(regions:Array<Float>):Void;
 
     /**
+     * Brings the app window to the front and gives it the keyboard focus,
+     * activating the app on desktop platforms. Does nothing where an app
+     * cannot activate its window (web, mobile, headless, hidden windows).
+     */
+    function activateWindow():Void;
+
+    /**
+     * Whether the app window has the keyboard focus of the system (true where
+     * the platform does not tell). Backends emit `windowFocusChange` when it
+     * changes.
+     */
+    function isWindowFocused():Bool;
+
+    /**
      * Shows or hides the mouse cursor while it is over the app.
      * Has no effect on platforms without a mouse cursor.
      * 

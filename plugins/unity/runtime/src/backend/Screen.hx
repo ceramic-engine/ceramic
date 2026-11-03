@@ -209,6 +209,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function touchCancel(touchIndex:Int, x:Float, y:Float);
 
+    /**
+     * Fired when the app window gains or loses the keyboard focus of the
+     * system. Not fired by the Unity backend yet.
+     * @param focused Whether the window now has the focus
+     */
+    @event function windowFocusChange(focused:Bool);
+
 /// Public API
 
     #if !no_backend_docs
@@ -299,6 +306,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function showWindowMenu(x:Float, y:Float):Void {}
 
     public function setWindowHitRegions(regions:Array<Float>):Void {}
+
+    /** Not available yet on Unity: does nothing. */
+    public function activateWindow():Void {}
+
+    /** Not tracked yet on Unity: always true. */
+    public function isWindowFocused():Bool {
+        return true;
+    }
 
     #if !no_backend_docs
     /**

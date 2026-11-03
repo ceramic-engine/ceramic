@@ -128,6 +128,13 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function touchCancel(touchIndex:Int, x:Float, y:Float);
 
+    /**
+     * Fired when the app window gains or loses the keyboard focus of the
+     * system. Never fired by the headless backend: tests emit it to simulate focus changes.
+     * @param focused Whether the window now has the focus
+     */
+    @event function windowFocusChange(focused:Bool);
+
 /// Public API
 
     #if !no_backend_docs
@@ -233,6 +240,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     public function showWindowMenu(x:Float, y:Float):Void {}
 
     public function setWindowHitRegions(regions:Array<Float>):Void {}
+
+    /** No window to activate: does nothing. */
+    public function activateWindow():Void {}
+
+    var windowFocused:Bool = true;
+
+    /** True unless a test emitted `windowFocusChange(false)`. */
+    public function isWindowFocused():Bool {
+        return windowFocused;
+    }
+
+    function willEmitWindowFocusChange(focused:Bool):Void {
+        windowFocused = focused;
+    }
 
     public function setCursorVisible(visible:Bool):Void {
 

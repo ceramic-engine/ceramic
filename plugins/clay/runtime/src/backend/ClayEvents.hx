@@ -1057,7 +1057,8 @@ class ClayEvents extends clay.Events {
     /**
      * Handles window-related events such as focus changes, resize, and fullscreen transitions.
      * Most events are handled automatically by the Clay engine, but fullscreen state changes
-     * need to be synchronized with the Ceramic app settings.
+     * need to be synchronized with the Ceramic app settings, and focus changes are
+     * forwarded to the screen (`windowFocusChange`).
      *
      * Fullscreen events:
      * - ENTER_FULLSCREEN: Updates app settings to reflect fullscreen state
@@ -1088,7 +1089,9 @@ class ClayEvents extends clay.Events {
             case ENTER:
             case LEAVE:
             case FOCUS_GAINED:
+                backend.screen.emitWindowFocusChange(true);
             case FOCUS_LOST:
+                backend.screen.emitWindowFocusChange(false);
             case CLOSE:
             case ENTER_FULLSCREEN:
                 ceramic.App.app.settings.fullscreen = true;
