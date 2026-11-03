@@ -3399,6 +3399,15 @@ class Window implements WindowInvalidator {
     }
 
     /**
+     * Bring the window to the front and give it the keyboard focus (Rust
+     * `activate_window`): through `platformOperations`, the Ceramic app
+     * window by default (see `CeramicWindowOperations.activate`).
+     */
+    public function activateWindow():Void {
+        if (platformOperations != null) platformOperations.activate();
+    }
+
+    /**
      * Minimize the window at the platform level.
      */
     public function minimizeWindow():Void {

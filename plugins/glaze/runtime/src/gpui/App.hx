@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.Menu.OwnedMenu;
 import haxe.ds.IntMap;
 import tracker.Autorun;
 
@@ -280,6 +281,7 @@ class App {
         _backgroundExecutor = new BackgroundExecutor(this.dispatcher);
         _foregroundExecutor = new ForegroundExecutor(this.dispatcher);
         syncedAnimationEpoch = _backgroundExecutor.now();
+        platformOperations = new gpui.platform.CeramicPlatformOperations();
         _current = this;
     }
 
@@ -1152,6 +1154,146 @@ class App {
 
     static function defaultOpenUrl(url:String):Void {
         ceramic.App.app.backend.openUrl(url);
+    }
+
+    /**
+     * The application operations of the platform (Rust: the `Platform`
+     * trait): quitting, activating, path prompts and menus.
+     * `CeramicPlatformOperations` by default, a `TestPlatformOperations` for
+     * tests. Setting it registers `shutdown` as its quit callback, like
+     * `Application::run` does with `on_quit`.
+     */
+    public var platformOperations(default, set):PlatformOperations;
+    function set_platformOperations(operations:PlatformOperations):PlatformOperations {
+        platformOperations = operations;
+        if (operations != null)
+            operations.onQuit(() -> shutdown());
+        return operations;
+    }
+
+    final quitObservers:SubscriberSet<App->Null<AnyTask>> = new SubscriberSet();
+
+    var _quitting:Bool = false;
+
+    /**
+     * Gracefully quit the application via the platform's standard routine
+     * (Rust `quit`). Where the platform quits, `shutdown` runs first.
+     */
+    public function quit():Void {
+        platformOperations.quit();
+    }
+
+    /**
+     * Whether `shutdown` has run (Rust: the `quitting` flag).
+     */
+    public inline function isQuitting():Bool {
+        return _quitting;
+    }
+
+    /**
+     * Register a callback to be invoked when the application is about to
+     * quit (Rust `on_app_quit`). It is not possible to cancel the quit event
+     * at this point. The callback may return a task: the platform quits once
+     * every returned task completes, or after `SHUTDOWN_TIMEOUT` (Rust blocks
+     * up to that long; the port cannot block, the quit waits instead).
+     */
+    public function onAppQuit(onQuit:App->Null<AnyTask>):Subscription {
+        final subscriber = quitObservers.insert(0, onQuit);
+        subscriber.activate();
+        return subscriber.subscription;
+    }
+
+    /** Rust `SHUTDOWN_TIMEOUT`, in seconds. */
+    public static inline final SHUTDOWN_TIMEOUT:Float = 0.1;
+
+    /**
+     * Runs the quit observers and flushes the effects (Rust `shutdown`,
+     * called by the platform when it quits). Returns a task that completes
+     * once every observer task completed, or `SHUTDOWN_TIMEOUT` passed.
+     * Windows stay open: the process ends right after.
+     */
+    public function shutdown():Task<Unit> {
+        final tasks:Array<AnyTask> = [];
+        for (observer in quitObservers.remove(0)) {
+            final task = observer(this);
+            if (task != null)
+                tasks.push(task);
+        }
+        flushEffects();
+        _quitting = true;
+        final done = new Task<Unit>();
+        var remaining = tasks.length;
+        if (remaining == 0) {
+            done.resolve(Unit.unit);
+            return done;
+        }
+        final timeout = _backgroundExecutor.timer(SHUTDOWN_TIMEOUT);
+        timeout.then(_ -> {
+            trace('timed out waiting on app_will_quit');
+            done.resolve(Unit.unit);
+        });
+        for (task in tasks) {
+            task.onComplete(() -> {
+                remaining--;
+                if (remaining == 0) {
+                    timeout.cancel();
+                    done.resolve(Unit.unit);
+                }
+            });
+        }
+        return done;
+    }
+
+    /**
+     * Instructs the platform to activate the application by bringing it to
+     * the foreground (Rust `activate`).
+     */
+    public function activate(ignoringOtherApps:Bool):Void {
+        platformOperations.activate(ignoringOtherApps);
+    }
+
+    /**
+     * Displays a platform modal for selecting paths (Rust `prompt_for_paths`).
+     * When one or more paths are selected, the task resolves with them; when
+     * cancelled, with `null`. The task fails where the platform cannot show
+     * the modal (the web, or a Ceramic app without the `dialogs` plugin).
+     */
+    public function promptForPaths(options:PathPromptOptions):Task<Null<Array<String>>> {
+        return platformOperations.promptForPaths(options);
+    }
+
+    /**
+     * Displays a platform modal for selecting a new path where a file can be
+     * saved (Rust `prompt_for_new_path`). The provided directory is the
+     * initial location. When a path is selected, the task resolves with it;
+     * when cancelled, with `null`. The task fails where the platform cannot
+     * show the modal.
+     */
+    public function promptForNewPath(directory:String, ?suggestedName:String):Task<Null<String>> {
+        return platformOperations.promptForNewPath(directory, suggestedName);
+    }
+
+    /**
+     * Returns `true` if the platform file picker supports selecting a mix of
+     * files and directories (Rust `can_select_mixed_files_and_dirs`).
+     */
+    public function canSelectMixedFilesAndDirs():Bool {
+        return platformOperations.canSelectMixedFilesAndDirs();
+    }
+
+    /**
+     * Sets the menu bar for this application (Rust `set_menus`). This will
+     * replace any existing menu bar.
+     */
+    public function setMenus(menus:Array<Menu>):Void {
+        platformOperations.setMenus(menus, keymap);
+    }
+
+    /**
+     * Gets the menu bar for this application (Rust `get_menus`).
+     */
+    public function getMenus():Null<Array<OwnedMenu>> {
+        return platformOperations.getMenus();
     }
 
     /**

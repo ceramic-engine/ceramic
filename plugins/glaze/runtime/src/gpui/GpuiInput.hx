@@ -40,8 +40,9 @@ import ceramic.KeyModifiers;
  *   the mouse, or the last bound window. Modifier changes are sent as
  *   `ModifiersChangedEvent` first; modifier only keys are not sent as key
  *   events (like the web platform).
- * - The app going to background deactivates the windows (focus events report
- *   an empty focus path), coming back reactivates the active one.
+ * - The app going to background or its window losing the system focus
+ *   (Ceramic `windowFocusChange`) deactivates the windows (focus events
+ *   report an empty focus path), coming back reactivates the active one.
  * - Text input: each bound window gets a `TextInputBridge` (its
  *   `textInputPlatform`, unless one is already set) that receives the key
  *   downs and Ceramic's `textCommit` / `textComposition` events, and starts or
@@ -99,6 +100,27 @@ class GpuiInput extends ceramic.Entity {
         if (app == null || app.screen == null)
             return;
         app.screen.cursor = (cast style : Int);
+    }
+
+    /**
+     * Makes `window` the window receiving keyboard events (when bound) and
+     * activates it, unless the app window does not have the system focus:
+     * then it becomes active when the app window gains it
+     * (`CeramicWindowOperations.activate`).
+     */
+    public static function activateWindow(window:Window):Void {
+        if (window.isDestroyed())
+            return;
+        if (instance != null && !instance.destroyed && boundWindows.indexOf(window) != -1) {
+            final previous = instance.activeWindow;
+            if (previous != window) {
+                if (previous != null && !previous.isDestroyed()) previous.setActive(false);
+                instance.activeWindow = window;
+            }
+        }
+        final app = ceramic.App.app;
+        if (app == null || app.screen == null || app.screen.windowFocused)
+            window.setActive(true);
     }
 
     static function bridgeOf(window:Null<Window>):Null<TextInputBridge> {
@@ -182,6 +204,18 @@ class GpuiInput extends ceramic.Entity {
         });
         app.onBeginEnterForeground(this, () -> {
             if (activeWindow != null) activeWindow.setActive(true);
+        });
+        // The app window losing the system focus deactivates the windows,
+        // like a native window resigning key; gaining it back reactivates
+        // the active one
+        screen.onWindowFocusChange(this, focused -> {
+            if (focused) {
+                if (activeWindow != null && !activeWindow.isDestroyed()) activeWindow.setActive(true);
+            }
+            else {
+                heldKeys.clear();
+                for (window in boundWindows) window.setActive(false);
+            }
         });
     }
 

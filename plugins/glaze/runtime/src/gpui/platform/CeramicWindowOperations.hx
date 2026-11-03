@@ -7,7 +7,7 @@ import ceramic.WindowHitKind;
 
 /**
  * `PlatformWindowOperations` on the Ceramic app window (`ceramic.Screen`):
- * minimize, maximize / restore, the system window menu and the title bar
+ * activate, minimize, maximize / restore, the system window menu and the title bar
  * double click act on the native window (SDL on native targets; they do
  * nothing on the web and in headless builds).
  *
@@ -27,6 +27,17 @@ class CeramicWindowOperations implements PlatformWindowOperations {
 
     public function new(window:Window) {
         this.window = window;
+    }
+
+    /**
+     * Makes this window the one receiving the keyboard (`GpuiInput`) and
+     * activates the app window (`ceramic.Screen.activateWindow`). The window
+     * becomes active right away when the app window has the system focus,
+     * otherwise once it gains it (like a native window becoming key).
+     */
+    public function activate():Void {
+        GpuiInput.activateWindow(window);
+        ceramic.App.app.screen.activateWindow();
     }
 
     public function minimize():Void {

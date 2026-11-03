@@ -40,8 +40,9 @@ app:
         # Gif capture utility
         #- gif
 
-        # Native dialogs
-        #- dialogs
+        # Native dialogs (CeramicPlatformOperations prompts, tested by
+        # PlatformOperationsTest through ceramic.Dialogs.handler)
+        - dialogs
 
         # Extended support of Electron
         #- electron

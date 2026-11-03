@@ -1,0 +1,107 @@
+// Ported from gpui-pre 0.3.10: src/platform/test/platform.rs (quit, activate,
+// path prompts and menus of `TestPlatform`)
+// Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui;
+
+import gpui.Menu.OwnedMenu;
+
+/**
+ * `PlatformOperations` for tests, like GPUI's test platform: nothing reaches
+ * the system. Path prompts stay pending until the test answers them
+ * (`simulateNewPathSelection`, `simulatePathPromptResponse`); quitting and
+ * activations are counted.
+ */
+class TestPlatformOperations implements PlatformOperations {
+
+    /** How many times `quit` was called. */
+    public var quitCount(default, null):Int = 0;
+
+    /** The `ignoringOtherApps` argument of each `activate` call. */
+    public final activations:Array<Bool> = [];
+
+    final pathPrompts:Array<{options:PathPromptOptions, task:Task<Null<Array<String>>>}> = [];
+
+    final newPathPrompts:Array<{directory:String, suggestedName:Null<String>, task:Task<Null<String>>}> = [];
+
+    var quitCallback:Null<Void->Null<AnyTask>> = null;
+
+    var menus:Array<OwnedMenu> = [];
+
+    public function new() {}
+
+    /** GPUI's test platform does nothing; the call is counted (the `onQuit` callback is not run). */
+    public function quit():Void {
+        quitCount++;
+    }
+
+    public function onQuit(callback:Void->Null<AnyTask>):Void {
+        quitCallback = callback;
+    }
+
+    /** Runs the `onQuit` callback, as a platform does when it quits, and returns its task. */
+    public function simulateQuit():Null<AnyTask> {
+        return quitCallback != null ? quitCallback() : null;
+    }
+
+    public function activate(ignoringOtherApps:Bool):Void {
+        activations.push(ignoringOtherApps);
+    }
+
+    public function promptForPaths(options:PathPromptOptions):Task<Null<Array<String>>> {
+        final task = new Task<Null<Array<String>>>();
+        pathPrompts.push({options: options, task: task});
+        return task;
+    }
+
+    public function promptForNewPath(directory:String, suggestedName:Null<String>):Task<Null<String>> {
+        final task = new Task<Null<String>>();
+        newPathPrompts.push({directory: directory, suggestedName: suggestedName, task: task});
+        return task;
+    }
+
+    /** Whether a new path prompt waits for an answer (`did_prompt_for_new_path`). */
+    public function didPromptForNewPath():Bool {
+        return newPathPrompts.length > 0;
+    }
+
+    /** Whether a path prompt waits for an answer. */
+    public function didPromptForPaths():Bool {
+        return pathPrompts.length > 0;
+    }
+
+    /**
+     * Answers the oldest new path prompt with `selectPath(directory, suggestedName)`
+     * (`simulate_new_path_selection`; `null` cancels).
+     */
+    public function simulateNewPathSelection(selectPath:(directory:String, suggestedName:Null<String>) -> Null<String>):Void {
+        final prompt = newPathPrompts.shift();
+        if (prompt == null)
+            throw 'no pending new path prompt';
+        prompt.task.resolve(selectPath(prompt.directory, prompt.suggestedName));
+    }
+
+    /**
+     * Answers the oldest path prompt with `selectPaths(options)`
+     * (`simulate_path_prompt_response`; `null` cancels).
+     */
+    public function simulatePathPromptResponse(selectPaths:PathPromptOptions->Null<Array<String>>):Void {
+        final prompt = pathPrompts.shift();
+        if (prompt == null)
+            throw 'no pending path prompt';
+        prompt.task.resolve(selectPaths(prompt.options));
+    }
+
+    public function canSelectMixedFilesAndDirs():Bool {
+        return true;
+    }
+
+    public function setMenus(menus:Array<Menu>, keymap:Keymap):Void {
+        this.menus = [for (menu in menus) menu.owned()];
+    }
+
+    public function getMenus():Null<Array<OwnedMenu>> {
+        return menus;
+    }
+
+}

@@ -4,7 +4,7 @@
 package gpui;
 
 /**
- * The native window operations of GPUI's `PlatformWindow`: minimize, zoom
+ * The native window operations of GPUI's `PlatformWindow`: activate, minimize, zoom
  * (maximize or restore), interactive move and resize, the window menu and
  * the title bar double click.
  *
@@ -15,6 +15,9 @@ package gpui;
  * headless and test windows).
  */
 interface PlatformWindowOperations {
+
+    /** Bring the window to the front and give it the keyboard focus (`PlatformWindow::activate`). */
+    function activate():Void;
 
     /** Minimize the window (`PlatformWindow::minimize`). */
     function minimize():Void;

@@ -316,6 +316,10 @@ private class RecordingOperations implements PlatformWindowOperations {
 
     public function new() {}
 
+    public function activate():Void {
+        calls.push('activate');
+    }
+
     public function minimize():Void {
         calls.push('minimize');
     }

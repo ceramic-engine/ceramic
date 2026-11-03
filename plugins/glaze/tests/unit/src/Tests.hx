@@ -45,6 +45,7 @@ class Tests {
         runner.add(new tests.kit.TouchSelectionIntegrationTest());
         runner.add(new tests.WindowFocusTest());
         runner.add(new tests.WindowScaleFactorTest());
+        runner.add(new tests.PlatformOperationsTest());
         // GPUI's inspector (define gpui_inspector)
         #if gpui_inspector
         runner.add(new tests.InspectorTest());
