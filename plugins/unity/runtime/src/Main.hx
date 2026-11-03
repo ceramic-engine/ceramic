@@ -27,6 +27,21 @@ class Main {
      */
     #if unity_urp
     static var _lastRegularUpdateTime:Float = 0;
+
+    /**
+     * Whether the URP render pass ran since the last regular update.
+     */
+    static var _renderPassRan:Bool = false;
+
+    /**
+     * Number of consecutive regular updates without any URP render pass.
+     */
+    static var _framesWithoutRenderPass:Int = 0;
+
+    /**
+     * Whether the app runs in batch mode (`-batchmode`), read once.
+     */
+    static var _isBatchMode:Bool = untyped __cs__('UnityEngine.Application.isBatchMode');
     #end
 
     /**
@@ -105,6 +120,27 @@ class Main {
         ceramic.App.app.backend.screen.update();
         ceramic.App.app.backend.input.update(delta);
 
+        // Batch frame driver: in batch mode (`-batchmode`, with or without
+        // `-nographics`) no camera may render, so the URP render pass that
+        // updates and renders the app never runs. When it did not run during
+        // two frames in a row, update the app from here and drop the draw
+        // commands that no render pass will consume.
+        if (_isBatchMode) {
+            if (_renderPassRan) {
+                _framesWithoutRenderPass = 0;
+            }
+            else {
+                _framesWithoutRenderPass++;
+            }
+            _renderPassRan = false;
+            if (_framesWithoutRenderPass >= 2) {
+                update();
+                if (ceramic.App.app.backend.draw != null) {
+                    ceramic.App.app.backend.draw.discardPendingCommandBuffers();
+                }
+            }
+        }
+
     }
 
     /**
@@ -116,6 +152,7 @@ class Main {
         if (_hasCriticalError)
             return;
 
+        _renderPassRan = true;
         update();
 
     }

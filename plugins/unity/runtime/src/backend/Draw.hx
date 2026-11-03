@@ -1953,6 +1953,24 @@ class Draw #if !completion implements spec.Draw #end {
 
     #if !no_backend_docs
     /**
+     * Releases the pending command buffers without rendering them.
+     *
+     * Used by the batch frame driver (`Main.regularUpdate`) when the app
+     * is updated outside of any URP render pass: nothing would consume
+     * these buffers, so they go back to the pool.
+     */
+    #end
+    @:noCompletion public function discardPendingCommandBuffers():Void {
+
+        for (i in 0...pendingCommandBuffers.length) {
+            CommandBufferPool.Release(pendingCommandBuffers.unsafeGet(i));
+        }
+        clearPendingCommandBuffers();
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Clears the lists of pending command buffers and render targets.
      *
      * Called at the beginning of each frame to reset URP state.
