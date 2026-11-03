@@ -1,0 +1,11 @@
+app:
+    package: mycompany.webfiles
+    name: webfiles
+    displayName: webfiles
+    author: My Company
+    version: '1.0'
+
+    plugins:
+        # GPUI port (its path prompts go through the dialogs plugin)
+        - gpui
+        - dialogs

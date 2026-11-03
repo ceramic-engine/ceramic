@@ -238,8 +238,8 @@ class PlatformOperationsTest extends TestCase {
 
     function testCeramicPromptFailsWhereNoDialogExists() {
         // The headless backend has no dialog: the prompt fails, like GPUI's
-        // web platform ("not supported")
-        #if (headless || (web && !ceramic_use_electron))
+        // web platform ("not supported"). Browsers have one since DEV-019.
+        #if (headless && !web)
         assertFalse(ceramic.Dialogs.pathDialogsAvailable());
         final task = app.promptForNewPath('/tmp');
         ceramic.App.app.flushImmediate();

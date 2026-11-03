@@ -41,6 +41,7 @@ class Tests {
         runner.add(new tests.TouchGestureTest());
         runner.add(new tests.TouchWindowTest());
         runner.add(new tests.GpuiInputTouchTest());
+        runner.add(new tests.BrowserFilesTest());
         runner.add(new tests.kit.InputTouchTest());
         runner.add(new tests.kit.TouchSelectionIntegrationTest());
         runner.add(new tests.WindowFocusTest());
