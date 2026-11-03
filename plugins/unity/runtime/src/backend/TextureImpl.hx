@@ -147,15 +147,22 @@ class TextureImpl {
         this.unityRtHandleDepth = unityRtHandleDepth;
         #end
 
+        // Ceramic textures clamp by default (`ceramic.Texture.wrapS` and
+        // `wrapT` are CLAMP, applied to the backend only when changed), like
+        // the clay backend's GL textures; Unity creates its textures with
+        // Repeat, which makes linear filtering at an edge blend the texels
+        // of the opposite edge (imported assets already clamp, see UnityMeta)
         if (unityTexture != null) {
             this.width = unityTexture.width;
             this.height = unityTexture.height;
             this.textureId = _nextTextureId++;
+            untyped __cs__('{0}.wrapMode = UnityEngine.TextureWrapMode.Clamp', unityTexture);
         }
         else if (unityRenderTexture != null) {
             this.width = unityRenderTexture.width;
             this.height = unityRenderTexture.height;
             this.textureId = _nextTextureId++;
+            untyped __cs__('{0}.wrapMode = UnityEngine.TextureWrapMode.Clamp', unityRenderTexture);
         }
 
     }
