@@ -312,14 +312,16 @@ class Shaders implements spec.Shaders {
 
     #if !no_backend_docs
     /**
-     * Gets the maximum number of vertex attributes.
-     * Unity shaders are written per platform, not limited like WebGL.
-     * @return 16
+     * Gets the maximum number of vertex attributes a Ceramic shader can use
+     * on this backend: position, color and texture coordinates, plus the 7
+     * custom attributes that `Materials` maps to `TEXCOORD1` to `TEXCOORD7`
+     * (Unity meshes have 8 texture coordinate channels).
+     * @return 10
      */
     #end
     inline public function maxVertexAttributes():Int {
 
-        return 16;
+        return 10;
 
     }
 
