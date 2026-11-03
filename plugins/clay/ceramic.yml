@@ -35,6 +35,12 @@ plugin:
             # shorten collection pauses on the main thread. It builds on top of
             # generational GC, so it is only enabled when generational is too.
             # Opt out with `ceramic_no_concurrent_gc`.
+            # The heap stays bounded at 2 x live + 256 MB (hxcpp defaults,
+            # kept for games: a 64 MB margin halves the heap but costs a
+            # worse p99 and many more cycles). A project can change them
+            # with the defines HXCPP_GC_CONCURRENT_HEAP_FACTOR and
+            # HXCPP_GC_CONCURRENT_HEAP_MARGIN_MB, or the same environment
+            # variables at run time (factor 0: unbounded heap).
             # Note: both are force-disabled for cppia builds (see Tools.hx), as
             # they are not safe under the bytecode interpreter.
             if !ceramic_no_concurrent_gc:
