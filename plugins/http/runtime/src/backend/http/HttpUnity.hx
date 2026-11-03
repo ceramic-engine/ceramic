@@ -82,24 +82,29 @@ class HttpUnity {
                 var resStatus = Std.int(webRequest.responseCode);
                 var resHeaders:Array<String> = [];
 
-                if (webRequest.isNetworkError || webRequest.isHttpError) {
+                if (webRequest.isNetworkError || resStatus <= 0) {
+                    // The connection or the transfer failed (status 0, like
+                    // the other backends): an HTTP error status (4xx, 5xx)
+                    // is a regular response with its headers and body
                     done({
                         status: resStatus,
-                        content: resStatus < 200 || resStatus >= 300 ? null : downloadHandler.text,
+                        content: null,
                         binaryContent: null,
                         headers: resHeaders,
-                        error: webRequest.error
+                        error: webRequest.error != null && webRequest.error != '' ? webRequest.error : 'Request failed'
                     });
                 }
                 else {
 
                     var rawHeaders = webRequest.GetResponseHeaders();
-                    untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
-                    var headerName:String = untyped __cs__('rawHeaderEntry.Key');
-                    var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
-                    resHeaders.push(headerName);
-                    resHeaders.push(headerValue);
-                    untyped __cs__('}');
+                    if (rawHeaders != null) {
+                        untyped __cs__('foreach(var rawHeaderEntry in ((System.Collections.Generic.Dictionary<string,string>){0})) {', rawHeaders);
+                        var headerName:String = untyped __cs__('rawHeaderEntry.Key');
+                        var headerValue:String = untyped __cs__('rawHeaderEntry.Value');
+                        resHeaders.push(headerName);
+                        resHeaders.push(headerValue);
+                        untyped __cs__('}');
+                    }
 
                     var resContentType:String = null;
                     var i = 0;
@@ -115,7 +120,7 @@ class HttpUnity {
 
                     var resTextContent:String = null;
                     var resBinaryContent:Bytes = null;
-                    if (ceramic.MimeType.isText(resContentType)) {
+                    if (options.binary != true && ceramic.MimeType.isText(resContentType)) {
                         resTextContent = downloadHandler.text;
                     }
                     else {
@@ -127,7 +132,7 @@ class HttpUnity {
                         content: resTextContent,
                         binaryContent: resBinaryContent,
                         headers: resHeaders,
-                        error: webRequest.error
+                        error: null
                     });
                 }
 
