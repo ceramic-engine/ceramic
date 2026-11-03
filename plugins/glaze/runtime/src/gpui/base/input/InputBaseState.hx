@@ -1031,8 +1031,12 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * have no minus sign, so a field that may hold a negative value (no
      * `min`, or a negative one) keeps the text keyboard. A field whose mask
      * drops the fraction (a group separator with `fraction` 0) takes digits
-     * only; any other takes a decimal separator too. A `pattern` or
-     * `validate` check can only narrow what the mask accepts.
+     * only. Any other takes a decimal separator too: the decimal keypad shows
+     * the separator of the device's region (a comma in many), which is a
+     * decimal separator only when the mask does not group digits with a comma
+     * or a dot (DEV-018), so a mask grouping with either keeps the text
+     * keyboard. A `pattern` or `validate` check can only narrow what the
+     * mask accepts.
      */
     function numberInputMode():TextInputMode {
         switch maskPattern {
@@ -1041,7 +1045,10 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
                 if (!isSingleLine() || min == null || !(min >= 0)) {
                     return TextInputMode.Text;
                 }
-                return separator != null && fraction == 0 ? TextInputMode.Numeric : TextInputMode.Decimal;
+                if (separator != null && fraction == 0) {
+                    return TextInputMode.Numeric;
+                }
+                return MaskPatternTools.commaIsDecimal(separator) ? TextInputMode.Decimal : TextInputMode.Text;
             case _:
                 return TextInputMode.Text;
         }

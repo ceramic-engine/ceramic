@@ -72,7 +72,7 @@ class NumberInputKeyboardTest extends TestCase {
     function open():NumberFields {
         var view:Entity<NumberFields> = null;
         app.update(cx -> {
-            window = Window.open(cx, {width: 400, height: 400, scaleFactor: 1, autoDraw: false, bindInput: false}, (window, cx) -> {
+            window = Window.open(cx, {width: 400, height: 600, scaleFactor: 1, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((c:Context<NumberFields>) -> new NumberFields(window, c));
                 return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
             });
@@ -119,7 +119,7 @@ class NumberInputKeyboardTest extends TestCase {
     function testNumberFieldWithoutNegativeValuesAsksForTheDecimalKeypad() {
         final fields = open();
         assertEquals(TextInputMode.Decimal, mode(fields.decimal));
-        assertEquals(TextInputMode.Decimal, mode(fields.grouped), 'a group separator keeps the fraction');
+        assertEquals(TextInputMode.Decimal, mode(fields.spaceGrouped), 'a space group separator keeps the comma a decimal separator (DEV-018)');
         // Without a group separator the mask leaves the text as typed, so a
         // fraction of 0 does not drop the decimals (gpui-kit `MaskPattern::mask`).
         assertEquals(TextInputMode.Decimal, mode(fields.ungroupedNoFraction));
@@ -128,6 +128,38 @@ class NumberInputKeyboardTest extends TestCase {
     function testIntegerNumberFieldAsksForTheNumericKeypad() {
         final fields = open();
         assertEquals(TextInputMode.Numeric, mode(fields.integer));
+        assertEquals(TextInputMode.Numeric, mode(fields.dotInteger));
+    }
+
+    /**
+     * A decimal field grouping digits with a comma or a dot: the comma of a
+     * comma region's decimal keypad would be a group separator there (DEV-018
+     * keeps its meaning), so the field keeps the text keyboard.
+     */
+    function testDecimalFieldGroupedWithACommaOrADotKeepsTheTextKeyboard() {
+        final fields = open();
+        assertEquals(TextInputMode.Text, mode(fields.commaGrouped));
+        assertEquals(TextInputMode.Text, mode(fields.dotGrouped));
+    }
+
+    function testGroupedFieldsSendTheirInputModeToCeramic() {
+        final fields = open();
+        sent.resize(0);
+        focus(fields.commaGrouped);
+        assertEquals('text', sent[sent.length - 1]);
+        focus(fields.spaceGrouped);
+        assertEquals('decimal', sent[sent.length - 1]);
+        focus(fields.dotGrouped);
+        assertEquals('text', sent[sent.length - 1]);
+        focus(fields.dotInteger);
+        assertEquals('numeric', sent[sent.length - 1]);
+
+        sent.resize(0);
+        assertTrue(tap(fields.commaGrouped));
+        assertTrue(tap(fields.spaceGrouped));
+        assertTrue(tap(fields.dotGrouped));
+        assertTrue(tap(fields.integer));
+        assertEquals('text,decimal,text,numeric', sent.join(','));
     }
 
     function testOtherInputsKeepTheTextKeyboard() {
@@ -194,8 +226,17 @@ private class NumberFields extends Model implements Render {
     /** min 0, default number mask. */
     public final decimal:Entity<InputState>;
 
-    /** min 0, group separator and 2 fraction digits. */
-    public final grouped:Entity<InputState>;
+    /** min 0, comma group separator and 2 fraction digits. */
+    public final commaGrouped:Entity<InputState>;
+
+    /** min 0, dot group separator, fraction kept. */
+    public final dotGrouped:Entity<InputState>;
+
+    /** min 0, space group separator, fraction kept. */
+    public final spaceGrouped:Entity<InputState>;
+
+    /** min 0, dot group separator and fraction 0: integers only. */
+    public final dotInteger:Entity<InputState>;
 
     /** min 0, no group separator and fraction 0. */
     public final ungroupedNoFraction:Entity<InputState>;
@@ -212,7 +253,10 @@ private class NumberFields extends Model implements Render {
         signed = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
         negativeMin = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).min(-10.));
         decimal = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).min(0.));
-        grouped = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number(','.code, 2)));
+        commaGrouped = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number(','.code, 2)));
+        dotGrouped = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number('.'.code, null)));
+        spaceGrouped = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number(' '.code, null)));
+        dotInteger = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number('.'.code, 0)));
         ungroupedNoFraction = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(0.), Number(null, 0)));
         integer = cx.newEntity((c:Context<InputState>) -> masked(new InputState(window, c).min(1.), Number(','.code, 0)));
         plain = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
@@ -226,7 +270,7 @@ private class NumberFields extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final column = div().flex().flexCol().gap(px(4.)).p(px(4.));
-        for (state in [signed, negativeMin, decimal, grouped, ungroupedNoFraction, integer]) {
+        for (state in [signed, negativeMin, decimal, commaGrouped, dotGrouped, spaceGrouped, dotInteger, ungroupedNoFraction, integer]) {
             column.child(div().w(px(200.)).h(px(36.)).child(new NumberInput(state)));
         }
         for (state in [plain, plainWithMin]) {
