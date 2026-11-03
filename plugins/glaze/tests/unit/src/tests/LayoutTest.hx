@@ -55,8 +55,9 @@ class LayoutTest extends TestCase {
         assertTrue(isPositiveZero(TaffyLayoutEngine.roundHalfTowardZero(0.3)));
         assertTrue(isPositiveZero(TaffyLayoutEngine.roundHalfTowardZero(0.5)));
         // Built at run time: Haxe folds the sign test of an inlined `-0.0`
-        // literal at compile time on cpp, as if it were `0.0`
-        final negativeZero = Std.parseFloat("-0.0");
+        // literal at compile time on cpp, as if it were `0.0`, and the C#
+        // Std.parseFloat("-0.0") returns 0.0 (the ceil of -0.3 is -0.0)
+        final negativeZero = Math.fceil(Std.parseFloat("-0.3"));
         assertTrue(isNegativeZero(negativeZero));
         assertTrue(isNegativeZero(TaffyLayoutEngine.roundHalfTowardZero(negativeZero)));
         assertTrue(isNegativeZero(TaffyLayoutEngine.roundHalfTowardZero(-0.3)));

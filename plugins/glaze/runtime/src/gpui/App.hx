@@ -850,6 +850,29 @@ class App {
     }
 
     /**
+     * `Type.createInstance(type, [])`. On C#, a constructor whose arguments are
+     * all optional must still receive them all: they are given as null, which
+     * makes them take their default values like on the other targets.
+     */
+    static function createDefaultInstance<G>(type:Class<G>):G {
+        #if cs
+        try {
+            return Type.createInstance(type, []);
+        }
+        catch (e:Dynamic) {
+            // The Haxe constructor, not the one taking an EmptyObject (no Haxe
+            // constructor call), with a default value (null) for each argument
+            final instance:Dynamic = untyped __cs__('((global::System.Func<object>)(() => { foreach (var c in {0}.GetConstructors()) { var ps = c.GetParameters(); if (ps.Length == 0 || (ps.Length == 1 && ps[0].ParameterType == typeof(global::haxe.lang.EmptyObject))) continue; return c.Invoke(new object[ps.Length]); } return null; }))()', cs.Lib.toNativeType(type));
+            if (instance == null)
+                throw e;
+            return instance;
+        }
+        #else
+        return Type.createInstance(type, []);
+        #end
+    }
+
+    /**
      * Access the global of the given type mutably, creating it with its default
      * constructor if it has not been assigned yet.
      */
@@ -859,7 +882,7 @@ class App {
         var value:G = @:privateAccess cell.unobservedValue;
         pushEffect(NotifyGlobalObservers(typeId));
         if (value == null) {
-            value = Type.createInstance(type, []);
+            value = createDefaultInstance(type);
             cell.value = value;
         }
         else {

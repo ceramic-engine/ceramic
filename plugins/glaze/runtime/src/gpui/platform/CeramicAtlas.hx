@@ -591,7 +591,12 @@ class CeramicAtlasBackend implements AtlasBackend {
         final size = w * h * 4;
         if (stagingBytes == null || stagingBytes.length < size) {
             stagingBytes = Bytes.alloc(size);
+            #if cs
+            // On C# targets ceramic.UInt8Array is the byte[] of the Bytes itself
+            staging = stagingBytes.getData();
+            #else
             staging = UInt8Array.fromBytes(stagingBytes);
+            #end
             #if js
             stagingWords = new js.lib.Int32Array(stagingBytes.getData());
             #end
@@ -635,7 +640,12 @@ class CeramicAtlasBackend implements AtlasBackend {
             }
         }
 
+        #if cs
+        // Unity's submitTexturePixelsRegion reads w * h * 4 bytes from offset 0
+        texture.submitPixelsRegion(x0, y0, w, h, staging);
+        #else
         texture.submitPixelsRegion(x0, y0, w, h, size == stagingBytes.length ? staging : UInt8Array.fromBytes(stagingBytes, 0, size));
+        #end
     }
 
     public function dispose():Void {

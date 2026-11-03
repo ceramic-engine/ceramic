@@ -34,6 +34,10 @@ class TestRunner {
     var numAssertions = 0;
 
     public function runAndExit():Void {
+        #if unity
+        // One line per message in the Unity log, without a stack trace each
+        untyped __cs__('UnityEngine.Application.SetStackTraceLogType(UnityEngine.LogType.Log, UnityEngine.StackTraceLogType.None)');
+        #end
         runSync();
         runAsync(() -> exit(report() ? 0 : 1));
     }
@@ -168,6 +172,8 @@ class TestRunner {
     static function print(message:String):Void {
         #if js
         js.Syntax.code('console.log({0})', message);
+        #elseif unity
+        untyped __cs__('UnityEngine.Debug.Log({0})', message);
         #else
         Sys.println(message);
         #end
@@ -186,6 +192,11 @@ class TestRunner {
     static function exit(code:Int):Void {
         #if js
         js.Syntax.code('process.exit({0})', code);
+        #elseif unity
+        // Sys.exit would end the Unity process without writing its log: in the
+        // editor (batch play mode, see CeramicBatchMode.cs of the Unity template)
+        // EditorApplication.Exit returns the code, in a player Application.Quit does
+        untyped __cs__('\n#if UNITY_EDITOR\nUnityEditor.EditorApplication.Exit({0});\n#else\nUnityEngine.Application.Quit({0});\n#endif\n', code);
         #elseif sys
         Sys.exit(code);
         #end

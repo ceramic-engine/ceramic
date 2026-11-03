@@ -31,7 +31,26 @@ class ActionRegistry {
      * in validating keymaps, or generating documentation.
      */
     public static function generateListOfAllRegisteredActions():Array<MacroActionData> {
+        initActionClasses();
         return macroActions != null ? macroActions.copy() : [];
+    }
+
+    #if cs
+    static var actionClassesInitialized = false;
+    #end
+
+    /**
+     * On C#, the `__init__` of a class runs from its static constructor, the
+     * first time the class is used, instead of at startup like on the other
+     * targets: run those of every action class before reading `macroActions`.
+     */
+    static function initActionClasses():Void {
+        #if cs
+        if (actionClassesInitialized)
+            return;
+        actionClassesInitialized = true;
+        untyped __cs__('foreach (var t in typeof(global::gpui.Action).Assembly.GetTypes()) { if (!t.IsInterface && !t.IsAbstract && !t.ContainsGenericParameters && typeof(global::gpui.Action).IsAssignableFrom(t)) global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(t.TypeHandle); }');
+        #end
     }
 
     final byName:Map<String, MacroActionData> = new Map();
@@ -55,6 +74,7 @@ class ActionRegistry {
      */
     @:allow(gpui)
     function loadActions():Void {
+        initActionClasses();
         if (macroActions == null) return;
         for (action in macroActions) {
             insertAction(action);

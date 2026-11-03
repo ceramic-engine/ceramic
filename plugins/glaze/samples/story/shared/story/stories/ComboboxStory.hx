@@ -105,13 +105,16 @@ private class Industry extends SearchableListItemBase {
  * unselected items when the capacity is reached, providing visual feedback
  * without `currentSelection` access.
  */
-private class Max2Delegate extends SearchableListDelegateBase<String> {
+private class Max2Delegate<I> extends SearchableListDelegateBase<I> {
 
-    final items:SearchableVec<String>;
+    // Generic over the item type (used with String): on C#, Haxe cannot override the
+    // base `item(ix):Null<I>` with a concrete `Null<String>` (the output does not compile).
+
+    final items:SearchableVec<I>;
 
     var selectedIndices:Array<IndexPath> = [];
 
-    public function new(items:SearchableVec<String>) {
+    public function new(items:SearchableVec<I>) {
         this.items = items;
     }
 
@@ -119,7 +122,7 @@ private class Max2Delegate extends SearchableListDelegateBase<String> {
         return items.itemsCount(section);
     }
 
-    public function item(ix:IndexPath):Null<String> {
+    public function item(ix:IndexPath):Null<I> {
         return items.item(ix);
     }
 
@@ -127,13 +130,13 @@ private class Max2Delegate extends SearchableListDelegateBase<String> {
         return items.position(value);
     }
 
-    override public function isItemEnabled(ix:IndexPath, _item:String, _cx:App):Bool {
+    override public function isItemEnabled(ix:IndexPath, _item:I, _cx:App):Bool {
         final atCapacity = selectedIndices.length >= 2;
         final isSelected = Lambda.exists(selectedIndices, i -> i.equals(ix));
         return !atCapacity || isSelected;
     }
 
-    override public function onWillChange(selection:Array<SelectedItem<String>>, changes:Array<SearchableListChange>):Void {
+    override public function onWillChange(selection:Array<SelectedItem<I>>, changes:Array<SearchableListChange>):Void {
         for (change in changes) {
             switch change {
                 case Deselect(index):
@@ -161,11 +164,11 @@ private class Max2Delegate extends SearchableListDelegateBase<String> {
 
 // MARK: PinnedDelegate: first two items always appear checked regardless of selection
 
-private class PinnedDelegate extends SearchableListDelegateBase<String> {
+private class PinnedDelegate<I> extends SearchableListDelegateBase<I> {
 
-    final items:SearchableVec<String>;
+    final items:SearchableVec<I>;
 
-    public function new(items:SearchableVec<String>) {
+    public function new(items:SearchableVec<I>) {
         this.items = items;
     }
 
@@ -173,7 +176,7 @@ private class PinnedDelegate extends SearchableListDelegateBase<String> {
         return items.itemsCount(section);
     }
 
-    public function item(ix:IndexPath):Null<String> {
+    public function item(ix:IndexPath):Null<I> {
         return items.item(ix);
     }
 
@@ -181,12 +184,12 @@ private class PinnedDelegate extends SearchableListDelegateBase<String> {
         return items.position(value);
     }
 
-    override public function isItemEnabled(ix:IndexPath, _item:String, _cx:App):Bool {
+    override public function isItemEnabled(ix:IndexPath, _item:I, _cx:App):Bool {
         // Pinned items are non-interactive: their checked state is fixed.
         return !ix.equals(new IndexPath(0)) && !ix.equals(new IndexPath(1));
     }
 
-    override public function isItemChecked(ix:IndexPath, _item:String, currentSelection:Array<SelectedItem<String>>, _cx:App):Bool {
+    override public function isItemChecked(ix:IndexPath, _item:I, currentSelection:Array<SelectedItem<I>>, _cx:App):Bool {
         // First two items are always rendered checked (externally pinned),
         // regardless of what is in the normal selection.
         return ix.equals(new IndexPath(0)) || ix.equals(new IndexPath(1)) || Lambda.exists(currentSelection, s -> s.index.equals(ix));
@@ -196,11 +199,11 @@ private class PinnedDelegate extends SearchableListDelegateBase<String> {
 
 // MARK: FeaturedDelegate: first item gets a "Featured" badge via renderItem
 
-private class FeaturedDelegate extends SearchableListDelegateBase<String> {
+private class FeaturedDelegate<I> extends SearchableListDelegateBase<I> {
 
-    final items:SearchableVec<String>;
+    final items:SearchableVec<I>;
 
-    public function new(items:SearchableVec<String>) {
+    public function new(items:SearchableVec<I>) {
         this.items = items;
     }
 
@@ -208,7 +211,7 @@ private class FeaturedDelegate extends SearchableListDelegateBase<String> {
         return items.itemsCount(section);
     }
 
-    public function item(ix:IndexPath):Null<String> {
+    public function item(ix:IndexPath):Null<I> {
         return items.item(ix);
     }
 
@@ -216,7 +219,7 @@ private class FeaturedDelegate extends SearchableListDelegateBase<String> {
         return items.position(value);
     }
 
-    override public function renderItem(ix:IndexPath, item:String, checked:Bool, _window:Window, cx:App):Null<AnyElement> {
+    override public function renderItem(ix:IndexPath, item:I, checked:Bool, _window:Window, cx:App):Null<AnyElement> {
         if (!ix.equals(new IndexPath(0))) {
             return null;
         }
@@ -226,7 +229,7 @@ private class FeaturedDelegate extends SearchableListDelegateBase<String> {
             .wFull()
             .justifyBetween()
             .itemsCenter()
-            .child(item);
+            .child(Std.string(item));
         if (checked) {
             row.child(new Icon(IconName.Check)
                 .xsmall()

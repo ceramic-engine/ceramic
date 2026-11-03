@@ -70,22 +70,26 @@ class HighlighterTest #if !macro extends KitTestCase #end {
     override function setup() {
         super.setup();
         addGrammars();
+        // Token comparisons must not depend on the speed of the machine
+        TextMateBackend.lineTimeLimit = 0;
     }
 
     override function teardown() {
+        TextMateBackend.lineTimeLimit = TextMateBackend.LINE_TIME_LIMIT;
         Highlighter.disable();
         super.teardown();
     }
 
     /**
-     * On node there is no synchronous read of the assets: the grammar files
-     * are embedded in the test build and handed to the asset source.
+     * On node and on Unity (C#, assets in Unity's Resources, no file) there is
+     * no synchronous read of the assets: the grammar files are embedded in the
+     * test build and handed to the asset source.
      */
     static function addGrammars():Void {
         if (grammarsAdded)
             return;
         grammarsAdded = true;
-        #if js
+        #if (js || cs)
         final files:haxe.DynamicAccess<String> = haxe.Json.parse(grammarFiles());
         for (name => content in files) {
             gpui.App.defaultAssetSource().add(GrammarCatalog.FOLDER + '/' + name, haxe.io.Bytes.ofString(content));
@@ -673,7 +677,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         return macro $v{haxe.Json.stringify(files)};
     }
 
-    /** The bundled grammar files (JavaScript builds only, see `addGrammars`). */
+    /** The bundled grammar files (JavaScript and C# builds only, see `addGrammars`). */
     static macro function grammarFiles():haxe.macro.Expr {
         final file = haxe.macro.Context.getPosInfos(haxe.macro.Context.currentPos()).file;
         // The plugin root, as `test/unit/plugins/gpui.plugin` names it.
@@ -689,6 +693,11 @@ class HighlighterTest #if !macro extends KitTestCase #end {
             final path = dir + '/' + name;
             haxe.macro.Context.registerModuleDependency('tests.kit.HighlighterTest', path);
             files.set(name, sys.io.File.getContent(path));
+        }
+        if (haxe.macro.Context.defined('cs')) {
+            // A string literal this large exceeds the C# limit of the user strings
+            haxe.macro.Context.addResource('gpui-test-grammars', haxe.io.Bytes.ofString(haxe.Json.stringify(files)));
+            return macro haxe.Resource.getString('gpui-test-grammars');
         }
         return macro $v{haxe.Json.stringify(files)};
     }

@@ -620,7 +620,8 @@ class TextTestDraw {
 
     /** Runs `f` inside a real prepaint pass and returns its value. */
     public static function inPrepaint<R>(app:App, f:(Window, App) -> R):R {
-        var slot:Null<R> = null;
+        // Typed R, not Null<R>: Haxe's C# output cannot read a captured Null<R> of a type parameter
+        var slot:R = null;
         var ran = false;
         var body:Null<(Window, App) -> R> = f;
         final window = openWindow(app, (_, _) -> {

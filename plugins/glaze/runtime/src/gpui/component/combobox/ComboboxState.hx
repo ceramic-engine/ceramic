@@ -154,6 +154,11 @@ class ComboboxState<I> extends Model implements Render {
             delegate,
             selectedIndices,
             (selectedIndex, _secondary, window, cx) -> {
+                #if cs
+                // Names I in this closure's own body: Haxe's C# output makes a closure generic
+                // only then, and its nested closure below needs I (the output does not compile otherwise)
+                final _csTypeParam:Null<I> = null;
+                #end
                 cx.deferIn(window, (listState, window, cx) -> {
                     final listState:ListState<SearchableListAdapter<I>> = cast listState;
                     final index = selectedIndex;
@@ -215,7 +220,13 @@ class ComboboxState<I> extends Model implements Render {
             },
             // on_cancel: close and emit Confirm with current values
             (_finalSelectedIndex, window, cx) -> {
+                #if cs
+                // Names I in this closure's own body: Haxe's C# output makes a closure generic
+                // only then, and its nested closure below needs I (the output does not compile otherwise)
+                final _csTypeParam:Null<I> = null;
+                #end
                 cx.deferIn(window, (_listState, window, cx) -> {
+                    #if cs final _csTypeParam:Null<I> = null; #end
                     weakCancel.tryUpdate(cx, (this_, cx) -> {
                         // Cancel propagates to the BaseCombobox, which may already
                         // have confirmed and closed before this deferred callback.
@@ -241,7 +252,11 @@ class ComboboxState<I> extends Model implements Render {
                         .intoAnyElement();
                 }
             },
-            (this_:Dynamic, window, cx) -> (this_ : ComboboxState<I>).onBlur(window, cast cx),
+            (this_:Dynamic, window, cx) -> {
+                // A local typed with I (not an inline cast) so that Haxe's C# output makes this closure generic
+                final state:ComboboxState<I> = this_;
+                state.onBlur(window, cast cx);
+            },
             window,
             cx
         );

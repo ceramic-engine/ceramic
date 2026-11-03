@@ -323,20 +323,28 @@ class ListState<D:ListDelegate> extends Model implements Render {
 
         if (searchTask != null) searchTask.cancel();
         final ctx:Context<ListState<D>> = cast cx;
-        searchTask = ctx.spawn((this_, acx) -> search.then(_ -> {
-            this_.tryUpdate(acx, (this_, _) -> {
-                this_.scrollHandle.scrollToItem(0, ScrollStrategy.Top);
-                this_.lastQuery = query;
+        searchTask = ctx.spawn((this_, acx) -> {
+            // The `_csTypeParam` locals name D in each closure's own body: Haxe's C# output
+            // makes a closure generic only then, and the nested closures need D (the C#
+            // output does not compile otherwise).
+            #if cs final _csTypeParam:Null<D> = null; #end
+            return search.then(_ -> {
+                #if cs final _csTypeParam:Null<D> = null; #end
+                this_.tryUpdate(acx, (this_, _) -> {
+                    this_.scrollHandle.scrollToItem(0, ScrollStrategy.Top);
+                    this_.lastQuery = query;
+                });
+            }).andThen(_ -> {
+                // Always wait 100ms to avoid flicker
+                return acx.backgroundExecutor().timer(0.1);
+            }).then(_ -> {
+                #if cs final _csTypeParam:Null<D> = null; #end
+                if (window.isDestroyed()) return;
+                this_.tryUpdate(acx, (this_, cx) -> {
+                    this_.setSearching(false, window, cx);
+                });
             });
-        }).andThen(_ -> {
-            // Always wait 100ms to avoid flicker
-            return acx.backgroundExecutor().timer(0.1);
-        }).then(_ -> {
-            if (window.isDestroyed()) return;
-            this_.tryUpdate(acx, (this_, cx) -> {
-                this_.setSearching(false, window, cx);
-            });
-        }));
+        });
     }
 
     function setSearching(searching:Bool, window:Window, cx:Context<Dynamic>):Void {
@@ -361,6 +369,11 @@ class ListState<D:ListDelegate> extends Model implements Render {
 
             final ctx:Context<ListState<D>> = cast cx;
             loadMoreTask = ctx.spawn((view, acx) -> {
+                #if cs
+                // Names D in this closure's own body: Haxe's C# output makes a closure generic
+                // only then, and its nested closure below needs D (the output does not compile otherwise)
+                final _csTypeParam:Null<D> = null;
+                #end
                 if (!window.isDestroyed()) {
                     view.tryUpdate(acx, (view, cx) -> {
                         view.delegateValue.loadMore(window, cast cx);

@@ -118,6 +118,14 @@ class TextMateBackend {
     /** Milliseconds a single line may take to tokenize (VSCode uses the same limit). */
     public static final LINE_TIME_LIMIT:Int = 500;
 
+    /**
+     * The limit in use, `LINE_TIME_LIMIT` unless changed (0: no limit). Tests
+     * that compare tokens set it to 0 so their results do not depend on the
+     * speed of the machine (Mono in the Unity editor goes over the limit on
+     * the first lines of large grammars, while their regexes compile).
+     */
+    @:noCompletion public static var lineTimeLimit:Int = LINE_TIME_LIMIT;
+
     /** `semanticName` results, by scope ("" for none). */
     static final names:Map<String, String> = new Map();
 
@@ -212,7 +220,7 @@ class TextMateBackend {
      */
     @:allow(gpui.component.highlighter)
     static function tokenizeLine(grammar:IGrammar, lineText:String, lineBytes:Int, newlineBytes:Int, state:textmate.IGrammar.StateStack):LineResult {
-        final result = grammar.tokenizeLine(lineText, state, LINE_TIME_LIMIT);
+        final result = grammar.tokenizeLine(lineText, state, lineTimeLimit);
         final highlights:Array<Highlight> = [];
         final tokens = result.tokens;
         final utf16Length = lineText.length;
