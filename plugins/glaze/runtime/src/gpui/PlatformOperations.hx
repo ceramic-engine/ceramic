@@ -1,5 +1,5 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs (the application part of the
-// `Platform` trait: quit, activate, path prompts, menus)
+// `Platform` trait: quit, activate, path prompts, menus and their callbacks)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
@@ -55,5 +55,18 @@ interface PlatformOperations {
 
     /** The application menus last set, if the platform keeps them (`Platform::get_menus`). */
     function getMenus():Null<Array<OwnedMenu>>;
+
+    /** The callback run when an application menu item is chosen (`Platform::on_app_menu_action`). */
+    function onAppMenuAction(callback:Action->Void):Void;
+
+    /** The callback run when an application menu opens (`Platform::on_will_open_app_menu`). */
+    function onWillOpenAppMenu(callback:Void->Void):Void;
+
+    /**
+     * The callback telling whether the action of an application menu item
+     * can run, asked when the platform validates the item
+     * (`Platform::on_validate_app_menu_command`).
+     */
+    function onValidateAppMenuCommand(callback:Action->Bool):Void;
 
 }

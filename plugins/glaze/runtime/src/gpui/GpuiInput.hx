@@ -446,11 +446,13 @@ class GpuiInput extends ceramic.Entity {
             final preferCharacterInput = keyChar != null && modifiers.control && modifiers.alt && !OperatingSystem.current.isMac();
             final event = new KeyDownEvent(keystroke, isHeld, preferCharacterInput);
             final bridge = bridgeOf(window);
-            if (bridge != null) {
-                bridge.keyDown(event);
-            }
-            else {
-                window.dispatchEvent(event);
+            final result = bridge != null ? bridge.keyDown(event) : window.dispatchEvent(event);
+            // Handled (or left to the IME while composing): a native menu
+            // item with the same shortcut does not run, like on macOS where
+            // the window gets key equivalents before the menu
+            // (gpui-pre-macos src/window.rs handle_key_event)
+            if (result == null || !result.propagate) {
+                ceramic.App.app.input.keyDownHandled = true;
             }
         }
         else {

@@ -93,6 +93,7 @@ class Tests {
         runner.add(new tests.kit.ComponentScrollTest());
         // gpui-kit (wave 5: menus)
         runner.add(new tests.AppMenuTest());
+        runner.add(new tests.AppMenuBarTest());
         runner.add(new tests.kit.ComponentMenuTest());
         // gpui-kit (wave 5: modals)
         runner.add(new tests.kit.BaseModalsTest());

@@ -185,6 +185,8 @@ class App {
         inspectorElementRegistry.register(type, factory);
     }
 
+    #end
+
     /**
      * The active window of this app (Rust `active_window`): the most
      * recently opened window of this app that is active.
@@ -192,7 +194,6 @@ class App {
     public function activeWindow():Null<Window> {
         return Window.activeWindowOf(this);
     }
-    #end
 
     /**
      * The text system of this app (Rust `cx.text_system()`). Add fonts with
@@ -1189,9 +1190,92 @@ class App {
     public var platformOperations(default, set):PlatformOperations;
     function set_platformOperations(operations:PlatformOperations):PlatformOperations {
         platformOperations = operations;
-        if (operations != null)
+        if (operations != null) {
             operations.onQuit(() -> shutdown());
+            initAppMenus(operations);
+        }
         return operations;
+    }
+
+    /**
+     * Rust `init_app_menus` (src/platform/app_menu.rs), run by `App::new`
+     * on its platform: opening an application menu clears the pending
+     * keystrokes, a menu item is enabled when its action is available, and
+     * choosing it dispatches its action.
+     */
+    function initAppMenus(operations:PlatformOperations):Void {
+        operations.onWillOpenAppMenu(() -> update(cx -> cx.clearPendingKeystrokes()));
+        operations.onValidateAppMenuCommand(action -> update(cx -> cx.isActionAvailable(action)));
+        operations.onAppMenuAction(action -> update(cx -> cx.dispatchAction(action)));
+    }
+
+    /**
+     * Clears the pending keystrokes of every window of this app (Rust
+     * `clear_pending_keystrokes`).
+     */
+    @:allow(gpui)
+    function clearPendingKeystrokes():Void {
+        for (window in Window.windows.copy()) {
+            if (window.app == this && !window.isDestroyed()) {
+                window.clearPendingKeystrokes(this);
+            }
+        }
+    }
+
+    /**
+     * Checks if the given action is bound in the current context, as defined
+     * by the app's current focus, the bindings in the element tree, and any
+     * global action listeners (Rust `is_action_available`).
+     */
+    public function isActionAvailable(action:Action):Bool {
+        var actionAvailable = false;
+        final window = activeWindow();
+        if (window != null) {
+            actionAvailable = window.isActionAvailable(action, this);
+        }
+        return actionAvailable || globalActionListeners.exists(Type.getClassName(Type.getClass(action)));
+    }
+
+    /**
+     * Dispatch an action to the currently active window or global action
+     * handler (Rust `dispatch_action`).
+     */
+    public function dispatchAction(action:Action):Void {
+        final window = activeWindow();
+        if (window != null) {
+            window.dispatchAction(action.boxedClone(), this);
+        }
+        else {
+            dispatchGlobalAction(action);
+        }
+    }
+
+    function dispatchGlobalAction(action:Action):Void {
+        propagateEvent = true;
+
+        final captureListeners = globalActionListenersFor(Type.getClass(action));
+        if (captureListeners != null) {
+            for (listener in captureListeners) {
+                listener(action, Capture, this);
+                if (!propagateEvent) {
+                    break;
+                }
+            }
+        }
+
+        if (propagateEvent) {
+            final bubbleListeners = globalActionListenersFor(Type.getClass(action));
+            if (bubbleListeners != null) {
+                var i = bubbleListeners.length - 1;
+                while (i >= 0) {
+                    bubbleListeners[i](action, Bubble, this);
+                    i--;
+                    if (!propagateEvent) {
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     final quitObservers:SubscriberSet<App->Null<AnyTask>> = new SubscriberSet();

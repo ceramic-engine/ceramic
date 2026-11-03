@@ -5087,6 +5087,18 @@ class Window implements WindowInvalidator {
         });
     }
 
+    @:allow(gpui)
+    static function activeWindowOf(app:App):Null<Window> {
+        var i = windows.length - 1;
+        while (i >= 0) {
+            final window = windows[i];
+            if (window.app == app && window._active && !window.destroyed) {
+                return window;
+            }
+            i--;
+        }
+        return null;
+    }
 
 
     #if gpui_inspector
@@ -5107,19 +5119,6 @@ class Window implements WindowInvalidator {
             inspector = null;
         }
         refresh();
-    }
-
-    @:allow(gpui)
-    static function activeWindowOf(app:App):Null<Window> {
-        var i = windows.length - 1;
-        while (i >= 0) {
-            final window = windows[i];
-            if (window.app == app && window._active && !window.destroyed) {
-                return window;
-            }
-            i--;
-        }
-        return null;
     }
 
     /**

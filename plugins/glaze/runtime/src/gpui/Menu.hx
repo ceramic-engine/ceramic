@@ -7,10 +7,10 @@ package gpui;
  * A menu of the application, either a main menu or a submenu.
  *
  * `App.setMenus` hands them to the platform (`App.platformOperations`),
- * which keeps them for `App.getMenus`; Ceramic has no native menu bar yet
- * (the macOS menu bar and its validation callbacks are not ported), so
- * apps draw them in the window with gpui-kit's `AppMenuBar`
- * (`GlobalState.setAppMenus`).
+ * which keeps them for `App.getMenus` and installs them as Ceramic's menu
+ * bar: the native macOS menu bar in clay native builds, like GPUI's macOS
+ * platform. Elsewhere there is no system menu bar, so apps draw them in the
+ * window with gpui-kit's `AppMenuBar` (`GlobalState.setAppMenus`).
  */
 class Menu {
 

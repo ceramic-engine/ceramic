@@ -104,4 +104,42 @@ class TestPlatformOperations implements PlatformOperations {
         return menus;
     }
 
+    var menuActionCallback:Null<Action->Void> = null;
+
+    var willOpenMenuCallback:Null<Void->Void> = null;
+
+    var validateMenuCommandCallback:Null<Action->Bool> = null;
+
+    /** GPUI's test platform ignores it; kept for `simulateMenuAction`. */
+    public function onAppMenuAction(callback:Action->Void):Void {
+        menuActionCallback = callback;
+    }
+
+    /** GPUI's test platform ignores it; kept for `simulateWillOpenMenu`. */
+    public function onWillOpenAppMenu(callback:Void->Void):Void {
+        willOpenMenuCallback = callback;
+    }
+
+    /** GPUI's test platform ignores it; kept for `simulateValidateMenuCommand`. */
+    public function onValidateAppMenuCommand(callback:Action->Bool):Void {
+        validateMenuCommandCallback = callback;
+    }
+
+    /** Runs the menu action callback, as a platform does when a menu item is chosen. */
+    public function simulateMenuAction(action:Action):Void {
+        if (menuActionCallback != null)
+            menuActionCallback(action);
+    }
+
+    /** Runs the will open menu callback, as a platform does when a menu opens. */
+    public function simulateWillOpenMenu():Void {
+        if (willOpenMenuCallback != null)
+            willOpenMenuCallback();
+    }
+
+    /** Runs the validation callback, as a platform does to enable a menu item (false without one). */
+    public function simulateValidateMenuCommand(action:Action):Bool {
+        return validateMenuCommandCallback != null && validateMenuCommandCallback(action);
+    }
+
 }
