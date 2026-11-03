@@ -11,6 +11,8 @@ using StringTools;
 
 class UnityCSharp {
 
+    static final ABSTRACT_GENERIC_CAST = ~/(public (?:virtual|override) object (\w+_cast)<([^>]+)>\(\) \{\n)((?:[ \t]*#line[^\n]*\n)?)([ \t]*)return this\.\2<[^>]+>\(\);\n/g;
+
     public static function exportScriptFilesToProject(cwd:String, project:Project) {
 
         var debug = context.debug;
@@ -58,6 +60,7 @@ class UnityCSharp {
                 }
                 else if (normalizedPath == 'Array.cs') {
                     processedContent = patchGenericCast(processedContent);
+                    processedContent = patchArraySort(processedContent);
                 }
 
                 var sanitizedName = sanitizeName(normalizedPath);
@@ -84,6 +87,9 @@ class UnityCSharp {
             }
         }
 
+        // Haxe resources (`--resource file@name`)
+        exportResourcesToProject(Path.join([srcCsPath, 'Resources']), Path.join([dstResourcesPath, 'haxe_resources']));
+
         // Remove outdated files
         for (name in dstList) {
 
@@ -103,6 +109,45 @@ class UnityCSharp {
                 }
             }
 
+        }
+
+    }
+
+    /**
+     * Copies the resources written by Haxe's C# target (`bin/src/Resources`)
+     * as `.bytes` text assets that the Unity `haxe.Resource` loads, and removes
+     * the outdated ones.
+     */
+    static function exportResourcesToProject(srcResourcesPath:String, dstResourcesPath:String) {
+
+        var srcNames = new Map<String,Bool>();
+        if (FileSystem.exists(srcResourcesPath)) {
+            for (name in FileSystem.readDirectory(srcResourcesPath)) {
+                var srcFilePath = Path.join([srcResourcesPath, name]);
+                if (FileSystem.isDirectory(srcFilePath))
+                    continue;
+                srcNames.set(name + '.bytes', true);
+                var dstFilePath = Path.join([dstResourcesPath, name + '.bytes']);
+                var content = File.getBytes(srcFilePath);
+                if (FileSystem.exists(dstFilePath) && File.getBytes(dstFilePath).compare(content) == 0)
+                    continue;
+                if (!FileSystem.exists(dstResourcesPath)) {
+                    FileSystem.createDirectory(dstResourcesPath);
+                }
+                File.saveBytes(dstFilePath, content);
+            }
+        }
+
+        if (FileSystem.exists(dstResourcesPath)) {
+            for (name in FileSystem.readDirectory(dstResourcesPath)) {
+                if (name.endsWith('.bytes') && !srcNames.exists(name)) {
+                    var outdatedFilePath = Path.join([dstResourcesPath, name]);
+                    FileSystem.deleteFile(outdatedFilePath);
+                    if (FileSystem.exists(outdatedFilePath + '.meta')) {
+                        FileSystem.deleteFile(outdatedFilePath + '.meta');
+                    }
+                }
+            }
         }
 
     }
@@ -142,6 +187,18 @@ class UnityCSharp {
 
         // Mute hidden inherited member
         content = content.replace('#pragma warning disable ', '#pragma warning disable 108, ');
+
+        // Haxe's C# target gives a generic abstract class a cast method that
+        // calls itself (it cannot create an instance to copy the fields into,
+        // like it does for other generic classes): any cast to that class
+        // overflowed the stack. Return the instance itself: same type
+        // arguments are the usual case, and the caller's C# cast fails
+        // cleanly otherwise.
+        if (content.indexOf('_cast<') != -1) {
+            content = ABSTRACT_GENERIC_CAST.map(content, function(r) {
+                return r.matched(1) + r.matched(4) + r.matched(5) + 'return this;\n';
+            });
+        }
 
         return content;
 
@@ -219,6 +276,72 @@ class UnityCSharp {
         content = content.replace('global::haxe.lang.Runtime.genericCast<T>(x', '(x');
 
         return content;
+
+    }
+
+    /**
+     * Haxe's C# `Array.sort` is a quicksort: not stable, while hxcpp
+     * (`std::stable_sort`) and JavaScript keep equal elements in their order,
+     * which code ported from stable sorts relies on. Replace it with a stable
+     * merge sort (an element moves before an earlier one only when the
+     * comparison says it is smaller, like `std::stable_sort`).
+     */
+    static function patchArraySort(content:String):String {
+
+        var sortDecl = 'public void sort(global::haxe.lang.Function f) {';
+        var sortIndex = content.indexOf(sortDecl);
+        var quicksortIndex = content.indexOf('public void quicksort(', sortIndex);
+        if (sortIndex == -1 || quicksortIndex == -1) {
+            warning('Failed to patch Array.sort');
+            return content;
+        }
+
+        var stableSort = [
+            sortDecl,
+            '\t\t\tunchecked {',
+            '\t\t\t\tint n = this.length;',
+            '\t\t\t\tif (n < 2) {',
+            '\t\t\t\t\treturn;',
+            '\t\t\t\t}',
+            '\t\t\t\tT[] src = this.__a;',
+            '\t\t\t\tT[] dst = new T[n];',
+            '\t\t\t\tfor (int width = 1; width < n; width *= 2) {',
+            '\t\t\t\t\tfor (int lo = 0; lo < n; lo += 2 * width) {',
+            '\t\t\t\t\t\tint mid = global::System.Math.Min(lo + width, n);',
+            '\t\t\t\t\t\tint hi = global::System.Math.Min(lo + 2 * width, n);',
+            '\t\t\t\t\t\tint i = lo;',
+            '\t\t\t\t\t\tint j = mid;',
+            '\t\t\t\t\t\tint k = lo;',
+            '\t\t\t\t\t\twhile (i < mid && j < hi) {',
+            '\t\t\t\t\t\t\tif (((int) (f.__hx_invoke2_f(default(double), (object) src[j], default(double), (object) src[i]))) < 0) {',
+            '\t\t\t\t\t\t\t\tdst[k++] = src[j++];',
+            '\t\t\t\t\t\t\t}',
+            '\t\t\t\t\t\t\telse {',
+            '\t\t\t\t\t\t\t\tdst[k++] = src[i++];',
+            '\t\t\t\t\t\t\t}',
+            '\t\t\t\t\t\t}',
+            '\t\t\t\t\t\twhile (i < mid) {',
+            '\t\t\t\t\t\t\tdst[k++] = src[i++];',
+            '\t\t\t\t\t\t}',
+            '\t\t\t\t\t\twhile (j < hi) {',
+            '\t\t\t\t\t\t\tdst[k++] = src[j++];',
+            '\t\t\t\t\t\t}',
+            '\t\t\t\t\t}',
+            '\t\t\t\t\tT[] swap = src;',
+            '\t\t\t\t\tsrc = dst;',
+            '\t\t\t\t\tdst = swap;',
+            '\t\t\t\t}',
+            '\t\t\t\tif (src != this.__a) {',
+            '\t\t\t\t\tglobal::System.Array.Copy(src, 0, this.__a, 0, n);',
+            '\t\t\t\t}',
+            '\t\t\t}',
+            '\t\t}',
+            '\t\t',
+            '\t\t',
+            '\t\t'
+        ].join('\n');
+
+        return content.substring(0, sortIndex) + stableSort + content.substring(quicksortIndex);
 
     }
 
