@@ -115,6 +115,26 @@ class MaterialData {
 
     #if !no_backend_docs
     /**
+     * Last render frame (`Materials.frame`) this material was used in.
+     */
+    #end
+    public var usedFrame:Int = -1;
+
+    #if !no_backend_docs
+    /**
+     * Whether the Unity material already holds the committed uniform values
+     * of its shader (see `ShaderImpl.commitParams()`).
+     */
+    #end
+    inline public function hasShaderParams():Bool {
+
+        var shaderImpl:ShaderImpl = shader;
+        return paramsVersion == shaderImpl.committedVersion;
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Creates a new MaterialData instance with default settings.
      */
     #end
@@ -187,48 +207,48 @@ class MaterialData {
     inline public function syncShaderParams():Void {
 
         var shaderImpl:ShaderImpl = shader;
-        if (paramsVersion != shaderImpl.paramsVersion) {
+        if (paramsVersion != shaderImpl.committedVersion) {
 
             untyped __cs__('UnityEngine.Material m = (UnityEngine.Material){0}', material);
 
-            if (shaderImpl.intParams != null) {
-                for (name => val in shaderImpl.intParams) {
+            if (shaderImpl.committedIntParams != null) {
+                for (name => val in shaderImpl.committedIntParams) {
                     untyped __cs__('m.SetInt({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.floatParams != null) {
-                for (name => val in shaderImpl.floatParams) {
+            if (shaderImpl.committedFloatParams != null) {
+                for (name => val in shaderImpl.committedFloatParams) {
                     untyped __cs__('m.SetFloat({0}, (float){1})', name, val);
                 }
             }
 
-            if (shaderImpl.vec2Params != null) {
-                for (name => val in shaderImpl.vec2Params) {
+            if (shaderImpl.committedVec2Params != null) {
+                for (name => val in shaderImpl.committedVec2Params) {
                     untyped __cs__('m.SetVector({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.vec3Params != null) {
-                for (name => val in shaderImpl.vec3Params) {
+            if (shaderImpl.committedVec3Params != null) {
+                for (name => val in shaderImpl.committedVec3Params) {
                     untyped __cs__('m.SetVector({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.vec4Params != null) {
-                for (name => val in shaderImpl.vec4Params) {
+            if (shaderImpl.committedVec4Params != null) {
+                for (name => val in shaderImpl.committedVec4Params) {
                     untyped __cs__('m.SetVector({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.floatArrayParams != null) {
-                for (name => val in shaderImpl.floatArrayParams) {
+            if (shaderImpl.committedFloatArrayParams != null) {
+                for (name => val in shaderImpl.committedFloatArrayParams) {
                     untyped __cs__('m.SetFloatArray({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.textureParams != null) {
-                for (textureName => val in shaderImpl.textureParams) {
+            if (shaderImpl.committedTextureParams != null) {
+                for (textureName => val in shaderImpl.committedTextureParams) {
                     final texture:TextureImpl = val;
                     if (texture.unityTexture != null) {
                         untyped __cs__('m.SetTexture({0}, (UnityEngine.Texture2D){1})', textureName, texture.unityTexture);
@@ -239,25 +259,25 @@ class MaterialData {
                 }
             }
 
-            if (shaderImpl.mat2Params != null) {
-                for (name => val in shaderImpl.mat2Params) {
+            if (shaderImpl.committedMat2Params != null) {
+                for (name => val in shaderImpl.committedMat2Params) {
                     untyped __cs__('m.SetFloatArray({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.mat3Params != null) {
-                for (name => val in shaderImpl.mat3Params) {
+            if (shaderImpl.committedMat3Params != null) {
+                for (name => val in shaderImpl.committedMat3Params) {
                     untyped __cs__('m.SetFloatArray({0}, {1})', name, val);
                 }
             }
 
-            if (shaderImpl.mat4Params != null) {
-                for (name => val in shaderImpl.mat4Params) {
+            if (shaderImpl.committedMat4Params != null) {
+                for (name => val in shaderImpl.committedMat4Params) {
                     untyped __cs__('m.SetMatrix({0}, (UnityEngine.Matrix4x4){1})', name, val);
                 }
             }
 
-            paramsVersion = shaderImpl.paramsVersion;
+            paramsVersion = shaderImpl.committedVersion;
 
         }
 

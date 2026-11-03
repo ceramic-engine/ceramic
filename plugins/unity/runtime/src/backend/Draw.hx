@@ -856,6 +856,9 @@ class Draw #if !completion implements spec.Draw #end {
     #end
     #if !ceramic_debug_draw_backend inline #end public function beginRender():Void {
 
+        // New frame: materials used by the previous one may take new uniforms
+        Materials.frame++;
+
         // Reset command buffer(s)
         #if unity_urp
         clearPendingCommandBuffers();
@@ -1180,6 +1183,12 @@ class Draw #if !completion implements spec.Draw #end {
     #if !ceramic_debug_draw_backend inline #end public function useShader(shader:backend.ShaderImpl):Void {
 
         _materialCurrentShader = _materialStencilWrite != 0 ? _stencilShader : shader;
+
+        // The uniforms set so far apply to the draws of this shader from now
+        // on (like a GL program's uniforms, see ShaderImpl.commitParams())
+        if (_materialCurrentShader != null) {
+            (_materialCurrentShader:ShaderImpl).commitParams();
+        }
 
         var attributesSize = ceramic.App.app.backend.shaders.customFloatAttributesSize(_materialCurrentShader);
 

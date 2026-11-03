@@ -41,6 +41,16 @@ class Materials {
 
     #if !no_backend_docs
     /**
+     * Render frame counter, bumped by `Draw.beginRender()`. The draw
+     * commands of a frame run after the whole frame is recorded, with the
+     * state their Unity material has THEN: a material used in this frame
+     * must not get other uniform values in the same frame (see `get()`).
+     */
+    #end
+    public static var frame:Int = 0;
+
+    #if !no_backend_docs
+    /**
      * Creates a new Materials manager instance.
      */
     #end
@@ -70,14 +80,33 @@ class Materials {
             var materialData = repository.unsafeGet(i);
 
             if (materialData.matches(textures, shader, srcRgb, dstRgb, srcAlpha, dstAlpha, stencil)) {
+                // A material already used in this frame keeps its uniforms:
+                // other values need another material (two draws of the same
+                // shader with different uniforms in one frame would both
+                // render with the last values otherwise)
+                if (materialData.usedFrame == frame && !materialData.hasShaderParams()) {
+                    continue;
+                }
                 materialData.syncShaderParams();
+                materialData.usedFrame = frame;
                 return materialData;
             }
         }
 
         // Nothing found, create a new one
         var materialData = new MaterialData();
-        materialData.textures = textures;
+        // A copy: the caller reuses its array (Draw's current textures),
+        // the material must keep the textures it was created with
+        if (textures != null) {
+            var texturesCopy = new NativeArray<backend.Texture>(textures.length);
+            for (t in 0...textures.length) {
+                texturesCopy[t] = textures[t];
+            }
+            materialData.textures = texturesCopy;
+        }
+        else {
+            materialData.textures = null;
+        }
         materialData.shader = shader;
         materialData.srcRgb = srcRgb;
         materialData.dstRgb = dstRgb;
@@ -90,6 +119,7 @@ class Materials {
         untyped __cs__('UnityEngine.Material material = new UnityEngine.Material((UnityEngine.Shader){0})', shaderImpl.unityShader);
 
         materialData.material = untyped __cs__('material');
+        materialData.usedFrame = frame;
         repository.push(materialData);
 
         var mainTexture:TextureImpl = textures[0];

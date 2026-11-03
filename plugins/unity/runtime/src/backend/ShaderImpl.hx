@@ -164,6 +164,69 @@ class ShaderImpl {
 
     #if !no_backend_docs
     /**
+     * `paramsVersion` of the values committed by `commitParams()` (-1:
+     * none yet). Draws render with the committed values, like a GL program
+     * renders with the uniforms uploaded when it was last used: values set
+     * after `Draw.useShader()` only apply from the next `useShader()`, as
+     * on the clay backend, even for a batch flushed after they were set.
+     */
+    #end
+    var committedVersion:Int = -1;
+
+    var committedIntParams:Map<String,Int> = null;
+    var committedFloatParams:Map<String,Float> = null;
+    var committedVec2Params:Map<String,unityengine.Vector2> = null;
+    var committedVec3Params:Map<String,unityengine.Vector3> = null;
+    var committedVec4Params:Map<String,unityengine.Vector4> = null;
+    var committedFloatArrayParams:Map<String,cs.NativeArray<Single>> = null;
+    var committedTextureParams:Map<String,backend.Texture> = null;
+    var committedMat2Params:Map<String,cs.NativeArray<Single>> = null;
+    var committedMat3Params:Map<String,cs.NativeArray<Single>> = null;
+    var committedMat4Params:Map<String,unityengine.Matrix4x4> = null;
+
+    #if !no_backend_docs
+    /**
+     * Commits the current uniform values (called by `Draw.useShader()`).
+     */
+    #end
+    public function commitParams():Void {
+
+        if (committedVersion == paramsVersion)
+            return;
+
+        committedIntParams = intParams != null ? intParams.copy() : null;
+        committedFloatParams = floatParams != null ? floatParams.copy() : null;
+        committedVec2Params = vec2Params != null ? vec2Params.copy() : null;
+        committedVec3Params = vec3Params != null ? vec3Params.copy() : null;
+        committedVec4Params = vec4Params != null ? vec4Params.copy() : null;
+        committedFloatArrayParams = floatArrayParams != null ? floatArrayParams.copy() : null;
+        committedTextureParams = textureParams != null ? textureParams.copy() : null;
+        // mat2 and mat3 arrays are updated in place by their setters
+        committedMat2Params = copyArrays(mat2Params);
+        committedMat3Params = copyArrays(mat3Params);
+        committedMat4Params = mat4Params != null ? mat4Params.copy() : null;
+        committedVersion = paramsVersion;
+
+    }
+
+    static function copyArrays(params:Map<String,cs.NativeArray<Single>>):Map<String,cs.NativeArray<Single>> {
+
+        if (params == null)
+            return null;
+        var result = new Map<String,cs.NativeArray<Single>>();
+        for (name => arr in params) {
+            var copy = new cs.NativeArray<Single>(arr.Length);
+            for (i in 0...arr.Length) {
+                copy[i] = arr[i];
+            }
+            result.set(name, copy);
+        }
+        return result;
+
+    }
+
+    #if !no_backend_docs
+    /**
      * Integer uniform parameters.
      */
     #end
