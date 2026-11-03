@@ -4,6 +4,7 @@ import ceramic.Files;
 import ceramic.IntIntMap;
 import haxe.io.Bytes;
 import unityengine.ImageConversion;
+import unityengine.RenderTexture;
 import unityengine.ScreenCapture;
 import unityengine.Texture2D;
 import unityengine.inputsystem.Mouse;
@@ -34,21 +35,132 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
         isEditor = untyped __cs__('UnityEngine.Application.isEditor');
 
-        pixelWidth = untyped __cs__('UnityEngine.Screen.width');
-        pixelHeight = untyped __cs__('UnityEngine.Screen.height');
-
-        if (!isEditor) {
-            var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
-            density = Math.round(dpi / 160);
-            if (density < 1) {
-                density = 1;
-            }
-        }
-        else {
-            density = 1;
-        }
+        readOverrides();
+        readPixelSize();
+        density = computeDensity();
         width = toLogicalSize(pixelWidth, density);
         height = toLogicalSize(pixelHeight, density);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Screen density forced by the `CERAMIC_UNITY_DENSITY` environment
+     * variable (a number above 0), or 0 when not forced.
+     */
+    #end
+    var densityOverride:Float = 0;
+
+    #if !no_backend_docs
+    /**
+     * Screen size in pixels forced by the `CERAMIC_UNITY_SCREEN_SIZE`
+     * environment variable (`<width>x<height>`, for example `1024x1024`),
+     * or 0 when not forced.
+     */
+    #end
+    var pixelWidthOverride:Int = 0;
+
+    #if !no_backend_docs
+    /**
+     * Whether `CERAMIC_UNITY_SCREEN_SIZE` is `window`: the screen takes the
+     * size of the window the app asks for at startup (`settings.windowWidth`
+     * and `windowHeight`, else `targetWidth` and `targetHeight`, like the
+     * window of the clay backend), times the density.
+     */
+    #end
+    var screenSizeFromWindowSettings:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * See `pixelWidthOverride`.
+     */
+    #end
+    var pixelHeightOverride:Int = 0;
+
+    #if !no_backend_docs
+    /**
+     * Reads the density and screen size overrides once. They give a
+     * deterministic screen when there is no real one (batch mode, tests
+     * rendered at a fixed size and density).
+     */
+    #end
+    function readOverrides():Void {
+
+        var densityValue = Sys.getEnv('CERAMIC_UNITY_DENSITY');
+        if (densityValue != null && densityValue != '') {
+            var value = Std.parseFloat(densityValue);
+            if (!Math.isNaN(value) && value > 0) {
+                densityOverride = value;
+            }
+            else {
+                ceramic.Shortcuts.log.warning('Ignoring invalid CERAMIC_UNITY_DENSITY: $densityValue');
+            }
+        }
+
+        var sizeValue = Sys.getEnv('CERAMIC_UNITY_SCREEN_SIZE');
+        if (sizeValue == 'window') {
+            screenSizeFromWindowSettings = true;
+        }
+        else if (sizeValue != null && sizeValue != '') {
+            var parts = sizeValue.split('x');
+            var w = parts.length == 2 ? Std.parseInt(parts[0]) : null;
+            var h = parts.length == 2 ? Std.parseInt(parts[1]) : null;
+            if (w != null && h != null && w > 0 && h > 0) {
+                pixelWidthOverride = w;
+                pixelHeightOverride = h;
+            }
+            else {
+                ceramic.Shortcuts.log.warning('Ignoring invalid CERAMIC_UNITY_SCREEN_SIZE: $sizeValue');
+            }
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Reads the size of the screen in pixels (or its override).
+     */
+    #end
+    function readPixelSize():Void {
+
+        if (pixelWidthOverride > 0) {
+            pixelWidth = pixelWidthOverride;
+            pixelHeight = pixelHeightOverride;
+        }
+        else if (screenSizeFromWindowSettings && ceramic.App.app != null && ceramic.App.app.settings != null
+            && (ceramic.App.app.settings.windowWidth > 0 || ceramic.App.app.settings.targetWidth > 0)) {
+            var settings = ceramic.App.app.settings;
+            var screenDensity = computeDensity();
+            pixelWidth = Math.round((settings.windowWidth > 0 ? settings.windowWidth : settings.targetWidth) * screenDensity);
+            pixelHeight = Math.round((settings.windowHeight > 0 ? settings.windowHeight : settings.targetHeight) * screenDensity);
+        }
+        else {
+            pixelWidth = untyped __cs__('UnityEngine.Screen.width');
+            pixelHeight = untyped __cs__('UnityEngine.Screen.height');
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Density of the screen: its override, 1 in the editor, otherwise
+     * `round(dpi / 160)` (at least 1).
+     */
+    #end
+    function computeDensity():Float {
+
+        if (densityOverride > 0) {
+            return densityOverride;
+        }
+        if (isEditor) {
+            return 1;
+        }
+        var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
+        var result:Float = Math.round(dpi / 160);
+        if (result < 1) {
+            result = 1;
+        }
+        return result;
 
     }
 
@@ -334,8 +446,21 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         return true;
     }
 
-    /** No menu bar on Unity: does nothing. */
-    public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {}
+    /** The menus of the last `setMenuBar()` call (no menu bar on Unity). */
+    public var menuBar(default, null):Array<ceramic.MenuItem> = null;
+
+    var menuItemEnabled:(id:Int)->Bool = null;
+
+    /** No menu bar on Unity: keeps the menus (`menuBar`, `isMenuItemEnabled`), like the headless backend. */
+    public function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+        menuBar = menus;
+        menuItemEnabled = isEnabled;
+    }
+
+    /** What the system would ask to validate the item with the given id. */
+    public function isMenuItemEnabled(id:Int):Bool {
+        return menuItemEnabled != null && menuItemEnabled(id);
+    }
 
     #if !no_backend_docs
     /**
@@ -381,17 +506,9 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @:allow(backend.Backend)
     function update() {
 
-        pixelWidth = untyped __cs__('UnityEngine.Screen.width');
-        pixelHeight = untyped __cs__('UnityEngine.Screen.height');
+        readPixelSize();
 
-        var newDensity:Float = 1;
-        if (!isEditor) {
-            var dpi:Single = untyped __cs__('UnityEngine.Screen.dpi');
-            newDensity = Math.round(dpi / 160);
-            if (newDensity < 1) {
-                newDensity = 1;
-            }
-        }
+        var newDensity = computeDensity();
         var newWidth = toLogicalSize(pixelWidth, newDensity);
         var newHeight = toLogicalSize(pixelHeight, newDensity);
 
@@ -740,6 +857,14 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     public function screenshotToTexture(done:(texture:Texture)->Void):Void {
 
+        if (batchTarget != null) {
+            pendingBatchScreenshots.push(() -> {
+                var unityTexture = readBatchTarget();
+                done(new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end));
+            });
+            return;
+        }
+
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
         if (unityTexture != null) {
             var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end);
@@ -760,6 +885,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     #end
     public function screenshotToPng(?path:String, done:(?data:Bytes)->Void):Void {
+
+        if (batchTarget != null) {
+            pendingBatchScreenshots.push(() -> {
+                var unityTexture = readBatchTarget();
+                var pngBytesData = ImageConversion.EncodeToPNG(unityTexture);
+                untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
+                if (path != null) {
+                    Files.saveBytes(path, Bytes.ofData(pngBytesData));
+                    done();
+                }
+                else {
+                    done(Bytes.ofData(pngBytesData));
+                }
+            });
+            return;
+        }
 
         // Always go through a texture: `ScreenCapture.CaptureScreenshot(path)` writes the file
         // at some later frame, which would make `done` fire before the screenshot exists
@@ -790,6 +931,19 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     #end
     public function screenshotToPixels(done:(pixels:ceramic.UInt8Array, width:Int, height:Int)->Void):Void {
 
+        if (batchTarget != null) {
+            pendingBatchScreenshots.push(() -> {
+                var unityTexture = readBatchTarget();
+                var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end);
+                var pixels = ceramic.App.app.backend.textures.fetchTexturePixels(texture);
+                var width = texture.width;
+                var height = texture.height;
+                ceramic.App.app.backend.textures.destroyTexture(texture);
+                done(pixels, width, height);
+            });
+            return;
+        }
+
         var unityTexture:Texture2D = ScreenCapture.CaptureScreenshotAsTexture(1);
         if (unityTexture != null) {
             var texture = new TextureImpl('screenshot:' + (nextScreenshotIndex++), unityTexture, null #if unity_6000 , null #end);
@@ -806,5 +960,112 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+/// Batch mode offscreen target
+
+    #if !no_backend_docs
+    /**
+     * Render texture the main camera renders into in batch mode with a
+     * graphics device (`-batchmode` without `-nographics`): there is no
+     * screen to render to then. Screenshots read it. Null otherwise.
+     */
+    #end
+    var batchTarget:RenderTexture = null;
+
+    #if !no_backend_docs
+    /**
+     * Screenshots asked while the batch target is used: they are taken at
+     * the next `flushBatchScreenshots()`, once the frame that asked for them
+     * has been rendered.
+     */
+    #end
+    var pendingBatchScreenshots:Array<()->Void> = [];
+
+    #if !no_backend_docs
+    /**
+     * Batch mode with a graphics device only: makes the main camera render
+     * into a render texture of the size of the screen in pixels (see
+     * `CERAMIC_UNITY_SCREEN_SIZE`), created again when that size changes.
+     * Returns false when there is no graphics device or no main camera.
+     */
+    #end
+    @:allow(Main)
+    function updateBatchTarget():Bool {
+
+        var hasDevice:Bool = untyped __cs__('UnityEngine.SystemInfo.graphicsDeviceType != UnityEngine.Rendering.GraphicsDeviceType.Null');
+        if (!hasDevice) {
+            return false;
+        }
+        var hasCamera:Bool = untyped __cs__('UnityEngine.Camera.main != null');
+        if (!hasCamera) {
+            return false;
+        }
+
+        if (batchTarget == null || batchTarget.width != pixelWidth || batchTarget.height != pixelHeight) {
+            var previous = batchTarget;
+            // Same format as the screen of the template (8 bits per channel, no MSAA)
+            batchTarget = untyped __cs__('new UnityEngine.RenderTexture({0}, {1}, 24, UnityEngine.RenderTextureFormat.ARGB32)', pixelWidth, pixelHeight);
+            untyped __cs__('{0}.antiAliasing = 1', batchTarget);
+            untyped __cs__('{0}.Create()', batchTarget);
+            untyped __cs__('UnityEngine.Camera.main.targetTexture = {0}', batchTarget);
+            if (previous != null) {
+                untyped __cs__('{0}.Release()', previous);
+                untyped __cs__('UnityEngine.Object.Destroy({0})', previous);
+            }
+        }
+        return true;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Renders the main camera into the batch target now (which runs the
+     * Ceramic render pass, so the app update and its drawing).
+     */
+    #end
+    @:allow(Main)
+    function renderBatchTarget():Void {
+
+        untyped __cs__('UnityEngine.Camera.main.Render()');
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Takes the screenshots asked since the last call. Called by
+     * `Main.regularUpdate()` before the next app update, so the batch
+     * target holds the frame that asked for them.
+     */
+    #end
+    @:allow(Main)
+    function flushBatchScreenshots():Void {
+
+        if (pendingBatchScreenshots.length == 0) {
+            return;
+        }
+        var screenshots = pendingBatchScreenshots;
+        pendingBatchScreenshots = [];
+        for (screenshot in screenshots) {
+            screenshot();
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Copies the batch target into a new readable texture (the caller
+     * destroys it).
+     */
+    #end
+    function readBatchTarget():Texture2D {
+
+        var texture:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}, {1}, UnityEngine.TextureFormat.RGBA32, false)', batchTarget.width, batchTarget.height);
+        var previousActive = RenderTexture.active;
+        RenderTexture.active = batchTarget;
+        texture.ReadPixels(new unityengine.Rect(0, 0, batchTarget.width, batchTarget.height), 0, 0, false);
+        texture.Apply(false, false);
+        RenderTexture.active = previousActive;
+        return texture;
+
+    }
 
 }

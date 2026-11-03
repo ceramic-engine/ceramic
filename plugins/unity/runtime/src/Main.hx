@@ -42,6 +42,18 @@ class Main {
      * Whether the app runs in batch mode (`-batchmode`), read once.
      */
     static var _isBatchMode:Bool = untyped __cs__('UnityEngine.Application.isBatchMode');
+
+    /**
+     * Batch mode with a graphics device: whether the main camera is rendered
+     * explicitly every frame (it does not render by itself in batch mode).
+     */
+    static var _batchExplicitRender:Bool = false;
+
+    /**
+     * Batch mode: whether rendering the main camera explicitly was tried
+     * and ran no render pass (then the app is updated without rendering).
+     */
+    static var _batchRenderFailed:Bool = false;
     #end
 
     /**
@@ -122,10 +134,26 @@ class Main {
 
         // Batch frame driver: in batch mode (`-batchmode`, with or without
         // `-nographics`) no camera may render, so the URP render pass that
-        // updates and renders the app never runs. When it did not run during
-        // two frames in a row, update the app from here and drop the draw
-        // commands that no render pass will consume.
+        // updates and renders the app never runs. With a graphics device, the
+        // main camera renders into an offscreen target of the screen size
+        // (screenshots read it), explicitly when it does not render by
+        // itself. Without one (or when even that runs no render pass), after
+        // two frames without a render pass, update the app from here and drop
+        // the draw commands that no render pass will consume.
         if (_isBatchMode) {
+            var screen = ceramic.App.app.backend.screen;
+            // The previous frame is rendered: take the screenshots it asked for
+            screen.flushBatchScreenshots();
+            var hasTarget = screen.updateBatchTarget();
+            if (_batchExplicitRender && hasTarget) {
+                _renderPassRan = false;
+                screen.renderBatchTarget();
+                if (!_renderPassRan) {
+                    updateWithoutRenderPass();
+                }
+                _renderPassRan = false;
+                return;
+            }
             if (_renderPassRan) {
                 _framesWithoutRenderPass = 0;
             }
@@ -134,11 +162,31 @@ class Main {
             }
             _renderPassRan = false;
             if (_framesWithoutRenderPass >= 2) {
-                update();
-                if (ceramic.App.app.backend.draw != null) {
-                    ceramic.App.app.backend.draw.discardPendingCommandBuffers();
+                if (hasTarget && !_batchRenderFailed) {
+                    screen.renderBatchTarget();
+                    if (_renderPassRan) {
+                        _batchExplicitRender = true;
+                        _renderPassRan = false;
+                        return;
+                    }
+                    _batchRenderFailed = true;
+                    ceramic.Shortcuts.log.warning('Batch mode: rendering the main camera ran no render pass, the app updates without rendering');
                 }
+                updateWithoutRenderPass();
             }
+        }
+
+    }
+
+    /**
+     * Batch mode without any render pass: updates the app and drops the draw
+     * commands that no render pass will consume.
+     */
+    static function updateWithoutRenderPass():Void {
+
+        update();
+        if (ceramic.App.app.backend.draw != null) {
+            ceramic.App.app.backend.draw.discardPendingCommandBuffers();
         }
 
     }
