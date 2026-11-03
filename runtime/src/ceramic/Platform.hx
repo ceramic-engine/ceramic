@@ -316,7 +316,10 @@ class Platform {
 
         #elseif unity
 
-        untyped __cs__('UnityEngine.Application.Quit()');
+        // Application.Quit() does nothing in the editor: stop play mode
+        // there instead, and tell the batch mode runner of the Unity
+        // template (CeramicBatchMode.cs) that the app ended by itself
+        untyped __cs__('\n#if UNITY_EDITOR\nUnityEditor.SessionState.SetBool("CeramicBatchMode.quitRequested", true);\nUnityEditor.EditorApplication.ExitPlaymode();\n#else\nUnityEngine.Application.Quit();\n#endif\n');
 
         #elseif (node || nodejs || hxnodejs)
 
