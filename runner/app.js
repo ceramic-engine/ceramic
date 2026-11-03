@@ -71,6 +71,7 @@ let screenshotPath = null;
 let screenshotThenQuit = false;
 let keepHidden = false;
 let screenshotOnSignal = false;
+let forcedDeviceScaleFactor = false;
 
 var argv = process.argv.slice();
 var i = 0;
@@ -108,8 +109,21 @@ while (i < argv.length) {
         // (deterministic: the app fires it once its scene is actually ready/rendered).
         screenshotOnSignal = true;
     }
+    if (arg.startsWith('--force-device-scale-factor')) {
+        // Chromium switch added by `ceramic web --device-scale-factor <factor>`
+        forcedDeviceScaleFactor = true;
+    }
     i++;
 }
+
+// Automated run (hidden window, screenshot capture or fixed device scale factor):
+// its result must not depend on what earlier runs left behind. Chromium stores the
+// page zoom per host ("localhost", whatever the port) in the runner profile, and every app served
+// by the runner shares it, so a zoom set by one run would change the device pixel
+// ratio of the next ones. Such runs use an in-memory session (nothing they do is
+// saved, nothing saved is read back) and start at zoom 1. Interactive runs keep
+// the default persistent session, so a developer's own zoom stays as it is.
+const automatedRun = keepHidden || screenshotPath != null || forcedDeviceScaleFactor;
 
 if (appFiles == null) {
     console.error('Missing app files path (use --app-files /your/files/dir)');
@@ -178,6 +192,12 @@ function createWindow() {
         }
     };
 
+    if (automatedRun) {
+        // No `persist:` prefix: an in-memory session, dropped when the runner quits
+        windowOptions.webPreferences.partition = 'ceramic-automated-run';
+        windowOptions.webPreferences.zoomFactor = 1.0;
+    }
+
     if (keepHidden) {
         // Window stays offscreen (`--hidden`): keep painting so capturePage()
         // still produces a valid frame, and don't throttle rendering when hidden.
@@ -192,6 +212,16 @@ function createWindow() {
     /*mainWindow.webContents.on('did-finish-load', function() {
         mainWindow.show();
     });*/
+
+    if (automatedRun) {
+        // Start every page load at zoom 1, whatever the session holds for this host
+        // (a zoom the app sets itself after loading still applies)
+        mainWindow.webContents.on('did-finish-load', function() {
+            if (mainWindow != null && mainWindow.webContents.getZoomFactor() != 1) {
+                mainWindow.webContents.setZoomFactor(1);
+            }
+        });
+    }
 
     // and load the index.html of the app.
     mainWindow.loadURL(appUrl);
