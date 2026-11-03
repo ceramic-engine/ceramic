@@ -184,6 +184,25 @@ class UnityBackendTools implements tools.spec.BackendTools {
             'bin' => true
         ];
 
+        // Images are imported as textures (premultiplied PNGs), so a
+        // binary load of an image finds nothing. With the define
+        // `unity_raw_image_bytes`, every image also gets an exact copy
+        // `<name>.bytes` (a TextAsset whose resource path is the asset path
+        // with its extension), for apps that decode images themselves.
+        var rawImageExtensions = [
+            'png' => true,
+            'jpg' => true,
+            'jpeg' => true,
+            'gif' => true
+        ];
+        // (the project is loaded again: its conditions, like `if unity`,
+        // need the defines of the target)
+        var definesProject = new tools.Project();
+        definesProject.loadAppFile(Path.join([cwd, 'ceramic.yml']));
+        var projectDefines:Dynamic = definesProject.app.defines;
+        var rawImageBytes = projectDefines != null
+            && Reflect.hasField(projectDefines, 'unity_raw_image_bytes');
+
         var newAssets:Array<tools.Asset> = [];
         var validDstPaths:Map<String,Bool> = new Map();
         if (dstAssetsPath == null) {
@@ -289,6 +308,22 @@ class UnityBackendTools implements tools.spec.BackendTools {
                 }
 
                 tools.Files.setToSameLastModified(srcPath, dstPath);
+            }
+
+            if (rawImageBytes && rawImageExtensions.exists(ext)) {
+                var rawPath = Path.join([dstAssetsPath, asset.name]) + '.bytes';
+                if (!listOnly && !tools.Files.haveSameLastModified(srcPath, rawPath)) {
+                    if (sys.FileSystem.exists(rawPath)) {
+                        sys.FileSystem.deleteFile(rawPath);
+                    }
+                    var dir = Path.directory(rawPath);
+                    if (!sys.FileSystem.exists(dir)) {
+                        sys.FileSystem.createDirectory(dir);
+                    }
+                    sys.io.File.copy(srcPath, rawPath);
+                    tools.Files.setToSameLastModified(srcPath, rawPath);
+                }
+                validDstPaths.set(rawPath, true);
             }
 
             validDstPaths.set(dstPath, true);
