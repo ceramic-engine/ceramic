@@ -52,11 +52,94 @@ class SwitchThemeMode implements Action {
  * entries, and the theme switching actions.
  *
  * Rust persists the settings in `target/state.json` and watches a
- * `./themes` folder on native targets; the port behaves like gpui-kit's web
- * build: embedded themes, default settings, nothing persisted (TODO: a
- * Ceramic persistent storage could keep the state).
+ * `./themes` folder on native targets. The port always uses the embedded
+ * themes (like gpui-kit's web build) and persists the settings through
+ * `stateStorage` when the app sets one (samples/story: Ceramic's app storage
+ * on native targets); without it nothing is read or written, like the web
+ * build (tests and golden scenes).
  */
 class Themes {
+
+    /**
+     * Where the settings are read and written (Rust `STATE_FILE`), set by
+     * the app before `Lib.init`. Null: nothing is persisted.
+     */
+    public static var stateStorage:Null<{read:Void->Null<String>, write:String->Void}> = null;
+
+    /**
+     * Rust `serde_json::from_str::<State>(&json).unwrap_or_default()`: the
+     * default state when the text is missing or does not parse (`theme` is
+     * required, `scrollbar_show` is an alias of `scrollbar_mode`).
+     */
+    public static function parseState(json:Null<String>):StoryThemeState {
+        if (json == null || json.length == 0) return new StoryThemeState();
+        try {
+            final data:haxe.DynamicAccess<Dynamic> = haxe.Json.parse(json);
+            final state = new StoryThemeState();
+            final theme = data.get('theme');
+            if (!Std.isOfType(theme, String)) return new StoryThemeState();
+            state.theme = theme;
+            final radius = data.get('radius');
+            if (radius != null) {
+                if (!Std.isOfType(radius, Float)) return new StoryThemeState();
+                state.radius = radius;
+            }
+            var mode:Dynamic = data.get('scrollbar_mode');
+            if (mode == null) mode = data.get('scrollbar_show');
+            if (mode != null) {
+                state.scrollbarMode = switch mode {
+                    case 'Scrolling': Scrolling;
+                    case 'Hover': Hover;
+                    case 'Always': Always;
+                    case _: return new StoryThemeState();
+                }
+            }
+            final fps = data.get('show_fps_monitor');
+            if (fps != null) {
+                if (!Std.isOfType(fps, Bool)) return new StoryThemeState();
+                state.showFpsMonitor = fps;
+            }
+            return state;
+        } catch (_:Dynamic) {
+            return new StoryThemeState();
+        }
+    }
+
+    /**
+     * Rust `serde_json::to_string_pretty(&state)`.
+     */
+    public static function stateJson(state:StoryThemeState):String {
+        inline function optional(value:Null<String>):String return value == null ? 'null' : value;
+        final radius = state.radius == null ? null : (Math.isFinite(state.radius) && state.radius == Math.ffloor(state.radius) ? '${Std.int(state.radius)}.0' : Std.string(state.radius));
+        final mode = state.scrollbarMode == null ? null : haxe.Json.stringify(state.scrollbarMode.toString());
+        final fps = state.showFpsMonitor == null ? null : (state.showFpsMonitor ? 'true' : 'false');
+        return '{\n'
+            + '  "theme": ${haxe.Json.stringify(state.theme)},\n'
+            + '  "radius": ${optional(radius)},\n'
+            + '  "scrollbar_mode": ${optional(mode)},\n'
+            + '  "show_fps_monitor": ${optional(fps)}\n'
+            + '}';
+    }
+
+    /**
+     * Rust `save_state`: writes the settings unless a theme is being
+     * previewed (write errors are ignored).
+     */
+    static function saveState(cx:AppContext):Void {
+        final storage = stateStorage;
+        if (storage == null) return;
+        if (AppState.global(cx).previewingTheme) return;
+
+        final theme = Theme.global(cx);
+        final state = new StoryThemeState();
+        state.theme = theme.themeName();
+        state.radius = theme.radius;
+        state.scrollbarMode = theme.scrollbarMode;
+        state.showFpsMonitor = AppState.global(cx).showFpsMonitor;
+        try {
+            storage.write(stateJson(state));
+        } catch (_:Dynamic) {}
+    }
 
     static function applyThemeConfig(themeConfig:ThemeConfig, cx:AppContext):Void {
         Theme.update(cx, theme -> theme.applyConfig(themeConfig));
@@ -93,7 +176,19 @@ class Themes {
             }
         }
 
-        final state = new StoryThemeState();
+        final storage = stateStorage;
+        final state = storage != null ? parseState(try storage.read() catch (_:Dynamic) null) : new StoryThemeState();
+
+        // Rust applies the persisted theme once its `./themes` folder is
+        // loaded (`watch_dir`); the port's themes are embedded, so it is
+        // applied right away
+        if (storage != null) {
+            final themeConfig = ThemeRegistry.global(cx).themes().get(state.theme);
+            if (themeConfig != null) {
+                applyThemeConfig(themeConfig, cx);
+                applyPersistedRadius(state, cx);
+            }
+        }
 
         if (state.scrollbarMode != null) {
             Theme.setScrollbarMode(state.scrollbarMode, cx);
@@ -103,6 +198,12 @@ class Themes {
             AppState.globalMut(cx).showFpsMonitor = state.showFpsMonitor;
         }
         cx.refreshWindows();
+
+        // Both globals carry persisted settings, so either changing writes the file.
+        if (storage != null) {
+            cx.observeGlobal(Theme, saveState).detach();
+            cx.observeGlobal(AppState, saveState).detach();
+        }
 
         cx.onAction(SwitchTheme, (switchTheme, cx) -> {
             final themeName = switchTheme.value;

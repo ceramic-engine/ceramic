@@ -20,6 +20,9 @@ class MainScene extends Scene {
 
     var window:Window;
 
+    /** The key of the gallery settings in Ceramic's app storage (`backend.io`). */
+    static inline final STATE_KEY = 'story-state.json';
+
     override function create() {
 
         final cx = App.current;
@@ -37,6 +40,18 @@ class MainScene extends Scene {
         // ToolbarStory's save icon and the reference icons of InputTokens
         paths.push(story.stories.ToolbarStory.SAVE_ICON_PATH);
         for (path in ['icons/image.svg', 'icons/sparkles.svg', 'icons/at-sign.svg']) paths.push(path);
+        // Rust keeps the settings of the gallery in `target/state.json` on
+        // native targets (not on the web): here in Ceramic's app storage
+        #if !web
+        final io = ceramic.App.app.backend.io;
+        story.Themes.stateStorage = {
+            read: () -> io.readString(STATE_KEY),
+            write: json -> {
+                io.saveString(STATE_KEY, json);
+            }
+        };
+        #end
+
         App.defaultAssetSource().preload(paths, _ -> {
             cx.update(cx -> Lib.init(cx));
             window = Lib.createNewWindow('GPUI Component', (window, cx) -> Gallery.view(name != '' ? name : null, window, cx), cx, width, height);

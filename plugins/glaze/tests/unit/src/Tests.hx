@@ -228,6 +228,7 @@ class Tests {
         runner.add(new tests.kit.DeviationsTest());
         // The story gallery (samples/story/shared)
         runner.add(new tests.kit.StoryGalleryTest());
+        runner.add(new tests.kit.StoryPlatformTest());
         runner.add(new tests.kit.StoryInputCompletionTest());
         runner.add(new tests.kit.StoryListTest());
 

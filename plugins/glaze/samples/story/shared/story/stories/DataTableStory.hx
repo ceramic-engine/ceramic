@@ -1102,23 +1102,99 @@ class DataTableStory extends Model implements Story {
     }
 
     function dumpCsv(_:ClickEvent, _:Window, cx:Context<DataTableStory>):Void {
-        // TODO: Rust asks for a path in the download folder
-        // (`cx.prompt_for_new_path`) and writes the rows of `table.dump_range`
-        // there with the `csv` crate, in batches of 2000 rows. Ceramic has no
-        // save dialog nor file writing API on every target yet (needed: a
-        // cross-platform "prompt for a new file path" and a file writer); the
-        // port builds the CSV text and logs its size.
-        final state = table.read(cx.app);
-        final headers = state.headers(cx.app);
-        final rowsCount = state.delegate().rowsCount(cx.app);
-        var lines = 1;
+        final downloadDir = downloadDir();
+        if (downloadDir == null) {
+            trace('Failed to get download directory');
+            return;
+        }
+
+        final receiver = cx.app.promptForNewPath(downloadDir, 'export.csv');
+        final table = this.table;
+        final app = cx.app;
+        // Rust `receiver.await.ok()`: a prompt that failed counts as cancelled
+        receiver.catchError(_ -> null).then(path -> {
+            if (path == null) {
+                trace('CSV export cancelled by user');
+                return;
+            }
+
+            try {
+                writeCsv(table, path, app);
+                trace('CSV exported successfully');
+            } catch (error:haxe.Exception) {
+                trace('Failed to export CSV: ${error.message}');
+            }
+        }).detach();
+    }
+
+    /**
+     * Rust `write_csv`: the headers, then the rows read in batches of
+     * `CSV_EXPORT_BATCH_ROWS` with `dump_range`, written with the `csv`
+     * crate's defaults (comma, `\n` line ends, fields quoted only when
+     * needed). The text is written with Ceramic's `Files` (native targets,
+     * node and Electron).
+     */
+    static function writeCsv(table:Entity<TableState<StockTableDelegate>>, path:String, cx:App):Void {
+        final state = table.read(cx);
+        final headers = state.headers(cx);
+        final rowsCount = state.delegate().rowsCount(cx);
+
+        final csv = new StringBuf();
+        writeCsvRecord(csv, headers);
         var start = 0;
         while (start < rowsCount) {
-            final end = start + 2000 < rowsCount ? start + 2000 : rowsCount;
-            lines += state.dumpRange(new Range(start, end), cx.app).rows.length;
+            final end = start + CSV_EXPORT_BATCH_ROWS < rowsCount ? start + CSV_EXPORT_BATCH_ROWS : rowsCount;
+            for (row in table.read(cx).dumpRange(new Range(start, end), cx).rows) {
+                writeCsvRecord(csv, row);
+            }
             start = end;
         }
-        trace('CSV export is not available on this platform (${headers.length} columns, $lines lines)');
+        ceramic.Files.saveContent(path, csv.toString());
+    }
+
+    /** Rust `CSV_EXPORT_BATCH_ROWS`. */
+    static inline final CSV_EXPORT_BATCH_ROWS = 2000;
+
+    /**
+     * One record as the `csv` crate writes it by default (`QuoteStyle::Necessary`):
+     * a field is quoted when it holds a comma, a quote or a line break (quotes
+     * doubled), and a record made of one empty field is written as `""`.
+     */
+    public static function writeCsvRecord(out:StringBuf, fields:Array<String>):Void {
+        if (fields.length == 1 && fields[0].length == 0) {
+            out.add('""\n');
+            return;
+        }
+        for (i in 0...fields.length) {
+            if (i > 0) out.add(',');
+            final field = fields[i];
+            if (field.indexOf(',') != -1 || field.indexOf('"') != -1 || field.indexOf('\n') != -1 || field.indexOf('\r') != -1) {
+                out.add('"');
+                out.add(StringTools.replace(field, '"', '""'));
+                out.add('"');
+            } else {
+                out.add(field);
+            }
+        }
+        out.add('\n');
+    }
+
+    /**
+     * Rust `dirs::download_dir()`: the user's Downloads folder (the XDG
+     * download folder on Linux when set), or `null` where there is none (the
+     * web, like the wasm build).
+     */
+    static function downloadDir():Null<String> {
+        #if web
+        return null;
+        #else
+        final xdg = ceramic.Platform.getEnv('XDG_DOWNLOAD_DIR');
+        if (xdg != null && xdg.length > 0) return xdg;
+        var home = ceramic.Platform.getEnv('HOME');
+        if (home == null || home.length == 0) home = ceramic.Platform.getEnv('USERPROFILE');
+        if (home == null || home.length == 0) return null;
+        return haxe.io.Path.join([home, 'Downloads']);
+        #end
     }
 
     /** Rust `{:?}` of a `Size`. */

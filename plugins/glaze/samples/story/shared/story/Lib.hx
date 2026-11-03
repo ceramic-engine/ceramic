@@ -78,8 +78,9 @@ class Lib {
 
             return cx.newEntity((rootCx:Context<Root>) -> new Root(storyRoot, window, rootCx));
         });
-        // TODO: `window.activate_window()` and `window.set_window_title(title)`
-        // need a Ceramic window API; the app sets `settings.title` instead.
+        window.activateWindow();
+        // TODO: `window.set_window_title(title)`: the app sets Ceramic's
+        // `settings.title` instead.
         return window;
     }
 
@@ -125,7 +126,7 @@ class Lib {
         ]);
 
         cx.onAction(Quit, (_, cx) -> {
-            // TODO: `cx.quit()` needs a Ceramic API to quit the app.
+            cx.quit();
         });
 
         cx.onAction(About, (_, cx) -> {
@@ -165,6 +166,8 @@ class Lib {
             });
             return gpui.component.dock.PanelHandle.panelHandle(view);
         });
+
+        cx.activate(true);
     }
 
     /**

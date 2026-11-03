@@ -43,8 +43,9 @@ class AppMenus {
     }
 
     static function updateAppMenu(title:String, appMenuBar:Entity<AppMenuBar>, cx:AppContext):Void {
-        // TODO: Rust also sets the OS menus (`cx.set_menus`), which the port
-        // does not have (native menus are out of scope).
+        // Ceramic has no native menu bar yet: the platform keeps the menus
+        // (`cx.getMenus()`), the title bar draws them
+        cx.setMenus(buildMenus(title, cx));
         final menus = [for (menu in buildMenus(title, cx)) menu.owned()];
         GlobalState.globalMut(cx).setAppMenus(menus);
 
