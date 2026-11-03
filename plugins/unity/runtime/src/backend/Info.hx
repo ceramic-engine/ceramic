@@ -55,7 +55,11 @@ class Info #if !completion implements spec.Info #end {
      */
     #end
     public function operatingSystem():String {
-        final name = Std.string(unityengine.Application.platform);
+        #if macro
+        return '';
+        #else
+        // Name of the RuntimePlatform enum value
+        final name:String = untyped __cs__('UnityEngine.Application.platform.ToString()');
         if (name.indexOf('OSX') == 0) return 'mac';
         if (name.indexOf('Windows') == 0) return 'windows';
         if (name.indexOf('Linux') == 0) return 'linux';
@@ -63,6 +67,7 @@ class Info #if !completion implements spec.Info #end {
         if (name == 'tvOS') return 'tvos';
         if (name == 'Android') return 'android';
         return '';
+        #end
     }
 
     public function storageDirectory():String {

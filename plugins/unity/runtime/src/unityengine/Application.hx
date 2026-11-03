@@ -32,10 +32,4 @@ extern class Application {
      */
     static function OpenURL(url:String):Void;
 
-    /**
-     * The platform the application is running on (a RuntimePlatform value,
-     * read through its name).
-     */
-    static var platform(default, null):Dynamic;
-
 }
