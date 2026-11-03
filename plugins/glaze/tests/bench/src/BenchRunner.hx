@@ -21,7 +21,13 @@ import gpui.util.FrameProfiler;
  * the bytes allocated per frame (20 more frames with the GC disabled), the
  * per-phase times per frame (`FrameProfiler`, with `gpui_profile_frames`,
  * otherwise 0) and on native the minor GC pauses (`cpp.vm.Gc.memInfo64`
- * 107 to 110, 0 until hxcpp exposes them).
+ * 107 to 110, 0 until hxcpp exposes them), the concurrent cycles per second,
+ * the reserved heap and the process RSS at the end of the block, and the CPU
+ * time: the main thread's per frame (`CLOCK_THREAD_CPUTIME_ID`: median, p99,
+ * mean, and the median of the frames without any collection work and of the
+ * frames run during a concurrent cycle), and the whole process's per frame.
+ * The thread CPU time is not inflated by other processes like the wall time,
+ * which helps comparing runs taken on a busy machine.
  *
  * An `IdleScenario` is drawn once, put on the screen, and `idleFrames` ticks
  * of the real update loop must draw nothing and allocate nothing; the process
@@ -62,6 +68,33 @@ import gpui.util.FrameProfiler;
  *   (live memory after a full collection, default 60, 0 for never) and
  *   `GPUI_BENCH_SOAK_WARMUP_SECONDS` (left out of the slopes, default 180).
  */
+#if cpp
+@:cppFileCode('
+#include <time.h>
+#ifdef __APPLE__
+#include <mach/mach.h>
+#endif
+static double bench_thread_cpu_ms() {
+#ifdef _WIN32
+   return 0;
+#else
+   struct timespec ts;
+   if (clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) != 0) return 0;
+   return ts.tv_sec * 1000.0 + ts.tv_nsec / 1000000.0;
+#endif
+}
+static double bench_rss_bytes() {
+#ifdef __APPLE__
+   mach_task_basic_info_data_t info;
+   mach_msg_type_number_t count = MACH_TASK_BASIC_INFO_COUNT;
+   if (task_info(mach_task_self(), MACH_TASK_BASIC_INFO, (task_info_t)&info, &count) != KERN_SUCCESS) return 0;
+   return (double)info.resident_size;
+#else
+   return 0;
+#endif
+}
+')
+#end
 class BenchRunner {
 
     public static inline final WARMUP_FRAMES = 30;
@@ -128,6 +161,15 @@ class BenchRunner {
     var failed:Bool = false;
 
     var written:Array<String> = [];
+
+    /** Main thread CPU time of each measured frame of the current block (ms) */
+    final blockThreadCpu:Array<Float> = [];
+    /** The same, for frames without collection work, and for frames during a concurrent cycle (no minor) */
+    final blockQuietCpu:Array<Float> = [];
+    final blockCycleCpu:Array<Float> = [];
+    var blockCyclesBefore = 0.0;
+    var blockProcessCpuBefore = 0.0;
+    var blockWallBefore = 0.0;
 
     /** Ceramic draw time of the last on screen measure (median and p99, ms) */
     var lastDrawMedian:Float = 0.0;
@@ -369,11 +411,21 @@ class BenchRunner {
                 minorPausesBefore = gcInfo(MEM_INFO_MINOR_PAUSE_COUNT);
                 minorPauseTotalBefore = gcInfo(MEM_INFO_TOTAL_MINOR_PAUSE_MS);
                 volumeBefore = gcInfo(MEM_INFO_ALLOCATION_VOLUME);
+                blockCyclesBefore = gcInfo(MEM_INFO_CYCLE_COUNT);
+                blockProcessCpuBefore = cpuTime();
+                blockWallBefore = now();
+                blockThreadCpu.resize(0);
+                blockQuietCpu.resize(0);
+                blockCycleCpu.resize(0);
             }
             final countersBefore = AllocationCounters.total();
             final elementsBefore = AnyElement.allocatedCount;
             final rasterizedBefore = gpui.PathRasterizer.rasterizedCount;
             final start = now();
+            final threadStart = threadCpuTime();
+            final cycleAtStart = gcInfo(MEM_INFO_CYCLE_ACTIVE);
+            final minorsAtStart = gcInfo(MEM_INFO_MINOR_PAUSE_COUNT);
+            final cyclesAtStart = gcInfo(MEM_INFO_CYCLE_COUNT);
             if (measured && lastTick > 0) {
                 wallTimes.push(start - lastTick);
             }
@@ -386,6 +438,16 @@ class BenchRunner {
             final time = now() - start;
             if (measured) {
                 times.push(time);
+                final cpu = threadCpuTime() - threadStart;
+                blockThreadCpu.push(cpu);
+                // Frames without any collection work against frames run
+                // while a concurrent cycle is active (no minor in either)
+                if (gcInfo(MEM_INFO_MINOR_PAUSE_COUNT) == minorsAtStart) {
+                    if (cycleAtStart == 0 && gcInfo(MEM_INFO_CYCLE_ACTIVE) == 0 && gcInfo(MEM_INFO_CYCLE_COUNT) == cyclesAtStart)
+                        blockQuietCpu.push(cpu);
+                    else
+                        blockCycleCpu.push(cpu);
+                }
                 renderedViews += window.renderedViewCount;
                 reusedViews += window.reusedViewCount;
                 counters += AllocationCounters.total() - countersBefore;
@@ -469,7 +531,8 @@ class BenchRunner {
      */
     /** Fields of a soak sample, in `soak.samples` of the result */
     static final SOAK_SAMPLE_FIELDS = ['t', 'frames', 'usage', 'reserved', 'current', 'large', 'minorCount', 'minorMaxMs', 'minorTotalMs', 'fullCount',
-        'cycles', 'cycleActive', 'volume', 'jsUsed', 'jsTotal', 'intervalFrames', 'frameMedianMs', 'frameP99Ms', 'frameMaxMs'];
+        'cycles', 'cycleActive', 'volume', 'jsUsed', 'jsTotal', 'intervalFrames', 'frameMedianMs', 'frameP99Ms', 'frameMaxMs', 'rss',
+        'threadCpuMedianMs', 'threadCpuP99Ms', 'processCpu'];
 
     /** Fields of a live memory sample, in `soak.lives` of the result */
     static final SOAK_LIVE_FIELDS = ['t', 'frames', 'live', 'liveBytes', 'large', 'usageBefore', 'reservedBefore', 'reservedAfter', 'jsLive', 'jsTotal', 'collectMs'];
@@ -487,6 +550,7 @@ class BenchRunner {
         var sampleCount = 0;
         var liveCount = 0;
         final intervalTimes:Array<Float> = [for (_ in 0...200000) 0.0];
+        final intervalCpu:Array<Float> = [for (_ in 0...200000) 0.0];
         var intervalCount = 0;
         final start = now();
         var frame = 0;
@@ -505,10 +569,13 @@ class BenchRunner {
             final n = intervalCount;
             final times = intervalTimes.slice(0, n);
             times.sort(Reflect.compare);
+            final cpus = intervalCpu.slice(0, n);
+            cpus.sort(Reflect.compare);
             final values = [seconds(at), frame, gcInfo(cpp_MEM_INFO_USAGE), reserved, gcInfo(cpp_MEM_INFO_CURRENT), gcInfo(cpp_MEM_INFO_LARGE),
                 gcInfo(MEM_INFO_MINOR_PAUSE_COUNT), gcInfo(MEM_INFO_MAX_MINOR_PAUSE_MS), gcInfo(MEM_INFO_TOTAL_MINOR_PAUSE_MS), gcInfo(MEM_INFO_FULL_COUNT),
                 gcInfo(MEM_INFO_CYCLE_COUNT), gcInfo(MEM_INFO_CYCLE_ACTIVE), gcInfo(MEM_INFO_ALLOCATION_VOLUME), heap[0], heap[1], n,
-                n > 0 ? times[n >> 1] : 0.0, percentile(times, 0.99), n > 0 ? times[n - 1] : 0.0];
+                n > 0 ? times[n >> 1] : 0.0, percentile(times, 0.99), n > 0 ? times[n - 1] : 0.0, rssBytes(),
+                n > 0 ? cpus[n >> 1] : 0.0, percentile(cpus, 0.99), cpuTime()];
             final base = sampleCount * SOAK_SAMPLE_FIELDS.length;
             for (i in 0...values.length) sampleData[base + i] = values[i];
             sampleCount++;
@@ -562,11 +629,15 @@ class BenchRunner {
             final sliceEnd = now() + SOAK_SLICE_MS;
             while (true) {
                 final frameStart = now();
+                final cpuStart = threadCpuTime();
                 scenario.step(WARMUP_FRAMES + frame);
                 ceramic.App.app.flushImmediate();
                 window.drawIfDirty();
                 final t = now();
-                if (intervalCount < intervalTimes.length) intervalTimes[intervalCount++] = t - frameStart;
+                if (intervalCount < intervalTimes.length) {
+                    intervalCpu[intervalCount] = threadCpuTime() - cpuStart;
+                    intervalTimes[intervalCount++] = t - frameStart;
+                }
                 frame++;
                 if (t >= nextSample) {
                     sample(t);
@@ -716,6 +787,11 @@ class BenchRunner {
     function finishMeasure(scenario:Scenario, window:Window, caching:Bool, elementCount:Int, run:Int, times:Array<Float>, wallTimes:Array<Float>,
         renderedViews:Int, reusedViews:Int, counters:Int, anyElements:Int, minorPausesBefore:Float, minorPauseTotalBefore:Float, allocatedVolume:Float):Void {
         var bytes = 0.0;
+        final blockSeconds = (now() - blockWallBefore) / 1000;
+        final processCpuPerFrame = (cpuTime() - blockProcessCpuBefore) / frames;
+        final cyclesPerSecond = blockSeconds > 0 ? (gcInfo(MEM_INFO_CYCLE_COUNT) - blockCyclesBefore) / blockSeconds : 0.0;
+        final threadCpu = blockThreadCpu.copy();
+        threadCpu.sort(Reflect.compare);
         final minorPauses = gcInfo(MEM_INFO_MINOR_PAUSE_COUNT) - minorPausesBefore;
         final minorPauseTotal = gcInfo(MEM_INFO_TOTAL_MINOR_PAUSE_MS) - minorPauseTotalBefore;
         final minorPauseLast = gcInfo(MEM_INFO_LAST_MINOR_PAUSE_MS);
@@ -770,7 +846,8 @@ class BenchRunner {
         }
         #if cpp
         if (minorPauses > 0 || minorPauseTotal > 0) {
-            print('  minor GC pauses: $minorPauses, total ${fmt(minorPauseTotal)} ms, max ${fmt(minorPauseMax)} ms, heap reserved ${mb(gcInfo(cpp_MEM_INFO_RESERVED))} MB');
+            print('  minor GC pauses: $minorPauses, total ${fmt(minorPauseTotal)} ms, max ${fmt(minorPauseMax)} ms, heap reserved ${mb(gcInfo(cpp_MEM_INFO_RESERVED))} MB, RSS ${mb(rssBytes())} MB, '
+                + 'cycles ${fmt(cyclesPerSecond)} per s, main thread CPU ${fmt(threadCpu.length > 0 ? threadCpu[threadCpu.length >> 1] : 0.0)} ms median per frame, process CPU ${fmt(processCpuPerFrame)} ms per frame');
         }
         #end
         AllocationCounters.reset();
@@ -822,8 +899,30 @@ class BenchRunner {
                 maxMinorPauseMs: minorPauseMax,
                 totalMinorPauseMs: minorPauseTotal,
                 reservedBytes: gcInfo(cpp_MEM_INFO_RESERVED),
-                usedBytes: gcInfo(cpp_MEM_INFO_USAGE)
-            }
+                usedBytes: gcInfo(cpp_MEM_INFO_USAGE),
+                rssBytes: rssBytes(),
+                cyclesPerSecond: cyclesPerSecond
+            },
+            threadCpuMedianMs: threadCpu.length > 0 ? threadCpu[threadCpu.length >> 1] : 0.0,
+            threadCpuP99Ms: percentile(threadCpu, 0.99),
+            threadCpuMeanMs: {
+                var sum = 0.0;
+                for (t in threadCpu) sum += t;
+                threadCpu.length > 0 ? sum / threadCpu.length : 0.0;
+            },
+            processCpuMsPerFrame: processCpuPerFrame,
+            quietCpuMedianMs: {
+                final a = blockQuietCpu.copy();
+                a.sort(Reflect.compare);
+                a.length > 0 ? a[a.length >> 1] : 0.0;
+            },
+            quietFrames: blockQuietCpu.length,
+            cycleCpuMedianMs: {
+                final a = blockCycleCpu.copy();
+                a.sort(Reflect.compare);
+                a.length > 0 ? a[a.length >> 1] : 0.0;
+            },
+            cycleFrames: blockCycleCpu.length
         });
         result.set('fullFrameAllocations', allocation);
         writeResult(result, scenario.name, caching, run);
@@ -1138,6 +1237,26 @@ class BenchRunner {
     }
 
     /** Process CPU time in ms (native), 0 elsewhere */
+    /** CPU time of the calling thread in ms (native), 0 elsewhere: unlike the wall time, other processes do not add to it */
+    static function threadCpuTime():Float {
+        #if cpp
+        return untyped __cpp__('bench_thread_cpu_ms()');
+        #else
+        return 0.0;
+        #end
+    }
+
+    /** Resident memory of the process in bytes (native macOS), 0 elsewhere */
+    static function rssBytes():Float {
+        #if cpp
+        return untyped __cpp__('bench_rss_bytes()');
+        #elseif js
+        return isNode() ? js.Syntax.code("process.memoryUsage().rss") : 0.0;
+        #else
+        return 0.0;
+        #end
+    }
+
     static function cpuTime():Float {
         #if sys
         return Sys.cpuTime() * 1000.0;

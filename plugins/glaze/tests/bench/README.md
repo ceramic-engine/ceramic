@@ -7,7 +7,12 @@ measures the frame time (mean, median, p50, p95, p99, max), the views
 rendered and reused, the objects created (`gpui.util.AllocationCounters`,
 with the `gpui_count_allocations` define), the bytes per frame on native
 (GC disabled), the per-phase times (`gpui.util.FrameProfiler`, with the
-`gpui_profile_frames` define, otherwise 0) and the minor GC pauses on native.
+`gpui_profile_frames` define, otherwise 0), and on native the minor GC pauses,
+the concurrent cycles per second, the reserved heap and RSS, and the CPU time
+per frame of the main thread (median, p99, mean, and separately for frames
+without collection work and frames during a concurrent cycle) and of the
+whole process. The thread CPU time is not inflated by other processes like the
+wall time: on a busy machine, compare it.
 The `idle` scenario checks that 120 frames of the real update loop draw and
 allocate nothing; the process exits with 1 when they do.
 
@@ -67,8 +72,8 @@ instead of the measured blocks (pick one with `GPUI_BENCH_SCENARIOS` and
 `GPUI_BENCH_ONLY`), through the real update loop in slices of about 100 ms.
 Every `GPUI_BENCH_SOAK_SAMPLE_SECONDS` (default 5) it records the hxcpp heap
 (used, reserved, current, large, minor and full collections, concurrent
-cycles, allocation volume), the V8 heap on node and the web, and the frame
-times of the interval; every `GPUI_BENCH_SOAK_LIVE_SECONDS` (default 60, 0 for
+cycles, allocation volume), the process RSS, the V8 heap on node and the web,
+and the frame times and main thread CPU times of the interval; every `GPUI_BENCH_SOAK_LIVE_SECONDS` (default 60, 0 for
 never) the live memory right after a full collection (`Gc.run(true)` and
 hxcpp's exact live object bytes, memInfo 120; V8's `gc()` on node and the
 web). The series are stored in arrays allocated up front, so the recording
