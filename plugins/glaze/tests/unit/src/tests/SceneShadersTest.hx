@@ -36,9 +36,21 @@ class SceneShadersTest extends TestCase {
     }
 
     function testHeadlessBackendChoosesDefaultShaders():Void {
-        #if !gpui_compact_shaders
+        #if (!gpui_compact_shaders && !unity)
         assertFalse(SceneRenderable.chooseShaders());
         assertFalse(SceneRenderable.useCompactShaders);
+        #end
+    }
+
+    function testUnityBackendChoosesCompactShaders():Void {
+        // Unity meshes give position, color, uv and 7 custom attributes
+        // (TEXCOORD1 to TEXCOORD7): GpuiQuad's 9 custom attributes do not
+        // fit (Metal refused its pipeline state), the compact shaders do
+        assertTrue(SceneRenderable.needsCompactShaders(10, 32));
+        #if unity
+        assertEquals(10, ceramic.App.app.backend.shaders.maxVertexAttributes());
+        assertTrue(SceneRenderable.chooseShaders());
+        assertTrue(SceneRenderable.useCompactShaders);
         #end
     }
 

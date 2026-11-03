@@ -27,6 +27,12 @@ plugin:
             # through gpui.CeramicHttpClient. Without it, the app keeps GPUI's
             # NullHttpClient and such images fail into their fallback.
 
+            # Unity imports images as (premultiplied) textures; the port
+            # decodes image files itself, so it needs their exact bytes too
+            if unity:
+                +defines:
+                    - unity_raw_image_bytes
+
             # Opt-in: Noto Color Emoji shipped with the app as the first
             # emoji font of the text system, on every target (define
             # gpui_bundled_emoji; see emoji-font/README.md). Without the
