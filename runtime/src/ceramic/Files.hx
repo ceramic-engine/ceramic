@@ -32,6 +32,10 @@ import js.node.Fs;
  * - Web + Electron: Support through Electron's Node.js integration
  * - Other web targets: No filesystem access (methods return defaults)
  * 
+ * Browser pseudo paths (`download:<name>`, `picked:<n>/...`, see `BrowserFiles`)
+ * work on every target: writing a download path starts a browser download,
+ * and picked paths read the files the user chose in the browser's file chooser.
+ * 
  * @see ceramic.Path
  * @see ceramic.Platform
  */
@@ -167,6 +171,11 @@ class Files {
      */
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
 
+        if (BrowserFiles.isBrowserPath(dir)) {
+            final prefix = dir.endsWith('/') ? dir : dir + '/';
+            return [for (path in BrowserFiles.pickedFilesIn(dir)) if (recursive || path.substr(prefix.length).indexOf('/') == -1) path.substr(prefix.length)];
+        }
+
         var result:Array<String> = [];
 
         for (name in FileSystem.readDirectory(dir)) {
@@ -197,6 +206,11 @@ class Files {
     }
     #elseif (web && ceramic_use_electron)
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
+
+        if (BrowserFiles.isBrowserPath(dir)) {
+            final prefix = dir.endsWith('/') ? dir : dir + '/';
+            return [for (path in BrowserFiles.pickedFilesIn(dir)) if (recursive || path.substr(prefix.length).indexOf('/') == -1) path.substr(prefix.length)];
+        }
 
         var fs = Platform.nodeRequire('fs');
         var result:Array<String> = [];
@@ -236,6 +250,11 @@ class Files {
     }
     #else
     public static function getFlatDirectory(dir:String, excludeSystemFiles:Bool = true, subCall:Bool = false, recursive:Bool = true):Array<String> {
+
+        if (BrowserFiles.isBrowserPath(dir)) {
+            final prefix = dir.endsWith('/') ? dir : dir + '/';
+            return [for (path in BrowserFiles.pickedFilesIn(dir)) if (recursive || path.substr(prefix.length).indexOf('/') == -1) path.substr(prefix.length)];
+        }
 
         // Not implemented on this platform
         return [];
@@ -559,6 +578,11 @@ class Files {
      */
     public static function getContent(path:String):Null<String> {
 
+        if (BrowserFiles.isBrowserPath(path)) {
+            final bytes = BrowserFiles.getPicked(path);
+            return bytes != null ? bytes.toString() : null;
+        }
+
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
         return sys.io.File.getContent(path);
@@ -591,6 +615,10 @@ class Files {
      * @return The file content as bytes, or null if unavailable
      */
     public static function getBytes(path:String):Null<Bytes> {
+
+        if (BrowserFiles.isBrowserPath(path)) {
+            return BrowserFiles.getPicked(path);
+        }
 
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
@@ -625,6 +653,11 @@ class Files {
      * @return The size in bytes, or -1 if unavailable
      */
     public static function getSize(path:String):Float {
+
+        if (BrowserFiles.isBrowserPath(path)) {
+            final bytes = BrowserFiles.getPicked(path);
+            return bytes != null ? bytes.length : -1;
+        }
 
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
@@ -746,6 +779,12 @@ class Files {
      */
     public static function saveContent(path:String, content:String):Void {
 
+        if (BrowserFiles.isBrowserPath(path)) {
+            if (BrowserFiles.isDownloadPath(path)) BrowserFiles.download(BrowserFiles.downloadName(path), Bytes.ofString(content));
+            else log.warning('saveContent(): a picked file cannot be written');
+            return;
+        }
+
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
         sys.io.File.saveContent(path, content);
@@ -776,6 +815,12 @@ class Files {
      * @param bytes Binary data to write to the file
      */
     public static function saveBytes(path:String, bytes:Bytes):Void {
+
+        if (BrowserFiles.isBrowserPath(path)) {
+            if (BrowserFiles.isDownloadPath(path)) BrowserFiles.download(BrowserFiles.downloadName(path), bytes);
+            else log.warning('saveBytes(): a picked file cannot be written');
+            return;
+        }
 
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
@@ -862,6 +907,10 @@ class Files {
      */
     public static function exists(path:String):Bool {
 
+        if (BrowserFiles.isBrowserPath(path)) {
+            return BrowserFiles.pickedExists(path);
+        }
+
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 
         return sys.FileSystem.exists(path);
@@ -900,6 +949,10 @@ class Files {
      * @return True if the path exists and is a directory, false otherwise
      */
     public static function isDirectory(path:String):Bool {
+
+        if (BrowserFiles.isBrowserPath(path)) {
+            return BrowserFiles.isPickedDirectory(path);
+        }
 
         #if ((cs || sys || node || nodejs || hxnodejs) && !no_filesystem)
 

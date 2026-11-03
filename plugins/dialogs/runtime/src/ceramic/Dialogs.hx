@@ -42,8 +42,9 @@ class Dialogs {
     /**
      * Whether `choosePaths` and `chooseNewPath` can show a dialog on this
      * platform (or a `handler` is set): native desktop targets (SDL file
-     * dialogs) and Electron. Browsers, mobile, headless and Unity cannot:
-     * the functions report an error there.
+     * dialogs), Electron, and browsers (the browser's file chooser and
+     * downloads, with pseudo paths: see `BrowserFiles`). Mobile, headless
+     * and Unity cannot: the functions report an error there.
      */
     public static function pathDialogsAvailable():Bool {
 
@@ -51,8 +52,8 @@ class Dialogs {
 
         #if (clay && cpp && (mac || windows || linux))
         return true;
-        #elseif (web && ceramic_use_electron)
-        return Platform.electronRemote() != null;
+        #elseif web
+        return true;
         #else
         return false;
         #end
@@ -81,6 +82,17 @@ class Dialogs {
      * Native desktop targets use SDL's file dialogs (a sheet attached to the
      * window on macOS); Electron uses its own dialogs. Hidden test windows
      * (`clay_sdl_headless`) never show one: they get a cancellation.
+     *
+     * In a browser, the browser's file chooser opens (an `<input type="file">`,
+     * `multiple` when asked, a folder chooser with `webkitdirectory` when
+     * `directories` is true; files or folders, never both). Browsers open it
+     * only during a user gesture (a click, a tap or a key press, for a few
+     * seconds after it): call this from the handler of such an event. Outside
+     * of one (`navigator.userActivation.isActive` false where the browser has
+     * it), `done` gets an error instead and nothing opens. The chosen files
+     * are read into memory before `done` gets their picked paths
+     * (`picked:<n>/<name>`, or the picked folder `picked:<n>/<folder>`),
+     * which `Files` reads like real paths (see `BrowserFiles`).
      */
     public static function choosePaths(options:DialogsOptions, done:(paths:Null<Array<String>>, error:Null<String>)->Void):Void {
 
@@ -99,6 +111,13 @@ class Dialogs {
      * `done` is called later (never during this call) with the chosen path,
      * with a null path and a null error when the user cancels, or with a null
      * path and an error message when no dialog can be shown here.
+     *
+     * In a browser no dialog opens: a page cannot choose where files go, the
+     * browser does (its downloads folder, or its own save dialog). `done`
+     * gets the download path of `options.defaultName`
+     * (`download:<name>`, see `BrowserFiles`); writing it with
+     * `Files.saveContent` or `Files.saveBytes` starts the download. No user
+     * gesture is needed.
      */
     public static function chooseNewPath(options:DialogsOptions, done:(path:Null<String>, error:Null<String>)->Void):Void {
 
@@ -153,11 +172,15 @@ class Dialogs {
         }
         @:privateAccess clay.Clay.app.runtime.showFileDialog(kind, options.title, options.prompt, location, sdlFilters, !save && options.multiple == true, finish);
 
-        #elseif (web && ceramic_use_electron)
+        #elseif web
 
+        #if ceramic_use_electron
         var remote = Platform.electronRemote();
+        #else
+        var remote:Dynamic = null;
+        #end
         if (remote == null) {
-            finish(null, 'file dialogs are not available in a browser');
+            showBrowserPathDialog(save, options, finish);
             return;
         }
         var dialog:Dynamic = remote.dialog;
@@ -200,6 +223,120 @@ class Dialogs {
         #end
 
     }
+
+    #if web
+
+    /**
+     * Browser version of the path dialogs: a download path for `save`, the
+     * browser's file chooser otherwise (see `choosePaths` and `chooseNewPath`).
+     */
+    static function showBrowserPathDialog(save:Bool, options:DialogsOptions, finish:(paths:Null<Array<String>>, error:Null<String>)->Void):Void {
+
+        if (save) {
+            finish([BrowserFiles.downloadPath(options.defaultName)], null);
+            return;
+        }
+
+        final document = js.Browser.document;
+        final navigator:Dynamic = js.Browser.navigator;
+        if (navigator.userActivation != null && navigator.userActivation.isActive != true) {
+            finish(null, 'the browser opens a file chooser only during a user gesture (a click, a tap or a key press)');
+            return;
+        }
+
+        final directories = options.directories == true;
+        final input = document.createInputElement();
+        input.type = 'file';
+        if (options.multiple == true) input.multiple = true;
+        if (directories) input.setAttribute('webkitdirectory', '');
+        if (!directories && options.filters != null) {
+            final accept = [];
+            for (filter in options.filters) {
+                if (filter.extensions != null) for (ext in filter.extensions) {
+                    if (ext != null && ext != '' && ext != '*') accept.push('.' + (ext.startsWith('.') ? ext.substr(1) : ext));
+                }
+            }
+            if (accept.length > 0) input.accept = accept.join(',');
+        }
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
+        var settled = false;
+        var changed = false;
+        var onFocus:Dynamic = null;
+
+        function done(paths:Null<Array<String>>, error:Null<String>):Void {
+            if (settled) return;
+            settled = true;
+            if (onFocus != null) js.Browser.window.removeEventListener('focus', onFocus);
+            input.remove();
+            finish(paths, error);
+        }
+
+        input.addEventListener('change', (_) -> {
+            changed = true;
+            final files = input.files;
+            if (files == null || files.length == 0) {
+                done(null, null);
+                return;
+            }
+            final pick = BrowserFiles.newPick();
+            final list = [for (i in 0...files.length) files.item(i)];
+            final results:Array<String> = [];
+            var remaining = list.length;
+            var failed:Null<String> = null;
+            function finishPick() {
+                if (failed != null) {
+                    BrowserFiles.forget(pick);
+                    done(null, failed);
+                    return;
+                }
+                if (directories) {
+                    // The chosen folders, not their files
+                    final folders:Array<String> = [];
+                    for (path in results) {
+                        final rest = path.substr(pick.length);
+                        final slash = rest.indexOf('/');
+                        final folder = pick + (slash >= 0 ? rest.substr(0, slash) : rest);
+                        if (!folders.contains(folder)) folders.push(folder);
+                    }
+                    done(folders, null);
+                }
+                else {
+                    results.sort((a, b) -> a < b ? -1 : (a > b ? 1 : 0));
+                    done(results, null);
+                }
+            }
+            for (file in list) {
+                final relative:String = directories && (file:Dynamic).webkitRelativePath != null && (file:Dynamic).webkitRelativePath != ''
+                    ? (file:Dynamic).webkitRelativePath : file.name;
+                (file:Dynamic).arrayBuffer().then((buffer:js.lib.ArrayBuffer) -> {
+                    results.push(BrowserFiles.addPicked(pick, relative, haxe.io.Bytes.ofData(buffer)));
+                    remaining--;
+                    if (remaining == 0) finishPick();
+                }, (error:Dynamic) -> {
+                    failed = 'could not read ' + file.name + ': ' + error;
+                    remaining--;
+                    if (remaining == 0) finishPick();
+                });
+            }
+        });
+
+        // Cancelling: the `cancel` event where the browser has it, else the
+        // page getting the focus back without a `change` shortly after.
+        input.addEventListener('cancel', (_) -> done(null, null));
+        onFocus = (_:Dynamic) -> {
+            js.Browser.window.setTimeout(() -> {
+                if (!changed) done(null, null);
+            }, 1000);
+        };
+        js.Browser.window.addEventListener('focus', onFocus);
+
+        input.click();
+
+    }
+
+    #end
 
     /**
      * Opens a native file selection dialog.
