@@ -36,6 +36,12 @@ using StringTools;
  *
  * `GPUI_STORY_TOUR_ONLY` restricts the tour to a comma separated list of
  * story names. Errors and exceptions are left to the app's log.
+ *
+ * On the headless backend nothing is drawn, so no PNG is written (the
+ * frame costs are still logged), and Ceramic runs its headless loop at 10
+ * frames per second on node: each page takes about
+ * `(GPUI_STORY_TOUR_FRAMES + GPUI_STORY_TOUR_SCROLL_FRAMES) / 10` seconds
+ * (the whole gallery with the defaults: about 4 minutes).
  */
 class StoryTour {
 
@@ -150,22 +156,17 @@ class StoryTour {
             final index = indices[position];
             final name = names[index];
             log.info('story tour: page $index $name max ${fmt(max(costs, firstCost))} ms, median ${fmt(median(costs))} ms over ${costs.length} frames');
+            #if headless
+            // Nothing is drawn on headless: no capture
+            afterCapture();
+            #else
             capturing = true;
             final file = haxe.io.Path.join([dir, '${index < 10 ? '0' : ''}$index-${fileName(name)}.png']);
             screen.toPng(file, () -> {
                 capturing = false;
-                if (scrollFrames > 0) {
-                    scrolling = true;
-                    frame = 0;
-                    costs = [];
-                    scrollDown = true;
-                    scrollInDirection = 0;
-                    scroll();
-                }
-                else {
-                    next();
-                }
+                afterCapture();
             });
+            #end
             return;
         }
 
@@ -178,6 +179,20 @@ class StoryTour {
             else {
                 scroll();
             }
+        }
+    }
+
+    function afterCapture():Void {
+        if (scrollFrames > 0) {
+            scrolling = true;
+            frame = 0;
+            costs = [];
+            scrollDown = true;
+            scrollInDirection = 0;
+            scroll();
+        }
+        else {
+            next();
         }
     }
 
