@@ -46,8 +46,25 @@ class App {
      * globals and new entity observers.
      */
     public static function typeIdOf(type:Class<Dynamic>):Int {
+        #if cs
+        // On C#, `Type.getClassName` reads the full name by reflection and
+        // allocates strings at each call (2 % of a frame of the story on
+        // Unity, through `globalCell`): keep the id of each class object
+        final key:{} = cast type;
+        var id = typeIdsByClass.get(key);
+        if (id == null) {
+            id = typeIdOfName(Type.getClassName(type));
+            typeIdsByClass.set(key, id);
+        }
+        return id;
+        #else
         return typeIdOfName(Type.getClassName(type));
+        #end
     }
+
+    #if cs
+    static final typeIdsByClass:haxe.ds.ObjectMap<{}, Int> = new haxe.ds.ObjectMap();
+    #end
 
     static function typeIdOfName(name:String):Int {
         var id = typeIds.get(name);
