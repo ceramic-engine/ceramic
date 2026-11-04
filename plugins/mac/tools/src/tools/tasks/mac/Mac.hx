@@ -25,7 +25,7 @@ class Mac extends tools.Task {
         var project = ensureCeramicProject(cwd, args, App);
 
         var macProjectPath = Path.join([cwd, 'project/mac']);
-        var macAppPath = Path.join([macProjectPath, project.app.name + '.app']);
+        var macAppPath = MacApp.appPath(cwd, project);
 
         var macAppSdlLib = Path.join([macAppPath, 'Contents', 'MacOS', 'libSDL3.dylib']);
         var ceramicSdlLib = Path.join([context.ceramicRootPath, 'bin/sdl/sdl3-mac-universal/lib/libSDL3.dylib']);
@@ -103,7 +103,7 @@ class Mac extends tools.Task {
         print('Start app');
 
         var status = commandWithChecksAndLogs(
-            project.app.name + '.app/Contents/MacOS/' + macAppBinaryName,
+            MacApp.appBundleName(project) + '/Contents/MacOS/' + macAppBinaryName,
             [],
             { cwd: macProjectPath, logCwd: outTargetPath, filter: (line:String) -> {
                 return line.indexOf('UNSUPPORTED (log once): POSSIBLE ISSUE: unit') != -1 && line.indexOf('GLD_TEXTURE_INDEX_2D is unloadable and bound to sampler type (Float)') != -1;

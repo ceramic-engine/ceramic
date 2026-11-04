@@ -206,7 +206,7 @@ class ClayBackendTools implements tools.spec.BackendTools {
 
         return switch (target.name) {
             case 'mac':
-                Path.join([cwd, 'project', 'mac', context.project.app.name + '.app', 'Contents', 'Resources', 'assets']);
+                Path.join([tools.MacApp.appPath(cwd, context.project), 'Contents', 'Resources', 'assets']);
             case 'ios':
                 Path.join([cwd, 'project', 'ios', 'project', 'assets', 'assets']);
             case 'android':

@@ -9,11 +9,32 @@ import tools.Templates;
 
 class MacApp {
 
+    /**
+     * Name of the app bundle folder in `project/mac`. The template's
+     * `myapp.app` is renamed with the app name lowercased, so every path to
+     * the bundle must use this name: `project.app.name + '.app'` only finds
+     * it on a case insensitive volume.
+     */
+    public static function appBundleName(project:Project):String {
+
+        return ('' + project.app.name).toLowerCase() + '.app';
+
+    }
+
+    /**
+     * Path of the app bundle in `project/mac` (see `appBundleName()`).
+     */
+    public static function appPath(cwd:String, project:Project):String {
+
+        return Path.join([cwd, 'project', 'mac', appBundleName(project)]);
+
+    }
+
     public static function createMacAppIfNeeded(cwd:String, project:Project):Void {
 
         var macProjectPath = Path.join([cwd, 'project/mac']);
         var defaultMacAppPath = Path.join([macProjectPath, 'myapp.app']);
-        var macAppPath = Path.join([macProjectPath, project.app.name + '.app']);
+        var macAppPath = appPath(cwd, project);
         var macAppInfoFile = Path.join([macAppPath, 'Contents', 'Info.plist']);
         var macAppAssetsPath = Path.join([macAppPath, 'Contents', 'Resources', 'assets']);
         var tmpAppAssetsPath = Path.join([cwd, 'project', 'mac-tmp-assets']);
