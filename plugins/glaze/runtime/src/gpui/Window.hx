@@ -1209,7 +1209,11 @@ class Window implements WindowInvalidator {
      * Snaps bounds to the device pixel grid.
      */
     public inline function pixelSnapBounds(bounds:Bounds):Bounds {
-        return bounds.map(pixelSnap);
+        // `bounds.map(pixelSnap)` without the bound method (Floats boxed per call)
+        return new Bounds(
+            new Point(pixelSnap(bounds.origin.x), pixelSnap(bounds.origin.y)),
+            new Size(pixelSnap(bounds.size.width), pixelSnap(bounds.size.height))
+        );
     }
 
     /**

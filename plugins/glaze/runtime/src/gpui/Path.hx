@@ -18,8 +18,35 @@ package gpui;
  */
 class Path {
 
-    /** Bounds of the vertices (logical pixels) */
-    public var bounds:Bounds;
+    /**
+     * Bounds of the vertices (logical pixels). Kept as four values while
+     * the path grows (a `Bounds` per vertex otherwise), made on demand.
+     */
+    public var bounds(get, set):Bounds;
+
+    var boundsLeft:Float = 0;
+    var boundsTop:Float = 0;
+    var boundsWidth:Float = 0;
+    var boundsHeight:Float = 0;
+    var boundsObject:Null<Bounds> = null;
+
+    function get_bounds():Bounds {
+        var result = boundsObject;
+        if (result == null) {
+            result = new Bounds(new Point(boundsLeft, boundsTop), new Size(boundsWidth, boundsHeight));
+            boundsObject = result;
+        }
+        return result;
+    }
+
+    function set_bounds(value:Bounds):Bounds {
+        boundsLeft = value.origin.x;
+        boundsTop = value.origin.y;
+        boundsWidth = value.size.width;
+        boundsHeight = value.size.height;
+        boundsObject = value;
+        return value;
+    }
 
     /** Triangles: 3 vertices each */
     public final vertices:Array<PathVertex> = [];
@@ -113,13 +140,17 @@ class Path {
      */
     @:allow(gpui.PathBuilder)
     function unionBounds(x:Float, y:Float):Void {
-        final ox = bounds.origin.x;
-        final oy = bounds.origin.y;
-        final right = Math.max(SpringMath.f32(ox + bounds.size.width), x);
-        final bottom = Math.max(SpringMath.f32(oy + bounds.size.height), y);
+        final ox = boundsLeft;
+        final oy = boundsTop;
+        final right = Math.max(SpringMath.f32(ox + boundsWidth), x);
+        final bottom = Math.max(SpringMath.f32(oy + boundsHeight), y);
         final left = Math.min(ox, x);
         final top = Math.min(oy, y);
-        bounds = new Bounds(new Point(left, top), new Size(SpringMath.f32(right - left), SpringMath.f32(bottom - top)));
+        boundsLeft = left;
+        boundsTop = top;
+        boundsWidth = SpringMath.f32(right - left);
+        boundsHeight = SpringMath.f32(bottom - top);
+        boundsObject = null;
     }
 
     /**

@@ -72,7 +72,7 @@ private class ViewNodes {
  * to be laid out again; otherwise its new subtree replaces the retained one
  * (`replaceRetained()`).
  */
-class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> {
+class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implements taffy.compute.Leaf.LeafMeasurer {
 
     final tree:TaffyTree<NodeContext>;
 
@@ -135,12 +135,10 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> {
     var measureCx:Null<App> = null;
     var measureScaleFactor:Float = 1;
     var measureNodeContext:Null<NodeContext> = null;
-    final leafMeasure:taffy.compute.Leaf.LeafMeasureFunction;
 
     public function new() {
         tree = new TaffyTree<NodeContext>();
         tree.disableRounding();
-        leafMeasure = measureLeaf;
     }
 
     /**
@@ -490,33 +488,67 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> {
     function measureNode(input:taffy.tree.LayoutInput, nodeId:NodeId, nodeContext:Null<NodeContext>, style:taffy.style.Style):taffy.tree.LayoutOutput {
         final previous = measureNodeContext;
         measureNodeContext = nodeContext;
-        final output = Leaf.computeLeafLayout(input, style, leafMeasure);
+        // The engine is the leaf measurer too: the known and available sizes come as values
+        final output = Leaf.computeLeafLayoutWithMeasurer(input, style, this);
         measureNodeContext = previous;
         return output;
     }
 
-    function measureLeaf(knownDimensions:taffy.geometry.SizeOpt, availableSpace:taffy.geometry.SizeAvail):taffy.geometry.Size {
+    static final NONE_KNOWN = new SizeOf<Null<Float>>(null, null);
+
+    /** The available space given to the last measured leaf (immutable values reused while unchanged) */
+    var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
+    var lastAvailableWidth:AvailableSpace = AvailableSpace.MaxContent;
+    var lastAvailableHeight:AvailableSpace = AvailableSpace.MaxContent;
+
+    /**
+     * The port's available space of a taffy one in logical pixels: `previous`
+     * when it is the same `Definite` value (same bits), a new one otherwise.
+     */
+    /** The same value, zero signs included */
+    static inline function sameFloat(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
+    }
+
+    static function untransformAvailable(ev:taffy.style.AvailableSpace, scaleFactor:Float, previous:AvailableSpace):AvailableSpace {
+        return switch ev {
+            case taffy.style.AvailableSpace.MinContent: AvailableSpace.MinContent;
+            case taffy.style.AvailableSpace.MaxContent: AvailableSpace.MaxContent;
+            case definite:
+                final value:Float = definite.definiteValue() / scaleFactor;
+                switch previous {
+                    case Definite(last) if (sameFloat(last, value)):
+                        previous;
+                    case _:
+                        AvailableSpace.Definite(value);
+                }
+        }
+    }
+
+    @:noCompletion
+    public function measureLeafSize(knownWidth:OptionalFloat, knownHeight:OptionalFloat, availableWidth:taffy.style.AvailableSpace, availableHeight:taffy.style.AvailableSpace):taffy.geometry.Size {
         final nodeContext = measureNodeContext;
         if (nodeContext == null) {
             return taffy.geometry.Size.ZERO;
         }
         final scaleFactor = measureScaleFactor;
 
-        final knownWidth = knownDimensions.width;
-        final knownHeight = knownDimensions.height;
-        final known = new SizeOf<Null<Float>>(
+        // Immutable values: none known shares one object, and the available
+        // space of the last measure is reused when it is the same
+        final known = knownWidth.isNone() && knownHeight.isNone() ? NONE_KNOWN : new SizeOf<Null<Float>>(
             knownWidth.isSome() ? knownWidth.unwrap() / scaleFactor : null,
             knownHeight.isSome() ? knownHeight.unwrap() / scaleFactor : null
         );
 
-        inline function untransform(ev:taffy.style.AvailableSpace):AvailableSpace {
-            return switch ev {
-                case taffy.style.AvailableSpace.MinContent: AvailableSpace.MinContent;
-                case taffy.style.AvailableSpace.MaxContent: AvailableSpace.MaxContent;
-                case definite: AvailableSpace.Definite(definite.definiteValue() / scaleFactor);
-            }
+        final width = untransformAvailable(availableWidth, scaleFactor, lastAvailableWidth);
+        final height = untransformAvailable(availableHeight, scaleFactor, lastAvailableHeight);
+        var available = lastAvailable;
+        if (available == null || available.width != width || available.height != height) {
+            available = new SizeOf<AvailableSpace>(width, height);
+            lastAvailable = available;
         }
-        final available = new SizeOf<AvailableSpace>(untransform(availableSpace.width), untransform(availableSpace.height));
+        lastAvailableWidth = width;
+        lastAvailableHeight = height;
 
         nodeContext.lastKnown = known;
         nodeContext.lastAvailable = available;

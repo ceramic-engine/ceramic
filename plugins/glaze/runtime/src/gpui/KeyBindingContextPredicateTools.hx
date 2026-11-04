@@ -80,8 +80,8 @@ class KeyBindingContextPredicateTools {
     public static function depthOf(self:KeyBindingContextPredicate, contexts:Array<KeyContext>):Null<Int> {
         var depth = contexts.length;
         while (depth >= 0) {
-            final contextSlice = depth == contexts.length ? contexts : contexts.slice(0, depth);
-            if (evalInner(self, contextSlice, contexts)) {
+            // `evalInner(self, contexts.slice(0, depth), contexts)` without the slice
+            if (evalRange(self, contexts, 0, depth, 0, contexts.length)) {
                 return depth;
             }
             depth--;
@@ -93,7 +93,52 @@ class KeyBindingContextPredicateTools {
      * Eval a predicate against a set of contexts, arranged from lowest to highest.
      */
     public static function eval(self:KeyBindingContextPredicate, contexts:Array<KeyContext>):Bool {
-        return evalInner(self, contexts, contexts);
+        return evalRange(self, contexts, 0, contexts.length, 0, contexts.length);
+    }
+
+    /**
+     * `evalInner(self, contexts.slice(start, end), contexts.slice(allStart, allEnd))`
+     * without the slices (Rust borrows sub-slices): the same evaluation on
+     * index ranges of one array.
+     */
+    static function evalRange(self:KeyBindingContextPredicate, contexts:Array<KeyContext>, start:Int, end:Int, allStart:Int, allEnd:Int):Bool {
+        if (end - start == 0) {
+            return false;
+        }
+        final context = contexts[end - 1];
+        return switch self {
+            case Identifier(name):
+                context.contains(name);
+            case Equal(left, right):
+                final value = context.get(left);
+                value != null && value == right;
+            case NotEqual(left, right):
+                final value = context.get(left);
+                value == null || value != right;
+            case Not(pred):
+                var result = true;
+                for (i in 0...allEnd - allStart) {
+                    if (evalRange(pred, contexts, allStart, allStart + i + 1, allStart, allEnd)) {
+                        result = false;
+                        break;
+                    }
+                }
+                result;
+            case Descendant(parent, child):
+                var result = false;
+                for (i in 0...end - start - 1) {
+                    if (evalRange(parent, contexts, start, start + i + 1, allStart, allEnd)) {
+                        final restStart = start + i + 1;
+                        result = evalRange(child, contexts, restStart, end, restStart, end);
+                        break;
+                    }
+                }
+                result;
+            case And(left, right):
+                evalRange(left, contexts, start, end, allStart, allEnd) && evalRange(right, contexts, start, end, allStart, allEnd);
+            case Or(left, right):
+                evalRange(left, contexts, start, end, allStart, allEnd) || evalRange(right, contexts, start, end, allStart, allEnd);
+        }
     }
 
     /**

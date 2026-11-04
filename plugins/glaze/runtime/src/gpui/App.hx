@@ -278,6 +278,7 @@ class App {
     }
 
     public function new(?dispatcher:PlatformDispatcher) {
+        invokeHandlerCallback = invokeHandler;
         this.dispatcher = dispatcher != null ? dispatcher : new CeramicDispatcher();
         _backgroundExecutor = new BackgroundExecutor(this.dispatcher);
         _foregroundExecutor = new ForegroundExecutor(this.dispatcher);
@@ -432,7 +433,7 @@ class App {
 
     function applyNotifyEffect(emitter:Int):Void {
         pendingNotifications.remove(emitter);
-        observers.retain(emitter, invokeHandler);
+        observers.retain(emitter, invokeHandlerCallback);
     }
 
     function applyEmitEffect(emitter:Int, event:Dynamic):Void {
@@ -462,7 +463,7 @@ class App {
 
     function applyNotifyGlobalObserversEffect(globalType:Int):Void {
         pendingGlobalNotifications.remove(globalType);
-        globalObservers.retain(globalType, invokeHandler);
+        globalObservers.retain(globalType, invokeHandlerCallback);
     }
 
     function applyDeferEffect(callback:App->Void):Void {
@@ -485,6 +486,9 @@ class App {
             return true;
         });
     }
+
+    /** `invokeHandler` as a callback, bound once (a bound method allocates a closure each time it is taken) */
+    final invokeHandlerCallback:(App->Bool)->Bool;
 
     function invokeHandler(handler:App->Bool):Bool {
         Autorun.unobserve();

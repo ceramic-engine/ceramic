@@ -303,6 +303,46 @@ class KeyContextTest extends TestCase {
         assertPredicate(Equal('vim_operator', '>'), parse('vim_operator == >'));
     }
 
+    /**
+     * `depthOf` and `eval` evaluate on index ranges of the context stack
+     * (no `slice` per depth): the same results as `evalInner` on slices,
+     * like Rust's sub-slices, for predicates mixing every operator.
+     */
+    function testDepthOfAndEvalMatchSlicedEvaluation() {
+        final names = ['Workspace', 'Pane', 'Editor', 'Terminal'];
+        final predicates = [
+            'Editor', 'Pane > Editor', 'Workspace > Pane > Editor', '!Terminal', 'Pane > !Workspace',
+            '!Workspace', 'Editor && mode == full', 'Pane || Terminal', 'mode != full', '!(Pane > Editor)',
+            'Workspace > (Pane > Editor)', '(Workspace > Pane) > Editor', 'Workspace > !Editor && Pane',
+            'Terminal > Editor || !Pane', 'Pane > Pane', '(mode == full) > Editor'
+        ].map(parse);
+        var seed = 7;
+        function next(n:Int):Int {
+            seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+            return seed % n;
+        }
+        for (_ in 0...200) {
+            final contexts:Array<KeyContext> = [];
+            for (_ in 0...next(6)) {
+                final name = names[next(names.length)];
+                contexts.push(KeyContext.parse(next(3) == 0 ? name + ' mode=full' : name));
+            }
+            for (predicate in predicates) {
+                var expectedDepth:Null<Int> = null;
+                var depth = contexts.length;
+                while (depth >= 0) {
+                    if (KeyBindingContextPredicateTools.evalInner(predicate, contexts.slice(0, depth), contexts)) {
+                        expectedDepth = depth;
+                        break;
+                    }
+                    depth--;
+                }
+                assertEquals(expectedDepth, predicate.depthOf(contexts));
+                assertEquals(KeyBindingContextPredicateTools.evalInner(predicate, contexts, contexts), predicate.eval(contexts));
+            }
+        }
+    }
+
 }
 
 @:action(namespace = test_only) private class A implements Action {}

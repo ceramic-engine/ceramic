@@ -1186,16 +1186,22 @@ private class SidePoints {
 
     public function copy():SidePoints {
         final c = new SidePoints();
-        c.prevX = prevX;
-        c.prevY = prevY;
-        c.nextX = nextX;
-        c.nextY = nextY;
-        c.hasSingle = hasSingle;
-        c.singleX = singleX;
-        c.singleY = singleY;
-        c.prevVertex = prevVertex;
-        c.nextVertex = nextVertex;
+        c.setFrom(this);
         return c;
+    }
+
+    /** Copies the values of `o` into this one */
+    public function setFrom(o:SidePoints):Void {
+        final c = this;
+        c.prevX = o.prevX;
+        c.prevY = o.prevY;
+        c.nextX = o.nextX;
+        c.nextY = o.nextY;
+        c.hasSingle = o.hasSingle;
+        c.singleX = o.singleX;
+        c.singleY = o.singleY;
+        c.prevVertex = o.prevVertex;
+        c.nextVertex = o.nextVertex;
     }
 
 }
@@ -1221,8 +1227,12 @@ private class EndpointData {
         c.halfWidth = halfWidth;
         c.advancement = advancement;
         c.lineJoin = lineJoin;
-        c.sidePoints = [sidePoints[0].copy(), sidePoints[1].copy()];
-        c.fold = [fold[0], fold[1]];
+        // Into the arrays and side points of the new endpoint (copying them
+        // allocated them a second time)
+        c.sidePoints[0].setFrom(sidePoints[0]);
+        c.sidePoints[1].setFrom(sidePoints[1]);
+        c.fold[0] = fold[0];
+        c.fold[1] = fold[1];
         c.isFlatteningStep = isFlatteningStep;
         return c;
     }
