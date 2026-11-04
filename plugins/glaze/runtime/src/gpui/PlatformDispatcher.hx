@@ -15,13 +15,13 @@ interface PlatformDispatcher {
     /**
      * Runs `runnable` soon, on the main thread, outside of the current call stack.
      */
-    function dispatch(runnable:Void->Void):Void;
+    function dispatch(runnable:() -> Void):Void;
 
     /**
      * Runs `runnable` after the given delay in seconds.
      * Returns a function that cancels it.
      */
-    function dispatchAfter(seconds:Float, runnable:Void->Void):Void->Void;
+    function dispatchAfter(seconds:Float, runnable:() -> Void):() -> Void;
 
     /**
      * Current time in seconds. Only differences between two values are meaningful.

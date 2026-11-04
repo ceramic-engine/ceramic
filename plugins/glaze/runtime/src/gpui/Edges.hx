@@ -56,7 +56,7 @@ class Edges {
     /**
      * Returns new edges with `f` applied to each side.
      */
-    public inline function map(f:Float->Float):Edges {
+    public inline function map(f:(Float) -> Float):Edges {
 
         return new Edges(f(top), f(right), f(bottom), f(left));
 
@@ -65,7 +65,7 @@ class Edges {
     /**
      * Returns generic edges with `f` applied to each side.
      */
-    public inline function mapOf<U>(f:Float->U):EdgesOf<U> {
+    public inline function mapOf<U>(f:(Float) -> U):EdgesOf<U> {
 
         return new EdgesOf<U>(f(top), f(right), f(bottom), f(left));
 
@@ -74,7 +74,7 @@ class Edges {
     /**
      * Checks if any of the sides satisfies the given predicate.
      */
-    public inline function any(predicate:Float->Bool):Bool {
+    public inline function any(predicate:(Float) -> Bool):Bool {
 
         return predicate(top) || predicate(right) || predicate(bottom) || predicate(left);
 

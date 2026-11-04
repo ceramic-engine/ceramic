@@ -96,7 +96,7 @@ class Task<T> extends AnyTask {
      * after an `.await`). The returned task is ready when `f` has run. Failure
      * and cancellation are propagated. Use `map` to produce a value.
      */
-    public function then(f:T->Void):Task<Unit> {
+    public function then(f:(T) -> Void):Task<Unit> {
         final out = new Task<Unit>();
         out.cancelHook = cancel;
         onComplete(() -> {
@@ -127,7 +127,7 @@ class Task<T> extends AnyTask {
      * result (an `.await` whose value is transformed). Failure and cancellation
      * are propagated.
      */
-    public function map<U>(f:T->U):Task<U> {
+    public function map<U>(f:(T) -> U):Task<U> {
         final out = new Task<U>();
         out.cancelHook = cancel;
         onComplete(() -> {
@@ -159,7 +159,7 @@ class Task<T> extends AnyTask {
      * returns (an `.await` followed by more awaits). `f` may return `null` when
      * there is nothing more to wait for (the result is then `null`).
      */
-    public function andThen<U>(f:T->Task<U>):Task<U> {
+    public function andThen<U>(f:(T) -> Task<U>):Task<U> {
         final out = new Task<U>();
         out.cancelHook = cancel;
         onComplete(() -> {
@@ -199,7 +199,7 @@ class Task<T> extends AnyTask {
      * Recovers from a failure: when the task fails, the returned task is ready
      * with the value returned by `f` (Rust: `unwrap_or_else` on a `Result`).
      */
-    public function catchError(f:Dynamic->T):Task<T> {
+    public function catchError(f:(Dynamic) -> T):Task<T> {
         final out = new Task<T>();
         out.cancelHook = cancel;
         onComplete(() -> {

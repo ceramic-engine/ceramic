@@ -404,7 +404,7 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
     }
 
     /** `cx.update(crate::init)` then a window whose Root shows the view built by `build`. */
-    function openRoot<V:Model & Render>(build:Context<V>->V):{view:Entity<V>, cx:VisualTestContext} {
+    function openRoot<V:Model & Render>(build:(Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
         app.update(cx -> {
             Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of the theme).
@@ -463,7 +463,7 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
         return StringTools.trim(text);
     }
 
-    static function paragraphs(count:Int, format:Int->String):String {
+    static function paragraphs(count:Int, format:(Int) -> String):String {
         return [for (ix in 0...count) format(ix)].join("\n\n");
     }
 

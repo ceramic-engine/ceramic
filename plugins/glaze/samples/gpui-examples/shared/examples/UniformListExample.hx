@@ -22,7 +22,7 @@ class UniformListExample extends Model implements Render {
     /**
      * Where `println!` goes (the console by default).
      */
-    public static var println:String->Void = line -> trace(line);
+    public static var println:(String) -> Void = line -> trace(line);
 
     public function new() {
         super();

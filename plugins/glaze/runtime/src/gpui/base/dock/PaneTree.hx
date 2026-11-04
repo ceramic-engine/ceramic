@@ -309,7 +309,7 @@ class PaneTree {
      * the same, so no snapshot of the previous tree is needed. A mutation that
      * cannot resolve its target returns `false` and the whole edit is a no-op.
      */
-    function edit(apply:PaneTree -> Bool):EditResult {
+    function edit(apply:(PaneTree) -> Bool):EditResult {
         final mutated = apply(this);
         final collapsed = normalizeReporting();
         return new EditResult(mutated || collapsed);

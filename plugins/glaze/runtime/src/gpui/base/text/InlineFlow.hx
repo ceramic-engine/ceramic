@@ -1048,7 +1048,7 @@ class InlineFlow extends gpui.Element {
      * ones left, rebased to `start` (Rust takes `&[(Range<usize>, T)]`; here
      * `rangeOf` reads the range of an item).
      */
-    public static function sliceRanges<T, U>(ranges:Array<T>, rangeOf:T->Range, start:Int, end:Int, map:(Range, T) -> U):Array<U> {
+    public static function sliceRanges<T, U>(ranges:Array<T>, rangeOf:(T) -> Range, start:Int, end:Int, map:(Range, T) -> U):Array<U> {
         final result:Array<U> = [];
         for (value in ranges) {
             final range = rangeOf(value);

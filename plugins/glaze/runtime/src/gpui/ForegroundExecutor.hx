@@ -28,7 +28,7 @@ class ForegroundExecutor {
      * `then` / `andThen`. Return `Task.ready(value)` or `Task.done()` when nothing
      * is awaited. `null` is accepted and means `Task.done()` (the result is then `null`).
      */
-    public function spawn<R>(f:Void->Task<R>):Task<R> {
+    public function spawn<R>(f:() -> Task<R>):Task<R> {
         final task = new Task<R>();
         dispatcher.dispatch(() -> {
             if (!task.isPending)

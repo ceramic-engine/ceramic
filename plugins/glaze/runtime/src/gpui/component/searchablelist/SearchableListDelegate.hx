@@ -185,7 +185,7 @@ abstract class SearchableListDelegateBase<I> implements SearchableListDelegate<I
     }
 
     /** Rust `Vec::retain`, in place. */
-    static function retain<I>(selection:Array<SelectedItem<I>>, keep:SelectedItem<I>->Bool):Void {
+    static function retain<I>(selection:Array<SelectedItem<I>>, keep:(SelectedItem<I>) -> Bool):Void {
         var j = 0;
         for (i in 0...selection.length) {
             final entry = selection[i];

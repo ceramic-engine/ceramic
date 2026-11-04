@@ -106,7 +106,7 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function styles(build:TabStyles->TabStyles):BaseTab {
+    public function styles(build:(TabStyles) -> TabStyles):BaseTab {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -128,7 +128,7 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):BaseTab {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):BaseTab {
         base.hover(f);
         return this;
     }
@@ -179,12 +179,12 @@ class TabStyles {
 
     public function new() {}
 
-    public function selected(build:StateStyle->StateStyle):TabStyles {
+    public function selected(build:(StateStyle) -> StateStyle):TabStyles {
         selectedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
 
-    public function disabled(build:StateStyle->StateStyle):TabStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):TabStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }

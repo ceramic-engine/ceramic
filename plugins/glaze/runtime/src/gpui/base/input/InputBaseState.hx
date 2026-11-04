@@ -826,7 +826,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * The `disabled` and `readonly` modes only reject the changes made by the
      * user, the programmatic APIs must always be able to update the text.
      */
-    public function withEditsAllowed(f:InputBaseState->Void):Void {
+    public function withEditsAllowed(f:(InputBaseState) -> Void):Void {
         final wasDisabled = disabled;
         final wasReadonly = readonly;
         disabled = false;

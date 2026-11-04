@@ -334,7 +334,7 @@ class PlatformOperationsTest extends TestCase {
     static function setSystemFocus(focused:Bool):Void {
         final ceramicApp = ceramic.App.app;
         @:privateAccess ceramicApp.backend.screen.emitWindowFocusChange(focused);
-        final callbacks:Array<Void->Void> = @:privateAccess ceramicApp.beginUpdateCallbacks;
+        final callbacks:Array<() -> Void> = @:privateAccess ceramicApp.beginUpdateCallbacks;
         @:privateAccess ceramicApp.beginUpdateCallbacks = [];
         for (callback in callbacks) {
             callback();

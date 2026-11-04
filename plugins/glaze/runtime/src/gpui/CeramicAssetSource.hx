@@ -61,7 +61,7 @@ class CeramicAssetSource implements AssetSource {
      * Loads the given asset paths (as Ceramic binary assets), then calls `done`
      * with `true` if all of them were loaded.
      */
-    public function preload(paths:Array<String>, done:Bool->Void):Void {
+    public function preload(paths:Array<String>, done:(Bool) -> Void):Void {
         final assets = new ceramic.Assets();
         final pending:Array<{path:String, asset:ceramic.BinaryAsset}> = [];
         for (path in paths) {

@@ -31,7 +31,7 @@ class BoundsOf<T> {
     /**
      * Returns new bounds with `f` applied to every value of origin and size.
      */
-    public inline function map<U>(f:T->U):BoundsOf<U> {
+    public inline function map<U>(f:(T) -> U):BoundsOf<U> {
 
         return new BoundsOf<U>(origin.map(f), size.map(f));
 
@@ -40,7 +40,7 @@ class BoundsOf<T> {
     /**
      * Returns numeric bounds with `f` applied to every value of origin and size.
      */
-    public inline function mapToBounds(f:T->Float):Bounds {
+    public inline function mapToBounds(f:(T) -> Float):Bounds {
 
         return new Bounds(origin.mapToPoint(f), size.mapToSize(f));
 
@@ -49,7 +49,7 @@ class BoundsOf<T> {
     /**
      * Returns new bounds with `f` applied to the origin only.
      */
-    public inline function mapOrigin(f:T->T):BoundsOf<T> {
+    public inline function mapOrigin(f:(T) -> T):BoundsOf<T> {
 
         return new BoundsOf<T>(origin.map(f), size);
 
@@ -58,7 +58,7 @@ class BoundsOf<T> {
     /**
      * Returns new bounds with `f` applied to the size only.
      */
-    public inline function mapSize(f:T->T):BoundsOf<T> {
+    public inline function mapSize(f:(T) -> T):BoundsOf<T> {
 
         return new BoundsOf<T>(origin, size.map(f));
 
@@ -67,7 +67,7 @@ class BoundsOf<T> {
     /**
      * Structural equality. `eq` compares two values (default: `==`).
      */
-    public function equals(other:BoundsOf<T>, ?eq:T->T->Bool):Bool {
+    public function equals(other:BoundsOf<T>, ?eq:(T, T) -> Bool):Bool {
 
         return other != null && origin.equals(other.origin, eq) && size.equals(other.size, eq);
 

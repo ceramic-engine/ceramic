@@ -1439,7 +1439,7 @@ class TextViewStateTest extends KitTestCase {
     }
 
     /** Reveals `range` of the current text and draws a few frames. */
-    function revealAt(state:Entity<TextViewState>, range:String->Range, cx:VisualTestContext):Void {
+    function revealAt(state:Entity<TextViewState>, range:(String) -> Range, cx:VisualTestContext):Void {
         update(state, (state, cx) -> {
             final text = state.renderedText();
             state.revealRange(range(text.asStr()), cx);

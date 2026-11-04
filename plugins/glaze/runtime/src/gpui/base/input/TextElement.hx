@@ -1074,7 +1074,7 @@ class TextElement extends Element {
     }
 
     /** Rust `slice::partition_point` over `len` items. */
-    static function partitionPoint(len:Int, pred:Int->Bool):Int {
+    static function partitionPoint(len:Int, pred:(Int) -> Bool):Int {
         var lo = 0;
         var hi = len;
         while (lo < hi) {

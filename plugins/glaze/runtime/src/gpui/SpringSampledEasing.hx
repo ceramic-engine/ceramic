@@ -18,9 +18,9 @@ class SpringSampledEasing {
     /**
      * The easing, exactly 0 at 0 and 1 at 1, possibly overshooting in between.
      */
-    public final easing:Float->Float;
+    public final easing:(Float) -> Float;
 
-    public inline function new(duration:Float, easing:Float->Float) {
+    public inline function new(duration:Float, easing:(Float) -> Float) {
 
         this.duration = duration;
         this.easing = easing;

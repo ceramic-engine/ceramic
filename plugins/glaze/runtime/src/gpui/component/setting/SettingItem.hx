@@ -82,7 +82,7 @@ class SettingItem {
      * set, the page-level reset button will appear while `isDirty` returns
      * true, and clicking it invokes `reset`.
      */
-    public function onReset(isDirty:App -> Bool, reset:(Window, App) -> Void):SettingItem {
+    public function onReset(isDirty:(App) -> Bool, reset:(Window, App) -> Void):SettingItem {
         switch kind {
             case Element(disabled, keywords, _, render):
                 kind = Element(disabled, keywords, new ResetHandler(isDirty, reset), render);

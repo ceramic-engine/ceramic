@@ -57,7 +57,7 @@ class EditorBench extends BaseScenario {
     public static inline final LANGUAGE = 'json';
 
     /** Loads the grammar files of the language (needed before `setup` on targets without synchronous asset reads). */
-    public static function preload(done:Bool->Void):Void {
+    public static function preload(done:(Bool) -> Void):Void {
         Highlighter.preload([LANGUAGE], done);
     }
 

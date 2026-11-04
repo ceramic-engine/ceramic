@@ -36,7 +36,7 @@ class Size {
     /**
      * Returns a new size with `f` applied to the width and height.
      */
-    public inline function map(f:Float->Float):Size {
+    public inline function map(f:(Float) -> Float):Size {
 
         return new Size(f(width), f(height));
 
@@ -45,7 +45,7 @@ class Size {
     /**
      * Returns a generic size with `f` applied to the width and height.
      */
-    public inline function mapOf<U>(f:Float->U):SizeOf<U> {
+    public inline function mapOf<U>(f:(Float) -> U):SizeOf<U> {
 
         return new SizeOf<U>(f(width), f(height));
 
@@ -81,7 +81,7 @@ class Size {
     /**
      * Returns a new size with `f` applied to the value along the given axis (Rust trait `Along`).
      */
-    public inline function applyAlong(axis:Axis, f:Float->Float):Size {
+    public inline function applyAlong(axis:Axis, f:(Float) -> Float):Size {
 
         return axis == Horizontal ? new Size(f(width), height) : new Size(width, f(height));
 

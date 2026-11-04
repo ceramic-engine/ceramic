@@ -61,7 +61,7 @@ class PaneNode {
     /**
      * Depth-first pre-order walk over this node and its descendants.
      */
-    public function walk(f:PaneNode -> Void):Void {
+    public function walk(f:(PaneNode) -> Void):Void {
         f(this);
         switch kindValue {
             case Split(_, children, _):

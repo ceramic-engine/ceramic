@@ -106,7 +106,7 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     /**
      * Configures application-owned styles for the switch's semantic states.
      */
-    public function styles(build:SwitchStyles->SwitchStyles):Switch {
+    public function styles(build:(SwitchStyles) -> SwitchStyles):Switch {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -163,19 +163,19 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Switch {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Switch {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Switch {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Switch {
         base.active(f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Switch {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Switch {
         base.focusVisible(f);
         return this;
     }
@@ -232,12 +232,12 @@ class SwitchStyles {
 
     public function new() {}
 
-    public function checked(build:StateStyle->StateStyle):SwitchStyles {
+    public function checked(build:(StateStyle) -> StateStyle):SwitchStyles {
         checkedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
 
-    public function disabled(build:StateStyle->StateStyle):SwitchStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):SwitchStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
@@ -298,7 +298,7 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function styles(build:SwitchStyles->SwitchStyles):SwitchTrack {
+    public function styles(build:(SwitchStyles) -> SwitchStyles):SwitchTrack {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -362,7 +362,7 @@ class SwitchThumb implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    public function styles(build:SwitchStyles->SwitchStyles):SwitchThumb {
+    public function styles(build:(SwitchStyles) -> SwitchStyles):SwitchThumb {
         semanticStyles = build(semanticStyles);
         return this;
     }

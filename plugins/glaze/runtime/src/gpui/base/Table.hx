@@ -71,7 +71,7 @@ abstract class TablePart implements RenderOnce implements Styled implements Pare
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):TablePart {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):TablePart {
         base.hover(f);
         return this;
     }

@@ -70,7 +70,7 @@ class TestRunner {
         return result;
     }
 
-    function runAsync(finished:Void->Void):Void {
+    function runAsync(finished:() -> Void):Void {
         final tests = asyncTests();
         var index = 0;
         function next():Void {

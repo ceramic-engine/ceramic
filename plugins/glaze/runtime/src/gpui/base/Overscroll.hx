@@ -171,7 +171,7 @@ class Overscroll {
      * `now` (seconds). `scroll` moves the text by a delta and returns how
      * much of it the text used. Returns whether the stretch changed.
      */
-    public function packet(dy:Float, phase:TouchPhase, extent:Float, nowSeconds:Float, scroll:Float->Float):Bool {
+    public function packet(dy:Float, phase:TouchPhase, extent:Float, nowSeconds:Float, scroll:(Float) -> Float):Bool {
         final now = MotionTime.nanos(nowSeconds);
         final before = offset();
         var thrown = false;

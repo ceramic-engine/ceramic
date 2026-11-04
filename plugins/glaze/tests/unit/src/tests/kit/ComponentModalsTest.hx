@@ -1133,7 +1133,7 @@ class ComponentModalsTest extends TestCase {
     }
 
     /** Rust `wait_for`: advances the test clock until `done`, at most `seconds`. */
-    function waitFor(cx:VisualTestContext, seconds:Float, done:Window->Bool):Void {
+    function waitFor(cx:VisualTestContext, seconds:Float, done:(Window) -> Bool):Void {
         var waited = 0.;
         while (!cx.update((window, _) -> {
             window.draw();

@@ -58,7 +58,7 @@ class EdgesOf<T> {
     /**
      * Returns new edges with `f` applied to each side.
      */
-    public inline function map<U>(f:T->U):EdgesOf<U> {
+    public inline function map<U>(f:(T) -> U):EdgesOf<U> {
 
         return new EdgesOf<U>(f(top), f(right), f(bottom), f(left));
 
@@ -67,7 +67,7 @@ class EdgesOf<T> {
     /**
      * Returns numeric edges with `f` applied to each side.
      */
-    public inline function mapToEdges(f:T->Float):Edges {
+    public inline function mapToEdges(f:(T) -> Float):Edges {
 
         return new Edges(f(top), f(right), f(bottom), f(left));
 
@@ -76,7 +76,7 @@ class EdgesOf<T> {
     /**
      * Checks if any of the sides satisfies the given predicate.
      */
-    public inline function any(predicate:T->Bool):Bool {
+    public inline function any(predicate:(T) -> Bool):Bool {
 
         return predicate(top) || predicate(right) || predicate(bottom) || predicate(left);
 
@@ -85,7 +85,7 @@ class EdgesOf<T> {
     /**
      * Structural equality. `eq` compares two values (default: `==`).
      */
-    public function equals(other:EdgesOf<T>, ?eq:T->T->Bool):Bool {
+    public function equals(other:EdgesOf<T>, ?eq:(T, T) -> Bool):Bool {
 
         if (other == null) return false;
         if (eq == null) return top == other.top && right == other.right && bottom == other.bottom && left == other.left;

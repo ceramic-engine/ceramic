@@ -48,7 +48,7 @@ class SpringAnimationElement<E:Element, T> extends Element implements ParentElem
      * Returns a new `SpringAnimationElement` after applying the given function
      * to the element being animated.
      */
-    public function mapElement(f:E->E):SpringAnimationElement<E, T> {
+    public function mapElement(f:(E) -> E):SpringAnimationElement<E, T> {
         if (element != null) element = f(element);
         return this;
     }

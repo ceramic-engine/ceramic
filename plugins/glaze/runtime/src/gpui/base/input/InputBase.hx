@@ -99,7 +99,7 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
         return this;
     }
 
-    public function styles(build:InputStyles->InputStyles):InputBase {
+    public function styles(build:(InputStyles) -> InputStyles):InputBase {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -146,12 +146,12 @@ class InputStyles {
 
     public function new() {}
 
-    public function focused(build:StateStyle->StateStyle):InputStyles {
+    public function focused(build:(StateStyle) -> StateStyle):InputStyles {
         focusedStyle.refine(@:privateAccess build(new StateStyle()).intoRefinement());
         return this;
     }
 
-    public function disabled(build:StateStyle->StateStyle):InputStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):InputStyles {
         disabledStyle.refine(@:privateAccess build(new StateStyle()).intoRefinement());
         return this;
     }

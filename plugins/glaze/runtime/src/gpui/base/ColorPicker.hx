@@ -676,13 +676,13 @@ class ColorSwatch implements RenderOnce implements Styled implements ParentEleme
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):ColorSwatch {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):ColorSwatch {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):ColorSwatch {
+    public function active(f:(StyleBuilder) -> StyleBuilder):ColorSwatch {
         base.active(f);
         return this;
     }

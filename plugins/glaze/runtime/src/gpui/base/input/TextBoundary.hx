@@ -47,7 +47,7 @@ class TextBoundary {
      * that connect with it: words with words, whitespace with whitespace, and
      * nothing else. At most 128 chars are looked at on each side.
      */
-    public static function wordRangeFromChars(offset:Int, character:Int, previous:Void->Int, following:Void->Int):Range {
+    public static function wordRangeFromChars(offset:Int, character:Int, previous:() -> Int, following:() -> Int):Range {
         final kind = characterKind(character);
         inline function connects(next:Int):Bool {
             final nextKind = characterKind(next);

@@ -28,7 +28,7 @@ interface PlatformOperations {
      * The callback run when the platform is about to quit (`Platform::on_quit`):
      * the platform quits once the task it returns completes.
      */
-    function onQuit(callback:Void->Null<AnyTask>):Void;
+    function onQuit(callback:() -> Null<AnyTask>):Void;
 
     /** Activates the application, bringing it to the foreground (`Platform::activate`). */
     function activate(ignoringOtherApps:Bool):Void;
@@ -57,16 +57,16 @@ interface PlatformOperations {
     function getMenus():Null<Array<OwnedMenu>>;
 
     /** The callback run when an application menu item is chosen (`Platform::on_app_menu_action`). */
-    function onAppMenuAction(callback:Action->Void):Void;
+    function onAppMenuAction(callback:(Action) -> Void):Void;
 
     /** The callback run when an application menu opens (`Platform::on_will_open_app_menu`). */
-    function onWillOpenAppMenu(callback:Void->Void):Void;
+    function onWillOpenAppMenu(callback:() -> Void):Void;
 
     /**
      * The callback telling whether the action of an application menu item
      * can run, asked when the platform validates the item
      * (`Platform::on_validate_app_menu_command`).
      */
-    function onValidateAppMenuCommand(callback:Action->Bool):Void;
+    function onValidateAppMenuCommand(callback:(Action) -> Bool):Void;
 
 }

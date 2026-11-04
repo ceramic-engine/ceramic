@@ -357,7 +357,7 @@ class AccordionTrigger implements RenderOnce implements Styled implements Parent
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):AccordionTrigger {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):AccordionTrigger {
         base.hover(f);
         return this;
     }

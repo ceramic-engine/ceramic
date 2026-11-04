@@ -114,7 +114,7 @@ class PlatformInputHandler {
      * Where the IME candidate window goes: the start of the marked text on the caret's
      * line when composing, the selection head otherwise.
      */
-    public static function computeImeCandidateBounds(markedRange:Null<Range>, selection:UTF16Selection, boundsForRange:Range->Null<Bounds>):Null<Bounds> {
+    public static function computeImeCandidateBounds(markedRange:Null<Range>, selection:UTF16Selection, boundsForRange:(Range) -> Null<Bounds>):Null<Bounds> {
         if (markedRange != null) {
             // Default to the start of the marked (composing) range.
             var lineStart = markedRange.start;

@@ -221,7 +221,7 @@ private class TabStopMapTest {
         return this;
     }
 
-    public function tabGroup(tabIndex:Int, children:TabStopMapTest->TabStopMapTest):TabStopMapTest {
+    public function tabGroup(tabIndex:Int, children:(TabStopMapTest) -> TabStopMapTest):TabStopMapTest {
         tabMap.beginGroup(tabIndex);
         children(this);
         tabMap.endGroup();

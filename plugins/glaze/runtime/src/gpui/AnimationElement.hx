@@ -41,7 +41,7 @@ class AnimationElement<E:Element> extends Element implements ParentElement {
      * Returns a new `AnimationElement<E>` after applying the given function
      * to the element being animated.
      */
-    public function mapElement(f:E->E):AnimationElement<E> {
+    public function mapElement(f:(E) -> E):AnimationElement<E> {
         if (element != null) element = f(element);
         return this;
     }

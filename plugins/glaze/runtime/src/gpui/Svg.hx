@@ -116,17 +116,17 @@ class Svg extends Element implements Styled {
         return this;
     }
 
-    public function hover(f:StyleBuilder->StyleBuilder):Svg {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Svg {
         interactivity.hoverStyle = StyleBuilder.build(f);
         return this;
     }
 
-    public function groupHover(groupName:String, f:StyleBuilder->StyleBuilder):Svg {
+    public function groupHover(groupName:String, f:(StyleBuilder) -> StyleBuilder):Svg {
         interactivity.groupHoverStyle = new Interactivity.GroupStyle(groupName, StyleBuilder.build(f));
         return this;
     }
 
-    public function active(f:StyleBuilder->StyleBuilder):Svg {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Svg {
         interactivity.activeStyle = StyleBuilder.build(f);
         return this;
     }

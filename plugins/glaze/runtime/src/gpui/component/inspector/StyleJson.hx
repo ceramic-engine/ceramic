@@ -80,7 +80,7 @@ class StyleJson {
         if (fields.length > 0) entries.push({key: key, value: obj(fields)});
     }
 
-    static function edges<T>(top:Null<T>, right:Null<T>, bottom:Null<T>, left:Null<T>, write:T->JsonValue):Array<{key:String, value:JsonValue}> {
+    static function edges<T>(top:Null<T>, right:Null<T>, bottom:Null<T>, left:Null<T>, write:(T) -> JsonValue):Array<{key:String, value:JsonValue}> {
         final fields = [];
         if (top != null) fields.push({key: 'top', value: write(top)});
         if (right != null) fields.push({key: 'right', value: write(right)});
@@ -89,7 +89,7 @@ class StyleJson {
         return fields;
     }
 
-    static function sizes<T>(width:Null<T>, height:Null<T>, write:T->JsonValue):Array<{key:String, value:JsonValue}> {
+    static function sizes<T>(width:Null<T>, height:Null<T>, write:(T) -> JsonValue):Array<{key:String, value:JsonValue}> {
         final fields = [];
         if (width != null) fields.push({key: 'width', value: write(width)});
         if (height != null) fields.push({key: 'height', value: write(height)});
@@ -846,7 +846,7 @@ class StyleJson {
      * fields are errors) or from a sequence of the fields in order.
      * `onField` deserializes the value of the field it is given.
      */
-    static function deStruct(r:SerdeReader, expecting:String, fields:Array<String>, defaults:Array<String>, required:Array<String>, onField:String->Void, denyUnknown:Bool = false):Void {
+    static function deStruct(r:SerdeReader, expecting:String, fields:Array<String>, defaults:Array<String>, required:Array<String>, onField:(String) -> Void, denyUnknown:Bool = false):Void {
         final peek = r.parseWhitespace();
         if (peek == -1) {
             throw r.peekError(SerdeReader.EOF_WHILE_PARSING_VALUE);

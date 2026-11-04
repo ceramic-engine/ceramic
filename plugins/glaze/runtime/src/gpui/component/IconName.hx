@@ -54,7 +54,7 @@ enum abstract IconName(String) to String {
      * Preloads every bundled icon into the default asset source (needed on
      * the web before rendering icons), then calls `done(success)`.
      */
-    public static function preload(done:Bool->Void):Void {
+    public static function preload(done:(Bool) -> Void):Void {
         App.defaultAssetSource().preload([for (name in ALL) name.path()], done);
     }
 

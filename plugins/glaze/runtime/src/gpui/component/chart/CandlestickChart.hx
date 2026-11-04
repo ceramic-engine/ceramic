@@ -40,15 +40,15 @@ class CandlestickChart<T> extends Plot {
 
     final data:Array<T>;
 
-    var xFn:Null<T->String> = null;
+    var xFn:Null<(T) -> String> = null;
 
-    var openFn:Null<T->Float> = null;
+    var openFn:Null<(T) -> Float> = null;
 
-    var highFn:Null<T->Float> = null;
+    var highFn:Null<(T) -> Float> = null;
 
-    var lowFn:Null<T->Float> = null;
+    var lowFn:Null<(T) -> Float> = null;
 
-    var closeFn:Null<T->Float> = null;
+    var closeFn:Null<(T) -> Float> = null;
 
     var tickMarginValue:Int = 1;
 
@@ -103,7 +103,7 @@ class CandlestickChart<T> extends Plot {
     }
 
     /** Set the hover tooltip's title for a datum, instead of its x value. */
-    public function tooltipTitle(title:T->String):CandlestickChart<T> {
+    public function tooltipTitle(title:(T) -> String):CandlestickChart<T> {
         tooltipContentValue.setTitle(title);
         return this;
     }
@@ -126,27 +126,27 @@ class CandlestickChart<T> extends Plot {
         return this;
     }
 
-    public function x(x:T->String):CandlestickChart<T> {
+    public function x(x:(T) -> String):CandlestickChart<T> {
         xFn = x;
         return this;
     }
 
-    public function open(open:T->Float):CandlestickChart<T> {
+    public function open(open:(T) -> Float):CandlestickChart<T> {
         openFn = open;
         return this;
     }
 
-    public function high(high:T->Float):CandlestickChart<T> {
+    public function high(high:(T) -> Float):CandlestickChart<T> {
         highFn = high;
         return this;
     }
 
-    public function low(low:T->Float):CandlestickChart<T> {
+    public function low(low:(T) -> Float):CandlestickChart<T> {
         lowFn = low;
         return this;
     }
 
-    public function close(close:T->Float):CandlestickChart<T> {
+    public function close(close:(T) -> Float):CandlestickChart<T> {
         closeFn = close;
         return this;
     }

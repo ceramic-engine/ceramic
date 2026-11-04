@@ -36,14 +36,14 @@ class ReduceMotion {
      * Reads the system preference: `true` to reduce motion, `false` not to,
      * `null` when unknown. `null` (the default) means no reading.
      */
-    public static var systemPreference:Null<Void->Null<Bool>> = null;
+    public static var systemPreference:Null<() -> Null<Bool>> = null;
 
     /**
      * Called once by the first `applySystemReduceMotion`, to follow the
      * platform's changes by calling `applyPreference` (Rust follows the Linux
      * portal's change signal this way). `null` by default.
      */
-    public static var followSystem:Null<App->Void> = null;
+    public static var followSystem:Null<(App) -> Void> = null;
 
     /**
      * Applies the system's reduced-motion preference when Base initializes.

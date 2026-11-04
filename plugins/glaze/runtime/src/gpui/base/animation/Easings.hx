@@ -23,7 +23,7 @@ class Easings {
      * The output is clamped to `[0, 1]`, as `Animation.withEasing` callers
      * expect: solver and rounding errors are clamped away.
      */
-    public static function cubicBezier(x1:Float, y1:Float, x2:Float, y2:Float):Float->Float {
+    public static function cubicBezier(x1:Float, y1:Float, x2:Float, y2:Float):(Float) -> Float {
 
         final x1 = f32(x1);
         final y1 = f32(y1);
@@ -37,7 +37,7 @@ class Easings {
      * `cubicBezier` without the output clamp, so y control points outside
      * `0..=1` keep their anticipation and overshoot. Input progress stays clamped.
      */
-    public static function unclampedCubicBezier(x1:Float, y1:Float, x2:Float, y2:Float):Float->Float {
+    public static function unclampedCubicBezier(x1:Float, y1:Float, x2:Float, y2:Float):(Float) -> Float {
 
         final x1 = f32(x1);
         final y1 = f32(y1);

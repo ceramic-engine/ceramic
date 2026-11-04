@@ -32,7 +32,7 @@ class BackgroundExecutor {
      * only has side effects should end with `Unit.unit` (a `Task<Void>` cannot be
      * awaited on native targets, see `Unit`).
      */
-    public function spawn<R>(f:Void->R):Task<R> {
+    public function spawn<R>(f:() -> R):Task<R> {
         final task = new Task<R>();
         dispatcher.dispatch(() -> {
             if (!task.isPending)

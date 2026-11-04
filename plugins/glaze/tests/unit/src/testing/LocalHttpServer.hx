@@ -66,7 +66,7 @@ class LocalHttpServer {
     }
 
     /** Starts the server, then calls `ready` (on the main thread). */
-    public function start(ready:Void->Void):Void {
+    public function start(ready:() -> Void):Void {
         #if js
         final http:Dynamic = js.Syntax.code('require("http")');
         server = http.createServer((req:Dynamic, res:Dynamic) -> {

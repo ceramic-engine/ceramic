@@ -88,7 +88,7 @@ class ListTest extends TestCase {
     }
 
     /** Rust `draw_list` */
-    function drawList(state:ListState, viewportHeight:Float, renderItem:Int->IntoElement):Void {
+    function drawList(state:ListState, viewportHeight:Float, renderItem:(Int) -> IntoElement):Void {
         drawAt(100, viewportHeight, () -> list(state, (index, _, _) -> renderItem(index)).wFull().hFull());
     }
 
@@ -498,7 +498,7 @@ class ListTest extends TestCase {
     function testNavigationCancelsProvisionalAndPaintsDestination() {
         addEmptyWindow();
         for (measured in [false, true]) {
-            final navigations:Array<{name:String, navigate:ListState->Void, destination:Int, top:Float}> = [
+            final navigations:Array<{name:String, navigate:(ListState) -> Void, destination:Int, top:Float}> = [
                 {name: 'scroll_to', navigate: state -> state.scrollTo(listOffset(12, 0)), destination: 12, top: 0},
                 {name: 'end', navigate: state -> state.scrollToEnd(), destination: 19, top: 150},
                 {name: 'down', navigate: state -> state.scrollBy(px(5000)), destination: 19, top: 150},
@@ -533,7 +533,7 @@ class ListTest extends TestCase {
             }
         }
 
-        final navigations:Array<{name:String, navigate:ListState->Void}> = [
+        final navigations:Array<{name:String, navigate:(ListState) -> Void}> = [
             {name: 'end_sentinel', navigate: state -> state.scrollTo(listOffset(3, 0))},
             {name: 'scroll_to_end', navigate: state -> state.scrollToEnd()},
             {name: 'follow_tail', navigate: state -> state.setFollowMode(FollowMode.Tail)},

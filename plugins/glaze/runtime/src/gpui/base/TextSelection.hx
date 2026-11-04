@@ -90,7 +90,7 @@ class TextSelection {
      * Calls `callback` whenever the touch selection changes: it appears, its
      * handles move, its menu opens or closes, or it goes away.
      */
-    public static function observeTouchSelection(window:Window, cx:App, callback:App->Void):Subscription {
+    public static function observeTouchSelection(window:Window, cx:App, callback:(App) -> Void):Subscription {
         final state = WindowSelectionState.acquire(window, cx);
         return cx.observe(state, (_, cx) -> callback(cx));
     }
@@ -420,7 +420,7 @@ class TextSelection {
     }
 
     @:allow(gpui.base)
-    static function withTextSelectionScope<T>(windowId:Int, scope:TextSelectionScopeId, cx:App, callback:App->T):T {
+    static function withTextSelectionScope<T>(windowId:Int, scope:TextSelectionScopeId, cx:App, callback:(App) -> T):T {
         pushTextSelectionScope(windowId, scope, cx);
         try {
             final result = callback(cx);

@@ -31,7 +31,7 @@ class PointOf<T> {
     /**
      * Returns a new point with `f` applied to both coordinates.
      */
-    public inline function map<U>(f:T->U):PointOf<U> {
+    public inline function map<U>(f:(T) -> U):PointOf<U> {
 
         return new PointOf<U>(f(x), f(y));
 
@@ -40,7 +40,7 @@ class PointOf<T> {
     /**
      * Returns a numeric point with `f` applied to both coordinates.
      */
-    public inline function mapToPoint(f:T->Float):Point {
+    public inline function mapToPoint(f:(T) -> Float):Point {
 
         return new Point(f(x), f(y));
 
@@ -58,7 +58,7 @@ class PointOf<T> {
     /**
      * Returns a new point with `f` applied to the coordinate along the given axis (Rust trait `Along`).
      */
-    public inline function applyAlong(axis:Axis, f:T->T):PointOf<T> {
+    public inline function applyAlong(axis:Axis, f:(T) -> T):PointOf<T> {
 
         return axis == Horizontal ? new PointOf<T>(f(x), y) : new PointOf<T>(x, f(y));
 
@@ -67,7 +67,7 @@ class PointOf<T> {
     /**
      * Structural equality. `eq` compares two values (default: `==`).
      */
-    public function equals(other:PointOf<T>, ?eq:T->T->Bool):Bool {
+    public function equals(other:PointOf<T>, ?eq:(T, T) -> Bool):Bool {
 
         if (other == null) return false;
         if (eq == null) return x == other.x && y == other.y;

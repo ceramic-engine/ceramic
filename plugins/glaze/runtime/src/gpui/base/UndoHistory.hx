@@ -30,9 +30,9 @@ class UndoHistory<T> {
 
     var ignoring:Bool = false;
 
-    final clock:Void->Float;
+    final clock:() -> Float;
 
-    public function new(?clock:Void->Float) {
+    public function new(?clock:() -> Float) {
         this.clock = clock != null ? clock : haxe.Timer.stamp;
     }
 

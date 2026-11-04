@@ -64,7 +64,7 @@ class Themes {
      * Where the settings are read and written (Rust `STATE_FILE`), set by
      * the app before `Lib.init`. Null: nothing is persisted.
      */
-    public static var stateStorage:Null<{read:Void->Null<String>, write:String->Void}> = null;
+    public static var stateStorage:Null<{read:() -> Null<String>, write:(String) -> Void}> = null;
 
     /**
      * Rust `serde_json::from_str::<State>(&json).unwrap_or_default()`: the

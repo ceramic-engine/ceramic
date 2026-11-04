@@ -881,7 +881,7 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
         return element;
     }
 
-    static function styleChoiceCard<T:Styled & ParentElement>(base:T, hover:(StyleBuilder->StyleBuilder)->Void, indicator:AnyElement, content:AnyElement,
+    static function styleChoiceCard<T:Styled & ParentElement>(base:T, hover:((StyleBuilder) -> StyleBuilder)->Void, indicator:AnyElement, content:AnyElement,
             shortcut:AnyElement, metrics:QuestionnaireMetrics, selected:Bool, disabled:Bool, invalid:Bool, focused:Bool, instanceStyle:StyleRefinement,
             window:Window, cx:App):T {
         final theme = Theme.global(cx);

@@ -386,7 +386,7 @@ class TimeFieldState extends Model implements Render {
         focusHandle = cx.focusHandle().tabStop(true);
     }
 
-    function edited(edit:SegmentEditor -> Bool):Bool {
+    function edited(edit:(SegmentEditor) -> Bool):Bool {
         final next = editor.copy();
         final result = edit(next);
         editor = next;
@@ -452,7 +452,7 @@ class TimeFieldState extends Model implements Render {
         focusHandle.focus(window, cx);
     }
 
-    function edit(cx:Context<TimeFieldState>, edit:SegmentEditor -> Bool):Void {
+    function edit(cx:Context<TimeFieldState>, edit:(SegmentEditor) -> Bool):Void {
         if (edited(edit)) {
             cx.emit(TimeFieldEvent.Change(editor.time));
         }
@@ -510,7 +510,7 @@ class TimeFieldState extends Model implements Render {
             return;
         }
         final ch = chars[0];
-        final edit:SegmentEditor -> Bool = if (ch >= '0'.code && ch <= '9'.code) {
+        final edit:(SegmentEditor) -> Bool = if (ch >= '0'.code && ch <= '9'.code) {
             editor -> editor.inputDigit(ch - '0'.code);
         } else if (ch == 'a'.code || ch == 'A'.code) {
             editor -> editor.inputPeriod(false);
@@ -624,7 +624,7 @@ class TimeFieldSegment implements RenderOnce implements Styled implements Parent
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):TimeFieldSegment {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):TimeFieldSegment {
         base.hover(f);
         return this;
     }

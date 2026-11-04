@@ -121,7 +121,7 @@ class TextMateGrammars {
      * be used on targets without a file system. All the bundled grammars
      * when `languages` is null.
      */
-    public static function preload(languages:Null<Array<String>>, done:Bool->Void):Void {
+    public static function preload(languages:Null<Array<String>>, done:(Bool) -> Void):Void {
         ensureInfos();
         final files:Array<String> = [];
         final seen:Map<String, Bool> = new Map();

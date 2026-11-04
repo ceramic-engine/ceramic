@@ -168,7 +168,7 @@ class InputMoveNotifyTest extends TestCase {
         }
     }
 
-    function focus(state:MovePage->Entity<InputBaseState>):Void {
+    function focus(state:(MovePage) -> Entity<InputBaseState>):Void {
         each((page, cx) -> state(page).update(cx, (s, cx) -> s.focus(page.window, cx)));
     }
 

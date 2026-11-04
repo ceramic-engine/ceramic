@@ -198,7 +198,7 @@ class Chart {
      * is left-aligned, one on the last is right-aligned, and the rest are
      * centered.
      */
-    public static function buildPointXLabels<T>(data:Array<T>, xFn:T->String, xScale:ScalePoint<String>, pointCount:Int, labeled:Array<Bool>, color:Hsla):Array<AxisText> {
+    public static function buildPointXLabels<T>(data:Array<T>, xFn:(T) -> String, xScale:ScalePoint<String>, pointCount:Int, labeled:Array<Bool>, color:Hsla):Array<AxisText> {
         final result:Array<AxisText> = [];
         for (i in 0...data.length) {
             if (!(i < labeled.length && labeled[i])) continue;
@@ -214,7 +214,7 @@ class Chart {
      * Build axis labels for band-based scales (`BarChart`,
      * `CandlestickChart`): the tick is the centre of each band.
      */
-    public static function buildBandLabels<T>(data:Array<T>, xFn:T->String, xScale:ScaleBand<String>, bandWidth:Float, labeled:Array<Bool>, color:Hsla):Array<AxisText> {
+    public static function buildBandLabels<T>(data:Array<T>, xFn:(T) -> String, xScale:ScaleBand<String>, bandWidth:Float, labeled:Array<Bool>, color:Hsla):Array<AxisText> {
         final result:Array<AxisText> = [];
         for (i in 0...data.length) {
             if (!(i < labeled.length && labeled[i])) continue;
@@ -332,7 +332,7 @@ typedef ChartTooltipRow = {
  */
 class TooltipContent<T> {
 
-    var title:Null<T->String> = null;
+    var title:Null<(T) -> String> = null;
 
     var value:Null<(T, Int, Float) -> String> = null;
 
@@ -342,7 +342,7 @@ class TooltipContent<T> {
 
     public function new() {}
 
-    public function setTitle(title:T->String):Void {
+    public function setTitle(title:(T) -> String):Void {
         this.title = title;
     }
 
@@ -414,7 +414,7 @@ class PointAxes {
 
     public var yTickCount:Int = 5;
 
-    public var yTickFormat:Null<Float->String> = null;
+    public var yTickFormat:Null<(Float) -> String> = null;
 
     public var xTickCount:Null<Int> = null;
 

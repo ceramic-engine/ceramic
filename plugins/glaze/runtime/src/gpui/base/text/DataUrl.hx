@@ -70,7 +70,7 @@ class DataUrl {
      * fallible sink), so the only failure this can report is
      * `InvalidBase64`.
      */
-    public function decode(writeBodyBytes:Bytes->Void):DataUrlDecodeOutcome {
+    public function decode(writeBodyBytes:(Bytes) -> Void):DataUrlDecodeOutcome {
         return decodeInternal(writeBodyBytes);
     }
 
@@ -90,7 +90,7 @@ class DataUrl {
         return decoded == null ? null : decoded.body;
     }
 
-    function decodeInternal(writeBodyBytes:Bytes->Void):DataUrlDecodeOutcome {
+    function decodeInternal(writeBodyBytes:(Bytes) -> Void):DataUrlDecodeOutcome {
         if (base64_)
             return decodeWithBase64(encodedBodyPlusFragment_, writeBodyBytes);
         final result = decodeWithoutBase64(encodedBodyPlusFragment_, bytes -> {
@@ -104,7 +104,7 @@ class DataUrl {
         }
     }
 
-    static function decodeWithBase64(encodedBodyPlusFragment:Bytes, writeBodyBytes:Bytes->Void):DataUrlDecodeOutcome {
+    static function decodeWithBase64(encodedBodyPlusFragment:Bytes, writeBodyBytes:(Bytes) -> Void):DataUrlDecodeOutcome {
         final decoder = new ForgivingBase64Decoder(writeBodyBytes);
         final result = decodeWithoutBase64(encodedBodyPlusFragment, bytes -> decoder.feed(bytes));
         return switch result {
@@ -123,7 +123,7 @@ class DataUrl {
      * fragment). `writeBytes` returning `false` stops decoding immediately,
      * like the `?` operator on the Rust write callback's `Result`.
      */
-    static function decodeWithoutBase64(encodedBodyPlusFragment:Bytes, writeBytes:Bytes->Bool):DecodeWithoutBase64Result {
+    static function decodeWithoutBase64(encodedBodyPlusFragment:Bytes, writeBytes:(Bytes) -> Bool):DecodeWithoutBase64Result {
         final len = encodedBodyPlusFragment.length;
         var sliceStart = 0;
         var i = 0;
@@ -687,12 +687,12 @@ class ForgivingBase64 {
  */
 class ForgivingBase64Decoder {
 
-    final writeBytes:Bytes->Void;
+    final writeBytes:(Bytes) -> Void;
     var bitBuffer:Int = 0;
     var bufferBitLength:Int = 0;
     var paddingSymbols:Int = 0;
 
-    public function new(writeBytes:Bytes->Void) {
+    public function new(writeBytes:(Bytes) -> Void) {
         this.writeBytes = writeBytes;
     }
 

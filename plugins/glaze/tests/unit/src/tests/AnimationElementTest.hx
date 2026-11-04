@@ -135,7 +135,7 @@ class AnimationElementTest extends TestCase {
         ceramic.App.app.flushImmediate();
     }
 
-    function openWindow<V:Model & Render>(build:Void->V):{window:Window, view:Entity<V>} {
+    function openWindow<V:Model & Render>(build:() -> V):{window:Window, view:Entity<V>} {
         var view:Entity<V> = null;
         var window:Window = null;
         app.update(cx -> {
@@ -163,7 +163,7 @@ class AnimationElementTest extends TestCase {
         return count;
     }
 
-    function updateView<V:Model>(view:Entity<V>, f:V->Void):Void {
+    function updateView<V:Model>(view:Entity<V>, f:(V) -> Void):Void {
         view.update(app, (view, cx) -> {
             f(view);
             cx.notify();

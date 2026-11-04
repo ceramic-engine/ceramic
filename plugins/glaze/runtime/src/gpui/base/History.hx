@@ -138,12 +138,12 @@ class History<T> {
     /**
      * Keeps only entries accepted by `keep` on both sides of the current position.
      */
-    public function retain(keep:T->Bool):Void {
+    public function retain(keep:(T) -> Bool):Void {
         retainIn(trail, keep);
         retainIn(forwardStack, keep);
     }
 
-    static function retainIn<T>(array:Array<T>, keep:T->Bool):Void {
+    static function retainIn<T>(array:Array<T>, keep:(T) -> Bool):Void {
         var write = 0;
         for (read in 0...array.length) {
             final entry = array[read];

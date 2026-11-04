@@ -57,7 +57,7 @@ class Easing {
     /**
      * The Quint ease-out function, which starts quickly and decelerates to a stop.
      */
-    public static function easeOutQuint():Float->Float {
+    public static function easeOutQuint():(Float) -> Float {
 
         return easeOutQuintValue;
 
@@ -76,7 +76,7 @@ class Easing {
     /**
      * Apply the given easing function, first in the forward direction and then in the reverse direction.
      */
-    public static function bounce(easing:Float->Float):Float->Float {
+    public static function bounce(easing:(Float) -> Float):(Float) -> Float {
 
         return delta -> {
             final delta = f32(delta);
@@ -93,7 +93,7 @@ class Easing {
     /**
      * A custom easing function for pulsating alpha that slows down as it approaches 0.1.
      */
-    public static function pulsatingBetween(min:Float, max:Float):Float->Float {
+    public static function pulsatingBetween(min:Float, max:Float):(Float) -> Float {
 
         final min = f32(min);
         final range = f32(f32(max) - min);

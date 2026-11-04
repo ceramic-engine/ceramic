@@ -69,9 +69,9 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
 
     var onStepHandler:Null<(StepAction, Window, App) -> Void> = null;
 
-    var decrementDecorator:Null<Button->Button> = null;
+    var decrementDecorator:Null<(Button) -> Button> = null;
 
-    var incrementDecorator:Null<Button->Button> = null;
+    var incrementDecorator:Null<(Button) -> Button> = null;
 
     var inputElement:Null<AnyElement> = null;
 
@@ -112,13 +112,13 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
     }
 
     /** Decorate the built-in decrement button with application-owned content and styles. */
-    public function decrementButton(decorate:Button->Button):NumberInput {
+    public function decrementButton(decorate:(Button) -> Button):NumberInput {
         decrementDecorator = decorate;
         return this;
     }
 
     /** Decorate the built-in increment button with application-owned content and styles. */
-    public function incrementButton(decorate:Button->Button):NumberInput {
+    public function incrementButton(decorate:(Button) -> Button):NumberInput {
         incrementDecorator = decorate;
         return this;
     }

@@ -576,7 +576,7 @@ class TextWrapper {
      * Rust `#[cfg(test)] measured_wrap_boundaries`: the unmodified upstream
      * character-first algorithm, the independent differential-test oracle.
      */
-    public static function measuredWrapBoundaries(text:String, width:Float, wrappingIndent:WrappingIndent, measure:String->Float):Array<Boundary> {
+    public static function measuredWrapBoundaries(text:String, width:Float, wrappingIndent:WrappingIndent, measure:(String) -> Float):Array<Boundary> {
         final bytes = Bytes.ofString(text);
         final textLen = bytes.length;
         final indent = leadingIndent(bytes, wrappingIndent);
@@ -625,7 +625,7 @@ class TextWrapper {
     }
 
     /** Preserve the measured comparisons that make these breaks valid at nearby widths. */
-    public static function measuredWrap(text:String, width:Float, wrappingIndent:WrappingIndent, measure:String->Float):MeasuredWrap {
+    public static function measuredWrap(text:String, width:Float, wrappingIndent:WrappingIndent, measure:(String) -> Float):MeasuredWrap {
         measuredLines++;
         final validWidths = WidthRange.all();
         final bytes = Bytes.ofString(text);

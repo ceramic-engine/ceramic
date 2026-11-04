@@ -72,13 +72,13 @@ class Bar<T> {
 
     var alignmentValue:BarAlignment = Bottom;
 
-    var crossFn:T->Null<Float> = _ -> null;
+    var crossFn:(T) -> Null<Float> = _ -> null;
 
     var bandWidthValue:Float = 0.;
 
-    var baseFn:T->Float = _ -> 0.;
+    var baseFn:(T) -> Float = _ -> 0.;
 
-    var valueFn:T->Null<Float> = _ -> null;
+    var valueFn:(T) -> Null<Float> = _ -> null;
 
     var fillFn:(T, Bounds, BarAlignment) -> Background = (_, _, _) -> Background.fromHsla(black());
 
@@ -104,7 +104,7 @@ class Bar<T> {
      * Set the cross-axis position of each bar (in pixels): the x coordinate
      * of vertical bars, the y coordinate of horizontal ones.
      */
-    public function cross(cross:T->Null<Float>):Bar<T> {
+    public function cross(cross:(T) -> Null<Float>):Bar<T> {
         crossFn = cross;
         return this;
     }
@@ -116,13 +116,13 @@ class Bar<T> {
     }
 
     /** Set the baseline position of each bar (in pixels along the value axis). */
-    public function base(base:T->Float):Bar<T> {
+    public function base(base:(T) -> Float):Bar<T> {
         baseFn = base;
         return this;
     }
 
     /** Set the value-end position of each bar (in pixels along the value axis). */
-    public function value(value:T->Null<Float>):Bar<T> {
+    public function value(value:(T) -> Null<Float>):Bar<T> {
         valueFn = value;
         return this;
     }

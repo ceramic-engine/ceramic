@@ -81,19 +81,19 @@ class BarChart<T> extends Plot {
 
     final data:Array<T>;
 
-    var bandFn:Null<T->String> = null;
+    var bandFn:Null<(T) -> String> = null;
 
-    var valueFn:Null<T->Float> = null;
+    var valueFn:Null<(T) -> Float> = null;
 
     var fillFn:Null<(T, Bounds, Bounds, BarAlignment) -> Background> = null;
 
-    var fillGradientFn:Null<(T, Float, Float, Float->Float) -> Array<LinearColorStop>> = null;
+    var fillGradientFn:Null<(T, Float, Float, (Float) -> Float) -> Array<LinearColorStop>> = null;
 
     var tickMarginValue:Int = 1;
 
-    var labelFn:Null<T->String> = null;
+    var labelFn:Null<(T) -> String> = null;
 
-    var labelColorFn:Null<T->Hsla> = null;
+    var labelColorFn:Null<(T) -> Hsla> = null;
 
     var labelAxisValue:Bool = true;
 
@@ -103,7 +103,7 @@ class BarChart<T> extends Plot {
 
     var valueTickCountValue:Int = 5;
 
-    var valueTickFormatFn:Null<Float->String> = null;
+    var valueTickFormatFn:Null<(Float) -> String> = null;
 
     var bandCountValue:Null<Int> = null;
 
@@ -183,7 +183,7 @@ class BarChart<T> extends Plot {
     }
 
     /** Set the hover tooltip's title for a datum, instead of its band. */
-    public function tooltipTitle(title:T->String):BarChart<T> {
+    public function tooltipTitle(title:(T) -> String):BarChart<T> {
         tooltipContentValue.setTitle(title);
         return this;
     }
@@ -206,12 +206,12 @@ class BarChart<T> extends Plot {
         return this;
     }
 
-    public function band(band:T->String):BarChart<T> {
+    public function band(band:(T) -> String):BarChart<T> {
         bandFn = band;
         return this;
     }
 
-    public function value(value:T->Float):BarChart<T> {
+    public function value(value:(T) -> Float):BarChart<T> {
         valueFn = value;
         return this;
     }
@@ -232,7 +232,7 @@ class BarChart<T> extends Plot {
      * (`lo`, `hi`) and a function mapping a chart value to the bar's own
      * `0..1`. Replaces a `fill`.
      */
-    public function fillGradient(fill:(T, Float, Float, Float->Float) -> Array<LinearColorStop>):BarChart<T> {
+    public function fillGradient(fill:(T, Float, Float, (Float) -> Float) -> Array<LinearColorStop>):BarChart<T> {
         fillGradientFn = fill;
         fillFn = null;
         return this;
@@ -243,12 +243,12 @@ class BarChart<T> extends Plot {
         return this;
     }
 
-    public function label(label:T->String):BarChart<T> {
+    public function label(label:(T) -> String):BarChart<T> {
         labelFn = label;
         return this;
     }
 
-    public function labelColor(color:T->IntoHsla):BarChart<T> {
+    public function labelColor(color:(T) -> IntoHsla):BarChart<T> {
         labelColorFn = t -> (color(t) : Hsla);
         return this;
     }
@@ -273,7 +273,7 @@ class BarChart<T> extends Plot {
         return this;
     }
 
-    public function valueTickFormat(format:Float->String):BarChart<T> {
+    public function valueTickFormat(format:(Float) -> String):BarChart<T> {
         valueTickFormatFn = format;
         return this;
     }
@@ -904,7 +904,7 @@ class BarChart<T> extends Plot {
      * The two stops `fill` gives datum `d` with bar value `value`, mapped
      * from the chart's `range` onto the bar and clipped to it.
      */
-    static function barGradient<T>(fill:(T, Float, Float, Float->Float) -> Array<LinearColorStop>, d:T, value:Float, range:Array<Float>):Array<LinearColorStop> {
+    static function barGradient<T>(fill:(T, Float, Float, (Float) -> Float) -> Array<LinearColorStop>, d:T, value:Float, range:Array<Float>):Array<LinearColorStop> {
         final barLo = Math.min(value, 0.);
         final barSpan = Math.max(f(Math.max(value, 0.) - barLo), F32_EPSILON);
         final chartToBar = (chartValue:Float) -> f(f(chartValue - barLo) / barSpan);

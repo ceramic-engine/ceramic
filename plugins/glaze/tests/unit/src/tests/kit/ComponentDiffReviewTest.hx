@@ -34,7 +34,7 @@ class ComponentDiffReviewTest extends KitTestCase {
 
     static final PATCH = 'diff --git a/first.txt b/first.txt\n--- a/first.txt\n+++ b/first.txt\n@@ -1,3 +1,3 @@\n one\n-two\n+TWO\n three\ndiff --git a/second.txt b/second.txt\n--- a/second.txt\n+++ b/second.txt\n@@ -10 +10 @@\n-ten\n+TEN\n';
 
-    function newState(build:Context<DiffState>->DiffState):Entity<DiffState> {
+    function newState(build:(Context<DiffState>) -> DiffState):Entity<DiffState> {
         var state:Entity<DiffState> = null;
         app.update(cx -> state = cx.newEntity(build));
         return state;

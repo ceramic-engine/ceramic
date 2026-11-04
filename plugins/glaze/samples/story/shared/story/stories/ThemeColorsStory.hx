@@ -600,7 +600,7 @@ class ThemeColorsStory extends Model implements Story {
     }
 
     /** Filters categories by a predicate on color entries, removing empty categories. */
-    static function filterCategories(categories:Array<ColorCategory>, predicate:ColorEntry->Bool):Array<ColorCategory> {
+    static function filterCategories(categories:Array<ColorCategory>, predicate:(ColorEntry) -> Bool):Array<ColorCategory> {
         final result = [];
         for (category in categories) {
             final filtered = [for (entry in category.entries) if (predicate(entry)) entry];

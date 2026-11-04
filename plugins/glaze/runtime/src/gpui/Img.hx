@@ -125,17 +125,17 @@ class Img extends Element implements Styled {
         return this;
     }
 
-    public function hover(f:StyleBuilder->StyleBuilder):Img {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Img {
         interactivity.hoverStyle = StyleBuilder.build(f);
         return this;
     }
 
-    public function groupHover(groupName:String, f:StyleBuilder->StyleBuilder):Img {
+    public function groupHover(groupName:String, f:(StyleBuilder) -> StyleBuilder):Img {
         interactivity.groupHoverStyle = new Interactivity.GroupStyle(groupName, StyleBuilder.build(f));
         return this;
     }
 
-    public function active(f:StyleBuilder->StyleBuilder):Img {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Img {
         interactivity.activeStyle = StyleBuilder.build(f);
         return this;
     }

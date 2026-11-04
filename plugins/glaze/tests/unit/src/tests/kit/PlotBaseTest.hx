@@ -151,7 +151,7 @@ class PlotBaseTest extends KitTestCase {
     }
 
     /** Change the view, then return the progress the plot was handed on the frame that follows. */
-    function updateScoped(view:ScopedAppearView, f:ScopedAppearView->Void):Null<Float> {
+    function updateScoped(view:ScopedAppearView, f:(ScopedAppearView) -> Void):Null<Float> {
         app.update(cx -> {
             f(view);
             view.samples.resize(0);

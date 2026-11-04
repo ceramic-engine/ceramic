@@ -99,7 +99,7 @@ class App {
     var pendingReleases:Array<Model> = [];
 
     @:allow(gpui)
-    final observers:SubscriberSet<App->Bool> = new SubscriberSet();
+    final observers:SubscriberSet<(App) -> Bool> = new SubscriberSet();
 
     @:allow(gpui)
     final eventListeners:SubscriberSet<EventListener> = new SubscriberSet();
@@ -108,7 +108,7 @@ class App {
     final releaseListeners:SubscriberSet<(Model, App) -> Void> = new SubscriberSet();
 
     @:allow(gpui)
-    final globalObservers:SubscriberSet<App->Bool> = new SubscriberSet();
+    final globalObservers:SubscriberSet<(App) -> Bool> = new SubscriberSet();
 
     @:allow(gpui)
     final newEntityObservers:SubscriberSet<(Model, App) -> Void> = new SubscriberSet();
@@ -120,13 +120,13 @@ class App {
     /**
      * Called when a `RefreshWindows` effect is applied. Plugged by windows (step 7).
      */
-    public var onRefreshWindows:Null<App->Void> = null;
+    public var onRefreshWindows:Null<(App) -> Void> = null;
 
     /**
      * Called each time `flushEffects` has emptied the effect queue. Windows (step 7)
      * use it to schedule a frame when they are dirty.
      */
-    public var onEffectsFlushed:Null<App->Void> = null;
+    public var onEffectsFlushed:Null<(App) -> Void> = null;
 
 /// Text, assets and SVG
 
@@ -310,7 +310,7 @@ class App {
      * Runs `update` with effects batched: effects pushed during the update (and
      * nested updates) are flushed when the outermost update finishes.
      */
-    public function update<R>(update:App->R):R {
+    public function update<R>(update:(App) -> R):R {
         startUpdate();
         var result:R;
         try {
@@ -483,7 +483,7 @@ class App {
         globalObservers.retain(globalType, invokeHandlerCallback);
     }
 
-    function applyDeferEffect(callback:App->Void):Void {
+    function applyDeferEffect(callback:(App) -> Void):Void {
         runUnobserved(callback);
     }
 
@@ -505,9 +505,9 @@ class App {
     }
 
     /** `invokeHandler` as a callback, bound once (a bound method allocates a closure each time it is taken) */
-    final invokeHandlerCallback:(App->Bool)->Bool;
+    final invokeHandlerCallback:((App) -> Bool)->Bool;
 
-    function invokeHandler(handler:App->Bool):Bool {
+    function invokeHandler(handler:(App) -> Bool):Bool {
         Autorun.unobserve();
         var keep = false;
         try {
@@ -521,7 +521,7 @@ class App {
         return keep;
     }
 
-    function runUnobserved(callback:App->Void):Void {
+    function runUnobserved(callback:(App) -> Void):Void {
         Autorun.unobserve();
         try {
             callback(this);
@@ -545,7 +545,7 @@ class App {
      * Schedules the given function to be run at the end of the current effect cycle,
      * allowing entities that are currently on the stack to be returned to the app.
      */
-    public function defer(f:App->Void):Void {
+    public function defer(f:(App) -> Void):Void {
         pushEffect(Defer(f));
     }
 
@@ -609,12 +609,12 @@ class App {
      * Builds an entity that is owned by the application (Rust: `cx.new(|cx| ...)`).
      * The given function is invoked with the `Context` of the new entity.
      */
-    public function newEntity<T:Model>(build:Context<T>->T):Entity<T> {
+    public function newEntity<T:Model>(build:(Context<T>) -> T):Entity<T> {
         return newEntityIn(build, null);
     }
 
     @:allow(gpui)
-    function newEntityIn<T:Model>(build:Context<T>->T, parent:Null<EntitySlot>):Entity<T> {
+    function newEntityIn<T:Model>(build:(Context<T>) -> T, parent:Null<EntitySlot>):Entity<T> {
         startUpdate();
         final cx = new Context<T>(this, nextEntityId++);
         var entity:T = null;
@@ -703,7 +703,7 @@ class App {
     }
 
     @:allow(gpui)
-    function newObserver(key:Int, value:App->Bool):Subscription {
+    function newObserver(key:Int, value:(App) -> Bool):Subscription {
         final subscriber = observers.insert(key, value);
         defer(_ -> subscriber.activate());
         return subscriber.subscription;
@@ -794,7 +794,7 @@ class App {
      * app (`AsyncApp`) and returns the task it ends with
      * (see `ForegroundExecutor.spawn`).
      */
-    public function spawn<R>(f:AsyncApp->Task<R>):Task<R> {
+    public function spawn<R>(f:(AsyncApp) -> Task<R>):Task<R> {
         return _foregroundExecutor.spawn(() -> f(this));
     }
 
@@ -975,7 +975,7 @@ class App {
     /**
      * Register a callback to be invoked when a global of the given type is updated.
      */
-    public function observeGlobal<G>(type:Class<G>, f:App->Void):Subscription {
+    public function observeGlobal<G>(type:Class<G>, f:(App) -> Void):Subscription {
         final subscriber = globalObservers.insert(typeIdOf(type), cx -> {
             f(cx);
             return true;
@@ -1188,7 +1188,7 @@ class App {
      * Opens URLs for `openUrl` (Rust: the platform). By default, the Ceramic
      * backend's `openUrl` (the system's handler, a new tab on the web).
      */
-    public var platformOpenUrl:String->Void = defaultOpenUrl;
+    public var platformOpenUrl:(String) -> Void = defaultOpenUrl;
 
     /**
      * Opens the given URL in the system's default handler (browser).
@@ -1299,7 +1299,7 @@ class App {
         }
     }
 
-    final quitObservers:SubscriberSet<App->Null<AnyTask>> = new SubscriberSet();
+    final quitObservers:SubscriberSet<(App) -> Null<AnyTask>> = new SubscriberSet();
 
     var _quitting:Bool = false;
 
@@ -1325,7 +1325,7 @@ class App {
      * every returned task completes, or after `SHUTDOWN_TIMEOUT` (Rust blocks
      * up to that long; the port cannot block, the quit waits instead).
      */
-    public function onAppQuit(onQuit:App->Null<AnyTask>):Subscription {
+    public function onAppQuit(onQuit:(App) -> Null<AnyTask>):Subscription {
         final subscriber = quitObservers.insert(0, onQuit);
         subscriber.activate();
         return subscriber.subscription;

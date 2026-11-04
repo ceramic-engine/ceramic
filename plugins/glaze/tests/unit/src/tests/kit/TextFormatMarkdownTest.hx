@@ -128,7 +128,7 @@ class TextFormatMarkdownTest extends TestCase {
         }
     }
 
-    static function findMap<T>(blocks:Array<BlockNode>, f:BlockNode->Null<T>):Null<T> {
+    static function findMap<T>(blocks:Array<BlockNode>, f:(BlockNode) -> Null<T>):Null<T> {
         for (block in blocks) {
             final found = f(block);
             if (found != null)
@@ -231,7 +231,7 @@ class TextFormatMarkdownTest extends TestCase {
         }
     }
 
-    static function markedRuns(paragraph:Paragraph, predicate:TextMark->Bool):Array<String> {
+    static function markedRuns(paragraph:Paragraph, predicate:(TextMark) -> Bool):Array<String> {
         final runs = [];
         for (node in paragraph.children_) {
             for (ranged in node.marks_) {

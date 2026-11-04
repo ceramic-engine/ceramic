@@ -858,7 +858,7 @@ class MotionTest extends KitTestCase {
     /** Rust's `f32::EPSILON`. */
     static final F32_EPSILON:Float = 1.1920929e-7;
 
-    static function easingError(f:Void->Easing):Null<EasingError> {
+    static function easingError(f:() -> Easing):Null<EasingError> {
         try {
             f();
         }
@@ -868,7 +868,7 @@ class MotionTest extends KitTestCase {
         return null;
     }
 
-    static function keyframeError(f:Void->Keyframes<Float>):Null<KeyframeError> {
+    static function keyframeError(f:() -> Keyframes<Float>):Null<KeyframeError> {
         try {
             f();
         }
@@ -878,7 +878,7 @@ class MotionTest extends KitTestCase {
         return null;
     }
 
-    static function springError(f:Void->Spring):Null<SpringError> {
+    static function springError(f:() -> Spring):Null<SpringError> {
         try {
             f();
         }

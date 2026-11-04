@@ -111,7 +111,7 @@ class Corners {
     /**
      * Returns new corners with `f` applied to each value.
      */
-    public inline function map(f:Float->Float):Corners {
+    public inline function map(f:(Float) -> Float):Corners {
 
         return new Corners(f(topLeft), f(topRight), f(bottomRight), f(bottomLeft));
 
@@ -120,7 +120,7 @@ class Corners {
     /**
      * Returns generic corners with `f` applied to each value.
      */
-    public inline function mapOf<U>(f:Float->U):CornersOf<U> {
+    public inline function mapOf<U>(f:(Float) -> U):CornersOf<U> {
 
         return new CornersOf<U>(f(topLeft), f(topRight), f(bottomRight), f(bottomLeft));
 

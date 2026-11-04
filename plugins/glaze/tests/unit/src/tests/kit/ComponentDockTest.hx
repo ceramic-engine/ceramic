@@ -418,7 +418,7 @@ class ComponentDockTest extends TestCase {
      * Draw one panel through the real `DockSkin` and report whether its tab
      * bar offered a zoom control.
      */
-    function drewZoomControl(panel:App->gpui.base.dock.PanelView):Bool {
+    function drewZoomControl(panel:(App) -> gpui.base.dock.PanelView):Bool {
         init();
         final s = skinned();
         s.cx.update((window, cx) -> {
@@ -535,7 +535,7 @@ class ComponentDockTest extends TestCase {
         }
     }
 
-    function focusedSkinnedArea(build:App->{panel:Entity<SkinProbe>, layout:DockLayout}, ?bottom:Bool):{area:Entity<DockArea>, cx:VisualTestContext} {
+    function focusedSkinnedArea(build:(App) -> {panel:Entity<SkinProbe>, layout:DockLayout}, ?bottom:Bool):{area:Entity<DockArea>, cx:VisualTestContext} {
         init();
         final s = skinned();
         final panel = s.cx.update((window, cx) -> {
@@ -956,7 +956,7 @@ class SkinProbe extends PanelBase {
         this.focus = cx.focusHandle();
     }
 
-    public static function create(name:String, cx:App, ?configure:SkinProbe->Void):Entity<SkinProbe> {
+    public static function create(name:String, cx:App, ?configure:(SkinProbe) -> Void):Entity<SkinProbe> {
         return cx.newEntity((pcx:Context<SkinProbe>) -> {
             final probe = new SkinProbe(name, pcx);
             if (configure != null) configure(probe);

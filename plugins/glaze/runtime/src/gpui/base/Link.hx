@@ -117,7 +117,7 @@ class Link implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function styles(build:LinkStyles->LinkStyles):Link {
+    public function styles(build:(LinkStyles) -> LinkStyles):Link {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -143,19 +143,19 @@ class Link implements RenderOnce implements Styled implements ParentElement {
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Link {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Link {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Link {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Link {
         base.active(f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Link {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Link {
         base.focusVisible(f);
         return this;
     }

@@ -116,7 +116,7 @@ class Positioner extends Element implements ParentElement {
 
     var cornerPosition:Null<PointCell> = null;
 
-    var onPositionCallback:Null<ResolvedPosition->Void> = null;
+    var onPositionCallback:Null<(ResolvedPosition) -> Void> = null;
 
     var marginValue:Float = 4.;
 
@@ -210,7 +210,7 @@ class Positioner extends Element implements ParentElement {
     /**
      * Observe resolved geometry before children prepaint.
      */
-    public function onPosition(callback:ResolvedPosition->Void):Positioner {
+    public function onPosition(callback:(ResolvedPosition) -> Void):Positioner {
         onPositionCallback = callback;
         return this;
     }

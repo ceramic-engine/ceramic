@@ -17,7 +17,7 @@ class TestDispatcher implements PlatformDispatcher {
 
     var time:Float = 0;
 
-    final runnables:Array<Void->Void> = [];
+    final runnables:Array<() -> Void> = [];
 
     var runnablesHead:Int = 0;
 
@@ -27,11 +27,11 @@ class TestDispatcher implements PlatformDispatcher {
 
     public function new() {}
 
-    public function dispatch(runnable:Void->Void):Void {
+    public function dispatch(runnable:() -> Void):Void {
         runnables.push(runnable);
     }
 
-    public function dispatchAfter(seconds:Float, runnable:Void->Void):Void->Void {
+    public function dispatchAfter(seconds:Float, runnable:() -> Void):() -> Void {
         final timer = new TestTimer(time + seconds, nextTimerSeq++, runnable);
         // Keep timers sorted by time, then by creation order
         var index = timers.length;
@@ -144,9 +144,9 @@ private class TestTimer {
 
     public final seq:Int;
 
-    public var runnable:Null<Void->Void>;
+    public var runnable:Null<() -> Void>;
 
-    public function new(time:Float, seq:Int, runnable:Void->Void) {
+    public function new(time:Float, seq:Int, runnable:() -> Void) {
         this.time = time;
         this.seq = seq;
         this.runnable = runnable;

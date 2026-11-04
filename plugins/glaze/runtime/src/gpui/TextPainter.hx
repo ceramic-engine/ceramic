@@ -50,7 +50,7 @@ class TextPainter {
      * When set, run backgrounds are painted with this function (usually
      * `Window.paintQuad`), otherwise a solid quad is emitted directly.
      */
-    public var quadPainter:Null<PaintQuad->Void> = null;
+    public var quadPainter:Null<(PaintQuad) -> Void> = null;
 
     /** Text rendering mode (`Window::text_rendering_mode`); subpixel sprites are not supported yet */
     public var textRenderingMode:TextRenderingMode = PlatformDefault;

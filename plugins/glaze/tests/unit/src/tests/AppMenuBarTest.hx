@@ -420,7 +420,7 @@ class AppMenuBarTest extends TestCase {
     /** Runs Ceramic's queued input callbacks, like the start of an update. */
     static function flushInput():Void {
         final ceramicApp = ceramic.App.app;
-        final callbacks:Array<Void->Void> = @:privateAccess ceramicApp.beginUpdateCallbacks;
+        final callbacks:Array<() -> Void> = @:privateAccess ceramicApp.beginUpdateCallbacks;
         @:privateAccess ceramicApp.beginUpdateCallbacks = [];
         for (callback in callbacks) {
             callback();

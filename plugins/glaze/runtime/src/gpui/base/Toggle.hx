@@ -99,7 +99,7 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
     /**
      * Configures application-owned styles for the toggle's semantic states.
      */
-    public function styles(build:ToggleStyles->ToggleStyles):Toggle {
+    public function styles(build:(ToggleStyles) -> ToggleStyles):Toggle {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -141,19 +141,19 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Toggle {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Toggle {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Toggle {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Toggle {
         base.active(f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Toggle {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Toggle {
         base.focusVisible(f);
         return this;
     }
@@ -217,12 +217,12 @@ class ToggleStyles {
 
     public function new() {}
 
-    public function pressed(build:StateStyle->StateStyle):ToggleStyles {
+    public function pressed(build:(StateStyle) -> StateStyle):ToggleStyles {
         pressedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
 
-    public function disabled(build:StateStyle->StateStyle):ToggleStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):ToggleStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }

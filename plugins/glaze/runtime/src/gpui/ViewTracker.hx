@@ -33,13 +33,13 @@ class ViewTracker extends Autorun {
     /**
      * Called when a write during render is detected. Logs a warning by default.
      */
-    public static var onWriteDuringCapture:ViewTracker->Void = defaultOnWriteDuringCapture;
+    public static var onWriteDuringCapture:(ViewTracker) -> Void = defaultOnWriteDuringCapture;
 
     /**
      * Called (with tracker capture disabled) when an observed value read during
      * the last capture has changed.
      */
-    public var onInvalidated:Null<Void->Void>;
+    public var onInvalidated:Null<() -> Void>;
 
     /**
      * Name used in warnings, the class name of the owner by default.
@@ -65,7 +65,7 @@ class ViewTracker extends Autorun {
 
     var savedCurrent:Null<Autorun> = null;
 
-    public function new(onInvalidated:Void->Void, ?owner:ceramic.Entity, ?name:String) {
+    public function new(onInvalidated:() -> Void, ?owner:ceramic.Entity, ?name:String) {
         super(null);
         this.onInvalidated = onInvalidated;
         this.name = name != null ? name : (owner != null ? Type.getClassName(Type.getClass(owner)) : 'ViewTracker');
@@ -125,7 +125,7 @@ class ViewTracker extends Autorun {
     /**
      * Runs `render` between `beginCapture()` and `endCapture()`, even if it throws.
      */
-    public function capture<R>(render:Void->R):R {
+    public function capture<R>(render:() -> R):R {
         beginCapture();
         var result:R;
         try {

@@ -80,7 +80,7 @@ class BaseScrollTest extends TestCase {
     /// overscroll.rs
 
     /** Text that can scroll `room` further toward its end. */
-    static function text(room:Array<Float>):Float->Float {
+    static function text(room:Array<Float>):(Float) -> Float {
         return dy -> {
             final used = Math.max(dy, -room[0]);
             room[0] += used;
@@ -257,7 +257,7 @@ class BaseScrollTest extends TestCase {
     }
 
     /** Text `end` px long whose offset is an `f32`, as a scroll handle's is. */
-    static function longText(offset:Array<Float>, end:Float):Float->Float {
+    static function longText(offset:Array<Float>, end:Float):(Float) -> Float {
         return dy -> {
             final before = offset[0];
             var next = gpui.SpringMath.f32(before + dy);

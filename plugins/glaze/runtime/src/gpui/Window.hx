@@ -1189,7 +1189,7 @@ class Window implements WindowInvalidator {
     /**
      * Executes the provided function with the specified rem size.
      */
-    public function withRemSize<R>(remSize:Null<Float>, f:Window->R):R {
+    public function withRemSize<R>(remSize:Null<Float>, f:(Window) -> R):R {
         if (remSize == null)
             return f(this);
         remSizeOverrideStack.push(remSize);
@@ -1684,7 +1684,7 @@ class Window implements WindowInvalidator {
      * Runs `f` as part of the rendering of the given view (Rust
      * `with_rendered_view`): reads of observable fields subscribe the view.
      */
-    public function withRenderedView<R>(view:Model, f:Window->R):R {
+    public function withRenderedView<R>(view:Model, f:(Window) -> R):R {
         beginRenderedView(view, false);
         var result:R;
         try {
@@ -1803,7 +1803,7 @@ class Window implements WindowInvalidator {
     /**
      * Push an element id onto the stack, and call a function with that id active.
      */
-    public function withId<R>(elementId:ElementIdArg, f:Window->R):R {
+    public function withId<R>(elementId:ElementIdArg, f:(Window) -> R):R {
         final node = elementIdNode;
         elementIdNode = node.child(elementId);
         final result = f(this);
@@ -1826,7 +1826,7 @@ class Window implements WindowInvalidator {
     /**
      * Provide elements in the called function with a new namespace in which their identifiers must be unique.
      */
-    public inline function withElementNamespace<R>(elementId:ElementIdArg, f:Window->R):R {
+    public inline function withElementNamespace<R>(elementId:ElementIdArg, f:(Window) -> R):R {
         return withId(elementId, f);
     }
 
@@ -1890,7 +1890,7 @@ class Window implements WindowInvalidator {
      * The state is a `StateModel` holding an observable value: reading it in render subscribes the
      * view, and the view is also notified when the state entity is notified.
      */
-    public function useKeyedState<T>(key:ElementIdArg, cx:App, init:Window->T):Entity<StateModel<T>> {
+    public function useKeyedState<T>(key:ElementIdArg, cx:App, init:(Window) -> T):Entity<StateModel<T>> {
         final currentView = this.currentView();
         return withGlobalId(key, (globalId, window) -> {
             return window.withElementState(globalId, StateModel, (state, window) -> {
@@ -1910,7 +1910,7 @@ class Window implements WindowInvalidator {
      * Use a piece of state that exists as long this element is being rendered in consecutive frames,
      * keyed by the code location of the call.
      */
-    public function useState<T>(cx:App, init:Window->T, ?pos:haxe.PosInfos):Entity<StateModel<T>> {
+    public function useState<T>(cx:App, init:(Window) -> T, ?pos:haxe.PosInfos):Entity<StateModel<T>> {
         return useKeyedState(ElementId.CodeLocation(pos.fileName, pos.lineNumber), cx, init);
     }
 
@@ -1990,7 +1990,7 @@ class Window implements WindowInvalidator {
     /**
      * Push a text style onto the stack, and call a function with that style active.
      */
-    public function withTextStyle<R>(style:Null<TextStyleRefinement>, f:Window->R):R {
+    public function withTextStyle<R>(style:Null<TextStyleRefinement>, f:(Window) -> R):R {
         if (style == null)
             return f(this);
         pushTextStyle(style);
@@ -2025,7 +2025,7 @@ class Window implements WindowInvalidator {
      * Invoke the given function with the given content mask after intersecting it
      * with the current mask.
      */
-    public function withContentMask<R>(mask:Null<ContentMask>, f:Window->R):R {
+    public function withContentMask<R>(mask:Null<ContentMask>, f:(Window) -> R):R {
         if (mask == null)
             return f(this);
         pushContentMask(mask);
@@ -2083,7 +2083,7 @@ class Window implements WindowInvalidator {
     /**
      * Updates the global element offset relative to the current offset.
      */
-    public function withElementOffset<R>(offset:Point, f:Window->R):R {
+    public function withElementOffset<R>(offset:Point, f:(Window) -> R):R {
         if (offset.isZero())
             return f(this);
         return withAbsoluteElementOffset(elementOffset().add(offset), f);
@@ -2092,7 +2092,7 @@ class Window implements WindowInvalidator {
     /**
      * Updates the global element offset based on the given offset.
      */
-    public function withAbsoluteElementOffset<R>(offset:Point, f:Window->R):R {
+    public function withAbsoluteElementOffset<R>(offset:Point, f:(Window) -> R):R {
         elementOffsetStack.push(offset);
         final result = f(this);
         elementOffsetStack.pop();
@@ -2110,7 +2110,7 @@ class Window implements WindowInvalidator {
     /**
      * Executes the provided function with the specified image cache (none: `f` runs as is).
      */
-    public function withImageCache<R>(imageCache:Null<AnyImageCache>, f:Window->R):R {
+    public function withImageCache<R>(imageCache:Null<AnyImageCache>, f:(Window) -> R):R {
         if (imageCache == null)
             return f(this);
         imageCacheStack.push(imageCache);
@@ -2130,7 +2130,7 @@ class Window implements WindowInvalidator {
     /**
      * Executes the given closure with an additional element opacity applied.
      */
-    public function withElementOpacity<R>(opacity:Null<Float>, f:Window->R):R {
+    public function withElementOpacity<R>(opacity:Null<Float>, f:(Window) -> R):R {
         if (opacity == null)
             return f(this);
         final previous = pushElementOpacity(opacity);
@@ -2216,7 +2216,7 @@ class Window implements WindowInvalidator {
      * Invoke the given function with the content mask reset to that
      * of the window.
      */
-    public function paintLayer<R>(bounds:Bounds, f:Window->R):R {
+    public function paintLayer<R>(bounds:Bounds, f:(Window) -> R):R {
         final mask = contentMask().bounds;
         // In f32, like GPUI (see `TextPainter.pushCoverLayer`)
         final pushed = TextPainter.pushCoverLayer(nextFrame.scene, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, _scaleFactor);
@@ -3690,7 +3690,7 @@ class Window implements WindowInvalidator {
     /**
      * Executes the given closure within a tab group of the given index (no group when `null`).
      */
-    public function withTabGroup<R>(index:Null<Int>, f:Window->R):R {
+    public function withTabGroup<R>(index:Null<Int>, f:(Window) -> R):R {
         if (index != null) {
             nextFrame.tabStops.beginGroup(index);
             final result = f(this);
@@ -3836,7 +3836,7 @@ class Window implements WindowInvalidator {
      * Returns the subscription and the function activating it.
      */
     @:allow(gpui)
-    function newFocusListener(listener:(WindowFocusEvent, Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+    function newFocusListener(listener:(WindowFocusEvent, Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = focusListeners.insert(0, listener);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
     }
@@ -3846,7 +3846,7 @@ class Window implements WindowInvalidator {
      * (Rust `window.bounds_observers.insert`).
      */
     @:allow(gpui)
-    function newBoundsObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+    function newBoundsObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = boundsObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
     }
@@ -3856,7 +3856,7 @@ class Window implements WindowInvalidator {
      * (Rust `window.activation_observers.insert`).
      */
     @:allow(gpui)
-    function newActivationObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+    function newActivationObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = activationObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
     }
@@ -3865,7 +3865,7 @@ class Window implements WindowInvalidator {
      * Registers a listener called when the focus is lost (the focus path becomes empty).
      */
     @:allow(gpui)
-    function newFocusLostListener(listener:(Window, App) -> Bool):{subscription:Subscription, activate:Void->Void} {
+    function newFocusLostListener(listener:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = focusLostListeners.insert(0, listener);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
     }

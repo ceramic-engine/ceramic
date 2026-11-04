@@ -74,7 +74,7 @@ class BaseResizableTest extends TestCase {
         ceramic.App.app.flushImmediate();
     }
 
-    function open<V:Model & Render>(build:Context<V> -> V):{view:Entity<V>, cx:VisualTestContext} {
+    function open<V:Model & Render>(build:(Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
         DebugProbe.clear();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, cx:Context<V>) -> build(cx));
         contexts.push(opened.cx);
@@ -190,7 +190,7 @@ class BaseResizableTest extends TestCase {
         final state = newState();
         final opened = open((_:Context<FixedPanelHarness>) -> new FixedPanelHarness(840., false, state));
         final cx = opened.cx;
-        function update(f:FixedPanelHarness -> Void) {
+        function update(f:(FixedPanelHarness) -> Void) {
             cx.update((_, app) -> opened.view.update(app, (view, cx) -> {
                 f(view);
                 cx.notify();

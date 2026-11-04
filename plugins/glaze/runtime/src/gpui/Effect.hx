@@ -20,7 +20,7 @@ enum Effect {
 
     NotifyGlobalObservers(globalType:Int);
 
-    Defer(callback:App->Void);
+    Defer(callback:(App) -> Void);
 
     EntityCreated(entity:Model, typeId:Int);
 

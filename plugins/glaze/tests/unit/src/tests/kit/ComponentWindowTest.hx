@@ -75,7 +75,7 @@ class ComponentWindowTest extends TestCase {
         ceramic.App.app.flushImmediate();
     }
 
-    function open(render:(Window, Context<Dynamic>) -> IntoElement, ?prepare:Window->Void, width:Float = 600, height:Float = 400):VisualTestContext {
+    function open(render:(Window, Context<Dynamic>) -> IntoElement, ?prepare:(Window) -> Void, width:Float = 600, height:Float = 400):VisualTestContext {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView(render), width, height);
         contexts.push(opened.cx);
         if (prepare != null) opened.cx.update((window, _) -> prepare(window));
@@ -122,7 +122,7 @@ class ComponentWindowTest extends TestCase {
 
     /// integration/components.rs
 
-    function titleBarWindow(?prepare:Window->Void):VisualTestContext {
+    function titleBarWindow(?prepare:(Window) -> Void):VisualTestContext {
         return open((_, _) -> div().sizeFull().child(new TitleBar().child('Library')), prepare);
     }
 

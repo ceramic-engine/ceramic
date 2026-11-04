@@ -335,7 +335,7 @@ class Theme extends ThemeColor {
      *
      * The edit is made on a copy, installed when the closure returns.
      */
-    public static function update<R>(cx:AppContext, edit:Theme->R):R {
+    public static function update<R>(cx:AppContext, edit:(Theme) -> R):R {
 
         return Theme.edit(cx, false, edit);
 
@@ -348,7 +348,7 @@ class Theme extends ThemeColor {
      * mode did not change, which is what `change` promises.
      */
     @:allow(gpui.component.theme)
-    static function edit<R>(cx:AppContext, reloadMode:Bool, edit:Theme->R):R {
+    static function edit<R>(cx:AppContext, reloadMode:Bool, edit:(Theme) -> R):R {
 
         tracker.Autorun.unobserve();
         final before = cx.global(Theme);

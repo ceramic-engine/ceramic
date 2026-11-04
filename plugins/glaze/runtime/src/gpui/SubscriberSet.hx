@@ -100,7 +100,7 @@ class SubscriberSet<Callback> {
      * Calls `f` for each active subscriber to the given emitter.
      * If `f` returns false, the subscriber is removed.
      */
-    public function retain(emitterKey:Int, f:Callback->Bool):Void {
+    public function retain(emitterKey:Int, f:(Callback) -> Bool):Void {
         final list = subscribers.get(emitterKey);
         if (list == null)
             return;

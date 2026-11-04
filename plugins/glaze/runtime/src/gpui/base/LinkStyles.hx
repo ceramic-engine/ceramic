@@ -18,7 +18,7 @@ class LinkStyles {
     /**
      * Style applied while the link is disabled (resolved after the instance style).
      */
-    public function disabled(build:StateStyle->StateStyle):LinkStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):LinkStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }

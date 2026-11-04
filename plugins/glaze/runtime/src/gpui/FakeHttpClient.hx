@@ -11,17 +11,17 @@ import gpui.HttpClient;
  */
 class FakeHttpClient implements HttpClient {
 
-    var handler:HttpRequest->Task<HttpResponse>;
+    var handler:(HttpRequest) -> Task<HttpResponse>;
 
     /** The requests sent so far, in order */
     public final requests:Array<HttpRequest> = [];
 
-    function new(handler:HttpRequest->Task<HttpResponse>) {
+    function new(handler:(HttpRequest) -> Task<HttpResponse>) {
         this.handler = handler;
     }
 
     /** A client whose requests are answered by `handler` */
-    public static function create(handler:HttpRequest->Task<HttpResponse>):FakeHttpClient {
+    public static function create(handler:(HttpRequest) -> Task<HttpResponse>):FakeHttpClient {
         return new FakeHttpClient(handler);
     }
 
@@ -36,7 +36,7 @@ class FakeHttpClient implements HttpClient {
     }
 
     /** Replaces the handler; the new one receives the previous one */
-    public function replaceHandler(newHandler:(HttpRequest->Task<HttpResponse>, HttpRequest)->Task<HttpResponse>):Void {
+    public function replaceHandler(newHandler:((HttpRequest) -> Task<HttpResponse>, HttpRequest)->Task<HttpResponse>):Void {
         final previous = handler;
         handler = request -> newHandler(previous, request);
     }

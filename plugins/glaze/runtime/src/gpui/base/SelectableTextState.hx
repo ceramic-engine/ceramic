@@ -12,8 +12,8 @@ import gpui.Window;
 import gpui.util.Utf8;
 
 typedef FocusCallback = (Window, App) -> Void;
-typedef ClearHandler = App -> Void;
-typedef CopyCallback = App -> String;
+typedef ClearHandler = (App) -> Void;
+typedef CopyCallback = (App) -> String;
 typedef ContentKeyResolver = (Point, App) -> Null<TextSelectionContentKey>;
 
 /** Rust `CopyItem`. */

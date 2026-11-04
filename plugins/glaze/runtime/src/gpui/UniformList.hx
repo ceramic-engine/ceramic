@@ -403,7 +403,7 @@ class UniformList extends Element implements Styled {
     /**
      * Apply the given style to this element when the mouse hovers over it.
      */
-    public function hover(f:StyleBuilder->StyleBuilder):UniformList {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):UniformList {
         interactivity.hoverStyle = StyleBuilder.build(f);
         return this;
     }

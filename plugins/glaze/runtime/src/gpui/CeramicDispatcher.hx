@@ -11,11 +11,11 @@ class CeramicDispatcher implements PlatformDispatcher {
 
     public function new() {}
 
-    public function dispatch(runnable:Void->Void):Void {
+    public function dispatch(runnable:() -> Void):Void {
         ceramic.App.app.onceImmediate(runnable);
     }
 
-    public function dispatchAfter(seconds:Float, runnable:Void->Void):Void->Void {
+    public function dispatchAfter(seconds:Float, runnable:() -> Void):() -> Void {
         return ceramic.Timer.delay(null, seconds, runnable);
     }
 

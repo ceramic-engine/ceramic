@@ -21,7 +21,7 @@ class PlatformUrl {
     public static var openedUrl:Null<String> = null;
 
     /** Replaces the platform opener (null: the platform's). */
-    public static var opener:Null<String->Void> = null;
+    public static var opener:Null<(String) -> Void> = null;
 
     public static function openUrl(cx:AppContext, url:String):Void {
         openedUrl = url;

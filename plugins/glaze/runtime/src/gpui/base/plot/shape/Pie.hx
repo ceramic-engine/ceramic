@@ -12,7 +12,7 @@ import gpui.base.plot.shape.Arc.ArcData;
  */
 class Pie<T> {
 
-    var valueFn:T->Null<Float> = _ -> null;
+    var valueFn:(T) -> Null<Float> = _ -> null;
 
     var startAngleValue:Float = 0.;
 
@@ -23,7 +23,7 @@ class Pie<T> {
     public function new() {}
 
     /** Set the value of the Pie. */
-    public function value(value:T->Null<Float>):Pie<T> {
+    public function value(value:(T) -> Null<Float>):Pie<T> {
         valueFn = value;
         return this;
     }

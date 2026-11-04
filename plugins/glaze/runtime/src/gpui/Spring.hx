@@ -89,7 +89,7 @@ class Spring {
      * `envelopeBelow`), which avoids returning a tuple per evaluation.
      */
     @:allow(gpui.SpringConfig)
-    static function findSettleTime(decayStart:Float, naturalFrequency:Float, isBelowThreshold:Float->Bool):Float {
+    static function findSettleTime(decayStart:Float, naturalFrequency:Float, isBelowThreshold:(Float) -> Bool):Float {
 
         if (isBelowThreshold(decayStart)) {
             return durationFromSecs(decayStart);

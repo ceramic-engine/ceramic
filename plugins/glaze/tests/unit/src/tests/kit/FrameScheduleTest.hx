@@ -85,7 +85,7 @@ class FrameScheduleTest extends TestCase {
      * Rust `HeadlessAppContext::update`: runs `f` on the app without
      * flushing the effects (the next update flushes them).
      */
-    function headlessUpdate(f:App->Void):Void {
+    function headlessUpdate(f:(App) -> Void):Void {
         app.startUpdate();
         f(app);
         app.pendingUpdates--;

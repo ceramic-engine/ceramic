@@ -168,9 +168,9 @@ class SankeyChart<T> extends Plot {
 
     @:allow(tests) var nodeCornerRadiusValue:Null<Float> = null;
 
-    @:allow(tests) var nodeColorFn:Null<T->Hsla> = null;
+    @:allow(tests) var nodeColorFn:Null<(T) -> Hsla> = null;
 
-    @:allow(tests) var nodeLabelFn:Null<T->String> = null;
+    @:allow(tests) var nodeLabelFn:Null<(T) -> String> = null;
 
     @:allow(tests) var valueLabelFn:Null<(T, Float) -> String> = null;
 
@@ -182,7 +182,7 @@ class SankeyChart<T> extends Plot {
 
     @:allow(tests) var labelGapValue:Float = DEFAULT_LABEL_GAP;
 
-    @:allow(tests) var tooltipNameFn:Null<T->String> = null;
+    @:allow(tests) var tooltipNameFn:Null<(T) -> String> = null;
 
     @:allow(tests) var tooltipValueFn:Null<(T, Float) -> String> = null;
 
@@ -257,12 +257,12 @@ class SankeyChart<T> extends Plot {
         return this;
     }
 
-    public function nodeColor(color:T->IntoHsla):SankeyChart<T> {
+    public function nodeColor(color:(T) -> IntoHsla):SankeyChart<T> {
         nodeColorFn = t -> (color(t) : Hsla);
         return this;
     }
 
-    public function nodeLabel(label:T->String):SankeyChart<T> {
+    public function nodeLabel(label:(T) -> String):SankeyChart<T> {
         nodeLabelFn = label;
         return this;
     }
@@ -278,7 +278,7 @@ class SankeyChart<T> extends Plot {
         return this;
     }
 
-    public function tooltipName(name:T->String):SankeyChart<T> {
+    public function tooltipName(name:(T) -> String):SankeyChart<T> {
         tooltipNameFn = name;
         return this;
     }

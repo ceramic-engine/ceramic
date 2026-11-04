@@ -206,7 +206,7 @@ class ScrollRedrawTest extends TestCase {
         final reference = openWindow(root, false);
         frame();
         assertEquals(dump(reference), dump(cached));
-        final moves:Array<{name:String, move:Void->Void}> = [
+        final moves:Array<{name:String, move:() -> Void}> = [
             {name: 'div', move: () -> handle.setOffset(point(px(0), px(-50)))},
             {name: 'list', move: () -> listState.scrollTo(new gpui.ListOffset(5, 0))},
             {name: 'uniform list', move: () -> uniformHandle.scrollToItem(20, gpui.ScrollStrategy.Top)}

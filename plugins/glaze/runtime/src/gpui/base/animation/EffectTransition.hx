@@ -38,7 +38,7 @@ class EffectTransition {
      */
     public var duration:Float;
 
-    var easing:Float->Float;
+    var easing:(Float) -> Float;
 
     final effects:Array<TransitionEffect> = [];
 
@@ -52,7 +52,7 @@ class EffectTransition {
     /**
      * Set the easing function.
      */
-    public function ease(easing:Float->Float):EffectTransition {
+    public function ease(easing:(Float) -> Float):EffectTransition {
 
         this.easing = easing;
         return this;

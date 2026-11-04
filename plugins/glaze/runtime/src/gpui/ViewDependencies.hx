@@ -45,7 +45,7 @@ class ViewDependencies {
      * Records that the view being drawn read `state`. `changed` tells
      * whether the state differs from what the view has drawn.
      */
-    public function record(window:Window, state:{}, changed:Void->Bool):Void {
+    public function record(window:Window, state:{}, changed:() -> Bool):Void {
         if (cachedStyleDepth > 0 || !window.viewCaching || window.viewCachingDisabled) {
             return;
         }
@@ -107,13 +107,13 @@ private class ViewChecks {
     /** Index of each state in `checks` */
     final indexes:ObjectMap<{}, Int> = new ObjectMap();
 
-    public final checks:Array<Void->Bool> = [];
+    public final checks:Array<() -> Bool> = [];
 
     public function new(viewId:Int) {
         this.viewId = viewId;
     }
 
-    public function set(state:{}, changed:Void->Bool):Void {
+    public function set(state:{}, changed:() -> Bool):Void {
         final index = indexes.get(state);
         if (index != null) {
             checks[index] = changed;

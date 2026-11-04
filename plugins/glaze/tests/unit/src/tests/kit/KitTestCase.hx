@@ -43,7 +43,7 @@ class KitTestCase extends TestCase {
     /**
      * `cx.open_window(...)` followed by `run_until_parked()`.
      */
-    function openWindow<V:Model & Render>(build:Context<V>->V):{window:Window, view:Entity<V>} {
+    function openWindow<V:Model & Render>(build:(Context<V>) -> V):{window:Window, view:Entity<V>} {
         var view:Entity<V> = null;
         var window:Window = null;
         app.update(cx -> {

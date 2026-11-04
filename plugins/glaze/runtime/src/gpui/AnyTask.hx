@@ -26,9 +26,9 @@ class AnyTask {
      * produces the result (a timer, an awaited task...).
      */
     @:allow(gpui)
-    var cancelHook:Null<Void->Void> = null;
+    var cancelHook:Null<() -> Void> = null;
 
-    var listeners:Null<Array<Void->Void>> = null;
+    var listeners:Null<Array<() -> Void>> = null;
 
     @:allow(gpui.EntitySlot)
     var owner:Null<EntitySlot> = null;
@@ -105,7 +105,7 @@ class AnyTask {
      * Calls `listener` once the task is ready, failed or cancelled, synchronously
      * if it already is. Mostly for internal use: prefer `then` / `andThen`.
      */
-    public function onComplete(listener:Void->Void):Void {
+    public function onComplete(listener:() -> Void):Void {
         if (state != Pending) {
             listener();
             return;
@@ -158,7 +158,7 @@ class AnyTask {
      * timers and continuations never subscribes the view being rendered.
      */
     @:allow(gpui)
-    static function runUnobserved(f:Void->Void):Void {
+    static function runUnobserved(f:() -> Void):Void {
         Autorun.unobserve();
         try {
             f();

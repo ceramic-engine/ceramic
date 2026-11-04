@@ -842,7 +842,7 @@ class SliderIndicator implements RenderOnce implements Styled implements ParentE
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):SliderIndicator {
+    public function active(f:(StyleBuilder) -> StyleBuilder):SliderIndicator {
         base.active(f);
         return this;
     }

@@ -25,11 +25,11 @@ class Area<T> {
 
     var dataValues:Array<T> = [];
 
-    var xFn:T->Null<Float> = _ -> null;
+    var xFn:(T) -> Null<Float> = _ -> null;
 
     var y0Value:Null<Float> = null;
 
-    var y1Fn:T->Null<Float> = _ -> null;
+    var y1Fn:(T) -> Null<Float> = _ -> null;
 
     var fillValue:Background = new Background();
 
@@ -46,7 +46,7 @@ class Area<T> {
     }
 
     /** Set the x of the Area. */
-    public function x(x:T->Null<Float>):Area<T> {
+    public function x(x:(T) -> Null<Float>):Area<T> {
         xFn = x;
         return this;
     }
@@ -58,7 +58,7 @@ class Area<T> {
     }
 
     /** Set the y1 of the Area. */
-    public function y1(y1:T->Null<Float>):Area<T> {
+    public function y1(y1:(T) -> Null<Float>):Area<T> {
         y1Fn = y1;
         return this;
     }

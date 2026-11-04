@@ -72,7 +72,7 @@ class Highlighter {
      * embed), or of every bundled grammar when null. Needed before
      * highlighting on targets without a file system.
      */
-    public static function preload(languages:Null<Array<String>>, done:Bool->Void):Void {
+    public static function preload(languages:Null<Array<String>>, done:(Bool) -> Void):Void {
         TextMateGrammars.preload(languages, done);
     }
 
@@ -88,7 +88,7 @@ class Highlighter {
      * assets are reported loaded. `done(true)` once the engine is in use;
      * `done(false)` keeps the pure Haxe engine.
      */
-    public static function enableWasm(onigModule:Dynamic, done:Bool->Void):Void {
+    public static function enableWasm(onigModule:Dynamic, done:(Bool) -> Void):Void {
         final lib = try {
             // A module whose wasm is not ready throws here, not later while highlighting.
             final scanner:Dynamic = onigModule.createOnigScanner(['a']);

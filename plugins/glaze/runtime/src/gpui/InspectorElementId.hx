@@ -42,7 +42,7 @@ class InspectorElementPath {
      * can show its files relative to its own root, like rustc does for the
      * crates of a workspace.
      */
-    public static var locationFormatter:Null<haxe.PosInfos->String> = null;
+    public static var locationFormatter:Null<(haxe.PosInfos) -> String> = null;
 
     public inline function equals(other:Null<InspectorElementPath>):Bool {
         return other != null && key == other.key;

@@ -6,4 +6,4 @@ package gpui.base.input;
 /**
  * Creates the highlighter of a language, or null (Rust `InputHighlighterFactory`).
  */
-typedef InputHighlighterFactory = String -> Null<InputHighlighter>;
+typedef InputHighlighterFactory = (String) -> Null<InputHighlighter>;

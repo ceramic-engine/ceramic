@@ -43,7 +43,7 @@ class AnimationTest extends TestCase {
         final inputs:Array<Float> = data.inputs;
         final easings:Dynamic = data.easings;
 
-        final functions:Array<{name:String, easing:Float->Float}> = [
+        final functions:Array<{name:String, easing:(Float) -> Float}> = [
             {name: 'linear', easing: Easing.linear},
             {name: 'quadratic', easing: Easing.quadratic},
             {name: 'ease_in_out', easing: Easing.easeInOut},

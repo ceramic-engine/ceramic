@@ -33,7 +33,7 @@ class ImageAssets {
     }
 
     /** Rust `asset_entry`: the entry of `key`, starting `load` if it does not exist. */
-    public function entry(key:String, load:App->Task<ImageLoadResult>, cx:App):CachedLoad<ImageLoadResult> {
+    public function entry(key:String, load:(App) -> Task<ImageLoadResult>, cx:App):CachedLoad<ImageLoadResult> {
         var entry = entries.get(key);
         if (entry == null) {
             entry = new CachedLoad(logErrors(load(cx)), cx);
@@ -43,12 +43,12 @@ class ImageAssets {
     }
 
     /** Rust `fetch_asset` / `Window.get_asset`: the result, or `null` while loading (no notification). */
-    public inline function fetch(key:String, load:App->Task<ImageLoadResult>, cx:App):Null<ImageLoadResult> {
+    public inline function fetch(key:String, load:(App) -> Task<ImageLoadResult>, cx:App):Null<ImageLoadResult> {
         return entry(key, load, cx).get();
     }
 
     /** Rust `Window.use_asset`: the result, or `null` while loading, in which case the current view is notified when it is ready. */
-    public inline function use(key:String, load:App->Task<ImageLoadResult>, window:Window, cx:App):Null<ImageLoadResult> {
+    public inline function use(key:String, load:(App) -> Task<ImageLoadResult>, window:Window, cx:App):Null<ImageLoadResult> {
         return entry(key, load, cx).useBy(window.currentView());
     }
 

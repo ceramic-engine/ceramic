@@ -26,7 +26,7 @@ class AtlasState<Backend:AtlasBackend> {
         return tilesByKey.exists(key.keyString());
     }
 
-    public function clear(?resetBackend:Backend->Void):Void {
+    public function clear(?resetBackend:(Backend) -> Void):Void {
         tilesByKey.clear();
         glyphTiles.clear();
         if (resetBackend != null)

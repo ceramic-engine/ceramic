@@ -234,7 +234,7 @@ class MessageScroller implements RenderOnce implements Styled {
     var jumpButtonStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests)
-    var jumpButtonRenderer:Null<Button->Button> = null;
+    var jumpButtonRenderer:Null<(Button) -> Button> = null;
 
     /** Seconds. */
     @:allow(tests)
@@ -307,7 +307,7 @@ class MessageScroller implements RenderOnce implements Styled {
      * The callback receives the fully configured Button, so its variant,
      * semantic size, icon, tooltip, or instance styling may be adjusted.
      */
-    public function withJumpButtonRenderer(renderer:Button->Button):MessageScroller {
+    public function withJumpButtonRenderer(renderer:(Button) -> Button):MessageScroller {
         jumpButtonRenderer = renderer;
         return this;
     }

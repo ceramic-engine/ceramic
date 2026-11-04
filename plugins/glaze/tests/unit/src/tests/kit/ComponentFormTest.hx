@@ -47,7 +47,7 @@ class ComponentFormTest extends TestCase {
         ceramic.App.app.flushImmediate();
     }
 
-    function open<V:Model & Render>(build:Context<V> -> V):VisualTestContext {
+    function open<V:Model & Render>(build:(Context<V>) -> V):VisualTestContext {
         DebugProbe.clear();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, cx:Context<V>) -> build(cx));
         contexts.push(opened.cx);

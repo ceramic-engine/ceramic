@@ -204,12 +204,12 @@ class TextSelectionHandle {
     }
 
     /** Sets the synchronous participant cleanup command used by window clear. */
-    public function clearWith(callback:App -> Void, cx:App):Void {
+    public function clearWith(callback:(App) -> Void, cx:App):Void {
         state.update(cx, (state, _) -> state.clearWith(callback));
     }
 
     /** Sets a participant-specific copy projection. */
-    public function copyWith(callback:App -> String, cx:App):Void {
+    public function copyWith(callback:(App) -> String, cx:App):Void {
         state.update(cx, (state, _) -> state.copyWith(callback));
     }
 

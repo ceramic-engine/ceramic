@@ -1069,12 +1069,12 @@ class UpdateFuture {
     /** Rust's result channel (`rx_result`). */
     final results:Array<ParsedUpdate> = [];
     final app:App;
-    final onResult:ParsedUpdate->Void;
+    final onResult:(ParsedUpdate) -> Void;
     var pollScheduled:Bool = false;
     var deliverScheduled:Bool = false;
     var closed:Bool = false;
 
-    public function new(format:TextViewFormat, app:App, onResult:ParsedUpdate->Void) {
+    public function new(format:TextViewFormat, app:App, onResult:(ParsedUpdate) -> Void) {
         this.format = format;
         this.app = app;
         this.onResult = onResult;

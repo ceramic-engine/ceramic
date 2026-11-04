@@ -127,7 +127,7 @@ class CarouselStory extends Model implements Story {
     }
 
     static function itemsWith(state:Entity<CarouselState>, prefix:String, count:Int, typography:SlideTypography, square:Bool,
-            configure:CarouselItem->CarouselItem, cx:App):CarouselContent {
+            configure:(CarouselItem) -> CarouselItem, cx:App):CarouselContent {
         final content = new CarouselContent(state);
         for (index in 0...count) {
             final label = Std.string(index + 1);

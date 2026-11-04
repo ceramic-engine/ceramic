@@ -104,7 +104,7 @@ class ExampleInfo {
 
     public final height:Float;
 
-    @:optional public final setup:Null<App->Void>;
+    @:optional public final setup:Null<(App) -> Void>;
 
     public final open:(Window, App) -> AnyView;
 

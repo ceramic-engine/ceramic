@@ -188,14 +188,14 @@ class Context<T:Model> extends EntitySlot {
      * Builds an entity owned by this entity (Rust: `cx.new(|cx| ...)`).
      * It is destroyed when this entity is destroyed.
      */
-    public function newEntity<U:Model>(build:Context<U>->U):Entity<U> {
+    public function newEntity<U:Model>(build:(Context<U>) -> U):Entity<U> {
         return app.newEntityIn(build, this);
     }
 
     /**
      * Schedules the given function to be run at the end of the current effect cycle.
      */
-    public inline function defer(f:App->Void):Void {
+    public inline function defer(f:(App) -> Void):Void {
         app.defer(f);
     }
 

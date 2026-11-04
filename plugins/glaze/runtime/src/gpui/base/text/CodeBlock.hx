@@ -13,10 +13,10 @@ import gpui.base.input.StyledRange;
 /** Highlights of a code block cached with the highlighter that made them. */
 class CachedCodeBlockHighlights {
 
-    public final highlighter:CodeBlock->Array<StyledRange>;
+    public final highlighter:(CodeBlock) -> Array<StyledRange>;
     public final styles:Array<StyledRange>;
 
-    public function new(highlighter:CodeBlock->Array<StyledRange>, styles:Array<StyledRange>) {
+    public function new(highlighter:(CodeBlock) -> Array<StyledRange>, styles:Array<StyledRange>) {
         this.highlighter = highlighter;
         this.styles = styles;
     }
@@ -147,7 +147,7 @@ class CodeBlock {
     }
 
     @:allow(gpui.base.text)
-    function highlightedStyles(highlighter:CodeBlock->Array<StyledRange>):Array<StyledRange> {
+    function highlightedStyles(highlighter:(CodeBlock) -> Array<StyledRange>):Array<StyledRange> {
         final cache = highlightCache.value;
         if (cache != null && Reflect.compareMethods(cache.highlighter, highlighter)) {
             return cache.styles.copy();

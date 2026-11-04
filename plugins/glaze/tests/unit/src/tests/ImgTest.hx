@@ -359,7 +359,7 @@ class ImgTest extends TestCase {
         return task.value;
     }
 
-    function useHttp(handler:gpui.HttpClient.HttpRequest->gpui.HttpClient.HttpResponse):gpui.FakeHttpClient {
+    function useHttp(handler:(gpui.HttpClient.HttpRequest) -> gpui.HttpClient.HttpResponse):gpui.FakeHttpClient {
         final client = gpui.FakeHttpClient.create(request -> gpui.Task.ready(handler(request)));
         app.setHttpClient(client);
         return client;
@@ -556,7 +556,7 @@ class ImgTest extends TestCase {
      * (on Unity, `LoadImage` gives a JPEG an RGB24 texture: reading it as
      * RGBA32 ran past its pixels).
      */
-    function asyncTestJpegDecodesThroughTheBackend(done:Void->Void) {
+    function asyncTestJpegDecodesThroughTheBackend(done:() -> Void) {
         final bytes = haxe.crypto.Base64.decode(JPEG_RED_4x2);
         gpui.ImageAssetLoader.decodeRaster(bytes, gpui.ImageFormat.Jpeg).then(result -> {
             switch result {

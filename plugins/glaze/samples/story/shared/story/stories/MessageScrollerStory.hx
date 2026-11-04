@@ -347,7 +347,7 @@ class MessageScrollerStory extends Model implements Story {
             .child(scroller.withBottomFade(theme.background).sizeFull());
     }
 
-    static function listStyle(f:StyleBuilder->StyleBuilder):StyleRefinement {
+    static function listStyle(f:(StyleBuilder) -> StyleBuilder):StyleRefinement {
         return f(new StyleBuilder(new StyleRefinement())).style();
     }
 

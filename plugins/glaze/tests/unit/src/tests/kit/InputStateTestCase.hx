@@ -97,21 +97,21 @@ class InputStateTestCase extends KitTestCase {
         return new InputView(input, opened.cx);
     }
 
-    function build(?f:InputState->InputBaseState):InputView {
+    function build(?f:(InputState) -> InputBaseState):InputView {
         return buildWith((window, cx) -> {
             final state = new InputState(window, cx);
             return f != null ? f(state) : state;
         });
     }
 
-    function buildTextarea(?f:TextareaState->InputBaseState):InputView {
+    function buildTextarea(?f:(TextareaState) -> InputBaseState):InputView {
         return buildWith((window, cx) -> {
             final state = new TextareaState(window, cx);
             return f != null ? f(state) : state;
         });
     }
 
-    function buildEditor(?f:EditorState->InputBaseState):InputView {
+    function buildEditor(?f:(EditorState) -> InputBaseState):InputView {
         return buildWith((window, cx) -> {
             final state = new EditorState(window, cx).language("sql");
             return f != null ? f(state) : state;

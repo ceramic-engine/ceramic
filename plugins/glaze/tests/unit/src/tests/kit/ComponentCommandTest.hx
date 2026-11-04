@@ -490,7 +490,7 @@ class ComponentCommandTest extends TestCase {
         });
     }
 
-    function harness(command:Entity<CommandState>->Command):{view:Entity<CommandHarness>, cx:VisualTestContext} {
+    function harness(command:(Entity<CommandState>) -> Command):{view:Entity<CommandHarness>, cx:VisualTestContext} {
         return addWindowView((window, cx:Context<CommandHarness>) -> new CommandHarness(cx.newEntity(c -> new CommandState(window, c)), command));
     }
 
@@ -1127,9 +1127,9 @@ private class CommandHarness extends Model implements Render {
 
     public final state:Entity<CommandState>;
 
-    final command:Entity<CommandState>->Command;
+    final command:(Entity<CommandState>) -> Command;
 
-    public function new(state:Entity<CommandState>, command:Entity<CommandState>->Command) {
+    public function new(state:Entity<CommandState>, command:(Entity<CommandState>) -> Command) {
         super();
         this.state = state;
         this.command = command;

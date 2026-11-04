@@ -74,7 +74,7 @@ class RadarChart<T> extends Plot {
 
     @:allow(tests) final data:Array<T>;
 
-    @:allow(tests) final values:Array<T->Float> = [];
+    @:allow(tests) final values:Array<(T) -> Float> = [];
 
     @:allow(tests) final strokes:Array<Hsla> = [];
 
@@ -84,7 +84,7 @@ class RadarChart<T> extends Plot {
 
     final tooltipContentValue:TooltipContent<T> = new TooltipContent();
 
-    @:allow(tests) var labelFn:Null<T->RadarLabel> = null;
+    @:allow(tests) var labelFn:Null<(T) -> RadarLabel> = null;
 
     var labelTexts:Array<Null<String>> = [];
 
@@ -145,7 +145,7 @@ class RadarChart<T> extends Plot {
     }
 
     /** Set the hover tooltip's title for a datum, instead of its label. */
-    public function tooltipTitle(title:T->String):RadarChart<T> {
+    public function tooltipTitle(title:(T) -> String):RadarChart<T> {
         tooltipContentValue.setTitle(title);
         return this;
     }
@@ -169,7 +169,7 @@ class RadarChart<T> extends Plot {
     }
 
     /** Add a series. */
-    public function value(value:T->Float):RadarChart<T> {
+    public function value(value:(T) -> Float):RadarChart<T> {
         values.push(value);
         return this;
     }
@@ -185,7 +185,7 @@ class RadarChart<T> extends Plot {
     }
 
     /** Label each dimension with text or an element. */
-    public function label(label:T->RadarLabel):RadarChart<T> {
+    public function label(label:(T) -> RadarLabel):RadarChart<T> {
         labelFn = label;
         return this;
     }

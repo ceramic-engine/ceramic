@@ -221,7 +221,7 @@ class BenchRunner {
      * The standard benchmark window: 1280x1024 at scale 2, no auto draw, no
      * input binding, the view caching of the mode.
      */
-    public static function openWindow(app:App, caching:Bool, buildRoot:Void->AnyView, width:Int = 1280, height:Int = 1024, scaleFactor:Float = 2.0):Window {
+    public static function openWindow(app:App, caching:Bool, buildRoot:() -> AnyView, width:Int = 1280, height:Int = 1024, scaleFactor:Float = 2.0):Window {
         final window = Window.open(app, {width: width, height: height, scaleFactor: scaleFactor, autoDraw: false, bindInput: false, viewCaching: caching}, (_, _) -> buildRoot());
         window.viewCachingDisabled = !caching;
         return window;
@@ -291,7 +291,7 @@ class BenchRunner {
         print('gpui benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : '')
             + (renderToTexture != null ? ', renderToTexture $renderToTexture' : '')
             + (partialRendering != null ? ', partialRendering $partialRendering' : ''));
-        final tasks:Array<(Void->Void)->Void> = [];
+        final tasks:Array<(() -> Void)->Void> = [];
         for (scenario in scenarios) {
             for (caching in scenario.cachedModes) {
                 if (only != null && (only == 'cached') != caching) {
@@ -319,7 +319,7 @@ class BenchRunner {
         exit(failed ? 1 : 0);
     }
 
-    function runMode(scenario:Scenario, caching:Bool, done:Void->Void):Void {
+    function runMode(scenario:Scenario, caching:Bool, done:() -> Void):Void {
         final window = scenario.setup(app, caching);
         if (renderToTexture != null) {
             window.renderable.renderToTexture = renderToTexture;
@@ -365,7 +365,7 @@ class BenchRunner {
         nextRun();
     }
 
-    function measure(scenario:Scenario, window:Window, caching:Bool, elementCount:Int, run:Int, done:Void->Void):Void {
+    function measure(scenario:Scenario, window:Window, caching:Bool, elementCount:Int, run:Int, done:() -> Void):Void {
         final times:Array<Float> = [];
         final wallTimes:Array<Float> = [];
         var renderedViews = 0;
@@ -477,7 +477,7 @@ class BenchRunner {
         // On screen: one step per tick of the real update loop, Ceramic
         // renders the window after each update
         var frame = 0;
-        var handler:Null<Float->Void> = null;
+        var handler:Null<(Float) -> Void> = null;
         ceramic.App.app.onBeginDraw(owner, onBeginDraw);
         ceramic.App.app.onFinishDraw(owner, onFinishDraw);
         handler = _ -> {
@@ -543,7 +543,7 @@ class BenchRunner {
     /** Fields of a live memory sample, in `soak.lives` of the result */
     static final SOAK_LIVE_FIELDS = ['t', 'frames', 'live', 'liveBytes', 'large', 'usageBefore', 'reservedBefore', 'reservedAfter', 'jsLive', 'jsTotal', 'collectMs'];
 
-    function soak(scenario:Scenario, window:Window, caching:Bool, done:Void->Void):Void {
+    function soak(scenario:Scenario, window:Window, caching:Bool, done:() -> Void):Void {
         final label = '${scenario.name}-${caching ? 'cached' : 'full'}';
         print('soak $label: ${soakSeconds} s, samples every ${soakSampleSeconds} s, live memory every ${soakLiveSeconds} s, warmup ${soakWarmupSeconds} s');
         // The series are stored in flat arrays allocated up front: records
@@ -564,7 +564,7 @@ class BenchRunner {
         var nextLive = soakLiveSeconds > 0 ? start + soakLiveSeconds * 1000 : Math.POSITIVE_INFINITY;
         var maxReserved = 0.0;
         var lastLiveAt = -1.0;
-        var handler:Null<Float->Void> = null;
+        var handler:Null<(Float) -> Void> = null;
         function seconds(at:Float):Float return (at - start) / 1000;
         function sample(at:Float):Void {
             if (sampleCount >= sampleCapacity) return;
@@ -939,7 +939,7 @@ class BenchRunner {
      * Idle frames through the real update loop: nothing changes, nothing is
      * drawn, nothing is allocated (by gpui or by the renderable).
      */
-    function idle(scenario:IdleScenario, window:Window, caching:Bool, elementCount:Int, done:Void->Void):Void {
+    function idle(scenario:IdleScenario, window:Window, caching:Bool, elementCount:Int, done:() -> Void):Void {
         final idleFrames = scenario.idleFrames;
         final scene = window.renderedScene();
         final drawCount = window.drawCount;
@@ -957,7 +957,7 @@ class BenchRunner {
         ceramic.App.app.onBeginDraw(owner, onBeginDraw);
         ceramic.App.app.onFinishDraw(owner, onFinishDraw);
         ceramic.App.app.screen.add(window.renderable);
-        var handler:Null<Float->Void> = null;
+        var handler:Null<(Float) -> Void> = null;
         handler = _ -> {
             ticks++;
             if (ticks == 10) {

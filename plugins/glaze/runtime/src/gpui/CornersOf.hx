@@ -56,7 +56,7 @@ class CornersOf<T> {
     /**
      * Returns new corners with `f` applied to each value.
      */
-    public inline function map<U>(f:T->U):CornersOf<U> {
+    public inline function map<U>(f:(T) -> U):CornersOf<U> {
 
         return new CornersOf<U>(f(topLeft), f(topRight), f(bottomRight), f(bottomLeft));
 
@@ -65,7 +65,7 @@ class CornersOf<T> {
     /**
      * Returns numeric corners with `f` applied to each value.
      */
-    public inline function mapToCorners(f:T->Float):Corners {
+    public inline function mapToCorners(f:(T) -> Float):Corners {
 
         return new Corners(f(topLeft), f(topRight), f(bottomRight), f(bottomLeft));
 
@@ -74,7 +74,7 @@ class CornersOf<T> {
     /**
      * Structural equality. `eq` compares two values (default: `==`).
      */
-    public function equals(other:CornersOf<T>, ?eq:T->T->Bool):Bool {
+    public function equals(other:CornersOf<T>, ?eq:(T, T) -> Bool):Bool {
 
         if (other == null) return false;
         if (eq == null) {

@@ -45,9 +45,9 @@ class AreaChart<T> extends Plot {
 
     final data:Array<T>;
 
-    var xFn:Null<T->String> = null;
+    var xFn:Null<(T) -> String> = null;
 
-    final yFns:Array<T->Float> = [];
+    final yFns:Array<(T) -> Float> = [];
 
     final strokes:Array<Hsla> = [];
 
@@ -114,7 +114,7 @@ class AreaChart<T> extends Plot {
     }
 
     /** Set the hover tooltip's title for a datum, instead of its x value. */
-    public function tooltipTitle(title:T->String):AreaChart<T> {
+    public function tooltipTitle(title:(T) -> String):AreaChart<T> {
         tooltipContentValue.setTitle(title);
         return this;
     }
@@ -140,12 +140,12 @@ class AreaChart<T> extends Plot {
         return this;
     }
 
-    public function x(x:T->String):AreaChart<T> {
+    public function x(x:(T) -> String):AreaChart<T> {
         xFn = x;
         return this;
     }
 
-    public function y(y:T->Float):AreaChart<T> {
+    public function y(y:(T) -> Float):AreaChart<T> {
         yFns.push(y);
         return this;
     }
@@ -222,7 +222,7 @@ class AreaChart<T> extends Plot {
     }
 
     /** Set the text of each y-axis tick label from the value at its tick. */
-    public function yTickFormat(format:Float->String):AreaChart<T> {
+    public function yTickFormat(format:(Float) -> String):AreaChart<T> {
         axes.yTickFormat = format;
         return this;
     }

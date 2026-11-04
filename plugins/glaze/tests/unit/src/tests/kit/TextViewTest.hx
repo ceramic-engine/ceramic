@@ -146,9 +146,9 @@ private class InlinePluginTestRoot extends Model implements Render {
 
 /** A view rendered in a plain container (several Rust test roots). */
 private class PlainRoot extends Model implements Render {
-    final build:Void->IntoElement;
+    final build:() -> IntoElement;
 
-    public function new(build:Void->IntoElement) {
+    public function new(build:() -> IntoElement) {
         super();
         this.build = build;
     }

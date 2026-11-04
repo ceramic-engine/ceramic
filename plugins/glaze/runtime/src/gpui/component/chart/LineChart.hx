@@ -42,9 +42,9 @@ class LineChart<T> extends Plot {
 
     final data:Array<T>;
 
-    var xFn:Null<T->String> = null;
+    var xFn:Null<(T) -> String> = null;
 
-    var yFn:Null<T->Float> = null;
+    var yFn:Null<(T) -> Float> = null;
 
     var strokeValue:Null<Hsla> = null;
 
@@ -114,7 +114,7 @@ class LineChart<T> extends Plot {
     }
 
     /** Set the hover tooltip's title for a datum, instead of its x value. */
-    public function tooltipTitle(title:T->String):LineChart<T> {
+    public function tooltipTitle(title:(T) -> String):LineChart<T> {
         tooltipContentValue.setTitle(title);
         return this;
     }
@@ -137,12 +137,12 @@ class LineChart<T> extends Plot {
         return this;
     }
 
-    public function x(x:T->String):LineChart<T> {
+    public function x(x:(T) -> String):LineChart<T> {
         xFn = x;
         return this;
     }
 
-    public function y(y:T->Float):LineChart<T> {
+    public function y(y:(T) -> Float):LineChart<T> {
         yFn = y;
         return this;
     }
@@ -222,7 +222,7 @@ class LineChart<T> extends Plot {
     }
 
     /** Set the text of each y-axis tick label from the value at its tick. */
-    public function yTickFormat(format:Float->String):LineChart<T> {
+    public function yTickFormat(format:(Float) -> String):LineChart<T> {
         axes.yTickFormat = format;
         return this;
     }

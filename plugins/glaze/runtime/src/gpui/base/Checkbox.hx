@@ -167,7 +167,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     /**
      * Defines application-owned styles for the checkbox's semantic states.
      */
-    public function styles(build:CheckboxStyles->CheckboxStyles):Checkbox {
+    public function styles(build:(CheckboxStyles) -> CheckboxStyles):Checkbox {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -220,19 +220,19 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Checkbox {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Checkbox {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Checkbox {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Checkbox {
         base.active(f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Checkbox {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Checkbox {
         base.focusVisible(f);
         return this;
     }
@@ -305,7 +305,7 @@ class CheckboxStyles {
     /**
      * Refines the root style when the checkbox is checked.
      */
-    public function checked(build:StateStyle->StateStyle):CheckboxStyles {
+    public function checked(build:(StateStyle) -> StateStyle):CheckboxStyles {
         checkedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
@@ -313,7 +313,7 @@ class CheckboxStyles {
     /**
      * Refines the root style when the checkbox is indeterminate.
      */
-    public function indeterminate(build:StateStyle->StateStyle):CheckboxStyles {
+    public function indeterminate(build:(StateStyle) -> StateStyle):CheckboxStyles {
         indeterminateStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
@@ -321,7 +321,7 @@ class CheckboxStyles {
     /**
      * Refines the root style when the checkbox is disabled.
      */
-    public function disabled(build:StateStyle->StateStyle):CheckboxStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):CheckboxStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
@@ -379,7 +379,7 @@ class CheckboxIndicator implements RenderOnce implements Styled implements Paren
      * Semantic styles of the indicator (Rust `CheckboxIndicatorStyles`, the
      * same three states as `CheckboxStyles`).
      */
-    public function styles(build:CheckboxStyles->CheckboxStyles):CheckboxIndicator {
+    public function styles(build:(CheckboxStyles) -> CheckboxStyles):CheckboxIndicator {
         semanticStyles = build(semanticStyles);
         return this;
     }

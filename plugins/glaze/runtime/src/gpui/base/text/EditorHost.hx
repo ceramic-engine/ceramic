@@ -94,7 +94,7 @@ class EditorHost {
      * Keys must be unique within one collection scope. Only prepainted leaves
      * are returned; absence is not evidence that a document leaf was removed.
      */
-    public static function collectLeafGeometry<R>(decorations:Map<Int, Array<RangedColor>>, f:Void->R):{result:R, leaves:Map<Int, LeafGeometry>} {
+    public static function collectLeafGeometry<R>(decorations:Map<Int, Array<RangedColor>>, f:() -> R):{result:R, leaves:Map<Int, LeafGeometry>} {
         final collector = new Collector(decorations);
         final result = EditorSeam.withSink(collector, f);
         final leaves:Map<Int, LeafGeometry> = new Map();

@@ -26,7 +26,7 @@ class EditorSeam {
     static var sink:Null<EditorSink> = null;
 
     /** Run `f` with `sink` installed; restores the previous sink afterwards, also when `f` throws. */
-    public static function withSink<R>(sink:EditorSink, f:Void->R):R {
+    public static function withSink<R>(sink:EditorSink, f:() -> R):R {
         final previous = EditorSeam.sink;
         EditorSeam.sink = sink;
         try {

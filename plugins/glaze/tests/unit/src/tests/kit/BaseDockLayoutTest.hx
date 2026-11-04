@@ -386,7 +386,7 @@ class BaseDockLayoutTest extends TestCase {
 
 /// builder.rs (the panels need an app)
 
-    function withApp<R>(f:App -> R):R {
+    function withApp<R>(f:(App) -> R):R {
         final app = new App(new TestDispatcher());
         return app.update(cx -> f(cx));
     }

@@ -142,7 +142,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /**
      * Defines application-owned styles for the button's semantic states.
      */
-    public function styles(build:ButtonStyles->ButtonStyles):Button {
+    public function styles(build:(ButtonStyles) -> ButtonStyles):Button {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -210,25 +210,25 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Button {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Button {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Button {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Button {
         base.active(f);
         return this;
     }
 
     /** Interactive style while the group is hovered (on `base`). */
-    public function groupHover(groupName:String, f:StyleBuilder->StyleBuilder):Button {
+    public function groupHover(groupName:String, f:(StyleBuilder) -> StyleBuilder):Button {
         base.groupHover(groupName, f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Button {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Button {
         base.focusVisible(f);
         return this;
     }
@@ -313,7 +313,7 @@ class ButtonStyles {
     /**
      * Refines the root style when the button is selected.
      */
-    public function selected(build:StateStyle->StateStyle):ButtonStyles {
+    public function selected(build:(StateStyle) -> StateStyle):ButtonStyles {
         selectedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
@@ -321,7 +321,7 @@ class ButtonStyles {
     /**
      * Refines the root style when the button is disabled.
      */
-    public function disabled(build:StateStyle->StateStyle):ButtonStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):ButtonStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }

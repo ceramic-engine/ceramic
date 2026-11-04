@@ -68,11 +68,11 @@ class CeramicAtlas extends ceramic.Entity implements PlatformAtlas {
      * Called when a texture is added (`textures` changed). A renderable using
      * these textures must refresh its used textures.
      */
-    public var onTexturesChange(get, set):Null<Void->Void>;
-    inline function get_onTexturesChange():Null<Void->Void> {
+    public var onTexturesChange(get, set):Null<() -> Void>;
+    inline function get_onTexturesChange():Null<() -> Void> {
         return state.backend.onTexturesChange;
     }
-    inline function set_onTexturesChange(value:Null<Void->Void>):Null<Void->Void> {
+    inline function set_onTexturesChange(value:Null<() -> Void>):Null<() -> Void> {
         return state.backend.onTexturesChange = value;
     }
 
@@ -328,10 +328,10 @@ class CeramicAtlasBackend implements AtlasBackend {
     /** Textures of `insertTexture()` tiles (not owned, never destroyed here) */
     final externalTextures:Array<Texture> = [];
 
-    public var onTexturesChange:Null<Void->Void> = null;
+    public var onTexturesChange:Null<() -> Void> = null;
 
     /** Called with the texture index of a path page emptied for reuse */
-    public var onEvictPage:Null<Int->Void> = null;
+    public var onEvictPage:Null<(Int) -> Void> = null;
 
     /**
      * Frames a path page stays untouched when no frame uses it anymore.

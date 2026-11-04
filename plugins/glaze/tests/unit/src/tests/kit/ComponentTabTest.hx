@@ -112,7 +112,7 @@ class ComponentTabTest extends TestCase {
         return a.equals(b);
     }
 
-    function notify(view:Entity<Harness>, cx:VisualTestContext, f:Harness->Void):Void {
+    function notify(view:Entity<Harness>, cx:VisualTestContext, f:(Harness) -> Void):Void {
         cx.update((_, app) -> view.update(app, (harness, c) -> {
             f(harness);
             c.notify();
@@ -122,7 +122,7 @@ class ComponentTabTest extends TestCase {
 /// tab.rs
 
     /** One `TabBar`, optionally capped, holding the tab `build` returns. */
-    function show(variant:TabVariant, maxWidth:Null<Pixels>, build:Tab->Tab):VisualTestContext {
+    function show(variant:TabVariant, maxWidth:Null<Pixels>, build:(Tab) -> Tab):VisualTestContext {
         return open((_, _) -> {
             final bar = new TabBar('tabs').withVariant(variant).selectedIndex(0);
             if (maxWidth != null) bar.maxWidth(maxWidth);
@@ -131,7 +131,7 @@ class ComponentTabTest extends TestCase {
     }
 
     /** Outer width of a labelled tab in every variant, capped or not. */
-    function variantWidths(build:Tab->Tab, maxWidth:Null<Pixels>):Array<Float> {
+    function variantWidths(build:(Tab) -> Tab, maxWidth:Null<Pixels>):Array<Float> {
         return [for (variant in VARIANTS) {
             final cx = show(variant, maxWidth, build);
             final tab = bounds(cx, 'tab');
@@ -245,7 +245,7 @@ class ComponentTabTest extends TestCase {
 /// tab_bar.rs: overflow menu
 
     /** Opens the overflow menu and activates its first item. */
-    function chooseFirstMenuItem(groupHandler:Bool, activate:VisualTestContext->Void):{clicks:Array<String>, events:Array<ClickEvent>} {
+    function chooseFirstMenuItem(groupHandler:Bool, activate:(VisualTestContext) -> Void):{clicks:Array<String>, events:Array<ClickEvent>} {
         final clicks:Array<String> = [];
         final events:Array<ClickEvent> = [];
         final tab = (label:String) -> new ProbedTab('$label-tab')
@@ -939,9 +939,9 @@ private class Harness extends Model implements Render {
 
     public var width:Float = 0.;
 
-    final build:Harness->IntoElement;
+    final build:(Harness) -> IntoElement;
 
-    public function new(build:Harness->IntoElement) {
+    public function new(build:(Harness) -> IntoElement) {
         super();
         this.build = build;
     }

@@ -164,7 +164,7 @@ class TextEditorHostTest extends KitTestCase {
         return drawAndInspect(blocks, decorations, extensions, width, _ -> null).geometries;
     }
 
-    function drawAndInspect<R>(blocks:Array<BlockNode>, decorations:Map<Int, Array<RangedColor>>, extensions:MarkdownExtensions, width:Float, inspect:Window->R):{geometries:Map<Int, LeafGeometry>, inspected:R} {
+    function drawAndInspect<R>(blocks:Array<BlockNode>, decorations:Map<Int, Array<RangedColor>>, extensions:MarkdownExtensions, width:Float, inspect:(Window) -> R):{geometries:Map<Int, LeafGeometry>, inspected:R} {
         final out = {value: new Map<Int, LeafGeometry>()};
         final result = addHost(new Host(blocks, extensions, decorations, out, width, null));
         settle(result.cx);

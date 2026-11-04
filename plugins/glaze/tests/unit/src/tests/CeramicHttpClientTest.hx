@@ -76,13 +76,13 @@ class CeramicHttpClientTest extends TestCase {
         }
     }
 
-    function withServer(f:LocalHttpServer->Void):Void {
+    function withServer(f:(LocalHttpServer) -> Void):Void {
         server = new LocalHttpServer(respond);
         server.start(() -> f(server));
     }
 
     /** Calls `then` on the first frame where `condition` holds. */
-    static function waitUntil(condition:Void->Bool, then:Void->Void):Void {
+    static function waitUntil(condition:() -> Bool, then:() -> Void):Void {
         if (condition()) {
             then();
             return;
@@ -90,7 +90,7 @@ class CeramicHttpClientTest extends TestCase {
         ceramic.App.app.onceUpdate(null, _ -> waitUntil(condition, then));
     }
 
-    function load(uri:String, done:ImageLoadResult->Void):Void {
+    function load(uri:String, done:(ImageLoadResult) -> Void):Void {
         ImageAssetLoader.load(Resource.Uri(uri), app).then(done);
     }
 
@@ -104,7 +104,7 @@ class CeramicHttpClientTest extends TestCase {
         }
     }
 
-    function asyncTestDefaultClientIsCeramic(done:Void->Void) {
+    function asyncTestDefaultClientIsCeramic(done:() -> Void) {
         assertTrue(Std.isOfType(app.httpClient(), CeramicHttpClient));
         // A test dispatcher keeps GPUI's NullHttpClient
         final testApp = new App(new gpui.TestDispatcher());
@@ -112,7 +112,7 @@ class CeramicHttpClientTest extends TestCase {
         done();
     }
 
-    function asyncTestPng(done:Void->Void) {
+    function asyncTestPng(done:() -> Void) {
         withServer(server -> {
             load(server.url('/image.png'), result -> {
                 assertLoaded(result, 3, 2);
@@ -121,7 +121,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestSvgServedAsText(done:Void->Void) {
+    function asyncTestSvgServedAsText(done:() -> Void) {
         withServer(server -> {
             load(server.url('/image.svg'), result -> {
                 // SVG rendered at scale 1 by `render_single_frame`, then sized
@@ -138,7 +138,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestNotFound(done:Void->Void) {
+    function asyncTestNotFound(done:() -> Void) {
         withServer(server -> {
             final uri = server.url('/missing.png');
             load(uri, result -> {
@@ -155,7 +155,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestConnectionRefused(done:Void->Void) {
+    function asyncTestConnectionRefused(done:() -> Void) {
         // Nothing listens on port 1
         final uri = 'http://127.0.0.1:1/image.png';
         load(uri, result -> {
@@ -169,7 +169,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestRedirectIsFollowed(done:Void->Void) {
+    function asyncTestRedirectIsFollowed(done:() -> Void) {
         withServer(server -> {
             load(server.url('/redirect.png'), result -> {
                 assertLoaded(result, 3, 2);
@@ -180,7 +180,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestQueryStringIsSent(done:Void->Void) {
+    function asyncTestQueryStringIsSent(done:() -> Void) {
         withServer(server -> {
             load(server.url('/query.png?v=1&w=2'), result -> {
                 assertLoaded(result, 5, 1);
@@ -194,7 +194,7 @@ class CeramicHttpClientTest extends TestCase {
      * remote images of the story (README badges and logo, image story) and
      * prints what each gives. Nothing is asserted.
      */
-    function asyncTestRemoteStoryImages(done:Void->Void) {
+    function asyncTestRemoteStoryImages(done:() -> Void) {
         if (Sys.getEnv('GPUI_TEST_NETWORK') != '1') {
             done();
             return;
@@ -228,7 +228,7 @@ class CeramicHttpClientTest extends TestCase {
     }
 
     /** `ceramic.Http` without `binary`: text bodies come as strings, like before */
-    function asyncTestCeramicHttpTextMode(done:Void->Void) {
+    function asyncTestCeramicHttpTextMode(done:() -> Void) {
         withServer(server -> {
             ceramic.Http.request({url: server.url('/hello.txt')}, response -> {
                 assertEquals(200, response.status);
@@ -247,7 +247,7 @@ class CeramicHttpClientTest extends TestCase {
         });
     }
 
-    function asyncTestCacheHit(done:Void->Void) {
+    function asyncTestCacheHit(done:() -> Void) {
         withServer(server -> {
             final uri = server.url('/image.png');
             final key = 'resource:' + Resource.Uri(uri).key();

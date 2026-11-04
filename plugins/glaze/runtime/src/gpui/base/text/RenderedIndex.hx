@@ -85,7 +85,7 @@ class RenderedIndex {
     }
 
     /** Rust `partition_point` over `leaves`. */
-    function partitionLeaves(pred:LeafSpan->Bool):Int {
+    function partitionLeaves(pred:(LeafSpan) -> Bool):Int {
         var lo = 0;
         var hi = leaves.length;
         while (lo < hi) {

@@ -579,7 +579,7 @@ class DialogClose implements RenderOnce implements Styled implements ParentEleme
      * activation. The builder only needs to supply presentation.
      * The wrapper does not also handle clicks when a trigger is supplied.
      */
-    public function trigger(build:gpui.base.Button->IntoElement):DialogClose {
+    public function trigger(build:(gpui.base.Button) -> IntoElement):DialogClose {
         final anchor = this.anchor;
         final button = new gpui.base.Button('close')
             .accessibilityLabel('Close')

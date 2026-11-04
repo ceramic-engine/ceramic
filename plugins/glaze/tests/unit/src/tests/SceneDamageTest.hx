@@ -24,7 +24,7 @@ class SceneDamageTest extends TestCase {
         scene.commitQuad(q);
     }
 
-    static function sceneOf(build:Scene->Void):Scene {
+    static function sceneOf(build:(Scene) -> Void):Scene {
         final scene = new Scene();
         build(scene);
         scene.finish();

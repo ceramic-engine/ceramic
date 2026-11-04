@@ -51,7 +51,7 @@ import gpui.Task;
  */
 class CeramicPlatformOperations implements PlatformOperations {
 
-    var quitCallback:Null<Void->Null<AnyTask>> = null;
+    var quitCallback:Null<() -> Null<AnyTask>> = null;
 
     var menus:Null<Array<OwnedMenu>> = null;
 
@@ -76,7 +76,7 @@ class CeramicPlatformOperations implements PlatformOperations {
             shutdown.onComplete(() -> ceramic.App.app.quit());
     }
 
-    public function onQuit(callback:Void->Null<AnyTask>):Void {
+    public function onQuit(callback:() -> Null<AnyTask>):Void {
         quitCallback = callback;
     }
 
@@ -159,26 +159,26 @@ class CeramicPlatformOperations implements PlatformOperations {
         return menus;
     }
 
-    var menuCommand:Null<gpui.Action->Void> = null;
+    var menuCommand:Null<(gpui.Action) -> Void> = null;
 
-    var validateMenuCommand:Null<gpui.Action->Bool> = null;
+    var validateMenuCommand:Null<(gpui.Action) -> Bool> = null;
 
-    var willOpenMenu:Null<Void->Void> = null;
+    var willOpenMenu:Null<() -> Void> = null;
 
     /** The operations that installed the current Ceramic menu bar (one per Ceramic app). */
     static var menuBarOwner:Null<CeramicPlatformOperations> = null;
 
     static var menuBarBound:Bool = false;
 
-    public function onAppMenuAction(callback:gpui.Action->Void):Void {
+    public function onAppMenuAction(callback:(gpui.Action) -> Void):Void {
         menuCommand = callback;
     }
 
-    public function onWillOpenAppMenu(callback:Void->Void):Void {
+    public function onWillOpenAppMenu(callback:() -> Void):Void {
         willOpenMenu = callback;
     }
 
-    public function onValidateAppMenuCommand(callback:gpui.Action->Bool):Void {
+    public function onValidateAppMenuCommand(callback:(gpui.Action) -> Bool):Void {
         validateMenuCommand = callback;
     }
 

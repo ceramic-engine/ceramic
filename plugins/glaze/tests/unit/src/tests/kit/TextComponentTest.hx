@@ -25,9 +25,9 @@ import testing.VisualTestContext;
 import gpui.Prelude.*;
 
 private class StatelessMarkdown extends Model implements Render {
-    final onRender:Void->Void;
+    final onRender:() -> Void;
 
-    public function new(onRender:Void->Void) {
+    public function new(onRender:() -> Void) {
         super();
         this.onRender = onRender;
     }

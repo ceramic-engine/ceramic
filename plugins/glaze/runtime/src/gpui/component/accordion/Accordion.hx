@@ -89,7 +89,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
     /**
      * Adds an AccordionItem to the Accordion.
      */
-    public function item(child:AccordionItem->AccordionItem):Accordion {
+    public function item(child:(AccordionItem) -> AccordionItem):Accordion {
         items.push(child(new AccordionItem()));
         return this;
     }
@@ -251,7 +251,7 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
      * toggles the item, so the hover feedback belongs there, not on the
      * whole item.
      */
-    public function hover(f:StyleBuilder->StyleBuilder):AccordionItem {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):AccordionItem {
         hoverStyle = StyleBuilder.build(f);
         return this;
     }

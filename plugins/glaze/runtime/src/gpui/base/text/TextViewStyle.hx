@@ -33,7 +33,7 @@ class TextViewStyle {
     var codeBackground_:Hsla;
     var border_:Hsla;
     var paragraphGap_:Rems;
-    var heading_:Int->StyleRefinement;
+    var heading_:(Int) -> StyleRefinement;
     var codeBlock_:StyleRefinement;
     var table_:StyleRefinement;
     var tableHead_:StyleRefinement;
@@ -220,7 +220,7 @@ class TextViewStyle {
     }
 
     /** Sets the style refinement for headings, selected by heading level (1-6). */
-    public function withHeading(heading:Int->StyleRefinement):TextViewStyle {
+    public function withHeading(heading:(Int) -> StyleRefinement):TextViewStyle {
         final style = clone();
         style.heading_ = heading;
         return style;

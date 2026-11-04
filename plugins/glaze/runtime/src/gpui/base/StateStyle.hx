@@ -25,7 +25,7 @@ class StateStyle implements Styled {
     /**
      * Optionally applies `then` (Rust `FluentBuilder::when`).
      */
-    public inline function when(condition:Bool, then:StateStyle->StateStyle):StateStyle {
+    public inline function when(condition:Bool, then:(StateStyle) -> StateStyle):StateStyle {
         return condition ? then(this) : this;
     }
 

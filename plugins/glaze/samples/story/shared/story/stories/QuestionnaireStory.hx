@@ -370,7 +370,7 @@ class QuestionnaireStory extends Model implements Story {
         return focusHandle_;
     }
 
-    static function style(f:StyleBuilder->StyleBuilder):StyleRefinement {
+    static function style(f:(StyleBuilder) -> StyleBuilder):StyleRefinement {
         return f(new StyleBuilder(new StyleRefinement())).style();
     }
 

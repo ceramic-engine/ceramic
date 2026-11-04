@@ -1877,8 +1877,8 @@ class Interactivity {
         activeTooltip:ActiveTooltipCell,
         tooltipId:Int,
         buildTooltip:(Window, App) -> {view:AnyView, hoverable:Bool},
-        checkIsHovered:Window->Bool,
-        checkIsHoveredDuringPrepaint:Window->Bool,
+        checkIsHovered:(Window) -> Bool,
+        checkIsHoveredDuringPrepaint:(Window) -> Bool,
         longPressTooltipActive:Ref<Bool>,
         showDelay:Null<Float>,
         window:Window
@@ -1927,8 +1927,8 @@ class Interactivity {
     static function handleTooltipMouseMove(
         activeTooltip:ActiveTooltipCell,
         buildTooltip:(Window, App) -> {view:AnyView, hoverable:Bool},
-        checkIsHovered:Window->Bool,
-        checkIsHoveredDuringPrepaint:Window->Bool,
+        checkIsHovered:(Window) -> Bool,
+        checkIsHoveredDuringPrepaint:(Window) -> Bool,
         tooltipId:Int,
         currentView:Int,
         phase:DispatchPhase,
@@ -1976,7 +1976,7 @@ class Interactivity {
     static function showTooltip(
         activeTooltip:ActiveTooltipCell,
         buildTooltip:(Window, App) -> {view:AnyView, hoverable:Bool},
-        checkIsHoveredDuringPrepaint:Window->Bool,
+        checkIsHoveredDuringPrepaint:(Window) -> Bool,
         longPressTooltipActive:Null<Ref<Bool>>,
         window:Window,
         cx:App
@@ -2005,7 +2005,7 @@ class Interactivity {
     static function handleTooltipCheckVisibleAndUpdate(
         activeTooltip:ActiveTooltipCell,
         tooltipIsHoverable:Bool,
-        checkIsHovered:Window->Bool,
+        checkIsHovered:(Window) -> Bool,
         tooltipBounds:Bounds,
         window:Window,
         cx:App

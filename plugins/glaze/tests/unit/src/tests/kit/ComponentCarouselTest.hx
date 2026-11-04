@@ -512,7 +512,7 @@ class ComponentCarouselTest extends TestCase {
         assertFalse(new Carousel('carousel', state).focusRing(false).isFocusRingEnabled());
     }
 
-    function openHarness<V:Model & Render>(build:Context<V>->V):VisualTestContext {
+    function openHarness<V:Model & Render>(build:(Context<V>) -> V):VisualTestContext {
         app.update(cx -> Component.init(cx));
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, cx:Context<V>) -> build(cx));
         contexts.push(opened.cx);

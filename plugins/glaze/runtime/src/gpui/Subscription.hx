@@ -14,7 +14,7 @@ package gpui;
  */
 class Subscription {
 
-    var unsubscribe:Null<Void->Void>;
+    var unsubscribe:Null<() -> Void>;
 
     @:allow(gpui.EntitySlot)
     var owner:Null<EntitySlot> = null;
@@ -23,7 +23,7 @@ class Subscription {
      * Creates a new subscription with a callback that gets invoked when
      * this subscription is disposed.
      */
-    public function new(unsubscribe:Void->Void) {
+    public function new(unsubscribe:() -> Void) {
         this.unsubscribe = unsubscribe;
     }
 
@@ -71,7 +71,7 @@ class Subscription {
         });
     }
 
-    function takeUnsubscribe():Null<Void->Void> {
+    function takeUnsubscribe():Null<() -> Void> {
         if (owner != null) {
             final slot = owner;
             owner = null;

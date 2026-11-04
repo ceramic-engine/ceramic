@@ -32,7 +32,7 @@ class Animation {
      * A function that maps normalized time to an animated value.
      * The result may exceed 0..1 for easing functions that overshoot.
      */
-    public var easing:Float->Float;
+    public var easing:(Float) -> Float;
 
     /**
      * The maximum number of times per second this animation re-renders.
@@ -81,7 +81,7 @@ class Animation {
      * The output is not clamped, allowing physical easing functions such as
      * springs to overshoot.
      */
-    public function withEasing(easing:Float->Float):Animation {
+    public function withEasing(easing:(Float) -> Float):Animation {
 
         this.easing = easing;
         return this;

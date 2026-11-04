@@ -166,7 +166,7 @@ class CanvasFallbackTest extends TestCase {
     }
 
     /** Expands `[start, end, code]` ranges into a lookup */
-    static function rangeLookup(ranges:Array<Array<Int>>):Int->Int {
+    static function rangeLookup(ranges:Array<Array<Int>>):(Int) -> Int {
         return c -> {
             var lo = 0;
             var hi = ranges.length - 1;

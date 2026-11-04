@@ -148,7 +148,7 @@ enum Matcher {
     DayOfWeek(days:Array<Int>);
     Interval(before:Null<NaiveDate>, after:Null<NaiveDate>);
     Range(from:Null<NaiveDate>, to:Null<NaiveDate>);
-    Custom(f:NaiveDate -> Bool);
+    Custom(f:(NaiveDate) -> Bool);
 }
 
 class MatcherTools {
@@ -161,7 +161,7 @@ class MatcherTools {
         return Matcher.Range(from, to);
     }
 
-    public static inline function custom(f:NaiveDate -> Bool):Matcher {
+    public static inline function custom(f:(NaiveDate) -> Bool):Matcher {
         return Matcher.Custom(f);
     }
 
@@ -651,13 +651,13 @@ class CalendarItem implements RenderOnce implements Styled implements ParentElem
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):CalendarItem {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):CalendarItem {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):CalendarItem {
+    public function active(f:(StyleBuilder) -> StyleBuilder):CalendarItem {
         base.active(f);
         return this;
     }

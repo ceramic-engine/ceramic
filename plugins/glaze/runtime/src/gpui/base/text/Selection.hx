@@ -54,7 +54,7 @@ class Selection {
             || (c >= 0x0300 && c <= 0x036F);
     }
 
-    public static function wordRangeFromChars(offset:Int, c:Int, prevChars:Void->Int, nextChars:Void->Int):Range {
+    public static function wordRangeFromChars(offset:Int, c:Int, prevChars:() -> Int, nextChars:() -> Int):Range {
         final charType = CharType.from(c);
         var start = offset;
         var end = offset + Utf8.codePointLength(c);

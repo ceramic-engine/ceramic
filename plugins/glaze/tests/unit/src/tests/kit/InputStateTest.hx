@@ -1933,7 +1933,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     /** Opens an editor inside a host listening for `Search`, focused, and presses the search shortcut once. */
-    function pressSearchShortcut(searchable:Bool):{editor:Entity<InputBaseState>, searchRequests:Void->Int} {
+    function pressSearchShortcut(searchable:Bool):{editor:Entity<InputBaseState>, searchRequests:() -> Int} {
         var searchRequests = 0;
         var editor:Entity<InputBaseState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {

@@ -24,7 +24,7 @@ class TestPlatformOperations implements PlatformOperations {
 
     final newPathPrompts:Array<{directory:String, suggestedName:Null<String>, task:Task<Null<String>>}> = [];
 
-    var quitCallback:Null<Void->Null<AnyTask>> = null;
+    var quitCallback:Null<() -> Null<AnyTask>> = null;
 
     var menus:Array<OwnedMenu> = [];
 
@@ -35,7 +35,7 @@ class TestPlatformOperations implements PlatformOperations {
         quitCount++;
     }
 
-    public function onQuit(callback:Void->Null<AnyTask>):Void {
+    public function onQuit(callback:() -> Null<AnyTask>):Void {
         quitCallback = callback;
     }
 
@@ -85,7 +85,7 @@ class TestPlatformOperations implements PlatformOperations {
      * Answers the oldest path prompt with `selectPaths(options)`
      * (`simulate_path_prompt_response`; `null` cancels).
      */
-    public function simulatePathPromptResponse(selectPaths:PathPromptOptions->Null<Array<String>>):Void {
+    public function simulatePathPromptResponse(selectPaths:(PathPromptOptions) -> Null<Array<String>>):Void {
         final prompt = pathPrompts.shift();
         if (prompt == null)
             throw 'no pending path prompt';
@@ -104,24 +104,24 @@ class TestPlatformOperations implements PlatformOperations {
         return menus;
     }
 
-    var menuActionCallback:Null<Action->Void> = null;
+    var menuActionCallback:Null<(Action) -> Void> = null;
 
-    var willOpenMenuCallback:Null<Void->Void> = null;
+    var willOpenMenuCallback:Null<() -> Void> = null;
 
-    var validateMenuCommandCallback:Null<Action->Bool> = null;
+    var validateMenuCommandCallback:Null<(Action) -> Bool> = null;
 
     /** GPUI's test platform ignores it; kept for `simulateMenuAction`. */
-    public function onAppMenuAction(callback:Action->Void):Void {
+    public function onAppMenuAction(callback:(Action) -> Void):Void {
         menuActionCallback = callback;
     }
 
     /** GPUI's test platform ignores it; kept for `simulateWillOpenMenu`. */
-    public function onWillOpenAppMenu(callback:Void->Void):Void {
+    public function onWillOpenAppMenu(callback:() -> Void):Void {
         willOpenMenuCallback = callback;
     }
 
     /** GPUI's test platform ignores it; kept for `simulateValidateMenuCommand`. */
-    public function onValidateAppMenuCommand(callback:Action->Bool):Void {
+    public function onValidateAppMenuCommand(callback:(Action) -> Bool):Void {
         validateMenuCommandCallback = callback;
     }
 

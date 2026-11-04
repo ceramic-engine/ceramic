@@ -383,7 +383,7 @@ class Bounds {
     /**
      * Returns new bounds with `f` applied to every value of origin and size.
      */
-    public inline function map(f:Float->Float):Bounds {
+    public inline function map(f:(Float) -> Float):Bounds {
 
         return new Bounds(origin.map(f), size.map(f));
 
@@ -392,7 +392,7 @@ class Bounds {
     /**
      * Returns generic bounds with `f` applied to every value of origin and size.
      */
-    public inline function mapOf<U>(f:Float->U):BoundsOf<U> {
+    public inline function mapOf<U>(f:(Float) -> U):BoundsOf<U> {
 
         return new BoundsOf<U>(origin.mapOf(f), size.mapOf(f));
 
@@ -401,7 +401,7 @@ class Bounds {
     /**
      * Returns new bounds with `f` applied to the origin only.
      */
-    public inline function mapOrigin(f:Float->Float):Bounds {
+    public inline function mapOrigin(f:(Float) -> Float):Bounds {
 
         return new Bounds(origin.map(f), size);
 
@@ -410,7 +410,7 @@ class Bounds {
     /**
      * Returns new bounds with `f` applied to the size only.
      */
-    public inline function mapSize(f:Float->Float):Bounds {
+    public inline function mapSize(f:(Float) -> Float):Bounds {
 
         return new Bounds(origin, size.map(f));
 

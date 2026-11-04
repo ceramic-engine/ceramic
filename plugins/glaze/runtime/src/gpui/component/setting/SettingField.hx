@@ -22,11 +22,11 @@ import gpui.component.setting.NumberField.NumberFieldOptions;
  */
 class ResetHandler {
 
-    public final isDirty:App -> Bool;
+    public final isDirty:(App) -> Bool;
 
     public final reset:(Window, App) -> Void;
 
-    public function new(isDirty:App -> Bool, reset:(Window, App) -> Void) {
+    public function new(isDirty:(App) -> Bool, reset:(Window, App) -> Void) {
         this.isDirty = isDirty;
         this.reset = reset;
     }
@@ -158,7 +158,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      * Function to get the value for this field.
      */
     @:allow(gpui.component.setting, tests)
-    final value:App -> T;
+    final value:(App) -> T;
 
     /**
      * Function to set the value for this field.
@@ -185,21 +185,21 @@ class SettingField<T> implements AnySettingField implements Styled {
     /**
      * Create a new Switch field.
      */
-    public static function switch_(value:App -> Bool, setValue:(Bool, App) -> Void):SettingField<Bool> {
+    public static function switch_(value:(App) -> Bool, setValue:(Bool, App) -> Void):SettingField<Bool> {
         return new SettingField<Bool>(BoolValue, SettingFieldType.Switch, value, setValue);
     }
 
     /**
      * Create a new Checkbox field.
      */
-    public static function checkbox(value:App -> Bool, setValue:(Bool, App) -> Void):SettingField<Bool> {
+    public static function checkbox(value:(App) -> Bool, setValue:(Bool, App) -> Void):SettingField<Bool> {
         return new SettingField<Bool>(BoolValue, SettingFieldType.Checkbox, value, setValue);
     }
 
     /**
      * Create a new Input field.
      */
-    public static function input(value:App -> String, setValue:(String, App) -> Void):SettingField<String> {
+    public static function input(value:(App) -> String, setValue:(String, App) -> Void):SettingField<String> {
         return new SettingField<String>(StringValue, SettingFieldType.Input, value, setValue);
     }
 
@@ -209,7 +209,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      * The popup menu does not scroll. For long option lists that may exceed
      * the viewport, use `scrollableDropdown` instead.
      */
-    public static function dropdown(options:Array<DropdownOption>, value:App -> String, setValue:(String, App) -> Void):SettingField<String> {
+    public static function dropdown(options:Array<DropdownOption>, value:(App) -> String, setValue:(String, App) -> Void):SettingField<String> {
         return new SettingField<String>(StringValue, SettingFieldType.Dropdown(options, false), value, setValue);
     }
 
@@ -217,7 +217,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      * Create a new Dropdown field whose popup menu scrolls when its content
      * exceeds the viewport.
      */
-    public static function scrollableDropdown(options:Array<DropdownOption>, value:App -> String, setValue:(String, App) -> Void):SettingField<String> {
+    public static function scrollableDropdown(options:Array<DropdownOption>, value:(App) -> String, setValue:(String, App) -> Void):SettingField<String> {
         return new SettingField<String>(StringValue, SettingFieldType.Dropdown(options, true), value, setValue);
     }
 
@@ -243,14 +243,14 @@ class SettingField<T> implements AnySettingField implements Styled {
     /**
      * Create a new Number Input field with the given options.
      */
-    public static function numberInput(options:NumberFieldOptions, value:App -> Float, setValue:(Float, App) -> Void):SettingField<Float> {
+    public static function numberInput(options:NumberFieldOptions, value:(App) -> Float, setValue:(Float, App) -> Void):SettingField<Float> {
         return new SettingField<Float>(FloatValue, SettingFieldType.NumberInput(options), value, setValue);
     }
 
     /**
      * Create a new setting field with the given get and set functions.
      */
-    function new(kind:SettingValueKind, fieldType:SettingFieldType, value:App -> T, setValue:(T, App) -> Void) {
+    function new(kind:SettingValueKind, fieldType:SettingFieldType, value:(App) -> T, setValue:(T, App) -> Void) {
         this.kind = kind;
         this.fieldTypeValue = fieldType;
         this.value = value;
@@ -282,7 +282,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      *
      * When set, this takes precedence over the `defaultValue` based reset.
      */
-    public function onReset(isDirty:App -> Bool, reset:(Window, App) -> Void):SettingField<T> {
+    public function onReset(isDirty:(App) -> Bool, reset:(Window, App) -> Void):SettingField<T> {
         this.resetHandler = new ResetHandler(isDirty, reset);
         return this;
     }

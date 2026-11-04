@@ -69,7 +69,7 @@ class TestCase {
         }
     }
 
-    function assertRaises(fn:Void->Void, ?message:String, ?pos:PosInfos):Void {
+    function assertRaises(fn:() -> Void, ?message:String, ?pos:PosInfos):Void {
         assertions++;
         var raised = false;
         try {

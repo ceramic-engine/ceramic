@@ -89,7 +89,7 @@ enum EasingKind {
     Steps(count:Int, position:StepPosition);
     /** Stop inputs and outputs, of the same length. */
     LinearStops(inputs:Array<Float>, outputs:Array<Float>);
-    Custom(easing:Float->Float);
+    Custom(easing:(Float) -> Float);
 }
 
 /**
@@ -127,7 +127,7 @@ abstract Easing(EasingKind) from EasingKind to EasingKind {
     /**
      * A custom curve (Rust `Easing::Custom`).
      */
-    public static inline function custom(easing:Float->Float):Easing {
+    public static inline function custom(easing:(Float) -> Float):Easing {
         return EasingKind.Custom(easing);
     }
 

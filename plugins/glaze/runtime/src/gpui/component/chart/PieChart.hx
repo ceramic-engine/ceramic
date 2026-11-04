@@ -91,29 +91,29 @@ class PieChart<T> extends Plot {
 
     var innerRadiusValue:Float = 0.;
 
-    var innerRadiusFnValue:Null<ArcData<T>->Float> = null;
+    var innerRadiusFnValue:Null<(ArcData<T>) -> Float> = null;
 
     var outerRadiusValue:Float = 0.;
 
-    var outerRadiusFnValue:Null<ArcData<T>->Float> = null;
+    var outerRadiusFnValue:Null<(ArcData<T>) -> Float> = null;
 
     var padAngleValue:Float = 0.;
 
-    var valueFn:Null<T->Float> = null;
+    var valueFn:Null<(T) -> Float> = null;
 
-    var colorFn:Null<T->Hsla> = null;
+    var colorFn:Null<(T) -> Hsla> = null;
 
     @:allow(tests)
-    var labelFn:Null<T->String> = null;
+    var labelFn:Null<(T) -> String> = null;
 
-    var labelLineColorFn:Null<T->Hsla> = null;
+    var labelLineColorFn:Null<(T) -> Hsla> = null;
 
     var labelColorValue:Null<Hsla> = null;
 
     var labelGapValue:Float = DEFAULT_LABEL_GAP;
 
     @:allow(tests)
-    var tooltipNameFn:Null<T->String> = null;
+    var tooltipNameFn:Null<(T) -> String> = null;
 
     var tooltipValueFn:Null<(T, Float, Float) -> String> = null;
 
@@ -169,7 +169,7 @@ class PieChart<T> extends Plot {
     }
 
     /** Set the inner radius of each slice from its arc. */
-    public function innerRadiusFn(innerRadius:ArcData<T>->Float):PieChart<T> {
+    public function innerRadiusFn(innerRadius:(ArcData<T>) -> Float):PieChart<T> {
         innerRadiusFnValue = innerRadius;
         return this;
     }
@@ -184,7 +184,7 @@ class PieChart<T> extends Plot {
     }
 
     /** Set the outer radius of each slice from its arc. */
-    public function outerRadiusFn(outerRadius:ArcData<T>->Float):PieChart<T> {
+    public function outerRadiusFn(outerRadius:(ArcData<T>) -> Float):PieChart<T> {
         outerRadiusFnValue = outerRadius;
         return this;
     }
@@ -199,23 +199,23 @@ class PieChart<T> extends Plot {
         return this;
     }
 
-    public function value(value:T->Float):PieChart<T> {
+    public function value(value:(T) -> Float):PieChart<T> {
         valueFn = value;
         return this;
     }
 
-    public function color(color:T->IntoHsla):PieChart<T> {
+    public function color(color:(T) -> IntoHsla):PieChart<T> {
         colorFn = t -> (color(t) : Hsla);
         return this;
     }
 
     /** Draw a leader-line label outside the ring for each slice. */
-    public function label(label:T->String):PieChart<T> {
+    public function label(label:(T) -> String):PieChart<T> {
         labelFn = label;
         return this;
     }
 
-    public function labelLineColor(color:T->Hsla):PieChart<T> {
+    public function labelLineColor(color:(T) -> Hsla):PieChart<T> {
         labelLineColorFn = color;
         return this;
     }
@@ -231,7 +231,7 @@ class PieChart<T> extends Plot {
     }
 
     /** Set the name of a slice's tooltip row. */
-    public function tooltipName(name:T->String):PieChart<T> {
+    public function tooltipName(name:(T) -> String):PieChart<T> {
         tooltipNameFn = name;
         return this;
     }

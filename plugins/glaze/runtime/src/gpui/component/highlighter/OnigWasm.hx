@@ -28,10 +28,10 @@ class OnigWasm {
 
     static var loading = false;
 
-    static final callbacks:Array<Bool->Void> = [];
+    static final callbacks:Array<(Bool) -> Void> = [];
 
     /** Loads the binding and the wasm file, then enables the engine; `done(true)` when it is in use. */
-    public static function load(done:Bool->Void):Void {
+    public static function load(done:(Bool) -> Void):Void {
         if (onigModule != null) {
             done(true);
             return;

@@ -48,7 +48,7 @@ class Transition {
         return new Transition(0).init(durationNanos, delay, easingValue);
     }
 
-    public function ease(easing:Float->Float):Transition {
+    public function ease(easing:(Float) -> Float):Transition {
         return new Transition(0).init(durationNanos, delayValue, Easing.custom(easing));
     }
 

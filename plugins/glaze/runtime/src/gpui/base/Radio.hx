@@ -116,7 +116,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     /**
      * Configures application-owned styles for the radio's semantic states.
      */
-    public function styles(build:RadioStyles->RadioStyles):Radio {
+    public function styles(build:(RadioStyles) -> RadioStyles):Radio {
         semanticStyles = build(semanticStyles);
         return this;
     }
@@ -177,19 +177,19 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     }
 
     /** Interactive style while hovered (on `base`). */
-    public function hover(f:StyleBuilder->StyleBuilder):Radio {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Radio {
         base.hover(f);
         return this;
     }
 
     /** Interactive style while pressed (on `base`). */
-    public function active(f:StyleBuilder->StyleBuilder):Radio {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Radio {
         base.active(f);
         return this;
     }
 
     /** Interactive style while focused by the keyboard (on `base`). */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Radio {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Radio {
         base.focusVisible(f);
         return this;
     }
@@ -248,12 +248,12 @@ class RadioStyles {
 
     public function new() {}
 
-    public function checked(build:StateStyle->StateStyle):RadioStyles {
+    public function checked(build:(StateStyle) -> StateStyle):RadioStyles {
         checkedStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }
 
-    public function disabled(build:StateStyle->StateStyle):RadioStyles {
+    public function disabled(build:(StateStyle) -> StateStyle):RadioStyles {
         disabledStyle.refine(build(new StateStyle()).intoRefinement());
         return this;
     }

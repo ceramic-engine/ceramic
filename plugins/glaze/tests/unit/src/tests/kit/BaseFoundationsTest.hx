@@ -123,7 +123,7 @@ class BaseFoundationsTest extends TestCase {
 
     // state_style.rs
 
-    function state(build:StateStyle->StateStyle):StyleRefinement {
+    function state(build:(StateStyle) -> StateStyle):StyleRefinement {
         return build(new StateStyle()).style();
     }
 

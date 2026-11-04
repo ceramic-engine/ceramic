@@ -36,7 +36,7 @@ class Point {
     /**
      * Returns a new point with `f` applied to both coordinates.
      */
-    public inline function map(f:Float->Float):Point {
+    public inline function map(f:(Float) -> Float):Point {
 
         return new Point(f(x), f(y));
 
@@ -45,7 +45,7 @@ class Point {
     /**
      * Returns a generic point with `f` applied to both coordinates.
      */
-    public inline function mapOf<U>(f:Float->U):PointOf<U> {
+    public inline function mapOf<U>(f:(Float) -> U):PointOf<U> {
 
         return new PointOf<U>(f(x), f(y));
 
@@ -63,7 +63,7 @@ class Point {
     /**
      * Returns a new point with `f` applied to the coordinate along the given axis (Rust trait `Along`).
      */
-    public inline function applyAlong(axis:Axis, f:Float->Float):Point {
+    public inline function applyAlong(axis:Axis, f:(Float) -> Float):Point {
 
         return axis == Horizontal ? new Point(f(x), y) : new Point(x, f(y));
 

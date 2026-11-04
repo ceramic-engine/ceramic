@@ -39,7 +39,7 @@ class Spinner implements RenderOnce implements Sizable {
 
     var speed:Float = 0.8;
 
-    var easing:Float->Float = Easing.easeInOut;
+    var easing:(Float) -> Float = Easing.easeInOut;
 
     var colorValue:Null<Hsla> = null;
 
@@ -64,7 +64,7 @@ class Spinner implements RenderOnce implements Sizable {
     /**
      * Set the easing of the rotation.
      */
-    public function ease(easing:Float->Float):Spinner {
+    public function ease(easing:(Float) -> Float):Spinner {
         this.easing = easing;
         return this;
     }

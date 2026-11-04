@@ -34,7 +34,7 @@ class SizeOf<T> {
     /**
      * Returns a new size with `f` applied to the width and height.
      */
-    public inline function map<U>(f:T->U):SizeOf<U> {
+    public inline function map<U>(f:(T) -> U):SizeOf<U> {
 
         return new SizeOf<U>(f(width), f(height));
 
@@ -43,7 +43,7 @@ class SizeOf<T> {
     /**
      * Returns a numeric size with `f` applied to the width and height.
      */
-    public inline function mapToSize(f:T->Float):Size {
+    public inline function mapToSize(f:(T) -> Float):Size {
 
         return new Size(f(width), f(height));
 
@@ -61,7 +61,7 @@ class SizeOf<T> {
     /**
      * Returns a new size with `f` applied to the value along the given axis (Rust trait `Along`).
      */
-    public inline function applyAlong(axis:Axis, f:T->T):SizeOf<T> {
+    public inline function applyAlong(axis:Axis, f:(T) -> T):SizeOf<T> {
 
         return axis == Horizontal ? new SizeOf<T>(f(width), height) : new SizeOf<T>(width, f(height));
 
@@ -70,7 +70,7 @@ class SizeOf<T> {
     /**
      * Structural equality. `eq` compares two values (default: `==`).
      */
-    public function equals(other:SizeOf<T>, ?eq:T->T->Bool):Bool {
+    public function equals(other:SizeOf<T>, ?eq:(T, T) -> Bool):Bool {
 
         if (other == null) return false;
         if (eq == null) return width == other.width && height == other.height;

@@ -35,9 +35,9 @@ class Line<T> {
 
     var dataValues:Array<T> = [];
 
-    var xFn:T->Null<Float> = _ -> null;
+    var xFn:(T) -> Null<Float> = _ -> null;
 
-    var yFn:T->Null<Float> = _ -> null;
+    var yFn:(T) -> Null<Float> = _ -> null;
 
     var strokeValue:Background = new Background();
 
@@ -62,13 +62,13 @@ class Line<T> {
     }
 
     /** Set the x of the Line. */
-    public function x(x:T->Null<Float>):Line<T> {
+    public function x(x:(T) -> Null<Float>):Line<T> {
         xFn = x;
         return this;
     }
 
     /** Set the y of the Line. */
-    public function y(y:T->Null<Float>):Line<T> {
+    public function y(y:(T) -> Null<Float>):Line<T> {
         yFn = y;
         return this;
     }

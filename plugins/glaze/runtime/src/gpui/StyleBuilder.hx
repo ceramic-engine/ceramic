@@ -28,7 +28,7 @@ class StyleBuilder implements Styled {
     /**
      * Runs `f` on a builder of a new refinement and returns the refinement.
      */
-    public static function build(f:StyleBuilder->StyleBuilder):StyleRefinement {
+    public static function build(f:(StyleBuilder) -> StyleBuilder):StyleRefinement {
         return f(new StyleBuilder()).style();
     }
 

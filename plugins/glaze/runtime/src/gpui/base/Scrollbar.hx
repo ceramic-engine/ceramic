@@ -780,7 +780,7 @@ class ScrollbarTrackStyle {
     }
 
     /** `FluentBuilder::when`. */
-    public function when(condition:Bool, then:ScrollbarTrackStyle->ScrollbarTrackStyle):ScrollbarTrackStyle {
+    public function when(condition:Bool, then:(ScrollbarTrackStyle) -> ScrollbarTrackStyle):ScrollbarTrackStyle {
         return condition ? then(this) : this;
     }
 
@@ -841,7 +841,7 @@ class ScrollbarThumbStyle {
     }
 
     /** `FluentBuilder::when`. */
-    public function when(condition:Bool, then:ScrollbarThumbStyle->ScrollbarThumbStyle):ScrollbarThumbStyle {
+    public function when(condition:Bool, then:(ScrollbarThumbStyle) -> ScrollbarThumbStyle):ScrollbarThumbStyle {
         return condition ? then(this) : this;
     }
 
@@ -886,38 +886,38 @@ class ScrollbarStyles {
 
     public function new() {}
 
-    public function track(build:ScrollbarTrackStyle->ScrollbarTrackStyle):ScrollbarStyles {
+    public function track(build:(ScrollbarTrackStyle) -> ScrollbarTrackStyle):ScrollbarStyles {
         build(_track);
         return this;
     }
 
-    public function trackHover(build:ScrollbarTrackStyle->ScrollbarTrackStyle):ScrollbarStyles {
+    public function trackHover(build:(ScrollbarTrackStyle) -> ScrollbarTrackStyle):ScrollbarStyles {
         build(_trackHover);
         return this;
     }
 
-    public function trackActive(build:ScrollbarTrackStyle->ScrollbarTrackStyle):ScrollbarStyles {
+    public function trackActive(build:(ScrollbarTrackStyle) -> ScrollbarTrackStyle):ScrollbarStyles {
         build(_trackActive);
         return this;
     }
 
-    public function thumb(build:ScrollbarThumbStyle->ScrollbarThumbStyle):ScrollbarStyles {
+    public function thumb(build:(ScrollbarThumbStyle) -> ScrollbarThumbStyle):ScrollbarStyles {
         build(_thumb);
         return this;
     }
 
-    public function thumbHover(build:ScrollbarThumbStyle->ScrollbarThumbStyle):ScrollbarStyles {
+    public function thumbHover(build:(ScrollbarThumbStyle) -> ScrollbarThumbStyle):ScrollbarStyles {
         build(_thumbHover);
         return this;
     }
 
-    public function thumbActive(build:ScrollbarThumbStyle->ScrollbarThumbStyle):ScrollbarStyles {
+    public function thumbActive(build:(ScrollbarThumbStyle) -> ScrollbarThumbStyle):ScrollbarStyles {
         build(_thumbActive);
         return this;
     }
 
     /** `FluentBuilder::when`. */
-    public function when(condition:Bool, then:ScrollbarStyles->ScrollbarStyles):ScrollbarStyles {
+    public function when(condition:Bool, then:(ScrollbarStyles) -> ScrollbarStyles):ScrollbarStyles {
         return condition ? then(this) : this;
     }
 
@@ -1219,7 +1219,7 @@ class Scrollbar extends Element {
         return this;
     }
 
-    public function styles(build:ScrollbarStyles->ScrollbarStyles):Scrollbar {
+    public function styles(build:(ScrollbarStyles) -> ScrollbarStyles):Scrollbar {
         build(_styles);
         return this;
     }

@@ -158,7 +158,7 @@ class CompanyListItem implements ListDelegateItem {
      * Make this item draggable for reordering, by using the interactivity of
      * the inner `ListItem`.
      */
-    public function draggable(ix:IndexPath, dropPosition:Null<DropPosition>, onDragStart:App->Void,
+    public function draggable(ix:IndexPath, dropPosition:Null<DropPosition>, onDragStart:(App) -> Void,
             onDragMove:(DragMoveEvent<DragCompany>, Window, App) -> Void, onDrop:(DragCompany, Window, App) -> Void):CompanyListItem {
         final name = company.name;
         this.dropPosition = dropPosition;

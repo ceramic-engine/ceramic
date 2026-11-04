@@ -1006,7 +1006,7 @@ private class PathSampler {
             }
             return r;
         }
-        function partitionPoint(first:Int, last:Int, pred:Int->Bool):Int {
+        function partitionPoint(first:Int, last:Int, pred:(Int) -> Bool):Int {
             var l = first;
             var r = last;
             while (l < r) {

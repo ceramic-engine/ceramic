@@ -83,7 +83,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Optionally applies `then` (Rust `FluentBuilder::when`).
      */
-    public inline function when(condition:Bool, then:Div->Div):Div {
+    public inline function when(condition:Bool, then:(Div) -> Div):Div {
         return condition ? then(this) : this;
     }
 
@@ -98,7 +98,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Applies `f` to this element (Rust `FluentBuilder::map`).
      */
-    public inline function map(f:Div->Div):Div {
+    public inline function map(f:(Div) -> Div):Div {
         return f(this);
     }
 
@@ -201,7 +201,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Apply the given style to this element when the mouse hovers over it.
      */
-    public function hover(f:StyleBuilder->StyleBuilder):Div {
+    public function hover(f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.hoverStyle = StyleBuilder.build(f);
         return this;
     }
@@ -209,7 +209,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Apply the given style to this element when the mouse hovers over a group member.
      */
-    public function groupHover(groupName:String, f:StyleBuilder->StyleBuilder):Div {
+    public function groupHover(groupName:String, f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.groupHoverStyle = new Interactivity.GroupStyle(groupName, StyleBuilder.build(f));
         return this;
     }
@@ -402,7 +402,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Apply the given style when the given data type is dragged over this element's group.
      */
-    public function groupDragOver<S>(type:Class<S>, groupName:String, f:StyleBuilder->StyleBuilder):Div {
+    public function groupDragOver<S>(type:Class<S>, groupName:String, f:(StyleBuilder) -> StyleBuilder):Div {
         if (interactivity.groupDragOverStyles == null) interactivity.groupDragOverStyles = [];
         interactivity.groupDragOverStyles.push({type: type, style: new Interactivity.GroupStyle(groupName, StyleBuilder.build(f))});
         return this;
@@ -456,7 +456,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Set the given styles to be applied when this element, specifically, is focused.
      * Requires that the element is focusable. Elements can be made focusable using `trackFocus`.
      */
-    public function focus(f:StyleBuilder->StyleBuilder):Div {
+    public function focus(f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.focusStyle = StyleBuilder.build(f);
         return this;
     }
@@ -464,7 +464,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Set the given styles to be applied when this element is inside another element that is focused.
      */
-    public function inFocus(f:StyleBuilder->StyleBuilder):Div {
+    public function inFocus(f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.inFocusStyle = StyleBuilder.build(f);
         return this;
     }
@@ -473,7 +473,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Set the given styles to be applied when this element is focused via keyboard navigation.
      * This is similar to CSS's `:focus-visible` pseudo-class.
      */
-    public function focusVisible(f:StyleBuilder->StyleBuilder):Div {
+    public function focusVisible(f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.focusVisibleStyle = StyleBuilder.build(f);
         return this;
     }
@@ -540,7 +540,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Set the given styles to be applied when this element is active.
      */
-    public function active(f:StyleBuilder->StyleBuilder):Div {
+    public function active(f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.activeStyle = StyleBuilder.build(f);
         return this;
     }
@@ -548,7 +548,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Set the given styles to be applied when this element's group is active.
      */
-    public function groupActive(groupName:String, f:StyleBuilder->StyleBuilder):Div {
+    public function groupActive(groupName:String, f:(StyleBuilder) -> StyleBuilder):Div {
         interactivity.groupActiveStyle = new Interactivity.GroupStyle(groupName, StyleBuilder.build(f));
         return this;
     }
