@@ -31,7 +31,8 @@ using StringTools;
  * `GPUI_STORY_TOUR_SCROLL_FRAMES` (default 0), the page is then scrolled
  * with the mouse wheel during that many frames (30 pixels per frame at the
  * center of the story area, the direction flips at the ends) and a line
- * `story tour: scroll ...` gives the median and mean frame cost.
+ * `story tour: scroll ...` gives the median, mean, 95th percentile and highest
+ * frame cost.
  *
  * `GPUI_STORY_TOUR_ONLY` restricts the tour to a comma separated list of
  * story names. Errors and exceptions are left to the app's log.
@@ -100,9 +101,14 @@ class StoryTour {
         log.info('story tour: ${indices.length} pages, $waitFrames frames each, $scrollFrames scroll frames, into $dir');
 
         // A frame costs from the start of Ceramic's update to the end of its
-        // last render of visuals (finishDraw is deferred to the next frame
-        // on Unity: `ceramic_pending_finish_draw`)
+        // last render of visuals, or of its draw where the draw finishes in
+        // the same frame (finishDraw is deferred to the next frame on Unity:
+        // `ceramic_pending_finish_draw`)
         ceramic.App.app.onEndRenderVisuals(null, () -> lastRenderEnd = now());
+        #if !ceramic_pending_finish_draw
+        // Backends without a renderer of visuals (headless) only finish their draw
+        ceramic.App.app.onFinishDraw(null, () -> lastRenderEnd = now());
+        #end
         ceramic.App.app.onPreUpdate(null, _ -> {
             final start = now();
             if (frameStart > 0 && lastRenderEnd > frameStart) {
@@ -166,7 +172,7 @@ class StoryTour {
         if (scrolling) {
             if (frame >= scrollFrames) {
                 final index = indices[position];
-                log.info('story tour: scroll $index ${names[index]} median ${fmt(median(costs))} ms, mean ${fmt(mean(costs))} ms over ${costs.length} frames');
+                log.info('story tour: scroll $index ${names[index]} median ${fmt(median(costs))} ms, mean ${fmt(mean(costs))} ms over ${costs.length} frames, p95 ${fmt(percentile(costs, 0.95))} ms, max ${fmt(max(costs, 0))} ms');
                 next();
             }
             else {
@@ -220,6 +226,13 @@ class StoryTour {
         final sorted = values.copy();
         sorted.sort((a, b) -> a < b ? -1 : a > b ? 1 : 0);
         return sorted[Std.int(sorted.length / 2)];
+    }
+
+    static function percentile(values:Array<Float>, p:Float):Float {
+        if (values.length == 0) return 0;
+        final sorted = values.copy();
+        sorted.sort((a, b) -> a < b ? -1 : a > b ? 1 : 0);
+        return sorted[Std.int(Math.min(sorted.length - 1, Math.floor(sorted.length * p)))];
     }
 
     static function max(values:Array<Float>, first:Float):Float {
