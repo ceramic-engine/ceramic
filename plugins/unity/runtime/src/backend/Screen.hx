@@ -566,11 +566,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     #if !no_backend_docs
     /**
+     * Mouse scroll per event of the Input System (`mouseScroll`, `mouseWheel`).
+     */
+    #end
+    public var scrollInput(default, null):ScrollInput = new ScrollInput();
+
+    #if !no_backend_docs
+    /**
      * Processes mouse input from Unity's Input System.
      * Handles button states, movement, and wheel scrolling.
      */
     #end
     function updateMouseInput() {
+
+        scrollInput.bind();
 
         var mouse = Mouse.current;
         if (mouse != null) {
@@ -578,22 +587,15 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
             var newMouseX = mouse.position.x.ReadValue() / density;
             var newMouseY = (pixelHeight - mouse.position.y.ReadValue()) / density;
 
-            // Use a factor to try to get a consistent value with other targets
-            var mouseScrollX = Math.floor(mouse.scroll.x.ReadValue());
-            var mouseScrollY = Math.floor(mouse.scroll.y.ReadValue());
-
-            if (mouseScrollX != 0 || mouseScrollY != 0) {
-                emitMouseWheel(mouseScrollX, mouseScrollY);
-            }
-            // TODO: emitMouseScroll once the unit of Unity's `Mouse.scroll`
-            // (it depends on the platform and the Input System version) is
-            // calibrated against the native scrolling of each platform
-
             if (newMouseX != mouseX || newMouseY != mouseY) {
                 mouseX = newMouseX;
                 mouseY = newMouseY;
                 emitMouseMove(mouseX, mouseY);
             }
+
+            // Scroll, one mouseScroll per event of the Input System, at the
+            // position just emitted (see backend.ScrollInput)
+            scrollInput.flush(this);
 
             if (mouse.leftButton.isPressed) {
                 if (!mouseLeftPressed) {

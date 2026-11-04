@@ -35,29 +35,150 @@ class TextInput implements spec.TextInput {
 
     #if !no_backend_docs
     /**
-     * Binds to Unity's onTextInput event for character input.
+     * Keyboard whose text and IME composition events are bound, if any.
+     */
+    #end
+    var boundKeyboard:Keyboard = null;
+
+    #if !no_backend_docs
+    /**
+     * Delegate bound to `Keyboard.onIMECompositionChange` (a C# delegate,
+     * kept to unbind it).
+     */
+    #end
+    var imeCompositionHandler:Dynamic = null;
+
+    #if !no_backend_docs
+    /**
+     * Joins the UTF-16 surrogates of characters outside the BMP (emoji),
+     * which Unity reports as two separate text input calls.
+     */
+    #end
+    final utf16Joiner = new ceramic.Utf16Joiner();
+
+    #if !no_backend_docs
+    /**
+     * Text and composition events received from the Input System, emitted
+     * by `flushPendingText()` (after the key events of the same frame, as
+     * SDL orders them).
+     */
+    #end
+    var pendingTexts:Array<String> = [];
+
+    #if !no_backend_docs
+    /**
+     * Kind of each pending event: 0 for committed text, 1 for a composition.
+     */
+    #end
+    var pendingKinds:Array<Int> = [];
+
+    #if !no_backend_docs
+    /**
+     * Binds to Unity's text input and IME composition events.
      */
     #end
     function bindTextInput():Void {
 
-        if (Keyboard.current != null) {
-            untyped __cs__('UnityEngine.InputSystem.Keyboard.current.onTextInput += handleTextInput');
+        updateKeyboardBinding();
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Binds the text events of `Keyboard.current`, again when it changes
+     * (no keyboard when the app started, a keyboard added later, a virtual
+     * keyboard of a test). Called every frame by `backend.Input`.
+     */
+    #end
+    @:allow(backend.Input)
+    function updateKeyboardBinding():Void {
+
+        final keyboard = Keyboard.current;
+        if (keyboard == boundKeyboard) return;
+
+        if (boundKeyboard != null) {
+            untyped __cs__('{0}.onTextInput -= handleTextInput', boundKeyboard);
+            if (imeCompositionHandler != null) {
+                untyped __cs__('{0}.onIMECompositionChange -= (System.Action<UnityEngine.InputSystem.LowLevel.IMECompositionString>){1}', boundKeyboard, imeCompositionHandler);
+            }
+        }
+
+        boundKeyboard = keyboard;
+        utf16Joiner.reset();
+
+        if (keyboard != null) {
+            untyped __cs__('{0}.onTextInput += handleTextInput', keyboard);
+            if (imeCompositionHandler == null) {
+                imeCompositionHandler = untyped __cs__('(System.Action<UnityEngine.InputSystem.LowLevel.IMECompositionString>)((s) => handleImeComposition(s.ToString()))');
+            }
+            untyped __cs__('{0}.onIMECompositionChange += (System.Action<UnityEngine.InputSystem.LowLevel.IMECompositionString>){1}', keyboard, imeCompositionHandler);
+            if (textEditing) {
+                untyped __cs__('{0}.SetIMEEnabled(true)', keyboard);
+            }
         }
 
     }
 
     #if !no_backend_docs
     /**
-     * Handles raw text input from Unity.
-     * Defers processing to next frame to avoid timing issues.
-     * @param csChar Unicode character from Unity
+     * Handles one UTF-16 code unit from Unity's `Keyboard.onTextInput`:
+     * surrogate pairs are joined, then the text waits for
+     * `flushPendingText()`.
+     * @param csChar UTF-16 code unit from Unity
      */
     #end
     @:keep function handleTextInput(csChar:Char16):Void {
 
-        ceramic.App.app.onceImmediate(function() {
-            _handleTextInput(csChar);
-        });
+        final unit:Int = untyped __cs__('(int){0}', csChar);
+        final text = utf16Joiner.push(unit);
+        if (text != null) {
+            pendingTexts.push(text);
+            pendingKinds.push(0);
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Handles a change of the IME composition (the whole composed text, an
+     * empty string when the composition ends).
+     * @param text The composed text
+     */
+    #end
+    @:keep function handleImeComposition(text:String):Void {
+
+        pendingTexts.push(text != null ? text : '');
+        pendingKinds.push(1);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Emits the text and composition events received since the previous
+     * call, in their order. Called by `backend.Input` after the key events.
+     */
+    #end
+    @:allow(backend.Input)
+    function flushPendingText():Void {
+
+        if (pendingTexts.length == 0) return;
+
+        final texts = pendingTexts;
+        final kinds = pendingKinds;
+        pendingTexts = [];
+        pendingKinds = [];
+
+        for (i in 0...texts.length) {
+            if (kinds[i] == 1) {
+                if (textEditing) {
+                    final value = texts[i];
+                    @:privateAccess ceramic.App.app.backend.input.emitTextComposition(value, value.length, 0);
+                }
+            }
+            else {
+                _handleTextInput(texts[i]);
+            }
+        }
 
     }
 
@@ -65,13 +186,13 @@ class TextInput implements spec.TextInput {
     /**
      * Processes text input and converts to appropriate Ceramic events.
      * Handles special keys and filters non-printable characters.
-     * @param csChar Unicode character to process
+     * @param char One character (one or two UTF-16 code units)
      */
     #end
-    @:keep function _handleTextInput(csChar:Char16):Void {
+    function _handleTextInput(char:String):Void {
 
         if (textEditing) {
-            var text:String = Std.string(csChar);
+            var text:String = char;
             var code:Int = text.charCodeAt(0);
             // Skip control characters and the private use codes unity gives for arrows and function keys
             if (code >= 32 && code != 127 && !(code >= 63232 && code <= 63254)) {
@@ -80,7 +201,6 @@ class TextInput implements spec.TextInput {
         }
 
         if (textInputActive) {
-            var char:String = Std.string(csChar);
             var code:Int = char.charCodeAt(0);
 
             #if ceramic_debug_text_input
@@ -204,8 +324,6 @@ class TextInput implements spec.TextInput {
     #end
     var textEditing:Bool = false;
 
-    var imeCompositionBound:Bool = false;
-
     #if !no_backend_docs
     /**
      * Enables IME input on the current keyboard and forwards its composition.
@@ -217,11 +335,8 @@ class TextInput implements spec.TextInput {
 
         textEditing = true;
 
+        updateKeyboardBinding();
         if (Keyboard.current != null) {
-            if (!imeCompositionBound) {
-                imeCompositionBound = true;
-                untyped __cs__('UnityEngine.InputSystem.Keyboard.current.onIMECompositionChange += (s) => handleImeComposition(s.ToString())');
-            }
             untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMEEnabled(true)');
         }
         setTextEditingArea(x, y, w, h, 0);
@@ -265,16 +380,6 @@ class TextInput implements spec.TextInput {
     public function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {
 
         // No virtual keyboard settings with Unity's text editing yet
-
-    }
-
-    @:keep function handleImeComposition(text:String):Void {
-
-        ceramic.App.app.onceImmediate(function() {
-            if (!textEditing) return;
-            final value = text != null ? text : '';
-            @:privateAccess ceramic.App.app.backend.input.emitTextComposition(value, value.length, 0);
-        });
 
     }
 

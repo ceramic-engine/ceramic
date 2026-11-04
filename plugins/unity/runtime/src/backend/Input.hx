@@ -160,7 +160,11 @@ class Input implements tracker.Events implements spec.Input {
     @:allow(backend.Backend)
     inline function update(delta:Float):Void {
 
-        updateKeyboardInput();
+        final textInput = ceramic.App.app.backend.textInput;
+        textInput.updateKeyboardBinding();
+        updateKeyboardInput(delta);
+        // Text after the key events of the same frame, like SDL orders them
+        textInput.flushPendingText();
         updateGamepadInput(delta);
 
     }
@@ -233,11 +237,33 @@ class Input implements tracker.Events implements spec.Input {
 
     }
 
-    function updateKeyboardInput() {
+    #if !no_backend_docs
+    /**
+     * Key repeat: Unity's Input System gives no repeated key down events, so
+     * the last pressed key (modifiers and lock keys excepted) repeats like
+     * the system would, with the system's delay and interval
+     * (`backend.KeyRepeatSettings`). Each repeat is a `keyDown` without
+     * `keyUp`, as SDL's repeats reach the clay backend. Its `delay` and
+     * `interval` can be changed.
+     */
+    #end
+    public var keyRepeat(default, null):ceramic.KeyRepeatTimer = new ceramic.KeyRepeatTimer(KeyRepeatSettings.delay(), KeyRepeatSettings.interval());
+
+    var repeatKeyCode:Int = KeyCode.UNKNOWN;
+
+    var repeatScanCode:Int = ScanCode.UNKNOWN;
+
+    var repeatPressedThisFrame:Bool = false;
+
+    function updateKeyboardInput(delta:Float) {
 
         // Codes from: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.0/api/UnityEngine.InputSystem.Key.html
 
         var keyboard = Keyboard.current;
+        repeatPressedThisFrame = false;
+        if (keyboard == null) {
+            keyRepeat.stop();
+        }
         if (keyboard != null && (keyboard.anyKey.wasPressedThisFrame || keyboard.anyKey.wasReleasedThisFrame || keyboard.anyKey.isPressed)) {
 
             updateKeyModifiers(keyboard);
@@ -324,7 +350,41 @@ class Input implements tracker.Events implements spec.Input {
             testKey(keyboard, 103, ScanCode.F10, KeyCode.F10);
             testKey(keyboard, 104, ScanCode.F11, KeyCode.F11);
             testKey(keyboard, 105, ScanCode.F12, KeyCode.F12);
+
+            updateKeyRepeat(keyboard, delta);
         }
+        else {
+            keyRepeat.stop();
+        }
+
+    }
+
+    function updateKeyRepeat(keyboard:Keyboard, delta:Float):Void {
+
+        final value = keyRepeat.key;
+        if (value == -1 || repeatPressedThisFrame) return;
+
+        var key:KeyControl = untyped __cs__('{0}[{1}]', keyboard.allKeys, value-1);
+        if (key == null || !key.isPressed) {
+            keyRepeat.stop();
+            return;
+        }
+
+        final count = keyRepeat.update(delta);
+        for (_ in 0...count) {
+            emitKeyDown({
+                keyCode: repeatKeyCode,
+                scanCode: repeatScanCode,
+                modifiers: keyModifiers
+            });
+        }
+
+    }
+
+    /** Whether the key at this index of `testKey()` never repeats (modifiers, lock keys). */
+    inline function isNonRepeatingKey(value:Int):Bool {
+
+        return (value >= 51 && value <= 58) || value == 72 || value == 73 || value == 75;
 
     }
 
@@ -408,11 +468,18 @@ class Input implements tracker.Events implements spec.Input {
                     keyCode = KeyCode.UNKNOWN;
                 }
             }
+            final resolvedKeyCode:Int = keyCode != null ? keyCode : (key.displayName != null ? key.displayName.charCodeAt(0) : KeyCode.UNKNOWN);
             emitKeyDown({
-                keyCode: keyCode != null ? keyCode : (key.displayName != null ? key.displayName.charCodeAt(0) : KeyCode.UNKNOWN),
+                keyCode: resolvedKeyCode,
                 scanCode: scanCode,
                 modifiers: keyModifiers
             });
+            if (!isNonRepeatingKey(value)) {
+                keyRepeat.press(value);
+                repeatKeyCode = resolvedKeyCode;
+                repeatScanCode = scanCode;
+                repeatPressedThisFrame = true;
+            }
         }
         if (key.wasReleasedThisFrame) {
             if (keyCode == null) {
@@ -431,6 +498,7 @@ class Input implements tracker.Events implements spec.Input {
                 scanCode: scanCode,
                 modifiers: keyModifiers
             });
+            keyRepeat.release(value);
         }
 
     }
