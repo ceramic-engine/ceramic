@@ -37,12 +37,51 @@ class TextLayout {
      * Requests a measured layout node for `text` with the current text style
      * of the window (the runs default to one run of that style).
      */
+    /**
+     * `[style.toRun(len)]`, shared with the last texts laid out with the
+     * same style values and length (the runs are only read: shaping and
+     * truncation copy what they change). 4 ways per length slot.
+     */
+    static final recentRuns:Array<Array<TextRun>> = [for (_ in 0...RECENT_RUNS) null];
+
+    static inline final RECENT_RUNS = 256;
+
+    static inline final RUN_SLOTS = 64;
+
+    static function defaultRuns(style:TextStyle, len:Int):Array<TextRun> {
+        // 4 ways per length slot (texts of one length in several styles)
+        final base = (len & (RUN_SLOTS - 1)) * 4;
+        for (way in 0...4) {
+            final cached = recentRuns[base + way];
+            if (cached == null)
+                continue;
+            final run = cached[0];
+            final font = run.font;
+            if (run.len == len && font.family == style.fontFamily && font.features.equals(style.fontFeatures)
+                && (font.fallbacks == null ? style.fontFallbacks == null : font.fallbacks.equals(style.fontFallbacks))
+                && (font.weight:Float) == (style.fontWeight:Float) && font.style == style.fontStyle
+                && run.color.equals(style.color) && TextRun.sameColor(run.backgroundColor, style.backgroundColor)
+                && TextRun.sameUnderline(run.underline, style.underline)
+                && TextRun.sameStrikethrough(run.strikethrough, style.strikethrough)) {
+                return cached;
+            }
+        }
+        final runs = [style.toRun(len)];
+        final way = recentRunsNext[len & (RUN_SLOTS - 1)];
+        recentRunsNext[len & (RUN_SLOTS - 1)] = (way + 1) & 3;
+        recentRuns[base + way] = runs;
+        return runs;
+    }
+
+    /** The way of each slot replaced next */
+    static final recentRunsNext:Array<Int> = [for (_ in 0...RUN_SLOTS) 0];
+
     public function layout(text:String, runs:Null<Array<TextRun>>, window:Window, cx:App):LayoutId {
         final textStyle = window.currentTextStyle();
         final fontSize = textStyle.fontSize.toPixels(window.remSize());
         final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixelsOf(fontSize, window.remSize()));
 
-        final runs:Array<TextRun> = runs != null ? runs : [textStyle.toRun(Utf8.byteLength(text))];
+        final runs:Array<TextRun> = runs != null ? runs : defaultRuns(textStyle, Utf8.byteLength(text));
         final elementState = this;
 
         return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {

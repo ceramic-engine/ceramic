@@ -115,7 +115,7 @@ class App {
 
     final globalsByType:IntMap<GlobalCell> = new IntMap();
 
-    final windowInvalidatorsByEntity:IntMap<IntMap<WindowInvalidator>> = new IntMap();
+    final windowInvalidatorsByEntity:IntMap<EntityInvalidators> = new IntMap();
 
     /**
      * Called when a `RefreshWindows` effect is applied. Plugged by windows (step 7).
@@ -566,9 +566,11 @@ class App {
         var live = false;
         var effect = false;
         if (invalidators != null) {
-            for (invalidator in invalidators) {
+            // By index (a map iteration copies its values into an array on hxcpp)
+            final list = invalidators.invalidators;
+            for (i in 0...list.length) {
                 live = true;
-                if (invalidator.invalidateView(entityId, this)) {
+                if (list[i].invalidateView(entityId, this)) {
                     effect = true;
                 }
             }
@@ -587,7 +589,7 @@ class App {
     public function addWindowInvalidator(entityId:Int, windowId:Int, invalidator:WindowInvalidator):Void {
         var invalidators = windowInvalidatorsByEntity.get(entityId);
         if (invalidators == null) {
-            invalidators = new IntMap();
+            invalidators = new EntityInvalidators();
             windowInvalidatorsByEntity.set(entityId, invalidators);
         }
         invalidators.set(windowId, invalidator);
@@ -1485,6 +1487,40 @@ class App {
     function dispatchKeystrokeInterceptors(keystroke:Keystroke, inputPreference:InputPreference, contextStack:Array<KeyContext>, window:Window):Void {
         final event = new KeystrokeEvent(keystroke, inputPreference, null, contextStack);
         keystrokeInterceptors.retain(0, callback -> callback(event, window, this));
+    }
+
+}
+
+/**
+ * The window invalidators of an entity by window id (the map they were in,
+ * as two arrays: few windows, iterated on every notify without allocating).
+ */
+private class EntityInvalidators {
+
+    public final windowIds:Array<Int> = [];
+
+    public final invalidators:Array<WindowInvalidator> = [];
+
+    public function new() {}
+
+    public function set(windowId:Int, invalidator:WindowInvalidator):Void {
+        final index = windowIds.indexOf(windowId);
+        if (index != -1) {
+            invalidators[index] = invalidator;
+        }
+        else {
+            windowIds.push(windowId);
+            invalidators.push(invalidator);
+        }
+    }
+
+    public function remove(windowId:Int):Bool {
+        final index = windowIds.indexOf(windowId);
+        if (index == -1)
+            return false;
+        windowIds.splice(index, 1);
+        invalidators.splice(index, 1);
+        return true;
     }
 
 }

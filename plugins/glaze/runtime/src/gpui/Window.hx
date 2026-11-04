@@ -133,7 +133,13 @@ class StateModel<T> extends Model {
  * A mouse listener registered for the next frame (Rust `AnyMouseListener`),
  * called for events of the given kind only.
  */
-private class MouseListenerEntry {
+/**
+ * A mouse listener of the next frame (internal: subclasses keep the state of
+ * the element listeners in fields instead of closures).
+ */
+@:noCompletion
+@:allow(gpui)
+class MouseListenerEntry {
 
     public final kind:PlatformInputKind;
 
@@ -154,12 +160,48 @@ private class MouseListenerEntry {
         this.hitbox = hitbox;
     }
 
-    public inline function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+    public function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
         if (elementListener != null) {
             elementListener(event, phase, hitbox, window, cx);
         }
         else {
             listener(event, phase, window, cx);
+        }
+    }
+
+}
+
+/**
+ * The hover listener of an element (`Interactivity.paintMouseListeners`):
+ * its state in fields instead of a closure capturing it.
+ */
+private class HoverListenerEntry extends MouseListenerEntry {
+
+    final hoverState:Null<Interactivity.ElementHoverState>;
+
+    final currentView:Int;
+
+    /** The hover state the view was painted with: -1 when not tracked, else 0 or 1 */
+    final paintedHovered:Int;
+
+    public function new(hitbox:Hitbox, hoverState:Null<Interactivity.ElementHoverState>, currentView:Int, paintedHovered:Int) {
+        super(MouseMove, null, null, hitbox);
+        this.hoverState = hoverState;
+        this.currentView = currentView;
+        this.paintedHovered = paintedHovered;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        final hovered = hitbox.isHovered(window);
+        final wasHovered = hoverState != null && hoverState.element;
+        if (phase == Capture && hovered != wasHovered) {
+            if (hoverState != null) {
+                hoverState.element = hovered;
+                cx.notify(currentView);
+            }
+        }
+        else if (phase == Capture && paintedHovered != -1 && hovered != (paintedHovered == 1)) {
+            cx.notify(currentView);
         }
     }
 
@@ -3631,6 +3673,21 @@ class Window implements WindowInvalidator {
      * Like `onMouseEvent()`, for a listener of an element called with its
      * hitbox (the same as registering `(e, p, w, cx) -> listener(e, p, hitbox, w, cx)`).
      */
+    /** Registers a mouse listener entry for the next frame (internal) */
+    @:allow(gpui)
+    function addMouseListenerEntry(entry:MouseListenerEntry):Void {
+        nextFrame.mouseListeners.push(entry);
+    }
+
+    /**
+     * The hover listener of an element (see `Interactivity.paintMouseListeners`),
+     * without a closure. `paintedHovered`: -1 when not tracked, else 0 or 1.
+     */
+    @:allow(gpui)
+    function onElementHover(hitbox:Hitbox, hoverState:Null<Interactivity.ElementHoverState>, currentView:Int, paintedHovered:Int):Void {
+        nextFrame.mouseListeners.push(new HoverListenerEntry(hitbox, hoverState, currentView, paintedHovered));
+    }
+
     @:allow(gpui)
     function onElementMouseEvent(kind:PlatformInputKind, listener:Interactivity.ElementMouseListener, hitbox:Hitbox):Void {
         nextFrame.mouseListeners.push(new MouseListenerEntry(kind, null, listener, hitbox));

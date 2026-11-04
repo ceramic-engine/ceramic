@@ -1266,21 +1266,10 @@ class Interactivity {
             // differs from `hoverState.element`, which a first frame drawn
             // under the mouse leaves unset: an uncached view is fixed by the
             // next full redraw, a cached one is not).
-            final paintedHovered = window.viewCaching && hoverState != null ? hitbox.isHovered(window) : null;
+            final paintedHovered = window.viewCaching && hoverState != null ? (hitbox.isHovered(window) ? 1 : 0) : -1;
 
-            window.onMouseEvent(MouseMove, (_, phase, window, cx) -> {
-                final hovered = hitbox.isHovered(window);
-                final wasHovered = hoverState != null && hoverState.element;
-                if (phase == Capture && hovered != wasHovered) {
-                    if (hoverState != null) {
-                        hoverState.element = hovered;
-                        cx.notify(currentView);
-                    }
-                }
-                else if (phase == Capture && paintedHovered != null && hovered != paintedHovered) {
-                    cx.notify(currentView);
-                }
-            });
+            // The listener's state in an entry, without a closure (`Window.HoverListenerEntry`)
+            window.onElementHover(hitbox, hoverState, currentView, paintedHovered);
         }
 
         if (groupHoverStyle != null) {
@@ -1354,39 +1343,11 @@ class Interactivity {
                 if (elementState.clickedState == null) elementState.clickedState = new ElementClickedState();
                 final clickedState = elementState.clickedState;
 
-                final hasAuxClickListeners = auxClickListeners.length > 0;
-                window.onMouseEvent(MouseDown, (event, phase, window, _) -> {
-                    final event:MouseDownEvent = cast event;
-                    if (phase == Bubble && (event.button == Left || hasAuxClickListeners) && hitbox.isHovered(window)) {
-                        pendingMouseDown.value = event;
-                        window.refresh();
-                    }
-                });
-
-                var dragListenerLeft = dragListener;
-                window.onMouseEvent(MouseMove, (event, phase, window, cx) -> {
-                    if (phase == Capture) {
-                        return;
-                    }
-
-                    final event:MouseMoveEvent = cast event;
-                    final mouseDown = pendingMouseDown.value;
-                    if (mouseDown != null
-                        && !cx.hasActiveDrag()
-                        && event.position.sub(mouseDown.position).magnitude() > DRAG_THRESHOLD
-                        && dragListenerLeft != null
-                        && mouseDown.button == Left) {
-                        final listener = dragListenerLeft;
-                        dragListenerLeft = null;
-                        clickedState.reset();
-                        final cursorOffset = event.position.sub(hitbox.origin);
-                        final drag = listener.render(listener.value, cursorOffset, window, cx);
-                        cx.activeDrag = new AnyDrag(drag, listener.value, cursorOffset, dragCursorStyle);
-                        pendingMouseDown.value = null;
-                        window.refresh();
-                        cx.stopPropagation();
-                    }
-                });
+                // The state the three click listeners share (Rust closures), in
+                // one object and three listener entries instead of closures
+                final clickState = new ClickListenerState(hitbox, pendingMouseDown, clickedState, clickListeners, auxClickListeners, dragListener, dragCursorStyle);
+                window.addMouseListenerEntry(new ClickMouseDownEntry(clickState));
+                window.addMouseListenerEntry(new ClickMouseMoveEntry(clickState));
 
                 if (isFocused) {
                     // Record the focus generation at which an enter/space key
@@ -1433,43 +1394,7 @@ class Interactivity {
                     });
                 }
 
-                var capturedMouseDown:Null<MouseDownEvent> = null;
-                window.onMouseEvent(MouseUp, (event, phase, window, cx) -> {
-                    switch phase {
-                        // Clear the pending mouse down during the capture phase,
-                        // so that it happens even if another event handler stops
-                        // propagation.
-                        case Capture:
-                            if (pendingMouseDown.value != null && hitbox.isHovered(window)) {
-                                capturedMouseDown = pendingMouseDown.value;
-                                pendingMouseDown.value = null;
-                                window.refresh();
-                            }
-                            else if (pendingMouseDown.value != null) {
-                                // Clear the pending mouse down event (without firing click handlers)
-                                // if the hitbox is not being hovered.
-                                pendingMouseDown.value = null;
-                                window.refresh();
-                            }
-                        // Fire click handlers during the bubble phase.
-                        case Bubble:
-                            final mouseDown = capturedMouseDown;
-                            if (mouseDown != null) {
-                                capturedMouseDown = null;
-                                final mouseClick = ClickEvent.Mouse(new MouseClickEvent(mouseDown, cast event));
-                                if (mouseDown.button == Left) {
-                                    for (listener in clickListeners) {
-                                        listener(mouseClick, window, cx);
-                                    }
-                                }
-                                else {
-                                    for (listener in auxClickListeners) {
-                                        listener(mouseClick, window, cx);
-                                    }
-                                }
-                            }
-                    }
-                });
+                window.addMouseListenerEntry(new ClickMouseUpEntry(clickState));
             }
 
             final hoverListener = this.hoverListener;
@@ -2074,6 +1999,152 @@ class GroupHitboxes {
         final stack = cx.groupHitboxes.get(name);
         if (stack != null) {
             Stacks.drop(stack);
+        }
+    }
+
+}
+
+/**
+ * The state of the click listeners of an element for one frame (what the
+ * listeners of `Interactivity.paintMouseListeners` capture in Rust).
+ */
+private class ClickListenerState {
+
+    public final hitbox:Hitbox;
+
+    public final pendingMouseDown:Ref<Null<MouseDownEvent>>;
+
+    public final clickedState:ElementClickedState;
+
+    public final clickListeners:Array<(ClickEvent, Window, App) -> Void>;
+
+    public final auxClickListeners:Array<(ClickEvent, Window, App) -> Void>;
+
+    public final hasAuxClickListeners:Bool;
+
+    /** The drag listener, until a drag starts */
+    public var dragListenerLeft:Null<DragListener>;
+
+    public final dragCursorStyle:Null<CursorStyle>;
+
+    /** The mouse down taken in the capture phase of a mouse up */
+    public var capturedMouseDown:Null<MouseDownEvent> = null;
+
+    public function new(hitbox:Hitbox, pendingMouseDown:Ref<Null<MouseDownEvent>>, clickedState:ElementClickedState,
+            clickListeners:Array<(ClickEvent, Window, App) -> Void>, auxClickListeners:Array<(ClickEvent, Window, App) -> Void>,
+            dragListener:Null<DragListener>, dragCursorStyle:Null<CursorStyle>) {
+        this.hitbox = hitbox;
+        this.pendingMouseDown = pendingMouseDown;
+        this.clickedState = clickedState;
+        this.clickListeners = clickListeners;
+        this.auxClickListeners = auxClickListeners;
+        this.hasAuxClickListeners = auxClickListeners.length > 0;
+        this.dragListenerLeft = dragListener;
+        this.dragCursorStyle = dragCursorStyle;
+    }
+
+}
+
+private class ClickMouseDownEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:ClickListenerState;
+
+    public function new(state:ClickListenerState) {
+        super(MouseDown, null, null, null);
+        this.state = state;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        final event:MouseDownEvent = cast event;
+        if (phase == Bubble && (event.button == Left || state.hasAuxClickListeners) && state.hitbox.isHovered(window)) {
+            state.pendingMouseDown.value = event;
+            window.refresh();
+        }
+    }
+
+}
+
+private class ClickMouseMoveEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:ClickListenerState;
+
+    public function new(state:ClickListenerState) {
+        super(MouseMove, null, null, null);
+        this.state = state;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Capture) {
+            return;
+        }
+
+        final event:MouseMoveEvent = cast event;
+        final state = this.state;
+        final mouseDown = state.pendingMouseDown.value;
+        if (mouseDown != null
+            && !cx.hasActiveDrag()
+            && event.position.sub(mouseDown.position).magnitude() > @:privateAccess Interactivity.DRAG_THRESHOLD
+            && state.dragListenerLeft != null
+            && mouseDown.button == Left) {
+            final listener = state.dragListenerLeft;
+            state.dragListenerLeft = null;
+            state.clickedState.reset();
+            final cursorOffset = event.position.sub(state.hitbox.origin);
+            final drag = listener.render(listener.value, cursorOffset, window, cx);
+            cx.activeDrag = new AnyDrag(drag, listener.value, cursorOffset, state.dragCursorStyle);
+            state.pendingMouseDown.value = null;
+            window.refresh();
+            cx.stopPropagation();
+        }
+    }
+
+}
+
+private class ClickMouseUpEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:ClickListenerState;
+
+    public function new(state:ClickListenerState) {
+        super(MouseUp, null, null, null);
+        this.state = state;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        final state = this.state;
+        final pendingMouseDown = state.pendingMouseDown;
+        switch phase {
+            // Clear the pending mouse down during the capture phase,
+            // so that it happens even if another event handler stops
+            // propagation.
+            case Capture:
+                if (pendingMouseDown.value != null && state.hitbox.isHovered(window)) {
+                    state.capturedMouseDown = pendingMouseDown.value;
+                    pendingMouseDown.value = null;
+                    window.refresh();
+                }
+                else if (pendingMouseDown.value != null) {
+                    // Clear the pending mouse down event (without firing click handlers)
+                    // if the hitbox is not being hovered.
+                    pendingMouseDown.value = null;
+                    window.refresh();
+                }
+            // Fire click handlers during the bubble phase.
+            case Bubble:
+                final mouseDown = state.capturedMouseDown;
+                if (mouseDown != null) {
+                    state.capturedMouseDown = null;
+                    final mouseClick = ClickEvent.Mouse(new MouseClickEvent(mouseDown, cast event));
+                    if (mouseDown.button == Left) {
+                        for (listener in state.clickListeners) {
+                            listener(mouseClick, window, cx);
+                        }
+                    }
+                    else {
+                        for (listener in state.auxClickListeners) {
+                            listener(mouseClick, window, cx);
+                        }
+                    }
+                }
         }
     }
 

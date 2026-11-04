@@ -215,8 +215,36 @@ class ViewElement extends Element {
     }
 
     override function elementId():Null<ElementId> {
-        return entityId != -1 ? ElementId.View(entityId) : null;
+        if (entityId == -1)
+            return null;
+        // Made once per element (it is asked in each phase)
+        var id = viewElementId;
+        if (id == null || viewElementIdEntity != entityId) {
+            id = ElementId.View(entityId);
+            viewElementId = id;
+            viewElementIdEntity = entityId;
+        }
+        return id;
     }
+
+    /** `ElementId.Name(componentName)`, made once per element (it is pushed in each phase) */
+    function componentElementId():ElementId {
+        var id = componentId;
+        if (id == null || componentIdName != componentName) {
+            id = ElementId.Name(componentName);
+            componentId = id;
+            componentIdName = componentName;
+        }
+        return id;
+    }
+
+    var componentId:Null<ElementId> = null;
+
+    var componentIdName:Null<String> = null;
+
+    var viewElementId:Null<ElementId> = null;
+
+    var viewElementIdEntity:Int = -1;
 
     function renderView(window:Window, cx:App):AnyElement {
         if (view != null) {
@@ -264,7 +292,7 @@ class ViewElement extends Element {
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         if (entityId == -1) {
             // Stateless path: isolate subtree via type name (no entity identity).
-            window.pushElementId(ElementId.Name(componentName));
+            window.pushElementId(componentElementId());
             rendered = renderView(window, cx);
             final layoutId = rendered.requestLayout(window, cx);
             window.popElementId();
@@ -319,7 +347,7 @@ class ViewElement extends Element {
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         if (entityId == -1) {
-            window.pushElementId(ElementId.Name(componentName));
+            window.pushElementId(componentElementId());
             rendered.prepaint(window, cx);
             window.popElementId();
             return;
@@ -511,7 +539,7 @@ class ViewElement extends Element {
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         if (entityId == -1) {
-            window.pushElementId(ElementId.Name(componentName));
+            window.pushElementId(componentElementId());
             rendered.paint(window, cx);
             window.popElementId();
             rendered = null;
