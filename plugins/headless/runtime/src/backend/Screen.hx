@@ -329,9 +329,11 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     /**
      * Captures a screenshot and saves it as a PNG file or returns the PNG data.
      * 
-     * In headless mode, this always returns null since there's no visual content to capture.
+     * In headless mode, this always returns null since there's no visual content to capture,
+     * and no file is written at `path`. Ceramic's `screen.toPng()` still calls its callback,
+     * after the next draw.
      * 
-     * @param path Optional file path to save the PNG to
+     * @param path Optional file path to save the PNG to (ignored)
      * @param done Callback function called with the PNG data (always null)
      */
     #end
