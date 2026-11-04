@@ -347,6 +347,20 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function menuWillOpen();
 
+    /**
+     * Fired when the light or dark appearance of the system changes. Not
+     * fired by the Unity backend yet.
+     * @param appearance The new appearance
+     */
+    @event function systemAppearanceChange(appearance:ceramic.SystemAppearance);
+
+    /**
+     * Fired when the user's scrollbar preference changes. Not fired by the
+     * Unity backend.
+     * @param autoHide Whether scrollbars should only show while scrolling
+     */
+    @event function autoHideScrollbarsChange(autoHide:Bool);
+
 /// Public API
 
     #if !no_backend_docs
@@ -460,6 +474,19 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     /** What the system would ask to validate the item with the given id. */
     public function isMenuItemEnabled(id:Int):Bool {
         return menuItemEnabled != null && menuItemEnabled(id);
+    }
+
+    /** No dock menu on Unity: does nothing. */
+    public function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {}
+
+    /** Not read yet on Unity: always `LIGHT`. */
+    public function getSystemAppearance():ceramic.SystemAppearance {
+        return LIGHT;
+    }
+
+    /** Not read yet on Unity: always false. */
+    public function getAutoHideScrollbars():Bool {
+        return false;
     }
 
     #if !no_backend_docs

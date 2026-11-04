@@ -140,6 +140,28 @@ interface Screen {
     function setMenuBar(menus:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void;
 
     /**
+     * Installs the menu shown when the app icon in the dock is right clicked
+     * (macOS native builds), replacing the current one; an empty list
+     * removes it. Every item has its `id` set (distinct from the menu bar
+     * ids). Backends emit `menuAction(id)` when an item is chosen, and ask
+     * `isEnabled(id)` when the system validates an item. Does nothing
+     * elsewhere.
+     */
+    function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void;
+
+    /**
+     * The light or dark appearance of the system (`LIGHT` where the platform
+     * does not tell). Backends emit `systemAppearanceChange` when it changes.
+     */
+    function getSystemAppearance():ceramic.SystemAppearance;
+
+    /**
+     * Whether the user prefers scrollbars that only show while scrolling.
+     * Backends emit `autoHideScrollbarsChange` when it changes.
+     */
+    function getAutoHideScrollbars():Bool;
+
+    /**
      * Shows or hides the mouse cursor while it is over the app.
      * Has no effect on platforms without a mouse cursor.
      * 

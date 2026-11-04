@@ -1095,7 +1095,27 @@ class ClayEvents extends clay.Events {
     }
 
     /**
-     * A menu of the native menu bar opens.
+     * The light or dark theme of the system changed.
+     * @param dark Whether the system now uses a dark theme
+     */
+    override function systemThemeChange(dark:Bool) {
+
+        backend.screen.emitSystemAppearanceChange(dark ? ceramic.SystemAppearance.DARK : ceramic.SystemAppearance.LIGHT);
+
+    }
+
+    /**
+     * The user's scrollbar preference changed.
+     * @param autoHide Whether scrollbars should only show while scrolling
+     */
+    override function autoHideScrollbarsChange(autoHide:Bool) {
+
+        backend.screen.emitAutoHideScrollbarsChange(autoHide);
+
+    }
+
+    /**
+     * A menu of the native menu bar, or the dock menu, opens.
      */
     override function menuWillOpen() {
 

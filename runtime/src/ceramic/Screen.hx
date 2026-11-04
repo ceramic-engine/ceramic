@@ -358,18 +358,32 @@ class Screen extends Entity implements Observable implements RenderTarget {
     @event function windowFocusChange(focused:Bool);
 
     /**
-     * An item of the menu bar (`setMenuBar`) was chosen: clicked in the
-     * menu, or its shortcut was pressed and no `keyDown` listener handled
-     * the key (`input.keyDownHandled`). Emitted at the start of a frame, in
-     * order with the input events.
+     * An item of the menu bar (`setMenuBar`) or of the dock menu
+     * (`setDockMenu`) was chosen: clicked in the menu, or its shortcut was
+     * pressed and no `keyDown` listener handled the key
+     * (`input.keyDownHandled`). Emitted at the start of a frame, in order
+     * with the input events.
      */
     @event function menuAction(item:MenuItem);
 
     /**
-     * A menu of the menu bar opens (emitted at the start of the next frame:
-     * the app does not run while the system tracks the menu).
+     * A menu of the menu bar, or the dock menu, opens (emitted at the start
+     * of the next frame: the app does not run while the system tracks the
+     * menu).
      */
     @event function menuWillOpen();
+
+    /**
+     * The light or dark appearance of the system changed (see
+     * `systemAppearance`). Emitted at the start of a frame.
+     */
+    @event function systemAppearanceChange(appearance:SystemAppearance);
+
+    /**
+     * The user's scrollbar preference changed (see `autoHideScrollbars`).
+     * Emitted at the start of a frame.
+     */
+    @event function autoHideScrollbarsChange(autoHide:Bool);
 
 /// Lifecycle
 
@@ -648,7 +662,7 @@ class Screen extends Entity implements Observable implements RenderTarget {
         // Menu bar
         app.backend.screen.onMenuAction(this, function(id) {
             app.beginUpdateCallbacks.push(function() {
-                final item = menuItemsById.get(id);
+                final item = menuItemById(id);
                 if (item != null) {
                     emitMenuAction(item);
                 }
@@ -666,6 +680,26 @@ class Screen extends Entity implements Observable implements RenderTarget {
         app.backend.screen.onMenuWillOpen(this, function() {
             app.beginUpdateCallbacks.push(function() {
                 emitMenuWillOpen();
+            });
+        });
+
+        // System appearance and scrollbar preference
+        systemAppearance = app.backend.screen.getSystemAppearance();
+        app.backend.screen.onSystemAppearanceChange(this, function(appearance) {
+            app.beginUpdateCallbacks.push(function() {
+                if (systemAppearance != appearance) {
+                    systemAppearance = appearance;
+                    emitSystemAppearanceChange(appearance);
+                }
+            });
+        });
+        autoHideScrollbars = app.backend.screen.getAutoHideScrollbars();
+        app.backend.screen.onAutoHideScrollbarsChange(this, function(autoHide) {
+            app.beginUpdateCallbacks.push(function() {
+                if (autoHideScrollbars != autoHide) {
+                    autoHideScrollbars = autoHide;
+                    emitAutoHideScrollbarsChange(autoHide);
+                }
             });
         });
 
@@ -2022,6 +2056,27 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
     }
 
+/// System preferences
+
+    /**
+     * The light or dark appearance chosen in the system settings: SDL's
+     * system theme on native builds (macOS, Windows, Linux, iOS, Android),
+     * `prefers-color-scheme` on the web; `LIGHT` where the platform does not
+     * tell (and on Unity for now). Updated at the start of a frame, right
+     * before `systemAppearanceChange` is emitted.
+     */
+    public var systemAppearance(default, null):SystemAppearance = LIGHT;
+
+    /**
+     * Whether the user prefers scrollbars that only show while scrolling,
+     * for apps that draw their own scrollbars. macOS native builds: the
+     * preferred scroller style is overlay (System Settings, Appearance,
+     * "Show scroll bars"; `autoHideScrollbarsChange` is emitted when it
+     * changes). Web, iOS and Android: true. Windows, Linux, headless (unless
+     * a test emits a change) and Unity: false.
+     */
+    public var autoHideScrollbars(default, null):Bool = false;
+
 /// Menu bar
 
     /**
@@ -2086,8 +2141,64 @@ class Screen extends Entity implements Observable implements RenderTarget {
 
     }
 
+/// Dock menu
+
     /**
-     * Whether the given menu bar item can be chosen: `menuItemValidator`
+     * The items last given to `setDockMenu` (`null` before).
+     */
+    public var dockMenu(default, null):Null<Array<MenuItem>> = null;
+
+    var dockMenuItemsById:IntMap<MenuItem> = new IntMap();
+
+    /**
+     * Installs the menu shown when the app icon in the dock is right
+     * clicked, above the items of the system, replacing the current one (an
+     * empty list removes it). Its items are actions, separators and
+     * submenus; choosing one emits `menuAction`, and `menuItemValidator`
+     * decides whether it can be chosen, like the menu bar items.
+     *
+     * Native dock menu on macOS (clay native builds). Elsewhere the items
+     * are kept in `dockMenu` and nothing is shown.
+     *
+     * @param items The items of the dock menu
+     */
+    public function setDockMenu(items:Array<MenuItem>):Void {
+
+        if (items == null) items = [];
+        dockMenu = items;
+        dockMenuItemsById = new IntMap();
+        for (item in items) {
+            assignDockMenuItemIds(item);
+        }
+        app.backend.screen.setDockMenu(items, function(id) {
+            final item = dockMenuItemsById.get(id);
+            return item != null && isMenuItemEnabled(item);
+        });
+
+    }
+
+    function assignDockMenuItemIds(item:MenuItem):Void {
+
+        item.assignId(nextMenuItemId++);
+        dockMenuItemsById.set(item.id, item);
+        if (item.items != null) {
+            for (child in item.items) {
+                assignDockMenuItemIds(child);
+            }
+        }
+
+    }
+
+    /** The menu bar or dock menu item with the given id, if any. */
+    function menuItemById(id:Int):Null<MenuItem> {
+
+        final item = menuItemsById.get(id);
+        return item != null ? item : dockMenuItemsById.get(id);
+
+    }
+
+    /**
+     * Whether the given menu bar or dock menu item can be chosen: `menuItemValidator`
      * when set, `item.enabled` otherwise.
      */
     public function isMenuItemEnabled(item:MenuItem):Bool {

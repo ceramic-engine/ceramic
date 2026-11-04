@@ -156,6 +156,21 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
      */
     @event function menuWillOpen();
 
+    /**
+     * Fired when the light or dark appearance of the system changes. Never
+     * fired by the headless backend: tests emit it to simulate a change (the
+     * appearance then reads the emitted value).
+     * @param appearance The new appearance
+     */
+    @event function systemAppearanceChange(appearance:ceramic.SystemAppearance);
+
+    /**
+     * Fired when the user's scrollbar preference changes. Never fired by the
+     * headless backend: tests emit it to simulate a change.
+     * @param autoHide Whether scrollbars should only show while scrolling
+     */
+    @event function autoHideScrollbarsChange(autoHide:Bool);
+
 /// Public API
 
     #if !no_backend_docs
@@ -287,9 +302,46 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         menuItemEnabled = isEnabled;
     }
 
-    /** What the system would ask to validate the item with the given id. */
+    /** What the system would ask to validate the item with the given id (menu bar or dock menu). */
     public function isMenuItemEnabled(id:Int):Bool {
-        return menuItemEnabled != null && menuItemEnabled(id);
+        if (menuItemEnabled != null && menuItemEnabled(id)) return true;
+        return dockMenuItemEnabled != null && dockMenuItemEnabled(id);
+    }
+
+    /** The dock menu last installed (nothing is shown). */
+    public var dockMenu(default, null):Array<ceramic.MenuItem> = null;
+
+    var dockMenuItemEnabled:(id:Int)->Bool = null;
+
+    /** No dock: keeps the items for tests (`dockMenu`, `isMenuItemEnabled`). */
+    public function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+        dockMenu = items;
+        dockMenuItemEnabled = isEnabled;
+    }
+
+    var systemAppearance:ceramic.SystemAppearance = LIGHT;
+
+    /** `LIGHT` unless a test emitted `systemAppearanceChange` with another value. */
+    public function getSystemAppearance():ceramic.SystemAppearance {
+        return systemAppearance;
+    }
+
+    function willEmitSystemAppearanceChange(appearance:ceramic.SystemAppearance):Void {
+        systemAppearance = appearance;
+    }
+
+    var autoHideScrollbars:Bool = false;
+
+    /**
+     * False (like GPUI's test platform) unless a test emitted
+     * `autoHideScrollbarsChange(true)`.
+     */
+    public function getAutoHideScrollbars():Bool {
+        return autoHideScrollbars;
+    }
+
+    function willEmitAutoHideScrollbarsChange(autoHide:Bool):Void {
+        autoHideScrollbars = autoHide;
     }
 
     public function setCursorVisible(visible:Bool):Void {

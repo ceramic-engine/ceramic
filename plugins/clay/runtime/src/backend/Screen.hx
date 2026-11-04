@@ -139,9 +139,24 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @event function menuKeyEquivalent(id:Int);
 
     /**
-     * Fired when a menu of the menu bar opens (macOS native builds).
+     * Fired when a menu of the menu bar, or the dock menu, opens (macOS
+     * native builds).
      */
     @event function menuWillOpen();
+
+    /**
+     * Fired when the light or dark appearance of the system changes (SDL's
+     * system theme on native builds, `prefers-color-scheme` on the web).
+     * @param appearance The new appearance
+     */
+    @event function systemAppearanceChange(appearance:ceramic.SystemAppearance);
+
+    /**
+     * Fired when the user's scrollbar preference changes (macOS native
+     * builds: the preferred scroller style).
+     * @param autoHide Whether scrollbars should only show while scrolling
+     */
+    @event function autoHideScrollbarsChange(autoHide:Bool);
 
 #if (web && !no_resume_audio_context)
 
@@ -316,6 +331,36 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     }
 
+    /**
+     * Dock menu on macOS (`Clay.app.runtime.setDockMenu`, an `NSMenu` given
+     * by the application delegate); nothing elsewhere.
+     */
+    public function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+
+        dockMenuItemEnabled = isEnabled;
+        Clay.app.runtime.setDockMenu([for (item in items) toClayMenuItem(item)]);
+
+    }
+
+    var dockMenuItemEnabled:(id:Int)->Bool = null;
+
+    /** SDL's system theme on native builds, `prefers-color-scheme` on the web. */
+    public function getSystemAppearance():ceramic.SystemAppearance {
+
+        return Clay.app.runtime.isSystemThemeDark() ? ceramic.SystemAppearance.DARK : ceramic.SystemAppearance.LIGHT;
+
+    }
+
+    /**
+     * macOS native builds: the preferred scroller style is overlay. Web, iOS
+     * and Android: true. Windows and Linux: false.
+     */
+    public function getAutoHideScrollbars():Bool {
+
+        return Clay.app.runtime.autoHideScrollbars();
+
+    }
+
     static function toClayMenuItem(item:ceramic.MenuItem):clay.MenuItemSpec {
 
         return {
@@ -336,7 +381,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     @:allow(backend.ClayEvents)
     function isMenuItemEnabled(id:Int):Bool {
 
-        return menuItemEnabled != null && menuItemEnabled(id);
+        if (menuItemEnabled != null && menuItemEnabled(id)) return true;
+        return dockMenuItemEnabled != null && dockMenuItemEnabled(id);
 
     }
 
