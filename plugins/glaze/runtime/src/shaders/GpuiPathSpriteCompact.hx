@@ -116,6 +116,15 @@ class GpuiPathSpriteCompact_Vert extends Vert {
 
 }
 
+/**
+ * `math: 'safe'`: on Unity, Metal's safe math (no effect on GLSL). With
+ * Metal's fast math, the dither noise of gradient fills computed other bits
+ * than the GLSL output through ANGLE on the same GPU (one level on most
+ * dithered path pixels); with safe math the Unity captures are the same as
+ * the web ones there. `GpuiQuad` keeps fast math: its dash code matches
+ * the web only with it (see `dashAlpha()`).
+ */
+@shade({ math: 'safe' })
 class GpuiPathSpriteCompact_Frag extends Frag {
 
     @param var mainTex:Sampler2D;

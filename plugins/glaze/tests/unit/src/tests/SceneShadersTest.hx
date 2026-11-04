@@ -54,4 +54,16 @@ class SceneShadersTest extends TestCase {
         #end
     }
 
+    function testRenderTextureMirrorFollowsTheBackend():Void {
+        // The scene is drawn mirrored into its render texture only where
+        // Ceramic flips render textures (clay): on Unity the mirror made the
+        // render pass rasterize the scene upside down compared to the screen
+        // (other interpolated bits than the web, see docs/UNITY.md)
+        #if unity
+        assertFalse(@:privateAccess SceneRenderable.MIRROR_TARGET);
+        #else
+        assertTrue(@:privateAccess SceneRenderable.MIRROR_TARGET);
+        #end
+    }
+
 }

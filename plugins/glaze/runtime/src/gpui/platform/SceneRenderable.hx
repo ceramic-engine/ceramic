@@ -241,6 +241,20 @@ class SceneRenderable extends Renderable {
     var targetQuad:Null<ceramic.Quad> = null;
 
     /**
+     * Whether `SceneTargetDrawer` draws the scene mirrored into the render
+     * texture (and `targetQuad` mirrors it back), so that the GPU
+     * rasterizes and interpolates the primitives exactly like on the screen.
+     * On clay, Ceramic flips what it draws into a render texture: the mirror
+     * cancels that flip. Ceramic's Unity backend draws render textures the
+     * way it draws the screen (Unity orients render textures itself), so the
+     * mirror would do the opposite there: the Unity captures in this mode
+     * differed from the web on dithered gradients and antialiased edges
+     * (interpolated positions a few ulps apart), and gave the same bytes as
+     * the screen mode once the mirror was left out.
+     */
+    static final MIRROR_TARGET:Bool = #if unity false #else true #end;
+
+    /**
      * Font gamma (see GPUI's `ZED_FONTS_GAMMA`), clamped to 1.0..2.2.
      *
      * Defaults to 1.0 (no correction), like GPUI's Metal renderer (macOS),
@@ -508,7 +522,7 @@ class SceneRenderable extends Renderable {
         if (targetQuad == null) {
             targetQuad = new ceramic.Quad();
             // Rows bottom up (see `SceneTargetDrawer.render()`)
-            targetQuad.scaleY = -1;
+            if (MIRROR_TARGET) targetQuad.scaleY = -1;
             // Input goes to this renderable (see `GpuiInput`)
             targetQuad.touchable = false;
             add(targetQuad);
@@ -611,7 +625,7 @@ class SceneRenderable extends Renderable {
     inline function layoutTargetQuad():Void {
 
         targetQuad.size(width, height);
-        targetQuad.pos(0, height);
+        targetQuad.pos(0, MIRROR_TARGET ? height : 0);
 
     }
 
@@ -1775,7 +1789,8 @@ class SceneTargetDrawer extends Renderable {
         // the top, like loaded textures). The scene is drawn mirrored so that
         // this flip gives back the vertex positions the screen would get: the
         // GPU rasterizes and interpolates exactly like on the screen, with
-        // the texture rows bottom up (`targetQuad` shows them mirrored back)
+        // the texture rows bottom up (`targetQuad` shows them mirrored back).
+        // Not on Unity, which does not flip (see `MIRROR_TARGET`)
         final height = owner.targetTexture != null ? owner.targetTexture.height : owner.height;
 
         // The reference drawer of `verifyPartialRendering` is left out
@@ -1786,9 +1801,13 @@ class SceneTargetDrawer extends Renderable {
         }
         else
         #end
-        {
+        if (SceneRenderable.MIRROR_TARGET) {
             owner.regionClip = false;
             owner.renderScene(draw, matA, -matB, matC, -matD, matTX, height - matTY);
+        }
+        else {
+            owner.regionClip = false;
+            owner.renderScene(draw, matA, matB, matC, matD, matTX, matTY);
         }
         if (!reference) gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
 
