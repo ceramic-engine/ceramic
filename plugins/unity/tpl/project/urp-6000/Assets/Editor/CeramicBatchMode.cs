@@ -131,6 +131,68 @@ public static class CeramicBatchMode
         EditorApplication.Exit(failedShaders > 0 || checkedShaders == 0 ? 1 : 0);
     }
 
+    /// <summary>
+    /// Entry point for -executeMethod CeramicBatchMode.BuildPlayer (no -quit needed):
+    /// builds a standalone player of the Ceramic scene for the editor's platform
+    /// (macOS, Windows or Linux) and exits with code 0 when the build succeeded,
+    /// 1 otherwise. Options: -ceramicBuildPath &lt;path&gt; (required: the .app on
+    /// macOS, the executable elsewhere), -ceramicScriptingBackend mono|il2cpp
+    /// (default mono), -ceramicDevelopment 1 (a development player),
+    /// -ceramicIncrementalGc 0|1 (sets the incremental garbage collector of the
+    /// player settings; the project's setting is kept when omitted).
+    /// The player runs without any window with -batchmode, for example
+    /// &lt;path&gt;.app/Contents/MacOS/&lt;name&gt; -batchmode -logFile &lt;log&gt;.
+    /// </summary>
+    public static void BuildPlayer()
+    {
+        var path = ReadArg("-ceramicBuildPath");
+        if (path == null)
+        {
+            Debug.LogError("CeramicBatchMode: -ceramicBuildPath is required");
+            EditorApplication.Exit(1);
+            return;
+        }
+        var il2cpp = ReadArg("-ceramicScriptingBackend") == "il2cpp";
+        var development = ReadArg("-ceramicDevelopment") == "1";
+
+        BuildTarget target;
+        switch (Application.platform)
+        {
+            case RuntimePlatform.OSXEditor: target = BuildTarget.StandaloneOSX; break;
+            case RuntimePlatform.WindowsEditor: target = BuildTarget.StandaloneWindows64; break;
+            default: target = BuildTarget.StandaloneLinux64; break;
+        }
+        var namedTarget = UnityEditor.Build.NamedBuildTarget.Standalone;
+        PlayerSettings.SetScriptingBackend(namedTarget, il2cpp ? ScriptingImplementation.IL2CPP : ScriptingImplementation.Mono2x);
+        if (il2cpp)
+            PlayerSettings.SetIl2CppCompilerConfiguration(namedTarget, development ? Il2CppCompilerConfiguration.Debug : Il2CppCompilerConfiguration.Release);
+        var incrementalGc = ReadArg("-ceramicIncrementalGc");
+        if (incrementalGc != null)
+            PlayerSettings.gcIncremental = incrementalGc == "1";
+        // Haxe code reaches classes and fields by reflection: never strip the app's code
+        PlayerSettings.SetManagedStrippingLevel(namedTarget, ManagedStrippingLevel.Minimal);
+#if UNITY_EDITOR_OSX
+        // The architecture of this machine only (a universal player builds IL2CPP code twice)
+        UnityEditor.OSXStandalone.UserBuildSettings.architecture =
+            System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64
+                ? UnityEditor.Build.OSArchitecture.ARM64
+                : UnityEditor.Build.OSArchitecture.x64;
+#endif
+
+        var options = new BuildPlayerOptions
+        {
+            scenes = new[] { ScenePath },
+            locationPathName = path,
+            target = target,
+            options = development ? BuildOptions.Development : BuildOptions.None
+        };
+        Debug.Log("CeramicBatchMode: building " + target + " player (" + (il2cpp ? "IL2CPP" : "Mono") + (development ? ", development" : "") + ") into " + path);
+        var report = BuildPipeline.BuildPlayer(options);
+        var summary = report.summary;
+        Debug.Log("CeramicBatchMode: player build " + summary.result + " in " + (int)summary.totalTime.TotalSeconds + " s, " + summary.totalErrors + " error(s), " + summary.totalSize + " bytes");
+        EditorApplication.Exit(summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded ? 0 : 1);
+    }
+
     static void StartRun(int index)
     {
         if (index > 0)

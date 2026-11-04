@@ -13,6 +13,8 @@ class UnityCSharp {
 
     static final ABSTRACT_GENERIC_CAST = ~/(public (?:virtual|override) object (\w+_cast)<([^>]+)>\(\) \{\n)((?:[ \t]*#line[^\n]*\n)?)([ \t]*)return this\.\2<[^>]+>\(\);\n/g;
 
+    static final STATIC_GENERIC_CAST = ~/public static object __hx_cast<([^>]+)>\((global::[\w.@]+) me\) \{\n((?:[ \t]*#line[^\n]*\n)?)([ \t]*)return \( \(\( me != null \)\) \? \(me\.(\w+_cast)<[^>]+>\(\)\) : default\(object\) \);\n/g;
+
     public static function exportScriptFilesToProject(cwd:String, project:Project) {
 
         var debug = context.debug;
@@ -197,6 +199,26 @@ class UnityCSharp {
         if (content.indexOf('_cast<') != -1) {
             content = ABSTRACT_GENERIC_CAST.map(content, function(r) {
                 return r.matched(1) + r.matched(4) + r.matched(5) + 'return this;\n';
+            });
+        }
+
+        // Haxe's C# target casts to a generic class through a static
+        // `__hx_cast<T>(me)` that calls the generic virtual method
+        // `me.<class>_cast<T>()`, which compares `typeof` the type arguments
+        // before returning the instance itself. On IL2CPP, a generic virtual
+        // call is resolved through a locked hash table and `typeof` in shared
+        // generic code through a reflection lookup: about 9 % of a frame of
+        // the GPUI story on Unity (taffy reads its nodes this way). Return the
+        // instance at once when it already has the target type (what the cast
+        // method returns in that case anyway).
+        if (content.indexOf('public static object __hx_cast<') != -1) {
+            content = STATIC_GENERIC_CAST.map(content, function(r) {
+                var typeParams = r.matched(1);
+                var castMethod = r.matched(5);
+                return r.matched(0).replace(
+                    '? (me.' + castMethod + '<' + typeParams + '>())',
+                    '? ((me is ' + r.matched(2) + '<' + typeParams + '>) ? (object) me : me.' + castMethod + '<' + typeParams + '>())'
+                );
             });
         }
 
