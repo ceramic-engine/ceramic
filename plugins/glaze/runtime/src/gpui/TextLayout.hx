@@ -207,8 +207,11 @@ class TextLayout {
         final lineHeight = _lineHeight;
         var originY = bounds.origin.y;
         final textStyle = window.currentTextStyle();
+        var first = true;
         for (line in lines) {
-            final lineOrigin = new Point(bounds.origin.x, originY);
+            // The first line starts at the bounds' origin (immutable, so shared)
+            final lineOrigin = first ? bounds.origin : new Point(bounds.origin.x, originY);
+            first = false;
             if (pass == All || pass == Background) {
                 line.paintBackground(lineOrigin, lineHeight, textStyle.textAlign, bounds, window.textPainter());
             }
