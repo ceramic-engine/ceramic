@@ -79,7 +79,7 @@ class VectorPlugin {
     /**
      * Ensure an SVG asset is loaded, loading it if necessary.
      */
-    public static function ensureSvg(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:SvgAsset->Void):Void {
+    public static function ensureSvg(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:(SvgAsset) -> Void):Void {
 
         if (!name.startsWith('svg:')) name = 'svg:' + name;
 

@@ -82,7 +82,7 @@ class TtfPlugin {
     /**
      * Ensure a font asset is loaded, loading it if necessary.
      */
-    public static function ensureTtf(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:TtfFontAsset->Void):Void {
+    public static function ensureTtf(assets:Assets, name:Either<String,AssetId<String>>, ?variant:String, ?options:AssetOptions, done:(TtfFontAsset) -> Void):Void {
 
         if (!name.startsWith('ttf:')) name = 'ttf:' + name;
 
