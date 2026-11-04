@@ -59,7 +59,7 @@ class CaretAnchoredPopup extends Element {
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         // The real layout happens in prepaint, once the anchor is resolved.
-        return window.requestLayout(new Style(), [], cx);
+        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), [], cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {

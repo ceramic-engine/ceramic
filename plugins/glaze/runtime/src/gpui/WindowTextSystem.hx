@@ -14,6 +14,11 @@ class WindowTextSystem {
 
     final lineLayoutCache:LineLayoutCache;
 
+    /** Font runs of `shapeText()`, reused from call to call (null while in use) */
+    var scratchFontRuns:Null<Array<FontRun>> = [];
+
+    var scratchFontRunPool:Null<Array<FontRun>> = [];
+
     public final textSystem:TextSystem;
 
     /**
@@ -95,33 +100,45 @@ class WindowTextSystem {
      * `lineClamp` is -1 when there is no limit.
      */
     public function shapeText(text:String, fontSize:Pixels, runs:Array<TextRun>, ?wrapWidth:Float, lineClamp:Int = -1):Array<WrappedLine> {
-        // Runs with a length, copied because their length is consumed line by line
-        final pending:Array<TextRun> = [];
-        for (run in runs) {
-            if (run.len > 0)
-                pending.push(run.clone());
-        }
-        var runIndex = 0;
+        // Rust copies the runs with a length because their length is consumed
+        // line by line: here the current run and what is left of it are kept
+        // in locals instead (`runs` is not changed)
+        var runIndex = nextRunWithLength(runs, 0);
+        var runLeft = runIndex < runs.length ? runs[runIndex].len : 0;
 
         final lines:Array<WrappedLine> = [];
         final maxWrapLines = lineClamp;
         var wrappedLines = 0;
 
-        final fontRuns:Array<FontRun> = [];
+        // Scratch font runs (the line cache copies what it keeps); a nested
+        // call gets its own
+        var fontRuns = scratchFontRuns;
+        scratchFontRuns = null;
+        if (fontRuns == null) fontRuns = [];
+        var fontRunPool = scratchFontRunPool;
+        scratchFontRunPool = null;
+        if (fontRunPool == null) fontRunPool = [];
 
-        function processLine(lineText:String, lineStart:Int, lineEnd:Int) {
+        // Lines split at `\n` (the text itself when it has none)
+        final splitLines:Null<Array<String>> = text.indexOf('\n') >= 0 ? text.split('\n') : null;
+        final lineCount = splitLines != null ? splitLines.length : 1;
+        var lineStart = 0;
+        for (i in 0...lineCount) {
+            final lineText = splitLines != null ? splitLines[i] : text;
+            final lineLen = Utf8.byteLength(lineText);
+            final lineEnd = lineStart + lineLen;
+
             fontRuns.resize(0);
-
             final decorationRuns:Array<DecorationRun> = [];
             var runStart = lineStart;
             while (runStart < lineEnd) {
-                if (runIndex >= pending.length) {
+                if (runIndex >= runs.length) {
                     ceramic.Shortcuts.log.warning('`TextRun`s do not cover the entire to be shaped text');
                     break;
                 }
-                final run = pending[runIndex];
+                final run = runs[runIndex];
 
-                final runLenWithinLine = Std.int(Math.min(lineEnd - runStart, run.len));
+                final runLenWithinLine = Std.int(Math.min(lineEnd - runStart, runLeft));
 
                 var decorationChanged = true;
                 if (decorationRuns.length > 0) {
@@ -144,42 +161,58 @@ class WindowTextSystem {
                     lastFontRun.len += runLenWithinLine;
                 }
                 else {
-                    fontRuns.push(new FontRun(runLenWithinLine, fontId));
+                    final index = fontRuns.length;
+                    if (index < fontRunPool.length) {
+                        final fontRun = fontRunPool[index];
+                        fontRun.len = runLenWithinLine;
+                        fontRun.fontId = fontId;
+                        fontRuns.push(fontRun);
+                    }
+                    else {
+                        final fontRun = new FontRun(runLenWithinLine, fontId);
+                        fontRunPool.push(fontRun);
+                        fontRuns.push(fontRun);
+                    }
                 }
 
                 // Preserve the remainder of the run for the next line
-                run.len -= runLenWithinLine;
-                if (run.len == 0) {
-                    runIndex++;
+                runLeft -= runLenWithinLine;
+                if (runLeft == 0) {
+                    runIndex = nextRunWithLength(runs, runIndex + 1);
+                    runLeft = runIndex < runs.length ? runs[runIndex].len : 0;
                 }
                 runStart += runLenWithinLine;
             }
 
-            final layout = lineLayoutCache.layoutWrappedLine(lineText, fontSize, fontRuns.copy(), wrapWidth, maxWrapLines >= 0 ? Std.int(Math.max(0, maxWrapLines - wrappedLines)) : -1);
+            final layout = lineLayoutCache.layoutWrappedLine(lineText, fontSize, fontRuns, wrapWidth, maxWrapLines >= 0 ? Std.int(Math.max(0, maxWrapLines - wrappedLines)) : -1);
             wrappedLines += layout.wrapBoundaries.length;
 
             lines.push(new WrappedLine(layout, lineText, decorationRuns));
 
             // Skip `\n` character.
-            if (runIndex < pending.length) {
-                final run = pending[runIndex];
-                run.len -= 1;
-                if (run.len == 0) {
-                    runIndex++;
+            if (runIndex < runs.length) {
+                runLeft -= 1;
+                if (runLeft == 0) {
+                    runIndex = nextRunWithLength(runs, runIndex + 1);
+                    runLeft = runIndex < runs.length ? runs[runIndex].len : 0;
                 }
             }
-        }
-
-        final splitLines = text.split('\n');
-        var lineStart = 0;
-        for (i in 0...splitLines.length) {
-            final lineText = splitLines[i];
-            final lineLen = Utf8.byteLength(lineText);
-            processLine(lineText, lineStart, lineStart + lineLen);
             lineStart += lineLen + 1;
         }
 
+        fontRuns.resize(0);
+        scratchFontRuns = fontRuns;
+        scratchFontRunPool = fontRunPool;
         return lines;
+    }
+
+    /** The first run from `start` with a length (`runs.length` when none) */
+    static function nextRunWithLength(runs:Array<TextRun>, start:Int):Int {
+        var i = start;
+        while (i < runs.length && runs[i].len <= 0) {
+            i++;
+        }
+        return i;
     }
 
     function fontRunsOf(runs:Array<TextRun>):Array<FontRun> {

@@ -59,11 +59,14 @@ class Font {
         return style = value;
     }
 
-    public function new(family:String, ?features:FontFeatures, ?fallbacks:FontFallbacks, ?weight:FontWeight, ?style:FontStyle) {
+    // `weight` has a default value instead of `?weight`: hxcpp passes it in
+    // a `hx::Null<Float>` struct, where `Null<Float>` would box it (400 is
+    // `FontWeight.NORMAL`; null still gives it)
+    public function new(family:String, ?features:FontFeatures, ?fallbacks:FontFallbacks, weight:FontWeight = 400.0, ?style:FontStyle) {
         this.family = family;
         this.features = features != null ? features : FontFeatures.defaultValue();
         this.fallbacks = fallbacks;
-        this.weight = weight != null ? weight : FontWeight.NORMAL;
+        this.weight = weight;
         this.style = style != null ? style : FontStyle.Normal;
     }
 

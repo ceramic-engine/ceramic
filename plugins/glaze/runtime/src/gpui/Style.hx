@@ -23,6 +23,11 @@ class Style {
     static final ZERO_DEFINITE:DefiniteLength = DefiniteLength.Absolute(ZERO_ABSOLUTE);
     static final ZERO_LENGTH:Length = Length.Definite(ZERO_DEFINITE);
     static final NO_SHADOWS:Array<BoxShadow> = [];
+    static final SQUARE_CORNERS:Corners = new Corners(0.0, 0.0, 0.0, 0.0);
+
+    static inline function isPositiveZero(value:Float):Bool {
+        return value == 0.0 && 1.0 / value > 0.0;
+    }
 
     /** Bits (`StyleRefinement` constants) of the optional value fields that are `Some` */
     public var optionMask:Int = 0;
@@ -204,6 +209,23 @@ class Style {
     /**
      * Creates the default style (Rust `Style::default()`).
      */
+    static var sharedDefault:Null<Style> = null;
+
+    /**
+     * A default style shared by the elements that request their layout with
+     * `new Style()` and never change it (the layout only reads it): no
+     * allocation per element and frame. Never change it either.
+     */
+    @:allow(gpui)
+    static function sharedDefaultStyle():Style {
+        var style = sharedDefault;
+        if (style == null) {
+            style = new Style();
+            sharedDefault = style;
+        }
+        return style;
+    }
+
     public function new() {
         #if gpui_count_allocations gpui.util.AllocationCounters.styles++; #end
     }
@@ -305,10 +327,33 @@ class Style {
      * If the element does not hide its overflow, this will return `null`.
      */
     public function overflowMask(bounds:Bounds, remSize:Pixels):Null<ContentMask> {
+        if (!computeOverflowMask(bounds, remSize)) {
+            return null;
+        }
+        return new ContentMask(new Bounds(
+            new Point(overflowMaskX, overflowMaskY),
+            new Size(overflowMaskWidth, overflowMaskHeight)
+        ));
+    }
+
+    /** The bounds of the last `computeOverflowMask()` that returned true */
+    @:allow(gpui) static var overflowMaskX:Float = 0;
+    @:allow(gpui) static var overflowMaskY:Float = 0;
+    @:allow(gpui) static var overflowMaskWidth:Float = 0;
+    @:allow(gpui) static var overflowMaskHeight:Float = 0;
+
+    /**
+     * The bounds of `overflowMask()` (the same operations, Rust's
+     * `Bounds::from_corners`) into `overflowMaskX`, `overflowMaskY`,
+     * `overflowMaskWidth` and `overflowMaskHeight`, without allocating;
+     * false when there is no mask.
+     */
+    @:allow(gpui)
+    function computeOverflowMask(bounds:Bounds, remSize:Pixels):Bool {
         final xVisible = overflowX == Overflow.Visible;
         final yVisible = overflowY == Overflow.Visible;
         if (xVisible && yVisible) {
-            return null;
+            return false;
         }
 
         var minX = bounds.origin.x;
@@ -327,20 +372,26 @@ class Style {
             maxY -= bottom;
         }
 
-        final maskBounds = if (xVisible) {
+        var topLeftX = minX;
+        var topLeftY = minY;
+        var bottomRightX = maxX;
+        var bottomRightY = maxY;
+        if (xVisible) {
             // x visible, y hidden
-            Bounds.fromCorners(new Point(minX, bounds.origin.y), new Point(maxX, bounds.origin.y + bounds.size.height));
+            topLeftY = bounds.origin.y;
+            bottomRightY = bounds.origin.y + bounds.size.height;
         }
         else if (yVisible) {
             // x hidden, y visible
-            Bounds.fromCorners(new Point(bounds.origin.x, minY), new Point(bounds.origin.x + bounds.size.width, maxY));
+            topLeftX = bounds.origin.x;
+            bottomRightX = bounds.origin.x + bounds.size.width;
         }
-        else {
-            // both hidden
-            Bounds.fromCorners(new Point(minX, minY), new Point(maxX, maxY));
-        }
-
-        return new ContentMask(maskBounds);
+        // Bounds::from_corners
+        overflowMaskX = topLeftX;
+        overflowMaskY = topLeftY;
+        overflowMaskWidth = bottomRightX - topLeftX;
+        overflowMaskHeight = bottomRightY - topLeftY;
+        return true;
     }
 
     /**
@@ -360,12 +411,22 @@ class Style {
      */
     public function paintBackground(bounds:Bounds, window:Window, cx:App):Corners {
         final remSize = window.remSize();
-        final cornerRadii = new Corners(
-            cornerRadiusTopLeft.toPixels(remSize),
-            cornerRadiusTopRight.toPixels(remSize),
-            cornerRadiusBottomRight.toPixels(remSize),
-            cornerRadiusBottomLeft.toPixels(remSize)
-        ).clampRadiiForQuadSize(bounds.size);
+        // `Corners.clampRadiiForQuadSize()` inlined: square corners (all +0,
+        // the common case) share one `Corners` (immutable)
+        final size = bounds.size;
+        final max = (size.width <= size.height ? size.width : size.height) / 2.0;
+        final topLeft:Float = cornerRadiusTopLeft.toPixels(remSize);
+        final topRight:Float = cornerRadiusTopRight.toPixels(remSize);
+        final bottomRight:Float = cornerRadiusBottomRight.toPixels(remSize);
+        final bottomLeft:Float = cornerRadiusBottomLeft.toPixels(remSize);
+        final clampedTopLeft = topLeft <= max ? topLeft : max;
+        final clampedTopRight = topRight <= max ? topRight : max;
+        final clampedBottomRight = bottomRight <= max ? bottomRight : max;
+        final clampedBottomLeft = bottomLeft <= max ? bottomLeft : max;
+        final cornerRadii = isPositiveZero(clampedTopLeft) && isPositiveZero(clampedTopRight)
+            && isPositiveZero(clampedBottomRight) && isPositiveZero(clampedBottomLeft)
+            ? SQUARE_CORNERS
+            : new Corners(clampedTopLeft, clampedTopRight, clampedBottomRight, clampedBottomLeft);
 
         window.paintDropShadows(bounds, cornerRadii, boxShadow);
 

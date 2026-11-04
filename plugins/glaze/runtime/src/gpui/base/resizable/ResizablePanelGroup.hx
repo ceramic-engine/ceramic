@@ -255,7 +255,7 @@ class ResizePanelGroupElement extends Element {
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return window.requestLayout(new Style(), null, cx);
+        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), null, cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {}

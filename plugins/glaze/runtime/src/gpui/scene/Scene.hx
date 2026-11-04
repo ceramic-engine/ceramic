@@ -117,7 +117,7 @@ class Scene {
 
     public function popLayer():Void {
 
-        layerStack.pop();
+        gpui.util.Stacks.drop(layerStack);
         opKinds.push(OP_END_LAYER);
         opPrimitives.push(null);
 

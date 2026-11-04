@@ -405,7 +405,7 @@ class TextSelection {
         final stacks = WindowSelectionState.globalOf(cx, TextSelectionScopeStacks).map;
         final stack = stacks.get(windowId);
         if (stack != null) {
-            stack.pop();
+            gpui.util.Stacks.drop(stack);
             if (stack.length == 0) {
                 stacks.remove(windowId);
             }

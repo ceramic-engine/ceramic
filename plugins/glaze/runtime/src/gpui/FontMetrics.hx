@@ -97,6 +97,16 @@ class FontMetrics {
         return scaleBounds(boundingBox, unitsPerEm, fontSize);
     }
 
+    /** `boundingBoxAt(fontSize).size.width` without its `Bounds` */
+    public function boundingBoxWidthAt(fontSize:Pixels):Float {
+        return f32(f32(boundingBox.size.width / unitsPerEm) * f32(fontSize));
+    }
+
+    /** `boundingBoxAt(fontSize).size.height` without its `Bounds` */
+    public function boundingBoxHeightAt(fontSize:Pixels):Float {
+        return f32(f32(boundingBox.size.height / unitsPerEm) * f32(fontSize));
+    }
+
     /**
      * `bounds / units_per_em as f32 * font_size` in f32, like GPUI: each
      * component divided then multiplied, each operation rounded to f32.

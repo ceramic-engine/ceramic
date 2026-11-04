@@ -186,7 +186,9 @@ class AnyElement {
         availableWidth = availableSpace.width;
         availableHeight = availableSpace.height;
         phase = PHASE_LAYOUT_COMPUTED;
-        return window.layoutBounds(layoutId).size;
+        // `window.layoutBounds(layoutId).size` without the `Bounds`
+        @:privateAccess window.computeLayoutBounds(layoutId);
+        return @:privateAccess window.layoutBoundsSize;
     }
 
     /**

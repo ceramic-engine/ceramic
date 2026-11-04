@@ -20,8 +20,7 @@ class LinePaint {
      */
     public static function paintLine(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter, paintUnderline:Null<ShapedLine.UnderlineHandler>):Void {
         final wraps:Array<WrapBoundary> = wrapBoundaries != null ? wrapBoundaries : NO_WRAPS;
-        final lineBounds = linePaintBounds(origin, layout, lineHeight, align, alignWidth, wraps);
-        final pushed = painter.pushLayer(lineBounds);
+        final pushed = pushLineLayer(origin, layout, lineHeight, align, alignWidth, wraps, painter);
 
         final paddingTop = (lineHeight - layout.ascent - layout.descent) / 2.0;
         final baselineOffsetY = paddingTop + layout.ascent;
@@ -64,9 +63,8 @@ class LinePaint {
         final runs = layout.runs;
         for (runIx in 0...runs.length) {
             final run = runs[runIx];
-            final maxGlyphSize = textSystem.boundingBox(run.fontId, layout.fontSize).size;
-            maxGlyphWidth = maxGlyphSize.width;
-            maxGlyphHeight = maxGlyphSize.height;
+            maxGlyphWidth = textSystem.boundingBoxWidth(run.fontId, layout.fontSize);
+            maxGlyphHeight = textSystem.boundingBoxHeight(run.fontId, layout.fontSize);
 
             final glyphs = run.glyphs;
             for (glyphIx in 0...glyphs.length) {
@@ -259,8 +257,7 @@ class LinePaint {
      */
     public static function paintLineBackground(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter):Void {
         final wraps:Array<WrapBoundary> = wrapBoundaries != null ? wrapBoundaries : NO_WRAPS;
-        final lineBounds = linePaintBounds(origin, layout, lineHeight, align, alignWidth, wraps);
-        final pushed = painter.pushLayer(lineBounds);
+        final pushed = pushLineLayer(origin, layout, lineHeight, align, alignWidth, wraps, painter);
 
         var decorationIndex = 0;
         var wrapIndex = 0;
@@ -279,7 +276,7 @@ class LinePaint {
         final runs = layout.runs;
         for (runIx in 0...runs.length) {
             final run = runs[runIx];
-            maxGlyphWidth = textSystem.boundingBox(run.fontId, layout.fontSize).size.width;
+            maxGlyphWidth = textSystem.boundingBoxWidth(run.fontId, layout.fontSize);
 
             final glyphs = run.glyphs;
             for (glyphIx in 0...glyphs.length) {
@@ -377,6 +374,17 @@ class LinePaint {
 
         if (pushed)
             painter.popLayer();
+    }
+
+    /**
+     * `painter.pushLayer(linePaintBounds(...))`, without a `Bounds` for a
+     * left aligned line (the common case).
+     */
+    static function pushLineLayer(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, wraps:Array<WrapBoundary>, painter:TextPainter):Bool {
+        if (align == Left || layout.len == 0) {
+            return painter.pushLayerAt(origin.x, origin.y, layout.width, lineHeight * (wraps.length + 1.0));
+        }
+        return painter.pushLayer(linePaintBounds(origin, layout, lineHeight, align, alignWidth, wraps));
     }
 
     /**

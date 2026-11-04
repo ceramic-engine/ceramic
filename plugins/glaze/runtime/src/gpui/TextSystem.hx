@@ -43,6 +43,20 @@ class TextSystem {
 
     final fontMetrics:IntMap<FontMetrics> = new IntMap();
 
+    /**
+     * Fonts resolved lately and their ids, compared by value (like Rust's
+     * `HashMap<Font, FontId>`): a `Font` made for each text style and frame
+     * finds its id without building its key string. Copies, so that a font
+     * changed after its resolution does not match.
+     */
+    final recentFonts:Array<Font> = [];
+
+    final recentFontIds:Array<FontId> = [];
+
+    var recentFontNext:Int = 0;
+
+    static inline final RECENT_FONTS = 16;
+
     final rasterBoundsCache:GlyphCache<Bounds> = new GlyphCache();
 
     /** Line wrappers by font id, then by exact font size (few sizes per font) */
@@ -101,6 +115,7 @@ class TextSystem {
         platformTextSystem.addFonts(fonts);
         fontIdsByFont.clear();
         fontsByKey.clear();
+        forgetRecentFonts();
         fontGeneration++;
     }
 
@@ -125,19 +140,47 @@ class TextSystem {
      * Throws if the font and none of the fallbacks can be resolved.
      */
     public function resolveFont(font:Font):FontId {
+        for (i in 0...recentFonts.length) {
+            final recent = recentFonts[i];
+            if (recent == font || recent.equals(font)) {
+                return recentFontIds[i];
+            }
+        }
         final cached = fontIdsByFont.get(font.key());
         if (cached != null) {
             switch cached {
                 case Direct(fontId) | Fallback(fontId):
+                    rememberFont(font, fontId);
                     return fontId;
                 case Missing(_):
             }
         }
-        return resolveFontUncached(font);
+        final fontId = resolveFontUncached(font);
+        rememberFont(font, fontId);
+        return fontId;
+    }
+
+    function rememberFont(font:Font, fontId:FontId):Void {
+        final copy = font.clone();
+        if (recentFonts.length < RECENT_FONTS) {
+            recentFonts.push(copy);
+            recentFontIds.push(fontId);
+            return;
+        }
+        recentFonts[recentFontNext] = copy;
+        recentFontIds[recentFontNext] = fontId;
+        recentFontNext = (recentFontNext + 1) % RECENT_FONTS;
+    }
+
+    function forgetRecentFonts():Void {
+        recentFonts.resize(0);
+        recentFontIds.resize(0);
+        recentFontNext = 0;
     }
 
     /** Sets the cached resolution of a font (used by tests). */
     public function setCachedFont(font:Font, cached:CachedFont):Void {
+        forgetRecentFonts();
         final key = font.key();
         fontIdsByFont.set(key, cached);
         fontsByKey.set(key, font);
@@ -199,6 +242,16 @@ class TextSystem {
      */
     public function boundingBox(fontId:FontId, fontSize:Pixels):Bounds {
         return readMetrics(fontId).boundingBoxAt(fontSize);
+    }
+
+    /** `boundingBox(fontId, fontSize).size.width` without its `Bounds` */
+    public function boundingBoxWidth(fontId:FontId, fontSize:Pixels):Float {
+        return readMetrics(fontId).boundingBoxWidthAt(fontSize);
+    }
+
+    /** `boundingBox(fontId, fontSize).size.height` without its `Bounds` */
+    public function boundingBoxHeight(fontId:FontId, fontSize:Pixels):Float {
+        return readMetrics(fontId).boundingBoxHeightAt(fontSize);
     }
 
     /**

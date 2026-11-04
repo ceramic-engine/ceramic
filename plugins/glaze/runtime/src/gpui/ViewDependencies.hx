@@ -26,8 +26,11 @@ import haxe.ds.ObjectMap;
  */
 class ViewDependencies {
 
-    /** Changed checks by view id, then by state */
-    final byView:IntMap<ObjectMap<{}, Void->Bool>> = new IntMap();
+    /** Changed checks by view id */
+    final byView:IntMap<ViewChecks> = new IntMap();
+
+    /** The values of `byView`, iterated without allocating (a map's iteration copies them) */
+    final views:Array<ViewChecks> = [];
 
     /**
      * Depth of the views cached with a style (`.cached(style)`) being
@@ -53,41 +56,71 @@ class ViewDependencies {
         final viewId = stack[stack.length - 1].entityId;
         var checks = byView.get(viewId);
         if (checks == null) {
-            checks = new ObjectMap();
+            checks = new ViewChecks(viewId);
             byView.set(viewId, checks);
+            views.push(checks);
         }
         checks.set(state, changed);
     }
 
     /**
-     * Called when a frame starts: calls `markDirty` with every view of the
-     * last frame whose recorded states changed, and forgets them (they
-     * render and record again). Views missing from the last frame are
+     * Called when a frame starts: marks dirty (`Window.markViewDirty`) every
+     * view of the last frame whose recorded states changed, and forgets them
+     * (they render and record again). Views missing from the last frame are
      * forgotten.
      */
     @:allow(gpui)
-    function invalidateChanged(lastFrame:DispatchTree, markDirty:Int->Void):Void {
-        var forget:Null<Array<Int>> = null;
-        for (viewId => checks in byView) {
+    function invalidateChanged(lastFrame:DispatchTree, window:Window):Void {
+        final views = this.views;
+        var kept = 0;
+        for (i in 0...views.length) {
+            final view = views[i];
+            final viewId = view.viewId;
             var stale = !lastFrame.containsView(viewId);
             if (!stale) {
-                for (changed in checks) {
-                    if (changed()) {
-                        markDirty(viewId);
+                final checks = view.checks;
+                for (j in 0...checks.length) {
+                    if (checks[j]()) {
+                        @:privateAccess window.markViewDirty(viewId);
                         stale = true;
                         break;
                     }
                 }
             }
             if (stale) {
-                if (forget == null) forget = [];
-                forget.push(viewId);
-            }
-        }
-        if (forget != null) {
-            for (viewId in forget) {
                 byView.remove(viewId);
             }
+            else {
+                views[kept++] = view;
+            }
+        }
+        views.resize(kept);
+    }
+
+}
+
+/** The changed checks of one view, by state */
+private class ViewChecks {
+
+    public final viewId:Int;
+
+    /** Index of each state in `checks` */
+    final indexes:ObjectMap<{}, Int> = new ObjectMap();
+
+    public final checks:Array<Void->Bool> = [];
+
+    public function new(viewId:Int) {
+        this.viewId = viewId;
+    }
+
+    public function set(state:{}, changed:Void->Bool):Void {
+        final index = indexes.get(state);
+        if (index != null) {
+            checks[index] = changed;
+        }
+        else {
+            indexes.set(state, checks.length);
+            checks.push(changed);
         }
     }
 

@@ -198,7 +198,7 @@ class PlotAppearScope extends Element {
             appeared = new PlotAppeared();
         }
         final child = this.child;
-        return within(appeared, () -> child != null ? child.requestLayout(window, cx) : window.requestLayout(new Style(), null, cx));
+        return within(appeared, () -> child != null ? child.requestLayout(window, cx) : window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), null, cx));
     }
 
     public function prepaint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {

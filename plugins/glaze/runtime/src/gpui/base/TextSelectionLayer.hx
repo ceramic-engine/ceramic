@@ -31,7 +31,7 @@ class TextSelectionLayer extends Element {
     }
 
     public function requestLayout(_:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return window.requestLayout(new Style(), [], cx);
+        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), [], cx);
     }
 
     public function prepaint(globalId:Null<GlobalElementId>, _:Bounds, window:Window, cx:App):Void {

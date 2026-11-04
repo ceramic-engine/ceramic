@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Static boxing report of the generated C++ (step 5 of docs/perf/PLAN.md).
 //
-// Scans the C++ that hxcpp generated for the GPUI port, taffy and ttf (by
+// Scans the C++ that hxcpp generated for the GPUI port and its libraries (by
 // default test/bench/out/clay/mac/cpp after a native bench build) and counts,
 // per Haxe module and per function, the constructs that box values or
 // allocate behind the code's back:
@@ -18,6 +18,17 @@
 //   member     bound methods taken as values (`obj->method_dyn()`, hxcpp's
 //              CreateMemberFunction): one allocation each
 //   dynCtor    other explicit `::Dynamic(...)` constructions
+//   iter       iterator objects created by `for` loops and calls: `iterator()`,
+//              `keys()`, `keyValueIterator()` (on hxcpp a Map's `keys()` and
+//              `iterator()` also copy the keys or values into a new array)
+//   dynIter    `hasNext()` / `next()` called through `Dynamic` (a field lookup
+//              by name per call, and `next()` boxes the value it returns):
+//              loops over an `Iterator<T>` / `Iterable<T>`, a Map, an
+//              anonymous structure or `Dynamic`
+//   primPop    `pop()` / `shift()` on an `Array<Int>`, `Array<Float>` or
+//              `Array<Bool>`: hxcpp returns `Null<T>` as `Dynamic`, so the
+//              value is boxed (Floats and Ints outside -1...255 allocate)
+//              even when it is not used
 //
 // and, per module, the `::Dynamic` fields of its classes (from the generated
 // headers: Null<Float>, Null<Int>, Null<Bool>, function values, anonymous
@@ -68,7 +79,8 @@ if (!fs.existsSync(srcRoot)) {
 }
 
 // Packages scanned, and the hot modules (Haxe source paths) reported by default
-const PACKAGES = ['gpui', 'taffy', 'ttf'];
+const PACKAGES = ['gpui', 'taffy', 'ttf', 'tracker', 'similar', 'plutovg', 'lunasvg', 'textmate',
+    'oniguruma', 'ropey', 'markdown', 'html5ever', 'unicode_segmentation', 'unicode_linebreak', 'clay', 'ceramic'];
 const HOT = [
     /^gpui\/Window\.hx$/,
     /^gpui\/Div\.hx$/,
@@ -88,7 +100,7 @@ const HOT = [
 ];
 const isHot = (mod) => HOT.some(r => r.test(mod));
 
-const CATEGORIES = ['dynLocal', 'dynCall', 'field', 'anon', 'closure', 'member', 'dynCtor'];
+const CATEGORIES = ['dynLocal', 'dynCall', 'field', 'anon', 'closure', 'member', 'dynCtor', 'iter', 'dynIter', 'primPop'];
 
 function walk(dir, out) {
     if (!fs.existsSync(dir)) return out;
@@ -112,6 +124,7 @@ function isBoilerplate(fn) {
 
 // Pass 1: the Dynamic fields and the method names of every class (headers)
 const dynFieldNames = new Set();
+const primArrayFieldNames = new Set();
 const methodNames = new Set();
 const headerFields = new Map(); // header rel path (no extension) -> {dyn: [...]}
 for (const pkg of PACKAGES) {
@@ -122,6 +135,9 @@ for (const pkg of PACKAGES) {
         const info = { dyn: [] };
         for (const line of text.split('\n')) {
             let m;
+            if ((m = /^\t\t(?:static )? *::Array< (?:int|Float|bool) > ([A-Za-z_][A-Za-z0-9_]*);$/.exec(line))) {
+                primArrayFieldNames.add(m[1]);
+            }
             if ((m = /^\t\t(?:static )? *::Dynamic ([A-Za-z_][A-Za-z0-9_]*);$/.exec(line))) {
                 info.dyn.push(m[1]);
                 dynFieldNames.add(m[1]);
@@ -236,7 +252,19 @@ function analyse(entry, className, def) {
         if (dynFieldNames.has(m[1])) counts.dynCall++;
     }
 
-    counts.field = (body.match(/->__(?:Field|SetField)\(HX_/g) || []).length +
+    counts.iter = (body.match(/(?:->|IMap_obj::|::)(?:iterator|keys|keyValueIterator)\(/g) || []).length +
+        (body.match(/->__Field\(HX_\("(?:iterator|keys|keyValueIterator)",/g) || []).length;
+    const primArrays = new Set();
+    const primRe = /::Array< (?:int|Float|bool) > ([A-Za-z_][A-Za-z0-9_]*)/g;
+    while ((m = primRe.exec(def.params + '\n' + body))) primArrays.add(m[1]);
+    const popRe = /(this->|[ (!=\t])([A-Za-z_][A-Za-z0-9_]*)->(?:pop|shift)\(\)/g;
+    counts.primPop = 0;
+    while ((m = popRe.exec(body))) {
+        if (m[1] === 'this->' ? primArrayFieldNames.has(m[2]) : (primArrays.has(m[2]) || primArrayFieldNames.has(m[2]))) counts.primPop++;
+    }
+    counts.dynIter = (body.match(/->__Field\(HX_\("(?:hasNext|next)",/g) || []).length;
+    counts.field = (body.match(/->__(?:Field|SetField)\(HX_/g) || []).length -
+        (body.match(/->__Field\(HX_\("(?:iterator|keys|keyValueIterator|hasNext|next)",/g) || []).length +
         (body.match(/::hx::FieldRef\(/g) || []).length;
     counts.anon = (body.match(/Anon_obj::Create\(/g) || []).length;
     counts.closure = (body.match(/HX_BEGIN_LOCAL_FUNC/g) || []).length;

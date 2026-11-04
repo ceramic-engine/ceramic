@@ -525,7 +525,7 @@ class VelocityTracker {
         times.push(time);
         positions.push(position);
         while (times.length > TouchGestureRecognizer.VELOCITY_MAX_SAMPLES) {
-            times.shift();
+            gpui.util.Stacks.dropFirstFloat(times);
             positions.shift();
         }
     }

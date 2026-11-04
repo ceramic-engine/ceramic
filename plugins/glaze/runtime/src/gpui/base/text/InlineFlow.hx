@@ -181,7 +181,7 @@ class InlineFlow extends gpui.Element {
         final layoutState = new InlineFlowLayoutState(typography, frameState);
         this.layoutState = layoutState;
 
-        return window.requestMeasuredLayout(new Style(), (knownDimensions, availableSpace, window, cx) -> {
+        return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
             final wrapWidth:Null<Float> = if (typography.textStyle.whiteSpace == Normal) {
                 knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
                     case Definite(width): width;

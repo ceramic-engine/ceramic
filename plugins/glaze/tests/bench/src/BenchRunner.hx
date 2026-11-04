@@ -114,6 +114,10 @@ class BenchRunner {
     static inline final MEM_INFO_CYCLE_ACTIVE = 104;
     /** Object bytes in blocks found live by the last full collection (exact, without line fragmentation) */
     static inline final MEM_INFO_FULL_LIVE_BYTES = 120;
+    /** Heap bound of the concurrent collector: goal, allocations that waited at the cap, bytes released */
+    static inline final MEM_INFO_HEAP_GOAL = 121;
+    static inline final MEM_INFO_HEAP_WAITS = 122;
+    static inline final MEM_INFO_HEAP_RELEASED = 123;
 
     /** `cpp.vm.Gc.MEM_INFO_*` (usage, reserved, current, large) */
     static inline final cpp_MEM_INFO_USAGE = 0;
@@ -417,6 +421,7 @@ class BenchRunner {
                 blockThreadCpu.resize(0);
                 blockQuietCpu.resize(0);
                 blockCycleCpu.resize(0);
+                AllocProfile.start();
             }
             final countersBefore = AllocationCounters.total();
             final elementsBefore = AnyElement.allocatedCount;
@@ -463,6 +468,7 @@ class BenchRunner {
                 frameBody(frame);
             }
             webMark('end', label);
+            writeAllocProfile(label);
             lastPathRasterizations = pathRasterizations;
             finishMeasure(scenario, window, caching, elementCount, run, times, wallTimes, renderedViews, reusedViews, counters, anyElements, minorPausesBefore, minorPauseTotalBefore, gcInfo(MEM_INFO_ALLOCATION_VOLUME) - volumeBefore);
             done();
@@ -532,7 +538,7 @@ class BenchRunner {
     /** Fields of a soak sample, in `soak.samples` of the result */
     static final SOAK_SAMPLE_FIELDS = ['t', 'frames', 'usage', 'reserved', 'current', 'large', 'minorCount', 'minorMaxMs', 'minorTotalMs', 'fullCount',
         'cycles', 'cycleActive', 'volume', 'jsUsed', 'jsTotal', 'intervalFrames', 'frameMedianMs', 'frameP99Ms', 'frameMaxMs', 'rss',
-        'threadCpuMedianMs', 'threadCpuP99Ms', 'processCpu'];
+        'threadCpuMedianMs', 'threadCpuP99Ms', 'processCpu', 'heapGoal', 'heapWaits', 'heapReleased'];
 
     /** Fields of a live memory sample, in `soak.lives` of the result */
     static final SOAK_LIVE_FIELDS = ['t', 'frames', 'live', 'liveBytes', 'large', 'usageBefore', 'reservedBefore', 'reservedAfter', 'jsLive', 'jsTotal', 'collectMs'];
@@ -575,7 +581,8 @@ class BenchRunner {
                 gcInfo(MEM_INFO_MINOR_PAUSE_COUNT), gcInfo(MEM_INFO_MAX_MINOR_PAUSE_MS), gcInfo(MEM_INFO_TOTAL_MINOR_PAUSE_MS), gcInfo(MEM_INFO_FULL_COUNT),
                 gcInfo(MEM_INFO_CYCLE_COUNT), gcInfo(MEM_INFO_CYCLE_ACTIVE), gcInfo(MEM_INFO_ALLOCATION_VOLUME), heap[0], heap[1], n,
                 n > 0 ? times[n >> 1] : 0.0, percentile(times, 0.99), n > 0 ? times[n - 1] : 0.0, rssBytes(),
-                n > 0 ? cpus[n >> 1] : 0.0, percentile(cpus, 0.99), cpuTime()];
+                n > 0 ? cpus[n >> 1] : 0.0, percentile(cpus, 0.99), cpuTime(), gcInfo(MEM_INFO_HEAP_GOAL), gcInfo(MEM_INFO_HEAP_WAITS),
+                gcInfo(MEM_INFO_HEAP_RELEASED)];
             final base = sampleCount * SOAK_SAMPLE_FIELDS.length;
             for (i in 0...values.length) sampleData[base + i] = values[i];
             sampleCount++;
@@ -1070,6 +1077,25 @@ class BenchRunner {
      * found by walking up from the working directory (the folder holding
      * `src/BenchRunner.hx`). Null on the web (no file system).
      */
+    /**
+     * With `--variant allocprof`: the allocation sites of the block just
+     * measured (`AllocProfile`), printed and written next to the results as
+     * `<label>-allocs.txt`.
+     */
+    function writeAllocProfile(label:String):Void {
+        final report = AllocProfile.stop(frames, envInt('GPUI_BENCH_ALLOC_TOP', 60));
+        if (report == null) return;
+        print('  allocation profile of $label:');
+        print(report);
+        #if sys
+        final dir = resultsDirectory();
+        if (dir != null) {
+            sys.FileSystem.createDirectory(dir);
+            sys.io.File.saveContent(dir + '/' + label + '-allocs.txt', report);
+        }
+        #end
+    }
+
     function resultsDirectory():Null<String> {
         if (resultsDir != null) {
             return resultsDir;

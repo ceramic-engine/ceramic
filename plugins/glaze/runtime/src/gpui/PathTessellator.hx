@@ -117,10 +117,18 @@ class PathTessellator {
     }
 
     /**
-     * lyon `QuadraticBezierSegment::for_each_flattened_with_t`: calls
-     * `cb(x, y, t)` for the end of each line segment (`t` is `t.end`).
+     * Scratch of the flattened points (`x, y, t` triples): callers flatten
+     * into it and read it back before flattening again, with no callback
+     * (a callback would allocate a closure and box its three Floats per
+     * point on hxcpp).
      */
-    public static function flattenQuad(fx:Float, fy:Float, cx:Float, cy:Float, tx:Float, ty:Float, tolerance:Float, cb:(x:Float, y:Float, t:Float) -> Void):Void {
+    @:allow(gpui) static final flattenBuffer:Array<Float> = [];
+
+    /**
+     * lyon `QuadraticBezierSegment::for_each_flattened_with_t`: appends
+     * `x, y, t` to `out` for the end of each line segment (`t` is `t.end`).
+     */
+    public static function flattenQuad(fx:Float, fy:Float, cx:Float, cy:Float, tx:Float, ty:Float, tolerance:Float, out:Array<Float>):Void {
         // flattened_segments_wang
         final lx = f(f(f(fx - f(cx * 2)) + tx) * 2);
         final ly = f(f(f(fy - f(cy * 2)) + ty) * 2);
@@ -138,14 +146,18 @@ class PathTessellator {
         for (_ in 0...count) {
             final t1 = f(t0 + step);
             final t2 = f(t1 * t1);
-            cb(f(f(fx + f(a1x * t1)) + f(a2x * t2)), f(f(fy + f(a1y * t1)) + f(a2y * t2)), t1);
+            out.push(f(f(fx + f(a1x * t1)) + f(a2x * t2)));
+            out.push(f(f(fy + f(a1y * t1)) + f(a2y * t2)));
+            out.push(t1);
             t0 = t1;
         }
-        cb(tx, ty, 1.0);
+        out.push(tx);
+        out.push(ty);
+        out.push(1.0);
     }
 
     /** Same as `flattenQuad()` for a cubic curve. */
-    public static function flattenCubic(fx:Float, fy:Float, c1x:Float, c1y:Float, c2x:Float, c2y:Float, tx:Float, ty:Float, tolerance:Float, cb:(x:Float, y:Float, t:Float) -> Void):Void {
+    public static function flattenCubic(fx:Float, fy:Float, c1x:Float, c1y:Float, c2x:Float, c2y:Float, tx:Float, ty:Float, tolerance:Float, out:Array<Float>):Void {
         final v1x = f(f(f(fx - f(c1x * 2)) + c2x) * 6);
         final v1y = f(f(f(fy - f(c1y * 2)) + c2y) * 6);
         final v2x = f(f(f(c1x - f(c2x * 2)) + tx) * 6);
@@ -174,10 +186,14 @@ class PathTessellator {
             t2 = f(t2 * t1);
             x = f(x + f(a3x * t2));
             y = f(y + f(a3y * t2));
-            cb(x, y, t1);
+            out.push(x);
+            out.push(y);
+            out.push(t1);
             t0 = t1;
         }
-        cb(tx, ty, 1.0);
+        out.push(tx);
+        out.push(ty);
+        out.push(1.0);
     }
 
 /// lyon_tessellation: fill
@@ -224,16 +240,21 @@ class PathTessellator {
                     tmp.resize(0);
                     if (isAfter(cx, cy, tx, ty)) {
                         // Swapped so that it goes downwards, then put back in path order
-                        flattenQuad(tx, ty, qx, qy, cx, cy, tolerance, (x, y, _) -> { tmp.push(x); tmp.push(y); });
-                        var i = tmp.length - 4;
+                        flattenQuad(tx, ty, qx, qy, cx, cy, tolerance, tmp);
+                        var i = tmp.length - 6;
                         while (i >= 0) {
                             push(tmp[i], tmp[i + 1]);
-                            i -= 2;
+                            i -= 3;
                         }
                         push(tx, ty);
                     }
                     else {
-                        flattenQuad(cx, cy, qx, qy, tx, ty, tolerance, (x, y, _) -> push(x, y));
+                        flattenQuad(cx, cy, qx, qy, tx, ty, tolerance, tmp);
+                        var i = 0;
+                        while (i < tmp.length) {
+                            push(tmp[i], tmp[i + 1]);
+                            i += 3;
+                        }
                     }
                     cx = tx;
                     cy = ty;
@@ -241,16 +262,21 @@ class PathTessellator {
                     final c1x = pts[k++], c1y = pts[k++], c2x = pts[k++], c2y = pts[k++], tx = pts[k++], ty = pts[k++];
                     tmp.resize(0);
                     if (isAfter(cx, cy, tx, ty)) {
-                        flattenCubic(tx, ty, c2x, c2y, c1x, c1y, cx, cy, tolerance, (x, y, _) -> { tmp.push(x); tmp.push(y); });
-                        var i = tmp.length - 4;
+                        flattenCubic(tx, ty, c2x, c2y, c1x, c1y, cx, cy, tolerance, tmp);
+                        var i = tmp.length - 6;
                         while (i >= 0) {
                             push(tmp[i], tmp[i + 1]);
-                            i -= 2;
+                            i -= 3;
                         }
                         push(tx, ty);
                     }
                     else {
-                        flattenCubic(cx, cy, c1x, c1y, c2x, c2y, tx, ty, tolerance, (x, y, _) -> push(x, y));
+                        flattenCubic(cx, cy, c1x, c1y, c2x, c2y, tx, ty, tolerance, tmp);
+                        var i = 0;
+                        while (i < tmp.length) {
+                            push(tmp[i], tmp[i + 1]);
+                            i += 3;
+                        }
                     }
                     cx = tx;
                     cy = ty;
@@ -266,8 +292,7 @@ class PathTessellator {
             final poly = polygons[i];
             var n = poly.length;
             while (n >= 4 && poly[n - 2] == poly[0] && poly[n - 1] == poly[1]) {
-                poly.pop();
-                poly.pop();
+                poly.resize(n - 2);
                 n -= 2;
             }
             if (n < 4)
@@ -853,12 +878,18 @@ private class PathSampler {
                     kinds.push(LyonPath.QUAD);
                     segPoints.push([cx, cy, qx, qy, tx, ty]);
                     var px = cx, py = cy;
-                    PathTessellator.flattenQuad(cx, cy, qx, qy, tx, ty, tolerance, (x, y, t) -> {
+                    final flat = PathTessellator.flattenBuffer;
+                    flat.resize(0);
+                    PathTessellator.flattenQuad(cx, cy, qx, qy, tx, ty, tolerance, flat);
+                    var j = 0;
+                    while (j < flat.length) {
+                        final x = flat[j], y = flat[j + 1], t = flat[j + 2];
                         distance = f(distance + PathTessellator.length(f(x - px), f(y - py)));
                         pushEdge(distance, index, t);
                         px = x;
                         py = y;
-                    });
+                        j += 3;
+                    }
                     cx = tx;
                     cy = ty;
                 case LyonPath.CUBIC:
@@ -866,12 +897,18 @@ private class PathSampler {
                     kinds.push(LyonPath.CUBIC);
                     segPoints.push([cx, cy, c1x, c1y, c2x, c2y, tx, ty]);
                     var px = cx, py = cy;
-                    PathTessellator.flattenCubic(cx, cy, c1x, c1y, c2x, c2y, tx, ty, tolerance, (x, y, t) -> {
+                    final flat = PathTessellator.flattenBuffer;
+                    flat.resize(0);
+                    PathTessellator.flattenCubic(cx, cy, c1x, c1y, c2x, c2y, tx, ty, tolerance, flat);
+                    var j = 0;
+                    while (j < flat.length) {
+                        final x = flat[j], y = flat[j + 1], t = flat[j + 2];
                         distance = f(distance + PathTessellator.length(f(x - px), f(y - py)));
                         pushEdge(distance, index, t);
                         px = x;
                         py = y;
-                    });
+                        j += 3;
+                    }
                     cx = tx;
                     cy = ty;
                 case LyonPath.CLOSE:
@@ -1312,14 +1349,18 @@ private class StrokeBuilder {
     }
 
     public function quadraticBezierToFw(fx:Float, fy:Float, cx:Float, cy:Float, tx:Float, ty:Float):Void {
-        inline function step(x:Float, y:Float, isFlatteningStep:Bool) {
-            final e = newEndpoint(x, y);
-            e.isFlatteningStep = isFlatteningStep;
-            fixedWidthStepImpl(e);
+        inline function steps(flat:Array<Float>) {
+            var j = 0;
+            while (j < flat.length) {
+                final e = newEndpoint(flat[j], flat[j + 1]);
+                e.isFlatteningStep = flat[j + 2] != 1.0;
+                fixedWidthStepImpl(e);
+                j += 3;
+            }
         }
         // flatten_quad
         final tSplit = findSharpTurn(fx, fy, cx, cy, tx, ty);
-        if (tSplit != null) {
+        if (tSplit >= 0.0) {
             final t:Float = tSplit;
             // QuadraticBezierSegment::split
             final oneT = f(1 - t);
@@ -1331,20 +1372,31 @@ private class StrokeBuilder {
             final c0y = f(f(oneT * fy) + f(t * cy));
             final c1x = f(f(oneT * cx) + f(t * tx));
             final c1y = f(f(oneT * cy) + f(t * ty));
-            PathTessellator.flattenQuad(fx, fy, c0x, c0y, sx, sy, tolerance, (x, y, te) -> step(x, y, te != 1.0));
-            PathTessellator.flattenQuad(sx, sy, c1x, c1y, tx, ty, tolerance, (x, y, te) -> step(x, y, te != 1.0));
+            final flat = PathTessellator.flattenBuffer;
+            flat.resize(0);
+            PathTessellator.flattenQuad(fx, fy, c0x, c0y, sx, sy, tolerance, flat);
+            PathTessellator.flattenQuad(sx, sy, c1x, c1y, tx, ty, tolerance, flat);
+            steps(flat);
         }
         else {
-            PathTessellator.flattenQuad(fx, fy, cx, cy, tx, ty, tolerance, (x, y, te) -> step(x, y, te != 1.0));
+            final flat = PathTessellator.flattenBuffer;
+            flat.resize(0);
+            PathTessellator.flattenQuad(fx, fy, cx, cy, tx, ty, tolerance, flat);
+            steps(flat);
         }
     }
 
     public function cubicBezierToFw(fx:Float, fy:Float, c1x:Float, c1y:Float, c2x:Float, c2y:Float, tx:Float, ty:Float):Void {
-        PathTessellator.flattenCubic(fx, fy, c1x, c1y, c2x, c2y, tx, ty, tolerance, (x, y, te) -> {
-            final e = newEndpoint(x, y);
-            e.isFlatteningStep = te != 1.0;
+        final flat = PathTessellator.flattenBuffer;
+        flat.resize(0);
+        PathTessellator.flattenCubic(fx, fy, c1x, c1y, c2x, c2y, tx, ty, tolerance, flat);
+        var j = 0;
+        while (j < flat.length) {
+            final e = newEndpoint(flat[j], flat[j + 1]);
+            e.isFlatteningStep = flat[j + 2] != 1.0;
             fixedWidthStepImpl(e);
-        });
+            j += 3;
+        }
     }
 
     public function end(close:Bool):Void {
@@ -1357,8 +1409,8 @@ private class StrokeBuilder {
         firsts.resize(0);
     }
 
-    /** lyon `find_sharp_turn` */
-    static function findSharpTurn(fx:Float, fy:Float, cx:Float, cy:Float, tx:Float, ty:Float):Null<Float> {
+    /** lyon `find_sharp_turn` (-1 for `None`: the turn is strictly inside 0...1) */
+    static function findSharpTurn(fx:Float, fy:Float, cx:Float, cy:Float, tx:Float, ty:Float):Float {
         final bx = f(tx - fx), by = f(ty - fy);
         final vx = f(cx - fx), vy = f(cy - fy);
         final nx = -by, ny = bx;
@@ -1367,7 +1419,7 @@ private class StrokeBuilder {
         var lx = bx, ly = by;
         if ((vDotB >= 0.0 && vDotB <= f(f(bx * bx) + f(by * by))) || f(Math.abs(vDotN) * 2.0) >= Math.abs(vDotB)) {
             if (f(PathTessellator.squareLength(bx, by) * 30.0) > PathTessellator.squareLength(vx, vy))
-                return null;
+                return -1.0;
             lx = vx;
             ly = vy;
         }
@@ -1380,11 +1432,11 @@ private class StrokeBuilder {
         // local_x_extremum_t
         final div = f(f(0 - f(2 * rcx)) + rtx);
         if (div == 0.0)
-            return null;
+            return -1.0;
         final t = f(f(0 - rcx) / div);
         if (t > 0.0 && t < 1.0)
             return t;
-        return null;
+        return -1.0;
     }
 
     inline function pointsAreTooClose(ax:Float, ay:Float, bx:Float, by:Float):Bool {

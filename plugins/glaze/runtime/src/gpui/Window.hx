@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.util.Stacks;
 import gpui.platform.SceneRenderable;
 import gpui.TouchGestureRecognizer.RecognizedTouchGesture;
 import gpui.scene.Scene;
@@ -681,6 +682,9 @@ class Window implements WindowInvalidator {
     /** Views notified since the last frame (Rust: the invalidator's dirty views) */
     final pendingDirtyViews:IntMap<Bool> = new IntMap();
 
+    /** The keys of `pendingDirtyViews`, iterated without allocating (a map's `keys()` copies them) */
+    final pendingDirtyViewIds:Array<Int> = [];
+
     /** Shared scroll states read by the views cached by default (port, see `ViewDependencies`) */
     @:allow(gpui)
     final viewDependencies:ViewDependencies = new ViewDependencies();
@@ -751,6 +755,9 @@ class Window implements WindowInvalidator {
     var elementOpacity:Float = 1.0;
 
     final trackers:IntMap<ViewTracker> = new IntMap();
+
+    /** The keys of `trackers`, iterated without allocating (a map's `keys()` copies them) */
+    final trackerIds:Array<Int> = [];
 
     /**
      * The window drawing a frame, whose views record the entities accessed
@@ -999,10 +1006,11 @@ class Window implements WindowInvalidator {
         }
         GpuiInput.unbind(this);
         clearPendingInput();
-        for (tracker in trackers) {
-            tracker.destroy();
+        for (entityId in trackerIds) {
+            trackers.get(entityId).destroy();
         }
         trackers.clear();
+        trackerIds.resize(0);
         for (entityId in liveEntities.ids) {
             app.removeWindowInvalidator(entityId, id);
         }
@@ -1027,7 +1035,7 @@ class Window implements WindowInvalidator {
      * tracker reactions go through too).
      */
     public function invalidateView(entityId:Int, cx:App):Bool {
-        pendingDirtyViews.set(entityId, true);
+        addPendingDirtyView(entityId);
         // Like GPUI's `WindowInvalidator::invalidate_view`, a view notified
         // while the window draws is recorded for the next frame but does not
         // make the window dirty (otherwise a view that notifies from its own
@@ -1058,6 +1066,13 @@ class Window implements WindowInvalidator {
      * `mark_view_dirty`): a cached view renders again when one of its
      * descendants must.
      */
+    function addPendingDirtyView(viewId:Int):Void {
+        if (!pendingDirtyViews.exists(viewId)) {
+            pendingDirtyViews.set(viewId, true);
+            pendingDirtyViewIds.push(viewId);
+        }
+    }
+
     function markViewDirty(viewId:Int):Void {
         final tree = renderedFrame.dispatchTree;
         var nodeId = tree.viewNodeId(viewId);
@@ -1179,7 +1194,7 @@ class Window implements WindowInvalidator {
             return f(this);
         remSizeOverrideStack.push(remSize);
         final result = f(this);
-        remSizeOverrideStack.pop();
+        Stacks.drop(remSizeOverrideStack);
         return result;
     }
 
@@ -1265,12 +1280,14 @@ class Window implements WindowInvalidator {
 
     function drawFrame():Void {
         // Rust `invalidate_entities`
-        for (entityId in pendingDirtyViews.keys()) {
-            markViewDirty(entityId);
+        final pendingIds = pendingDirtyViewIds;
+        for (i in 0...pendingIds.length) {
+            markViewDirty(pendingIds[i]);
         }
+        pendingIds.resize(0);
         pendingDirtyViews.clear();
         // Default view caching: views whose scroll states changed render again
-        viewDependencies.invalidateChanged(renderedFrame.dispatchTree, markViewDirty);
+        viewDependencies.invalidateChanged(renderedFrame.dispatchTree, this);
 
         dirty = false;
         renderedViews.clear();
@@ -1349,20 +1366,20 @@ class Window implements WindowInvalidator {
         var focusBeforeListeners = _focus;
 
         // Views not rendered (or reused) anymore stop reacting
-        var stale:Null<Array<Int>> = null;
         final dispatchTree = renderedFrame.dispatchTree;
-        for (entityId in trackers.keys()) {
+        final ids = trackerIds;
+        var kept = 0;
+        for (i in 0...ids.length) {
+            final entityId = ids[i];
             if (!renderedViews.exists(entityId) && !dispatchTree.containsView(entityId)) {
-                if (stale == null) stale = [];
-                stale.push(entityId);
-            }
-        }
-        if (stale != null) {
-            for (entityId in stale) {
                 trackers.get(entityId).destroy();
                 trackers.remove(entityId);
             }
+            else {
+                ids[kept++] = entityId;
+            }
         }
+        ids.resize(kept);
 
         AnyElement.clearArena();
         drawCount++;
@@ -1563,6 +1580,7 @@ class Window implements WindowInvalidator {
         if (tracker == null) {
             tracker = new ViewTracker(() -> app.notify(entityId), view);
             trackers.set(entityId, tracker);
+            trackerIds.push(entityId);
         }
         if (firstPhase) {
             if (!renderedViews.exists(entityId)) {
@@ -1610,9 +1628,9 @@ class Window implements WindowInvalidator {
      */
     function recordEntitiesAccessed():Void {
         final next = nextLiveEntities;
-        for (entityId => tracker in trackers) {
+        for (entityId in trackerIds) {
             next.add(entityId);
-            for (accessed in tracker.accessed.ids) {
+            for (accessed in trackers.get(entityId).accessed.ids) {
                 next.add(accessed);
             }
         }
@@ -1741,13 +1759,14 @@ class Window implements WindowInvalidator {
      */
     @:allow(gpui)
     function computeLayoutBounds(layoutId:LayoutId):Void {
-        final bounds = layoutEngine.layoutBounds(layoutId, _scaleFactor);
+        final engine = layoutEngine;
+        engine.computeBounds(layoutId, _scaleFactor);
         final offset = elementOffset();
         // Always add the snapped offset like GPUI does, even when it is zero:
         // `-0.0 + 0.0` is `+0.0`, so skipping it would keep a negative zero
-        layoutBoundsX = bounds.origin.x + pixelSnap(offset.x);
-        layoutBoundsY = bounds.origin.y + pixelSnap(offset.y);
-        layoutBoundsSize = bounds.size;
+        layoutBoundsX = engine.boundsLeft(layoutId) + pixelSnap(offset.x);
+        layoutBoundsY = engine.boundsTop(layoutId) + pixelSnap(offset.y);
+        layoutBoundsSize = engine.boundsSize(layoutId);
     }
 
     /**
@@ -2013,6 +2032,34 @@ class Window implements WindowInvalidator {
 
     public function pushContentMask(mask:ContentMask):Void {
         contentMaskStack.push(mask.intersect(contentMask()));
+    }
+
+    /**
+     * `pushContentMask(style.overflowMask(bounds, remSize()))` when the
+     * style has one (true), making only the intersected mask: the same
+     * operations as `Bounds.intersect` (`Point.max`, `Point.min`,
+     * `fromCorners`).
+     */
+    @:allow(gpui)
+    function pushOverflowMask(style:Style, bounds:Bounds):Bool {
+        if (!style.computeOverflowMask(bounds, remSize())) {
+            return false;
+        }
+        final x = Style.overflowMaskX;
+        final y = Style.overflowMaskY;
+        final right = x + Style.overflowMaskWidth;
+        final bottom = y + Style.overflowMaskHeight;
+        final other = contentMask().bounds;
+        final otherRight = other.origin.x + other.size.width;
+        final otherBottom = other.origin.y + other.size.height;
+        final left = gpui.util.MathUtil.totalLess(other.origin.x, x) ? x : other.origin.x;
+        final top = gpui.util.MathUtil.totalLess(other.origin.y, y) ? y : other.origin.y;
+        final minRight = !gpui.util.MathUtil.totalLess(otherRight, right) ? right : otherRight;
+        final minBottom = !gpui.util.MathUtil.totalLess(otherBottom, bottom) ? bottom : otherBottom;
+        final width = (gpui.util.MathUtil.totalLess(left, minRight) ? minRight : left) - left;
+        final height = (gpui.util.MathUtil.totalLess(top, minBottom) ? minBottom : top) - top;
+        contentMaskStack.push(new ContentMask(new Bounds(new Point(left, top), new Size(width, height))));
+        return true;
     }
 
     public inline function popContentMask():Void {
@@ -2763,7 +2810,7 @@ class Window implements WindowInvalidator {
                     pushAbsoluteElementOffset(draw.absoluteOffset);
                     element.prepaint(this, app);
                     popElementOffset();
-                    remSizeOverrideStack.pop();
+                    Stacks.drop(remSizeOverrideStack);
                     endRenderedView();
                 }
                 else {
@@ -2798,7 +2845,7 @@ class Window implements WindowInvalidator {
                 if (draw.contentMask != null) pushContentMask(draw.contentMask);
                 remSizeOverrideStack.push(draw.remSize);
                 element.paint(this, app);
-                remSizeOverrideStack.pop();
+                Stacks.drop(remSizeOverrideStack);
                 if (draw.contentMask != null) popContentMask();
                 endRenderedView();
             }
@@ -3066,7 +3113,7 @@ class Window implements WindowInvalidator {
      */
     @:allow(gpui)
     function invalidateViewForNextFrame(viewId:Int):Void {
-        pendingDirtyViews.set(viewId, true);
+        addPendingDirtyView(viewId);
         dirty = true;
     }
 

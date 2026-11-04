@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.util.Stacks;
 import gpui.keymap.DispatchResult;
 import gpui.keymap.KeyDispatch;
 import gpui.keymap.Replay;
@@ -200,9 +201,9 @@ class DispatchTree {
             contextStack.pop();
         }
         if (node.viewId != -1) {
-            viewStack.pop();
+            Stacks.drop(viewStack);
         }
-        nodeStack.pop();
+        Stacks.drop(nodeStack);
     }
 
     /**
@@ -251,7 +252,7 @@ class DispatchTree {
                     break;
                 }
                 else {
-                    sourceStack.pop();
+                    Stacks.drop(sourceStack);
                     popNode();
                 }
             }
@@ -262,7 +263,7 @@ class DispatchTree {
             moveNode(sourceNode);
         }
         while (sourceStack.length > 0) {
-            sourceStack.pop();
+            Stacks.drop(sourceStack);
             popNode();
         }
         reusedSubtreeContainsFocus = containsFocus;

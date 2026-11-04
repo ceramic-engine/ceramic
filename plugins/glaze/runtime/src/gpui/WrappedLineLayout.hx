@@ -42,6 +42,11 @@ class WrappedLineLayout {
         return new Size(width(), lineHeight * (wrapBoundaries.length + 1));
     }
 
+    /** `size(lineHeight).height` without the `Size` */
+    public inline function sizeHeight(lineHeight:Pixels):Pixels {
+        return lineHeight * (wrapBoundaries.length + 1);
+    }
+
     /** The ascent of a line in this layout */
     public inline function ascent():Pixels {
         return unwrappedLayout.ascent;

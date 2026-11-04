@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.util.Stacks;
 import haxe.ds.IntMap;
 
 /**
@@ -106,7 +107,7 @@ class TabStopMap {
      */
     public function endGroup():Void {
         insertionHistory.push(GroupEnd);
-        currentPath.pop();
+        Stacks.drop(currentPath);
     }
 
     public function clear():Void {

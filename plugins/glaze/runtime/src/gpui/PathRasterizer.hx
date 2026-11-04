@@ -186,6 +186,7 @@ class PathRasterizer {
         }
         else {
             final vertices = path.vertices;
+            final covered = coveredSamples;
             var i = 0;
             while (i + 2 < vertices.length) {
                 final a = vertices[i].xyPosition;
@@ -196,9 +197,12 @@ class PathRasterizer {
                     snapX(a.x, scaleFactor, viewportWidth) - ox, snapY(a.y, scaleFactor, viewportHeight) - oy,
                     snapX(b.x, scaleFactor, viewportWidth) - ox, snapY(b.y, scaleFactor, viewportHeight) - oy,
                     snapX(c.x, scaleFactor, viewportWidth) - ox, snapY(c.y, scaleFactor, viewportHeight) - oy,
-                    width, height,
-                    (p, j) -> bits.set(p, bits.get(p) | (1 << j))
+                    width, height, covered
                 );
+                for (k in covered) {
+                    final p = k >> 2;
+                    bits.set(p, bits.get(p) | (1 << (k & 3)));
+                }
             }
         }
 
@@ -255,7 +259,11 @@ class PathRasterizer {
             // path_rasterization_fragment: `length(float2(dx.x, dy.x)) < 0.001`
             final isCurve = Math.sqrt(dsx * dsx + dsy * dsy) >= 0.001;
 
-            coverTriangle(ax, ay, bx, by, cx, cy, width, height, (p, j) -> {
+            final covered = coveredSamples;
+            coverTriangle(ax, ay, bx, by, cx, cy, width, height, covered);
+            for (k in covered) {
+                final p = k >> 2;
+                final j = k & 3;
                 var alpha = 1.0;
                 if (isCurve) {
                     // Fragment values at the pixel center
@@ -271,11 +279,10 @@ class PathRasterizer {
                     alpha = f(Math.max(0, Math.min(1, 0.5 - distance)));
                 }
                 if (alpha <= 0)
-                    return;
-                final k = p * 4 + j;
-                // Premultiplied "over" of the path color with itself
+                    continue;
+                // Premultiplied "over" of the path color with itself (`k` is `p * 4 + j`)
                 samples[k] = samples[k] + alpha * (1 - samples[k]);
-            });
+            }
         }
 
         final clip = boundsClip(path, scaleFactor, x0, y0);
@@ -336,12 +343,17 @@ class PathRasterizer {
         ];
     }
 
+    /** Samples covered by the last `coverTriangle()` (reused) */
+    static final coveredSamples:Array<Int> = [];
+
     /**
-     * Calls `cover(pixel, sample)` for each sample of the tile inside the
-     * triangle (vertices in 1/256 pixel units relative to the tile), with
-     * exact integer edge functions and the top-left rule.
+     * Sets `covered` to `pixel * 4 + sample` for each sample of the tile
+     * inside the triangle (vertices in 1/256 pixel units relative to the
+     * tile), with exact integer edge functions and the top-left rule, in
+     * row, sample, column order.
      */
-    static function coverTriangle(ax:Float, ay:Float, bx:Float, by:Float, cx:Float, cy:Float, width:Int, height:Int, cover:(pixel:Int, sample:Int) -> Void):Void {
+    static function coverTriangle(ax:Float, ay:Float, bx:Float, by:Float, cx:Float, cy:Float, width:Int, height:Int, covered:Array<Int>):Void {
+        covered.resize(0);
         var area = (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
         if (area == 0)
             return;
@@ -380,7 +392,7 @@ class PathRasterizer {
                     final e2 = (ax - cx) * (sy - cy) - (ay - cy) * (sx - cx);
                     if (e2 < 0 || (e2 == 0 && !incCA))
                         continue;
-                    cover(py * width + px, j);
+                    covered.push((py * width + px) * 4 + j);
                 }
             }
         }

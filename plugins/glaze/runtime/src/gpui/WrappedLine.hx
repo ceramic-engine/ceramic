@@ -37,6 +37,11 @@ class WrappedLine {
         return layout.size(lineHeight);
     }
 
+    /** `size(lineHeight).height` without the `Size` */
+    public inline function sizeHeight(lineHeight:Pixels):Pixels {
+        return layout.sizeHeight(lineHeight);
+    }
+
     public inline function wrapBoundaries():Array<WrapBoundary> {
         return layout.wrapBoundaries;
     }

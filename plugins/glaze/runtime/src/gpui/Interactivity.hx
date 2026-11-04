@@ -3,6 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.util.Stacks;
 import gpui.ClickEvent.KeyboardClickEvent;
 import gpui.ClickEvent.MouseClickEvent;
 import gpui.util.Ref;
@@ -877,7 +878,7 @@ class Interactivity {
     public var prepaintScrollOffset(default, null):Point = ZERO_POINT;
 
     var prepaintTextStyle:Null<TextStyleRefinement> = null;
-    var prepaintMask:Null<ContentMask> = null;
+    var prepaintMask:Bool = false;
     var previousPrepaintOpacity:Float = 1.0;
     var prepaintPushedGroup:Bool = false;
 
@@ -932,8 +933,7 @@ class Interactivity {
 
             final textStyle = style.textStyle();
             if (textStyle != null) window.pushTextStyle(textStyle);
-            final mask = style.overflowMask(bounds, window.remSize());
-            if (mask != null) window.pushContentMask(mask);
+            final mask = window.pushOverflowMask(style, bounds);
 
             final hitbox = shouldInsertHitbox(style, window, cx) ? window.insertHitbox(bounds, hitboxBehavior) : null;
             final scrollOffset = clampScrollPosition(bounds, style, window, cx);
@@ -964,14 +964,14 @@ class Interactivity {
      */
     public function prepaintEnd(window:Window):Void {
         if (prepaintPushedGroup) {
-            window.prepaintGroupHitboxes.pop();
+            Stacks.drop(window.prepaintGroupHitboxes);
         }
         window.prepaintOpacity = previousPrepaintOpacity;
 
-        if (prepaintMask != null) window.popContentMask();
+        if (prepaintMask) window.popContentMask();
         if (prepaintTextStyle != null) window.popTextStyle();
         prepaintTextStyle = null;
-        prepaintMask = null;
+        prepaintMask = false;
     }
 
     function shouldInsertHitbox(style:Style, window:Window, cx:App):Bool {
@@ -1072,7 +1072,7 @@ class Interactivity {
     var paintHitbox:Null<Hitbox> = null;
     var paintCornerRadii:Null<Corners> = null;
     var paintTextStyle:Null<TextStyleRefinement> = null;
-    var paintMask:Null<ContentMask> = null;
+    var paintMask:Bool = false;
     var paintTabGroup:Bool = false;
     var paintHasOpacity:Bool = false;
     var paintPreviousOpacity:Float = 0.0;
@@ -1112,8 +1112,7 @@ class Interactivity {
 
         final textStyle = style.textStyle();
         if (textStyle != null) window.pushTextStyle(textStyle);
-        final mask = style.overflowMask(bounds, window.remSize());
-        if (mask != null) window.pushContentMask(mask);
+        final mask = window.pushOverflowMask(style, bounds);
 
         // Rust `window.with_tab_group(tab_group_index, ...)` around the listeners and the content
         paintTabGroup = tabGroupIndex != null;
@@ -1187,9 +1186,9 @@ class Interactivity {
             @:privateAccess window.nextFrame.tabStops.endGroup();
         }
 
-        if (paintMask != null) window.popContentMask();
+        if (paintMask) window.popContentMask();
         if (paintTextStyle != null) window.popTextStyle();
-        paintMask = null;
+        paintMask = false;
         paintTextStyle = null;
 
         style.paintBorder(bounds, paintCornerRadii, window, cx);
@@ -2074,7 +2073,7 @@ class GroupHitboxes {
     public static function pop(name:String, cx:App):Void {
         final stack = cx.groupHitboxes.get(name);
         if (stack != null) {
-            stack.pop();
+            Stacks.drop(stack);
         }
     }
 

@@ -45,7 +45,7 @@ class TextLayout {
         final runs:Array<TextRun> = runs != null ? runs : [textStyle.toRun(Utf8.byteLength(text))];
         final elementState = this;
 
-        return window.requestMeasuredLayout(new Style(), (knownDimensions, availableSpace, window, cx) -> {
+        return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
             final availableWidth:Null<Float> = switch availableSpace.width {
                 case Definite(x): x;
                 case _: null;
@@ -114,7 +114,7 @@ class TextLayout {
                     if (unclipped != null) {
                         fits = true;
                         for (line in unclipped) {
-                            if (line.size(lineHeight).width > truncateWidth) {
+                            if (line.width() > truncateWidth) {
                                 fits = false;
                                 break;
                             }
@@ -145,9 +145,8 @@ class TextLayout {
             var width:Float = 0;
             var height:Float = 0;
             for (line in lines) {
-                final lineSize = line.size(lineHeight);
-                height += lineSize.height;
-                width = Math.fceil(Math.max(width, lineSize.width));
+                height += line.sizeHeight(lineHeight);
+                width = Math.fceil(Math.max(width, line.width()));
             }
             final size = new Size(width, height);
             elementState.setInner(lines, len, lineHeight, wrapWidth, truncateWidth, size);
@@ -216,7 +215,7 @@ class TextLayout {
             if (pass == All || pass == Foreground) {
                 line.paint(lineOrigin, lineHeight, textStyle.textAlign, bounds, window.textPainter());
             }
-            originY += line.size(lineHeight).height;
+            originY += line.sizeHeight(lineHeight);
         }
     }
 
@@ -237,7 +236,7 @@ class TextLayout {
         var lineOriginY = bounds.origin.y;
         var lineStartIx = 0;
         for (line in lines) {
-            final lineBottom = lineOriginY + line.size(lineHeight).height;
+            final lineBottom = lineOriginY + line.sizeHeight(lineHeight);
             if (position.y > lineBottom) {
                 lineOriginY = lineBottom;
                 lineStartIx += line.len() + 1;
@@ -274,7 +273,7 @@ class TextLayout {
                 break;
             }
             else if (index > lineEndIx) {
-                lineOriginY += line.size(lineHeight).height;
+                lineOriginY += line.sizeHeight(lineHeight);
                 lineStartIx = lineEndIx + 1;
                 continue;
             }

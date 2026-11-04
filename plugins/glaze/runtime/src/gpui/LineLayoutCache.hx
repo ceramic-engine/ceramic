@@ -371,7 +371,7 @@ private class LineCacheEntry {
 
     public final fontSize:Float;
 
-    /** The runs, as given (callers pass a fresh array that is not changed afterwards) */
+    /** The runs (a copy: callers may reuse theirs) */
     public final runs:Array<FontRun>;
 
     public final wrapWidth:Null<Float>;
@@ -400,11 +400,16 @@ private class LineCacheEntry {
     }
 
     public static function ofText(hash:Int, text:String, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):LineCacheEntry {
-        return new LineCacheEntry(hash, text, 0, 0, fontSize, runs, wrapWidth, forceWidth);
+        return new LineCacheEntry(hash, text, 0, 0, fontSize, copyRuns(runs), wrapWidth, forceWidth);
     }
 
     public static function ofHash(hash:Int, textHash:Int, textLen:Int, fontSize:Float, runs:Array<FontRun>, wrapWidth:Null<Float>, forceWidth:Null<Float>):LineCacheEntry {
-        return new LineCacheEntry(hash, null, textHash, textLen, fontSize, runs, wrapWidth, forceWidth);
+        return new LineCacheEntry(hash, null, textHash, textLen, fontSize, copyRuns(runs), wrapWidth, forceWidth);
+    }
+
+    /** The entry keeps its own runs: callers may pass scratch runs they reuse */
+    static function copyRuns(runs:Array<FontRun>):Array<FontRun> {
+        return [for (run in runs) new FontRun(run.len, run.fontId)];
     }
 
     static inline function sameOptional(a:Null<Float>, b:Null<Float>):Bool {

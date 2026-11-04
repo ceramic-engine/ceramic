@@ -101,8 +101,13 @@ class TextPainter {
      * clipped bounds are empty; call `popLayer()` only when it returned true.
      */
     public function pushLayer(bounds:Bounds):Bool {
+        return pushLayerAt(bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height);
+    }
+
+    /** `pushLayer()` of the bounds `x, y, width, height` */
+    public function pushLayerAt(x:Float, y:Float, width:Float, height:Float):Bool {
         final mask = contentMaskBounds;
-        if (!pushCoverLayer(scene, bounds.origin.x, bounds.origin.y, bounds.size.width, bounds.size.height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, scaleFactor))
+        if (!pushCoverLayer(scene, x, y, width, height, mask.origin.x, mask.origin.y, mask.size.width, mask.size.height, scaleFactor))
             return false;
         layerDepth++;
         return true;
