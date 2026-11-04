@@ -15,6 +15,8 @@ class UnityCSharp {
 
     static final STATIC_GENERIC_CAST = ~/public static object __hx_cast<([^>]+)>\((global::[\w.@]+) me\) \{\n((?:[ \t]*#line[^\n]*\n)?)([ \t]*)return \( \(\( me != null \)\) \? \(me\.(\w+_cast)<[^>]+>\(\)\) : default\(object\) \);\n/g;
 
+    static final ARRAY_LENGTH = ~/\( ((?:this\.)?\w+) as global::System\.Array \)\.Length/g;
+
     public static function exportScriptFilesToProject(cwd:String, project:Project) {
 
         var debug = context.debug;
@@ -60,9 +62,13 @@ class UnityCSharp {
                 else if (normalizedPath == 'cs/internal/Runtime.cs') {
                     processedContent = patchRuntime(processedContent, dstResourcesPath);
                 }
+                else if (normalizedPath == 'haxe/ds/IntMap.cs' || normalizedPath == 'haxe/ds/StringMap.cs') {
+                    processedContent = patchMapGenericCast(processedContent);
+                }
                 else if (normalizedPath == 'Array.cs') {
                     processedContent = patchGenericCast(processedContent);
                     processedContent = patchArraySort(processedContent);
+                    processedContent = patchArrayLength(processedContent);
                 }
 
                 var sanitizedName = sanitizeName(normalizedPath);
@@ -298,6 +304,34 @@ class UnityCSharp {
         content = content.replace('global::haxe.lang.Runtime.genericCast<T>(x', '(x');
 
         return content;
+
+    }
+
+    /**
+     * `IntMap<T>` and `StringMap<T>` keep their values in a `T[]` but read
+     * them through `Runtime.genericCast<T>`, a type test that IL2CPP runs
+     * through its slow path when `T` is a reference type: read them as they
+     * are, like `Array.__get` (`patchGenericCast`).
+     */
+    static function patchMapGenericCast(content:String):String {
+
+        content = content.replace('global::haxe.lang.Runtime.genericCast<T>(this.vals[', '(this.vals[');
+        content = content.replace('global::haxe.lang.Runtime.genericCast<T>(vals[', '(vals[');
+        content = content.replace('global::haxe.lang.Runtime.genericCast<T>(this.m.vals[', '(this.m.vals[');
+
+        return content;
+
+    }
+
+    /**
+     * Haxe's C# `Array` reads the length of its native `T[]` through
+     * `(a as System.Array).Length`, which IL2CPP compiles to two calls into
+     * the runtime (`GetLength(0)` and `Rank`), on every `push` and every
+     * write by index. Read the length of the `T[]` directly.
+     */
+    static function patchArrayLength(content:String):String {
+
+        return ARRAY_LENGTH.replace(content, '$1.Length');
 
     }
 
