@@ -204,6 +204,18 @@ class Textures implements spec.Textures {
         var unityTexture:Texture2D = untyped __cs__('new UnityEngine.Texture2D(2, 2, UnityEngine.TextureFormat.RGBA32, false)');
         ImageConversion.LoadImage(unityTexture, bytes.getData(), false);
 
+        // LoadImage changes the format to the image's (RGB24 for a JPEG or
+        // an opaque PNG), while Ceramic textures are RGBA32 (and
+        // fetchTexturePixels reads them as Color32)
+        var isRgba32:Bool = untyped __cs__('{0}.format == UnityEngine.TextureFormat.RGBA32', unityTexture);
+        if (!isRgba32) {
+            var converted:Texture2D = untyped __cs__('new UnityEngine.Texture2D({0}.width, {0}.height, UnityEngine.TextureFormat.RGBA32, false)', unityTexture);
+            untyped __cs__('{0}.SetPixels32({1}.GetPixels32())', converted, unityTexture);
+            converted.Apply(false, false);
+            untyped __cs__('UnityEngine.Object.Destroy({0})', unityTexture);
+            unityTexture = converted;
+        }
+
         var texture = new TextureImpl('bytes:' + (nextBytesIndex++), unityTexture, null #if unity_6000 , null #end);
 
         loadedTexturesRetainCount.set(texture.path, 1);
