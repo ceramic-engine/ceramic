@@ -72,7 +72,7 @@ private class ViewNodes {
  * to be laid out again; otherwise its new subtree replaces the retained one
  * (`replaceRetained()`).
  */
-class TaffyLayoutEngine {
+class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> {
 
     final tree:TaffyTree<NodeContext>;
 
@@ -135,13 +135,11 @@ class TaffyLayoutEngine {
     var measureCx:Null<App> = null;
     var measureScaleFactor:Float = 1;
     var measureNodeContext:Null<NodeContext> = null;
-    final taffyMeasure:taffy.tree.TaffyTree.MeasureFunction<NodeContext>;
     final leafMeasure:taffy.compute.Leaf.LeafMeasureFunction;
 
     public function new() {
         tree = new TaffyTree<NodeContext>();
         tree.disableRounding();
-        taffyMeasure = measureNode;
         leafMeasure = measureLeaf;
     }
 
@@ -445,8 +443,9 @@ class TaffyLayoutEngine {
                     boundsFrames[id] = 0;
                     absoluteLayoutBounds[id] = null;
                 }
-                for (child in tree.children(id)) {
-                    stack.push(child);
+                // By index: `tree.children()` returns a copy
+                for (i in 0...tree.childCount(id)) {
+                    stack.push(tree.childAtIndex(id, i));
                 }
             }
         }
@@ -478,7 +477,14 @@ class TaffyLayoutEngine {
         runCount++;
         final window = measureWindow;
         measureScaleFactor = window != null ? window.scaleFactor() : 1.0;
-        tree.computeLayoutWithMeasure(id, available, taffyMeasure);
+        // The engine is the measurer: a typed call per leaf (a measure
+        // function value would box the node id on hxcpp)
+        tree.computeLayoutWithMeasurer(id, available, this);
+    }
+
+    @:noCompletion
+    public function measureLeafNode(input:taffy.tree.LayoutInput, nodeId:NodeId, nodeContext:NodeContext, style:taffy.style.Style):taffy.tree.LayoutOutput {
+        return measureNode(input, nodeId, nodeContext, style);
     }
 
     function measureNode(input:taffy.tree.LayoutInput, nodeId:NodeId, nodeContext:Null<NodeContext>, style:taffy.style.Style):taffy.tree.LayoutOutput {

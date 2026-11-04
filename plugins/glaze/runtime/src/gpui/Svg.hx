@@ -164,7 +164,10 @@ class Svg extends Element implements Styled {
 /// Element
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return interactivity.requestLayout(id, #if gpui_inspector inspectorId, #end window, cx, (style, window, cx) -> window.requestLayout(style, null, cx));
+        // `interactivity.requestLayout(..., (style, window, cx) -> window.requestLayout(style, null, cx))`
+        // without the closure (whose Int result is boxed on hxcpp)
+        final style = interactivity.requestLayoutStyle(id, #if gpui_inspector inspectorId, #end window, cx);
+        return window.requestLayout(style, null, cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {

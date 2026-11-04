@@ -158,10 +158,10 @@ class ListElement extends Element implements Styled {
     @:allow(gpui)
     static function paddingToPixels(style:Style, parentSize:Size, remSize:Pixels):Edges {
         return new Edges(
-            style.paddingTop.toPixels(AbsoluteLength.Pixels(parentSize.height), remSize),
-            style.paddingRight.toPixels(AbsoluteLength.Pixels(parentSize.width), remSize),
-            style.paddingBottom.toPixels(AbsoluteLength.Pixels(parentSize.height), remSize),
-            style.paddingLeft.toPixels(AbsoluteLength.Pixels(parentSize.width), remSize)
+            style.paddingTop.toPixelsOf(parentSize.height, remSize),
+            style.paddingRight.toPixelsOf(parentSize.width, remSize),
+            style.paddingBottom.toPixelsOf(parentSize.height, remSize),
+            style.paddingLeft.toPixelsOf(parentSize.width, remSize)
         );
     }
 

@@ -395,7 +395,7 @@ class VirtualList extends Element implements Styled {
 
                 // Including the gap between items for calculate the item size
                 final gapLength = axis == Horizontal ? style.gapWidth : style.gapHeight;
-                final gap = gapLength.toPixels(AbsoluteLength.Pixels(fontSize), remSize);
+                final gap = gapLength.toPixelsOf(fontSize, remSize);
 
                 if (!sameSizes(state.itemsSizes, itemSizes)) {
                     state.itemsSizes = itemSizes;
@@ -481,10 +481,10 @@ class VirtualList extends Element implements Styled {
 
     static function paddingToPixels(style:Style, parentSize:Size, remSize:Float):Edges {
         return new Edges(
-            style.paddingTop.toPixels(AbsoluteLength.Pixels(parentSize.height), remSize),
-            style.paddingRight.toPixels(AbsoluteLength.Pixels(parentSize.width), remSize),
-            style.paddingBottom.toPixels(AbsoluteLength.Pixels(parentSize.height), remSize),
-            style.paddingLeft.toPixels(AbsoluteLength.Pixels(parentSize.width), remSize)
+            style.paddingTop.toPixelsOf(parentSize.height, remSize),
+            style.paddingRight.toPixelsOf(parentSize.width, remSize),
+            style.paddingBottom.toPixelsOf(parentSize.height, remSize),
+            style.paddingLeft.toPixelsOf(parentSize.width, remSize)
         );
     }
 

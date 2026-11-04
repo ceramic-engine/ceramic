@@ -37,6 +37,19 @@ class DefiniteLengthTools {
     }
 
     /**
+     * `toPixels(AbsoluteLength.Pixels(basePixels), remSize)` without the
+     * `AbsoluteLength` (an enum value allocated per call).
+     */
+    public static function toPixelsOf(self:DefiniteLength, basePixels:Pixels, remSize:Pixels):Pixels {
+
+        return switch self {
+            case Absolute(size): size.toPixels(remSize);
+            case Fraction(fraction): basePixels * fraction;
+        }
+
+    }
+
+    /**
      * Checks if the length is zero (Rust trait `IsZero`).
      */
     public static function isZero(self:DefiniteLength):Bool {

@@ -1023,10 +1023,10 @@ class Interactivity {
         // Taffy lays the box out with the padding snapped to the device pixel
         // grid; recomputed unsnapped, it could exceed `bounds` and leave the box
         // scrollable by the sub-pixel difference.
-        final paddingLeft = window.pixelSnap(style.paddingLeft.toPixels(AbsoluteLength.Pixels(bounds.size.width), remSize));
-        final paddingRight = window.pixelSnap(style.paddingRight.toPixels(AbsoluteLength.Pixels(bounds.size.width), remSize));
-        final paddingTop = window.pixelSnap(style.paddingTop.toPixels(AbsoluteLength.Pixels(bounds.size.height), remSize));
-        final paddingBottom = window.pixelSnap(style.paddingBottom.toPixels(AbsoluteLength.Pixels(bounds.size.height), remSize));
+        final paddingLeft = window.pixelSnap(style.paddingLeft.toPixelsOf(bounds.size.width, remSize));
+        final paddingRight = window.pixelSnap(style.paddingRight.toPixelsOf(bounds.size.width, remSize));
+        final paddingTop = window.pixelSnap(style.paddingTop.toPixelsOf(bounds.size.height, remSize));
+        final paddingBottom = window.pixelSnap(style.paddingBottom.toPixelsOf(bounds.size.height, remSize));
         // The floating point values produced by Taffy and ours often vary
         // slightly after ~5 decimal places: round the scroll max to 2 decimal places.
         final scrollMaxX = Math.max(roundToTwoDecimals(contentSize.width + paddingLeft + paddingRight - bounds.size.width), 0);

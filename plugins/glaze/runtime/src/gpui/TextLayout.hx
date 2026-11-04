@@ -40,7 +40,7 @@ class TextLayout {
     public function layout(text:String, runs:Null<Array<TextRun>>, window:Window, cx:App):LayoutId {
         final textStyle = window.currentTextStyle();
         final fontSize = textStyle.fontSize.toPixels(window.remSize());
-        final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixels(AbsoluteLength.Pixels(fontSize), window.remSize()));
+        final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixelsOf(fontSize, window.remSize()));
 
         final runs:Array<TextRun> = runs != null ? runs : [textStyle.toRun(Utf8.byteLength(text))];
         final elementState = this;
