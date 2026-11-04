@@ -1427,6 +1427,39 @@ class App {
     }
 
     /**
+     * Sets the right click menu for the app icon in the dock (Rust
+     * `set_dock_menu`). Its items dispatch their action like the menu bar
+     * items.
+     */
+    public function setDockMenu(menus:Array<Menu.MenuItem>):Void {
+        platformOperations.setDockMenu(menus, keymap);
+    }
+
+    /**
+     * Performs the action associated with the given dock menu item, only
+     * used on Windows for now (Rust `perform_dock_menu_action`).
+     */
+    public function performDockMenuAction(action:Int):Void {
+        platformOperations.performDockMenuAction(action);
+    }
+
+    /**
+     * Returns the appearance of the application's windows (Rust
+     * `window_appearance`).
+     */
+    public function windowAppearance():WindowAppearance {
+        return platformOperations.windowAppearance();
+    }
+
+    /**
+     * Returns whether the user has configured scrollbars to auto-hide at the
+     * platform level (Rust `should_auto_hide_scrollbars`).
+     */
+    public function shouldAutoHideScrollbars():Bool {
+        return platformOperations.shouldAutoHideScrollbars();
+    }
+
+    /**
      * Register a global listener for actions of exactly the given class, invoked in the
      * bubble phase after the window's element listeners.
      */

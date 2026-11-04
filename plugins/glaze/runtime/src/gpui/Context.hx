@@ -453,6 +453,21 @@ class Context<T:Model> extends EntitySlot {
     }
 
     /**
+     * Register a callback to be invoked when the window appearance changes.
+     */
+    public function observeWindowAppearance(window:Window, callback:(T, Window, Context<T>) -> Void):Subscription {
+        final self = this;
+        final result = window.newAppearanceObserver((window, cx) -> {
+            if (!self.isAlive())
+                return false;
+            cx.updateEntity((cast self.model : T), (view, cx) -> callback(view, window, cx));
+            return true;
+        });
+        result.activate();
+        return ownSubscription(result.subscription);
+    }
+
+    /**
      * Register a callback to be invoked when the window loses focus (nothing is focused anymore).
      */
     public function onFocusLost(window:Window, listener:(T, Window, Context<T>) -> Void):Subscription {

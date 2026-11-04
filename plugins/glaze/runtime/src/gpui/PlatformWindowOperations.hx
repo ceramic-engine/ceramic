@@ -5,8 +5,8 @@ package gpui;
 
 /**
  * The native window operations of GPUI's `PlatformWindow`: activate, minimize, zoom
- * (maximize or restore), interactive move and resize, the window menu and
- * the title bar double click.
+ * (maximize or restore), interactive move and resize, the window menu, the
+ * title bar double click and the window appearance.
  *
  * Windows use `gpui.platform.CeramicWindowOperations` by default, which acts
  * on the Ceramic app window (`ceramic.Screen`: SDL on native targets, nothing
@@ -39,5 +39,12 @@ interface PlatformWindowOperations {
 
     /** Run the system action of a title bar double click (`PlatformWindow::titlebar_double_click`). */
     function titlebarDoubleClick(isResizable:Bool, isMinimizable:Bool):Void;
+
+    /**
+     * The appearance of the window (`PlatformWindow::appearance`). The window
+     * reads it again when the platform reports a change (Ceramic's
+     * `systemAppearanceChange`, see `Window.observeWindowAppearance`).
+     */
+    function appearance():WindowAppearance;
 
 }

@@ -12,6 +12,7 @@ import gpui.Menu.OwnedMenu;
 import gpui.PathPromptOptions;
 import gpui.PlatformOperations;
 import gpui.Task;
+import gpui.WindowAppearance;
 
 /**
  * `PlatformOperations` through Ceramic:
@@ -48,6 +49,19 @@ import gpui.Task;
  *   callback, validation asks `onValidateAppMenuCommand`, and opening a
  *   menu runs `onWillOpenAppMenu`. A shortcut first goes to the window as a
  *   key down and only runs the item when the window did not handle it.
+ * - `setDockMenu` installs Ceramic's dock menu (`ceramic.Screen.setDockMenu`),
+ *   like GPUI's macOS platform (`set_dock_menu`, `create_dock_menu`,
+ *   `handle_dock_menu`): a native `NSMenu` given by the application
+ *   delegate on macOS, nothing elsewhere. Its items run the
+ *   `onAppMenuAction` callback and are validated like the menu bar items.
+ *   `performDockMenuAction` does nothing (GPUI only uses it on Windows).
+ * - `windowAppearance` is Ceramic's system appearance
+ *   (`ceramic.Screen.systemAppearance`: the effective appearance of the
+ *   application on macOS like GPUI's, the system theme through SDL on
+ *   Windows and Linux, `prefers-color-scheme` on the web like gpui-pre-web).
+ * - `shouldAutoHideScrollbars` is Ceramic's scrollbar preference
+ *   (`ceramic.Screen.autoHideScrollbars`: the preferred scroller style on
+ *   macOS like GPUI's, true on the web like gpui-pre-web).
  */
 class CeramicPlatformOperations implements PlatformOperations {
 
@@ -138,18 +152,8 @@ class CeramicPlatformOperations implements PlatformOperations {
             final menuBar = menuBarItems(menus, keymap);
             menuBarOwner = this;
             final screen = app.screen;
-            if (!menuBarBound) {
-                menuBarBound = true;
-                screen.onMenuAction(null, item -> {
-                    if (menuBarOwner != null)
-                        menuBarOwner.handleMenuItem(item);
-                });
-                screen.onMenuWillOpen(null, () -> {
-                    if (menuBarOwner != null)
-                        menuBarOwner.menuWillOpen();
-                });
-            }
-            screen.menuItemValidator = item -> menuBarOwner != null && menuBarOwner.validateMenuItem(item);
+            bindMenuEvents(screen);
+            screen.menuItemValidator = validateCeramicMenuItem;
             screen.setMenuBar(menuBar);
         }
         this.menus = [for (menu in menus) menu.owned()];
@@ -157,6 +161,31 @@ class CeramicPlatformOperations implements PlatformOperations {
 
     public function getMenus():Null<Array<OwnedMenu>> {
         return menus;
+    }
+
+    public function setDockMenu(menu:Array<MenuItem>, keymap:Keymap):Void {
+        final app = ceramic.App.app;
+        if (app != null && app.screen != null) {
+            bindMenuEvents(app.screen);
+            dockMenuOwner = this;
+            app.screen.menuItemValidator = validateCeramicMenuItem;
+            app.screen.setDockMenu([for (item in menu) menuItem(item, keymap)]);
+        }
+    }
+
+    /** GPUI's default (`Platform::perform_dock_menu_action`): nothing outside Windows. */
+    public function performDockMenuAction(action:Int):Void {}
+
+    public function windowAppearance():WindowAppearance {
+        final app = ceramic.App.app;
+        if (app == null || app.screen == null)
+            return Light;
+        return WindowAppearance.fromCeramic(app.screen.systemAppearance);
+    }
+
+    public function shouldAutoHideScrollbars():Bool {
+        final app = ceramic.App.app;
+        return app != null && app.screen != null && app.screen.autoHideScrollbars;
     }
 
     var menuCommand:Null<(gpui.Action) -> Void> = null;
@@ -168,7 +197,54 @@ class CeramicPlatformOperations implements PlatformOperations {
     /** The operations that installed the current Ceramic menu bar (one per Ceramic app). */
     static var menuBarOwner:Null<CeramicPlatformOperations> = null;
 
+    /** The operations that installed the current Ceramic dock menu. */
+    static var dockMenuOwner:Null<CeramicPlatformOperations> = null;
+
     static var menuBarBound:Bool = false;
+
+    /**
+     * Listens to Ceramic's menu events once: an item goes to the operations
+     * that installed its menu (Rust: the platform's `menu_command`, shared by
+     * the menu bar and the dock menu), opening a menu to those of the menu
+     * bar, or of the dock menu without menu bar.
+     */
+    static function bindMenuEvents(screen:ceramic.Screen):Void {
+        if (menuBarBound)
+            return;
+        menuBarBound = true;
+        screen.onMenuAction(null, item -> {
+            final owner = ownerOf(item);
+            if (owner != null)
+                owner.handleMenuItem(item);
+        });
+        screen.onMenuWillOpen(null, () -> {
+            final owner = menuBarOwner != null ? menuBarOwner : dockMenuOwner;
+            if (owner != null)
+                owner.menuWillOpen();
+        });
+    }
+
+    static function ownerOf(item:ceramic.MenuItem):Null<CeramicPlatformOperations> {
+        final screen = ceramic.App.app.screen;
+        if (dockMenuOwner != null && screen.dockMenu != null && containsItem(screen.dockMenu, item))
+            return dockMenuOwner;
+        return menuBarOwner;
+    }
+
+    static function containsItem(items:Array<ceramic.MenuItem>, item:ceramic.MenuItem):Bool {
+        for (candidate in items) {
+            if (candidate == item)
+                return true;
+            if (candidate.items != null && containsItem(candidate.items, item))
+                return true;
+        }
+        return false;
+    }
+
+    static function validateCeramicMenuItem(item:ceramic.MenuItem):Bool {
+        final owner = ownerOf(item);
+        return owner != null && owner.validateMenuItem(item);
+    }
 
     public function onAppMenuAction(callback:(gpui.Action) -> Void):Void {
         menuCommand = callback;

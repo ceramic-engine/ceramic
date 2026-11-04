@@ -899,6 +899,8 @@ class Window implements WindowInvalidator {
 
     final activationObservers:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
 
+    final appearanceObservers:SubscriberSet<(Window, App) -> Bool> = new SubscriberSet();
+
     var pendingInput:Null<PendingInput> = null;
 
     var pendingModifierModifiers:Modifiers = Modifiers.none();
@@ -956,6 +958,7 @@ class Window implements WindowInvalidator {
         _viewportSize = new Size(options.width, options.height);
         windowContentMask = new ContentMask(new Bounds(new Point(0, 0), _viewportSize));
         _active = options.active;
+        _appearance = platformAppearance();
         _isResizable = options.isResizable;
         _isMinimizable = options.isMinimizable;
         renderedFrame = new Frame(app.keymap);
@@ -999,6 +1002,10 @@ class Window implements WindowInvalidator {
         // callback, wired in `Window::new`): Ceramic emits `resize` when the
         // screen density changes (browser zoom, another display)
         ceramic.App.app.screen.onResize(renderable, handleScreenResize);
+        // The platform window reports an appearance change (Rust
+        // `on_appearance_changed`, wired in `Window::new`): Ceramic emits
+        // `systemAppearanceChange` when the system appearance changes
+        ceramic.App.app.screen.onSystemAppearanceChange(renderable, handleSystemAppearanceChange);
     }
 
     static function refreshWindowsOf(app:App):Void {
@@ -1016,6 +1023,12 @@ class Window implements WindowInvalidator {
     public static function open(app:App, options:Null<WindowOptions>, build:(Window, App) -> AnyView):Window {
         final window = new Window(app, options);
         window.root = build(window, app);
+        // Rust `open_window` defers `appearance_changed` once the root view
+        // is built: observers registered while building run once. Without
+        // observers it would only read the appearance again, so the port
+        // skips it then (no extra effect cycle).
+        if (window.appearanceObservers.hasSubscribers(0))
+            window.defer(app, (window, cx) -> window.appearanceChanged(cx));
         return window;
     }
 
@@ -3345,6 +3358,72 @@ class Window implements WindowInvalidator {
         activationObservers.retain(0, callback -> callback(this, app));
         boundsChanged();
         refresh();
+    }
+
+/// Appearance
+
+    var _appearance:WindowAppearance = Light;
+
+    /**
+     * Returns the appearance of the current window (Rust `appearance`): read
+     * from the platform window when the window opens and when the platform
+     * reports a change.
+     */
+    public inline function appearance():WindowAppearance {
+        return _appearance;
+    }
+
+    /** The appearance of the platform window (`Light` without platform operations, like a test window). */
+    function platformAppearance():WindowAppearance {
+        return platformOperations != null ? platformOperations.appearance() : Light;
+    }
+
+    /**
+     * Rust: the `on_appearance_changed` callback of `Window::new`, which
+     * defers the update on the foreground executor (changing the appearance
+     * may be reported while the app is updating).
+     */
+    function handleSystemAppearanceChange(_:ceramic.SystemAppearance):Void {
+        if (destroyed)
+            return;
+        app.foregroundExecutor().spawn(() -> {
+            if (!destroyed)
+                app.update(cx -> appearanceChanged(cx));
+            return null;
+        });
+    }
+
+    /**
+     * Reads the appearance of the platform window again and runs the
+     * appearance observers (Rust `appearance_changed`).
+     */
+    @:allow(gpui)
+    function appearanceChanged(cx:App):Void {
+        _appearance = platformAppearance();
+        appearanceObservers.retain(0, callback -> callback(this, cx));
+    }
+
+    /**
+     * Registers a callback to be invoked when the window appearance changes
+     * (Rust `observe_window_appearance`).
+     */
+    public function observeWindowAppearance(callback:(Window, App) -> Void):Subscription {
+        final subscriber = appearanceObservers.insert(0, (window, cx) -> {
+            callback(window, cx);
+            return true;
+        });
+        subscriber.activate();
+        return subscriber.subscription;
+    }
+
+    /**
+     * Registers a callback called when the window appearance changes
+     * (Rust `window.appearance_observers.insert`).
+     */
+    @:allow(gpui)
+    function newAppearanceObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
+        final subscriber = appearanceObservers.insert(0, callback);
+        return {subscription: subscriber.subscription, activate: subscriber.activate};
     }
 
 /// Platform window

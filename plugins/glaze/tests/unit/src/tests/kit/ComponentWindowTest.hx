@@ -348,6 +348,10 @@ private class RecordingOperations implements PlatformWindowOperations {
         calls.push('double-click');
     }
 
+    public function appearance():gpui.WindowAppearance {
+        return Light;
+    }
+
     static function edgeName(edge:ResizeEdge):String {
         return switch edge {
             case Top: 'Top';

@@ -230,9 +230,8 @@ class ThemeColorsStory extends Model implements Story {
         final registry = ThemeRegistry.global(cx);
         // Look up the selected theme configuration
         final selectedThemeConfig = registry.themes().get(selectedThemeName);
-        // Rust falls back to the window appearance when the lookup fails: the
-        // port has none, the selected theme always exists here.
-        final isDark = selectedThemeConfig != null ? selectedThemeConfig.mode.isDark() : false;
+        // Fallback to system appearance if selected theme lookup fails
+        final isDark = selectedThemeConfig != null ? selectedThemeConfig.mode.isDark() : cx.windowAppearance().isDark();
         final themeConfig = isDark ? registry.defaultDarkTheme() : registry.defaultLightTheme();
         final tempTheme = new Theme(themeConfig.mode.isDark() ? ThemeColor.dark() : ThemeColor.light());
         tempTheme.applyConfig(themeConfig);

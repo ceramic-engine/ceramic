@@ -283,10 +283,8 @@ class Theme extends ThemeColor {
     }
 
     /**
-     * Initializes the theme system: the registry, then the default light theme.
-     * Rust: `theme::init`. Rust also syncs the scrollbar mode with the
-     * platform (`should_auto_hide_scrollbars`), which Ceramic does not expose:
-     * the mode stays `Scrolling`.
+     * Initializes the theme system: the registry, the default light theme,
+     * then the scrollbar mode from the platform (Rust: `theme::init`).
      */
     public static function init(cx:AppContext):Void {
 
@@ -294,6 +292,30 @@ class Theme extends ThemeColor {
 
         // Ensure theme is loaded directly on startup
         change(Light, null, cx);
+        syncScrollbarAppearance(cx);
+
+    }
+
+    /**
+     * Sync the theme with the system appearance: the appearance of `window`
+     * when given (Rust prefers it, to avoid an error on Linux), else the
+     * appearance of the application's windows.
+     */
+    public static function syncSystemAppearance(window:Null<Window>, cx:AppContext):Void {
+
+        final appearance = window != null ? window.appearance() : cx.windowAppearance();
+        change(ThemeMode.fromAppearance(appearance), window, cx);
+
+    }
+
+    /**
+     * Sync the scrollbar showing behavior with the system: `Scrolling` when
+     * the platform auto-hides scrollbars, `Hover` otherwise.
+     */
+    public static function syncScrollbarAppearance(cx:AppContext):Void {
+
+        final mode:ScrollbarMode = cx.shouldAutoHideScrollbars() ? Scrolling : Hover;
+        setScrollbarMode(mode, cx);
 
     }
 

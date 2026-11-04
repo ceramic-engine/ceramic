@@ -42,6 +42,16 @@ enum abstract ThemeMode(Int) {
     }
 
     /**
+     * The mode of a window appearance (Rust `From<WindowAppearance>`): dark
+     * for `Dark` and `VibrantDark`.
+     */
+    public static function fromAppearance(appearance:gpui.WindowAppearance):ThemeMode {
+
+        return appearance.isDark() ? Dark : Light;
+
+    }
+
+    /**
      * Total order, light first (Rust derives `Ord`).
      */
     public inline function compare(other:ThemeMode):Int {

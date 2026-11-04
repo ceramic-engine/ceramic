@@ -1,15 +1,17 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs (the application part of the
-// `Platform` trait: quit, activate, path prompts, menus and their callbacks)
+// `Platform` trait: quit, activate, path prompts, menus and their callbacks,
+// the dock menu, the window appearance and the scrollbar preference)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.Menu.MenuItem;
 import gpui.Menu.OwnedMenu;
 
 /**
  * The application operations of GPUI's `Platform` (`App.platformOperations`):
- * quitting, activating the app, the native path prompts and the application
- * menus.
+ * quitting, activating the app, the native path prompts, the application
+ * and dock menus, and the system appearance and scrollbar preference.
  *
  * `gpui.platform.CeramicPlatformOperations` by default (through Ceramic: the
  * app, the screen and the `dialogs` plugin), `TestPlatformOperations` (like
@@ -68,5 +70,27 @@ interface PlatformOperations {
      * (`Platform::on_validate_app_menu_command`).
      */
     function onValidateAppMenuCommand(callback:(Action) -> Bool):Void;
+
+    /**
+     * Sets the menu shown when the app icon in the dock is right clicked
+     * (`Platform::set_dock_menu`). Its items run the `onAppMenuAction`
+     * callback, like the application menu items.
+     */
+    function setDockMenu(menu:Array<MenuItem>, keymap:Keymap):Void;
+
+    /**
+     * Performs the action of the dock menu item at the given index
+     * (`Platform::perform_dock_menu_action`, only used on Windows by GPUI).
+     */
+    function performDockMenuAction(action:Int):Void;
+
+    /** The appearance of the application's windows (`Platform::window_appearance`). */
+    function windowAppearance():WindowAppearance;
+
+    /**
+     * Whether the user has configured scrollbars to auto-hide at the
+     * platform level (`Platform::should_auto_hide_scrollbars`).
+     */
+    function shouldAutoHideScrollbars():Bool;
 
 }

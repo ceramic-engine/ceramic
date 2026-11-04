@@ -69,6 +69,15 @@ class CeramicWindowOperations implements PlatformWindowOperations {
         ceramic.App.app.screen.showWindowMenu(point.x, point.y);
     }
 
+    /**
+     * The appearance of the system (`ceramic.Screen.systemAppearance`): the
+     * window has no appearance of its own, like a macOS window that follows
+     * the application.
+     */
+    public function appearance():WindowAppearance {
+        return WindowAppearance.fromCeramic(ceramic.App.app.screen.systemAppearance);
+    }
+
     public function titlebarDoubleClick(isResizable:Bool, isMinimizable:Bool):Void {
         // GPUI on Linux and Windows zooms the window (macOS follows a system
         // preference that SDL does not expose: zoom is its default)

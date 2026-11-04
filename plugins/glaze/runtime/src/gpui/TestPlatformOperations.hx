@@ -1,9 +1,11 @@
 // Ported from gpui-pre 0.3.10: src/platform/test/platform.rs (quit, activate,
-// path prompts and menus of `TestPlatform`)
+// path prompts, menus, dock menu, window appearance and scrollbars of
+// `TestPlatform`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
 
+import gpui.Menu.MenuItem;
 import gpui.Menu.OwnedMenu;
 
 /**
@@ -135,6 +137,34 @@ class TestPlatformOperations implements PlatformOperations {
     public function simulateWillOpenMenu():Void {
         if (willOpenMenuCallback != null)
             willOpenMenuCallback();
+    }
+
+    /** The dock menu items of each `setDockMenu` call (GPUI's test platform ignores them). */
+    public final dockMenus:Array<Array<MenuItem>> = [];
+
+    /** The index of each `performDockMenuAction` call (ignored by GPUI's test platform). */
+    public final dockMenuActions:Array<Int> = [];
+
+    public function setDockMenu(menu:Array<MenuItem>, keymap:Keymap):Void {
+        dockMenus.push(menu);
+    }
+
+    public function performDockMenuAction(action:Int):Void {
+        dockMenuActions.push(action);
+    }
+
+    /** What `windowAppearance` answers: `Light`, like GPUI's test platform, unless a test changes it. */
+    public var appearance:WindowAppearance = Light;
+
+    public function windowAppearance():WindowAppearance {
+        return appearance;
+    }
+
+    /** What `shouldAutoHideScrollbars` answers: false, like GPUI's test platform, unless a test changes it. */
+    public var autoHideScrollbars:Bool = false;
+
+    public function shouldAutoHideScrollbars():Bool {
+        return autoHideScrollbars;
     }
 
     /** Runs the validation callback, as a platform does to enable a menu item (false without one). */
