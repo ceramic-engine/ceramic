@@ -496,6 +496,13 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
 
     static final NONE_KNOWN = new SizeOf<Null<Float>>(null, null);
 
+    /** The known dimensions given to the last measured leaf with some (reused while unchanged) */
+    var lastKnown:Null<SizeOf<Null<Float>>> = null;
+    var lastKnownHasWidth:Bool = false;
+    var lastKnownHasHeight:Bool = false;
+    var lastKnownWidth:Float = 0.0;
+    var lastKnownHeight:Float = 0.0;
+
     /** The available space given to the last measured leaf (immutable values reused while unchanged) */
     var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
     var lastAvailableWidth:AvailableSpace = AvailableSpace.MaxContent;
@@ -535,10 +542,26 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
 
         // Immutable values: none known shares one object, and the available
         // space of the last measure is reused when it is the same
-        final known = knownWidth.isNone() && knownHeight.isNone() ? NONE_KNOWN : new SizeOf<Null<Float>>(
-            knownWidth.isSome() ? knownWidth.unwrap() / scaleFactor : null,
-            knownHeight.isSome() ? knownHeight.unwrap() / scaleFactor : null
-        );
+        var known = NONE_KNOWN;
+        if (knownWidth.isSome() || knownHeight.isSome()) {
+            final hasWidth = knownWidth.isSome();
+            final hasHeight = knownHeight.isSome();
+            final width = hasWidth ? knownWidth.unwrap() / scaleFactor : 0.0;
+            final height = hasHeight ? knownHeight.unwrap() / scaleFactor : 0.0;
+            final last = lastKnown;
+            if (last != null && hasWidth == lastKnownHasWidth && hasHeight == lastKnownHasHeight
+                && (!hasWidth || sameFloat(width, lastKnownWidth)) && (!hasHeight || sameFloat(height, lastKnownHeight))) {
+                known = last;
+            }
+            else {
+                known = new SizeOf<Null<Float>>(hasWidth ? width : null, hasHeight ? height : null);
+                lastKnown = known;
+                lastKnownHasWidth = hasWidth;
+                lastKnownHasHeight = hasHeight;
+                lastKnownWidth = width;
+                lastKnownHeight = height;
+            }
+        }
 
         final width = untransformAvailable(availableWidth, scaleFactor, lastAvailableWidth);
         final height = untransformAvailable(availableHeight, scaleFactor, lastAvailableHeight);

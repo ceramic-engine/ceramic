@@ -66,17 +66,26 @@ class WrappedLine {
      * Paint this line of text. When `bounds` is null, the wrap width is
      * used to align the text.
      */
+    /**
+     * The width the line is aligned in: the bounds' width, the wrap width,
+     * else the line's own width (as a value: `Null<Float>` boxes on hxcpp)
+     */
+    inline function alignWidthOf(bounds:Null<Bounds>):Float {
+        if (bounds != null)
+            return bounds.size.width;
+        final wrapWidth = layout.wrapWidth;
+        return wrapWidth != null ? (wrapWidth : Float) : layout.unwrappedLayout.width;
+    }
+
     public function paint(origin:Point, lineHeight:Pixels, align:TextAlign, bounds:Null<Bounds>, painter:TextPainter):Void {
-        final alignWidth:Null<Float> = bounds != null ? bounds.size.width : layout.wrapWidth;
-        LinePaint.paintLine(origin, layout.unwrappedLayout, lineHeight, align, alignWidth, decorationRuns, layout.wrapBoundaries, painter, null);
+        LinePaint.paintLineAligned(origin, layout.unwrappedLayout, lineHeight, align, alignWidthOf(bounds), decorationRuns, layout.wrapBoundaries, painter, null);
     }
 
     /**
      * Paint the background of line of text.
      */
     public function paintBackground(origin:Point, lineHeight:Pixels, align:TextAlign, bounds:Null<Bounds>, painter:TextPainter):Void {
-        final alignWidth:Null<Float> = bounds != null ? bounds.size.width : layout.wrapWidth;
-        LinePaint.paintLineBackground(origin, layout.unwrappedLayout, lineHeight, align, alignWidth, decorationRuns, layout.wrapBoundaries, painter);
+        LinePaint.paintLineBackgroundAligned(origin, layout.unwrappedLayout, lineHeight, align, alignWidthOf(bounds), decorationRuns, layout.wrapBoundaries, painter);
     }
 
 }

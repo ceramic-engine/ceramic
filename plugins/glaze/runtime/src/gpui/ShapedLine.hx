@@ -123,6 +123,16 @@ class ShapedLine {
         LinePaint.paintLineBackground(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter);
     }
 
+    /** `paint` with an alignment width that is known (a `Null<Float>` argument is boxed on hxcpp) */
+    public function paintAligned(origin:Point, lineHeight:Pixels, align:TextAlign, alignWidth:Float, painter:TextPainter):Void {
+        LinePaint.paintLineAligned(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter, null);
+    }
+
+    /** `paintBackground` with an alignment width that is known */
+    public function paintBackgroundAligned(origin:Point, lineHeight:Pixels, align:TextAlign, alignWidth:Float, painter:TextPainter):Void {
+        LinePaint.paintLineBackgroundAligned(origin, layout, lineHeight, align, alignWidth, decorationRuns, null, painter);
+    }
+
     /**
      * Split this shaped line at a byte index, returning `[prefix, suffix]`.
      *

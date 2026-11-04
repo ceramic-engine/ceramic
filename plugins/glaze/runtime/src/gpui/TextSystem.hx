@@ -384,7 +384,41 @@ class TextSystem {
      * cache character widths and are reused (one per font id and size).
      */
     public function lineWrapper(font:Font, fontSize:Pixels):LineWrapper {
-        final fontId = resolveFont(font);
+        return lineWrapperOfFontId(resolveFont(font), fontSize);
+    }
+
+    /**
+     * `lineWrapper(style.font(), fontSize)` without making the `Font` when
+     * the style's font was resolved lately (compared like `Font.equals`).
+     */
+    @:allow(gpui)
+    function lineWrapperOfStyle(style:TextStyle, fontSize:Pixels):LineWrapper {
+        return lineWrapperOfFontId(resolveStyleFont(style), fontSize);
+    }
+
+    /** `resolveFont(style.font())`, without the `Font` when it is one of the recent fonts */
+    function resolveStyleFont(style:TextStyle):FontId {
+        final features = style.fontFeatures;
+        if (features != null) {
+            final family = style.fontFamily;
+            final fallbacks = style.fontFallbacks;
+            final weight:Float = style.fontWeight;
+            // (a null style, possible on dynamic targets only, takes the slow path: `Font` makes it `Normal`)
+            final fontStyle:FontStyle = style.fontStyle;
+            for (i in 0...recentFonts.length) {
+                final recent = recentFonts[i];
+                // `recent.equals(style.font())`
+                if (recent.family == family && recent.features.equals(features)
+                    && (recent.fallbacks == null ? fallbacks == null : recent.fallbacks.equals(fallbacks))
+                    && (recent.weight:Float) == weight && recent.style == fontStyle) {
+                    return recentFontIds[i];
+                }
+            }
+        }
+        return resolveFont(style.font());
+    }
+
+    function lineWrapperOfFontId(fontId:FontId, fontSize:Pixels):LineWrapper {
         var wrappers = wrapperPool.get(fontId);
         if (wrappers == null) {
             wrappers = [];

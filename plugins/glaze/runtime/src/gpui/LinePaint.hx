@@ -18,9 +18,21 @@ class LinePaint {
      * `wrapBoundaries` is null for an unwrapped line, `paintUnderline` null
      * to paint underlines with `painter.paintUnderline()`.
      */
+    /** The initial glyph color (immutable: one shared value instead of one per line) */
+    static final BLACK:Hsla = Hsla.black();
+
     public static function paintLine(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter, paintUnderline:Null<ShapedLine.UnderlineHandler>):Void {
+        paintLineAligned(origin, layout, lineHeight, align, alignWidth != null ? alignWidth : layout.width, decorationRuns, wrapBoundaries, painter, paintUnderline);
+    }
+
+    /**
+     * `paintLine` with the alignment width given as a value (`alignWidth`, or
+     * the layout's width when there is none): a `Null<Float>` argument is
+     * boxed on hxcpp.
+     */
+    public static function paintLineAligned(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, effectiveAlignWidth:Float, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter, paintUnderline:Null<ShapedLine.UnderlineHandler>):Void {
         final wraps:Array<WrapBoundary> = wrapBoundaries != null ? wrapBoundaries : NO_WRAPS;
-        final pushed = pushLineLayer(origin, layout, lineHeight, align, alignWidth, wraps, painter);
+        final pushed = pushLineLayer(origin, layout, lineHeight, align, effectiveAlignWidth, wraps, painter);
 
         final paddingTop = (lineHeight - layout.ascent - layout.descent) / 2.0;
         final baselineOffsetY = paddingTop + layout.ascent;
@@ -28,7 +40,7 @@ class LinePaint {
         var decorationIndex = 0;
         var wrapIndex = 0;
         var runEnd = 0;
-        var color = Hsla.black();
+        var color = BLACK;
 
         // current_underline: (origin, style, range)
         var hasUnderline = false;
@@ -45,7 +57,6 @@ class LinePaint {
         var strikethroughStyle:StrikethroughStyle = null;
 
         final textSystem = painter.textSystem;
-        final effectiveAlignWidth:Float = alignWidth != null ? alignWidth : layout.width;
         var glyphOriginX = alignedOriginX(origin, effectiveAlignWidth, 0.0, align, layout, wrapIndex < wraps.length ? wraps[wrapIndex] : null);
         var glyphOriginY:Float = origin.y;
         var prevGlyphX:Float = 0;
@@ -256,8 +267,13 @@ class LinePaint {
      * Paints the background colors of the decoration runs of a line.
      */
     public static function paintLineBackground(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter):Void {
+        paintLineBackgroundAligned(origin, layout, lineHeight, align, alignWidth != null ? alignWidth : layout.width, decorationRuns, wrapBoundaries, painter);
+    }
+
+    /** `paintLineBackground` with the alignment width given as a value (see `paintLineAligned`) */
+    public static function paintLineBackgroundAligned(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, effectiveAlignWidth:Float, decorationRuns:Array<DecorationRun>, wrapBoundaries:Null<Array<WrapBoundary>>, painter:TextPainter):Void {
         final wraps:Array<WrapBoundary> = wrapBoundaries != null ? wrapBoundaries : NO_WRAPS;
-        final pushed = pushLineLayer(origin, layout, lineHeight, align, alignWidth, wraps, painter);
+        final pushed = pushLineLayer(origin, layout, lineHeight, align, effectiveAlignWidth, wraps, painter);
 
         var decorationIndex = 0;
         var wrapIndex = 0;
@@ -267,7 +283,6 @@ class LinePaint {
         var backgroundY:Float = 0;
         var backgroundColor:Hsla = null;
         final textSystem = painter.textSystem;
-        final effectiveAlignWidth:Float = alignWidth != null ? alignWidth : layout.width;
         var glyphOriginX = alignedOriginX(origin, effectiveAlignWidth, 0.0, align, layout, wrapIndex < wraps.length ? wraps[wrapIndex] : null);
         var glyphOriginY:Float = origin.y;
         var prevGlyphX:Float = 0;
@@ -380,23 +395,27 @@ class LinePaint {
      * `painter.pushLayer(linePaintBounds(...))`, without a `Bounds` for a
      * left aligned line (the common case).
      */
-    static function pushLineLayer(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, wraps:Array<WrapBoundary>, painter:TextPainter):Bool {
+    static function pushLineLayer(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, effectiveAlignWidth:Float, wraps:Array<WrapBoundary>, painter:TextPainter):Bool {
         if (align == Left || layout.len == 0) {
             return painter.pushLayerAt(origin.x, origin.y, layout.width, lineHeight * (wraps.length + 1.0));
         }
-        return painter.pushLayer(linePaintBounds(origin, layout, lineHeight, align, alignWidth, wraps));
+        return painter.pushLayer(linePaintBoundsAligned(origin, layout, lineHeight, align, effectiveAlignWidth, wraps));
     }
 
     /**
      * Bounds covered by a painted line (all its rows, aligned).
      */
     public static function linePaintBounds(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, alignWidth:Null<Float>, wrapBoundaries:Array<WrapBoundary>):Bounds {
+        return linePaintBoundsAligned(origin, layout, lineHeight, align, alignWidth != null ? alignWidth : layout.width, wrapBoundaries);
+    }
+
+    /** `linePaintBounds` with the alignment width given as a value */
+    static function linePaintBoundsAligned(origin:Point, layout:LineLayout, lineHeight:Pixels, align:TextAlign, effectiveAlignWidth:Float, wrapBoundaries:Array<WrapBoundary>):Bounds {
         var bounds = new Bounds(origin, new Size(layout.width, lineHeight * (wrapBoundaries.length + 1.0)));
         if (align == Left || layout.len == 0) {
             return bounds;
         }
 
-        final effectiveAlignWidth:Float = alignWidth != null ? alignWidth : layout.width;
         var rowStart:Float = 0;
         final count = wrapBoundaries.length + 1;
         for (row in 0...count) {

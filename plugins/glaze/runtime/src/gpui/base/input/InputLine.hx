@@ -111,6 +111,43 @@ class InputLine {
         paintPass(pos, height, align, width, true, window, cx);
     }
 
+    /** `paint` with a width that is known (a `Null<Float>` argument is boxed on hxcpp) */
+    public function paintAligned(pos:Point, height:Float, align:TextAlign, width:Float, window:Window, cx:App):Void {
+        paintPassAligned(pos, height, align, width, false, window, cx);
+    }
+
+    /** `paintBackground` with a width that is known */
+    public function paintBackgroundAligned(pos:Point, height:Float, align:TextAlign, width:Float, window:Window, cx:App):Void {
+        paintPassAligned(pos, height, align, width, true, window, cx);
+    }
+
+    /** `paintPass` with a width that is known: the same painting */
+    function paintPassAligned(pos:Point, height:Float, align:TextAlign, width:Float, background:Bool, window:Window, cx:App):Void {
+        final painter = window.textPainter();
+        if (shaped != null) {
+            if (background)
+                shaped.paintBackgroundAligned(pos, height, align, width, painter);
+            else
+                shaped.paintAligned(pos, height, align, width, painter);
+            return;
+        }
+        final full = width;
+        final remaining = full - this.width > 0.0 ? full - this.width : 0.0;
+        final offset = switch align {
+            case Right: remaining;
+            case Center: remaining / 2.0;
+            case _: 0.0;
+        }
+        for (f in fragments) {
+            if (f.text != null) {
+                if (background)
+                    f.text.paintBackground(new Point(pos.x + offset + f.x, pos.y), height, TextAlign.Left, null, painter);
+                else
+                    f.text.paint(new Point(pos.x + offset + f.x, pos.y), height, TextAlign.Left, null, painter);
+            }
+        }
+    }
+
     function paintPass(pos:Point, height:Float, align:TextAlign, width:Null<Float>, background:Bool, window:Window, cx:App):Void {
         final painter = window.textPainter();
         inline function paint(line:ShapedLine, pos:Point, align:TextAlign, width:Null<Float>) {

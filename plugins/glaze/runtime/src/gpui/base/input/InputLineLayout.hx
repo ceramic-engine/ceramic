@@ -373,6 +373,36 @@ class InputLineLayout {
         }
     }
 
+    /** `paintBackground` with an align width that is known (a `Null<Float>` argument is boxed on hxcpp) */
+    public function paintBackgroundAligned(pos:Point, lineHeight:Float, textAlign:TextAlign, alignWidth:Float, window:Window, cx:App):Void {
+        if (!hasBackground)
+            return;
+
+        for (ix in 0...wrappedLines.length) {
+            wrappedLines[ix].paintBackgroundAligned(new Point(pos.x + lineIndent(ix), pos.y + ix * lineHeight), lineHeight, textAlign, alignWidth, window, cx);
+        }
+    }
+
+    /** `paint` with an align width that is known */
+    public function paintAligned(pos:Point, lineHeight:Float, textAlign:TextAlign, alignWidth:Float, window:Window, cx:App):Void {
+        for (ix in 0...wrappedLines.length) {
+            wrappedLines[ix].paintAligned(new Point(pos.x + lineIndent(ix), pos.y + ix * lineHeight), lineHeight, textAlign, alignWidth, window, cx);
+        }
+
+        // Paint whitespace indicators
+        final indicators = whitespaceIndicators;
+        if (indicators != null) {
+            final painter = window.textPainter();
+            for (ws in whitespaceChars) {
+                final invisible = ws.isTab ? indicators.tab.clone() : indicators.space.clone();
+
+                final origin = new Point(pos.x + ws.x + lineIndent(ws.lineIndex), pos.y + ws.lineIndex * lineHeight);
+
+                invisible.paintAligned(origin, lineHeight, textAlign, alignWidth, painter);
+            }
+        }
+    }
+
     public function paint(pos:Point, lineHeight:Float, textAlign:TextAlign, alignWidth:Null<Float>, window:Window, cx:App):Void {
         for (ix in 0...wrappedLines.length) {
             wrappedLines[ix].paint(new Point(pos.x + lineIndent(ix), pos.y + ix * lineHeight), lineHeight, textAlign, alignWidth, window, cx);

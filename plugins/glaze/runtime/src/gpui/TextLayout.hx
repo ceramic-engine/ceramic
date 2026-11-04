@@ -99,7 +99,7 @@ class TextLayout {
                 return elementState.size;
             }
 
-            final lineWrapper = cx.textSystem().lineWrapper(textStyle.font(), fontSize);
+            final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize);
             var finalText = text;
             var finalRuns = runs;
             if (truncateWidth != null) {

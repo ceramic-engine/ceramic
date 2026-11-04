@@ -2576,7 +2576,7 @@ class TextElement extends Element {
             final bufferLine = prepaint.lastLayout.visibleBufferLines[li];
             final p = new Point(origin.x + prepaint.lastLayout.lineNumberWidth + scrollOffset, origin.y + offsetY);
 
-            line.paintBackground(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
+            line.paintBackgroundAligned(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
 
             offsetY += line.size(lineHeight).height;
 
@@ -2645,7 +2645,7 @@ class TextElement extends Element {
             final p = new Point(origin.x + prepaint.lastLayout.lineNumberWidth + scrollOffset, lineY);
 
             // Paint the actual line
-            line.paint(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
+            line.paintAligned(p, lineHeight, textAlign, prepaint.lastLayout.contentWidth, window, cx);
             offsetY += line.size(lineHeight).height;
 
             final isCurrentRow = prepaint.currentRow != null && prepaint.currentRow == row;
