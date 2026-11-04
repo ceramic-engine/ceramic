@@ -99,6 +99,14 @@ class Main {
         var isEditor:Bool = untyped __cs__('UnityEngine.Application.isEditor');
         untyped __cs__('UnityEngine.QualitySettings.vSyncCount = 1');
 
+        // Ceramic textures are sampled with plain bilinear (or nearest)
+        // filtering, like on its other backends. Unity's quality levels can
+        // force anisotropic filtering on every texture (`Forced On`, the
+        // setting of the High and Ultra levels of the default project), which
+        // changes the samples of scaled sprites and text: keep it per texture
+        // (Ceramic textures leave it off)
+        untyped __cs__('if (UnityEngine.QualitySettings.anisotropicFiltering == UnityEngine.AnisotropicFiltering.ForceEnable) UnityEngine.QualitySettings.anisotropicFiltering = UnityEngine.AnisotropicFiltering.Enable');
+
         var settings = ceramic.App.init();
         if (isEditor) {
             settings.targetFps = 60;
