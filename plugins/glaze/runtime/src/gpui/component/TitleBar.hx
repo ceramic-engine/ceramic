@@ -46,7 +46,8 @@ using gpui.base.StyledExt;
  * - Linux: 12px padding, the same buttons with click handlers (minimize,
  *   zoom, close) when the window is client decorated, a double click zooms,
  *   a right click opens the window menu;
- * - the web: 12px padding, no window controls, no drag area.
+ * - the web (and Unity, see `isWeb`): 12px padding, no window controls,
+ *   no drag area.
  *
  * Dragging the bar starts a system window move on every platform but the
  * web. The window operations go through `Window` (see
@@ -58,10 +59,13 @@ class TitleBar implements RenderOnce implements Styled implements ParentElement 
 
     /**
      * Whether the title bar renders like gpui-kit's web build (Rust
-     * `cfg!(target_family = "wasm")`): true on the web target. Writable so
+     * `cfg!(target_family = "wasm")`): true on the web target, and on Unity,
+     * where the app draws inside a Unity view like a page in a browser (no
+     * system title bar buttons such as the macOS traffic lights, no window
+     * moves: Ceramic's window operations are no-ops there). Writable so
      * that tests and golden scenes can render the native paths.
      */
-    public static var isWeb:Bool = #if (js && !node) true #else false #end;
+    public static var isWeb:Bool = #if ((js && !node) || unity) true #else false #end;
 
     static inline function isLinux():Bool {
         return !isWeb && OperatingSystem.current == Linux;

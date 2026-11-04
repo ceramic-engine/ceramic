@@ -245,6 +245,25 @@ class SvgPathTest extends TestCase {
         assertEquals(200.0, paths[1].boundsX);
     }
 
+
+    #if (sys || unity || (web && ceramic_use_electron))
+    /**
+     * The default asset source reads a bundled asset that was not preloaded
+     * synchronously (icons, grammars): from the assets folder on targets with
+     * a file system, from the Unity resources on Unity (no file there).
+     */
+    function testDefaultAssetSourceReadsBundledAssetsSynchronously() {
+        final assets = new gpui.CeramicAssetSource();
+        final icon = assets.load('icons/check.svg');
+        assertNotNull(icon);
+        assertEquals('<svg', icon.getString(0, 4));
+        final grammar = assets.load('gpui/grammars/c.json');
+        assertNotNull(grammar);
+        assertEquals('{', StringTools.trim(grammar.toString()).charAt(0));
+        assertEquals(null, assets.load('icons/missing-icon.svg'));
+    }
+    #end
+
 }
 
 /** Counts the loads of each path, delegating to another asset source */

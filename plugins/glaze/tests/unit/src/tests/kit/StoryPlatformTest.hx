@@ -66,6 +66,24 @@ class StoryPlatformTest extends TestCase {
         assertEquals('{\n  "theme": "Default Light",\n  "radius": null,\n  "scrollbar_mode": null,\n  "show_fps_monitor": null\n}', Themes.stateJson(unset));
     }
 
+    /**
+     * Unity draws the app inside a Unity view, with no system title bar and
+     * no system menu bar: the title bar renders like the web (no room for
+     * the macOS traffic lights) and the gallery shows its in-window menu bar,
+     * while the shortcuts stay the ones of the system.
+     */
+    function testWindowChromeOnUnity() {
+        final app = new App(new TestDispatcher());
+        story.AppState.init(app);
+        #if unity
+        assertTrue(gpui.component.TitleBar.isWeb);
+        assertTrue(story.AppState.global(app).showAppMenuBar);
+        assertEquals(gpui.OperatingSystem.current == Mac, story.Lib.isMacos());
+        #else
+        assertEquals(!story.Lib.isMacos(), story.AppState.global(app).showAppMenuBar);
+        #end
+    }
+
     function testCsvRecordsQuoteLikeTheCsvCrate() {
         final out = new StringBuf();
         DataTableStory.writeCsvRecord(out, ['plain', 'a,b', 'say "hi"', 'two\nlines', 'cr\r', '']);

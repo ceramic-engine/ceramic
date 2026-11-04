@@ -37,10 +37,17 @@ class Lib {
     public static inline final PANEL_NAME:String = 'StoryContainer';
 
     /**
-     * Rust `cfg!(target_os = "macos")`: true on macOS, but not on the web.
+     * Rust `cfg!(target_os = "macos")`: true on macOS, but not on the web
+     * (true on Unity in macOS).
      */
     public static function isMacos():Bool {
+        #if unity
+        // Unity renders its title bar like the web (`TitleBar.isWeb`), but
+        // the keys are the ones of the system
+        return OperatingSystem.current == Mac;
+        #else
         return !TitleBar.isWeb && OperatingSystem.current == Mac;
+        #end
     }
 
     /**

@@ -54,8 +54,15 @@ class MainScene extends Scene {
 
         App.defaultAssetSource().preload(paths, _ -> {
             cx.update(cx -> Lib.init(cx));
-            window = Lib.createNewWindow('GPUI Component', (window, cx) -> Gallery.view(name != '' ? name : null, window, cx), cx, width, height);
+            var gallery:Null<gpui.Entity<Gallery>> = null;
+            window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
+                final view = Gallery.view(name != null && name != '' ? name : null, window, cx);
+                gallery = view;
+                return view;
+            }, cx, width, height);
             add(window.renderable);
+            // Automated tour of every page (GPUI_STORY_TOUR, see StoryTour)
+            StoryTour.startIfRequested(gallery, window);
         });
 
     }

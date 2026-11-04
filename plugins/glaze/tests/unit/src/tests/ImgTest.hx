@@ -547,6 +547,38 @@ class ImgTest extends TestCase {
         assertFalse(gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
     }
 
+    #if (clay || unity)
+    /** A 4x2 red JPEG (opaque, decoded by the backend, not by `format.png`) */
+    static final JPEG_RED_4x2 = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAACAAQDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD8X6KKK/ynP+/g/9k=';
+
+    /**
+     * An opaque image decoded by the backend reads back as 4 bytes per pixel
+     * (on Unity, `LoadImage` gives a JPEG an RGB24 texture: reading it as
+     * RGBA32 ran past its pixels).
+     */
+    function asyncTestJpegDecodesThroughTheBackend(done:Void->Void) {
+        final bytes = haxe.crypto.Base64.decode(JPEG_RED_4x2);
+        gpui.ImageAssetLoader.decodeRaster(bytes, gpui.ImageFormat.Jpeg).then(result -> {
+            switch result {
+                case Loaded(image):
+                    assertEquals(4.0, image.size(0).width);
+                    assertEquals(2.0, image.size(0).height);
+                    final bgra = image.asBytes(0);
+                    assertNotNull(bgra);
+                    assertEquals(4 * 2 * 4, bgra.length);
+                    for (i in 0...8) {
+                        // Red (JPEG rounding), opaque
+                        assertTrue(bgra.get(i * 4) < 16 && bgra.get(i * 4 + 1) < 16 && bgra.get(i * 4 + 2) > 239);
+                        assertEquals(255, bgra.get(i * 4 + 3));
+                    }
+                case Failed(error):
+                    fail('unexpected failure: ' + error.toString());
+            }
+            done();
+        });
+    }
+    #end
+
 }
 
 class ImgTestView extends Model implements Render {

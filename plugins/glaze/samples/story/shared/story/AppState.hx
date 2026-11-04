@@ -40,7 +40,9 @@ class AppState {
         // macOS draws the app menus in the system menu bar, so an in-window
         // menu bar would be a second copy of them. Off by default there,
         // but still switchable so the component stays demoable on a Mac.
-        state.showAppMenuBar = !Lib.isMacos();
+        // Unity has no system menu bar (Ceramic's `setMenuBar` is a no-op
+        // there): the in-window one is the only way to the menus.
+        state.showAppMenuBar = #if unity true #else !Lib.isMacos() #end;
         state.previewingTheme = false;
         cx.setGlobal(state);
     }
