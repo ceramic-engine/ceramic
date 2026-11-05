@@ -1,6 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs (the application part of the
 // `Platform` trait: quit, activate, path prompts, menus and their callbacks,
-// the dock menu, the window appearance and the scrollbar preference)
+// the dock menu, the window appearance, the scrollbar preference, the app
+// identity and system notifications)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package gpui;
@@ -11,10 +12,12 @@ import gpui.Menu.OwnedMenu;
 /**
  * The application operations of GPUI's `Platform` (`App.platformOperations`):
  * quitting, activating the app, the native path prompts, the application
- * and dock menus, and the system appearance and scrollbar preference.
+ * and dock menus, the system appearance and scrollbar preference, the app
+ * identity and the system notifications.
  *
  * `gpui.platform.CeramicPlatformOperations` by default (through Ceramic: the
- * app, the screen and the `dialogs` plugin), `TestPlatformOperations` (like
+ * app, the screen and the `dialogs` and `notifications` plugins),
+ * `TestPlatformOperations` (like
  * GPUI's test platform: prompts wait for the test to answer them) in tests.
  */
 interface PlatformOperations {
@@ -92,5 +95,34 @@ interface PlatformOperations {
      * platform level (`Platform::should_auto_hide_scrollbars`).
      */
     function shouldAutoHideScrollbars():Bool;
+
+    /**
+     * Sets the application's process-wide identity and user-visible name
+     * (`Platform::set_app_identity`): the Windows AppUserModelID, the name
+     * shown with its notifications. Called once, early in startup.
+     */
+    function setAppIdentity(identifier:String, name:String):Void;
+
+    /**
+     * Posts a notification to the operating system's notification center
+     * (`Platform::show_system_notification`). A notification whose tag matches
+     * an earlier one replaces it where the platform supports it. Nothing
+     * happens where notifications are unsupported or not authorized.
+     */
+    function showSystemNotification(notification:SystemNotification):Void;
+
+    /**
+     * Removes the delivered or pending notification with this tag, where the
+     * platform can (`Platform::dismiss_system_notification`).
+     */
+    function dismissSystemNotification(tag:String):Void;
+
+    /**
+     * Registers the callback run on the main thread when the user activates a
+     * system notification, its body or one of its buttons
+     * (`Platform::on_system_notification_response`). A later registration
+     * replaces it.
+     */
+    function onSystemNotificationResponse(callback:(SystemNotificationResponse) -> Void):Void;
 
 }

@@ -12,6 +12,8 @@ app:
         - http
         # Native file dialogs: cx.promptForNewPath (CSV export of the data table)
         - dialogs
+        # System notifications: the notification story's system delivery
+        - notifications
 
     # The story gallery (shared with test/golden, which renders every story)
     paths:

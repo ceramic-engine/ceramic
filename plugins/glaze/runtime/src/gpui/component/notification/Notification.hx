@@ -24,6 +24,8 @@ import gpui.SpringMath.f32;
 import gpui.StyleRefinement;
 import gpui.Styled;
 import gpui.Subscription;
+import gpui.SystemNotification;
+import gpui.SystemNotificationResponse;
 import gpui.WeakEntity;
 import gpui.Window;
 import gpui.base.Toast;
@@ -290,8 +292,19 @@ class Notification extends Model implements Render implements Styled {
      * Set where this notification is delivered, overriding the global
      * `NotificationSettings.delivery`.
      *
-     * The GPUI port has no OS notification center: system delivery posts
-     * nothing (see `NotificationList.pushSystem`).
+     * System delivery uses the OS notification center: the title and message
+     * become the system notification's title and body (a notification with
+     * neither is not posted). Pushing again with the same id replaces the
+     * previous system notification. Clicking the system notification
+     * activates the window, closes the in-app toast (if any), and fires
+     * `onClick`; with `NotificationDelivery.System` the toast never exists,
+     * so `onClose` is never called.
+     *
+     * Platform requirements (the Ceramic `notifications` plugin, without
+     * which nothing is posted): on macOS the application must run from its
+     * signed `.app` bundle (the first post triggers the authorization
+     * prompt); on Windows the application must call `App.setAppIdentity`
+     * early in startup; on Linux a notification service must be present.
      */
     public function delivery(delivery:NotificationDelivery):Notification {
         deliveryValue = delivery;
@@ -579,13 +592,18 @@ class NotificationList extends Model implements Render {
     final subscriptions:Map<String, Subscription> = new Map();
 
     /**
-     * Rust `init` registers the app-global system-notification response
-     * handler. The GPUI port has no OS notification center (no
-     * `on_system_notification_response`, `show_system_notification`,
-     * `dismiss_system_notification`), so there is nothing to register, and
-     * Rust's `SystemNotificationRegistry` is not ported.
+     * Registers the app-global system-notification response handler (Rust
+     * `notification::init`).
+     *
+     * GPUI keeps a single such handler (later registrations replace earlier
+     * ones), so gpui-kit owns it: applications must not call
+     * `App.onSystemNotificationResponse` after `Component.init`. Responses
+     * to notifications the application posts itself are ignored here.
      */
-    public static function init(_:AppContext):Void {}
+    public static function init(cx:AppContext):Void {
+        final app:App = cx;
+        app.onSystemNotificationResponse(SystemNotificationRegistry.handleResponse);
+    }
 
     public function new(_:Window, cx:Context<NotificationList>) {
         super();
@@ -729,7 +747,7 @@ class NotificationList extends Model implements Render {
                 if (note != null) {
                     note.update(cx, (note, cx) -> note.beginClose(cx));
                 }
-                // Rust `SystemNotificationRegistry::dismiss`: no OS notification center in the port.
+                SystemNotificationRegistry.dismiss(cx.app, dismissId, window);
                 view.startAdvancing(window, cx);
             }
         }));
@@ -746,11 +764,29 @@ class NotificationList extends Model implements Render {
     }
 
     /**
-     * Post the notification to the OS notification center (Rust
-     * `push_system`). The GPUI port has no OS notification center: nothing
-     * is posted.
+     * Post the notification to the OS notification center and register the
+     * state needed to dispatch the user's response back to this window
+     * (Rust `push_system`).
      */
-    static function pushSystem(notification:Notification, window:Window, cx:Context<NotificationList>):Void {}
+    static function pushSystem(notification:Notification, window:Window, cx:Context<NotificationList>):Void {
+        var title:String;
+        var body:String;
+        if (notification.titleValue != null) {
+            title = notification.titleValue;
+            body = notification.messageValue != null ? notification.messageValue : '';
+        }
+        else if (notification.messageValue != null) {
+            title = notification.messageValue;
+            body = '';
+        }
+        else {
+            // A content-only notification has nothing textual to show.
+            return;
+        }
+        final tag = NotificationIdTools.systemTag(notification.idValue);
+        SystemNotificationRegistry.insert(cx.app, tag, new SystemNotificationEntry(window, cx.weakEntity(), notification.idValue, notification.onClickHandler));
+        cx.app.showSystemNotification(new SystemNotification(tag, title, body, []));
+    }
 
     function advance(window:Window, cx:Context<NotificationList>):Void {
         final changes = notificationsManager.advance(cx.backgroundExecutor().now(), isExpanded());
@@ -781,8 +817,9 @@ class NotificationList extends Model implements Render {
     }
 
     function close(id:NotificationId, window:Window, cx:Context<NotificationList>):Void {
-        // Rust first retracts the system counterpart (`SystemNotificationRegistry::dismiss`):
-        // no OS notification center in the port.
+        // Unconditional: a system-only notification has no toast to dismiss,
+        // but its system counterpart must still be retracted.
+        SystemNotificationRegistry.dismiss(cx.app, id, window);
         if (notificationsManager.dismiss(id, cx.backgroundExecutor().now())) {
             final note = notificationsManager.get(id);
             if (note != null) {
@@ -799,7 +836,7 @@ class NotificationList extends Model implements Render {
      * or `Notification.id1`.
      */
     function closeByType(typeId:String, window:Window, cx:Context<NotificationList>):Void {
-        // Rust `SystemNotificationRegistry::dismiss_by_type`: no OS notification center in the port.
+        SystemNotificationRegistry.dismissByType(cx.app, typeId, window);
         final matched = [for (entry in notificationsManager.iter()) if (NotificationIdTools.typeId(entry.id) == typeId) entry.value];
         for (note in matched) {
             final id = note.read(cx).idValue;
@@ -812,7 +849,7 @@ class NotificationList extends Model implements Render {
     }
 
     public function clear(window:Window, cx:Context<NotificationList>):Void {
-        // Rust `SystemNotificationRegistry::dismiss_all`: no OS notification center in the port.
+        SystemNotificationRegistry.dismissAll(cx.app, window);
         for (id in notificationsManager.dismissAll(cx.backgroundExecutor().now())) {
             final note = notificationsManager.get(id);
             if (note != null) {
@@ -887,6 +924,155 @@ class NotificationList extends Model implements Render {
         }
 
         return div().sizeFull().children(rendered);
+    }
+
+}
+
+/**
+ * What a system notification needs to dispatch the user's response (Rust
+ * `SystemNotificationEntry`).
+ */
+private class SystemNotificationEntry {
+
+    public final window:Window;
+
+    public final list:WeakEntity<NotificationList>;
+
+    public final id:NotificationId;
+
+    public final onClick:Null<(ClickEvent, Window, App) -> Void>;
+
+    public function new(window:Window, list:WeakEntity<NotificationList>, id:NotificationId, onClick:Null<(ClickEvent, Window, App) -> Void>) {
+        this.window = window;
+        this.list = list;
+        this.id = id;
+        this.onClick = onClick;
+    }
+
+}
+
+/**
+ * App-global map from system-notification tag to the state needed to
+ * dispatch the user's response, ordered oldest-first so overflow prunes the
+ * stalest entries (Rust `SystemNotificationRegistry`).
+ */
+@:allow(gpui.component.notification)
+class SystemNotificationRegistry {
+
+    static inline final MAX_SYSTEM_NOTIFICATION_ENTRIES = 100;
+
+    final entries:Array<{tag:String, entry:SystemNotificationEntry}> = [];
+
+    public function new() {}
+
+    static function insert(cx:App, tag:String, entry:SystemNotificationEntry):Void {
+        final entries = cx.defaultGlobal(SystemNotificationRegistry).entries;
+        var i = entries.length - 1;
+        while (i >= 0) {
+            if (entries[i].tag == tag)
+                entries.splice(i, 1);
+            i--;
+        }
+        entries.push({tag: tag, entry: entry});
+        if (entries.length > MAX_SYSTEM_NOTIFICATION_ENTRIES) {
+            entries.splice(0, entries.length - MAX_SYSTEM_NOTIFICATION_ENTRIES);
+        }
+    }
+
+    /**
+     * Retract the system notification for `id`, but only if it was posted
+     * from the given window: another window pushing the same id owns the tag
+     * now, and this window's local dismiss must not clobber it.
+     */
+    static function dismiss(cx:App, id:NotificationId, window:Window):Void {
+        final tag = NotificationIdTools.systemTag(id);
+        final entries = cx.defaultGlobal(SystemNotificationRegistry).entries;
+        for (i in 0...entries.length) {
+            if (entries[i].tag == tag && entries[i].entry.window.id == window.id) {
+                entries.splice(i, 1);
+                cx.dismissSystemNotification(tag);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Retract all of the window's system notifications whose id matches the
+     * given marker type, regardless of the `NotificationId` variant.
+     */
+    static function dismissByType(cx:App, typeId:String, window:Window):Void {
+        dismissMatching(cx, window, id -> NotificationIdTools.typeId(id) == typeId);
+    }
+
+    /** Retract all system notifications posted from the given window. */
+    static function dismissAll(cx:App, window:Window):Void {
+        dismissMatching(cx, window, _ -> true);
+    }
+
+    static function dismissMatching(cx:App, window:Window, matches:(NotificationId) -> Bool):Void {
+        final entries = cx.defaultGlobal(SystemNotificationRegistry).entries;
+        final tags:Array<String> = [];
+        var i = 0;
+        while (i < entries.length) {
+            final item = entries[i];
+            if (item.entry.window.id == window.id && matches(item.entry.id)) {
+                tags.push(item.tag);
+                entries.splice(i, 1);
+            }
+            else {
+                i++;
+            }
+        }
+        for (tag in tags) {
+            cx.dismissSystemNotification(tag);
+        }
+    }
+
+    static function handleResponse(response:SystemNotificationResponse, cx:App):Void {
+        if (!StringTools.startsWith(response.tag, SYSTEM_TAG_PREFIX))
+            return;
+        // Platforms usually remove a clicked notification themselves; retract
+        // explicitly for the ones that keep it in the notification center.
+        cx.dismissSystemNotification(response.tag);
+        // The prefix already proves the notification is ours, so activate even
+        // when nothing is left to dispatch to: the platform can deliver a
+        // response for a notification posted before the process restarted, and
+        // entries are pruned past `MAX_SYSTEM_NOTIFICATION_ENTRIES`.
+        cx.activate(true);
+        final entries = cx.defaultGlobal(SystemNotificationRegistry).entries;
+        var index = -1;
+        for (i in 0...entries.length) {
+            if (entries[i].tag == response.tag) {
+                index = i;
+                break;
+            }
+        }
+        if (index == -1)
+            return;
+        final entry = entries.splice(index, 1)[0].entry;
+        // Rust `AnyWindowHandle::update` errs when the window is already
+        // closed: the entry is removed and the application is still brought
+        // to the foreground.
+        final window = entry.window;
+        if (Window.windows.indexOf(window) == -1)
+            return;
+        cx.update(cx -> {
+            window.activateWindow();
+            final list = entry.list.upgrade();
+            if (list != null) {
+                // No-op when the toast already closed or was never created
+                // (system-only delivery).
+                list.update(cx, (list, cx) -> list.close(entry.id, window, cx));
+            }
+            if (entry.onClick != null) {
+                entry.onClick(defaultClickEvent(), window, cx);
+            }
+        });
+    }
+
+    /** Rust `ClickEvent::default()`: a keyboard click (Enter) with empty bounds. */
+    static function defaultClickEvent():ClickEvent {
+        return ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(gpui.KeyboardButton.Enter, new gpui.Bounds()));
     }
 
 }

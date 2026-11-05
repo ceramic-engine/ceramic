@@ -47,6 +47,7 @@ class Tests {
         runner.add(new tests.WindowFocusTest());
         runner.add(new tests.WindowScaleFactorTest());
         runner.add(new tests.PlatformOperationsTest());
+        runner.add(new tests.SystemNotificationsTest());
         runner.add(new tests.CeramicInputHelpersTest());
         // GPUI's inspector (define gpui_inspector)
         #if gpui_inspector

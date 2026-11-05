@@ -53,7 +53,12 @@ class MainScene extends Scene {
         #end
 
         App.defaultAssetSource().preload(paths, _ -> {
-            cx.update(cx -> Lib.init(cx));
+            cx.update(cx -> {
+                Lib.init(cx);
+                // Required for system notifications on Windows; macOS only
+                // shows them when running from the signed app bundle
+                cx.setAppIdentity('com.longbridge.gpui-component.story', 'GPUI Component');
+            });
             var gallery:Null<gpui.Entity<Gallery>> = null;
             window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
                 final view = Gallery.view(name != null && name != '' ? name : null, window, cx);

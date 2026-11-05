@@ -1460,6 +1460,49 @@ class App {
     }
 
     /**
+     * Sets the application's process-wide identity and user-visible name
+     * (Rust `set_app_identity`). The identifier is used for platform identity
+     * mechanisms such as the Windows AppUserModelID. The name is used
+     * wherever the operating system presents the application to the user.
+     * Call this once, early in startup, before opening windows or posting
+     * notifications.
+     */
+    public function setAppIdentity(identifier:String, name:String):Void {
+        platformOperations.setAppIdentity(identifier, name);
+    }
+
+    /**
+     * Posts a notification to the operating system's notification center
+     * (Rust `show_system_notification`). Posting a notification whose tag
+     * matches an earlier one replaces that notification where the platform
+     * supports it. No-op on platforms without notification support, or when
+     * delivery is unavailable (e.g. authorization was denied).
+     */
+    public function showSystemNotification(notification:SystemNotification):Void {
+        platformOperations.showSystemNotification(notification);
+    }
+
+    /**
+     * Removes the delivered or pending notification with this tag (Rust
+     * `dismiss_system_notification`). Best-effort: some platforms cannot
+     * retract a notification once shown, in which case it ages out of the
+     * notification center on its own.
+     */
+    public function dismissSystemNotification(tag:String):Void {
+        platformOperations.dismissSystemNotification(tag);
+    }
+
+    /**
+     * Registers the handler invoked when the user activates a system
+     * notification, either by clicking its body or one of its action
+     * buttons (Rust `on_system_notification_response`). Subsequent
+     * registrations replace the handler.
+     */
+    public function onSystemNotificationResponse(callback:(SystemNotificationResponse, App) -> Void):Void {
+        platformOperations.onSystemNotificationResponse(response -> callback(response, this));
+    }
+
+    /**
      * Register a global listener for actions of exactly the given class, invoked in the
      * bubble phase after the window's element listeners.
      */

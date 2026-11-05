@@ -2,6 +2,10 @@
 // `Platform` (gpui-pre 0.3.10, src/platform.rs, Zed Industries, Apache-2.0)
 // implemented with Ceramic. The web behavior follows gpui-pre-web 0.3.10
 // src/platform.rs, except the path prompts (deliberate deviation DEV-019).
+// The system notifications follow gpui-pre-macos 0.3.10
+// src/system_notifications.rs (request the authorization on the first post),
+// gpui-pre-linux and gpui-pre-windows 0.3.10 (src/linux/system_notifications.rs,
+// src/system_notifications.rs) through Ceramic's notifications plugin.
 // See NOTICE.md and DEVIATIONS.md.
 package gpui.platform;
 
@@ -62,6 +66,21 @@ import gpui.WindowAppearance;
  * - `shouldAutoHideScrollbars` is Ceramic's scrollbar preference
  *   (`ceramic.Screen.autoHideScrollbars`: the preferred scroller style on
  *   macOS like GPUI's, true on the web like gpui-pre-web).
+ * - The system notifications use the `notifications` plugin
+ *   (`ceramic.Notifications`): `UNUserNotificationCenter` on macOS (the app
+ *   must run from its signed bundle), the freedesktop notification service
+ *   over DBus on Linux, toasts on Windows with the AppUserModelID given to
+ *   `setAppIdentity` (posts are dropped until it is set, like GPUI's Windows
+ *   platform), the recording backend in headless builds. Like GPUI's
+ *   macOS platform, the first post asks the user for the authorization
+ *   (once); the posts made while the answer is pending are posted when it
+ *   comes. A response listener starts the notification
+ *   center (GPUI's macOS platform initializes it on the first
+ *   `on_system_notification_response` too); the responses go to the last
+ *   operations that registered a callback (one platform per process in
+ *   GPUI). Without the plugin, in a browser (gpui-pre-web has no system
+ *   notifications) and on Unity, the calls do nothing, like a GPUI platform
+ *   without notifications.
  */
 class CeramicPlatformOperations implements PlatformOperations {
 
@@ -371,6 +390,113 @@ class CeramicPlatformOperations implements PlatformOperations {
             }
         }
         return bindings[0].keystrokes;
+    }
+
+/// System notifications
+
+    var systemNotificationResponseCallback:Null<(SystemNotificationResponse) -> Void> = null;
+
+    #if (plugin_notifications && !web)
+
+    /** Whether the user was asked for the authorization (GPUI's `authorization_requested`). */
+    static var authorizationRequested:Bool = false;
+
+    /** Posts waiting for the answer of the user, null once answered. */
+    static var postsAwaitingAuthorization:Null<Array<SystemNotification>> = null;
+
+    /** The operations whose callback gets the responses (the last to register one: one platform per process in GPUI). */
+    static var systemNotificationResponder:Null<CeramicPlatformOperations> = null;
+
+    static var listeningSystemNotifications:Bool = false;
+
+    #end
+
+    /** The process identity (Windows AppUserModelID, name shown on Linux and Windows). */
+    public function setAppIdentity(identifier:String, name:String):Void {
+        #if (plugin_notifications && !web)
+        ceramic.Notifications.shared.setAppIdentity(identifier, name);
+        #end
+    }
+
+    public function showSystemNotification(notification:SystemNotification):Void {
+        #if (plugin_notifications && !web)
+        final notifications = ceramic.Notifications.shared;
+        if (!notifications.isAvailable())
+            return;
+        if (!authorizationRequested) {
+            // gpui-pre-macos `request_authorization` (once, on the first post)
+            authorizationRequested = true;
+            postsAwaitingAuthorization = [notification.clone()];
+            notifications.requestAuthorization(_ -> {
+                final posts = postsAwaitingAuthorization;
+                postsAwaitingAuthorization = null;
+                if (posts != null) {
+                    for (post in posts)
+                        postSystemNotification(post);
+                }
+            });
+            return;
+        }
+        if (postsAwaitingAuthorization != null) {
+            postsAwaitingAuthorization.push(notification.clone());
+            return;
+        }
+        postSystemNotification(notification);
+        #end
+    }
+
+    #if (plugin_notifications && !web)
+    static function postSystemNotification(notification:SystemNotification):Void {
+        ceramic.Notifications.shared.show({
+            tag: notification.tag,
+            title: notification.title,
+            body: notification.body,
+            actions: [for (action in notification.actions) {id: action.id, label: action.label}]
+        });
+    }
+    #end
+
+    public function dismissSystemNotification(tag:String):Void {
+        #if (plugin_notifications && !web)
+        if (postsAwaitingAuthorization != null) {
+            var i = postsAwaitingAuthorization.length - 1;
+            while (i >= 0) {
+                if (postsAwaitingAuthorization[i].tag == tag)
+                    postsAwaitingAuthorization.splice(i, 1);
+                i--;
+            }
+        }
+        ceramic.Notifications.shared.dismiss(tag);
+        #end
+    }
+
+    public function onSystemNotificationResponse(callback:(SystemNotificationResponse) -> Void):Void {
+        systemNotificationResponseCallback = callback;
+        #if (plugin_notifications && !web)
+        systemNotificationResponder = this;
+        if (!listeningSystemNotifications) {
+            listeningSystemNotifications = true;
+            ceramic.Notifications.shared.onResponse(null, (tag, actionId) -> {
+                if (systemNotificationResponder != null)
+                    systemNotificationResponder.handleSystemNotificationResponse(new SystemNotificationResponse(tag, actionId));
+            });
+        }
+        #end
+    }
+
+    /**
+     * Runs the response callback, taken out for the call like GPUI's
+     * platforms do: it may re-enter the platform (dismiss the notification
+     * it was told about) or replace itself.
+     */
+    function handleSystemNotificationResponse(response:SystemNotificationResponse):Void {
+        final callback = systemNotificationResponseCallback;
+        systemNotificationResponseCallback = null;
+        if (callback != null) {
+            callback(response);
+            if (systemNotificationResponseCallback == null)
+                systemNotificationResponseCallback = callback;
+        }
     }
 
 }

@@ -12,7 +12,9 @@ import gpui.Model;
 import gpui.Point;
 import gpui.Render;
 import gpui.Size;
+import gpui.SystemNotificationResponse;
 import gpui.TestDispatcher;
+import gpui.TestPlatformOperations;
 import gpui.Window;
 import gpui.App;
 import gpui.base.Root;
@@ -1017,6 +1019,133 @@ class ComponentModalsTest extends TestCase {
         flushDismiss(cx);
 
         assertEquals(1, ids(list, cx).length);
+    }
+
+    /** Rust `init(cx)` on GPUI's test platform: the port's test double of it. */
+    function initSystemNotifications():TestPlatformOperations {
+        final platform = new TestPlatformOperations();
+        app.platformOperations = platform;
+        app.update(cx -> NotificationList.init(cx));
+        return platform;
+    }
+
+    /**
+     * Applications may post their own system notifications; a response for
+     * one of those must not be retracted or dispatched by the library.
+     */
+    function testResponseForAForeignTagIsIgnored() {
+        final platform = initSystemNotifications();
+        app.update(cx -> cx.setAppIdentity('com.example.test', 'Test'));
+        platform.simulateSystemNotificationResponse(new SystemNotificationResponse('com.example.app/own-tag'));
+        dispatcher.runUntilParked();
+        assertEquals(0, platform.dismissedSystemNotifications.length);
+        assertEquals(0, platform.activations.length);
+    }
+
+    function testSystemDeliveryPostsToCenterWithoutInAppToast() {
+        final platform = initSystemNotifications();
+        // The test platform drops posts until an identity is set, mirroring Windows.
+        app.update(cx -> cx.setAppIdentity('com.example.test', 'Test'));
+        final opened = notificationRoot(false);
+        final cx = opened.cx;
+        final list = cx.update((_, app) -> opened.root.read(app).list);
+
+        updateList(cx, list, (list, window, cx) -> {
+            list.push(Notification.info('body text').title('Title').withId(FooKind).delivery(System), window, cx);
+            // Message-only: the message becomes the system title.
+            list.push(Notification.info('message only').withId(BarKind).delivery(System), window, cx);
+        });
+        cx.runUntilParked();
+
+        final shown = platform.shownSystemNotifications;
+        assertEquals(2, shown.length);
+        assertEquals(NotificationIdTools.systemTag(Id(typeId(FooKind))), shown[0].tag);
+        assertEquals('Title', shown[0].title);
+        assertEquals('body text', shown[0].body);
+        assertEquals('message only', shown[1].title);
+        assertEquals('', shown[1].body);
+        assertEquals(0, ids(list, cx).length, 'no in-app toast should exist');
+
+        // System-only notifications are still retractable through the
+        // regular close path even though no toast entity exists.
+        updateList(cx, list, (list, window, cx) -> list.close(Id(typeId(FooKind)), window, cx));
+        assertEquals(NotificationIdTools.systemTag(Id(typeId(FooKind))), platform.dismissedSystemNotifications.join(','));
+    }
+
+    function testSystemClickActivatesWindowClosesToastAndFiresOnClick() {
+        final platform = initSystemNotifications();
+        app.update(cx -> cx.setAppIdentity('com.example.test', 'Test'));
+        final opened = notificationRoot(false);
+        final cx = opened.cx;
+        final list = cx.update((_, app) -> opened.root.read(app).list);
+
+        var clicked = false;
+        updateList(cx, list, (list, window, cx) -> list.push(Notification.info('message')
+            .title('Title')
+            .withId(FooKind)
+            .delivery(InAppAndSystem)
+            .autohide(false)
+            .onClick((_, _, _) -> clicked = true), window, cx));
+        cx.runUntilParked();
+        assertEquals(1, ids(list, cx).length);
+        assertEquals(1, platform.shownSystemNotifications.length);
+
+        platform.simulateSystemNotificationResponse(new SystemNotificationResponse(NotificationIdTools.systemTag(Id(typeId(FooKind)))));
+        cx.runUntilParked();
+
+        assertTrue(clicked, 'on_click should fire on system response');
+        // The response retracts the notification and brings the app forward
+        assertEquals(NotificationIdTools.systemTag(Id(typeId(FooKind))), platform.dismissedSystemNotifications.join(','));
+        assertEquals('true', platform.activations.join(','));
+        flushDismiss(cx);
+        assertEquals(0, ids(list, cx).length, 'the in-app counterpart should be closed');
+    }
+
+    function testExplicitCloseRetractsSystemNotificationButAutohideDoesNot() {
+        final platform = initSystemNotifications();
+        app.update(cx -> cx.setAppIdentity('com.example.test', 'Test'));
+        final opened = notificationRoot(false);
+        final cx = opened.cx;
+        cx.update((window, _) -> window.activateWindow());
+        final list = cx.update((_, app) -> opened.root.read(app).list);
+
+        // Autohide expiry leaves the system notification in the center.
+        updateList(cx, list, (list, window, cx) -> list.push(Notification.info('auto').withId(FooKind).delivery(InAppAndSystem), window, cx));
+        cx.runUntilParked();
+        advance(cx, 6.);
+        flushDismiss(cx);
+        assertEquals(0, ids(list, cx).length, 'the toast should have autohidden');
+        assertEquals(0, platform.dismissedSystemNotifications.length, 'autohide must not retract the system notification');
+
+        // An explicit close retracts it.
+        updateList(cx, list, (list, window, cx) -> list.push(Notification.info('manual').withId(BarKind).delivery(InAppAndSystem).autohide(false), window, cx));
+        cx.runUntilParked();
+        updateList(cx, list, (list, window, cx) -> list.close(Id(typeId(BarKind)), window, cx));
+        flushDismiss(cx);
+        assertEquals(NotificationIdTools.systemTag(Id(typeId(BarKind))), platform.dismissedSystemNotifications.join(','));
+    }
+
+    /**
+     * A response for a window that closed meanwhile still retracts the
+     * notification and activates the app, without dispatching (Rust: the
+     * window handle update errs). A port check, no Rust counterpart.
+     */
+    function testSystemResponseAfterTheWindowClosedOnlyActivates() {
+        final platform = initSystemNotifications();
+        app.update(cx -> cx.setAppIdentity('com.example.test', 'Test'));
+        final opened = notificationRoot(false);
+        final cx = opened.cx;
+        final list = cx.update((_, app) -> opened.root.read(app).list);
+        var clicked = false;
+        updateList(cx, list, (list, window, cx) -> list.push(Notification.info('message').withId(FooKind).system().onClick((_, _, _) -> clicked = true), window, cx));
+        contexts.remove(cx);
+        cx.destroy();
+
+        platform.simulateSystemNotificationResponse(new SystemNotificationResponse(NotificationIdTools.systemTag(Id(typeId(FooKind)))));
+        dispatcher.runUntilParked();
+        assertFalse(clicked);
+        assertEquals(NotificationIdTools.systemTag(Id(typeId(FooKind))), platform.dismissedSystemNotifications.join(','));
+        assertEquals('true', platform.activations.join(','));
     }
 
 // kit/tests/integration/root.rs (component parts)
