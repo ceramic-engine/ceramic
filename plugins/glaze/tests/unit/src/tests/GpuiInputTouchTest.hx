@@ -109,12 +109,17 @@ class GpuiInputTouchTest extends TestCase {
      * wheel events on its own clock: frames without motion, then double steps). The
      * resampler itself is tested in clay (`test/WheelResamplerTest.hx`).
      */
-    function testBindingInputEnablesWebWheelResampling() {
+    function testBindingInputKeepsCeramicWheelResamplingChoice() {
+        // Ceramic enables the resampling by default in Safari only (Utils.isSafari()):
+        // binding GPUI input leaves the app's choice as it is
         final settings = ceramic.App.app.settings;
+        final previous = settings.webWheelResampling;
         @:privateAccess if (GpuiInput.instance != null) GpuiInput.instance.destroy();
         settings.webWheelResampling = false;
         open((_, _) -> new TouchLogView([]));
-        assertTrue(settings.webWheelResampling);
+        assertFalse(settings.webWheelResampling);
+        settings.webWheelResampling = previous;
+        assertEquals(ceramic.Utils.isSafari(), @:privateAccess new ceramic.Settings().webWheelResampling);
     }
 
     function testTapsBecomeMouseClicksWithTheirCount() {

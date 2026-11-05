@@ -172,10 +172,9 @@ class GpuiInput extends ceramic.Entity {
         screen.onMouseDown(this, handleMouseDown);
         screen.onMouseUp(this, handleMouseUp);
         screen.onMouseScroll(this, handleMouseScroll);
-        // Web: smooth scrolling on the beat of the frames in browsers that dispatch wheel
-        // events unevenly (Safari), see ceramic.Settings.webWheelResampling. The scroll
-        // logic of GPUI is unchanged: it receives the same total distance, in even steps.
-        app.settings.webWheelResampling = true;
+        // Web: Ceramic resamples smooth scrolling on the beat of the frames in Safari by
+        // default (ceramic.Settings.webWheelResampling). The scroll logic of GPUI is
+        // unchanged: it receives the same total distance, in even steps.
         screen.onTouchDown(this, handleTouchDown);
         screen.onTouchMove(this, handleTouchMove);
         screen.onTouchUp(this, handleTouchUp);
