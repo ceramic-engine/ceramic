@@ -325,7 +325,7 @@ class PathTessellator {
             for (i in 0...n) {
                 final j = (i + 1) % n;
                 sweep.addEdge(poly[i * 2], poly[i * 2 + 1], poly[j * 2], poly[j * 2 + 1], sweep.sources.length);
-                sweep.sources.push([]);
+                sweep.sources.push(null);
             }
         }
         if (!sweep.run())
@@ -340,7 +340,7 @@ class PathTessellator {
                 out.push(x0);
                 out.push(y0);
                 final list = sweep.sources[e + i];
-                if (list.length > 0) {
+                if (list != null && list.length > 0) {
                     final j = (i + 1) % n;
                     final dx = poly[j * 2] - x0, dy = poly[j * 2 + 1] - y0;
                     final count = Std.int(list.length / 2);
@@ -606,8 +606,14 @@ class StrokeGeometry {
  */
 private class FillSweep {
 
-    /** Inserted points (`x, y`) of each source edge */
-    public final sources:Array<Array<Float>> = [];
+    /** Inserted points (`x, y`) of each source edge (null while none) */
+    public final sources:Array<Null<Array<Float>>> = [];
+
+    /** The edges below the current event position (reused from event to event) */
+    final below:Array<SweepEdge> = [];
+
+    /** Orders edges by `sortKey` (one function for every sweep) */
+    static final BY_SORT_KEY:(SweepEdge, SweepEdge) -> Int = (a, b) -> a.sortKey < b.sortKey ? -1 : (a.sortKey > b.sortKey ? 1 : 0);
 
     /** Pending edges, by event position: from (top), to, winding, source */
     final events:Array<SweepEdge> = [];
@@ -664,12 +670,13 @@ private class FillSweep {
 
             // Edges below: the pending edges starting here, sorted like lyon
             // (`sort_edges_below`, by slope)
-            final below:Array<SweepEdge> = [];
+            final below = this.below;
+            below.resize(0);
             while (events.length > 0 && events[0].fromX == px && events[0].fromY == py)
                 below.push(events.shift());
             for (e in below)
                 e.sortKey = SpringMath.f32(SpringMath.f32(e.toX - px) / Math.max(SpringMath.f32(e.toY - py), 1.1754943508222875e-38));
-            below.sort((a, b) -> a.sortKey < b.sortKey ? -1 : (a.sortKey > b.sortKey ? 1 : 0));
+            below.sort(BY_SORT_KEY);
 
             // Edges above: the active edges ending here (skipped by the checks)
             for (a in active)
@@ -784,7 +791,11 @@ private class FillSweep {
     }
 
     function record(source:Int, x:Float, y:Float):Void {
-        final list = sources[source];
+        var list = sources[source];
+        if (list == null) {
+            list = [];
+            sources[source] = list;
+        }
         var i = 0;
         while (i < list.length) {
             if (list[i] == x && list[i + 1] == y)

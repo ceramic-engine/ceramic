@@ -1781,6 +1781,15 @@ class Window implements WindowInvalidator {
     }
 
     /**
+     * `requestLayout()` giving `children` away: the layout node keeps the
+     * array (the element may still read it, never change it). Internal.
+     */
+    @:allow(gpui)
+    function requestLayoutOwned(style:Style, children:Array<LayoutId>, cx:App):LayoutId {
+        return layoutEngine.requestLayoutWith(style, remSize(), _scaleFactor, children, true);
+    }
+
+    /**
      * Add a node to the layout tree for the current frame. Instead of taking a `Style` and children,
      * this variant takes a function that is invoked during layout so you can use arbitrary logic to
      * determine the element's size.
@@ -3780,10 +3789,6 @@ class Window implements WindowInvalidator {
         nextFrame.mouseListeners.push(new MouseListenerEntry(kind, listener, null, null));
     }
 
-    /**
-     * Like `onMouseEvent()`, for a listener of an element called with its
-     * hitbox (the same as registering `(e, p, w, cx) -> listener(e, p, hitbox, w, cx)`).
-     */
     /** Registers a mouse listener entry for the next frame (internal) */
     @:allow(gpui)
     function addMouseListenerEntry(entry:MouseListenerEntry):Void {
@@ -3799,6 +3804,10 @@ class Window implements WindowInvalidator {
         nextFrame.mouseListeners.push(new HoverListenerEntry(hitbox, hoverState, currentView, paintedHovered));
     }
 
+    /**
+     * Like `onMouseEvent()`, for a listener of an element called with its
+     * hitbox (the same as registering `(e, p, w, cx) -> listener(e, p, hitbox, w, cx)`).
+     */
     @:allow(gpui)
     function onElementMouseEvent(kind:PlatformInputKind, listener:Interactivity.ElementMouseListener, hitbox:Hitbox):Void {
         nextFrame.mouseListeners.push(new MouseListenerEntry(kind, null, listener, hitbox));
@@ -3825,6 +3834,12 @@ class Window implements WindowInvalidator {
      */
     public function onAction(actionType:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void):Void {
         nextFrame.dispatchTree.onAction(actionType, listener);
+    }
+
+    /** `onAction()` with a listener entry, kept as is (no wrapper per frame) */
+    @:allow(gpui)
+    function onActionEntry(entry:DispatchTree.DispatchActionListener):Void {
+        nextFrame.dispatchTree.onActionEntry(entry);
     }
 
     /**
@@ -5088,7 +5103,7 @@ class Window implements WindowInvalidator {
             final listeners = tree.node(id).actionListeners.copy();
             for (entry in listeners) {
                 if (entry.actionType == actionType) {
-                    entry.listener(action, Capture, this, cx);
+                    entry.call(action, Capture, this, cx);
                     if (!cx.propagateEvent) {
                         return;
                     }
@@ -5104,7 +5119,7 @@ class Window implements WindowInvalidator {
             for (entry in listeners) {
                 if (entry.actionType == actionType) {
                     cx.propagateEvent = false; // Actions stop propagation by default during the bubble phase
-                    entry.listener(action, Bubble, this, cx);
+                    entry.call(action, Bubble, this, cx);
                     if (!cx.propagateEvent) {
                         return;
                     }

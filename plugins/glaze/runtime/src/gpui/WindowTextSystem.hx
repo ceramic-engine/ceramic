@@ -100,6 +100,16 @@ class WindowTextSystem {
      * `lineClamp` is -1 when there is no limit.
      */
     public function shapeText(text:String, fontSize:Pixels, runs:Array<TextRun>, ?wrapWidth:Float, lineClamp:Int = -1):Array<WrappedLine> {
+        return shapeTextWith(text, fontSize, runs, wrapWidth, lineClamp, false);
+    }
+
+    /**
+     * `shapeText()`, with `shareDecorations`: a line made of one whole run
+     * gets the decoration runs shared by the layouts of that run (the text
+     * layouts of the port, which do not change them).
+     */
+    @:allow(gpui)
+    function shapeTextWith(text:String, fontSize:Pixels, runs:Array<TextRun>, wrapWidth:Null<Float>, lineClamp:Int, shareDecorations:Bool):Array<WrappedLine> {
         // Rust copies the runs with a length because their length is consumed
         // line by line: here the current run and what is left of it are kept
         // in locals instead (`runs` is not changed)
@@ -129,8 +139,32 @@ class WindowTextSystem {
             final lineEnd = lineStart + lineLen;
 
             fontRuns.resize(0);
-            final decorationRuns:Array<DecorationRun> = [];
+            var decorationRuns:Array<DecorationRun>;
             var runStart = lineStart;
+            final wholeRun = shareDecorations && lineLen > 0 && runIndex < runs.length ? runs[runIndex] : null;
+            if (wholeRun != null && wholeRun.len == lineLen && runLeft == lineLen) {
+                // One run covering the line: what the loop below makes, with
+                // the decoration runs shared
+                decorationRuns = sharedLineDecorations(wholeRun);
+                final fontId = textSystem.resolveFont(wholeRun.font);
+                if (fontRunPool.length > 0) {
+                    final fontRun = fontRunPool[0];
+                    fontRun.len = lineLen;
+                    fontRun.fontId = fontId;
+                    fontRuns.push(fontRun);
+                }
+                else {
+                    final fontRun = new FontRun(lineLen, fontId);
+                    fontRunPool.push(fontRun);
+                    fontRuns.push(fontRun);
+                }
+                runIndex = nextRunWithLength(runs, runIndex + 1);
+                runLeft = runIndex < runs.length ? runs[runIndex].len : 0;
+                runStart = lineEnd;
+            }
+            else {
+                decorationRuns = [];
+            }
             while (runStart < lineEnd) {
                 if (runIndex >= runs.length) {
                     ceramic.Shortcuts.log.warning('`TextRun`s do not cover the entire to be shaped text');
@@ -204,6 +238,20 @@ class WindowTextSystem {
         scratchFontRuns = fontRuns;
         scratchFontRunPool = fontRunPool;
         return lines;
+    }
+
+    /** The decoration runs of a line made of the whole of `run`, shared */
+    static function sharedLineDecorations(run:TextRun):Array<DecorationRun> {
+        final cached = run.lineDecorationRuns;
+        if (cached != null) {
+            final decoration = cached[0];
+            if (decoration.len == run.len && decoration.color == run.color && decoration.backgroundColor == run.backgroundColor
+                && decoration.underline == run.underline && decoration.strikethrough == run.strikethrough)
+                return cached;
+        }
+        final created = [new DecorationRun(run.len, run.color, run.backgroundColor, run.underline, run.strikethrough)];
+        run.lineDecorationRuns = created;
+        return created;
     }
 
     /** The first run from `start` with a length (`runs.length` when none) */

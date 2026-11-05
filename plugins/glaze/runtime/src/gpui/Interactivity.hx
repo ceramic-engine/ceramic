@@ -46,14 +46,52 @@ class GroupDragOverStyle {
     }
 }
 
-/** An action listener and the action type it handles */
-@:structInit
-class TypedActionListener {
-    public final type:Class<Dynamic>;
-    public final listener:(Action, DispatchPhase, Window, App) -> Void;
-    public function new(type:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void) {
-        this.type = type;
-        this.listener = listener;
+/**
+ * An action listener and the action type it handles: the entry painted into
+ * the dispatch tree as is (`listener` is `null` on the subclasses below,
+ * which handle `call()` themselves)
+ */
+class TypedActionListener extends DispatchTree.DispatchActionListener {
+    public var type(get, never):Class<Dynamic>;
+    inline function get_type():Class<Dynamic> {
+        return actionType;
+    }
+    public function new(type:Class<Dynamic>, listener:Null<(Action, DispatchPhase, Window, App) -> Void>) {
+        super(type, listener);
+    }
+}
+
+/** `Interactivity.onAction`: calls its listener during the bubble phase */
+private class BubbleActionListener extends TypedActionListener {
+    final bubble:(Action, Window, App) -> Void;
+    public function new(type:Class<Dynamic>, bubble:(Action, Window, App) -> Void) {
+        super(type, null);
+        this.bubble = bubble;
+    }
+    override public function call(action:Action, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Bubble) {
+            bubble(action, window, cx);
+        }
+    }
+}
+
+/**
+ * `Interactivity.captureAction`: calls its listener during the capture
+ * phase, propagates during the bubble phase
+ */
+private class CaptureActionListener extends TypedActionListener {
+    final capture:(Action, Window, App) -> Void;
+    public function new(type:Class<Dynamic>, capture:(Action, Window, App) -> Void) {
+        super(type, null);
+        this.capture = capture;
+    }
+    override public function call(action:Action, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Capture) {
+            capture(action, window, cx);
+        }
+        else {
+            cx.propagate();
+        }
     }
 }
 
@@ -586,17 +624,7 @@ class Interactivity {
      */
     public function captureAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
         if (actionListeners == null) actionListeners = [];
-        actionListeners.push({
-            type: type,
-            listener: (action, phase, window, cx) -> {
-                if (phase == Capture) {
-                    listener(cast action, window, cx);
-                }
-                else {
-                    cx.propagate();
-                }
-            }
-        });
+        actionListeners.push(new CaptureActionListener(type, cast listener));
     }
 
     /**
@@ -604,14 +632,7 @@ class Interactivity {
      */
     public function onAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
         if (actionListeners == null) actionListeners = [];
-        actionListeners.push({
-            type: type,
-            listener: (action, phase, window, cx) -> {
-                if (phase == Bubble) {
-                    listener(cast action, window, cx);
-                }
-            }
-        });
+        actionListeners.push(new BubbleActionListener(type, cast listener));
     }
 
     /**
@@ -622,14 +643,11 @@ class Interactivity {
     public function onBoxedAction(action:Action, listener:(Action, Window, App) -> Void):Void {
         final action = action.boxedClone();
         if (actionListeners == null) actionListeners = [];
-        actionListeners.push({
-            type: Type.getClass(action),
-            listener: (_, phase, window, cx) -> {
-                if (phase == Bubble) {
-                    listener(action, window, cx);
-                }
+        actionListeners.push(new TypedActionListener(Type.getClass(action), (_, phase, window, cx) -> {
+            if (phase == Bubble) {
+                listener(action, window, cx);
             }
-        });
+        }));
     }
 
     /**
@@ -1203,15 +1221,8 @@ class Interactivity {
         // that will automatically transfer focus when hitting the element.
         // This behavior can be suppressed by using `window.preventDefault()`.
         if (trackedFocusHandle != null) {
-            final focusHandle = trackedFocusHandle;
-            window.onMouseEvent(MouseDown, (_, phase, window, cx) -> {
-                if (phase == Bubble && hitbox.isHovered(window) && !window.defaultPrevented()) {
-                    window.focus(focusHandle, cx);
-                    // If there is a parent that is also focusable, prevent it
-                    // from transferring focus because we already did so.
-                    window.preventDefault();
-                }
-            });
+            // In an entry, without a closure (`FocusMouseDownEntry`)
+            window.addMouseListenerEntry(new FocusMouseDownEntry(hitbox, trackedFocusHandle));
         }
 
         final mouseDownListeners = this.mouseDownListeners;
@@ -1522,7 +1533,7 @@ class Interactivity {
         if (actionListeners != null) {
             this.actionListeners = null;
             for (entry in actionListeners) {
-                window.onAction(entry.type, entry.listener);
+                @:privateAccess window.onActionEntry(entry);
             }
         }
     }
@@ -2041,6 +2052,31 @@ private class ClickListenerState {
         this.hasAuxClickListeners = auxClickListeners.length > 0;
         this.dragListenerLeft = dragListener;
         this.dragCursorStyle = dragCursorStyle;
+    }
+
+}
+
+/**
+ * The mouse down listener of a focusable element: transfers the focus when
+ * the element is hit (`Interactivity.paintMouseListeners`)
+ */
+private class FocusMouseDownEntry extends gpui.Window.MouseListenerEntry {
+
+    final focusHandle:FocusHandle;
+
+    public function new(hitbox:Hitbox, focusHandle:FocusHandle) {
+        // The hitbox of the entry (no element listener: `call` is overridden)
+        super(MouseDown, null, null, hitbox);
+        this.focusHandle = focusHandle;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Bubble && hitbox.isHovered(window) && !window.defaultPrevented()) {
+            window.focus(focusHandle, cx);
+            // If there is a parent that is also focusable, prevent it
+            // from transferring focus because we already did so.
+            window.preventDefault();
+        }
     }
 
 }

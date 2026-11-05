@@ -29,7 +29,15 @@ class Div extends Element implements Styled implements ParentElement {
 
     final childElements:Array<AnyElement> = [];
 
-    final childLayoutIds:Array<LayoutId> = [];
+    /**
+     * The layout ids of the children, from `requestLayout()`: a new array
+     * each time (the layout node keeps it), the shared empty one without
+     * children
+     */
+    var childLayoutIds:Array<LayoutId> = NO_LAYOUT_IDS;
+
+    /** The layout ids of a div without children (never changed) */
+    static final NO_LAYOUT_IDS:Array<LayoutId> = [];
 
     var prepaintListener:Null<(Array<Bounds>, Window, App) -> Void> = null;
 
@@ -653,11 +661,17 @@ class Div extends Element implements Styled implements ParentElement {
         final style = interactivity.requestLayoutStyle(id, #if gpui_inspector inspectorId, #end window, cx);
         final textStyle = style.textStyle();
         if (textStyle != null) window.pushTextStyle(textStyle);
-        childLayoutIds.resize(0);
-        for (child in childElements) {
-            childLayoutIds.push(child.requestLayout(window, cx));
+        final count = childElements.length;
+        var ids = NO_LAYOUT_IDS;
+        if (count > 0) {
+            ids = [];
+            ids.resize(count);
+            for (i in 0...count) {
+                ids[i] = childElements[i].requestLayout(window, cx);
+            }
         }
-        final layoutId = window.requestLayout(style, childLayoutIds, cx);
+        childLayoutIds = ids;
+        final layoutId = window.requestLayoutOwned(style, ids, cx);
         if (textStyle != null) window.popTextStyle();
         return layoutId;
     }

@@ -26,6 +26,12 @@ class TextRun {
     /** The strikethrough style (if any) */
     public var strikethrough:Null<StrikethroughStyle>;
 
+    /**
+     * The decoration runs of a line made of this whole run, shared by the
+     * text layouts that shape it (`WindowTextSystem.shapeTextWith`). Internal.
+     */
+    @:noCompletion public var lineDecorationRuns:Null<Array<DecorationRun>> = null;
+
     public function new(len:Int = 0, ?font:Font, ?color:Hsla, ?backgroundColor:Hsla, ?underline:UnderlineStyle, ?strikethrough:StrikethroughStyle) {
         this.len = len;
         this.font = font != null ? font : Font.defaultValue();

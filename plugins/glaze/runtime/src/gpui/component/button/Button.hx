@@ -471,6 +471,21 @@ class ButtonVariantTools {
  */
 class Button implements RenderOnce implements Styled implements ParentElement implements Sizable implements Selectable implements Disableable implements FocusableExt {
 
+    /** The mouse down listener of an enabled button (shared, it captures nothing) */
+    static final MOUSE_DOWN:(gpui.MouseDownEvent, Window, App) -> Void = (_, window, cx) -> {
+        // Avoid focus on mouse down.
+        window.preventDefault();
+
+        // Pressing a button must not start the window-level text selection.
+        GlobalState.suppressTextSelection(cx);
+    };
+
+    /** The mouse down listener of a loading button */
+    static final LOADING_MOUSE_DOWN:(gpui.MouseDownEvent, Window, App) -> Void = (_, _, cx) -> cx.stopPropagation();
+
+    /** The click listener of a loading button */
+    static final STOP_CLICK:(ClickEvent, Window, App) -> Void = (_, _, cx) -> cx.stopPropagation();
+
     /** Ink of the focus line a filled button draws inside its fill. */
     static inline final FOCUS_LINE_OPACITY:Float = 0.6;
 
@@ -1143,7 +1158,11 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             content.child(new Caret(size).textColor(normalStyle.fg.opacity(0.75)));
         }
 
-        final resolvedRole = roleValue.resolve(() -> variantValue.isLink() ? Role.Link : Role.Button);
+        // `roleValue.resolve(() -> ...)` without a closure per render
+        final resolvedRole = switch roleValue {
+            case Implicit: variantValue.isLink() ? Role.Link : Role.Button;
+            case _: roleValue.resolve(null);
+        }
         root.role(resolvedRole != null ? Explicit(resolvedRole) : Presentational)
             .selected(selected)
             .disabled(disabled)
@@ -1171,36 +1190,19 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         // background changes nothing.
         if (loading && !disabled) root.opacity(0.8);
         if (!disabled) {
-            root.onMouseDown(Left, (_, window, cx) -> {
-                if (loading) {
-                    cx.stopPropagation();
-                    return;
-                }
-
-                // Avoid focus on mouse down.
-                window.preventDefault();
-
-                // Pressing a button must not start the window-level text selection.
-                GlobalState.suppressTextSelection(cx);
-            });
+            root.onMouseDown(Left, loading ? LOADING_MOUSE_DOWN : MOUSE_DOWN);
         }
         final onClick = onClickHandler;
         if (onClick != null) {
-            root.onClick((event, window, cx) -> {
-                if (loading) {
-                    cx.stopPropagation();
-                    return;
-                }
-
-                onClick(event, window, cx);
-            });
+            // While loading, the click stops there
+            root.onClick(loading ? STOP_CLICK : onClick);
         }
         if (loading) {
-            root.onClick((_, _, cx) -> cx.stopPropagation());
+            root.onClick(STOP_CLICK);
         }
         final onHover = onHoverHandler;
         if (onHover != null && hoverable) {
-            root.onHover((hovered, window, cx) -> onHover(hovered, window, cx));
+            root.onHover(onHover);
         }
         final tooltipPlacement = tooltipPlacementValue;
         final tooltipShowDelay = tooltipShowDelayValue;

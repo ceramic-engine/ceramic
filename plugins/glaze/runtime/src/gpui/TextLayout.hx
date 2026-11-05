@@ -149,7 +149,7 @@ class TextLayout {
                 }
                 else {
                     var fits = false;
-                    final unclipped = try window.textSystem().shapeText(text, fontSize, runs, null, -1) catch (e:Dynamic) null;
+                    final unclipped = try @:privateAccess window.textSystem().shapeTextWith(text, fontSize, runs, null, -1, true) catch (e:Dynamic) null;
                     if (unclipped != null) {
                         fits = true;
                         for (line in unclipped) {
@@ -172,7 +172,7 @@ class TextLayout {
             }
             final len = Utf8.byteLength(finalText);
 
-            final lines = try window.textSystem().shapeText(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp) catch (e:Dynamic) {
+            final lines = try @:privateAccess window.textSystem().shapeTextWith(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp, true) catch (e:Dynamic) {
                 ceramic.Shortcuts.log.error('Failed to shape text: $e');
                 null;
             };
@@ -187,10 +187,19 @@ class TextLayout {
                 height += line.sizeHeight(lineHeight);
                 width = Math.fceil(Math.max(width, line.width()));
             }
-            final size = new Size(width, height);
+            // Sizes are immutable: the last one is kept when it is the same
+            final previous = elementState.size;
+            final size = previous != null && sameFloat(previous.width, width) && sameFloat(previous.height, height)
+                ? previous
+                : new Size(width, height);
             elementState.setInner(lines, len, lineHeight, wrapWidth, truncateWidth, size);
             return size;
         });
+    }
+
+    /** The same value, zero signs included */
+    static inline function sameFloat(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
     }
 
     function setInner(lines:Array<WrappedLine>, len:Int, lineHeight:Pixels, wrapWidth:Null<Float>, truncateWidth:Null<Float>, size:Size):Void {

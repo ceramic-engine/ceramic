@@ -390,6 +390,15 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     public function requestLayout(style:Style, remSize:Pixels, scaleFactor:Float, children:Array<LayoutId>):LayoutId {
+        return requestLayoutWith(style, remSize, scaleFactor, children, false);
+    }
+
+    /**
+     * `requestLayout()`; with `owned`, a node made with these children keeps
+     * the array instead of a copy (the caller gives it away and never
+     * changes it again).
+     */
+    public function requestLayoutWith(style:Style, remSize:Pixels, scaleFactor:Float, children:Array<LayoutId>, owned:Bool):LayoutId {
         final adopted = adoptNode(children, null);
         if (adopted != -1) {
             return adopted;
@@ -400,7 +409,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         }
         else {
             final nodes:Array<NodeId> = cast children;
-            return created(tree.newWithChildren(taffyStyle, nodes));
+            return created(owned ? tree.newWithChildrenOwned(taffyStyle, nodes) : tree.newWithChildren(taffyStyle, nodes));
         }
     }
 
@@ -533,10 +542,12 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     @:noCompletion
-    public function measureLeafSize(knownWidth:OptionalFloat, knownHeight:OptionalFloat, availableWidth:taffy.style.AvailableSpace, availableHeight:taffy.style.AvailableSpace):taffy.geometry.Size {
+    public function measureLeafSize(knownWidth:OptionalFloat, knownHeight:OptionalFloat, availableWidth:taffy.style.AvailableSpace, availableHeight:taffy.style.AvailableSpace):Void {
         final nodeContext = measureNodeContext;
         if (nodeContext == null) {
-            return taffy.geometry.Size.ZERO;
+            lastMeasuredWidth = 0.0;
+            lastMeasuredHeight = 0.0;
+            return;
         }
         final scaleFactor = measureScaleFactor;
 
@@ -576,10 +587,25 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         nodeContext.lastKnown = known;
         nodeContext.lastAvailable = available;
         final measured = nodeContext.measure(known, available, measureWindow, measureCx);
-        return new taffy.geometry.Size(
-            ceilToDevicePixel(Math.max(measured.width, 0.0), scaleFactor),
-            ceilToDevicePixel(Math.max(measured.height, 0.0), scaleFactor)
-        );
+        // Set after the measure (which may measure other leaves)
+        lastMeasuredWidth = ceilToDevicePixel(Math.max(measured.width, 0.0), scaleFactor);
+        lastMeasuredHeight = ceilToDevicePixel(Math.max(measured.height, 0.0), scaleFactor);
+    }
+
+    /** The width of the last `measureLeafSize()` (taffy reads it right after) */
+    var lastMeasuredWidth:Float = 0.0;
+
+    /** The height of the last `measureLeafSize()` */
+    var lastMeasuredHeight:Float = 0.0;
+
+    @:noCompletion
+    public function measuredWidth():Float {
+        return lastMeasuredWidth;
+    }
+
+    @:noCompletion
+    public function measuredHeight():Float {
+        return lastMeasuredHeight;
     }
 
     /**

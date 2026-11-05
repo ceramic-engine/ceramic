@@ -28,11 +28,20 @@ class DispatchActionListener {
 
     public final actionType:Class<Dynamic>;
 
-    public final listener:(action:Action, phase:DispatchPhase, window:Window, cx:App) -> Void;
+    /**
+     * The listener (`null` on the subclasses that handle the call
+     * themselves: dispatch through `call()`)
+     */
+    public final listener:Null<(action:Action, phase:DispatchPhase, window:Window, cx:App) -> Void>;
 
-    public function new(actionType:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void) {
+    public function new(actionType:Class<Dynamic>, listener:Null<(Action, DispatchPhase, Window, App) -> Void>) {
         this.actionType = actionType;
         this.listener = listener;
+    }
+
+    /** Call the listener */
+    public function call(action:Action, phase:DispatchPhase, window:Window, cx:App):Void {
+        listener(action, phase, window, cx);
     }
 
 }
@@ -295,6 +304,11 @@ class DispatchTree {
 
     public function onAction(actionType:Class<Dynamic>, listener:(Action, DispatchPhase, Window, App) -> Void):Void {
         activeNode().actionListeners.push(new DispatchActionListener(actionType, listener));
+    }
+
+    /** Add an action listener entry to the active node (kept as is) */
+    public function onActionEntry(entry:DispatchActionListener):Void {
+        activeNode().actionListeners.push(entry);
     }
 
     public function focusContains(parent:Int, child:Int):Bool {

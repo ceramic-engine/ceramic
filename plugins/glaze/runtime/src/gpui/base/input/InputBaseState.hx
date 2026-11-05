@@ -186,6 +186,9 @@ private class PasteTarget {
 @:access(gpui.base.input.LayoutMode)
 class InputBaseState extends Model implements Render implements EntityInputHandler {
 
+    /** The listeners of `render()`, made on the first render */
+    var renderListeners:Null<InputRenderListeners> = null;
+
     public static inline final EDITOR_ELEMENT_ID = "input-state";
 
     /** The key context of the inputs (Rust `CONTEXT`). */
@@ -4048,89 +4051,77 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             _pendingUpdate = false;
         }
 
-        inline function listenerFor<E>(f:(InputBaseState, E, Window, Context<InputBaseState>) -> Void):(E, Window, App) -> Void {
-            return (event, window, cx) -> entity.update(cx, (state, cx) -> f(state, event, window, cx));
+        // The listeners only call this state: made once (GPUI's `cx.listener`
+        // makes them each frame)
+        var listeners = renderListeners;
+        if (listeners == null) {
+            listeners = new InputRenderListeners(entity);
+            renderListeners = listeners;
         }
 
         // Accessibility (`InputAccessibility`, `aria_*`, `on_a11y_action`) is
         // not exported: the GPUI port has no accessibility tree.
         var element = div().id(EDITOR_ELEMENT_ID).keyContext(CONTEXT);
         if (isEditable()) {
-            element.onAction(Backspace, listenerFor((s, a, w, cx) -> s.backspace(a, w, cx)))
-                .onAction(Delete, listenerFor((s, a, w, cx) -> s.delete(a, w, cx)))
-                .onAction(DeleteToBeginningOfLine, listenerFor((s, a, w, cx) -> s.deleteToBeginningOfLine(a, w, cx)))
-                .onAction(DeleteToEndOfLine, listenerFor((s, a, w, cx) -> s.deleteToEndOfLine(a, w, cx)))
-                .onAction(DeleteToPreviousWordStart, listenerFor((s, a, w, cx) -> s.deletePreviousWord(a, w, cx)))
-                .onAction(DeleteToNextWordEnd, listenerFor((s, a, w, cx) -> s.deleteNextWord(a, w, cx)))
-                .onAction(gpui.base.input.InputActions.Enter, listenerFor((s, a, w, cx) -> s.enter(a, w, cx)))
-                .onAction(gpui.base.input.InputActions.Escape, listenerFor((s, a, w, cx) -> s.escape(a, w, cx)))
-                .onAction(Paste, listenerFor((s, a, w, cx) -> s.pasteAction(a, w, cx)))
-                .onAction(Cut, listenerFor((s, a, w, cx) -> s.cut(a, w, cx)))
-                .onAction(Undo, listenerFor((s, a, w, cx) -> s.undo(a, w, cx)))
-                .onAction(Redo, listenerFor((s, a, w, cx) -> s.redo(a, w, cx)));
+            element.onAction(Backspace, listeners.backspace)
+                .onAction(Delete, listeners.delete)
+                .onAction(DeleteToBeginningOfLine, listeners.deleteToBeginningOfLine)
+                .onAction(DeleteToEndOfLine, listeners.deleteToEndOfLine)
+                .onAction(DeleteToPreviousWordStart, listeners.deletePreviousWord)
+                .onAction(DeleteToNextWordEnd, listeners.deleteNextWord)
+                .onAction(gpui.base.input.InputActions.Enter, listeners.enter)
+                .onAction(gpui.base.input.InputActions.Escape, listeners.escape)
+                .onAction(Paste, listeners.pasteAction)
+                .onAction(Cut, listeners.cut)
+                .onAction(Undo, listeners.undo)
+                .onAction(Redo, listeners.redo);
             if (isMultiLine()) {
-                element.onAction(IndentInline, listenerFor((s, a, w, cx) -> s.indentInline(a, w, cx)))
-                    .onAction(OutdentInline, listenerFor((s, a, w, cx) -> s.outdentInline(a, w, cx)))
-                    .onAction(gpui.base.input.InputActions.Indent, listenerFor((s, a, w, cx) -> s.indentBlock(a, w, cx)))
-                    .onAction(gpui.base.input.InputActions.Outdent, listenerFor((s, a, w, cx) -> s.outdentBlock(a, w, cx)));
+                element.onAction(IndentInline, listeners.indentInline)
+                    .onAction(OutdentInline, listeners.outdentInline)
+                    .onAction(gpui.base.input.InputActions.Indent, listeners.indentBlock)
+                    .onAction(gpui.base.input.InputActions.Outdent, listeners.outdentBlock);
             }
         }
-        element.onAction(MoveLeft, listenerFor((s, a, w, cx) -> s.left(a, w, cx)))
-            .onAction(MoveRight, listenerFor((s, a, w, cx) -> s.right(a, w, cx)))
-            .onAction(SelectLeft, listenerFor((s, a, w, cx) -> s.selectLeft(a, w, cx)))
-            .onAction(SelectRight, listenerFor((s, a, w, cx) -> s.selectRight(a, w, cx)));
+        element.onAction(MoveLeft, listeners.left)
+            .onAction(MoveRight, listeners.right)
+            .onAction(SelectLeft, listeners.selectLeft)
+            .onAction(SelectRight, listeners.selectRight);
         if (isMultiLine()) {
-            element.onAction(MoveUp, listenerFor((s, a, w, cx) -> s.up(a, w, cx)))
-                .onAction(MoveDown, listenerFor((s, a, w, cx) -> s.down(a, w, cx)))
-                .onAction(SelectUp, listenerFor((s, a, w, cx) -> s.selectUp(a, w, cx)))
-                .onAction(SelectDown, listenerFor((s, a, w, cx) -> s.selectDown(a, w, cx)))
-                .onAction(MovePageUp, listenerFor((s, a, w, cx) -> s.pageUp(a, w, cx)))
-                .onAction(MovePageDown, listenerFor((s, a, w, cx) -> s.pageDown(a, w, cx)))
-                .onAction(AddCursorAbove, listenerFor((s, a, w, cx) -> s.addCursorAbove(a, w, cx)))
-                .onAction(AddCursorBelow, listenerFor((s, a, w, cx) -> s.addCursorBelow(a, w, cx)));
+            element.onAction(MoveUp, listeners.up)
+                .onAction(MoveDown, listeners.down)
+                .onAction(SelectUp, listeners.selectUp)
+                .onAction(SelectDown, listeners.selectDown)
+                .onAction(MovePageUp, listeners.pageUp)
+                .onAction(MovePageDown, listeners.pageDown)
+                .onAction(AddCursorAbove, listeners.addCursorAbove)
+                .onAction(AddCursorBelow, listeners.addCursorBelow);
         }
-        element.onAction(SelectAll, listenerFor((s, a, w, cx) -> s.onActionSelectAll(a, w, cx)))
-            .onAction(SelectToStartOfLine, listenerFor((s, a, w, cx) -> s.selectToStartOfLine(a, w, cx)))
-            .onAction(SelectToEndOfLine, listenerFor((s, a, w, cx) -> s.selectToEndOfLine(a, w, cx)))
-            .onAction(SelectToPreviousWordStart, listenerFor((s, a, w, cx) -> s.selectToPreviousWord(a, w, cx)))
-            .onAction(SelectToNextWordEnd, listenerFor((s, a, w, cx) -> s.selectToNextWord(a, w, cx)))
-            .onAction(MoveHome, listenerFor((s, a, w, cx) -> s.home(a, w, cx)))
-            .onAction(MoveEnd, listenerFor((s, a, w, cx) -> s.end(a, w, cx)))
-            .onAction(MoveToStart, listenerFor((s, a, w, cx) -> s.moveToStart(a, w, cx)))
-            .onAction(MoveToEnd, listenerFor((s, a, w, cx) -> s.moveToEnd(a, w, cx)))
-            .onAction(MoveToPreviousWord, listenerFor((s, a, w, cx) -> s.moveToPreviousWord(a, w, cx)))
-            .onAction(MoveToNextWord, listenerFor((s, a, w, cx) -> s.moveToNextWord(a, w, cx)))
-            .onAction(SelectToStart, listenerFor((s, a, w, cx) -> s.selectToStart(a, w, cx)))
-            .onAction(SelectToEnd, listenerFor((s, a, w, cx) -> s.selectToEnd(a, w, cx)))
-            .onAction(ShowCharacterPalette, listenerFor((s, a, w, cx) -> s.showCharacterPalette(a, w, cx)))
-            .onAction(ActivateToken, (_, window, cx) -> {
-                final state = entity.read(cx);
-                var activation:Null<InputTokenPresentation.TokenClickActivation> = null;
-                final selected = state.selectedRange();
-                for (span in state.tokenSpans()) {
-                    if (span.range().equals(selected)) {
-                        final bounds = state.rangeToBounds(span.range());
-                        if (bounds != null) {
-                            activation = state.tokenActivation(span.range().start, bounds, ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(gpui.KeyboardButton.Enter, bounds)));
-                        }
-                        break;
-                    }
-                }
-                if (activation != null) {
-                    activation.listener(activation.event, window, cx);
-                }
-            })
-            .onAction(Copy, listenerFor((s, a, w, cx) -> s.copy(a, w, cx)))
-            .onAction(gpui.base.input.InputActions.Search, listenerFor((s, a, w, cx) -> s.onActionSearch(a, w, cx)))
-            .onAction(Replace, listenerFor((s, a, w, cx) -> s.onActionReplace(a, w, cx)))
-            .onMouseDown(MouseButton.Left, listenerFor((s, e, w, cx) -> s.onMouseDown(e, w, cx)))
-            .onMouseDown(MouseButton.Right, listenerFor((s, e, w, cx) -> s.onMouseDown(e, w, cx)))
-            .onMouseUp(MouseButton.Left, listenerFor((s, e, w, cx) -> s.onMouseUp(e, w, cx)))
-            .onMouseUp(MouseButton.Right, listenerFor((s, e, w, cx) -> s.onMouseUp(e, w, cx)))
-            .onMouseMove(listenerFor((s, e, w, cx) -> s.onMouseMove(e, w, cx)))
-            .onScroll(listenerFor((s, e, w, cx) -> s.onScrollWheel(e, w, cx)));
+        element.onAction(SelectAll, listeners.onActionSelectAll)
+            .onAction(SelectToStartOfLine, listeners.selectToStartOfLine)
+            .onAction(SelectToEndOfLine, listeners.selectToEndOfLine)
+            .onAction(SelectToPreviousWordStart, listeners.selectToPreviousWord)
+            .onAction(SelectToNextWordEnd, listeners.selectToNextWord)
+            .onAction(MoveHome, listeners.home)
+            .onAction(MoveEnd, listeners.end)
+            .onAction(MoveToStart, listeners.moveToStart)
+            .onAction(MoveToEnd, listeners.moveToEnd)
+            .onAction(MoveToPreviousWord, listeners.moveToPreviousWord)
+            .onAction(MoveToNextWord, listeners.moveToNextWord)
+            .onAction(SelectToStart, listeners.selectToStart)
+            .onAction(SelectToEnd, listeners.selectToEnd)
+            .onAction(ShowCharacterPalette, listeners.showCharacterPalette)
+            .onAction(ActivateToken, listeners.activateToken)
+            .onAction(Copy, listeners.copy)
+            .onAction(gpui.base.input.InputActions.Search, listeners.onActionSearch)
+            .onAction(Replace, listeners.onActionReplace)
+            .onMouseDown(MouseButton.Left, listeners.onMouseDown)
+            .onMouseDown(MouseButton.Right, listeners.onMouseDown)
+            .onMouseUp(MouseButton.Left, listeners.onMouseUp)
+            .onMouseUp(MouseButton.Right, listeners.onMouseUp)
+            .onMouseMove(listeners.onMouseMove)
+            .onScroll(listeners.onScrollWheel);
         if (isMultiLine() && !disabled) {
-            element.onModifiersChanged((_, _, cx) -> entity.update(cx, (_, cx) -> cx.notify()));
+            element.onModifiersChanged(listeners.modifiersChanged);
         }
         if (!disabled) {
             if (isMultiLine() && window.modifiers().alt) {
@@ -4276,6 +4267,137 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
             intString = intString.substr(0, dot);
         final s = intString + (frac.length > 0 ? "." + frac : "");
         return negative ? "-" + s : s;
+    }
+
+}
+
+/**
+ * The listeners of `InputBaseState.render()`: they only call the state, so
+ * one set per state serves every frame (no closures per render)
+ */
+@:access(gpui.base.input.InputBaseState)
+private class InputRenderListeners {
+
+    public final backspace:(Dynamic, Window, App) -> Void;
+    public final delete:(Dynamic, Window, App) -> Void;
+    public final deleteToBeginningOfLine:(Dynamic, Window, App) -> Void;
+    public final deleteToEndOfLine:(Dynamic, Window, App) -> Void;
+    public final deletePreviousWord:(Dynamic, Window, App) -> Void;
+    public final deleteNextWord:(Dynamic, Window, App) -> Void;
+    public final enter:(Dynamic, Window, App) -> Void;
+    public final escape:(Dynamic, Window, App) -> Void;
+    public final pasteAction:(Dynamic, Window, App) -> Void;
+    public final cut:(Dynamic, Window, App) -> Void;
+    public final undo:(Dynamic, Window, App) -> Void;
+    public final redo:(Dynamic, Window, App) -> Void;
+    public final indentInline:(Dynamic, Window, App) -> Void;
+    public final outdentInline:(Dynamic, Window, App) -> Void;
+    public final indentBlock:(Dynamic, Window, App) -> Void;
+    public final outdentBlock:(Dynamic, Window, App) -> Void;
+    public final left:(Dynamic, Window, App) -> Void;
+    public final right:(Dynamic, Window, App) -> Void;
+    public final selectLeft:(Dynamic, Window, App) -> Void;
+    public final selectRight:(Dynamic, Window, App) -> Void;
+    public final up:(Dynamic, Window, App) -> Void;
+    public final down:(Dynamic, Window, App) -> Void;
+    public final selectUp:(Dynamic, Window, App) -> Void;
+    public final selectDown:(Dynamic, Window, App) -> Void;
+    public final pageUp:(Dynamic, Window, App) -> Void;
+    public final pageDown:(Dynamic, Window, App) -> Void;
+    public final addCursorAbove:(Dynamic, Window, App) -> Void;
+    public final addCursorBelow:(Dynamic, Window, App) -> Void;
+    public final onActionSelectAll:(Dynamic, Window, App) -> Void;
+    public final selectToStartOfLine:(Dynamic, Window, App) -> Void;
+    public final selectToEndOfLine:(Dynamic, Window, App) -> Void;
+    public final selectToPreviousWord:(Dynamic, Window, App) -> Void;
+    public final selectToNextWord:(Dynamic, Window, App) -> Void;
+    public final home:(Dynamic, Window, App) -> Void;
+    public final end:(Dynamic, Window, App) -> Void;
+    public final moveToStart:(Dynamic, Window, App) -> Void;
+    public final moveToEnd:(Dynamic, Window, App) -> Void;
+    public final moveToPreviousWord:(Dynamic, Window, App) -> Void;
+    public final moveToNextWord:(Dynamic, Window, App) -> Void;
+    public final selectToStart:(Dynamic, Window, App) -> Void;
+    public final selectToEnd:(Dynamic, Window, App) -> Void;
+    public final showCharacterPalette:(Dynamic, Window, App) -> Void;
+    public final copy:(Dynamic, Window, App) -> Void;
+    public final onActionSearch:(Dynamic, Window, App) -> Void;
+    public final onActionReplace:(Dynamic, Window, App) -> Void;
+    public final onMouseDown:(Dynamic, Window, App) -> Void;
+    public final onMouseUp:(Dynamic, Window, App) -> Void;
+    public final onMouseMove:(Dynamic, Window, App) -> Void;
+    public final onScrollWheel:(Dynamic, Window, App) -> Void;
+    public final activateToken:(ActivateToken, Window, App) -> Void;
+    public final modifiersChanged:(gpui.ModifiersChangedEvent, Window, App) -> Void;
+
+    public function new(entity:Entity<InputBaseState>) {
+        backspace = (event, window, cx) -> entity.update(cx, (state, cx) -> state.backspace(event, window, cx));
+        delete = (event, window, cx) -> entity.update(cx, (state, cx) -> state.delete(event, window, cx));
+        deleteToBeginningOfLine = (event, window, cx) -> entity.update(cx, (state, cx) -> state.deleteToBeginningOfLine(event, window, cx));
+        deleteToEndOfLine = (event, window, cx) -> entity.update(cx, (state, cx) -> state.deleteToEndOfLine(event, window, cx));
+        deletePreviousWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.deletePreviousWord(event, window, cx));
+        deleteNextWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.deleteNextWord(event, window, cx));
+        enter = (event, window, cx) -> entity.update(cx, (state, cx) -> state.enter(event, window, cx));
+        escape = (event, window, cx) -> entity.update(cx, (state, cx) -> state.escape(event, window, cx));
+        pasteAction = (event, window, cx) -> entity.update(cx, (state, cx) -> state.pasteAction(event, window, cx));
+        cut = (event, window, cx) -> entity.update(cx, (state, cx) -> state.cut(event, window, cx));
+        undo = (event, window, cx) -> entity.update(cx, (state, cx) -> state.undo(event, window, cx));
+        redo = (event, window, cx) -> entity.update(cx, (state, cx) -> state.redo(event, window, cx));
+        indentInline = (event, window, cx) -> entity.update(cx, (state, cx) -> state.indentInline(event, window, cx));
+        outdentInline = (event, window, cx) -> entity.update(cx, (state, cx) -> state.outdentInline(event, window, cx));
+        indentBlock = (event, window, cx) -> entity.update(cx, (state, cx) -> state.indentBlock(event, window, cx));
+        outdentBlock = (event, window, cx) -> entity.update(cx, (state, cx) -> state.outdentBlock(event, window, cx));
+        left = (event, window, cx) -> entity.update(cx, (state, cx) -> state.left(event, window, cx));
+        right = (event, window, cx) -> entity.update(cx, (state, cx) -> state.right(event, window, cx));
+        selectLeft = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectLeft(event, window, cx));
+        selectRight = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectRight(event, window, cx));
+        up = (event, window, cx) -> entity.update(cx, (state, cx) -> state.up(event, window, cx));
+        down = (event, window, cx) -> entity.update(cx, (state, cx) -> state.down(event, window, cx));
+        selectUp = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectUp(event, window, cx));
+        selectDown = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectDown(event, window, cx));
+        pageUp = (event, window, cx) -> entity.update(cx, (state, cx) -> state.pageUp(event, window, cx));
+        pageDown = (event, window, cx) -> entity.update(cx, (state, cx) -> state.pageDown(event, window, cx));
+        addCursorAbove = (event, window, cx) -> entity.update(cx, (state, cx) -> state.addCursorAbove(event, window, cx));
+        addCursorBelow = (event, window, cx) -> entity.update(cx, (state, cx) -> state.addCursorBelow(event, window, cx));
+        onActionSelectAll = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onActionSelectAll(event, window, cx));
+        selectToStartOfLine = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToStartOfLine(event, window, cx));
+        selectToEndOfLine = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToEndOfLine(event, window, cx));
+        selectToPreviousWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToPreviousWord(event, window, cx));
+        selectToNextWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToNextWord(event, window, cx));
+        home = (event, window, cx) -> entity.update(cx, (state, cx) -> state.home(event, window, cx));
+        end = (event, window, cx) -> entity.update(cx, (state, cx) -> state.end(event, window, cx));
+        moveToStart = (event, window, cx) -> entity.update(cx, (state, cx) -> state.moveToStart(event, window, cx));
+        moveToEnd = (event, window, cx) -> entity.update(cx, (state, cx) -> state.moveToEnd(event, window, cx));
+        moveToPreviousWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.moveToPreviousWord(event, window, cx));
+        moveToNextWord = (event, window, cx) -> entity.update(cx, (state, cx) -> state.moveToNextWord(event, window, cx));
+        selectToStart = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToStart(event, window, cx));
+        selectToEnd = (event, window, cx) -> entity.update(cx, (state, cx) -> state.selectToEnd(event, window, cx));
+        showCharacterPalette = (event, window, cx) -> entity.update(cx, (state, cx) -> state.showCharacterPalette(event, window, cx));
+        copy = (event, window, cx) -> entity.update(cx, (state, cx) -> state.copy(event, window, cx));
+        onActionSearch = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onActionSearch(event, window, cx));
+        onActionReplace = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onActionReplace(event, window, cx));
+        onMouseDown = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseDown(event, window, cx));
+        onMouseUp = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseUp(event, window, cx));
+        onMouseMove = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onMouseMove(event, window, cx));
+        onScrollWheel = (event, window, cx) -> entity.update(cx, (state, cx) -> state.onScrollWheel(event, window, cx));
+        activateToken = (_, window, cx) -> {
+            final state = entity.read(cx);
+            var activation:Null<InputTokenPresentation.TokenClickActivation> = null;
+            final selected = state.selectedRange();
+            for (span in state.tokenSpans()) {
+                if (span.range().equals(selected)) {
+                    final bounds = state.rangeToBounds(span.range());
+                    if (bounds != null) {
+                        activation = state.tokenActivation(span.range().start, bounds, ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(gpui.KeyboardButton.Enter, bounds)));
+                    }
+                    break;
+                }
+            }
+            if (activation != null) {
+                activation.listener(activation.event, window, cx);
+            }
+        };
+        modifiersChanged = (_, _, cx) -> entity.update(cx, (_, cx) -> cx.notify());
     }
 
 }
