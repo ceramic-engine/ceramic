@@ -124,21 +124,31 @@ class Colorize {
             return new Hsla(0.0, 0.0, 0.0, 0.0);
         }
 
-        // Convert both colors to RGB, then to Oklab color space
-        final lab1 = rgbToOklabF32(toRgbF32(color));
-        final lab2 = rgbToOklabF32(toRgbF32(other));
+        // Convert both colors to RGB, then to Oklab color space (components
+        // through the scratch fields below, no objects)
+        final rgb1 = toRgbF32(color);
+        rgbToOklabF32(rgb1.r, rgb1.g, rgb1.b);
+        final lab1L = oklabL;
+        final lab1A = oklabA;
+        final lab1B = oklabB;
+        final rgb2 = toRgbF32(other);
+        rgbToOklabF32(rgb2.r, rgb2.g, rgb2.b);
+        final lab2L = oklabL;
+        final lab2A = oklabA;
+        final lab2B = oklabB;
 
         // Premultiply alpha in Oklab space (this matches CSS color-mix behavior)
         final alpha1 = f32(color.a);
         final alpha2 = f32(other.a);
 
         // Interpolate premultiplied values, then unpremultiply
-        final L = f32(f32(f32(f32(lab1[0] * alpha1) * factor) + f32(f32(lab2[0] * alpha2) * inv)) / resultAlpha);
-        final a = f32(f32(f32(f32(lab1[1] * alpha1) * factor) + f32(f32(lab2[1] * alpha2) * inv)) / resultAlpha);
-        final b = f32(f32(f32(f32(lab1[2] * alpha1) * factor) + f32(f32(lab2[2] * alpha2) * inv)) / resultAlpha);
+        final L = f32(f32(f32(f32(lab1L * alpha1) * factor) + f32(f32(lab2L * alpha2) * inv)) / resultAlpha);
+        final a = f32(f32(f32(f32(lab1A * alpha1) * factor) + f32(f32(lab2A * alpha2) * inv)) / resultAlpha);
+        final b = f32(f32(f32(f32(lab1B * alpha1) * factor) + f32(f32(lab2B * alpha2) * inv)) / resultAlpha);
 
         // Convert back to RGB, then to HSLA
-        return hslaFromRgbF32(oklabToRgbF32(L, a, b), resultAlpha);
+        oklabToRgbF32(L, a, b);
+        return hslaFromRgbF32(mixedR, mixedG, mixedB, resultAlpha);
 
     }
 
@@ -172,11 +182,22 @@ class Colorize {
 
     }
 
-    static function rgbToOklabF32(rgb:Rgba):Array<Float> {
+    /** The result of `rgbToOklabF32()` */
+    static var oklabL:Float = 0.0;
+    static var oklabA:Float = 0.0;
+    static var oklabB:Float = 0.0;
 
-        final lr = toLinearF32(rgb.r);
-        final lg = toLinearF32(rgb.g);
-        final lb = toLinearF32(rgb.b);
+    /** The result of `oklabToRgbF32()` (sRGB components, clamped) */
+    static var mixedR:Float = 0.0;
+    static var mixedG:Float = 0.0;
+    static var mixedB:Float = 0.0;
+
+    /** Sets `oklabL`, `oklabA`, `oklabB` */
+    static function rgbToOklabF32(r:Float, g:Float, b:Float):Void {
+
+        final lr = toLinearF32(r);
+        final lg = toLinearF32(g);
+        final lb = toLinearF32(b);
 
         final l = sum3(m(0.4122214708, lr), m(0.5363325363, lg), m(0.0514459929, lb));
         final mm = sum3(m(0.2119034982, lr), m(0.6806995451, lg), m(0.1073969566, lb));
@@ -186,15 +207,14 @@ class Colorize {
         final m_ = cbrtF32(mm);
         final s_ = cbrtF32(s);
 
-        return [
-            f32(f32(m(0.2104542553, l_) + m(0.7936177850, m_)) - m(0.0040720468, s_)),
-            f32(f32(m(1.9779984951, l_) - m(2.4285922050, m_)) + m(0.4505937099, s_)),
-            f32(f32(m(0.0259040371, l_) + m(0.7827717662, m_)) - m(0.8086757660, s_))
-        ];
+        oklabL = f32(f32(m(0.2104542553, l_) + m(0.7936177850, m_)) - m(0.0040720468, s_));
+        oklabA = f32(f32(m(1.9779984951, l_) - m(2.4285922050, m_)) + m(0.4505937099, s_));
+        oklabB = f32(f32(m(0.0259040371, l_) + m(0.7827717662, m_)) - m(0.8086757660, s_));
 
     }
 
-    static function oklabToRgbF32(L:Float, a:Float, b:Float):Rgba {
+    /** Sets `mixedR`, `mixedG`, `mixedB` */
+    static function oklabToRgbF32(L:Float, a:Float, b:Float):Void {
 
         final l_ = f32(f32(L + m(0.3963377774, a)) + m(0.2158037573, b));
         final m_ = f32(f32(L - m(0.1055613458, a)) - m(0.0638541728, b));
@@ -208,23 +228,16 @@ class Colorize {
         final lg = f32(f32(m(-1.2684380046, l) + m(2.6097574011, mm)) - m(0.3413193965, s));
         final lb = f32(f32(m(-0.0041960863, l) - m(0.7034186147, mm)) + m(1.7076147010, s));
 
-        return new Rgba(
-            MathUtil.clamp(fromLinearF32(lr), 0.0, 1.0),
-            MathUtil.clamp(fromLinearF32(lg), 0.0, 1.0),
-            MathUtil.clamp(fromLinearF32(lb), 0.0, 1.0),
-            1.0
-        );
+        mixedR = MathUtil.clamp(fromLinearF32(lr), 0.0, 1.0);
+        mixedG = MathUtil.clamp(fromLinearF32(lg), 0.0, 1.0);
+        mixedB = MathUtil.clamp(fromLinearF32(lb), 0.0, 1.0);
 
     }
 
     /**
      * GPUI's `Hsla::from(Rgba)` in f32.
      */
-    static function hslaFromRgbF32(color:Rgba, alpha:Float):Hsla {
-
-        final r = color.r;
-        final g = color.g;
-        final b = color.b;
+    static function hslaFromRgbF32(r:Float, g:Float, b:Float, alpha:Float):Hsla {
         final max = Math.max(r, Math.max(g, b));
         final min = Math.min(r, Math.min(g, b));
         final delta = f32(max - min);
@@ -304,7 +317,7 @@ class Colorize {
      * `toHex` truncates the channels, so a channel at `3.9999999` in f64 and
      * `4.0` in f32 would give another digit.
      */
-    static function toRgbF32(color:Hsla):Rgba {
+    static inline function toRgbF32(color:Hsla):Rgba {
 
         final h = f32(color.h);
         final s = f32(color.s);

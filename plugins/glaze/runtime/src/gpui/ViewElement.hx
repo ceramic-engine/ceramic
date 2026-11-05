@@ -227,16 +227,27 @@ class ViewElement extends Element {
         return id;
     }
 
-    /** `ElementId.Name(componentName)`, made once per element (it is pushed in each phase) */
+    /**
+     * `ElementId.Name(componentName)`, made once per component class (it is
+     * pushed in each phase; element ids are immutable values)
+     */
     function componentElementId():ElementId {
         var id = componentId;
         if (id == null || componentIdName != componentName) {
-            id = ElementId.Name(componentName);
+            final name = componentName;
+            id = name != null ? componentIds.get(name) : null;
+            if (id == null) {
+                id = ElementId.Name(name);
+                if (name != null) componentIds.set(name, id);
+            }
             componentId = id;
-            componentIdName = componentName;
+            componentIdName = name;
         }
         return id;
     }
+
+    /** The ids of `componentElementId()`, by component class name */
+    static final componentIds:Map<String, ElementId> = new Map();
 
     var componentId:Null<ElementId> = null;
 

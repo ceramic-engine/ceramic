@@ -2141,7 +2141,7 @@ class Window implements WindowInvalidator {
      * `fromCorners`).
      */
     @:allow(gpui)
-    function pushOverflowMask(style:Style, bounds:Bounds):Bool {
+    function pushOverflowMask(style:Style, bounds:Bounds, ?like:ContentMask):Bool {
         if (!style.computeOverflowMask(bounds, remSize())) {
             return false;
         }
@@ -2158,8 +2158,22 @@ class Window implements WindowInvalidator {
         final minBottom = !gpui.util.MathUtil.totalLess(otherBottom, bottom) ? bottom : otherBottom;
         final width = (gpui.util.MathUtil.totalLess(left, minRight) ? minRight : left) - left;
         final height = (gpui.util.MathUtil.totalLess(top, minBottom) ? minBottom : top) - top;
+        // `like` (the mask of the same element in the prepaint phase) when
+        // it is the same: masks are immutable
+        if (like != null) {
+            final b = like.bounds;
+            if (sameFloat(b.origin.x, left) && sameFloat(b.origin.y, top) && sameFloat(b.size.width, width) && sameFloat(b.size.height, height)) {
+                contentMaskStack.push(like);
+                return true;
+            }
+        }
         contentMaskStack.push(new ContentMask(new Bounds(new Point(left, top), new Size(width, height))));
         return true;
+    }
+
+    /** The same value, zero signs included */
+    static inline function sameFloat(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
     }
 
     public inline function popContentMask():Void {

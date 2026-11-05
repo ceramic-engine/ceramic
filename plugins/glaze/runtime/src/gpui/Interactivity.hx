@@ -367,6 +367,9 @@ class Interactivity {
 
     public var trackedFocusHandle:Null<FocusHandle> = null;
 
+    /** The content mask this element pushed in its prepaint phase (internal) */
+    @:noCompletion var prepaintContentMask:Null<ContentMask> = null;
+
     public var trackedScrollHandle:Null<ScrollHandle> = null;
 
     public var scrollAnchor:Null<ScrollAnchor> = null;
@@ -952,6 +955,8 @@ class Interactivity {
             final textStyle = style.textStyle();
             if (textStyle != null) window.pushTextStyle(textStyle);
             final mask = window.pushOverflowMask(style, bounds);
+            // Kept for the paint phase (the same mask when the same values)
+            prepaintContentMask = mask ? window.contentMask() : null;
 
             final hitbox = shouldInsertHitbox(style, window, cx) ? window.insertHitbox(bounds, hitboxBehavior) : null;
             final scrollOffset = clampScrollPosition(bounds, style, window, cx);
@@ -1130,7 +1135,8 @@ class Interactivity {
 
         final textStyle = style.textStyle();
         if (textStyle != null) window.pushTextStyle(textStyle);
-        final mask = window.pushOverflowMask(style, bounds);
+        final mask = window.pushOverflowMask(style, bounds, prepaintContentMask);
+        prepaintContentMask = null;
 
         // Rust `window.with_tab_group(tab_group_index, ...)` around the listeners and the content
         paintTabGroup = tabGroupIndex != null;
@@ -1474,25 +1480,11 @@ class Interactivity {
             if (elementState.clickedState == null) elementState.clickedState = new ElementClickedState();
             final activeState = elementState.clickedState;
 
-            window.onMouseEvent(MouseUp, (_, phase, window, _) -> {
-                if (phase == Capture && activeState.isClicked()) {
-                    activeState.reset();
-                    window.refresh();
-                }
-            });
+            // In entries, without closures (`ActiveMouseUpEntry`, `ActiveMouseDownEntry`)
+            window.addMouseListenerEntry(new ActiveMouseUpEntry(activeState));
 
             final activeGroupHitbox = groupActiveStyle != null ? GroupHitboxes.get(groupActiveStyle.group, cx) : -1;
-            window.onMouseEvent(MouseDown, (_, phase, window, _) -> {
-                if (phase == Bubble && !window.defaultPrevented()) {
-                    final groupHovered = activeGroupHitbox != -1 && window.isHitboxIdHovered(activeGroupHitbox);
-                    final elementHovered = hitbox.isHovered(window);
-                    if (groupHovered || elementHovered) {
-                        activeState.group = groupHovered;
-                        activeState.element = elementHovered;
-                        window.refresh();
-                    }
-                }
-            });
+            window.addMouseListenerEntry(new ActiveMouseDownEntry(activeState, activeGroupHitbox, hitbox));
         }
     }
 
@@ -2076,6 +2068,52 @@ private class FocusMouseDownEntry extends gpui.Window.MouseListenerEntry {
             // If there is a parent that is also focusable, prevent it
             // from transferring focus because we already did so.
             window.preventDefault();
+        }
+    }
+
+}
+
+/** The mouse up listener of an element's active state (`Interactivity.paintMouseListeners`) */
+private class ActiveMouseUpEntry extends gpui.Window.MouseListenerEntry {
+
+    final activeState:ElementClickedState;
+
+    public function new(activeState:ElementClickedState) {
+        super(MouseUp, null, null, null);
+        this.activeState = activeState;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Capture && activeState.isClicked()) {
+            activeState.reset();
+            window.refresh();
+        }
+    }
+
+}
+
+/** The mouse down listener of an element's active state (`Interactivity.paintMouseListeners`) */
+private class ActiveMouseDownEntry extends gpui.Window.MouseListenerEntry {
+
+    final activeState:ElementClickedState;
+
+    final activeGroupHitbox:Int;
+
+    public function new(activeState:ElementClickedState, activeGroupHitbox:Int, hitbox:Hitbox) {
+        super(MouseDown, null, null, hitbox);
+        this.activeState = activeState;
+        this.activeGroupHitbox = activeGroupHitbox;
+    }
+
+    override function call(event:PlatformInput, phase:DispatchPhase, window:Window, cx:App):Void {
+        if (phase == Bubble && !window.defaultPrevented()) {
+            final groupHovered = activeGroupHitbox != -1 && window.isHitboxIdHovered(activeGroupHitbox);
+            final elementHovered = hitbox.isHovered(window);
+            if (groupHovered || elementHovered) {
+                activeState.group = groupHovered;
+                activeState.element = elementHovered;
+                window.refresh();
+            }
         }
     }
 
