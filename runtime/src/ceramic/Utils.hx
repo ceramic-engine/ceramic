@@ -1020,6 +1020,43 @@ class Utils {
     #end
 
     /**
+     * Returns `true` when running on web in Safari, or in any browser of iOS
+     * (they all use WebKit, like Safari). Chromium based browsers (Chrome,
+     * Edge, Opera, Electron) and Firefox return `false`.
+     *
+     * The result is cached for performance on web platforms.
+     *
+     * @return true if running in Safari or another WebKit browser of iOS
+     */
+    #if ceramic_fake_safari
+    public static function isSafari():Bool {
+        return true;
+    }
+    #elseif web
+    public static function isSafari():Bool {
+        static var result:Int = -1;
+        if (result == -1) {
+            result = 0;
+            final ua = js.Browser.navigator != null ? js.Browser.navigator.userAgent : '';
+            if (isIos()) {
+                result = 1;
+            }
+            else if (ua.indexOf('AppleWebKit') != -1 && ua.indexOf('Safari') != -1
+                && ua.indexOf('Chrome') == -1 && ua.indexOf('Chromium') == -1
+                && ua.indexOf('Edg') == -1 && ua.indexOf('OPR') == -1
+                && ua.indexOf('Android') == -1) {
+                result = 1;
+            }
+        }
+        return result != 0;
+    }
+    #else
+    public static function isSafari():Bool {
+        return false;
+    }
+    #end
+
+    /**
      * Returns the sign of a number.
      * 
      * @param value The number to check

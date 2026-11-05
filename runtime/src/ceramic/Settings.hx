@@ -217,9 +217,11 @@ class Settings implements Observable {
      * delivers wheel input aligned with the frames (Chromium), events go through as they
      * come and no latency is added. See `clay.WheelResampler`.
      *
-     * Default: `false` (enabled by plugins that need it, for example GPUI).
+     * Default: `true` in Safari and the other WebKit browsers of iOS (see
+     * `Utils.isSafari()`), whose wheel events have this issue, `false` elsewhere.
+     * An app can still set it either way.
      */
-    @observe public var webWheelResampling:Bool = false;
+    @observe public var webWheelResampling:Bool = Utils.isSafari();
 
     /**
      * Supported screen orientations for mobile devices.
