@@ -1,0 +1,13 @@
+app:
+    package: ceramic.tests.notifications
+    name: notifications
+    displayName: notifications
+    author: Ceramic
+    version: '1.0'
+
+    plugins:
+        - notifications
+
+    defines:
+        # Native runs use a hidden SDL window (nothing on screen)
+        - clay_sdl_headless

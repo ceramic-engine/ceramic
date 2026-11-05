@@ -1,0 +1,41 @@
+<xml>
+
+    <!-- System notifications of the Ceramic notifications plugin (native targets) -->
+
+    <files id="haxe">
+
+        <compilerflag value="-I${LINC_NOTIFICATIONS_PATH}" />
+
+        <file name="${LINC_NOTIFICATIONS_PATH}linc_notifications_common.cpp" />
+
+        <!-- macOS: UNUserNotificationCenter (iOS: same file, not enabled yet) -->
+        <file name="${LINC_NOTIFICATIONS_PATH}linc_notifications_apple.mm" if="mac" unless="ios" />
+
+        <!-- Linux: org.freedesktop.Notifications over DBus, libdbus loaded at run time -->
+        <file name="${LINC_NOTIFICATIONS_PATH}linc_notifications_linux.cpp" if="linux" unless="android" />
+
+        <!-- Windows: WinRT toasts (C++/WinRT headers of the Windows 10 SDK,
+             C++17: clay builds Windows with HXCPP_CPP17), untested -->
+        <file name="${LINC_NOTIFICATIONS_PATH}linc_notifications_windows.cpp" if="windows" />
+
+        <!-- iOS and Android do not use this file yet (stubs in Haxe) -->
+
+    </files>
+
+    <target id="haxe">
+
+        <vflag name="-framework" value="UserNotifications" if="mac" unless="ios" />
+
+        <!-- dlopen for libdbus -->
+        <lib name="-ldl" if="linux" unless="android" />
+
+        <section if="windows">
+            <lib name="windowsapp.lib" />
+            <lib name="shell32.lib" />
+            <lib name="ole32.lib" />
+            <lib name="advapi32.lib" />
+        </section>
+
+    </target>
+
+</xml>

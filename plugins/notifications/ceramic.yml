@@ -1,0 +1,7 @@
+plugin:
+    name: Notifications
+
+    runtime:
+        if plugin_notifications:
+            +paths:
+                - '{plugin:cwd}/runtime/src'
