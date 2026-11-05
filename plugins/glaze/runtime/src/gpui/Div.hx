@@ -700,7 +700,13 @@ class Div extends Element implements Styled implements ParentElement {
                     childrenBounds.push(window.computedLayoutBounds());
                 }
             }
-            contentSize = new Size(childMaxX - childMinX, childMaxY - childMinY);
+            final contentWidth = childMaxX - childMinX;
+            final contentHeight = childMaxY - childMinY;
+            // The element's own size when the children span it exactly (immutable, so shared)
+            final size = bounds.size;
+            contentSize = sameFloat(contentWidth, size.width) && sameFloat(contentHeight, size.height)
+                ? size
+                : new Size(contentWidth, contentHeight);
         }
 
         if (interactivity.trackedScrollHandle != null) {
@@ -748,6 +754,12 @@ class Div extends Element implements Styled implements ParentElement {
             }
         }
         interactivity.paintEnd(bounds, window, cx);
+    }
+
+
+    /** The same value, zero signs included */
+    static inline function sameFloat(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
     }
 
 }

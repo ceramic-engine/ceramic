@@ -16,6 +16,13 @@ class AtlasState<Backend:AtlasBackend> {
 
     final glyphTiles:GlyphCache<AtlasTile> = new GlyphCache();
 
+    /**
+     * The SVG tiles of `tilesByKey` by path, then by size: an SVG painted
+     * every frame finds its tile without building its key string. Cleared
+     * whenever tiles are forgotten.
+     */
+    final svgTiles:Map<String, Array<SvgTileEntry>> = new Map();
+
     public final backend:Backend;
 
     public function new(backend:Backend) {
@@ -29,6 +36,7 @@ class AtlasState<Backend:AtlasBackend> {
     public function clear(?resetBackend:(Backend) -> Void):Void {
         tilesByKey.clear();
         glyphTiles.clear();
+        svgTiles.clear();
         if (resetBackend != null)
             resetBackend(backend);
     }
@@ -38,6 +46,18 @@ class AtlasState<Backend:AtlasBackend> {
     }
 
     public function getOrInsertWith(key:AtlasKey, build:() -> Null<AtlasTileSource>):Null<AtlasTile> {
+        switch key {
+            case Svg(path, width, height):
+                final entries = svgTiles.get(path);
+                if (entries != null) {
+                    for (i in 0...entries.length) {
+                        final entry = entries[i];
+                        if (entry.width == width && entry.height == height)
+                            return entry.tile;
+                    }
+                }
+            case _:
+        }
         final keyString = key.keyString();
         final existing = tilesByKey.get(keyString);
         if (existing != null)
@@ -60,6 +80,13 @@ class AtlasState<Backend:AtlasBackend> {
         tilesByKey.set(keyString, tile);
         switch key {
             case Glyph(params): glyphTiles.set(params, tile);
+            case Svg(path, width, height):
+                var entries = svgTiles.get(path);
+                if (entries == null) {
+                    entries = [];
+                    svgTiles.set(path, entries);
+                }
+                entries.push(new SvgTileEntry(width, height, tile));
             case _:
         }
         return tile;
@@ -93,6 +120,7 @@ class AtlasState<Backend:AtlasBackend> {
      * is not told: it is the one emptying the page.
      */
     public function forgetTexture(textureIndex:Int):Void {
+        svgTiles.clear();
         var keys:Null<Array<String>> = null;
         for (key => tile in tilesByKey) {
             if (tile.textureId.index == textureIndex) {
@@ -114,10 +142,28 @@ class AtlasState<Backend:AtlasBackend> {
             tilesByKey.remove(keyString);
             switch key {
                 case Glyph(params): glyphTiles.remove(params);
+                case Svg(_, _, _): svgTiles.clear();
                 case _:
             }
             backend.remove(tile);
         }
+    }
+
+}
+
+/** A tile of `AtlasState.svgTiles` */
+private class SvgTileEntry {
+
+    public final width:Int;
+
+    public final height:Int;
+
+    public final tile:AtlasTile;
+
+    public function new(width:Int, height:Int, tile:AtlasTile) {
+        this.width = width;
+        this.height = height;
+        this.tile = tile;
     }
 
 }

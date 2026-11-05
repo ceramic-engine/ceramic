@@ -10,6 +10,22 @@ package gpui;
  */
 class TextStyle {
 
+    /**
+     * The last styles composed from this one by a window, with the
+     * refinements they were composed with (`Window.currentTextStyle`:
+     * siblings with equal refinements share one style; four slots, reused in
+     * turn, for the few variants of a list of siblings). Internal.
+     */
+    @:noCompletion public var childRefinement0:Null<TextStyleRefinement> = null;
+    @:noCompletion public var childStyle0:Null<TextStyle> = null;
+    @:noCompletion public var childRefinement1:Null<TextStyleRefinement> = null;
+    @:noCompletion public var childStyle1:Null<TextStyle> = null;
+    @:noCompletion public var childRefinement2:Null<TextStyleRefinement> = null;
+    @:noCompletion public var childStyle2:Null<TextStyle> = null;
+    @:noCompletion public var childRefinement3:Null<TextStyleRefinement> = null;
+    @:noCompletion public var childStyle3:Null<TextStyle> = null;
+    @:noCompletion public var nextChildSlot:Int = 0;
+
     /** The color of the text */
     public var color:Hsla;
 
@@ -187,6 +203,57 @@ class TextStyle {
      */
     public function lineHeightInPixels(remSize:Pixels):Pixels {
         return gpui.util.MathUtil.round(lineHeight.toPixels(fontSize, remSize));
+    }
+
+    /**
+     * The style composed from `parent` (this style, or `null` on the slots of
+     * a window's first level, see `Window.textStyleRootSlots`) in the given
+     * frame of `window` with a refinement equal to `refinement`, if one of
+     * the child slots holds it (a slot counts while its refinement was last
+     * composed with that parent, in that frame, into the slot's style: a
+     * refinement changed and composed again since then no longer matches).
+     * Internal (`Window.currentTextStyle`).
+     */
+    @:noCompletion public function composedChild(refinement:TextStyleRefinement, parent:Null<TextStyle>, frame:Int, window:Window):Null<TextStyle> {
+        var sibling = childRefinement0;
+        if (sibling != null && sibling.composedFrame == frame && sibling.composedWindow == window
+            && sibling.composedParent == parent && sibling.composedStyle == childStyle0 && sibling.equals(refinement))
+            return childStyle0;
+        sibling = childRefinement1;
+        if (sibling != null && sibling.composedFrame == frame && sibling.composedWindow == window
+            && sibling.composedParent == parent && sibling.composedStyle == childStyle1 && sibling.equals(refinement))
+            return childStyle1;
+        sibling = childRefinement2;
+        if (sibling != null && sibling.composedFrame == frame && sibling.composedWindow == window
+            && sibling.composedParent == parent && sibling.composedStyle == childStyle2 && sibling.equals(refinement))
+            return childStyle2;
+        sibling = childRefinement3;
+        if (sibling != null && sibling.composedFrame == frame && sibling.composedWindow == window
+            && sibling.composedParent == parent && sibling.composedStyle == childStyle3 && sibling.equals(refinement))
+            return childStyle3;
+        return null;
+    }
+
+    /**
+     * Remember `style`, composed from this one with `refinement`, in the next
+     * child slot. Internal (`Window.currentTextStyle`).
+     */
+    @:noCompletion public function rememberChild(refinement:TextStyleRefinement, style:TextStyle):Void {
+        switch nextChildSlot {
+            case 0:
+                childRefinement0 = refinement;
+                childStyle0 = style;
+            case 1:
+                childRefinement1 = refinement;
+                childStyle1 = style;
+            case 2:
+                childRefinement2 = refinement;
+                childStyle2 = style;
+            default:
+                childRefinement3 = refinement;
+                childStyle3 = style;
+        }
+        nextChildSlot = (nextChildSlot + 1) & 3;
     }
 
     public function clone():TextStyle {

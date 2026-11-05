@@ -23,6 +23,18 @@ class TextStyleRefinement {
     /** Bits of the value type fields that are set */
     public var mask:Int = 0;
 
+    /**
+     * The text style last composed from this refinement by a window
+     * (`Window.currentTextStyle`): `composedStyle` is `composedParent`
+     * refined with this refinement, valid during frame `composedFrame` of
+     * `composedWindow` only (the refinement and its parent are not changed
+     * while a frame is drawn). Internal.
+     */
+    @:noCompletion public var composedWindow:Null<Window> = null;
+    @:noCompletion public var composedFrame:Int = -1;
+    @:noCompletion public var composedParent:Null<TextStyle> = null;
+    @:noCompletion public var composedStyle:Null<TextStyle> = null;
+
     public var color:Null<Hsla> = null;
     public var fontFamily:Null<String> = null;
     public var fontFeatures:Null<FontFeatures> = null;
@@ -94,6 +106,9 @@ class TextStyleRefinement {
     public function refine(refinement:TextStyleRefinement):Void {
         if (refinement == null)
             return;
+        // Changed: what it composed no longer holds
+        composedStyle = null;
+        composedFrame = -1;
         if (refinement.color != null) color = refinement.color;
         if (refinement.fontFamily != null) fontFamily = refinement.fontFamily;
         if (refinement.fontFeatures != null) fontFeatures = refinement.fontFeatures;

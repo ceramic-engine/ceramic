@@ -1998,6 +1998,13 @@ class Window implements WindowInvalidator {
     static var defaultTextStyle:Null<TextStyle> = null;
 
     /**
+     * Holds the child slots of the styles composed on the first level of the
+     * text style stack (no parent style there): equal first refinements of
+     * siblings share one style. Only its slots are used.
+     */
+    var textStyleRootSlots:Null<TextStyle> = null;
+
+    /**
      * The current text style, shared between calls while the text style
      * stack holds the same refinements: must not be modified (`textStyle()`
      * returns a copy to modify). Composed once per stack depth.
@@ -2023,8 +2030,33 @@ class Window implements WindowInvalidator {
         }
         while (index < length) {
             final refinement = stack[index];
-            final style = index == 0 ? new TextStyle() : cache[index - 1].clone();
-            style.refine(refinement);
+            final parent = index == 0 ? null : cache[index - 1];
+            // The style this refinement composed with the same parent earlier
+            // in the frame (siblings, and the paint phase after the layout
+            // phase): the same values, no clone
+            var style = refinement.composedStyle;
+            if (style == null || refinement.composedParent != parent || refinement.composedFrame != drawCount || refinement.composedWindow != this) {
+                // A sibling with an equal refinement composed this parent
+                // already: the same values (styles composed here are not changed)
+                var slots = parent;
+                if (slots == null) {
+                    slots = textStyleRootSlots;
+                    if (slots == null) {
+                        slots = new TextStyle();
+                        textStyleRootSlots = slots;
+                    }
+                }
+                style = slots.composedChild(refinement, parent, drawCount, this);
+                if (style == null) {
+                    style = parent == null ? new TextStyle() : parent.clone();
+                    style.refine(refinement);
+                    slots.rememberChild(refinement, style);
+                }
+                refinement.composedStyle = style;
+                refinement.composedParent = parent;
+                refinement.composedFrame = drawCount;
+                refinement.composedWindow = this;
+            }
             cache[index] = style;
             refinements[index] = refinement;
             index++;
