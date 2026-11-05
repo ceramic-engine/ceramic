@@ -22,6 +22,10 @@ Haxe port of [GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui)
 
 Projects in this repository use the plugin through a `plugins/gpui.plugin` file containing a path relative to the project root. To use it from another project, add a `plugins/gpui.plugin` file pointing to this directory, then add `gpui` to `app.plugins` in its `ceramic.yml`.
 
+## UI API
+
+The API follows GPUI and gpui-kit with camelCase names (`div().flex().gap2().child(...)`, see `PORTING.md`). One convenience goes beyond Rust: `child(null)` is accepted and does nothing, exactly as if `child()` had not been called, and `children([...])` skips its null entries. This works for a literal `null` and for a null element, string, view, entity or component, on every element and gpui-kit component with `child` / `children` (and the appenders like `StatusBar.left` / `right` or `Toolbar.content`), so `div().child(cond ? a : null)` builds a conditional child. Order, layout and element ids are the same as in the tree built without the nulls. Rust passes an `Option` through `children` or `when_some` instead (`whenSome` in the port).
+
 ## Input, interactivity and focus
 
 Windows receive Ceramic input through `gpui.GpuiInput` (created on demand,

@@ -134,12 +134,12 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Bubble {
-        contentValue.childElements.push(child);
+        if (child != null) contentValue.childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Bubble {
-        for (child in children) contentValue.childElements.push(child);
+        for (child in children) if (child != null) contentValue.childElements.push(child);
         return this;
     }
 
@@ -202,12 +202,12 @@ class BubbleContent implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):BubbleContent {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):BubbleContent {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -302,12 +302,12 @@ class BubbleGroup implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):BubbleGroup {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):BubbleGroup {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -387,12 +387,12 @@ class BubbleReactions implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):BubbleReactions {
-        childElements.push(Element(child));
+        if (child != null) childElements.push(Element(child));
         return this;
     }
 
     public function children(children:Array<IntoElement>):BubbleReactions {
-        for (child in children) childElements.push(Element(child));
+        for (child in children) if (child != null) childElements.push(Element(child));
         return this;
     }
 

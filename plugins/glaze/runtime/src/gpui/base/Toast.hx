@@ -686,7 +686,7 @@ class Toast implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Toast {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

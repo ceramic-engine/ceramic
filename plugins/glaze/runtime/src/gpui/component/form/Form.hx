@@ -119,7 +119,7 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Add a child to the form.
      */
     public function child(field:Field):Form {
-        fields.push(field);
+        if (field != null) fields.push(field);
         return this;
     }
 
@@ -127,7 +127,7 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Add multiple children to the form.
      */
     public function children(fields:Iterable<Field>):Form {
-        for (field in fields) this.fields.push(field);
+        for (field in fields) if (field != null) this.fields.push(field);
         return this;
     }
 

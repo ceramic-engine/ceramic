@@ -73,12 +73,12 @@ class Collapsible implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):Collapsible {
-        base.child(child);
+        if (child != null) base.child(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Collapsible {
-        for (child in children) base.child(child);
+        for (child in children) if (child != null) base.child(child);
         return this;
     }
 

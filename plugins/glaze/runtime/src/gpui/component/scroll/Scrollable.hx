@@ -131,12 +131,12 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function child(child:IntoElement):Scrollable {
-        element.child(child);
+        if (child != null) element.child(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Scrollable {
-        for (child in children) element.child(child);
+        for (child in children) if (child != null) element.child(child);
         return this;
     }
 

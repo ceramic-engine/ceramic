@@ -60,7 +60,7 @@ class DockLayout {
      */
     public function child(child:DockLayout, size:Null<Pixels>):DockLayout {
         switch kind {
-            case Split(_, children): children.push({layout: child, size: size});
+            case Split(_, children): if (child != null) children.push({layout: child, size: size});
             case _: debugAssert('child() is only valid on hSplit() or vSplit()');
         }
         return this;

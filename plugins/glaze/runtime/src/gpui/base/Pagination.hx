@@ -237,12 +237,12 @@ class Pagination implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function child(child:IntoElement):Pagination {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Pagination {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

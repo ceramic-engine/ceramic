@@ -60,12 +60,12 @@ class Empty implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Empty {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Empty {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -186,7 +186,7 @@ class EmptyMedia implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function child(child:IntoElement):EmptyMedia {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -235,7 +235,7 @@ class EmptyTitle implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function child(child:IntoElement):EmptyTitle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -275,12 +275,12 @@ class EmptyDescription implements RenderOnce implements Styled implements Parent
     }
 
     public function child(child:IntoElement):EmptyDescription {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):EmptyDescription {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -321,12 +321,12 @@ class EmptyContent implements RenderOnce implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):EmptyContent {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):EmptyContent {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

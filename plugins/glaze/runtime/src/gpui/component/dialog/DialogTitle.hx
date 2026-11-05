@@ -36,7 +36,7 @@ class DialogTitle implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):DialogTitle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

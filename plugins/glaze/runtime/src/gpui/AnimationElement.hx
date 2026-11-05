@@ -56,7 +56,7 @@ class AnimationElement<E:Element> extends Element implements ParentElement {
      * Add a single child element to the animated element (when it is a `ParentElement`).
      */
     public function child(child:IntoElement):AnimationElement<E> {
-        extend([child]);
+        if (child != null) extend([child]);
         return this;
     }
 
@@ -64,7 +64,7 @@ class AnimationElement<E:Element> extends Element implements ParentElement {
      * Add multiple child elements to the animated element (when it is a `ParentElement`).
      */
     public function children(children:Array<IntoElement>):AnimationElement<E> {
-        extend([for (child in children) (child : AnyElement)]);
+        extend([for (child in children) if (child != null) (child : AnyElement)]);
         return this;
     }
 

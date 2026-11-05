@@ -151,12 +151,12 @@ class DescriptionList implements RenderOnce implements Sizable {
     }
 
     public function child(child:DescriptionItem):DescriptionList {
-        items.push(child);
+        if (child != null) items.push(child);
         return this;
     }
 
     public function children(children:Array<DescriptionItem>):DescriptionList {
-        for (child in children) items.push(child);
+        for (child in children) if (child != null) items.push(child);
         return this;
     }
 

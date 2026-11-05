@@ -49,7 +49,7 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Tooltip {
-        base.child(child);
+        if (child != null) base.child(child);
         return this;
     }
 

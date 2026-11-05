@@ -146,7 +146,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Marker {
-        markerChildren.push(MElement(child));
+        if (child != null) markerChildren.push(MElement(child));
         return this;
     }
 
@@ -229,7 +229,7 @@ class MarkerIcon implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function child(child:IntoElement):MarkerIcon {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -280,7 +280,7 @@ class MarkerContent implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):MarkerContent {
-        contentChildren.push(Element(child));
+        if (child != null) contentChildren.push(Element(child));
         return this;
     }
 

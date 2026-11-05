@@ -79,7 +79,7 @@ class SidebarFooter implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):SidebarFooter {
-        base.child(child);
+        if (child != null) base.child(child);
         return this;
     }
 

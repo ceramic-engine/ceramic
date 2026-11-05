@@ -74,7 +74,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Add a single child element to this element.
      */
     public function child(child:IntoElement):Div {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -83,7 +83,7 @@ class Div extends Element implements Styled implements ParentElement {
      */
     public function children(children:Array<IntoElement>):Div {
         for (child in children) {
-            childElements.push(child);
+            if (child != null) childElements.push(child);
         }
         return this;
     }

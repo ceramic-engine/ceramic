@@ -40,7 +40,7 @@ class DialogFooter implements RenderOnce implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):DialogFooter {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -109,7 +109,7 @@ class DialogAction implements RenderOnce implements ParentElement {
     }
 
     public function child(child:IntoElement):DialogAction {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

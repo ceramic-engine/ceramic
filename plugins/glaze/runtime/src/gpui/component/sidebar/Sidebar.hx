@@ -300,7 +300,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * Add a child element to the sidebar, the child must implement `Collapsible`
      */
     public function child(child:E):Sidebar<E> {
-        content.push(child);
+        if (child != null) content.push(child);
         return this;
     }
 
@@ -308,7 +308,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * Add multiple children to the sidebar, the children must implement `Collapsible`
      */
     public function children(children:Iterable<E>):Sidebar<E> {
-        for (child in children) content.push(child);
+        for (child in children) if (child != null) content.push(child);
         return this;
     }
 

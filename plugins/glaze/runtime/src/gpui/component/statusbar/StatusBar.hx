@@ -35,12 +35,12 @@ class StatusBar implements RenderOnce implements Styled implements ParentElement
     public function new() {}
 
     public function left(child:IntoElement):StatusBar {
-        leftElements.push(child);
+        if (child != null) leftElements.push(child);
         return this;
     }
 
     public function right(child:IntoElement):StatusBar {
-        rightElements.push(child);
+        if (child != null) rightElements.push(child);
         return this;
     }
 
@@ -53,7 +53,7 @@ class StatusBar implements RenderOnce implements Styled implements ParentElement
     }
 
     public function child(child:IntoElement):StatusBar {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

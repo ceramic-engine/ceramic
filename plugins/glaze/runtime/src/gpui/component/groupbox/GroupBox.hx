@@ -114,7 +114,7 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
     }
 
     public function child(child:IntoElement):GroupBox {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

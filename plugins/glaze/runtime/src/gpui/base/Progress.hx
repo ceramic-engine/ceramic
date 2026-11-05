@@ -73,7 +73,7 @@ class Progress implements RenderOnce implements Styled implements ParentElement 
     }
 
     public function child(child:IntoElement):Progress {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

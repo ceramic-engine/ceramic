@@ -8,6 +8,12 @@ package gpui;
  * converted into an element. Accepts any `Element` (`div()`, `canvas()`...),
  * an `AnyElement`, a string (a `Text` element), a view (an entity whose model implements `Render`) or a
  * component (`RenderOnce`).
+ *
+ * A null source converts to a null `IntoElement` (no method is called on
+ * it), and the `child()` / `children()` methods of every element skip null
+ * children: `div().child(cond ? a : null)` is the same as not calling
+ * `child()` at all (a convenience beyond Rust, where an `Option` goes through
+ * `children` or `when_some`).
  */
 @:forward(requestLayout, prepaint, paint, layoutAsRoot, prepaintAt, prepaintAsRoot, element)
 abstract IntoElement(AnyElement) to AnyElement {
@@ -21,28 +27,28 @@ abstract IntoElement(AnyElement) to AnyElement {
     }
 
     @:from static inline function fromElement(element:Element):IntoElement {
-        return new IntoElement(element.intoAnyElement());
+        return new IntoElement(element != null ? element.intoAnyElement() : null);
     }
 
     @:from static inline function fromView(view:Render):IntoElement {
-        return new IntoElement(ViewElement.forView(cast view).intoAnyElement());
+        return new IntoElement(view != null ? ViewElement.forView(cast view).intoAnyElement() : null);
     }
 
     @:from static inline function fromAnyView(view:AnyView):IntoElement {
-        return new IntoElement(view.intoAnyElement());
+        return new IntoElement(view != null ? view.intoAnyElement() : null);
     }
 
     @:from static inline function fromEntity<T:Model & Render>(entity:Entity<T>):IntoElement {
-        return new IntoElement(ViewElement.forView((entity : T)).intoAnyElement());
+        return new IntoElement(entity != null ? ViewElement.forView((entity : T)).intoAnyElement() : null);
     }
 
     /** Strings are text elements (Rust `impl IntoElement for &str / String / SharedString`) */
     @:from static inline function fromString(text:String):IntoElement {
-        return new IntoElement(new Text(null, text).intoAnyElement());
+        return new IntoElement(text != null ? new Text(null, text).intoAnyElement() : null);
     }
 
     @:from static inline function fromComponent(component:RenderOnce):IntoElement {
-        return new IntoElement(ViewElement.forComponent(component).intoAnyElement());
+        return new IntoElement(component != null ? ViewElement.forComponent(component).intoAnyElement() : null);
     }
 
     /**

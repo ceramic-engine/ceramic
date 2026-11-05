@@ -72,12 +72,12 @@ class Table implements RenderOnce implements Styled implements ChildElement {
     }
 
     public function child(child:ChildElement):Table {
-        childElements.push(new AnyChildElement(child));
+        if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
     public function children(children:Array<ChildElement>):Table {
-        for (child in children) childElements.push(new AnyChildElement(child));
+        for (child in children) if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
@@ -124,12 +124,12 @@ class TableHeader implements RenderOnce implements Styled implements ChildElemen
     }
 
     public function child(child:ChildElement):TableHeader {
-        childElements.push(new AnyChildElement(child));
+        if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
     public function children(children:Array<ChildElement>):TableHeader {
-        for (child in children) childElements.push(new AnyChildElement(child));
+        for (child in children) if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
@@ -175,12 +175,12 @@ class TableBody implements RenderOnce implements Styled implements ChildElement 
     }
 
     public function child(child:ChildElement):TableBody {
-        childElements.push(new AnyChildElement(child));
+        if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
     public function children(children:Array<ChildElement>):TableBody {
-        for (child in children) childElements.push(new AnyChildElement(child));
+        for (child in children) if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
@@ -221,12 +221,12 @@ class TableFooter implements RenderOnce implements Styled implements ChildElemen
     }
 
     public function child(child:ChildElement):TableFooter {
-        childElements.push(new AnyChildElement(child));
+        if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
     public function children(children:Array<ChildElement>):TableFooter {
-        for (child in children) childElements.push(new AnyChildElement(child));
+        for (child in children) if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
@@ -273,12 +273,12 @@ class TableRow implements RenderOnce implements Styled implements ChildElement {
     }
 
     public function child(child:ChildElement):TableRow {
-        childElements.push(new AnyChildElement(child));
+        if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 
     public function children(children:Array<ChildElement>):TableRow {
-        for (child in children) childElements.push(new AnyChildElement(child));
+        for (child in children) if (child != null) childElements.push(new AnyChildElement(child));
         return this;
     }
 

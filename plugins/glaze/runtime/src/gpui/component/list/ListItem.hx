@@ -198,12 +198,12 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):ListItem {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):ListItem {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -303,7 +303,7 @@ class ListSeparatorItem implements ListDelegateItem implements Styled implements
     }
 
     public function child(child:IntoElement):ListSeparatorItem {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

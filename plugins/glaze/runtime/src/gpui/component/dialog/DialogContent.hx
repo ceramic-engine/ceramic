@@ -37,12 +37,12 @@ class DialogContent implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):DialogContent {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):DialogContent {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

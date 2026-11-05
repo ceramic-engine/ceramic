@@ -53,7 +53,7 @@ class BaseCollapsible implements RenderOnce implements Styled implements ParentE
     }
 
     public function content(content:IntoElement):BaseCollapsible {
-        childEntries.push(Content(content));
+        if (content != null) childEntries.push(Content(content));
         return this;
     }
 
@@ -75,7 +75,7 @@ class BaseCollapsible implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):BaseCollapsible {
-        childEntries.push(Element(child));
+        if (child != null) childEntries.push(Element(child));
         return this;
     }
 

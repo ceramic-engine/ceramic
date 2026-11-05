@@ -84,7 +84,7 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      * disabled state as set so far).
      */
     public function child(child:Button):ButtonGroup {
-        childButtons.push(child.disabled(disabledValue));
+        if (child != null) childButtons.push(child.disabled(disabledValue));
         return this;
     }
 
@@ -92,7 +92,7 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      * Adds multiple buttons as children to the ButtonGroup.
      */
     public function children(children:Array<Button>):ButtonGroup {
-        for (child in children) childButtons.push(child);
+        for (child in children) if (child != null) childButtons.push(child);
         return this;
     }
 

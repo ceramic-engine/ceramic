@@ -78,12 +78,12 @@ class Switch implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Switch {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Switch {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -284,7 +284,7 @@ class SwitchTrack implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):SwitchTrack {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -353,7 +353,7 @@ class SwitchThumb implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):SwitchThumb {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

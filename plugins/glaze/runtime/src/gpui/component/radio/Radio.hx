@@ -105,12 +105,12 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
     }
 
     public function child(child:IntoElement):Radio {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Radio {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -377,7 +377,7 @@ class RadioGroup implements RenderOnce implements Styled {
      * Add a child Radio element.
      */
     public function child(child:Radio):RadioGroup {
-        radios.push(child);
+        if (child != null) radios.push(child);
         return this;
     }
 
@@ -385,7 +385,7 @@ class RadioGroup implements RenderOnce implements Styled {
      * Add multiple child Radio elements.
      */
     public function children(children:Array<Radio>):RadioGroup {
-        for (child in children) radios.push(child);
+        for (child in children) if (child != null) radios.push(child);
         return this;
     }
 

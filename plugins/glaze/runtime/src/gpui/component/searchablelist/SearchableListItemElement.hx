@@ -131,7 +131,7 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
     }
 
     public function child(child:IntoElement):SearchableListItemElement {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

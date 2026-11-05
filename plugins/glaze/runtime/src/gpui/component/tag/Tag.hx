@@ -113,12 +113,12 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
     }
 
     public function child(child:IntoElement):Tag {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Tag {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

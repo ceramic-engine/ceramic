@@ -108,7 +108,7 @@ class AvatarFallback implements RenderOnce implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):AvatarFallback {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

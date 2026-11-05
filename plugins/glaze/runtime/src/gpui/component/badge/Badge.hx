@@ -109,12 +109,12 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
     }
 
     public function child(child:IntoElement):Badge {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Badge {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

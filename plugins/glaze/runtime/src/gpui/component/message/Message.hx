@@ -56,12 +56,12 @@ class MessageGroup implements RenderOnce implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):MessageGroup {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):MessageGroup {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -265,12 +265,12 @@ class MessageAvatar implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):MessageAvatar {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):MessageAvatar {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -332,12 +332,12 @@ class MessageHeader implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):MessageHeader {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):MessageHeader {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -407,12 +407,12 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):MessageContent {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):MessageContent {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -470,12 +470,12 @@ class MessageFooter implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):MessageFooter {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):MessageFooter {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

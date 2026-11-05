@@ -15,7 +15,7 @@ class ParentElementTools {
      * Add a single child element to this element.
      */
     public static inline function child<T:ParentElement>(element:T, child:IntoElement):T {
-        element.extend([child.intoAnyElement()]);
+        if (child != null) element.extend([child.intoAnyElement()]);
         return element;
     }
 
@@ -23,7 +23,7 @@ class ParentElementTools {
      * Add multiple child elements to this element.
      */
     public static function children<T:ParentElement>(element:T, children:Array<IntoElement>):T {
-        element.extend([for (child in children) child.intoAnyElement()]);
+        element.extend([for (child in children) if (child != null) child.intoAnyElement()]);
         return element;
     }
 

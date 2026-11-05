@@ -63,12 +63,12 @@ class CarouselPrevious implements RenderOnce implements Styled implements Parent
     }
 
     public function child(child:IntoElement):CarouselPrevious {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):CarouselPrevious {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

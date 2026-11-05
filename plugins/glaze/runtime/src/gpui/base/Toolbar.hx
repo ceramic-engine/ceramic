@@ -91,12 +91,12 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Toolbar {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Toolbar {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -228,12 +228,12 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):ToolbarGroup {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):ToolbarGroup {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

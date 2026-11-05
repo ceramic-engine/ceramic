@@ -243,13 +243,13 @@ class Positioner extends Element implements ParentElement {
     }
 
     public function child(child:IntoElement):Positioner {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Positioner {
         for (child in children) {
-            childElements.push(child);
+            if (child != null) childElements.push(child);
         }
         return this;
     }

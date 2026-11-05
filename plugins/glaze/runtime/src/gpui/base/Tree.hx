@@ -83,7 +83,7 @@ class TreeItem {
     }
 
     public function child(child:TreeItem):TreeItem {
-        children.push(child);
+        if (child != null) children.push(child);
         return this;
     }
 

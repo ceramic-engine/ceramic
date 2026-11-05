@@ -77,12 +77,12 @@ class Toggle implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Toggle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Toggle {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

@@ -49,6 +49,8 @@ Rust free functions used everywhere (`px`, `rems`, `relative`, `point`, `size`, 
 | structs | classes (`@:structInit` where it helps construction) |
 | `impl Default` | default values in constructor arguments or a static `defaultValue()` |
 
+Null children: every implicit `IntoElement` conversion (`@:from` in `IntoElement.hx`) turns a null source into a null `IntoElement` without calling anything on it, and every `child` / `children` method (and child appenders such as `StatusBar.left`) skips nulls, so `child(null)` is the same as not calling `child()`. A ported `child` / `children` method must keep this: push only non-null children, so the indices and element ids of the others stay positional as in GPUI. It is an API convenience (Rust has `Option` with `children` or `when_some`), not a deviation of rendering.
+
 ## Units and geometry
 
 - Units are abstracts with implicit conversions, so they mostly document intent:

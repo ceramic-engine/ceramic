@@ -39,7 +39,7 @@ class DialogDescription implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):DialogDescription {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

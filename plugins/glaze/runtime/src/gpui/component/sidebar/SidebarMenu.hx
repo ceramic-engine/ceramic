@@ -52,7 +52,7 @@ class SidebarMenu implements SidebarItem implements Styled {
      * See also `children`.
      */
     public function child(child:SidebarMenuItem):SidebarMenu {
-        items.push(child);
+        if (child != null) items.push(child);
         return this;
     }
 
@@ -61,7 +61,7 @@ class SidebarMenu implements SidebarItem implements Styled {
      * (replaces the items added before, like the original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenu {
-        items = [for (child in children) child];
+        items = [for (child in children) if (child != null) child];
         return this;
     }
 
@@ -267,7 +267,7 @@ class SidebarMenuItem implements SidebarItem implements Styled {
      * original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenuItem {
-        childItems = [for (child in children) child];
+        childItems = [for (child in children) if (child != null) child];
         return this;
     }
 

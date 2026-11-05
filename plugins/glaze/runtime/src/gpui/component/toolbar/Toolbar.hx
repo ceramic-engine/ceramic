@@ -98,7 +98,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
      * Append a control that inherits the group's final size.
      */
     public function child<T:Sizable & RenderOnce>(child:T):ToolbarGroup {
-        items.push(Sized(child, child));
+        if (child != null) items.push(Sized(child, child));
         return this;
     }
 
@@ -106,7 +106,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
      * Append controls that inherit the group's final size.
      */
     public function children<T:Sizable & RenderOnce>(children:Array<T>):ToolbarGroup {
-        for (child in children) items.push(Sized(child, child));
+        for (child in children) if (child != null) items.push(Sized(child, child));
         return this;
     }
 
@@ -114,7 +114,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
      * Append non-sized content to the group.
      */
     public function content(content:IntoElement):ToolbarGroup {
-        items.push(Content(content));
+        if (content != null) items.push(Content(content));
         return this;
     }
 
@@ -206,7 +206,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
      * renders, so builder call order does not matter.
      */
     public function child<T:Sizable & RenderOnce>(child:T):Toolbar {
-        items.push(Sized(child, child));
+        if (child != null) items.push(Sized(child, child));
         return this;
     }
 
@@ -214,7 +214,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
      * Append sized controls.
      */
     public function children<T:Sizable & RenderOnce>(children:Array<T>):Toolbar {
-        for (child in children) items.push(Sized(child, child));
+        for (child in children) if (child != null) items.push(Sized(child, child));
         return this;
     }
 
@@ -222,7 +222,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
      * Append non-sized content.
      */
     public function content(content:IntoElement):Toolbar {
-        items.push(Content(content));
+        if (content != null) items.push(Content(content));
         return this;
     }
 

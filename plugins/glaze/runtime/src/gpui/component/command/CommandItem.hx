@@ -115,7 +115,7 @@ class CommandItem implements Disableable {
      * presentation, including any keybinding hint.
      */
     public function child(builder:(Window, App) -> IntoElement):CommandItem {
-        content = (window, cx) -> (builder(window, cx):AnyElement);
+        if (builder != null) content = (window, cx) -> (builder(window, cx):AnyElement);
         return this;
     }
 

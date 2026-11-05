@@ -68,7 +68,7 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):AlertDialog {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

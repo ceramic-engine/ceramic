@@ -193,13 +193,13 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
 
     /** Add children of the TabBar, all children will inherit the variant. */
     public function children(children:Array<Tab>):TabBar {
-        for (child in children) childTabs.push(child);
+        for (child in children) if (child != null) childTabs.push(child);
         return this;
     }
 
     /** Add child of the TabBar, tab will inherit the variant. */
     public function child(child:Tab):TabBar {
-        childTabs.push(child);
+        if (child != null) childTabs.push(child);
         return this;
     }
 

@@ -378,12 +378,12 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):InputGroupAddon {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):InputGroupAddon {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -611,7 +611,7 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
     }
 
     public function child(child:IntoElement):InputGroupButton {
-        button.child(child);
+        if (child != null) button.child(child);
         return this;
     }
 
@@ -690,12 +690,12 @@ class InputGroupText implements RenderOnce implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):InputGroupText {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):InputGroupText {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

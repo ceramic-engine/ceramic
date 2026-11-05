@@ -175,12 +175,12 @@ class CarouselContent implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):CarouselContent {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):CarouselContent {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

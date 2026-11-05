@@ -32,14 +32,14 @@ class ImageCacheElement extends Element implements Styled implements ParentEleme
 
     /** Add a child element to this element. */
     public function child(child:IntoElement):ImageCacheElement {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     /** Add multiple child elements to this element. */
     public function children(children:Array<IntoElement>):ImageCacheElement {
         for (child in children) {
-            childElements.push(child);
+            if (child != null) childElements.push(child);
         }
         return this;
     }

@@ -36,7 +36,7 @@ class DialogHeader implements RenderOnce implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):DialogHeader {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

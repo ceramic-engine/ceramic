@@ -127,7 +127,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):ResizablePanel {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

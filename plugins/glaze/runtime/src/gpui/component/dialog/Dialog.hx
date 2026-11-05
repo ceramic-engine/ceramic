@@ -398,12 +398,12 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Dialog {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Dialog {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

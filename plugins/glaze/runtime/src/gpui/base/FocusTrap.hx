@@ -147,7 +147,7 @@ class FocusTrapContainer extends Element implements Styled implements ParentElem
     }
 
     public function child(child:IntoElement):FocusTrapContainer {
-        base.child(child);
+        if (child != null) base.child(child);
         return this;
     }
 

@@ -37,7 +37,7 @@ class SidebarGroup<E:SidebarItem> implements SidebarItem {
      * Add a child to the sidebar group, the child should implement `SidebarItem`.
      */
     public function child(child:E):SidebarGroup<E> {
-        childItems.push(child);
+        if (child != null) childItems.push(child);
         return this;
     }
 
@@ -47,7 +47,7 @@ class SidebarGroup<E:SidebarItem> implements SidebarItem {
      * See also `child`.
      */
     public function children(children:Iterable<E>):SidebarGroup<E> {
-        for (child in children) childItems.push(child);
+        for (child in children) if (child != null) childItems.push(child);
         return this;
     }
 

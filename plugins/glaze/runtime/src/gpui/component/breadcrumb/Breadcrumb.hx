@@ -112,12 +112,12 @@ class Breadcrumb implements RenderOnce implements Styled {
     public function new() {}
 
     public function child(item:IntoBreadcrumbItem):Breadcrumb {
-        items.push(item);
+        if (item != null) items.push(item);
         return this;
     }
 
     public function children(items:Array<IntoBreadcrumbItem>):Breadcrumb {
-        for (item in items) this.items.push(item);
+        for (item in items) if (item != null) this.items.push(item);
         return this;
     }
 

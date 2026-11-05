@@ -287,12 +287,12 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):AccordionItem {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):AccordionItem {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

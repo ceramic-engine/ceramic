@@ -84,7 +84,7 @@ class SidebarHeader implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):SidebarHeader {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

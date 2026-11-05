@@ -111,12 +111,12 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
     }
 
     public function child(child:IntoElement):ContextMenu<E> {
-        extend([child]);
+        if (child != null) extend([child]);
         return this;
     }
 
     public function children(children:Array<IntoElement>):ContextMenu<E> {
-        extend([for (child in children) (child : AnyElement)]);
+        extend([for (child in children) if (child != null) (child : AnyElement)]);
         return this;
     }
 

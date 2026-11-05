@@ -777,7 +777,7 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
 
     /** Add centered content above the preview and above the status treatment. */
     public function overlay(overlay:IntoElement):AttachmentMedia {
-        overlays.push(
+        if (overlay != null) overlays.push(
             div()
                 .absolute()
                 .inset0()
@@ -818,12 +818,12 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):AttachmentMedia {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):AttachmentMedia {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1049,12 +1049,12 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):AttachmentContent {
-        childElements.push(Element(child));
+        if (child != null) childElements.push(Element(child));
         return this;
     }
 
     public function children(children:Array<IntoElement>):AttachmentContent {
-        for (child in children) childElements.push(Element(child));
+        for (child in children) if (child != null) childElements.push(Element(child));
         return this;
     }
 
@@ -1257,12 +1257,12 @@ class AttachmentActions implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):AttachmentActions {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):AttachmentActions {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1364,12 +1364,12 @@ class AttachmentGroup implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):AttachmentGroup {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):AttachmentGroup {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

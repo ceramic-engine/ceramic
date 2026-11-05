@@ -90,7 +90,7 @@ class Toggle implements RenderOnce implements Styled implements ParentElement im
     }
 
     public function child(child:IntoElement):Toggle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -271,7 +271,7 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
      * Add a child `Toggle` to the group.
      */
     public function child(toggle:Toggle):ToggleGroup {
-        items.push(toggle);
+        if (toggle != null) items.push(toggle);
         return this;
     }
 
@@ -279,7 +279,7 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
      * Add multiple `Toggle`s to the group.
      */
     public function children(children:Array<Toggle>):ToggleGroup {
-        for (child in children) items.push(child);
+        for (child in children) if (child != null) items.push(child);
         return this;
     }
 

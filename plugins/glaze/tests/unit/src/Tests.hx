@@ -235,6 +235,8 @@ class Tests {
         runner.add(new tests.kit.StoryPlatformTest());
         runner.add(new tests.kit.StoryInputCompletionTest());
         runner.add(new tests.kit.StoryListTest());
+        // child(null) and null children are skipped (README, UI API)
+        runner.add(new tests.kit.NullChildTest());
 
     }
 

@@ -397,12 +397,12 @@ class Questionnaire implements RenderOnce implements Styled implements ParentEle
     }
 
     public function child(child:IntoElement):Questionnaire {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):Questionnaire {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -467,12 +467,12 @@ class QuestionnaireProgress implements RenderOnce implements Styled implements P
     }
 
     public function child(child:IntoElement):QuestionnaireProgress {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireProgress {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -534,12 +534,12 @@ class QuestionnaireTitle implements RenderOnce implements Styled implements Pare
     }
 
     public function child(child:IntoElement):QuestionnaireTitle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireTitle {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -584,12 +584,12 @@ class QuestionnaireDescription implements RenderOnce implements Styled implement
     }
 
     public function child(child:IntoElement):QuestionnaireDescription {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireDescription {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -672,12 +672,12 @@ class QuestionnaireItem implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):QuestionnaireItem {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireItem {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -751,12 +751,12 @@ class QuestionnaireChoices implements RenderOnce implements Styled implements Pa
     }
 
     public function child(child:IntoElement):QuestionnaireChoices {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireChoices {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -843,12 +843,12 @@ class QuestionnaireChoice implements RenderOnce implements Styled implements Par
     }
 
     public function child(child:IntoElement):QuestionnaireChoice {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireChoice {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1101,12 +1101,12 @@ class QuestionnaireChoiceDescription implements RenderOnce implements Styled imp
     }
 
     public function child(child:IntoElement):QuestionnaireChoiceDescription {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireChoiceDescription {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1222,12 +1222,12 @@ class QuestionnaireError implements RenderOnce implements Styled implements Pare
     }
 
     public function child(child:IntoElement):QuestionnaireError {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireError {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1288,12 +1288,12 @@ class QuestionnaireActions implements RenderOnce implements Styled implements Pa
     }
 
     public function child(child:IntoElement):QuestionnaireActions {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireActions {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1409,12 +1409,12 @@ class QuestionnairePrevious implements RenderOnce implements Styled implements P
     }
 
     public function child(child:IntoElement):QuestionnairePrevious {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnairePrevious {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1452,12 +1452,12 @@ class QuestionnaireSkip implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):QuestionnaireSkip {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireSkip {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1495,12 +1495,12 @@ class QuestionnaireNext implements RenderOnce implements Styled implements Paren
     }
 
     public function child(child:IntoElement):QuestionnaireNext {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireNext {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -1538,12 +1538,12 @@ class QuestionnaireSubmit implements RenderOnce implements Styled implements Par
     }
 
     public function child(child:IntoElement):QuestionnaireSubmit {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):QuestionnaireSubmit {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

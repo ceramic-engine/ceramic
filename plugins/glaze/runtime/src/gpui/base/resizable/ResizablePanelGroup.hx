@@ -126,7 +126,7 @@ class ResizablePanelGroup implements RenderOnce {
      * - The `group` will be set to the group entity.
      */
     public function child(panel:IntoResizablePanel):ResizablePanelGroup {
-        childPanels.push(panel);
+        if (panel != null) childPanels.push(panel);
         return this;
     }
 
@@ -135,7 +135,7 @@ class ResizablePanelGroup implements RenderOnce {
      * like the original).
      */
     public function children(panels:Array<IntoResizablePanel>):ResizablePanelGroup {
-        childPanels = [for (panel in panels) (panel : ResizablePanel)];
+        childPanels = [for (panel in panels) if (panel != null) (panel : ResizablePanel)];
         return this;
     }
 

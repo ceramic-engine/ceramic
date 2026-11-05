@@ -593,7 +593,7 @@ class Slider implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function child(child:IntoElement):Slider {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -704,7 +704,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):SliderTrack {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -837,7 +837,7 @@ class SliderIndicator implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):SliderIndicator {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
@@ -893,7 +893,7 @@ class SliderThumb implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):SliderThumb {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

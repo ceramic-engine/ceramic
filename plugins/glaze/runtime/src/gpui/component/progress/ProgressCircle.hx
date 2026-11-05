@@ -130,7 +130,7 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
     }
 
     public function child(child:IntoElement):ProgressCircle {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 

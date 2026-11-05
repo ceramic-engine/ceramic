@@ -45,12 +45,12 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
     public function new() {}
 
     public function child(avatar:Avatar):AvatarGroup {
-        avatars.push(avatar);
+        if (avatar != null) avatars.push(avatar);
         return this;
     }
 
     public function children(avatars:Array<Avatar>):AvatarGroup {
-        for (avatar in avatars) this.avatars.push(avatar);
+        for (avatar in avatars) if (avatar != null) this.avatars.push(avatar);
         return this;
     }
 

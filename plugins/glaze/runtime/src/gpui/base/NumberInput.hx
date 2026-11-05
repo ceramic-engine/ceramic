@@ -92,12 +92,12 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function child(child:IntoElement):NumberInput {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):NumberInput {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 
@@ -412,12 +412,12 @@ class NumberInputText implements RenderOnce implements Styled implements ParentE
     }
 
     public function child(child:IntoElement):NumberInputText {
-        childElements.push(child);
+        if (child != null) childElements.push(child);
         return this;
     }
 
     public function children(children:Array<IntoElement>):NumberInputText {
-        for (child in children) childElements.push(child);
+        for (child in children) if (child != null) childElements.push(child);
         return this;
     }
 

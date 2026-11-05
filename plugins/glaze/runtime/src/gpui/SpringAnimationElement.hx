@@ -63,7 +63,7 @@ class SpringAnimationElement<E:Element, T> extends Element implements ParentElem
      * Add a single child element to the animated element (when it is a `ParentElement`).
      */
     public function child(child:IntoElement):SpringAnimationElement<E, T> {
-        extend([child]);
+        if (child != null) extend([child]);
         return this;
     }
 
@@ -71,7 +71,7 @@ class SpringAnimationElement<E:Element, T> extends Element implements ParentElem
      * Add multiple child elements to the animated element (when it is a `ParentElement`).
      */
     public function children(children:Array<IntoElement>):SpringAnimationElement<E, T> {
-        extend([for (child in children) (child : AnyElement)]);
+        extend([for (child in children) if (child != null) (child : AnyElement)]);
         return this;
     }
 
