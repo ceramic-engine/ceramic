@@ -15,7 +15,8 @@ package gpui;
  */
 class StyleBuilder implements Styled {
 
-    final refinement:StyleRefinement;
+    /** Changed only by `StyleSized`'s shared builder (`StyleBuilder.over()`) */
+    var refinement:StyleRefinement;
 
     public function new(?refinement:StyleRefinement) {
         this.refinement = refinement != null ? refinement : new StyleRefinement();
@@ -24,6 +25,23 @@ class StyleBuilder implements Styled {
     public inline function style():StyleRefinement {
         return refinement;
     }
+
+    /**
+     * A builder over `refinement` that is only used right away (one chain of
+     * calls): the same object every time. Internal (`StyleSized`).
+     */
+    @:noCompletion
+    public static function over(refinement:StyleRefinement):StyleBuilder {
+        var builder = sharedBuilder;
+        if (builder == null) {
+            builder = new StyleBuilder(refinement);
+            sharedBuilder = builder;
+        }
+        builder.refinement = refinement;
+        return builder;
+    }
+
+    static var sharedBuilder:Null<StyleBuilder> = null;
 
     /**
      * Runs `f` on a builder of a new refinement and returns the refinement.

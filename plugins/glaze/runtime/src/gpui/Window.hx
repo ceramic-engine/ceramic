@@ -1956,18 +1956,25 @@ class Window implements WindowInvalidator {
      */
     public function useKeyedState<T>(key:ElementIdArg, cx:App, init:(Window) -> T):Entity<StateModel<T>> {
         final currentView = this.currentView();
-        return withGlobalId(key, (globalId, window) -> {
-            return window.withElementState(globalId, StateModel, (state, window) -> {
-                if (state.value != null) {
-                    return (cast state.value : Entity<StateModel<T>>);
-                }
-                final initial = init(window);
-                final newState:Entity<StateModel<T>> = cx.newEntity(_ -> new StateModel<T>(initial));
-                cx.observe(newState, (_, cx) -> cx.notify(currentView));
-                state.value = (newState : StateModel<T>);
-                return newState;
-            });
-        });
+        // `withGlobalId(key, ...)` and `withElementState(globalId, StateModel, ...)`
+        // without their closures
+        final node = elementIdNode;
+        final globalId = node.child(key);
+        elementIdNode = globalId;
+        final state = elementStateBox(globalId, ElementStateType.of(StateModel));
+        var result:Entity<StateModel<T>>;
+        if (state.value != null) {
+            result = (cast state.value : Entity<StateModel<T>>);
+        }
+        else {
+            final initial = init(this);
+            final newState:Entity<StateModel<T>> = cx.newEntity(_ -> new StateModel<T>(initial));
+            cx.observe(newState, (_, cx) -> cx.notify(currentView));
+            state.value = (newState : StateModel<T>);
+            result = newState;
+        }
+        elementIdNode = node;
+        return result;
     }
 
     /**

@@ -15,7 +15,8 @@ using gpui.component.Size.SizeTools;
 class StyleSized {
 
     static inline function b<T:Styled>(self:T):StyleBuilder {
-        return new StyleBuilder(self.style());
+        // Only used for one chain of calls: the shared builder
+        return StyleBuilder.over(self.style());
     }
 
     public static function inputTextSize<T:Styled>(self:T, size:Size):T {
