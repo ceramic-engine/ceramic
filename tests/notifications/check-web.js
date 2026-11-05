@@ -5,6 +5,9 @@
 // served on 127.0.0.1. The page's Notification constructor is replaced by a
 // recorder (nothing reaches the system) that also plays a click.
 //
+// - a request outside of a user gesture (at start): answered at once
+//   without asking the browser (AUTHORIZED when granted, NOT_DETERMINED
+//   otherwise, Notification.requestPermission not called);
 // - notifications granted: a click asks (user gesture) and gets AUTHORIZED,
 //   two notifications are posted (title, body, tag), the second one is closed
 //   by dismiss, a click on the first one is the response with no action id;
@@ -55,6 +58,7 @@ const recorder = () => {
     if (!Real) return;
     window.__posted = [];
     window.__closed = [];
+    window.__requests = 0;
     function Recorded(title, options) {
         if (Real.permission !== 'granted') throw new TypeError('permission not granted');
         const notification = { onclick: null, onclose: null, onerror: null, onshow: null };
@@ -66,7 +70,10 @@ const recorder = () => {
         return notification;
     }
     Object.defineProperty(Recorded, 'permission', { get: () => Real.permission });
-    Recorded.requestPermission = (...args) => Real.requestPermission(...args);
+    Recorded.requestPermission = (...args) => {
+        window.__requests++;
+        return Real.requestPermission(...args);
+    };
     window.Notification = Recorded;
 };
 
@@ -98,6 +105,9 @@ async function run(browser, url, granted) {
     const ready = await waitLine(/^ready /);
     const label = granted ? 'granted' : 'not granted';
     check(ready === (granted ? 'ready available=true read=AUTHORIZED' : 'ready available=true read=NOT_DETERMINED'), `${label}: ${ready}`);
+    const outside = await waitLine(/^outside /);
+    check(outside === (granted ? 'outside AUTHORIZED' : 'outside NOT_DETERMINED'), `${label}: request outside of a gesture: ${outside}`);
+    check(await page.evaluate(() => window.__requests) === 0, `${label}: the browser was not asked outside of a gesture`);
 
     await page.mouse.click(160, 120);
     const answer = await waitLine(/^authorization /);
@@ -116,6 +126,7 @@ async function run(browser, url, granted) {
     }
     else {
         check(answer !== 'authorization AUTHORIZED', `${label}: ${answer}`);
+        check(await page.evaluate(() => window.__requests) === 1, `${label}: the browser was asked during the click`);
         check(posted === '', `${label}: nothing posted (${posted})`);
     }
     await context.close();

@@ -67,9 +67,11 @@ typedef NotificationsBackend = backend.notifications.NotificationsNone;
  *   Call `setAppIdentity` early, before anything else.
  * - **Web** (clay web): the browser's Notification API. Browsers only ask
  *   the user from a user gesture: call `requestAuthorization` from a click
- *   or key handler. A plain page has no action buttons (they need a service
- *   worker): a click on the notification is the response, with a null
- *   action id.
+ *   or key handler. Outside of a gesture, while the permission is not
+ *   determined, the browser is not asked and the answer is `NOT_DETERMINED`
+ *   (where the browser has `navigator.userActivation`). A plain page has no
+ *   action buttons (they need a service worker): a click on the
+ *   notification is the response, with a null action id.
  * - **Headless**: nothing reaches a system; the backend records the calls
  *   (`backend.shown`, `delivered`, `dismissed`) and tests emit responses
  *   (`backend.simulateResponse`).
@@ -199,7 +201,10 @@ class Notifications extends Entity {
      * the platform asks (macOS and iOS once per app, browsers from a user
      * gesture only, Android 13 and later). `done` gets the answer later
      * (never during this call), also when the user was asked before: then
-     * the system answers without asking again.
+     * the system answers without asking again. In a browser, outside of a
+     * user gesture and while the permission is not determined, nobody is
+     * asked and the answer is `NOT_DETERMINED`: call it again from a click
+     * or key handler.
      */
     public function requestAuthorization(?done:(authorization:NotificationAuthorization) -> Void):Void {
 

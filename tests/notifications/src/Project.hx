@@ -200,8 +200,10 @@ class Project extends Entity {
 
     /**
      * Driven by check-web.js in headless Chromium: logs what happens
-     * (`NOTIFICATIONS ...` console lines); the first click asks for the
-     * authorization (a user gesture), then posts.
+     * (`NOTIFICATIONS ...` console lines). At start, a request outside of
+     * a user gesture (asks nobody while the permission is not determined);
+     * the first click asks for the authorization (a user gesture), then
+     * posts.
      */
     function webChecks():Void {
 
@@ -210,7 +212,10 @@ class Project extends Entity {
             js.Browser.console.log('NOTIFICATIONS ' + line);
         }
         notifications.onResponse(this, (tag, actionId) -> report('response $tag $actionId'));
-        notifications.readAuthorization(a -> report('ready available=${notifications.isAvailable()} read=$a'));
+        notifications.readAuthorization(a -> {
+            report('ready available=${notifications.isAvailable()} read=$a');
+            notifications.requestAuthorization(a -> report('outside $a'));
+        });
 
         var clicks = 0;
         App.app.screen.onPointerDown(this, _ -> {

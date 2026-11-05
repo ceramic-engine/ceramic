@@ -10,9 +10,13 @@ import ceramic.NotificationOptions;
  * - The permission (`Notification.permission`) is the authorization;
  *   `requestAuthorization` calls `Notification.requestPermission()`, which
  *   browsers only honor during a user gesture (a click, a tap or a key
- *   press): call it from the handler of such an event. Outside of one,
- *   browsers deny it at once or show no prompt, and the answer stays
- *   `NOT_DETERMINED` or becomes `DENIED`.
+ *   press, for a few seconds after it): call it from the handler of such an
+ *   event. While the permission is not determined and the page is outside
+ *   of a gesture (`navigator.userActivation.isActive` false where the
+ *   browser has it), the browser is not asked at all: the answer is
+ *   `NOT_DETERMINED` and nothing is shown, the same in every browser (some
+ *   would deny it at once, others show no prompt or a quiet one). Browsers
+ *   without `navigator.userActivation` are asked and decide.
  * - The tag of the notification is the Notification API tag: the browser
  *   replaces a notification with the same tag. `dismiss` closes it.
  * - Action buttons need a service worker (`ServiceWorkerRegistration.showNotification`
@@ -27,6 +31,8 @@ class NotificationsWeb implements spec.Notifications {
     var handleAuthorization:(authorization:NotificationAuthorization, requested:Bool) -> Void = null;
 
     final shown:Map<String, Dynamic> = new Map();
+
+    var warnedOutsideGesture:Bool = false;
 
     public function new() {}
 
@@ -74,6 +80,15 @@ class NotificationsWeb implements spec.Notifications {
             return;
         }
 
+        if (!inUserGesture()) {
+            if (!warnedOutsideGesture) {
+                warnedOutsideGesture = true;
+                ceramic.Shortcuts.log.warning('Notifications.requestAuthorization: the browser asks for the permission only during a user gesture (a click, a tap or a key press)');
+            }
+            handleAuthorization(NOT_DETERMINED, true);
+            return;
+        }
+
         var answered = false;
         final answer = (_:Dynamic) -> {
             if (answered) return;
@@ -90,6 +105,18 @@ class NotificationsWeb implements spec.Notifications {
         catch (e:Dynamic) {
             answer(null);
         }
+
+    }
+
+    /**
+     * Whether the page is within a user gesture (transient activation), as
+     * far as the browser tells: true where it has no `navigator.userActivation`.
+     */
+    static function inUserGesture():Bool {
+
+        final navigator:Dynamic = js.Browser.navigator;
+        final activation:Dynamic = navigator != null ? navigator.userActivation : null;
+        return activation == null || activation.isActive == true;
 
     }
 
