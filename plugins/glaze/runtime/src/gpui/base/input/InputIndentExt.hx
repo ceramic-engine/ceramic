@@ -314,7 +314,8 @@ class InputIndentExt {
 
         // Build disjoint edits, dropping any that would overlap a previous one.
         // (`sort_by_key` is stable, like `ArraySort`)
-        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.start - b.start);
+        // A sign (a difference returned through the function value is boxed on hxcpp)
+        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.start < b.start ? -1 : (a.start > b.start ? 1 : 0));
         var lastEnd:Null<Int> = null;
         for (range in ranges) {
             if (lastEnd != null && range.start < lastEnd)

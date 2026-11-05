@@ -545,7 +545,8 @@ class TextMateBackend {
             }
         }
         // Rust `sort_by_key` (stable) then `dedup_by_key` on the start line.
-        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine - b.startLine);
+        // A sign (a difference returned through the function value is boxed on hxcpp)
+        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine < b.startLine ? -1 : (a.startLine > b.startLine ? 1 : 0));
         final result:Array<FoldRange> = [];
         for (range in ranges) {
             if (result.length == 0 || result[result.length - 1].startLine != range.startLine)
@@ -623,8 +624,11 @@ class TextMateBackend {
         for (lineNumber in 0...lines.length) {
             final line = lines[lineNumber];
             for (_ in 0...line.braceCloses) {
-                final start = starts.pop();
-                if (start != null && lineNumber - start >= 2) {
+                // `pop()` without boxing (an empty stack pops nothing)
+                if (starts.length == 0)
+                    continue;
+                final start = gpui.util.Stacks.popInt(starts);
+                if (lineNumber - start >= 2) {
                     ranges.push(new FoldRange(start, lineNumber));
                 }
             }
@@ -632,7 +636,8 @@ class TextMateBackend {
                 starts.push(lineNumber);
         }
         // Rust `sort_by_key` (stable) then `dedup_by_key` on the start line.
-        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine - b.startLine);
+        // A sign (a difference returned through the function value is boxed on hxcpp)
+        haxe.ds.ArraySort.sort(ranges, (a, b) -> a.startLine < b.startLine ? -1 : (a.startLine > b.startLine ? 1 : 0));
         final result:Array<FoldRange> = [];
         for (range in ranges) {
             if (result.length == 0 || result[result.length - 1].startLine != range.startLine)

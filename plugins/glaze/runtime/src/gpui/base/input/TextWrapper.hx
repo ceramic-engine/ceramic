@@ -203,54 +203,9 @@ class TextWrapper {
         final fontSize = this.fontSize;
         final wrappingIndent = this.wrappingIndent;
         final tabStop = TabStops.tabStopWidth(textSystem, font, fontSize, tabSize);
-        updateLines(changedText, range, newText, reuseWidths, (lineStr:String, wrapWidth:Float, lineStart:Int) -> {
-            final lineBytes = Bytes.ofString(lineStr);
-            final lineLen = lineBytes.length;
-            final fragments:Array<LineFragment> = [];
-            var offset = 0;
-            var first = 0;
-            {
-                // metrics.partition_point(|(r, _)| r.end <= line_start)
-                var lo = 0;
-                var hi = metrics.length;
-                while (lo < hi) {
-                    final mid = (lo + hi) >> 1;
-                    if (metrics[mid].range.end <= lineStart)
-                        lo = mid + 1;
-                    else
-                        hi = mid;
-                }
-                first = lo;
-            }
-            for (i in first...metrics.length) {
-                final metric = metrics[i];
-                if (metric.range.start >= lineStart + lineLen)
-                    break;
-                if (metric.range.start < lineStart || metric.range.end > lineStart + lineLen)
-                    continue;
-                final start = metric.range.start - lineStart;
-                final end = metric.range.end - lineStart;
-                if (!isCharBoundary(lineBytes, start) || !isCharBoundary(lineBytes, end))
-                    continue;
-                if (offset < start)
-                    fragments.push(LineFragment.Text(lineBytes.getString(offset, start - offset)));
-                fragments.push(LineFragment.Element(metric.width, end - start));
-                offset = end;
-            }
-            if (fragments.length == 0) {
-                return measuredWrap(lineStr, wrapWidth, wrappingIndent, text -> {
-                    final textLen = Utf8.byteLength(text);
-                    return measurements.measure(text, textLen, () -> {
-                        final layout = textSystem.layoutLine(text, fontSize, [new TextRun(textLen, font, Hsla.black())]);
-                        return TabStops.expandedWidth(layout, text, tabStop);
-                    });
-                });
-            }
-            if (offset < lineLen)
-                fragments.push(LineFragment.Text(lineBytes.getString(offset, lineLen - offset)));
-            // Inline element widths retain the original wrapper; no safe interval is inferred.
-            return MeasuredWrap.uncached(lineWrapper.wrapLine(fragments, wrapWidth, IndentAdjustment.SameIndent));
-        });
+        // The line wrapping in an object (`NativeLineWrapping`): the closures
+        // boxed the widths and offsets they passed and returned on hxcpp
+        updateLinesWith(changedText, range, newText, reuseWidths, new NativeLineWrapping(lineWrapper, metrics, measurements, textSystem, font, fontSize, wrappingIndent, tabStop));
     }
 
     static inline function isCharBoundary(bytes:Bytes, index:Int):Bool {
@@ -338,6 +293,11 @@ class TextWrapper {
 
     /** Splice changed rows into the sole display map, retaining valid rows on full width passes. */
     public function updateLines(changedText:Rope, range:Range, newText:Rope, reuseWidths:Bool, wrapLine:(String, Float, Int) -> MeasuredWrap):Void {
+        updateLinesWith(changedText, range, newText, reuseWidths, new FunctionLineWrapping(wrapLine));
+    }
+
+    /** `updateLines()` with the wrapping in an object */
+    function updateLinesWith(changedText:Rope, range:Range, newText:Rope, reuseWidths:Bool, wrapping:LineWrapping):Void {
         // Remove the old changed lines.
         final bufferLineCount = linesCount();
         final lastRow = bufferLineCount > 0 ? bufferLineCount - 1 : 0;
@@ -379,7 +339,7 @@ class TextWrapper {
                     case Same:
                         // Here only have wrapped line, if there is no wrap meet, the `line_wraps`
                         // result will empty.
-                        final measured = wrapLine(lineStr, wrapWidth, changedText.lineStartOffset(row));
+                        final measured = wrapping.wrapLine(lineStr, wrapWidth, changedText.lineStartOffset(row));
                         validWidths.intersect(measured.validWidths);
                         for (boundary in measured.boundaries) {
                             wrappedLines.push(new Range(prevBoundaryIx, boundary.ix));
@@ -389,14 +349,14 @@ class TextWrapper {
                     case None:
                         // The first visual line keeps the line's leading indentation, so it is
                         // wrapped as is.
-                        final boundaries = wrapLine(lineStr, wrapWidth, changedText.lineStartOffset(row));
+                        final boundaries = wrapping.wrapLine(lineStr, wrapWidth, changedText.lineStartOffset(row));
                         validWidths.intersect(boundaries.validWidths);
                         if (boundaries.boundaries.length > 0) {
                             final firstIx = boundaries.boundaries[0].ix;
                             wrappedLines.push(new Range(prevBoundaryIx, firstIx));
                             prevBoundaryIx = firstIx;
 
-                            final continuation = wrapLine(Utf8.substringFrom(lineStr, firstIx), wrapWidth, changedText.lineStartOffset(row) + firstIx);
+                            final continuation = wrapping.wrapLine(Utf8.substringFrom(lineStr, firstIx), wrapWidth, changedText.lineStartOffset(row) + firstIx);
                             validWidths.intersect(continuation.validWidths);
                             for (boundary in continuation.boundaries) {
                                 final ix = firstIx + boundary.ix;
@@ -626,12 +586,17 @@ class TextWrapper {
 
     /** Preserve the measured comparisons that make these breaks valid at nearby widths. */
     public static function measuredWrap(text:String, width:Float, wrappingIndent:WrappingIndent, measure:(String) -> Float):MeasuredWrap {
+        return measuredWrapWith(text, width, wrappingIndent, new FunctionTextWidths(measure));
+    }
+
+    /** `measuredWrap()` with the widths in an object */
+    static function measuredWrapWith(text:String, width:Float, wrappingIndent:WrappingIndent, widths:TextWidths):MeasuredWrap {
         measuredLines++;
         final validWidths = WidthRange.all();
         final bytes = Bytes.ofString(text);
         final textLen = bytes.length;
         final indent = leadingIndent(bytes, wrappingIndent);
-        final indentWidth = measure(sub(bytes, 0, indent));
+        final indentWidth = widths.widthOf(sub(bytes, 0, indent));
         final ends = graphemeEnds(bytes);
         final opportunities = breakOpportunities(bytes, ends);
         final result:Array<Boundary> = [];
@@ -646,47 +611,10 @@ class TextWrapper {
             // Beyond this local window, use the original exponential grapheme search instead.
             final wordProbeEnd = first + MAX_WORD_PROBE_GRAPHEMES - 1 < ends.length ? ends[first + MAX_WORD_PROBE_GRAPHEMES - 1] : textLen;
 
-            // `fitting(candidates, limit)` over `candidates[from..]`: the number of
-            // candidates that fit, or -1 (Rust `None`) when a probe passes `limit`
-            // (-1 for no limit).
-            function fitting(candidates:Array<Int>, from:Int, limit:Int):Int {
-                final count = candidates.length - from;
-                // `fits(end)`: 1 fits, 0 does not, -1 past the limit
-                function fits(end:Int):Int {
-                    if (limit >= 0 && end > limit)
-                        return -1;
-                    return validWidths.fits(measure(sub(bytes, start, end)), available, indentArg) ? 1 : 0;
-                }
-                var low = 0;
-                var high = 1;
-                while (high <= count) {
-                    final f = fits(candidates[from + high - 1]);
-                    if (f < 0)
-                        return -1;
-                    if (f == 0)
-                        break;
-                    low = high;
-                    if (high == count)
-                        break;
-                    high = high * 2 < count ? high * 2 : count;
-                }
-                while (low + 1 < high) {
-                    final mid = Std.int((low + high) / 2);
-                    final f = fits(candidates[from + mid - 1]);
-                    if (f < 0)
-                        return -1;
-                    if (f == 1)
-                        low = mid;
-                    else
-                        high = mid;
-                }
-                return low;
-            }
-
             // opportunities.partition_point(|&ix| ix <= start || (start == 0 && ix <= indent))
             final firstWord = partitionPointLe(opportunities, 0, start == 0 && indent > start ? indent : start);
             final wordsCount = opportunities.length - firstWord;
-            final wordCount = fitting(opportunities, firstWord, wordProbeEnd);
+            final wordCount = fitting(widths, validWidths, bytes, start, available, indentArg, opportunities, firstWord, wordProbeEnd);
             var end:Int;
             if (wordCount > 0) {
                 end = opportunities[firstWord + wordCount - 1];
@@ -694,7 +622,7 @@ class TextWrapper {
             else {
                 // An oversized word retains the original complete-grapheme fallback. At least one
                 // grapheme is consumed even when it is wider than the available viewport.
-                final count = fitting(ends, first, -1);
+                final count = fitting(widths, validWidths, bytes, start, available, indentArg, ends, first, -1);
                 final fittingEnd = ends[first + (count > 1 ? count : 1) - 1];
                 if (fittingEnd == textLen)
                     break;
@@ -710,6 +638,179 @@ class TextWrapper {
         return new MeasuredWrap(result, validWidths);
     }
 
+    /**
+     * `fitting(candidates, limit)` of `measuredWrap` over `candidates[from..]`:
+     * the number of candidates that fit, or -1 (Rust `None`) when a probe
+     * passes `limit` (-1 for no limit). A static function: the local
+     * closures were made per wrapped line and boxed their numbers on hxcpp.
+     */
+    static function fitting(widths:TextWidths, validWidths:WidthRange, bytes:Bytes, start:Int, available:Float, indentArg:Float, candidates:Array<Int>, from:Int, limit:Int):Int {
+        final count = candidates.length - from;
+        var low = 0;
+        var high = 1;
+        while (high <= count) {
+            final f = fits(widths, validWidths, bytes, start, available, indentArg, candidates[from + high - 1], limit);
+            if (f < 0)
+                return -1;
+            if (f == 0)
+                break;
+            low = high;
+            if (high == count)
+                break;
+            high = high * 2 < count ? high * 2 : count;
+        }
+        while (low + 1 < high) {
+            final mid = Std.int((low + high) / 2);
+            final f = fits(widths, validWidths, bytes, start, available, indentArg, candidates[from + mid - 1], limit);
+            if (f < 0)
+                return -1;
+            if (f == 1)
+                low = mid;
+            else
+                high = mid;
+        }
+        return low;
+    }
+
+    /** `fits(end)` of `fitting`: 1 fits, 0 does not, -1 past the limit */
+    static inline function fits(widths:TextWidths, validWidths:WidthRange, bytes:Bytes, start:Int, available:Float, indentArg:Float, end:Int, limit:Int):Int {
+        if (limit >= 0 && end > limit)
+            return -1;
+        return validWidths.fits(widths.widthOf(sub(bytes, start, end)), available, indentArg) ? 1 : 0;
+    }
+
     static inline final MAX_WORD_PROBE_GRAPHEMES:Int = 256;
+
+}
+
+/** Wraps a line of `TextWrapper.updateLines` (typed: no boxing of the width and offset) */
+private interface LineWrapping {
+
+    function wrapLine(text:String, width:Float, lineStart:Int):MeasuredWrap;
+
+}
+
+/** The widths of `TextWrapper.measuredWrapWith` (typed: no boxing of the result) */
+private interface TextWidths {
+
+    function widthOf(text:String):Float;
+
+}
+
+/** `LineWrapping` over a function value (`TextWrapper.updateLines`) */
+private class FunctionLineWrapping implements LineWrapping {
+
+    final wrap:(String, Float, Int) -> MeasuredWrap;
+
+    public function new(wrap:(String, Float, Int) -> MeasuredWrap) {
+        this.wrap = wrap;
+    }
+
+    public function wrapLine(text:String, width:Float, lineStart:Int):MeasuredWrap {
+        return wrap(text, width, lineStart);
+    }
+
+}
+
+/** `TextWidths` over a function value (`TextWrapper.measuredWrap`) */
+private class FunctionTextWidths implements TextWidths {
+
+    final measure:(String) -> Float;
+
+    public function new(measure:(String) -> Float) {
+        this.measure = measure;
+    }
+
+    public function widthOf(text:String):Float {
+        return measure(text);
+    }
+
+}
+
+/**
+ * The native line wrapping of `TextWrapper.updateWrapped`: inline element
+ * metrics, then the measured wrap with the cached native widths.
+ */
+@:access(gpui.base.input.TextWrapper)
+private class NativeLineWrapping implements LineWrapping implements TextWidths {
+
+    final lineWrapper:gpui.LineWrapper;
+
+    final metrics:Array<InlineMetric>;
+
+    final measurements:WidthMeasurements;
+
+    final textSystem:WindowTextSystem;
+
+    final font:Font;
+
+    final fontSize:Float;
+
+    final wrappingIndent:WrappingIndent;
+
+    final tabStop:Float;
+
+    public function new(lineWrapper:gpui.LineWrapper, metrics:Array<InlineMetric>, measurements:WidthMeasurements, textSystem:WindowTextSystem, font:Font, fontSize:Float, wrappingIndent:WrappingIndent, tabStop:Float) {
+        this.lineWrapper = lineWrapper;
+        this.metrics = metrics;
+        this.measurements = measurements;
+        this.textSystem = textSystem;
+        this.font = font;
+        this.fontSize = fontSize;
+        this.wrappingIndent = wrappingIndent;
+        this.tabStop = tabStop;
+    }
+
+    public function widthOf(text:String):Float {
+        final cached = measurements.cachedWidth(text);
+        if (!Math.isNaN(cached))
+            return cached;
+        final textLen = Utf8.byteLength(text);
+        final layout = textSystem.layoutLine(text, fontSize, [new TextRun(textLen, font, Hsla.black())]);
+        return measurements.remember(text, textLen, TabStops.expandedWidth(layout, text, tabStop));
+    }
+
+    public function wrapLine(lineStr:String, wrapWidth:Float, lineStart:Int):MeasuredWrap {
+        final lineBytes = Bytes.ofString(lineStr);
+        final lineLen = lineBytes.length;
+        final fragments:Array<LineFragment> = [];
+        var offset = 0;
+        var first = 0;
+        {
+            // metrics.partition_point(|(r, _)| r.end <= line_start)
+            var lo = 0;
+            var hi = metrics.length;
+            while (lo < hi) {
+                final mid = (lo + hi) >> 1;
+                if (metrics[mid].range.end <= lineStart)
+                    lo = mid + 1;
+                else
+                    hi = mid;
+            }
+            first = lo;
+        }
+        for (i in first...metrics.length) {
+            final metric = metrics[i];
+            if (metric.range.start >= lineStart + lineLen)
+                break;
+            if (metric.range.start < lineStart || metric.range.end > lineStart + lineLen)
+                continue;
+            final start = metric.range.start - lineStart;
+            final end = metric.range.end - lineStart;
+            if (!TextWrapper.isCharBoundary(lineBytes, start) || !TextWrapper.isCharBoundary(lineBytes, end))
+                continue;
+            if (offset < start)
+                fragments.push(LineFragment.Text(lineBytes.getString(offset, start - offset)));
+            fragments.push(LineFragment.Element(metric.width, end - start));
+            offset = end;
+        }
+        if (fragments.length == 0) {
+            return TextWrapper.measuredWrapWith(lineStr, wrapWidth, wrappingIndent, this);
+        }
+        if (offset < lineLen)
+            fragments.push(LineFragment.Text(lineBytes.getString(offset, lineLen - offset)));
+        // Inline element widths retain the original wrapper; no safe interval is inferred.
+        return MeasuredWrap.uncached(lineWrapper.wrapLine(fragments, wrapWidth, IndentAdjustment.SameIndent));
+    }
 
 }

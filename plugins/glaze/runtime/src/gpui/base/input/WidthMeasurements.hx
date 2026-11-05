@@ -16,7 +16,7 @@ class WidthMeasurements {
     static inline final MAX_TEXT_BYTES:Int = 4 * 1024 * 1024;
 
     /** Content keys also share common prefixes and suffixes between logical source lines. */
-    final widths:Map<String, Float> = new Map();
+    final widths:Map<String, MeasuredWidth> = new Map();
 
     /** Number of entries of `widths` (Rust `HashMap::len`) */
     var count:Int = 0;
@@ -42,8 +42,25 @@ class WidthMeasurements {
     public function measure(text:String, textLen:Int, measure:() -> Float):Float {
         final cached = widths.get(text);
         if (cached != null)
-            return cached;
-        final width = measure();
+            return cached.width;
+        return remember(text, textLen, measure());
+    }
+
+    /**
+     * The width measured earlier for `text`, or NaN (`measure()` without a
+     * function value, whose Float result is boxed on hxcpp).
+     */
+    @:allow(gpui.base.input)
+    function cachedWidth(text:String):Float {
+        // The width in an object: a `Map<String, Float>` boxes the value it
+        // returns on hxcpp (one allocation per hit)
+        final cached = widths.get(text);
+        return cached != null ? cached.width : Math.NaN;
+    }
+
+    /** Records `width`, just measured for `text` (the rest of `measure()`), and returns it */
+    @:allow(gpui.base.input)
+    function remember(text:String, textLen:Int, width:Float):Float {
         if (textLen > MAX_TEXT_BYTES)
             return width;
         while (count >= MAX_ENTRIES || textBytes + textLen > MAX_TEXT_BYTES) {
@@ -64,7 +81,7 @@ class WidthMeasurements {
         textBytes += textLen;
         order.push(text);
         orderBytes.push(textLen);
-        widths.set(text, width);
+        widths.set(text, new MeasuredWidth(width));
         count++;
         return width;
     }
@@ -77,6 +94,17 @@ class WidthMeasurements {
         orderBytes.resize(0);
         orderStart = 0;
         textBytes = 0;
+    }
+
+}
+
+/** A width of `WidthMeasurements` */
+private class MeasuredWidth {
+
+    public final width:Float;
+
+    public inline function new(width:Float) {
+        this.width = width;
     }
 
 }

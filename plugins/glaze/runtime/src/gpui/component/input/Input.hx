@@ -401,12 +401,12 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     /** Returns `(background, foreground)` colors for input-like components (Rust `input_style`). */
     @:allow(gpui.component)
-    static function inputStyleColors(disabled:Bool, cx:App):{background:Hsla, foreground:Hsla} {
+    static function inputStyleColors(disabled:Bool, cx:App):InputStyleColors {
         final theme = Theme.global(cx);
         if (disabled) {
-            return {background: theme.input.mixOklab(theme.transparent, 0.8), foreground: theme.mutedForeground};
+            return new InputStyleColors(theme.input.mixOklab(theme.transparent, 0.8), theme.mutedForeground);
         }
-        return {background: theme.inputBackground(), foreground: theme.foreground};
+        return new InputStyleColors(theme.inputBackground(), theme.foreground);
     }
 
     /**
@@ -695,6 +695,24 @@ class Input implements RenderOnce implements Styled implements Sizable implement
             });
         }
         return frame.render(window, cx);
+    }
+
+}
+
+/**
+ * The colors of `Input.inputStyleColors` (a class: the fields of an
+ * anonymous structure are read by name on hxcpp). Internal.
+ */
+@:noCompletion
+class InputStyleColors {
+
+    public final background:Hsla;
+
+    public final foreground:Hsla;
+
+    public inline function new(background:Hsla, foreground:Hsla) {
+        this.background = background;
+        this.foreground = foreground;
     }
 
 }

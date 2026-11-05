@@ -388,91 +388,93 @@ class VirtualList extends Element implements Styled {
         }
         final longestItemSize = measureItem(listWidth, window, cx);
 
-        final layoutId = base.interactivity.requestLayout(globalId, #if gpui_inspector inspectorId, #end window, cx, (style, window, cx) -> {
-            sizeLayout = window.withElementState(globalId, ItemSizeLayout, (box, _) -> {
-                if (box.value == null) box.value = new ItemSizeLayout();
-                final state = box.value;
+        // `base.interactivity.requestLayout(.., (style, window, cx) -> ..)` without
+        // the closure
+        final style = base.interactivity.requestLayoutStyle(globalId, #if gpui_inspector inspectorId, #end window, cx);
+        sizeLayout = window.withElementState(globalId, ItemSizeLayout, (box, _) -> {
+            if (box.value == null) box.value = new ItemSizeLayout();
+            final state = box.value;
 
-                // Including the gap between items for calculate the item size
-                final gapLength = axis == Horizontal ? style.gapWidth : style.gapHeight;
-                final gap = gapLength.toPixelsOf(fontSize, remSize);
+            // Including the gap between items for calculate the item size
+            final gapLength = axis == Horizontal ? style.gapWidth : style.gapHeight;
+            final gap = gapLength.toPixelsOf(fontSize, remSize);
 
-                if (!sameSizes(state.itemsSizes, itemSizes)) {
-                    state.itemsSizes = itemSizes;
-                    // Prepare each item's size by axis
-                    final sizes = [];
-                    for (i in 0...itemSizes.length) {
-                        final size = axis == Horizontal ? itemSizes[i].width : itemSizes[i].height;
-                        sizes.push(i + 1 == itemsCount ? size : size + gap);
-                    }
-                    state.sizes = sizes;
-
-                    // Prepare each item's origin by axis
-                    var cumulative = 0.;
-                    final origins = [];
-                    for (size in sizes) {
-                        origins.push(cumulative);
-                        cumulative += size;
-                    }
-                    state.origins = origins;
-
-                    if (axis == Horizontal) {
-                        state.contentSize = new Size(cumulative, state.contentSize.height);
-                    }
-                    else {
-                        state.contentSize = new Size(state.contentSize.width, cumulative);
-                    }
+            if (!sameSizes(state.itemsSizes, itemSizes)) {
+                state.itemsSizes = itemSizes;
+                // Prepare each item's size by axis
+                final sizes = [];
+                for (i in 0...itemSizes.length) {
+                    final size = axis == Horizontal ? itemSizes[i].width : itemSizes[i].height;
+                    sizes.push(i + 1 == itemsCount ? size : size + gap);
                 }
+                state.sizes = sizes;
+
+                // Prepare each item's origin by axis
+                var cumulative = 0.;
+                final origins = [];
+                for (size in sizes) {
+                    origins.push(cumulative);
+                    cumulative += size;
+                }
+                state.origins = origins;
 
                 if (axis == Horizontal) {
-                    state.contentSize = new Size(state.contentSize.width, longestItemSize.height);
+                    state.contentSize = new Size(cumulative, state.contentSize.height);
                 }
                 else {
-                    state.contentSize = new Size(longestItemSize.width, state.contentSize.height);
+                    state.contentSize = new Size(state.contentSize.width, cumulative);
                 }
-
-                return state.copy();
-            });
-
-            final axis = this.axis;
-            final contentSize = sizeLayout.contentSize;
-            return switch sizingBehavior {
-                case ListSizingBehavior.Infer:
-                    window.withTextStyle(style.textStyle(), window -> {
-                        return window.requestMeasuredLayout(style, (knownDimensions, availableSpace, _, _) -> {
-                            var width:Float;
-                            var height:Float;
-                            if (axis == Horizontal) {
-                                width = knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
-                                    case Definite(x): x;
-                                    case MinContent | MaxContent: contentSize.width;
-                                }
-                                // Deliberate deviation DEV-004: the original reads
-                                // `known_dimensions.width` here (a list as high as it is wide).
-                                height = knownDimensions.height != null ? knownDimensions.height : switch availableSpace.height {
-                                    case Definite(x): x;
-                                    case MinContent | MaxContent: contentSize.height;
-                                }
-                            }
-                            else {
-                                width = knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
-                                    case Definite(x): x;
-                                    case MinContent | MaxContent: contentSize.width;
-                                }
-                                height = knownDimensions.height != null ? knownDimensions.height : switch availableSpace.height {
-                                    case Definite(x): x;
-                                    case MinContent | MaxContent: contentSize.height;
-                                }
-                            }
-                            return new Size(width, height);
-                        });
-                    });
-                case ListSizingBehavior.Auto:
-                    window.withTextStyle(style.textStyle(), window -> {
-                        return window.requestLayout(style, null, cx);
-                    });
             }
+
+            if (axis == Horizontal) {
+                state.contentSize = new Size(state.contentSize.width, longestItemSize.height);
+            }
+            else {
+                state.contentSize = new Size(longestItemSize.width, state.contentSize.height);
+            }
+
+            return state.copy();
         });
+
+        final axis = this.axis;
+        final contentSize = sizeLayout.contentSize;
+        // `withTextStyle(style.textStyle(), ...)` without the closures (a
+        // `LayoutId` returned through a function value is boxed on hxcpp)
+        final textStyle = style.textStyle();
+        if (textStyle != null) window.pushTextStyle(textStyle);
+        final layoutId = switch sizingBehavior {
+            case ListSizingBehavior.Infer:
+                window.requestMeasuredLayout(style, (knownDimensions, availableSpace, _, _) -> {
+                    var width:Float;
+                    var height:Float;
+                    if (axis == Horizontal) {
+                        width = knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
+                            case Definite(x): x;
+                            case MinContent | MaxContent: contentSize.width;
+                        }
+                        // Deliberate deviation DEV-004: the original reads
+                        // `known_dimensions.width` here (a list as high as it is wide).
+                        height = knownDimensions.height != null ? knownDimensions.height : switch availableSpace.height {
+                            case Definite(x): x;
+                            case MinContent | MaxContent: contentSize.height;
+                        }
+                    }
+                    else {
+                        width = knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
+                            case Definite(x): x;
+                            case MinContent | MaxContent: contentSize.width;
+                        }
+                        height = knownDimensions.height != null ? knownDimensions.height : switch availableSpace.height {
+                            case Definite(x): x;
+                            case MinContent | MaxContent: contentSize.height;
+                        }
+                    }
+                    return new Size(width, height);
+                });
+            case ListSizingBehavior.Auto:
+                window.requestLayout(style, null, cx);
+        }
+        if (textStyle != null) window.popTextStyle();
 
         items.resize(0);
         this.sizeLayout = sizeLayout;
@@ -496,26 +498,30 @@ class VirtualList extends Element implements Styled {
      * Both edges are binary searches.
      */
     @:allow(gpui.base)
+    /**
+     * Item ends grow with the index, so the first item ending past `edge` is
+     * a partition point over the indices (a static function: a local one
+     * boxes `edge` on hxcpp).
+     */
+    static function endsBefore(origins:Array<Float>, sizes:Array<Float>, edge:Float):Int {
+        var low = 0;
+        var high = origins.length;
+        while (low < high) {
+            final mid = low + Std.int((high - low) / 2);
+            if (origins[mid] + sizes[mid] <= edge) {
+                low = mid + 1;
+            }
+            else {
+                high = mid;
+            }
+        }
+        return low;
+    }
+
     static function visibleRange(origins:Array<Float>, sizes:Array<Float>, viewportStart:Float, viewportEnd:Float):Array<Int> {
         final count = origins.length;
-        // Item ends grow with the index, so the first item ending past `edge` is
-        // a partition point over the indices.
-        function endsBefore(edge:Float):Int {
-            var low = 0;
-            var high = count;
-            while (low < high) {
-                final mid = low + Std.int((high - low) / 2);
-                if (origins[mid] + sizes[mid] <= edge) {
-                    low = mid + 1;
-                }
-                else {
-                    high = mid;
-                }
-            }
-            return low;
-        }
-        final first = endsBefore(viewportStart);
-        final pastEnd = endsBefore(viewportEnd);
+        final first = endsBefore(origins, sizes, viewportStart);
+        final pastEnd = endsBefore(origins, sizes, viewportEnd);
         final last = pastEnd == count ? count : Std.int(Math.min(pastEnd + 2, count));
         return [first, Std.int(Math.max(last, first))];
     }

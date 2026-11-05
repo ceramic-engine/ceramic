@@ -101,21 +101,24 @@ class HighlightStyle {
      * are UTF-8 byte ranges `[start, end)`.
      */
     public static function combineHighlights(a:Array<TextHighlight>, b:Array<TextHighlight>):Array<TextHighlight> {
-        final endpoints:Array<{position:Int, id:Int, isStart:Bool}> = [];
+        // Typed endpoints (anonymous structures are read by field name and
+        // box their numbers on hxcpp)
+        final endpoints:Array<HighlightEndpoint> = [];
         final highlights:Array<HighlightStyle> = [];
-        for (list in [a, b]) {
+        for (l in 0...2) {
+            final list = l == 0 ? a : b;
             for (entry in list) {
                 if (entry.end > entry.start) {
                     final id = highlights.length;
-                    endpoints.push({position: entry.start, id: id, isStart: true});
-                    endpoints.push({position: entry.end, id: id, isStart: false});
+                    endpoints.push(new HighlightEndpoint(entry.start, id, true));
+                    endpoints.push(new HighlightEndpoint(entry.end, id, false));
                     highlights.push(entry.style);
                 }
             }
         }
         // Stable sort by position (Rust sorts unstably by position only, the
         // result does not depend on the order of equal endpoints)
-        haxe.ds.ArraySort.sort(endpoints, (x, y) -> x.position - y.position);
+        HighlightEndpoint.sortByPosition(endpoints);
 
         final result:Array<TextHighlight> = [];
         final active:Array<Int> = [];
@@ -126,7 +129,7 @@ class HighlightStyle {
             if (ix > prevIndex && active.length > 0) {
                 var current = new HighlightStyle();
                 final sorted = active.copy();
-                sorted.sort((x, y) -> x - y);
+                sorted.sort((x, y) -> x < y ? -1 : (x > y ? 1 : 0));
                 for (id in sorted) {
                     current = current.highlight(highlights[id]);
                 }
@@ -140,6 +143,69 @@ class HighlightStyle {
             }
         }
         return result;
+    }
+
+}
+
+/** An endpoint of `HighlightStyle.combineHighlights` */
+private class HighlightEndpoint {
+
+    public final position:Int;
+
+    public final id:Int;
+
+    public final isStart:Bool;
+
+    public inline function new(position:Int, id:Int, isStart:Bool) {
+        this.position = position;
+        this.id = id;
+        this.isStart = isStart;
+    }
+
+    /**
+     * Stable sort by position (the order of `haxe.ds.ArraySort.sort` with
+     * `x.position - y.position`), typed: a merge sort without a function value
+     */
+    public static function sortByPosition(items:Array<HighlightEndpoint>):Void {
+        final count = items.length;
+        if (count < 2)
+            return;
+        var source = items;
+        var target:Array<HighlightEndpoint> = [];
+        target.resize(count);
+        var width = 1;
+        while (width < count) {
+            var start = 0;
+            while (start < count) {
+                final mid = start + width < count ? start + width : count;
+                final end = start + 2 * width < count ? start + 2 * width : count;
+                var i = start;
+                var j = mid;
+                var k = start;
+                while (i < mid && j < end) {
+                    // Ties take the left run first (stable)
+                    if (source[j].position < source[i].position) {
+                        target[k++] = source[j++];
+                    }
+                    else {
+                        target[k++] = source[i++];
+                    }
+                }
+                while (i < mid)
+                    target[k++] = source[i++];
+                while (j < end)
+                    target[k++] = source[j++];
+                start = end;
+            }
+            final swap = source;
+            source = target;
+            target = swap;
+            width *= 2;
+        }
+        if (source != items) {
+            for (n in 0...count)
+                items[n] = source[n];
+        }
     }
 
 }

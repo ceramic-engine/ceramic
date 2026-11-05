@@ -85,12 +85,18 @@ class TextLayout {
         final elementState = this;
 
         return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
-            final availableWidth:Null<Float> = switch availableSpace.width {
-                case Definite(x): x;
-                case _: null;
-            };
+            // The available width as a value (a `Null<Float>` boxes it on hxcpp)
+            var hasAvailableWidth = false;
+            var availableWidthValue = 0.0;
+            switch availableSpace.width {
+                case Definite(x):
+                    hasAvailableWidth = true;
+                    availableWidthValue = x;
+                case _:
+            }
             final wrapWidth:Null<Float> = if (textStyle.whiteSpace == Normal) {
-                knownDimensions.width != null ? knownDimensions.width : availableWidth;
+                knownDimensions.width != null ? knownDimensions.width
+                    : (hasAvailableWidth ? sameBox(elementState.wrapWidth, availableWidthValue) : null);
             }
             else {
                 null;
@@ -103,8 +109,8 @@ class TextLayout {
                 truncateWidth = if (knownDimensions.width != null) {
                     knownDimensions.width;
                 }
-                else if (availableWidth != null) {
-                    textStyle.lineClamp >= 0 ? availableWidth * textStyle.lineClamp : availableWidth;
+                else if (hasAvailableWidth) {
+                    textStyle.lineClamp >= 0 ? availableWidthValue * textStyle.lineClamp : availableWidthValue;
                 }
                 else {
                     null;
@@ -195,6 +201,14 @@ class TextLayout {
             elementState.setInner(lines, len, lineHeight, wrapWidth, truncateWidth, size);
             return size;
         });
+    }
+
+    /**
+     * `previous` when it holds `value` (no new box for the same width),
+     * else `value`
+     */
+    static inline function sameBox(previous:Null<Float>, value:Float):Null<Float> {
+        return previous != null && sameFloat(previous, value) ? previous : value;
     }
 
     /** The same value, zero signs included */

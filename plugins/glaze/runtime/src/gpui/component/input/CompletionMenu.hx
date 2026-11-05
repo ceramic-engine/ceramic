@@ -128,7 +128,8 @@ class CompletionMenu extends Model implements Render {
                 kept.push(range);
         }
         // `sort_by_key(|range| range.start)` is stable
-        haxe.ds.ArraySort.sort(kept, (a, b) -> a.start - b.start);
+        // A sign (a difference returned through the function value is boxed on hxcpp)
+        haxe.ds.ArraySort.sort(kept, (a, b) -> a.start < b.start ? -1 : (a.start > b.start ? 1 : 0));
 
         final merged:Array<Range> = [];
         for (range in kept) {
