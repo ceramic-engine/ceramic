@@ -18,6 +18,7 @@ import gpui.IntoElement;
 import gpui.ParentElement;
 import gpui.Pixels;
 import gpui.RenderOnce;
+import gpui.StyleBuilder;
 import gpui.StyleRefinement;
 import gpui.Styled;
 import gpui.Window;
@@ -533,9 +534,14 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     @:allow(gpui.component, tests)
     var outlineValue:Bool = false;
 
-    var borderCorners:Array<Bool> = [true, true, true, true];
+    /** Replaced, never changed in place (`withBorderCorners`) */
+    var borderCorners:Array<Bool> = ALL_SIDES;
 
-    var borderEdges:Array<Bool> = [true, true, true, true];
+    /** Replaced, never changed in place (`withBorderEdges`) */
+    var borderEdges:Array<Bool> = ALL_SIDES;
+
+    /** Every corner or edge (shared by the buttons that keep them all) */
+    static final ALL_SIDES:Array<Bool> = [true, true, true, true];
 
     @:allow(gpui.component, tests)
     var dropdownCaretValue:Bool = false;
@@ -1033,8 +1039,10 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         final children = childElements;
         final instanceStyle = base.style().clone();
         final normalStyle = style.normal(outlineValue, cx);
-        final selectedStyle = style.selected(outlineValue, cx);
-        final disabledStyle = style.disabled(outlineValue, cx);
+        // The state styles are only read by the base button while their
+        // state is on (`base.Button.resolvedStyle`): computed only then
+        final selectedStyle = selected ? style.selected(outlineValue, cx) : null;
+        final disabledStyle = disabled ? style.disabled(outlineValue, cx) : null;
         final iconSize:Size = this.iconSize != null ? this.iconSize : switch size {
             case Size(v): Size(v * 0.75);
             case _: size;
@@ -1093,10 +1101,12 @@ class Button implements RenderOnce implements Styled implements ParentElement im
                 }
             }
         }
-        if (borderCorners[0]) root.roundedTl(rounding);
-        if (borderCorners[1]) root.roundedTr(rounding);
-        if (borderCorners[3]) root.roundedBl(rounding);
-        if (borderCorners[2]) root.roundedBr(rounding);
+        // One length for the four corners (lengths are immutable values)
+        final roundingLength:gpui.AbsoluteLength = gpui.AbsoluteLength.Pixels(rounding);
+        if (borderCorners[0]) root.roundedTl(roundingLength);
+        if (borderCorners[1]) root.roundedTr(roundingLength);
+        if (borderCorners[3]) root.roundedBl(roundingLength);
+        if (borderCorners[2]) root.roundedBr(roundingLength);
         if (variantValue.isDefault() || outlineValue) {
             if (borderEdges[3]) root.borderL1();
             if (borderEdges[1]) root.borderR1();
@@ -1111,7 +1121,8 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             // to the pointer, it is not waiting for another click.
             if (interactive) {
                 final activeStyle = style.active(outline, cx);
-                root.active(s -> s.bg(activeStyle.bg).borderColor(activeStyle.border).textColor(activeStyle.fg));
+                // `root.active(s -> s.bg(..).borderColor(..).textColor(..))` without the closure
+                root.base.setActiveRefinement(new StyleBuilder().bg(activeStyle.bg).borderColor(activeStyle.border).textColor(activeStyle.fg).style());
                 if (hoverGroup != null) {
                     final idleBg = style.hovered(outline, cx).bg.opacity(0.5);
                     if (hoverGroupHeld) root.bg(idleBg);
@@ -1123,10 +1134,10 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         // hover state while one is present. If a selected button skipped it,
         // the stale state would keep hover colors after unselecting.
         final hoverStyle = !interactive || selected ? null : style.hovered(outline, cx);
-        root.hover(s -> {
-            if (hoverStyle == null) return s;
-            return s.bg(hoverStyle.bg).borderColor(hoverStyle.border).textColor(hoverStyle.fg);
-        });
+        // `root.hover(s -> ...)` without the closure (an empty refinement without a hover style)
+        root.base.setHoverRefinement(hoverStyle == null
+            ? new StyleRefinement()
+            : new StyleBuilder().bg(hoverStyle.bg).borderColor(hoverStyle.border).textColor(hoverStyle.fg).style());
         root.lineHeight(gpui.Prelude.relative(1.25)).refineStyle(instanceStyle);
 
         // The explicit name wins: it exists precisely for the cases where the
@@ -1165,21 +1176,26 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         }
         root.role(resolvedRole != null ? Explicit(resolvedRole) : Presentational)
             .selected(selected)
-            .disabled(disabled)
-            // Base layers semantic states over the builder chain, so the caller's
-            // own style is replayed inside each state to keep it the closest layer.
-            .styles(styles -> styles
+            .disabled(disabled);
+        // Base layers semantic states over the builder chain, so the caller's
+        // own style is replayed inside each state to keep it the closest layer.
+        if (selectedStyle != null) {
+            root.styles(styles -> styles
                 .selected(s -> s
                     .bg(selectedStyle.bg)
                     .borderColor(selectedStyle.border)
                     .textColor(selectedStyle.fg)
-                    .refineStyle(instanceStyle))
+                    .refineStyle(instanceStyle)));
+        }
+        if (disabledStyle != null) {
+            root.styles(styles -> styles
                 .disabled(s -> s
                     .bg(disabledStyle.bg)
                     .textColor(disabledStyle.fg)
                     .borderColor(disabledStyle.border)
                     .shadowNone()
                     .refineStyle(instanceStyle)));
+        }
         if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);
         if (toggledValue != null) root.a11y.toggled = toggledValue ? Toggled.True : Toggled.False;
         root.trackFocus(focusHandle).tabIndex(tabIndexValue).tabStop(tabStopValue).child(content);

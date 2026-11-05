@@ -553,6 +553,18 @@ class Div extends Element implements Styled implements ParentElement {
         return this;
     }
 
+    /** `hover(f)` with the refinement `f` would build (no closure). Internal. */
+    @:allow(gpui)
+    function setHoverRefinement(refinement:StyleRefinement):Void {
+        interactivity.hoverStyle = refinement;
+    }
+
+    /** `active(f)` with the refinement `f` would build (no closure). Internal. */
+    @:allow(gpui)
+    function setActiveRefinement(refinement:StyleRefinement):Void {
+        interactivity.activeStyle = refinement;
+    }
+
     /**
      * Set the given styles to be applied when this element's group is active.
      */
