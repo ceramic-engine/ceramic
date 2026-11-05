@@ -36,6 +36,9 @@ using gpui.base.StyledExt;
  */
 class HoverCard implements RenderOnce implements Styled {
 
+    /** The error thrown by `trigger(null)`. */
+    public static inline final NULL_TRIGGER_ERROR = 'HoverCard.trigger: the trigger element must not be null';
+
     final id:ElementId;
 
     final hoverCardStyle:StyleRefinement = new StyleRefinement();
@@ -68,7 +71,12 @@ class HoverCard implements RenderOnce implements Styled {
         return this;
     }
 
+    /**
+     * Set the trigger element. It is mandatory: a null trigger throws
+     * instead of rendering a card nobody can open.
+     */
     public function trigger(trigger:IntoElement):HoverCard {
+        if (trigger == null) throw NULL_TRIGGER_ERROR;
         triggerElement = trigger;
         return this;
     }

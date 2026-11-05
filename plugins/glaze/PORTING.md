@@ -51,6 +51,8 @@ Rust free functions used everywhere (`px`, `rems`, `relative`, `point`, `size`, 
 
 Null children: every implicit `IntoElement` conversion (`@:from` in `IntoElement.hx`) turns a null source into a null `IntoElement` without calling anything on it, and every `child` / `children` method (and child appenders such as `StatusBar.left`) skips nulls, so `child(null)` is the same as not calling `child()`. A ported `child` / `children` method must keep this: push only non-null children, so the indices and element ids of the others stay positional as in GPUI. It is an API convenience (Rust has `Option` with `children` or `when_some`), not a deviation of rendering.
 
+Null in the other slots: the `@:from` conversions of `IntoBreadcrumbItem`, `IntoResizablePanel`, `DescriptionText` and `RadarLabel` also turn a null source into null. Breadcrumb items and resizable panels are skipped like children (a group assigns panel indices and handles from the non-null panels only). `Message.avatar(null)` clears the avatar. A description item stores a null label or value as the empty text (Rust `"".into()`, the value `DescriptionItem::new` sets), so its cell is kept. A null radar label (or `Text(null)` / `Element(null)`) leaves its dimension unlabelled, as a chart without `label()`. A slot that must be set throws on null instead of rendering nothing: `HoverCard.trigger(null)` (kit and base) throws `HoverCard.trigger: the trigger element must not be null`.
+
 ## Units and geometry
 
 - Units are abstracts with implicit conversions, so they mostly document intent:

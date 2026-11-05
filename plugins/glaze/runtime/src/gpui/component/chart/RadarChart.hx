@@ -45,15 +45,21 @@ enum RadarLabelKind {
 /**
  * A `RadarLabelKind` from a string or an element (Rust `RadarLabel` and its
  * `From` conversions).
+ *
+ * A null string or element converts to a null label. A null label (or a
+ * `Text(null)` / `Element(null)` kind) is no label for that dimension: its
+ * spoke and values are drawn as usual, no text is drawn and no element is
+ * laid out, and its tooltip has no label title, exactly like a chart built
+ * without `label()` (a convenience beyond Rust, like `child(null)`).
  */
 abstract RadarLabel(RadarLabelKind) from RadarLabelKind to RadarLabelKind {
 
     @:from static inline function fromString(text:String):RadarLabel {
-        return Text(text);
+        return text != null ? Text(text) : null;
     }
 
     @:from static inline function fromElement(element:AnyElement):RadarLabel {
-        return Element(element);
+        return element != null ? Element(element) : null;
     }
 
     public inline function kind():RadarLabelKind {
@@ -302,9 +308,17 @@ class RadarChart<T> extends Plot {
         final elements:Array<AnyElement> = [];
 
         for (ix in 0...data.length) {
-            switch labelFn(data[ix]).kind() {
+            final label = labelFn(data[ix]);
+            // A null label is no label: nothing drawn, no tooltip title.
+            if (label == null) {
+                texts.push(null);
+                continue;
+            }
+            switch label.kind() {
                 case Text(text):
                     texts.push(text);
+                case Element(null):
+                    texts.push(null);
                 case Element(element):
                     texts.push(null);
 

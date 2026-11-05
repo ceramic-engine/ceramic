@@ -22,6 +22,14 @@ import gpui.Prelude.*;
 /**
  * The label or value of a description item: a string, rich `Text` or any
  * element.
+ *
+ * A null source converts to a null `DescriptionText`, and a description item
+ * takes a null label or value as no text: the empty string, which is what
+ * Rust's `DescriptionItem::new` puts in the value it leaves unset. The cell
+ * stays (with its padding, border, label width and the height of one empty
+ * text line), so `DescriptionItem.create(label).value(null)` and
+ * `item(label, null, span)` build the same list as
+ * `DescriptionItem.create(label).span(span)`.
  */
 abstract DescriptionText(AnyElement) to AnyElement {
 
@@ -30,15 +38,21 @@ abstract DescriptionText(AnyElement) to AnyElement {
     }
 
     @:from static function fromString(text:String):DescriptionText {
-        return new DescriptionText(div().child(text).intoAnyElement());
+        return text != null ? new DescriptionText(div().child(text).intoAnyElement()) : null;
     }
 
     @:from static function fromText(text:gpui.component.text.Text):DescriptionText {
-        return new DescriptionText(gpui.component.text.Text.TextTools.intoAnyElement(text));
+        return text != null ? new DescriptionText(gpui.component.text.Text.TextTools.intoAnyElement(text)) : null;
     }
 
     @:from static inline function fromIntoElement(element:IntoElement):DescriptionText {
-        return new DescriptionText(element.intoAnyElement());
+        return element != null ? new DescriptionText(element.intoAnyElement()) : null;
+    }
+
+    /** `text`, or the empty text (Rust `"".into()`) when it is null. */
+    @:allow(gpui.component.descriptionlist)
+    static function orEmpty(text:Null<DescriptionText>):DescriptionText {
+        return text != null ? text : fromString('');
     }
 
 }
@@ -57,13 +71,14 @@ class DescriptionItem {
     public final isSeparator:Bool;
 
     function new(label:Null<DescriptionText>, value:Null<DescriptionText>, span:Int, isSeparator:Bool) {
-        this.label = label;
-        this.valueText = value;
+        // A null label or value is no text: the empty text (see `DescriptionText`).
+        this.label = isSeparator ? null : DescriptionText.orEmpty(label);
+        this.valueText = isSeparator ? null : DescriptionText.orEmpty(value);
         this.spanValue = span;
         this.isSeparator = isSeparator;
     }
 
-    /** An item with the given label (empty value, span 1). */
+    /** An item with the given label (empty value, span 1; a null label is the empty text). */
     public static function create(label:DescriptionText):DescriptionItem {
         return new DescriptionItem(label, '', 1, false);
     }
@@ -76,8 +91,9 @@ class DescriptionItem {
         return new DescriptionItem(null, null, 0, true);
     }
 
+    /** Set the value (null for no text, the empty text). */
     public function value(value:DescriptionText):DescriptionItem {
-        if (!isSeparator) valueText = value;
+        if (!isSeparator) valueText = DescriptionText.orEmpty(value);
         return this;
     }
 

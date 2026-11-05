@@ -223,15 +223,19 @@ class ResizablePanelGroup implements RenderOnce {
 /**
  * Rust `impl Into<ResizablePanel>`: a panel, or any element (wrapped in a
  * new panel).
+ *
+ * A null element or group converts to a null panel (no panel is created),
+ * which `child` / `children` of the group skip: the group is the one built
+ * without it (a convenience beyond Rust, like `child(null)`).
  */
 abstract IntoResizablePanel(ResizablePanel) from ResizablePanel to ResizablePanel {
 
     @:from static function fromElement(element:IntoElement):IntoResizablePanel {
-        return Resizable.resizablePanel().child(element);
+        return element != null ? Resizable.resizablePanel().child(element) : null;
     }
 
     @:from static function fromGroup(group:ResizablePanelGroup):IntoResizablePanel {
-        return Resizable.resizablePanel().child(group);
+        return group != null ? Resizable.resizablePanel().child(group) : null;
     }
 
 }

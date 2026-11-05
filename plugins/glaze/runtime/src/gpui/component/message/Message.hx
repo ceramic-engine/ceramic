@@ -146,13 +146,18 @@ class Message implements RenderOnce implements Styled {
         return this;
     }
 
-    /** Set an optional avatar or other sender identity element. */
+    /**
+     * Set an optional avatar or other sender identity element.
+     *
+     * A null avatar means no avatar: the message renders as if no avatar
+     * had been set (no avatar slot, no footer inset).
+     */
     public function avatar(avatar:IntoElement):Message {
-        avatarValue = new MessageAvatar().child(avatar);
+        avatarValue = avatar != null ? new MessageAvatar().child(avatar) : null;
         return this;
     }
 
-    /** Set a fully configured avatar slot. */
+    /** Set a fully configured avatar slot (null for none). */
     public function avatarSlot(avatar:MessageAvatar):Message {
         avatarValue = avatar;
         return this;

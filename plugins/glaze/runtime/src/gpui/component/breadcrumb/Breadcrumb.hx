@@ -91,11 +91,14 @@ class BreadcrumbItem implements RenderOnce implements Styled {
 
 /**
  * Rust `impl Into<BreadcrumbItem>`: an item, or a string label.
+ *
+ * A null label converts to a null item, which `child` / `children` skip
+ * (a convenience beyond Rust, like `child(null)`).
  */
 abstract IntoBreadcrumbItem(BreadcrumbItem) from BreadcrumbItem to BreadcrumbItem {
 
     @:from static inline function fromString(label:String):IntoBreadcrumbItem {
-        return new BreadcrumbItem(label);
+        return label != null ? new BreadcrumbItem(label) : null;
     }
 
 }
