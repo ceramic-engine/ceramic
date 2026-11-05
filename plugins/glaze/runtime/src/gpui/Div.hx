@@ -346,6 +346,13 @@ class Div extends Element implements Styled implements ParentElement {
         return this;
     }
 
+    /** `onAction()` with an entry made once (`Interactivity.bubbleActionEntry`). Internal. */
+    @:allow(gpui)
+    function onActionEntry(entry:Interactivity.TypedActionListener):Div {
+        interactivity.addActionEntry(entry);
+        return this;
+    }
+
     /**
      * Bind the given callback to an action dispatch, based on a dynamic action parameter
      * instead of a type parameter.

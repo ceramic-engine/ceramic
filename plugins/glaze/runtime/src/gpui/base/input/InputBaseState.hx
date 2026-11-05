@@ -4063,57 +4063,57 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // not exported: the GPUI port has no accessibility tree.
         var element = div().id(EDITOR_ELEMENT_ID).keyContext(CONTEXT);
         if (isEditable()) {
-            element.onAction(Backspace, listeners.backspace)
-                .onAction(Delete, listeners.delete)
-                .onAction(DeleteToBeginningOfLine, listeners.deleteToBeginningOfLine)
-                .onAction(DeleteToEndOfLine, listeners.deleteToEndOfLine)
-                .onAction(DeleteToPreviousWordStart, listeners.deletePreviousWord)
-                .onAction(DeleteToNextWordEnd, listeners.deleteNextWord)
-                .onAction(gpui.base.input.InputActions.Enter, listeners.enter)
-                .onAction(gpui.base.input.InputActions.Escape, listeners.escape)
-                .onAction(Paste, listeners.pasteAction)
-                .onAction(Cut, listeners.cut)
-                .onAction(Undo, listeners.undo)
-                .onAction(Redo, listeners.redo);
+            element.onActionEntry(listeners.backspaceEntry)
+                .onActionEntry(listeners.deleteEntry)
+                .onActionEntry(listeners.deleteToBeginningOfLineEntry)
+                .onActionEntry(listeners.deleteToEndOfLineEntry)
+                .onActionEntry(listeners.deletePreviousWordEntry)
+                .onActionEntry(listeners.deleteNextWordEntry)
+                .onActionEntry(listeners.enterEntry)
+                .onActionEntry(listeners.escapeEntry)
+                .onActionEntry(listeners.pasteActionEntry)
+                .onActionEntry(listeners.cutEntry)
+                .onActionEntry(listeners.undoEntry)
+                .onActionEntry(listeners.redoEntry);
             if (isMultiLine()) {
-                element.onAction(IndentInline, listeners.indentInline)
-                    .onAction(OutdentInline, listeners.outdentInline)
-                    .onAction(gpui.base.input.InputActions.Indent, listeners.indentBlock)
-                    .onAction(gpui.base.input.InputActions.Outdent, listeners.outdentBlock);
+                element.onActionEntry(listeners.indentInlineEntry)
+                    .onActionEntry(listeners.outdentInlineEntry)
+                    .onActionEntry(listeners.indentBlockEntry)
+                    .onActionEntry(listeners.outdentBlockEntry);
             }
         }
-        element.onAction(MoveLeft, listeners.left)
-            .onAction(MoveRight, listeners.right)
-            .onAction(SelectLeft, listeners.selectLeft)
-            .onAction(SelectRight, listeners.selectRight);
+        element.onActionEntry(listeners.leftEntry)
+            .onActionEntry(listeners.rightEntry)
+            .onActionEntry(listeners.selectLeftEntry)
+            .onActionEntry(listeners.selectRightEntry);
         if (isMultiLine()) {
-            element.onAction(MoveUp, listeners.up)
-                .onAction(MoveDown, listeners.down)
-                .onAction(SelectUp, listeners.selectUp)
-                .onAction(SelectDown, listeners.selectDown)
-                .onAction(MovePageUp, listeners.pageUp)
-                .onAction(MovePageDown, listeners.pageDown)
-                .onAction(AddCursorAbove, listeners.addCursorAbove)
-                .onAction(AddCursorBelow, listeners.addCursorBelow);
+            element.onActionEntry(listeners.upEntry)
+                .onActionEntry(listeners.downEntry)
+                .onActionEntry(listeners.selectUpEntry)
+                .onActionEntry(listeners.selectDownEntry)
+                .onActionEntry(listeners.pageUpEntry)
+                .onActionEntry(listeners.pageDownEntry)
+                .onActionEntry(listeners.addCursorAboveEntry)
+                .onActionEntry(listeners.addCursorBelowEntry);
         }
-        element.onAction(SelectAll, listeners.onActionSelectAll)
-            .onAction(SelectToStartOfLine, listeners.selectToStartOfLine)
-            .onAction(SelectToEndOfLine, listeners.selectToEndOfLine)
-            .onAction(SelectToPreviousWordStart, listeners.selectToPreviousWord)
-            .onAction(SelectToNextWordEnd, listeners.selectToNextWord)
-            .onAction(MoveHome, listeners.home)
-            .onAction(MoveEnd, listeners.end)
-            .onAction(MoveToStart, listeners.moveToStart)
-            .onAction(MoveToEnd, listeners.moveToEnd)
-            .onAction(MoveToPreviousWord, listeners.moveToPreviousWord)
-            .onAction(MoveToNextWord, listeners.moveToNextWord)
-            .onAction(SelectToStart, listeners.selectToStart)
-            .onAction(SelectToEnd, listeners.selectToEnd)
-            .onAction(ShowCharacterPalette, listeners.showCharacterPalette)
-            .onAction(ActivateToken, listeners.activateToken)
-            .onAction(Copy, listeners.copy)
-            .onAction(gpui.base.input.InputActions.Search, listeners.onActionSearch)
-            .onAction(Replace, listeners.onActionReplace)
+        element.onActionEntry(listeners.onActionSelectAllEntry)
+            .onActionEntry(listeners.selectToStartOfLineEntry)
+            .onActionEntry(listeners.selectToEndOfLineEntry)
+            .onActionEntry(listeners.selectToPreviousWordEntry)
+            .onActionEntry(listeners.selectToNextWordEntry)
+            .onActionEntry(listeners.homeEntry)
+            .onActionEntry(listeners.endEntry)
+            .onActionEntry(listeners.moveToStartEntry)
+            .onActionEntry(listeners.moveToEndEntry)
+            .onActionEntry(listeners.moveToPreviousWordEntry)
+            .onActionEntry(listeners.moveToNextWordEntry)
+            .onActionEntry(listeners.selectToStartEntry)
+            .onActionEntry(listeners.selectToEndEntry)
+            .onActionEntry(listeners.showCharacterPaletteEntry)
+            .onActionEntry(listeners.activateTokenEntry)
+            .onActionEntry(listeners.copyEntry)
+            .onActionEntry(listeners.onActionSearchEntry)
+            .onActionEntry(listeners.onActionReplaceEntry)
             .onMouseDown(MouseButton.Left, listeners.onMouseDown)
             .onMouseDown(MouseButton.Right, listeners.onMouseDown)
             .onMouseUp(MouseButton.Left, listeners.onMouseUp)
@@ -4330,6 +4330,54 @@ private class InputRenderListeners {
     public final activateToken:(ActivateToken, Window, App) -> Void;
     public final modifiersChanged:(gpui.ModifiersChangedEvent, Window, App) -> Void;
 
+    /** The action entries of the listeners (immutable, added to the element each frame) */
+    public final backspaceEntry:gpui.Interactivity.TypedActionListener;
+    public final deleteEntry:gpui.Interactivity.TypedActionListener;
+    public final deleteToBeginningOfLineEntry:gpui.Interactivity.TypedActionListener;
+    public final deleteToEndOfLineEntry:gpui.Interactivity.TypedActionListener;
+    public final deletePreviousWordEntry:gpui.Interactivity.TypedActionListener;
+    public final deleteNextWordEntry:gpui.Interactivity.TypedActionListener;
+    public final enterEntry:gpui.Interactivity.TypedActionListener;
+    public final escapeEntry:gpui.Interactivity.TypedActionListener;
+    public final pasteActionEntry:gpui.Interactivity.TypedActionListener;
+    public final cutEntry:gpui.Interactivity.TypedActionListener;
+    public final undoEntry:gpui.Interactivity.TypedActionListener;
+    public final redoEntry:gpui.Interactivity.TypedActionListener;
+    public final indentInlineEntry:gpui.Interactivity.TypedActionListener;
+    public final outdentInlineEntry:gpui.Interactivity.TypedActionListener;
+    public final indentBlockEntry:gpui.Interactivity.TypedActionListener;
+    public final outdentBlockEntry:gpui.Interactivity.TypedActionListener;
+    public final leftEntry:gpui.Interactivity.TypedActionListener;
+    public final rightEntry:gpui.Interactivity.TypedActionListener;
+    public final selectLeftEntry:gpui.Interactivity.TypedActionListener;
+    public final selectRightEntry:gpui.Interactivity.TypedActionListener;
+    public final upEntry:gpui.Interactivity.TypedActionListener;
+    public final downEntry:gpui.Interactivity.TypedActionListener;
+    public final selectUpEntry:gpui.Interactivity.TypedActionListener;
+    public final selectDownEntry:gpui.Interactivity.TypedActionListener;
+    public final pageUpEntry:gpui.Interactivity.TypedActionListener;
+    public final pageDownEntry:gpui.Interactivity.TypedActionListener;
+    public final addCursorAboveEntry:gpui.Interactivity.TypedActionListener;
+    public final addCursorBelowEntry:gpui.Interactivity.TypedActionListener;
+    public final onActionSelectAllEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToStartOfLineEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToEndOfLineEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToPreviousWordEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToNextWordEntry:gpui.Interactivity.TypedActionListener;
+    public final homeEntry:gpui.Interactivity.TypedActionListener;
+    public final endEntry:gpui.Interactivity.TypedActionListener;
+    public final moveToStartEntry:gpui.Interactivity.TypedActionListener;
+    public final moveToEndEntry:gpui.Interactivity.TypedActionListener;
+    public final moveToPreviousWordEntry:gpui.Interactivity.TypedActionListener;
+    public final moveToNextWordEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToStartEntry:gpui.Interactivity.TypedActionListener;
+    public final selectToEndEntry:gpui.Interactivity.TypedActionListener;
+    public final showCharacterPaletteEntry:gpui.Interactivity.TypedActionListener;
+    public final activateTokenEntry:gpui.Interactivity.TypedActionListener;
+    public final copyEntry:gpui.Interactivity.TypedActionListener;
+    public final onActionSearchEntry:gpui.Interactivity.TypedActionListener;
+    public final onActionReplaceEntry:gpui.Interactivity.TypedActionListener;
+
     public function new(entity:Entity<InputBaseState>) {
         backspace = (event, window, cx) -> entity.update(cx, (state, cx) -> state.backspace(event, window, cx));
         delete = (event, window, cx) -> entity.update(cx, (state, cx) -> state.delete(event, window, cx));
@@ -4398,6 +4446,51 @@ private class InputRenderListeners {
             }
         };
         modifiersChanged = (_, _, cx) -> entity.update(cx, (_, cx) -> cx.notify());
+        backspaceEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Backspace, backspace);
+        deleteEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Delete, delete);
+        deleteToBeginningOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToBeginningOfLine, deleteToBeginningOfLine);
+        deleteToEndOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToEndOfLine, deleteToEndOfLine);
+        deletePreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToPreviousWordStart, deletePreviousWord);
+        deleteNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToNextWordEnd, deleteNextWord);
+        enterEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Enter, enter);
+        escapeEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Escape, escape);
+        pasteActionEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Paste, pasteAction);
+        cutEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Cut, cut);
+        undoEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Undo, undo);
+        redoEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Redo, redo);
+        indentInlineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(IndentInline, indentInline);
+        outdentInlineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(OutdentInline, outdentInline);
+        indentBlockEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Indent, indentBlock);
+        outdentBlockEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Outdent, outdentBlock);
+        leftEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveLeft, left);
+        rightEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveRight, right);
+        selectLeftEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectLeft, selectLeft);
+        selectRightEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectRight, selectRight);
+        upEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveUp, up);
+        downEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveDown, down);
+        selectUpEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectUp, selectUp);
+        selectDownEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectDown, selectDown);
+        pageUpEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MovePageUp, pageUp);
+        pageDownEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MovePageDown, pageDown);
+        addCursorAboveEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(AddCursorAbove, addCursorAbove);
+        addCursorBelowEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(AddCursorBelow, addCursorBelow);
+        onActionSelectAllEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectAll, onActionSelectAll);
+        selectToStartOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToStartOfLine, selectToStartOfLine);
+        selectToEndOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToEndOfLine, selectToEndOfLine);
+        selectToPreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToPreviousWordStart, selectToPreviousWord);
+        selectToNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToNextWordEnd, selectToNextWord);
+        homeEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveHome, home);
+        endEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveEnd, end);
+        moveToStartEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToStart, moveToStart);
+        moveToEndEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToEnd, moveToEnd);
+        moveToPreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToPreviousWord, moveToPreviousWord);
+        moveToNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToNextWord, moveToNextWord);
+        selectToStartEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToStart, selectToStart);
+        selectToEndEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToEnd, selectToEnd);
+        showCharacterPaletteEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(ShowCharacterPalette, showCharacterPalette);
+        activateTokenEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(ActivateToken, activateToken);
+        copyEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Copy, copy);
+        onActionSearchEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Search, onActionSearch);
+        onActionReplaceEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Replace, onActionReplace);
     }
-
 }

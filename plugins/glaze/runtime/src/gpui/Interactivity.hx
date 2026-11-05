@@ -639,6 +639,23 @@ class Interactivity {
     }
 
     /**
+     * The entry `onAction(type, listener)` registers: immutable, so an owner
+     * that keeps its listeners can make it once and add it each frame
+     * (`addActionEntry`). Internal.
+     */
+    @:allow(gpui)
+    static function bubbleActionEntry<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):TypedActionListener {
+        return new BubbleActionListener(type, cast listener);
+    }
+
+    /** Adds an entry made by `bubbleActionEntry` (`onAction` without a new entry). Internal. */
+    @:allow(gpui)
+    function addActionEntry(entry:TypedActionListener):Void {
+        if (actionListeners == null) actionListeners = [];
+        actionListeners.push(entry);
+    }
+
+    /**
      * Bind the given callback to an action dispatch, based on a dynamic action parameter
      * instead of a type parameter. Useful for component libraries that want to expose
      * action bindings to their users.

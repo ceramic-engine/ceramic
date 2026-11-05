@@ -147,6 +147,9 @@ class TextLayout {
             final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize);
             var finalText = text;
             var finalRuns = runs;
+            // The unclipped shaping of a text that fits: the same call as
+            // the final one when the text does not wrap (reused, not repeated)
+            var fittingLines:Null<Array<WrappedLine>> = null;
             if (truncateWidth != null) {
                 if (textStyle.lineClamp >= 0 && wrapWidth != null) {
                     final truncated = lineWrapper.truncateWrappedLine(text, wrapWidth, textStyle.lineClamp, truncationAffix, runs, truncateFrom);
@@ -165,6 +168,8 @@ class TextLayout {
                             }
                         }
                     }
+                    if (fits)
+                        fittingLines = unclipped;
                     if (!fits) {
                         // The truncation decision sums per-character advances,
                         // which overestimates the shaped width (no kerning), truncating
@@ -178,10 +183,15 @@ class TextLayout {
             }
             final len = Utf8.byteLength(finalText);
 
-            final lines = try @:privateAccess window.textSystem().shapeTextWith(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp, true) catch (e:Dynamic) {
-                ceramic.Shortcuts.log.error('Failed to shape text: $e');
-                null;
-            };
+            final lines = if (fittingLines != null && wrapWidth == null && textStyle.lineClamp < 0) {
+                fittingLines;
+            }
+            else {
+                try @:privateAccess window.textSystem().shapeTextWith(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp, true) catch (e:Dynamic) {
+                    ceramic.Shortcuts.log.error('Failed to shape text: $e');
+                    null;
+                };
+            }
             if (lines == null) {
                 elementState.setInner([], 0, lineHeight, wrapWidth, truncateWidth, new Size(0, 0));
                 return new Size(0, 0);
