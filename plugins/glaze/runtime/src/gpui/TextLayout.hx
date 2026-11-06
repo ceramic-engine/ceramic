@@ -12,7 +12,7 @@ import gpui.util.Utf8;
  * Rust shares it through `Rc<RefCell<Option<TextLayoutInner>>>`: here the
  * instance itself is shared, `measured` tells whether the inner state exists.
  */
-class TextLayout {
+class TextLayout extends TaffyLayoutEngine.MeasuredNode {
 
     /** `true` once measured (Rust `Some(TextLayoutInner)`) */
     public var measured(default, null):Bool = false;
@@ -31,7 +31,9 @@ class TextLayout {
 
     var _bounds:Null<Bounds> = null;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Requests a measured layout node for `text` with the current text style
@@ -82,135 +84,159 @@ class TextLayout {
         final lineHeight = window.pixelSnap(textStyle.lineHeight.toPixelsOf(fontSize, window.remSize()));
 
         final runs:Array<TextRun> = runs != null ? runs : defaultRuns(textStyle, Utf8.byteLength(text));
-        final elementState = this;
 
-        return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
-            // The available width as a value (a `Null<Float>` boxes it on hxcpp)
-            var hasAvailableWidth = false;
-            var availableWidthValue = 0.0;
-            switch availableSpace.width {
-                case Definite(x):
-                    hasAvailableWidth = true;
-                    availableWidthValue = x;
-                case _:
+        // The measure is this object (`measureNode`), with the values it reads
+        // kept here: no closure and no node context per text node
+        pendingText = text;
+        pendingRuns = runs;
+        pendingStyle = textStyle;
+        pendingFontSize = fontSize;
+        pendingLineHeight = lineHeight;
+        return @:privateAccess window.requestMeasuredNode(@:privateAccess gpui.Style.sharedDefaultStyle(), this);
+    }
+
+    var pendingText:String = '';
+
+    var pendingRuns:Null<Array<TextRun>> = null;
+
+    var pendingStyle:Null<TextStyle> = null;
+
+    var pendingFontSize:Float = 0.0;
+
+    var pendingLineHeight:Float = 0.0;
+
+    @:noCompletion
+    override function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
+        final text = pendingText;
+        final runs = pendingRuns;
+        final textStyle = pendingStyle;
+        final fontSize:Pixels = pendingFontSize;
+        final lineHeight:Pixels = pendingLineHeight;
+        // The available width as a value (a `Null<Float>` boxes it on hxcpp)
+        var hasAvailableWidth = false;
+        var availableWidthValue = 0.0;
+        switch availableSpace.width {
+            case Definite(x):
+                hasAvailableWidth = true;
+                availableWidthValue = x;
+            case _:
+        }
+        final wrapWidth:Null<Float> = if (textStyle.whiteSpace == Normal) {
+            knownDimensions.width != null ? knownDimensions.width
+                : (hasAvailableWidth ? sameBox(this.wrapWidth, availableWidthValue) : null);
+        }
+        else {
+            null;
+        };
+
+        var truncateWidth:Null<Float> = null;
+        var truncationAffix = '';
+        var truncateFrom:TruncateFrom = End;
+        if (textStyle.textOverflow != null) {
+            truncateWidth = if (knownDimensions.width != null) {
+                knownDimensions.width;
             }
-            final wrapWidth:Null<Float> = if (textStyle.whiteSpace == Normal) {
-                knownDimensions.width != null ? knownDimensions.width
-                    : (hasAvailableWidth ? sameBox(elementState.wrapWidth, availableWidthValue) : null);
+            else if (hasAvailableWidth) {
+                textStyle.lineClamp >= 0 ? availableWidthValue * textStyle.lineClamp : availableWidthValue;
             }
             else {
                 null;
             };
-
-            var truncateWidth:Null<Float> = null;
-            var truncationAffix = '';
-            var truncateFrom:TruncateFrom = End;
-            if (textStyle.textOverflow != null) {
-                truncateWidth = if (knownDimensions.width != null) {
-                    knownDimensions.width;
-                }
-                else if (hasAvailableWidth) {
-                    textStyle.lineClamp >= 0 ? availableWidthValue * textStyle.lineClamp : availableWidthValue;
-                }
-                else {
-                    null;
-                };
-                switch textStyle.textOverflow {
-                    case Truncate(s):
-                        truncationAffix = s;
-                        truncateFrom = End;
-                    case TruncateStart(s):
-                        truncationAffix = s;
-                        truncateFrom = Start;
-                    case TruncateMiddle(s):
-                        truncationAffix = s;
-                        truncateFrom = Middle;
-                }
+            switch textStyle.textOverflow {
+                case Truncate(s):
+                    truncationAffix = s;
+                    truncateFrom = End;
+                case TruncateStart(s):
+                    truncationAffix = s;
+                    truncateFrom = Start;
+                case TruncateMiddle(s):
+                    truncationAffix = s;
+                    truncateFrom = Middle;
             }
+        }
 
-            // Only use cached layout if:
-            // 1. We have a cached size
-            // 2. wrap_width matches (or both are None)
-            // 3. truncate_width is None (if truncate_width is Some, we need to re-layout
-            //    because the previous layout may have been computed without truncation)
-            // 4. the cached layout was not truncated (a truncated layout answers an
-            //    unconstrained probe with the truncated size, which poisons intrinsic
-            //    sizing with whatever width some earlier measure pass happened to use)
-            if (elementState.measured
-                && elementState.size != null
-                && (wrapWidth == null || wrapWidth == elementState.wrapWidth)
-                && truncateWidth == null
-                && elementState.truncateWidth == null) {
-                return elementState.size;
+        // Only use cached layout if:
+        // 1. We have a cached size
+        // 2. wrap_width matches (or both are None)
+        // 3. truncate_width is None (if truncate_width is Some, we need to re-layout
+        //    because the previous layout may have been computed without truncation)
+        // 4. the cached layout was not truncated (a truncated layout answers an
+        //    unconstrained probe with the truncated size, which poisons intrinsic
+        //    sizing with whatever width some earlier measure pass happened to use)
+        if (this.measured
+            && this.size != null
+            && (wrapWidth == null || wrapWidth == this.wrapWidth)
+            && truncateWidth == null
+            && this.truncateWidth == null) {
+            return this.size;
+        }
+
+        final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize);
+        var finalText = text;
+        var finalRuns = runs;
+        // The unclipped shaping of a text that fits: the same call as
+        // the final one when the text does not wrap (reused, not repeated)
+        var fittingLines:Null<Array<WrappedLine>> = null;
+        if (truncateWidth != null) {
+            if (textStyle.lineClamp >= 0 && wrapWidth != null) {
+                final truncated = lineWrapper.truncateWrappedLine(text, wrapWidth, textStyle.lineClamp, truncationAffix, runs, truncateFrom);
+                finalText = truncated.text;
+                finalRuns = truncated.runs;
             }
-
-            final lineWrapper = @:privateAccess cx.textSystem().lineWrapperOfStyle(textStyle, fontSize);
-            var finalText = text;
-            var finalRuns = runs;
-            // The unclipped shaping of a text that fits: the same call as
-            // the final one when the text does not wrap (reused, not repeated)
-            var fittingLines:Null<Array<WrappedLine>> = null;
-            if (truncateWidth != null) {
-                if (textStyle.lineClamp >= 0 && wrapWidth != null) {
-                    final truncated = lineWrapper.truncateWrappedLine(text, wrapWidth, textStyle.lineClamp, truncationAffix, runs, truncateFrom);
+            else {
+                var fits = false;
+                final unclipped = try @:privateAccess window.textSystem().shapeTextWith(text, fontSize, runs, null, -1, true) catch (e:Dynamic) null;
+                if (unclipped != null) {
+                    fits = true;
+                    for (line in unclipped) {
+                        if (line.width() > truncateWidth) {
+                            fits = false;
+                            break;
+                        }
+                    }
+                }
+                if (fits)
+                    fittingLines = unclipped;
+                if (!fits) {
+                    // The truncation decision sums per-character advances,
+                    // which overestimates the shaped width (no kerning), truncating
+                    // text that fits exactly in its measured width. Skip truncation
+                    // whenever the honestly-shaped text fits.
+                    final truncated = lineWrapper.truncateLine(text, truncateWidth, truncationAffix, runs, truncateFrom);
                     finalText = truncated.text;
                     finalRuns = truncated.runs;
                 }
-                else {
-                    var fits = false;
-                    final unclipped = try @:privateAccess window.textSystem().shapeTextWith(text, fontSize, runs, null, -1, true) catch (e:Dynamic) null;
-                    if (unclipped != null) {
-                        fits = true;
-                        for (line in unclipped) {
-                            if (line.width() > truncateWidth) {
-                                fits = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (fits)
-                        fittingLines = unclipped;
-                    if (!fits) {
-                        // The truncation decision sums per-character advances,
-                        // which overestimates the shaped width (no kerning), truncating
-                        // text that fits exactly in its measured width. Skip truncation
-                        // whenever the honestly-shaped text fits.
-                        final truncated = lineWrapper.truncateLine(text, truncateWidth, truncationAffix, runs, truncateFrom);
-                        finalText = truncated.text;
-                        finalRuns = truncated.runs;
-                    }
-                }
             }
-            final len = Utf8.byteLength(finalText);
+        }
+        final len = Utf8.byteLength(finalText);
 
-            final lines = if (fittingLines != null && wrapWidth == null && textStyle.lineClamp < 0) {
-                fittingLines;
-            }
-            else {
-                try @:privateAccess window.textSystem().shapeTextWith(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp, true) catch (e:Dynamic) {
-                    ceramic.Shortcuts.log.error('Failed to shape text: $e');
-                    null;
-                };
-            }
-            if (lines == null) {
-                elementState.setInner([], 0, lineHeight, wrapWidth, truncateWidth, new Size(0, 0));
-                return new Size(0, 0);
-            }
+        final lines = if (fittingLines != null && wrapWidth == null && textStyle.lineClamp < 0) {
+            fittingLines;
+        }
+        else {
+            try @:privateAccess window.textSystem().shapeTextWith(finalText, fontSize, finalRuns, wrapWidth, textStyle.lineClamp, true) catch (e:Dynamic) {
+                ceramic.Shortcuts.log.error('Failed to shape text: $e');
+                null;
+            };
+        }
+        if (lines == null) {
+            this.setInner([], 0, lineHeight, wrapWidth, truncateWidth, new Size(0, 0));
+            return new Size(0, 0);
+        }
 
-            var width:Float = 0;
-            var height:Float = 0;
-            for (line in lines) {
-                height += line.sizeHeight(lineHeight);
-                width = Math.fceil(Math.max(width, line.width()));
-            }
-            // Sizes are immutable: the last one is kept when it is the same
-            final previous = elementState.size;
-            final size = previous != null && sameFloat(previous.width, width) && sameFloat(previous.height, height)
-                ? previous
-                : new Size(width, height);
-            elementState.setInner(lines, len, lineHeight, wrapWidth, truncateWidth, size);
-            return size;
-        });
+        var width:Float = 0;
+        var height:Float = 0;
+        for (line in lines) {
+            height += line.sizeHeight(lineHeight);
+            width = Math.fceil(Math.max(width, line.width()));
+        }
+        // Sizes are immutable: the last one is kept when it is the same
+        final previous = this.size;
+        final size = previous != null && sameFloat(previous.width, width) && sameFloat(previous.height, height)
+            ? previous
+            : new Size(width, height);
+        this.setInner(lines, len, lineHeight, wrapWidth, truncateWidth, size);
+        return size;
     }
 
     /**

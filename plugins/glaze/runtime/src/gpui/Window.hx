@@ -1798,6 +1798,12 @@ class Window implements WindowInvalidator {
         return layoutEngine.requestMeasuredLayout(style, remSize(), _scaleFactor, measure);
     }
 
+    /** `requestMeasuredLayout()` with the measure as an object (`TextLayout`). Internal. */
+    @:allow(gpui)
+    function requestMeasuredNode(style:Style, measure:TaffyLayoutEngine.MeasuredNode):LayoutId {
+        return layoutEngine.requestMeasuredNode(style, remSize(), _scaleFactor, measure);
+    }
+
     /**
      * Compute the layout for the given id within the given available space.
      */

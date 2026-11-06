@@ -25,15 +25,42 @@ import taffy.util.OptionalFloat;
  */
 typedef MeasureFn = (knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App) -> Size;
 
-private class NodeContext {
-    public var measure:MeasureFn;
-    /** The arguments of the last call to `measure`, null before the first one */
-    public var lastKnown:Null<SizeOf<Null<Float>>> = null;
-    public var lastAvailable:Null<SizeOf<AvailableSpace>> = null;
-    public function new(measure:MeasureFn) {
-        this.measure = measure;
+/**
+ * The measure of a measured layout node, as an object: the node keeps it as
+ * its context. Internal: `requestMeasuredLayout()` wraps its function value
+ * in one (`FunctionMeasuredNode`); an element state can extend it to be its
+ * own measure (`TextLayout`: no closure and no context object per node).
+ */
+@:noCompletion
+class MeasuredNode {
+    /** The arguments of the last call to `measureNode`, null before the first one */
+    @:allow(gpui) var measuredKnown:Null<SizeOf<Null<Float>>> = null;
+    @:allow(gpui) var measuredAvailable:Null<SizeOf<AvailableSpace>> = null;
+
+    function new() {}
+
+    /** The size of the node (what a `MeasureFn` returns) */
+    @:allow(gpui)
+    function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
+        throw 'abstract';
     }
 }
+
+/** A `MeasuredNode` over a `MeasureFn` (`TaffyLayoutEngine.requestMeasuredLayout`) */
+private class FunctionMeasuredNode extends MeasuredNode {
+    final measure:MeasureFn;
+
+    public function new(measure:MeasureFn) {
+        super();
+        this.measure = measure;
+    }
+
+    override function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
+        return measure(knownDimensions, availableSpace, window, cx);
+    }
+}
+
+private typedef NodeContext = MeasuredNode;
 
 /**
  * The layout nodes requested by one view while it renders (see
@@ -248,7 +275,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
      * The next node to adopt for a request of the innermost view (children,
      * or a measure function for a measured leaf), or -1 to create one.
      */
-    function adoptNode(children:Null<Array<LayoutId>>, measure:Null<MeasureFn>):Int {
+    function adoptNode(children:Null<Array<LayoutId>>, measure:Null<MeasuredNode>):Int {
         if (viewNodesStack.length == 0) {
             return -1;
         }
@@ -288,9 +315,11 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
             // The new element measures like the one it replaces did last:
             // its state (text lines...) is the one its prepaint expects
             final context = data.context;
-            context.measure = measure;
-            if (context.lastKnown != null) {
-                measure(context.lastKnown, context.lastAvailable, measureWindow, measureCx);
+            measure.measuredKnown = context.measuredKnown;
+            measure.measuredAvailable = context.measuredAvailable;
+            data.context = measure;
+            if (measure.measuredKnown != null) {
+                measure.measureNode(measure.measuredKnown, measure.measuredAvailable, measureWindow, measureCx);
             }
         }
         // A retained nested view detached its root when it retained it again
@@ -414,12 +443,18 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     public function requestMeasuredLayout(style:Style, remSize:Pixels, scaleFactor:Float, measure:MeasureFn):LayoutId {
+        return requestMeasuredNode(style, remSize, scaleFactor, new FunctionMeasuredNode(measure));
+    }
+
+    /** `requestMeasuredLayout()` with the measure as an object (the node's context). Internal. */
+    @:noCompletion
+    public function requestMeasuredNode(style:Style, remSize:Pixels, scaleFactor:Float, measure:MeasuredNode):LayoutId {
         final adopted = adoptNode(null, measure);
         if (adopted != -1) {
             return adopted;
         }
         final taffyStyle = toTaffy(style, remSize, scaleFactor);
-        return created(tree.newLeafWithContext(taffyStyle, new NodeContext(measure)));
+        return created(tree.newLeafWithContext(taffyStyle, measure));
     }
 
     /**
@@ -584,9 +619,9 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
         lastAvailableWidth = width;
         lastAvailableHeight = height;
 
-        nodeContext.lastKnown = known;
-        nodeContext.lastAvailable = available;
-        final measured = nodeContext.measure(known, available, measureWindow, measureCx);
+        nodeContext.measuredKnown = known;
+        nodeContext.measuredAvailable = available;
+        final measured = nodeContext.measureNode(known, available, measureWindow, measureCx);
         // Set after the measure (which may measure other leaves)
         lastMeasuredWidth = ceilToDevicePixel(Math.max(measured.width, 0.0), scaleFactor);
         lastMeasuredHeight = ceilToDevicePixel(Math.max(measured.height, 0.0), scaleFactor);

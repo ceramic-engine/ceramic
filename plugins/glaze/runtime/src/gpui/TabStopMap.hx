@@ -80,8 +80,9 @@ class TabStopMap {
      */
     public function insert(focusHandle:FocusHandle):Void {
         insertionHistory.push(Insert(focusHandle));
-        final path = currentPath.copy();
-        path.push(focusHandle.tabIndexValue);
+        // Paths are never changed: the last one is shared while the group
+        // path and the tab index are the same (focusables of one group)
+        final path = pathFor(focusHandle.tabIndexValue);
         final node = new TabStopNode(path, insertionHistory.length - 1, focusHandle.isTabStop);
         byId.set(focusHandle.id, node);
         // insert_or_replace: insertion indices are unique, so this always inserts
@@ -92,6 +93,30 @@ class TabStopMap {
         else {
             order.insert(index, node);
         }
+    }
+
+    /** The last path made by `pathFor` */
+    var lastPath:Null<Array<Int>> = null;
+
+    /** `currentPath` followed by `tabIndex`, sharing the last such path when equal */
+    function pathFor(tabIndex:Int):Array<Int> {
+        final current = currentPath;
+        final last = lastPath;
+        if (last != null && last.length == current.length + 1 && last[current.length] == tabIndex) {
+            var same = true;
+            for (i in 0...current.length) {
+                if (last[i] != current[i]) {
+                    same = false;
+                    break;
+                }
+            }
+            if (same)
+                return last;
+        }
+        final path = current.copy();
+        path.push(tabIndex);
+        lastPath = path;
+        return path;
     }
 
     /**
