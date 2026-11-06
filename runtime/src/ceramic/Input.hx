@@ -194,7 +194,9 @@ class Input extends Entity {
     function resetDeltas() {
 
         while (gamepadGyroKeys.length > 0) {
-            var key = gamepadGyroKeys.pop();
+            // Last value without `pop()`, which boxes the Int it returns (`Null<Int>`) on hxcpp
+            var key = gamepadGyroKeys[gamepadGyroKeys.length - 1];
+            gamepadGyroKeys.resize(gamepadGyroKeys.length - 1);
             var deltas = gamepadGyroDeltas.get(key);
             if (deltas != null) {
                 deltas[0] = 0;
