@@ -17,6 +17,13 @@ class WrappedLineLayout {
     /** The width of the line, if it was wrapped */
     public var wrapWidth:Null<Float>;
 
+    /**
+     * The lines of the last single line text shaped into this layout by the
+     * port's text layouts (`WindowTextSystem.shapeTextWith`), shared by the
+     * next ones with the same text and decoration runs. Internal.
+     */
+    @:noCompletion public var sharedLines:Null<Array<WrappedLine>> = null;
+
     public function new(unwrappedLayout:LineLayout, ?wrapBoundaries:Array<WrapBoundary>, ?wrapWidth:Float) {
         this.unwrappedLayout = unwrappedLayout;
         this.wrapBoundaries = wrapBoundaries != null ? wrapBoundaries : [];

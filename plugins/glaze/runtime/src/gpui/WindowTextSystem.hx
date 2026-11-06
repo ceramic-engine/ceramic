@@ -116,7 +116,9 @@ class WindowTextSystem {
         var runIndex = nextRunWithLength(runs, 0);
         var runLeft = runIndex < runs.length ? runs[runIndex].len : 0;
 
-        final lines:Array<WrappedLine> = [];
+        // Made when a line is pushed (a single line text can return a shared array)
+        var lines:Null<Array<WrappedLine>> = null;
+        var single:Null<Array<WrappedLine>> = null;
         final maxWrapLines = lineClamp;
         var wrappedLines = 0;
 
@@ -221,7 +223,23 @@ class WindowTextSystem {
             final layout = lineLayoutCache.layoutWrappedLine(lineText, fontSize, fontRuns, wrapWidth, maxWrapLines >= 0 ? Std.int(Math.max(0, maxWrapLines - wrappedLines)) : -1);
             wrappedLines += layout.wrapBoundaries.length;
 
-            lines.push(new WrappedLine(layout, lineText, decorationRuns));
+            if (shareDecorations && lineCount == 1) {
+                // The port's text layouts only read their lines: one text in
+                // one line shares the array of the last text shaped into the
+                // same layout with the same text and decoration runs
+                final shared = layout.sharedLines;
+                if (shared != null && shared[0].text == lineText && shared[0].decorationRuns == decorationRuns) {
+                    single = shared;
+                }
+                else {
+                    single = [new WrappedLine(layout, lineText, decorationRuns)];
+                    layout.sharedLines = single;
+                }
+            }
+            else {
+                if (lines == null) lines = [];
+                lines.push(new WrappedLine(layout, lineText, decorationRuns));
+            }
 
             // Skip `\n` character.
             if (runIndex < runs.length) {
@@ -237,7 +255,8 @@ class WindowTextSystem {
         fontRuns.resize(0);
         scratchFontRuns = fontRuns;
         scratchFontRunPool = fontRunPool;
-        return lines;
+        if (single != null) return single;
+        return lines != null ? lines : [];
     }
 
     /** The decoration runs of a line made of the whole of `run`, shared */
