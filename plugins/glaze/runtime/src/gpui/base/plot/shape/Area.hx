@@ -41,7 +41,7 @@ class Area<T> {
 
     /** Set the data of the Area. */
     public function data(data:Iterable<T>):Area<T> {
-        dataValues = [for (v in data) v];
+        dataValues = gpui.util.Iterables.toArray(data);
         return this;
     }
 

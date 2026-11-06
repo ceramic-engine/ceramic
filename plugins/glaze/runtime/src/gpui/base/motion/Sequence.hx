@@ -150,9 +150,7 @@ class Sequence<T> {
      * Appends steps built elsewhere, in order.
      */
     public function withSteps(steps:Iterable<SequenceStep<T>>):Sequence<T> {
-        for (step in steps) {
-            stepList.push(step);
-        }
+        gpui.util.Iterables.append(stepList, steps);
         return this;
     }
 

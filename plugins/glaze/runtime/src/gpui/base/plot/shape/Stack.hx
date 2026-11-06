@@ -65,13 +65,13 @@ class Stack<T> {
 
     /** Set the data to be stacked */
     public function data(data:Iterable<T>):Stack<T> {
-        dataValues = [for (v in data) v];
+        dataValues = gpui.util.Iterables.toArray(data);
         return this;
     }
 
     /** Set the keys (series) for stacking */
     public function keys(keys:Iterable<String>):Stack<T> {
-        keyValues = [for (k in keys) k];
+        keyValues = gpui.util.Iterables.toArray(keys);
         return this;
     }
 

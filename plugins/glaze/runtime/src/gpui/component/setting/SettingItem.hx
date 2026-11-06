@@ -105,7 +105,7 @@ class SettingItem {
      * have no title/description but should still show up in search results.
      */
     public function keywords(keywords:Iterable<String>):SettingItem {
-        final keywords = [for (keyword in keywords) keyword];
+        final keywords = gpui.util.Iterables.toArray(keywords);
         switch kind {
             case Item(title, description, _, layout, disabled, field):
                 kind = Item(title, description, keywords, layout, disabled, field);

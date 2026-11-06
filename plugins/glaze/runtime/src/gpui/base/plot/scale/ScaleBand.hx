@@ -36,7 +36,7 @@ class ScaleBand<T> implements Scale<T> {
      * its lower end in domain order.
      */
     public function new(domain:Iterable<T>, range:Array<Float>) {
-        for (value in domain) {
+        for (value in gpui.util.Iterables.asArray(domain)) {
             if (indices.indexOf(value) < 0) {
                 indices.push(value);
             }

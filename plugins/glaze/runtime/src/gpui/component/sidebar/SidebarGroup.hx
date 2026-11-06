@@ -47,7 +47,7 @@ class SidebarGroup<E:SidebarItem> implements SidebarItem {
      * See also `child`.
      */
     public function children(children:Iterable<E>):SidebarGroup<E> {
-        for (child in children) if (child != null) childItems.push(child);
+        gpui.util.Iterables.appendNonNull(childItems, children);
         return this;
     }
 

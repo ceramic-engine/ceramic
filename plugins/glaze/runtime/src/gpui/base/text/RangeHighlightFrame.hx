@@ -43,7 +43,7 @@ class RangeHighlightFrame {
     static function create(text:RenderedText, highlights:Iterable<RangeHighlight>):Null<RangeHighlightFrame> {
         final pieces:Array<{key:TextLeafKey, color:RangedColor}> = [];
         var ix = 0;
-        for (highlight in highlights) {
+        for (highlight in gpui.util.Iterables.asArray(highlights)) {
             final leafRanges = text.index().resolve(highlight.range());
             if (leafRanges == null) {
                 throw new RangeHighlightException(InvalidRange(ix));

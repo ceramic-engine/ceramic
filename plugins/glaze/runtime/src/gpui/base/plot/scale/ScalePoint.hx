@@ -27,7 +27,7 @@ class ScalePoint<T> implements Scale<T> {
      * sits in the middle of the range.
      */
     public function new(domain:Iterable<T>, range:Array<Float>) {
-        this.domain = [for (v in domain) v];
+        this.domain = gpui.util.Iterables.toArray(domain);
         final len = this.domain.length;
         final r0 = f(range[0]);
         final rangeDiff = f(f(range[1]) - r0);

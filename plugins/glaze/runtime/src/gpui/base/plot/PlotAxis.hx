@@ -141,7 +141,7 @@ class PlotAxis {
 
     /** Set the tick labels of the x-axis. */
     public function xLabel(labels:Iterable<AxisText>):PlotAxis {
-        xLabels = [for (l in labels) l];
+        xLabels = gpui.util.Iterables.toArray(labels);
         return this;
     }
 
@@ -168,7 +168,7 @@ class PlotAxis {
 
     /** Set the tick labels of the y-axis. */
     public function yLabel(labels:Iterable<AxisText>):PlotAxis {
-        yLabels = [for (l in labels) l];
+        yLabels = gpui.util.Iterables.toArray(labels);
         return this;
     }
 

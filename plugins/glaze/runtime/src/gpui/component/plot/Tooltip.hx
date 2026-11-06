@@ -424,7 +424,7 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
 
     /** Set the dots of the tooltip. */
     public function dots(dots:Iterable<Dot>):Tooltip {
-        dotsValue = [for (d in dots) d];
+        dotsValue = gpui.util.Iterables.toArray(dots);
         return this;
     }
 

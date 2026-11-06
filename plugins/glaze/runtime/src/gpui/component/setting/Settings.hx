@@ -115,7 +115,7 @@ class Settings implements RenderOnce implements Sizable {
      * Add pages to the settings.
      */
     public function pages(pages:Iterable<SettingPage>):Settings {
-        for (page in pages) pagesValue.push(page);
+        gpui.util.Iterables.append(pagesValue, pages);
         return this;
     }
 

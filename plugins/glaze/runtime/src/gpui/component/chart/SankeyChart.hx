@@ -198,8 +198,8 @@ class SankeyChart<T> extends Plot {
 
     public function new(nodes:Iterable<T>, links:Iterable<SankeyLink>, ?pos:haxe.PosInfos) {
         super();
-        this.nodes = [for (n in nodes) n];
-        this.links = [for (l in links) l];
+        this.nodes = gpui.util.Iterables.toArray(nodes);
+        this.links = gpui.util.Iterables.toArray(links);
         idValue = Chart.callerId(pos);
     }
 

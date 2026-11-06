@@ -76,7 +76,7 @@ class LineChart<T> extends Plot {
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
-        this.data = [for (d in data) d];
+        this.data = gpui.util.Iterables.toArray(data);
         idValue = Chart.callerId(pos);
     }
 

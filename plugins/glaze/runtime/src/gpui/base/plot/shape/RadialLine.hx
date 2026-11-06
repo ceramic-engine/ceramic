@@ -64,7 +64,7 @@ class RadialLine<T> {
 
     /** Set the data of the RadialLine. */
     public function data(data:Iterable<T>):RadialLine<T> {
-        dataValues = [for (v in data) v];
+        dataValues = gpui.util.Iterables.toArray(data);
         return this;
     }
 

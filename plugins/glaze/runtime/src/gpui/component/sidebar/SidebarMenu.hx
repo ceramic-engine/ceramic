@@ -61,7 +61,7 @@ class SidebarMenu implements SidebarItem implements Styled {
      * (replaces the items added before, like the original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenu {
-        items = [for (child in children) if (child != null) child];
+        items = gpui.util.Iterables.toArrayNonNull(children);
         return this;
     }
 
@@ -267,7 +267,7 @@ class SidebarMenuItem implements SidebarItem implements Styled {
      * original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenuItem {
-        childItems = [for (child in children) if (child != null) child];
+        childItems = gpui.util.Iterables.toArrayNonNull(children);
         return this;
     }
 

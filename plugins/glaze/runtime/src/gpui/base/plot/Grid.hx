@@ -30,13 +30,13 @@ class Grid {
 
     /** Set the positions of the vertical lines, from the left of the plot. */
     public function x(x:Iterable<Float>):Grid {
-        xValues = [for (v in x) f(v)];
+        xValues = [for (v in gpui.util.Iterables.asArray(x)) f(v)];
         return this;
     }
 
     /** Set the positions of the horizontal lines, from the top of the plot. */
     public function y(y:Iterable<Float>):Grid {
-        yValues = [for (v in y) f(v)];
+        yValues = [for (v in gpui.util.Iterables.asArray(y)) f(v)];
         return this;
     }
 

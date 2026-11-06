@@ -352,7 +352,7 @@ class DiffState extends Model {
         }, cx.app);
         _selection = selection;
         _geometry = geometry;
-        _files = [for (file in files) file];
+        _files = gpui.util.Iterables.toArray(files);
         expanded = [for (_ in _files) []];
         _presentations = [for (_ in _files) null];
         fileIxs = fileIxsOf(_files);
@@ -622,7 +622,7 @@ class DiffState extends Model {
     public function setFiles(files:Iterable<DiffFile>, cx:Context<DiffState>):Void {
         if (window != null && selectionIsLocal(cx.app))
             TextSelection.clearForWindow(window, cx.app);
-        _files = [for (file in files) file];
+        _files = gpui.util.Iterables.toArray(files);
         fileIxs = fileIxsOf(_files);
         for (path in [for (path in collapsed.keys()) path]) {
             if (!fileIxs.exists(path))

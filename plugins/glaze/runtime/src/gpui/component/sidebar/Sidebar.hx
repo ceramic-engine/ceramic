@@ -308,7 +308,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * Add multiple children to the sidebar, the children must implement `Collapsible`
      */
     public function children(children:Iterable<E>):Sidebar<E> {
-        for (child in children) if (child != null) content.push(child);
+        gpui.util.Iterables.appendNonNull(content, children);
         return this;
     }
 

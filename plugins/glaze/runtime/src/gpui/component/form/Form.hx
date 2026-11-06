@@ -127,7 +127,7 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Add multiple children to the form.
      */
     public function children(fields:Iterable<Field>):Form {
-        for (field in fields) if (field != null) this.fields.push(field);
+        gpui.util.Iterables.appendNonNull(this.fields, fields);
         return this;
     }
 

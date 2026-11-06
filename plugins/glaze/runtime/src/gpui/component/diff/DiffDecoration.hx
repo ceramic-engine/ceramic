@@ -67,7 +67,7 @@ class Decorations {
     final files:Map<String, Array<DiffDecoration>> = new Map();
 
     function new(decorations:Iterable<DiffDecoration>) {
-        for (decoration in decorations) {
+        for (decoration in gpui.util.Iterables.asArray(decorations)) {
             final path = decoration.range().path();
             var list = files.get(path);
             if (list == null) {
@@ -105,7 +105,7 @@ class GutterMarkers {
     var count = 0;
 
     function new(markers:Iterable<DiffGutterMarker>) {
-        for (marker in markers) {
+        for (marker in gpui.util.Iterables.asArray(markers)) {
             final key = marker.position().key();
             if (!lines.exists(key)) {
                 lines.set(key, marker);

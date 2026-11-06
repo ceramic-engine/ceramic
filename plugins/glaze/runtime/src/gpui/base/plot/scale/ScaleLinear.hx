@@ -33,7 +33,7 @@ class ScaleLinear implements Scale<Float> {
     public function new(domain:Iterable<Float>, range:Array<Float>, f32Values:Bool = false) {
         var start:Null<Float> = null;
         var end:Null<Float> = null;
-        for (value in domain) {
+        for (value in gpui.util.Iterables.asArray(domain)) {
             final v = f32Values ? f(value) : value;
             if (start == null) {
                 start = v;

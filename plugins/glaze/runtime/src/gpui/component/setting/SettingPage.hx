@@ -143,7 +143,7 @@ class SettingPage {
      * Add multiple setting groups to the page.
      */
     public function groups(groups:Iterable<SettingGroup>):SettingPage {
-        for (group in groups) groupsValue.push(group);
+        gpui.util.Iterables.append(groupsValue, groups);
         return this;
     }
 

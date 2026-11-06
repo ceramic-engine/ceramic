@@ -47,7 +47,7 @@ class DiagnosticSet {
     }
 
     public function extend(diagnostics:Iterable<Diagnostic>):Void {
-        for (diagnostic in diagnostics)
+        for (diagnostic in gpui.util.Iterables.asArray(diagnostics))
             push(diagnostic);
     }
 

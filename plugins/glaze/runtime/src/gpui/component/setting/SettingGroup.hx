@@ -114,7 +114,7 @@ class SettingGroup implements Styled {
      * Add multiple setting items to the group.
      */
     public function items(items:Iterable<SettingItem>):SettingGroup {
-        for (item in items) this.itemsValue.push(item);
+        gpui.util.Iterables.append(this.itemsValue, items);
         return this;
     }
 

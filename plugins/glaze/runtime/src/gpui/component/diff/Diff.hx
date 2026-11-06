@@ -204,8 +204,7 @@ class Diff implements RenderOnce implements Styled {
      */
     public function annotations(annotations:Iterable<DiffAnnotation>):Diff {
         final index = new Annotations();
-        for (annotation in annotations)
-            index.items.push(annotation);
+        gpui.util.Iterables.append(index.items, annotations);
         for (ix in 0...index.items.length) {
             final annotation = index.items[ix];
             final position = annotation.position();

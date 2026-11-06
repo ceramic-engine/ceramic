@@ -57,7 +57,7 @@ class Line<T> {
 
     /** Set the data of the Line. */
     public function data(data:Iterable<T>):Line<T> {
-        dataValues = [for (v in data) v];
+        dataValues = gpui.util.Iterables.toArray(data);
         return this;
     }
 

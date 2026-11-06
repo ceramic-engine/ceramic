@@ -116,7 +116,7 @@ class Chart {
         final top = f(padding[0]);
         final bottom = f(padding[1]);
         final domainValues:Array<Float> = domain != null ? [domain[0], domain[1]] : {
-            final list = [for (v in values) v];
+            final list = gpui.util.Iterables.toArray(values);
             list.push(0.);
             list;
         };
@@ -138,7 +138,7 @@ class Chart {
      */
     public static function valueAxisGap(labels:Iterable<String>, window:Window):Float {
         var gap = VALUE_AXIS_GAP;
-        for (label in labels) {
+        for (label in gpui.util.Iterables.asArray(labels)) {
             gap = Math.max(gap, f(PlotLabel.measureTextWidth(label, PlotLabel.TEXT_SIZE, window) + PlotLabel.TEXT_GAP * 2.));
         }
         return gap;
