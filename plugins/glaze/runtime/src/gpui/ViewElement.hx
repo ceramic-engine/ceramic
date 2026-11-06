@@ -260,7 +260,21 @@ class ViewElement extends Element {
     function renderView(window:Window, cx:App):AnyElement {
         if (view != null) {
             final render:Render = cast view;
-            return cx.updateEntity(view, (_, viewCx) -> (render.render(window, cast viewCx) : AnyElement));
+            // `cx.updateEntity(view, (_, viewCx) -> render.render(window, viewCx))`
+            // without the closure (the same steps as `App.updateEntity`)
+            final viewCx:Context<Dynamic> = cast @:privateAccess view.slot();
+            Window.recordAccess(viewCx.id);
+            @:privateAccess cx.startUpdate();
+            var element:AnyElement;
+            try {
+                element = (render.render(window, viewCx) : AnyElement);
+            }
+            catch (e:haxe.Exception) {
+                @:privateAccess cx.pendingUpdates--;
+                throw gpui.util.Exceptions.rethrow(e);
+            }
+            @:privateAccess cx.finishUpdate();
+            return element;
         }
         else {
             final component = this.component;

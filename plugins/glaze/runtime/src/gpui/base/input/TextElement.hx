@@ -638,89 +638,25 @@ class TextElement extends Element {
 /// impl TextElement
 
     function paintMouseListeners(hitbox:Hitbox, window:Window, cx:App):Void {
+        // The listeners in entries, without closures (`TextScrollEntry`...),
+        // registered in the same order
+        final state = this.state;
         // Text with room to scroll keeps the wheel from the scroll areas
         // around it; its own listener scrolls it in the bubble phase.
-        {
-            final state = this.state;
-            final hitboxId = hitbox.id;
-            window.onMouseEvent(Scroll, (event, phase, window, cx) -> {
-                final event:ScrollEvent = cast event;
-                if (phase == Capture && window.shouldHitboxIdHandleScroll(hitboxId)
-                    && state.read(cx).takesScroll(event.delta.pixelDelta(window.lineHeight()))) {
-                    ScrollBounce.claimScroll(hitboxId, cx);
-                }
-            });
-        }
-
+        @:privateAccess window.addMouseListenerEntry(new TextScrollEntry(state, hitbox.id));
         // Every touch is offered as a drag first; that is how a tap's mouse
         // events are later told apart from a mouse's.
-        window.onMouseEvent(TouchDrag, (event, phase, _, cx) -> {
-            final event:TouchDragEvent = cast event;
-            if (phase.capture() && event.phase == Started) {
-                GlobalState.noteTouch(cx);
-            }
-        });
-
+        @:privateAccess window.addMouseListenerEntry(TEXT_TOUCH_DRAG);
         // A long press is touch's way to select: the word under the finger,
         // then whatever the finger sweeps over. Claiming it keeps the moves
         // out of the pan recognizer, so the input does not scroll instead.
-        {
-            final state = this.state;
-            window.onMouseEvent(LongPress, (event, phase, window, cx) -> {
-                final event:LongPressEvent = cast event;
-                if (!phase.bubble()) {
-                    return;
-                }
-                if (event.phase == Started) {
-                    if (window.defaultPrevented() || !hitbox.isHovered(window)) {
-                        return;
-                    }
-                    if (!state.update(cx, (state, cx) -> state.onLongPress(event, window, cx))) {
-                        return;
-                    }
-                    window.captureLongPress(state);
-                }
-                else if (!window.hasLongPressCapture(state)) {
-                    return;
-                }
-                else {
-                    state.update(cx, (state, cx) -> {
-                        state.onLongPress(event, window, cx);
-                    });
-                }
-                window.preventDefault();
-                cx.stopPropagation();
-            });
-        }
-
-        {
-            final state = this.state;
-            window.onMouseEvent(MouseMove, (event, _, window, cx) -> {
-                final event:MouseMoveEvent = cast event;
-                if (event.pressedButton == Left) {
-                    state.update(cx, (state, cx) -> {
-                        state.onDragMove(event, window, cx);
-                    });
-                }
-            });
-        }
-
-        {
-            final state = this.state;
-            window.onMouseEvent(MouseUp, (_, phase, _, cx) -> {
-                if (phase != Bubble) {
-                    return;
-                }
-
-                // Stop auto-scroll when mouse up, and also stop selecting.
-                state.update(cx, (state, _) -> {
-                    state.autoScroll.stop();
-                    state.selecting = false;
-                    state.columnSelectStart = null;
-                });
-            });
-        }
+        @:privateAccess window.addMouseListenerEntry(new TextLongPressEntry(state, hitbox));
+        @:privateAccess window.addMouseListenerEntry(new TextMouseMoveEntry(state));
+        @:privateAccess window.addMouseListenerEntry(new TextMouseUpEntry(state));
     }
+
+    /** The touch drag listener (captures nothing: one entry for every text element) */
+    static final TEXT_TOUCH_DRAG = new TextTouchDragEntry();
 
     /**
      * Lays out the carets and updates the scroll position for the active one.
@@ -3174,6 +3110,132 @@ class TextElementPrepaintState {
             for (info in cursorInfos)
                 new CursorRenderInfo(new Bounds(new Point(info.bounds.origin.x, info.bounds.origin.y + cursorScrollOffset.y), info.bounds.size), info.isActive)
         ];
+    }
+
+}
+
+/** Claims the wheel of text with room to scroll (`TextElement.paintMouseListeners`) */
+private class TextScrollEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:Entity<InputBaseState>;
+
+    final hitboxId:Int;
+
+    public function new(state:Entity<InputBaseState>, hitboxId:Int) {
+        super(Scroll, null, null, null);
+        this.state = state;
+        this.hitboxId = hitboxId;
+    }
+
+    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+        final event:ScrollEvent = cast event;
+        if (phase == Capture && window.shouldHitboxIdHandleScroll(hitboxId)
+            && state.read(cx).takesScroll(event.delta.pixelDelta(window.lineHeight()))) {
+            ScrollBounce.claimScroll(hitboxId, cx);
+        }
+    }
+
+}
+
+/** Notes touches (`TextElement.paintMouseListeners`) */
+private class TextTouchDragEntry extends gpui.Window.MouseListenerEntry {
+
+    public function new() {
+        super(TouchDrag, null, null, null);
+    }
+
+    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+        final event:TouchDragEvent = cast event;
+        if (phase.capture() && event.phase == Started) {
+            GlobalState.noteTouch(cx);
+        }
+    }
+
+}
+
+/** Long press selection (`TextElement.paintMouseListeners`) */
+private class TextLongPressEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:Entity<InputBaseState>;
+
+    final textHitbox:Hitbox;
+
+    public function new(state:Entity<InputBaseState>, textHitbox:Hitbox) {
+        super(LongPress, null, null, null);
+        this.state = state;
+        this.textHitbox = textHitbox;
+    }
+
+    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+        final event:LongPressEvent = cast event;
+        if (!phase.bubble()) {
+            return;
+        }
+        if (event.phase == Started) {
+            if (window.defaultPrevented() || !textHitbox.isHovered(window)) {
+                return;
+            }
+            if (!state.update(cx, (state, cx) -> state.onLongPress(event, window, cx))) {
+                return;
+            }
+            window.captureLongPress(state);
+        }
+        else if (!window.hasLongPressCapture(state)) {
+            return;
+        }
+        else {
+            state.update(cx, (state, cx) -> {
+                state.onLongPress(event, window, cx);
+            });
+        }
+        window.preventDefault();
+        cx.stopPropagation();
+    }
+
+}
+
+/** Drag selection moves (`TextElement.paintMouseListeners`) */
+private class TextMouseMoveEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:Entity<InputBaseState>;
+
+    public function new(state:Entity<InputBaseState>) {
+        super(MouseMove, null, null, null);
+        this.state = state;
+    }
+
+    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+        final event:MouseMoveEvent = cast event;
+        if (event.pressedButton == Left) {
+            state.update(cx, (state, cx) -> {
+                state.onDragMove(event, window, cx);
+            });
+        }
+    }
+
+}
+
+/** Ends the drag selection (`TextElement.paintMouseListeners`) */
+private class TextMouseUpEntry extends gpui.Window.MouseListenerEntry {
+
+    final state:Entity<InputBaseState>;
+
+    public function new(state:Entity<InputBaseState>) {
+        super(MouseUp, null, null, null);
+        this.state = state;
+    }
+
+    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+        if (phase != Bubble) {
+            return;
+        }
+
+        // Stop auto-scroll when mouse up, and also stop selecting.
+        state.update(cx, (state, _) -> {
+            state.autoScroll.stop();
+            state.selecting = false;
+            state.columnSelectStart = null;
+        });
     }
 
 }
