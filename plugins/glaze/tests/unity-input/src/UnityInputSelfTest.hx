@@ -4,6 +4,17 @@ package;
 
 import ceramic.ScanCode;
 import ceramic.ScrollUnit;
+import gpui.Context;
+import gpui.Entity;
+import gpui.IntoElement;
+import gpui.Model;
+import gpui.Render;
+import gpui.Window;
+import gpui.base.Root;
+import gpui.base.input.InputState;
+import gpui.component.input.Input;
+
+import gpui.Prelude.*;
 
 /**
  * Input self test of Ceramic's Unity backend, in batch mode (no window):
@@ -20,7 +31,18 @@ import ceramic.ScrollUnit;
  *   `textCommit`, after the `keyDown` of the same frame; IME composition;
  * - clipboard through `GUIUtility.systemCopyBuffer` (the previous text of
  *   the system clipboard is put back);
- * - touch down then cancel.
+ * - touch down then cancel;
+ * - window focus: Unity's `OnApplicationFocus` and `OnApplicationPause`
+ *   messages sent to the Ceramic game object (`SendMessage`, reaching the
+ *   `UnityLifecycle` component) give `windowFocusChange`, the background
+ *   and foreground events on mobile, and GPUI windows deactivated then
+ *   activated again;
+ * - virtual keyboard: a simulated `TouchScreenKeyboard`
+ *   (`FakeVirtualKeyboard`) opens when a gpui-kit `Input` gets the focus,
+ *   with the keyboard of its configuration, and its edits (typing,
+ *   backspace, emoji, caret moves, autocorrection, return key) reach the
+ *   input; Android's focus loss while it is visible keeps the window
+ *   active; a tap on the input opens it again; a blur closes it.
  *
  * Exits the editor with 0 when every check passes, 1 otherwise.
  */
@@ -101,6 +123,14 @@ import ceramic.ScrollUnit;
         return UnityEngine.GUIUtility.systemCopyBuffer;
     }
 
+    public static void csSendLifecycle(string name, bool value) {
+        global::haxe.root.Main.monoBehaviour.gameObject.SendMessage(name, value, UnityEngine.SendMessageOptions.RequireReceiver);
+    }
+
+    public static bool csHasLifecycle() {
+        return global::haxe.root.Main.monoBehaviour.gameObject.GetComponent<global::backend.UnityLifecycle>() != null;
+    }
+
     public static void exitWith(int code) {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.Exit(code);
@@ -132,6 +162,10 @@ class UnityInputSelfTest {
     var order:Array<String> = [];
 
     var touches:Array<String> = [];
+
+    var focusEvents:Array<String> = [];
+
+    var lifecycle:Array<String> = [];
 
     /** Steps, each returning the seconds to wait before the next one. */
     var steps:Array<()->Float> = [];
@@ -165,6 +199,12 @@ class UnityInputSelfTest {
         screen.onTouchDown(scene, (index, x, y) -> touches.push('down $index'));
         screen.onTouchUp(scene, (index, x, y) -> touches.push('up $index'));
         screen.onTouchCancel(scene, (index, x, y) -> touches.push('cancel $index'));
+        screen.onWindowFocusChange(scene, focused -> focusEvents.push(focused ? 'focused' : 'unfocused'));
+        final app = ceramic.App.app;
+        app.onBeginEnterBackground(scene, () -> lifecycle.push('beginEnterBackground'));
+        app.onFinishEnterBackground(scene, () -> lifecycle.push('finishEnterBackground'));
+        app.onBeginEnterForeground(scene, () -> lifecycle.push('beginEnterForeground'));
+        app.onFinishEnterForeground(scene, () -> lifecycle.push('finishEnterForeground'));
 
         print('unity-input self test, operating system: $os');
         untyped __cs__('global::haxe.root.UnityInputSelfTest.setupDevices()');
@@ -387,6 +427,260 @@ class UnityInputSelfTest {
             0.0;
         });
 
+        addFocusSteps();
+        addKeyboardSteps();
+
+    }
+
+    inline function sendLifecycle(name:String, value:Bool):Void {
+
+        untyped __cs__('global::haxe.root.UnityInputSelfTest.csSendLifecycle({0}, {1})', name, value);
+
+    }
+
+    function addFocusSteps():Void {
+
+        final backendScreen = ceramic.App.app.backend.screen;
+        final screen = ceramic.App.app.screen;
+
+        steps.push(() -> {
+            check(untyped __cs__('global::haxe.root.UnityInputSelfTest.csHasLifecycle()'), 'UnityLifecycle component on the Ceramic game object');
+            check(screen.windowFocused, 'window focused in batch mode');
+            check(scene.window.isWindowActive(), 'GPUI window active');
+            checkEquals('', focusEvents.join('|'), 'no focus event from Unity in batch mode');
+            // Unity's messages are ignored in batch mode unless asked for
+            sendLifecycle('OnApplicationFocus', false);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('', focusEvents.join('|'), 'OnApplicationFocus ignored in batch mode by default');
+            backendScreen.applicationFocusInBatchMode = true;
+            sendLifecycle('OnApplicationFocus', false);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('unfocused', focusEvents.join('|'), 'OnApplicationFocus(false): windowFocusChange(false)');
+            check(!screen.windowFocused && !backendScreen.isWindowFocused(), 'window not focused');
+            check(!scene.window.isWindowActive(), 'GPUI window deactivated');
+            // The same message again changes nothing
+            sendLifecycle('OnApplicationFocus', false);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('unfocused', focusEvents.join('|'), 'no event without a change');
+            sendLifecycle('OnApplicationFocus', true);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('unfocused|focused', focusEvents.join('|'), 'OnApplicationFocus(true): windowFocusChange(true)');
+            check(screen.windowFocused, 'window focused again');
+            check(scene.window.isWindowActive(), 'GPUI window active again');
+            // Desktop: a pause is not a background state
+            focusEvents = [];
+            lifecycle = [];
+            backendScreen.pauseMeansBackground = false;
+            sendLifecycle('OnApplicationPause', true);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('', focusEvents.join('|') + lifecycle.join('|'), 'desktop: OnApplicationPause ignored');
+            sendLifecycle('OnApplicationPause', false);
+            // Mobile: background
+            backendScreen.pauseMeansBackground = true;
+            sendLifecycle('OnApplicationPause', true);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('beginEnterBackground|finishEnterBackground', lifecycle.join('|'), 'mobile: OnApplicationPause(true) enters background');
+            checkEquals('unfocused', focusEvents.join('|'), 'mobile: not focused in background');
+            check(!scene.window.isWindowActive(), 'GPUI window deactivated in background');
+            lifecycle = [];
+            sendLifecycle('OnApplicationPause', false);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('beginEnterForeground|finishEnterForeground', lifecycle.join('|'), 'mobile: OnApplicationPause(false) enters foreground');
+            checkEquals('unfocused|focused', focusEvents.join('|'), 'mobile: focused in foreground');
+            check(scene.window.isWindowActive(), 'GPUI window active in foreground');
+            backendScreen.pauseMeansBackground = false;
+            focusEvents = [];
+            lifecycle = [];
+            0.0;
+        });
+
+    }
+
+    var keyboard:FakeVirtualKeyboard = null;
+
+    var keyboardWindow:Window = null;
+
+    var keyboardInput:Entity<InputState> = null;
+
+    function inputValue():String {
+
+        return keyboardInput.read(gpui.App.current).value();
+
+    }
+
+    function inputFocused():Bool {
+
+        return keyboardInput.read(gpui.App.current).focusHandle.isFocused(keyboardWindow);
+
+    }
+
+    function addKeyboardSteps():Void {
+
+        final textInput = ceramic.App.app.backend.textInput;
+        final backendScreen = ceramic.App.app.backend.screen;
+        final screen = ceramic.App.app.screen;
+        final grin = String.fromCharCode(0x1F600);
+        var opensBefore = 0;
+
+        steps.push(() -> {
+            check(textInput.virtualKeyboard == null, 'no TouchScreenKeyboard on desktop');
+            keyboard = new FakeVirtualKeyboard();
+            textInput.virtualKeyboard = keyboard;
+            // A gpui-kit input in a second window
+            final cx = gpui.App.current;
+            gpui.component.Component.init(cx);
+            keyboardWindow = Window.open(cx, {width: 400, height: 60}, (window, cx) -> {
+                return cx.newEntity((rootCx:Context<Root>) -> {
+                    final content = rootCx.newEntity((viewCx:Context<KeyboardView>) -> {
+                        final view = new KeyboardView();
+                        keyboardInput = viewCx.newEntity((inputCx:Context<InputState>) -> new InputState(window, inputCx));
+                        view.input = keyboardInput;
+                        return view;
+                    });
+                    return new Root(content, window, rootCx);
+                });
+            });
+            scene.add(keyboardWindow.renderable);
+            keyboardWindow.renderable.depth = 10;
+            gpui.GpuiInput.activateWindow(keyboardWindow);
+            0.3;
+        });
+
+        steps.push(() -> {
+            check(!textInput.keyboardOpen, 'keyboard closed before the focus');
+            keyboardInput.read(gpui.App.current).focusHandle.focus(keyboardWindow, gpui.App.current);
+            0.4;
+        });
+
+        steps.push(() -> {
+            print('virtual keyboard opens: ${keyboard.opens.join(', ')}');
+            check(ceramic.App.app.input.textEditing, 'text editing started by the focused input');
+            check(textInput.keyboardOpen, 'keyboard open');
+            checkEquals('DEFAULT single', keyboard.opens.join(', '), 'one open, keyboard of a single line input (Done key)');
+            check(screen.windowFocused, 'window focused with the keyboard');
+            texts = [];
+            keyDowns = [];
+            keyboard.type('h');
+            keyboard.type('i');
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('hi', texts.join(''), 'typed text committed');
+            checkEquals('hi', inputValue(), 'typed text in the input');
+            keyboard.backspace();
+            0.2;
+        });
+
+        steps.push(() -> {
+            check(count(keyDowns, ScanCode.BACKSPACE) == 1, 'one backspace key');
+            checkEquals('h', inputValue(), 'backspace in the input');
+            keyboard.type(grin);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('h' + grin, inputValue(), 'emoji in the input');
+            keyDowns = [];
+            keyboard.moveCaret(-2);
+            0.2;
+        });
+
+        steps.push(() -> {
+            check(count(keyDowns, ScanCode.LEFT) == 1, 'caret moved over the emoji: one left key (${count(keyDowns, ScanCode.LEFT)})');
+            keyboard.type('X');
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('hX' + grin, inputValue(), 'typed at the moved caret');
+            keyboard.moveCaret(2);
+            keyboard.type('teh');
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('hX' + grin + 'teh', inputValue(), 'caret back at the end');
+            keyboard.replaceBefore(3, 'the ');
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('hX' + grin + 'the ', inputValue(), 'autocorrection replaced the word');
+            // Android: the keyboard takes the focus of the app
+            focusEvents = [];
+            backendScreen.applicationFocusInBatchMode = true;
+            sendLifecycle('OnApplicationFocus', false);
+            0.2;
+        });
+
+        steps.push(() -> {
+            checkEquals('', focusEvents.join('|'), 'focus loss while the keyboard is visible: no event');
+            check(keyboardWindow.isWindowActive(), 'GPUI window still active');
+            check(inputFocused(), 'input still focused');
+            sendLifecycle('OnApplicationFocus', true);
+            keyDowns = [];
+            // The return key of a single line keyboard
+            keyboard.status = DONE;
+            0.2;
+        });
+
+        steps.push(() -> {
+            check(count(keyDowns, ScanCode.ENTER) == 1, 'return key: one enter key');
+            check(!textInput.keyboardOpen, 'keyboard closed by its return key');
+            check(ceramic.App.app.input.textEditing, 'text editing still active');
+            checkEquals('', focusEvents.join('|'), 'still focused after the keyboard closed');
+            // A tap on the input opens it again
+            opensBefore = keyboard.opens.length;
+            final density = backendScreen.getDensity();
+            final pixelHeight = backendScreen.getHeight() * density;
+            queueTouch(2, 1, 100 * density, pixelHeight - 30 * density);
+            0.1;
+        });
+
+        steps.push(() -> {
+            final density = backendScreen.getDensity();
+            final pixelHeight = backendScreen.getHeight() * density;
+            queueTouch(2, 3, 100 * density, pixelHeight - 30 * density);
+            0.3;
+        });
+
+        steps.push(() -> {
+            check(keyboard.opens.length == opensBefore + 1 && textInput.keyboardOpen, 'tap on the input opens the keyboard again');
+            checkEquals('hX' + grin + 'the ', inputValue(), 'input unchanged by the tap');
+            keyboardWindow.blur();
+            0.3;
+        });
+
+        steps.push(() -> {
+            check(!ceramic.App.app.input.textEditing, 'text editing stopped by the blur');
+            check(!textInput.keyboardOpen && keyboard.status == CLOSED, 'keyboard closed by the blur');
+            textInput.virtualKeyboard = null;
+            backendScreen.applicationFocusInBatchMode = false;
+            0.0;
+        });
+
     }
 
     function finish():Void {
@@ -470,6 +764,25 @@ class UnityInputSelfTest {
     inline function print(line:String):Void {
 
         MainScene.print(line);
+
+    }
+
+}
+
+/**
+ * A gpui-kit input, for the virtual keyboard steps.
+ */
+class KeyboardView extends Model implements Render {
+
+    public var input:Entity<InputState> = null;
+
+    public function new() {
+        super();
+    }
+
+    public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+
+        return div().sizeFull().p2().bg(hsla(0, 0, 1, 1)).child(new Input(input));
 
     }
 
