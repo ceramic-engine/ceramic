@@ -25,6 +25,25 @@ class Style {
     static final NO_SHADOWS:Array<BoxShadow> = [];
     static final SQUARE_CORNERS:Corners = new Corners(0.0, 0.0, 0.0, 0.0);
 
+    /** The last rounded corners of `paintBackground`, shared while the radii are the same */
+    static var lastCorners:Null<Corners> = null;
+
+    /** `new Corners(..)`, or the last ones when equal (corners are immutable) */
+    static function roundedCorners(topLeft:Float, topRight:Float, bottomRight:Float, bottomLeft:Float):Corners {
+        final last = lastCorners;
+        if (last != null && sameRadius(last.topLeft, topLeft) && sameRadius(last.topRight, topRight)
+            && sameRadius(last.bottomRight, bottomRight) && sameRadius(last.bottomLeft, bottomLeft))
+            return last;
+        final corners = new Corners(topLeft, topRight, bottomRight, bottomLeft);
+        lastCorners = corners;
+        return corners;
+    }
+
+    /** The same value, zero signs included */
+    static inline function sameRadius(a:Float, b:Float):Bool {
+        return a == b && (b != 0.0 || 1.0 / a == 1.0 / b);
+    }
+
     static inline function isPositiveZero(value:Float):Bool {
         return value == 0.0 && 1.0 / value > 0.0;
     }
@@ -426,7 +445,7 @@ class Style {
         final cornerRadii = isPositiveZero(clampedTopLeft) && isPositiveZero(clampedTopRight)
             && isPositiveZero(clampedBottomRight) && isPositiveZero(clampedBottomLeft)
             ? SQUARE_CORNERS
-            : new Corners(clampedTopLeft, clampedTopRight, clampedBottomRight, clampedBottomLeft);
+            : roundedCorners(clampedTopLeft, clampedTopRight, clampedBottomRight, clampedBottomLeft);
 
         window.paintDropShadows(bounds, cornerRadii, boxShadow);
 

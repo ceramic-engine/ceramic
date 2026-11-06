@@ -2180,6 +2180,11 @@ class Window implements WindowInvalidator {
                 return true;
             }
         }
+        // The current mask when the element does not clip it further (masks are immutable)
+        if (sameFloat(other.origin.x, left) && sameFloat(other.origin.y, top) && sameFloat(other.size.width, width) && sameFloat(other.size.height, height)) {
+            contentMaskStack.push(contentMask());
+            return true;
+        }
         contentMaskStack.push(new ContentMask(new Bounds(new Point(left, top), new Size(width, height))));
         return true;
     }
