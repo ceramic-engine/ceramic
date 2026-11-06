@@ -2682,6 +2682,8 @@ class Window implements WindowInvalidator {
      * source); `path` is also the atlas key, so different data needs
      * different paths. Throws if the SVG cannot be rendered.
      */
+    var svgTileBuilder:Null<SvgTileBuilder> = null;
+
     public function paintSvg(bounds:Bounds, path:String, data:Null<haxe.io.Bytes>, transformation:Null<TransformationMatrix>, color:Hsla, cx:App):Void {
         final elementOpacity = this.elementOpacity;
 
@@ -2692,9 +2694,24 @@ class Window implements WindowInvalidator {
         final bottom = Math.max(roundToDevice(bounds.origin.y + bounds.size.height), top);
 
         final factor = SvgRenderer.SMOOTH_SVG_SCALE_FACTOR;
-        final params = new RenderSvgParams(path, Std.int(Math.fceil((right - left) * factor)), Std.int(Math.fceil((bottom - top) * factor)));
+        final width = Std.int(Math.fceil((right - left) * factor));
+        final height = Std.int(Math.fceil((bottom - top) * factor));
 
-        final tile = spriteAtlas.getOrInsertWith(AtlasKey.Svg(path, params.width, params.height), () -> cx.svgRenderer().renderAlphaMask(params, data));
+        // The build of a missing tile through one function value made once
+        // (`SvgTileBuilder`): no closure nor params per painted SVG
+        var builder = svgTileBuilder;
+        if (builder == null) {
+            builder = new SvgTileBuilder();
+            svgTileBuilder = builder;
+        }
+        builder.path = path;
+        builder.width = width;
+        builder.height = height;
+        builder.data = data;
+        builder.cx = cx;
+        final tile = spriteAtlas.getOrInsertWith(AtlasKey.Svg(path, width, height), builder.buildFunction);
+        builder.data = null;
+        builder.cx = null;
         if (tile == null)
             return;
 
@@ -5569,5 +5586,31 @@ class Window implements WindowInvalidator {
         return null;
     }
     #end
+
+}
+
+/** Renders the missing SVG tile of `Window.paintSvg` (fields set before each lookup) */
+private class SvgTileBuilder {
+
+    public var path:String = '';
+
+    public var width:Int = 0;
+
+    public var height:Int = 0;
+
+    public var data:Null<haxe.io.Bytes> = null;
+
+    public var cx:Null<App> = null;
+
+    /** `build` as a function value, made once */
+    public final buildFunction:() -> Null<AtlasTile.AtlasTileSource>;
+
+    public function new() {
+        buildFunction = build;
+    }
+
+    function build():Null<AtlasTile.AtlasTileSource> {
+        return cx.svgRenderer().renderAlphaMask(new RenderSvgParams(path, width, height), data);
+    }
 
 }

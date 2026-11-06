@@ -122,14 +122,27 @@ class HighlightStyle {
 
         final result:Array<TextHighlight> = [];
         final active:Array<Int> = [];
+        // The active ids in ascending order, one array for the whole call
+        final sorted:Array<Int> = [];
         var ix = 0;
         for (endpoint in endpoints) {
             final prevIndex = ix;
             ix = endpoint.position;
             if (ix > prevIndex && active.length > 0) {
                 var current = new HighlightStyle();
-                final sorted = active.copy();
-                sorted.sort((x, y) -> x < y ? -1 : (x > y ? 1 : 0));
+                // `active.copy()` sorted, by insertion (no comparator closure,
+                // the ids are distinct and few)
+                sorted.resize(0);
+                for (i in 0...active.length) {
+                    final id = active[i];
+                    var j = sorted.length;
+                    sorted.push(id);
+                    while (j > 0 && sorted[j - 1] > id) {
+                        sorted[j] = sorted[j - 1];
+                        j--;
+                    }
+                    sorted[j] = id;
+                }
                 for (id in sorted) {
                     current = current.highlight(highlights[id]);
                 }

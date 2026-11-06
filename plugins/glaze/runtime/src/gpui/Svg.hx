@@ -171,35 +171,45 @@ class Svg extends Element implements Styled {
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
-        hitbox = interactivity.prepaint(id, #if gpui_inspector inspectorId, #end bounds, bounds.size, window, cx, (_, _, hitbox, _, _) -> hitbox);
+        // `interactivity.prepaint(.., (_, _, hitbox, _, _) -> hitbox)` without the closure
+        interactivity.prepaintBegin(id, #if gpui_inspector inspectorId, #end bounds, bounds.size, window, cx);
+        hitbox = interactivity.prepaintHitbox;
+        interactivity.prepaintEnd(window);
     }
 
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hitbox = this.hitbox;
         this.hitbox = null;
-        interactivity.paint(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (style, window, cx) -> {
-            final transformation = this.transformation != null ? this.transformation.intoMatrix(bounds.center(), window.scaleFactor()) : null;
-            final color:Null<Hsla> = style.text != null ? style.text.color : null;
-            if (color == null)
-                return;
-            try {
-                if (dataValue != null && dataPath != null) {
-                    window.paintSvg(bounds, dataPath, dataValue, transformation, color, cx);
-                }
-                else if (externalPathValue != null) {
-                    final bytes = loadExternal(externalPathValue);
-                    if (bytes == null)
-                        return;
-                    window.paintSvg(bounds, externalPathValue, bytes, transformation, color, cx);
-                }
-                else if (pathValue != null) {
-                    window.paintSvg(bounds, pathValue, null, transformation, color, cx);
-                }
+        // `interactivity.paint(.., (style, window, cx) -> ..)` without the closure
+        final style = interactivity.paintBegin(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+        if (style == null)
+            return;
+        paintContent(style, bounds, window, cx);
+        interactivity.paintEnd(bounds, window, cx);
+    }
+
+    function paintContent(style:Style, bounds:Bounds, window:Window, cx:App):Void {
+        final transformation = this.transformation != null ? this.transformation.intoMatrix(bounds.center(), window.scaleFactor()) : null;
+        final color:Null<Hsla> = style.text != null ? style.text.color : null;
+        if (color == null)
+            return;
+        try {
+            if (dataValue != null && dataPath != null) {
+                window.paintSvg(bounds, dataPath, dataValue, transformation, color, cx);
             }
-            catch (e:Dynamic) {
-                ceramic.Shortcuts.log.error('Failed to paint svg: $e');
+            else if (externalPathValue != null) {
+                final bytes = loadExternal(externalPathValue);
+                if (bytes == null)
+                    return;
+                window.paintSvg(bounds, externalPathValue, bytes, transformation, color, cx);
             }
-        });
+            else if (pathValue != null) {
+                window.paintSvg(bounds, pathValue, null, transformation, color, cx);
+            }
+        }
+        catch (e:Dynamic) {
+            ceramic.Shortcuts.log.error('Failed to paint svg: $e');
+        }
     }
 
     static function loadExternal(path:String):Null<Bytes> {
