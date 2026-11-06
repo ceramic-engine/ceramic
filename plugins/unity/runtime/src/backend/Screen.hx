@@ -323,7 +323,8 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
 
     /**
      * Fired when the app window gains or loses the keyboard focus of the
-     * system. Not fired by the Unity backend yet.
+     * system: Unity's `OnApplicationFocus`, and on mobile `OnApplicationPause`
+     * (an app in background is not focused). See `handleApplicationFocus()`.
      * @param focused Whether the window now has the focus
      */
     @event function windowFocusChange(focused:Bool);
@@ -455,9 +456,141 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
     /** Not available yet on Unity: does nothing. */
     public function activateWindow():Void {}
 
-    /** Not tracked yet on Unity: always true. */
+    /**
+     * Whether the app window has the focus: Unity's `OnApplicationFocus`
+     * and `OnApplicationPause` messages (see `handleApplicationFocus()`).
+     */
     public function isWindowFocused():Bool {
-        return true;
+        return focusTracker.focused;
+    }
+
+/// Application focus and pause
+
+    #if !no_backend_docs
+    /**
+     * Whether the app runs in batch mode (`-batchmode`).
+     */
+    #end
+    static final isBatchMode:Bool = untyped __cs__('UnityEngine.Application.isBatchMode');
+
+    #if !no_backend_docs
+    /**
+     * Window focus from Unity's messages, the pause and the virtual keyboard.
+     * In batch mode the window starts focused (nothing has the focus there,
+     * and tests expect active windows, like the headless backend).
+     */
+    #end
+    final focusTracker:ceramic.WindowFocusTracker = new ceramic.WindowFocusTracker(
+        isBatchMode ? true : untyped __cs__('UnityEngine.Application.isFocused')
+    );
+
+    /**
+     * Whether `OnApplicationPause` means that the app goes to background
+     * (`App` background and foreground events, window not focused): true on
+     * mobile platforms (`Application.isMobilePlatform`). On desktop Unity
+     * pauses an app that loses the focus when it does not run in background,
+     * and the editor pauses with its pause button: the focus events cover
+     * the first case and the second one is not a background state.
+     */
+    public var pauseMeansBackground:Bool = untyped __cs__('UnityEngine.Application.isMobilePlatform');
+
+    /**
+     * Whether Unity's focus and pause messages are honored in batch mode.
+     * False by default: a batch editor has no focused window, the app keeps
+     * the focus. Tests that simulate the messages set it to true.
+     */
+    public var applicationFocusInBatchMode:Bool = false;
+
+    /**
+     * Unity's `OnApplicationFocus` (from `UnityLifecycle`, the component that
+     * `Main` adds to the Ceramic game object).
+     * @param focused Whether the app now has the focus
+     */
+    public function handleApplicationFocus(focused:Bool):Void {
+
+        if (isBatchMode && !applicationFocusInBatchMode) return;
+        if (focusTracker.setSystemFocused(focused)) {
+            emitWindowFocusChange(focusTracker.focused);
+        }
+
+    }
+
+    /**
+     * Unity's `OnApplicationPause`. When it means background
+     * (`pauseMeansBackground`), emits the background or foreground events of
+     * the app (like clay on mobile), and the window is not focused while
+     * paused.
+     * @param paused Whether the app is paused
+     */
+    public function handleApplicationPause(paused:Bool):Void {
+
+        if (isBatchMode && !applicationFocusInBatchMode) return;
+        if (!pauseMeansBackground) return;
+        if (paused == focusTracker.paused) return;
+
+        final app = ceramic.App.app;
+        if (paused) {
+            @:privateAccess app.emitBeginEnterBackground();
+            @:privateAccess app.emitFinishEnterBackground();
+        }
+        else {
+            // The focus may have changed while paused
+            if (!isBatchMode) {
+                focusTracker.setSystemFocused(untyped __cs__('UnityEngine.Application.isFocused'));
+            }
+            @:privateAccess app.emitBeginEnterForeground();
+            @:privateAccess app.emitFinishEnterForeground();
+        }
+        final wasFocused = focusTracker.focused;
+        focusTracker.setPaused(paused);
+        if (focusTracker.focused != wasFocused) {
+            emitWindowFocusChange(focusTracker.focused);
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * The virtual keyboard of the app was shown or hidden (`TextInput`):
+     * Android takes the focus of the app while its keyboard is visible,
+     * which must not deactivate the edited field. Once hidden, the focus is
+     * read again from Unity.
+     */
+    #end
+    @:allow(backend.TextInput)
+    function virtualKeyboardVisibilityChange(visible:Bool):Void {
+
+        final wasFocused = focusTracker.focused;
+        focusTracker.setKeyboardVisible(visible);
+        if (!visible && !isBatchMode) {
+            focusTracker.setSystemFocused(untyped __cs__('UnityEngine.Application.isFocused'));
+        }
+        if (focusTracker.focused != wasFocused) {
+            emitWindowFocusChange(focusTracker.focused);
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Touches also go to the text input, which follows taps for its virtual
+     * keyboard.
+     */
+    #end
+    function willEmitTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+        ceramic.App.app.backend.textInput.handleTouchDown(touchIndex, x, y);
+    }
+
+    function willEmitTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+        ceramic.App.app.backend.textInput.handleTouchMove(touchIndex, x, y);
+    }
+
+    function willEmitTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+        ceramic.App.app.backend.textInput.handleTouchUp(touchIndex, x, y);
+    }
+
+    function willEmitTouchCancel(touchIndex:Int, x:Float, y:Float):Void {
+        ceramic.App.app.backend.textInput.handleTouchCancel(touchIndex, x, y);
     }
 
     /** The menus of the last `setMenuBar()` call (no menu bar on Unity). */
@@ -471,13 +604,22 @@ class Screen implements tracker.Events #if !completion implements spec.Screen #e
         menuItemEnabled = isEnabled;
     }
 
-    /** What the system would ask to validate the item with the given id. */
+    /** What the system would ask to validate the item with the given id (menu bar or dock menu). */
     public function isMenuItemEnabled(id:Int):Bool {
-        return menuItemEnabled != null && menuItemEnabled(id);
+        if (menuItemEnabled != null && menuItemEnabled(id)) return true;
+        return dockMenuItemEnabled != null && dockMenuItemEnabled(id);
     }
 
-    /** No dock menu on Unity: does nothing. */
-    public function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {}
+    /** The dock menu last installed (no dock menu on Unity: nothing is shown). */
+    public var dockMenu(default, null):Array<ceramic.MenuItem> = null;
+
+    var dockMenuItemEnabled:(id:Int)->Bool = null;
+
+    /** No dock menu on Unity: keeps the items (`dockMenu`, `isMenuItemEnabled`), like the headless backend. */
+    public function setDockMenu(items:Array<ceramic.MenuItem>, isEnabled:(id:Int)->Bool):Void {
+        dockMenu = items;
+        dockMenuItemEnabled = isEnabled;
+    }
 
     /** Not read yet on Unity: always `LIGHT`. */
     public function getSystemAppearance():ceramic.SystemAppearance {

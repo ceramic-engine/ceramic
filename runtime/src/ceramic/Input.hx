@@ -171,7 +171,8 @@ class Input extends Entity {
      * element right away when it returns `true`. Text editing should then be
      * started for that area (`startTextEditing()`), the keyboard stays hidden
      * otherwise. Backends that show the keyboard with text editing (native)
-     * never call it.
+     * do not need it; Unity on iOS and Android calls it from a tap while
+     * text editing is active, to show again a keyboard the user closed.
      */
     public var textEditingTapFilter:Null<(x:Float, y:Float)->Bool> = null;
 
@@ -331,7 +332,9 @@ class Input extends Entity {
      * - Clay native (SDL): `SDL_StartTextInput`, composition from `SDL_EVENT_TEXT_EDITING`.
      * - Clay web: a hidden `<textarea>` gets the focus and its composition events.
      * - Unity: `Keyboard.onTextInput` and `Keyboard.onIMECompositionChange` (no selection
-     *   inside the composition).
+     *   inside the composition). On iOS and Android, `TouchScreenKeyboard` opens: the
+     *   edits of its hidden field arrive as `textCommit` and as left, right, backspace
+     *   and enter key events.
      * - Headless: no-op.
      *
      * @param x X position of the edited text area, in screen coordinates
@@ -369,8 +372,10 @@ class Input extends Entity {
 
     /**
      * Sets how virtual keyboards should present themselves for the edited
-     * text (the attributes of the hidden editable element on the web). Kept
-     * until changed; applies to the next and the current text editing.
+     * text (the attributes of the hidden editable element on the web; the
+     * type, return key and autocorrection of Unity's `TouchScreenKeyboard`
+     * on iOS and Android, see `ceramic.VirtualKeyboardType`). Kept until
+     * changed; applies to the next and the current text editing.
      *
      * @param inputMode HTML `inputmode`: `text`, `numeric`, `decimal`, `tel`, `email`, `url`, `search`
      * @param enterKeyHint HTML `enterkeyhint` (`enter`, `done`, `go`, `next`, `previous`, `search`, `send`), or null for none

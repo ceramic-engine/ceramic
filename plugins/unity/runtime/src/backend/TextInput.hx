@@ -1,5 +1,8 @@
 package backend;
 
+import ceramic.KeyCode;
+import ceramic.ScanCode;
+import ceramic.VirtualKeyboardType;
 import cs.types.Char16;
 import unityengine.inputsystem.Keyboard;
 
@@ -10,6 +13,13 @@ using StringTools;
  * Unity backend implementation for text input handling.
  * Captures keyboard input from Unity's Input System and converts it to Ceramic text events.
  * Handles special keys like arrows, backspace, enter, and escape.
+ *
+ * On iOS and Android (`TouchScreenKeyboard.isSupported`), text input and
+ * text editing also open the virtual keyboard (`virtualKeyboard`): the edits
+ * of its hidden field become caret moves, deletions and text
+ * (`ceramic.VirtualKeyboardText`), given as left, right, backspace and enter
+ * key events plus `textCommit` to text editing, and as `ceramic.TextInput`
+ * calls to text input, like SDL does with its hidden iOS text field.
  */
 #end
 class TextInput implements spec.TextInput {
@@ -30,6 +40,11 @@ class TextInput implements spec.TextInput {
     public function new() {
 
         bindTextInput();
+
+        keyboardText.onMove = keyboardMove;
+        keyboardText.onDelete = keyboardDelete;
+        keyboardText.onInsert = keyboardInsert;
+        keyboardText.onLineBreak = keyboardLineBreak;
 
     }
 
@@ -161,7 +176,18 @@ class TextInput implements spec.TextInput {
     @:allow(backend.Input)
     function flushPendingText():Void {
 
+        updateVirtualKeyboard();
+
         if (pendingTexts.length == 0) return;
+
+        if (keyboardOpen) {
+            // The virtual keyboard is the source of text while it is open:
+            // text of the Input System (a hardware keyboard) would come twice
+            pendingTexts.resize(0);
+            pendingKinds.resize(0);
+            utf16Joiner.reset();
+            return;
+        }
 
         final texts = pendingTexts;
         final kinds = pendingKinds;
@@ -286,8 +312,7 @@ class TextInput implements spec.TextInput {
 
     #if !no_backend_docs
     /**
-     * Starts text input mode.
-     * TODO: Show virtual keyboard on mobile devices.
+     * Starts text input mode. Opens the virtual keyboard on iOS and Android.
      * @param initialText Initial text value (currently unused)
      * @param x Text field X position (for virtual keyboard positioning)
      * @param y Text field Y position (for virtual keyboard positioning)
@@ -298,8 +323,7 @@ class TextInput implements spec.TextInput {
     public function start(initialText:String, x:Float, y:Float, w:Float, h:Float):Void {
 
         textInputActive = true;
-
-        // TODO show keyboard on mobile devices
+        requestVirtualKeyboard();
 
     }
 
@@ -312,6 +336,9 @@ class TextInput implements spec.TextInput {
     public function stop():Void {
 
         textInputActive = false;
+        if (!textEditing) {
+            keyboardWanted = false;
+        }
 
     }
 
@@ -340,6 +367,7 @@ class TextInput implements spec.TextInput {
             untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMEEnabled(true)');
         }
         setTextEditingArea(x, y, w, h, 0);
+        requestVirtualKeyboard();
 
     }
 
@@ -355,6 +383,9 @@ class TextInput implements spec.TextInput {
 
         if (Keyboard.current != null) {
             untyped __cs__('UnityEngine.InputSystem.Keyboard.current.SetIMEEnabled(false)');
+        }
+        if (!textInputActive) {
+            keyboardWanted = false;
         }
 
     }
@@ -377,9 +408,336 @@ class TextInput implements spec.TextInput {
 
     }
 
+    #if !no_backend_docs
+    /**
+     * Virtual keyboard settings (see `ceramic.Input.setTextEditingConfiguration()`).
+     */
+    #end
+    var configInputMode:String = 'text';
+
+    var configEnterKeyHint:Null<String> = null;
+
+    var configAutocorrect:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Sets the virtual keyboard of iOS and Android: its type
+     * (`ceramic.VirtualKeyboardType`, from `inputMode` and the `search`
+     * enter key hint), whether its return key inserts line breaks or closes
+     * it (`enterKeyHint`, see `VirtualKeyboardType.multilineFromConfiguration()`),
+     * and autocorrection. Unity's keyboard has no autocapitalization or
+     * spellcheck setting. An open keyboard is opened again (at the next
+     * update) when its type, return key or autocorrection changes.
+     */
+    #end
     public function setTextEditingConfiguration(inputMode:String, enterKeyHint:Null<String>, autocapitalize:String, autocorrect:Bool, spellcheck:Bool):Void {
 
-        // No virtual keyboard settings with Unity's text editing yet
+        configInputMode = inputMode != null ? inputMode : 'text';
+        configEnterKeyHint = enterKeyHint;
+        configAutocorrect = autocorrect;
+
+    }
+
+/// Virtual keyboard (iOS, Android)
+
+    /**
+     * The virtual keyboard opened by text input and text editing: Unity's
+     * `TouchScreenKeyboard` where it is supported (iOS, Android), null
+     * elsewhere (desktop keeps the Input System keyboard only). Tests can
+     * set another implementation to simulate a keyboard.
+     */
+    public var virtualKeyboard:Null<VirtualKeyboard> = UnityTouchScreenKeyboard.isSupported() ? new UnityTouchScreenKeyboard() : null;
+
+    #if !no_backend_docs
+    /**
+     * Turns the edits of the hidden field of the keyboard into operations.
+     */
+    #end
+    final keyboardText:ceramic.VirtualKeyboardText = new ceramic.VirtualKeyboardText();
+
+    #if !no_backend_docs
+    /**
+     * Follows the touches to tell taps apart (see `handleTouchUp()`).
+     */
+    #end
+    final keyboardTaps:ceramic.TouchTapTracker = new ceramic.TouchTapTracker();
+
+    /** Whether the virtual keyboard is open. */
+    public var keyboardOpen(default, null):Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Whether the keyboard should be open: set by text input and text
+     * editing starting and by a tap on an editable area, cleared when both
+     * stopped or when the user closed the keyboard. The keyboard follows it
+     * at the next update (`updateVirtualKeyboard()`): the focus going from
+     * a field to another stops then starts text editing in the same frame,
+     * and the settings of the new field may arrive after it starts, which
+     * must neither close and open the keyboard again nor open it twice.
+     */
+    #end
+    var keyboardWanted:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Whether the hidden field starts over at the next update (another
+     * field, or a caret moved by a tap).
+     */
+    #end
+    var keyboardResetPending:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Settings of the open keyboard.
+     */
+    #end
+    var keyboardType:VirtualKeyboardType = DEFAULT;
+
+    var keyboardMultiline:Bool = true;
+
+    var keyboardAutocorrect:Bool = false;
+
+    #if !no_backend_docs
+    /**
+     * Asks for the keyboard, its hidden field starting over (another field
+     * may be edited).
+     */
+    #end
+    function requestVirtualKeyboard():Void {
+
+        if (virtualKeyboard == null) return;
+        keyboardWanted = true;
+        keyboardResetPending = true;
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Opens, closes or opens again the keyboard to match `keyboardWanted`
+     * and the settings.
+     */
+    #end
+    function syncVirtualKeyboard():Void {
+
+        final type = VirtualKeyboardType.fromConfiguration(configInputMode, configEnterKeyHint);
+        if (!keyboardWanted || type == NONE) {
+            closeVirtualKeyboard();
+            keyboardResetPending = false;
+            return;
+        }
+
+        final multiline = VirtualKeyboardType.multilineFromConfiguration(configEnterKeyHint);
+        if (keyboardOpen && type == keyboardType && multiline == keyboardMultiline && configAutocorrect == keyboardAutocorrect) {
+            if (keyboardResetPending) {
+                resetVirtualKeyboardText();
+            }
+            keyboardResetPending = false;
+            return;
+        }
+
+        keyboardResetPending = false;
+        keyboardType = type;
+        keyboardMultiline = multiline;
+        keyboardAutocorrect = configAutocorrect;
+        keyboardText.reset();
+        virtualKeyboard.open(keyboardText.text, type, configAutocorrect, multiline);
+        virtualKeyboard.setSelection(keyboardText.caret, 0);
+        if (!keyboardOpen) {
+            keyboardOpen = true;
+            ceramic.App.app.backend.screen.virtualKeyboardVisibilityChange(true);
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Closes the virtual keyboard now.
+     */
+    #end
+    function closeVirtualKeyboard():Void {
+
+        if (!keyboardOpen) return;
+        keyboardOpen = false;
+        if (virtualKeyboard != null) {
+            virtualKeyboard.close();
+        }
+        ceramic.App.app.backend.screen.virtualKeyboardVisibilityChange(false);
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * The hidden field of the keyboard starts over (`padding`, caret at the
+     * end). The caret of the app does not move.
+     */
+    #end
+    function resetVirtualKeyboardText():Void {
+
+        keyboardText.reset();
+        if (virtualKeyboard != null) {
+            virtualKeyboard.setText(keyboardText.text);
+            virtualKeyboard.setSelection(keyboardText.caret, 0);
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Reads the hidden field of the open keyboard and gives its edits to the
+     * app, handles a keyboard that the user closed (its return key on a
+     * single line keyboard is an enter key), then opens or closes the
+     * keyboard as text input and text editing ask. Called every frame,
+     * after the key events (`flushPendingText()`).
+     */
+    #end
+    function updateVirtualKeyboard():Void {
+
+        if (virtualKeyboard == null) return;
+
+        if (keyboardOpen) {
+            final status = virtualKeyboard.getStatus();
+            final text = virtualKeyboard.getText();
+            if (text != null) {
+                if (keyboardText.update(text, virtualKeyboard.getSelectionStart(), virtualKeyboard.getSelectionLength()) && status == VISIBLE) {
+                    keyboardResetPending = true;
+                }
+            }
+            if (status != VISIBLE) {
+                // Closed by the user: stays closed until a tap on an
+                // editable area or text editing starting again
+                keyboardWanted = false;
+                closeVirtualKeyboard();
+                if (status == DONE && !keyboardMultiline) {
+                    keyboardLineBreak();
+                }
+            }
+        }
+
+        syncVirtualKeyboard();
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Emits a key down and its key up (keys of the virtual keyboard).
+     */
+    #end
+    function emitVirtualKey(keyCode:KeyCode, scanCode:ScanCode):Void {
+
+        final input = ceramic.App.app.backend.input;
+        @:privateAccess input.emitKeyDown(new ceramic.Key(keyCode, scanCode));
+        @:privateAccess input.emitKeyUp(new ceramic.Key(keyCode, scanCode));
+
+    }
+
+    function keyboardMove(graphemes:Int):Void {
+
+        final count = graphemes < 0 ? -graphemes : graphemes;
+        for (_ in 0...count) {
+            if (textEditing) {
+                if (graphemes < 0) emitVirtualKey(KeyCode.LEFT, ScanCode.LEFT);
+                else emitVirtualKey(KeyCode.RIGHT, ScanCode.RIGHT);
+            }
+            if (textInputActive) {
+                if (graphemes < 0) ceramic.App.app.textInput.moveLeft();
+                else ceramic.App.app.textInput.moveRight();
+            }
+        }
+
+    }
+
+    function keyboardDelete(graphemes:Int):Void {
+
+        for (_ in 0...graphemes) {
+            if (textEditing) {
+                emitVirtualKey(KeyCode.BACKSPACE, ScanCode.BACKSPACE);
+            }
+            if (textInputActive) {
+                ceramic.App.app.textInput.backspace();
+            }
+        }
+
+    }
+
+    function keyboardInsert(text:String):Void {
+
+        if (textEditing) {
+            @:privateAccess ceramic.App.app.backend.input.emitTextCommit(text);
+        }
+
+        if (textInputActive) {
+            // Spaces go through space(), like the keyboard path
+            final textInput = ceramic.App.app.textInput;
+            var start = 0;
+            for (i in 0...text.length) {
+                if (StringTools.fastCodeAt(text, i) == ' '.code) {
+                    if (i > start) textInput.appendText(text.substring(start, i));
+                    textInput.space();
+                    start = i + 1;
+                }
+            }
+            if (text.length > start) {
+                textInput.appendText(start == 0 ? text : text.substring(start));
+            }
+        }
+
+    }
+
+    function keyboardLineBreak():Void {
+
+        if (textEditing) {
+            emitVirtualKey(KeyCode.ENTER, ScanCode.ENTER);
+        }
+        if (textInputActive) {
+            ceramic.App.app.textInput.enter();
+        }
+
+    }
+
+    #if !no_backend_docs
+    /**
+     * Touches, from `backend.Screen` (native coordinates). A tap while the
+     * keyboard is open may move the caret of the app: the hidden field
+     * starts over. A tap on an editable area (`ceramic.Input.textEditingTapFilter`)
+     * while text editing shows a keyboard that the user closed again.
+     */
+    #end
+    @:allow(backend.Screen)
+    function handleTouchDown(touchIndex:Int, x:Float, y:Float):Void {
+
+        if (virtualKeyboard == null) return;
+        keyboardTaps.touchDown(touchIndex, x, y, 0);
+
+    }
+
+    @:allow(backend.Screen)
+    function handleTouchMove(touchIndex:Int, x:Float, y:Float):Void {
+
+        if (virtualKeyboard == null) return;
+        keyboardTaps.touchMove(touchIndex, x, y);
+
+    }
+
+    @:allow(backend.Screen)
+    function handleTouchCancel(touchIndex:Int, x:Float, y:Float):Void {
+
+        if (virtualKeyboard == null) return;
+        keyboardTaps.touchCancel(touchIndex);
+
+    }
+
+    @:allow(backend.Screen)
+    function handleTouchUp(touchIndex:Int, x:Float, y:Float):Void {
+
+        if (virtualKeyboard == null) return;
+        if (!keyboardTaps.touchUp(touchIndex, x, y, 0)) return;
+
+        if (keyboardOpen) {
+            keyboardResetPending = true;
+        }
+        else if (textEditing && ceramic.App.app.input.textEditingTapTargets(x, y)) {
+            requestVirtualKeyboard();
+        }
 
     }
 

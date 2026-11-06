@@ -73,6 +73,12 @@ class Main {
     public static var audioMixer:AudioMixer = null;
 
     /**
+     * Component receiving Unity's application messages (focus, pause),
+     * added to the game object of `monoBehaviour`.
+     */
+    public static var lifecycle:backend.UnityLifecycle = null;
+
+    /**
      * Synchronizes with Unity components and initializes Ceramic if needed.
      * Called from Unity's C# side to establish the connection.
      * @param monoBehaviour Unity MonoBehaviour for lifecycle hooks
@@ -113,6 +119,12 @@ class Main {
         }
         project = @:privateAccess new Project(settings);
         ceramic.App.app.projectDir = Path.normalize(Path.join([Sys.getCwd(), '../../..'])); // Fix this TODO
+
+        // Unity's application messages (focus, pause) reach the screen
+        // through a component added to the Ceramic game object
+        if (monoBehaviour != null) {
+            lifecycle = untyped __cs__('{0}.gameObject.AddComponent<global::backend.UnityLifecycle>()', monoBehaviour);
+        }
 
         // Init last update time
         _lastUpdateTime = Sys.cpuTime();
