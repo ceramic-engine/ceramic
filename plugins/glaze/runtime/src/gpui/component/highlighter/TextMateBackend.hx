@@ -499,7 +499,7 @@ class TextMateBackend {
         // empty last line after a final newline.
         final lines = text.split('\n');
         if (lines.length > 0 && lines[lines.length - 1].length == 0)
-            lines.pop();
+            gpui.util.Stacks.drop(lines);
         for (lineNumber in 0...lines.length) {
             var line = lines[lineNumber];
             if (StringTools.endsWith(line, '\r'))
@@ -536,8 +536,11 @@ class TextMateBackend {
                         starts.push(lineNumber);
                     }
                     else if (character == '}'.code) {
-                        final start = starts.pop();
-                        if (start != null && lineNumber - start >= 2) {
+                        // `pop()` without boxing (an empty stack pops nothing)
+                        if (starts.length == 0)
+                            continue;
+                        final start = gpui.util.Stacks.popInt(starts);
+                        if (lineNumber - start >= 2) {
                             ranges.push(new FoldRange(start, lineNumber));
                         }
                     }

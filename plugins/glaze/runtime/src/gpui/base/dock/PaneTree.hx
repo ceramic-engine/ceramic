@@ -145,7 +145,7 @@ class PaneTree {
                 for (ix in 0...children.length) {
                     path.push(ix);
                     if (search(children[ix], id, path)) return true;
-                    path.pop();
+                    gpui.util.Stacks.drop(path);
                 }
             case Tabs(_, _):
         }

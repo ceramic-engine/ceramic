@@ -205,7 +205,7 @@ class DescriptionList implements RenderOnce implements Sizable {
         }
         // Remove last empty rows if it exists
         while (rows.length > 0 && rows[rows.length - 1].length == 0) {
-            rows.pop();
+            gpui.util.Stacks.drop(rows);
         }
         return rows;
     }

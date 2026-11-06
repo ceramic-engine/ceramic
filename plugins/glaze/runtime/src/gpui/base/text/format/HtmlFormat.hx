@@ -668,7 +668,7 @@ class HtmlFormat {
         }
         final text = last.text_.substr(0, last.text_.length - 1);
         if (text == '') {
-            children.pop();
+            gpui.util.Stacks.drop(children);
             return;
         }
         final len = TextUtils.len(text);

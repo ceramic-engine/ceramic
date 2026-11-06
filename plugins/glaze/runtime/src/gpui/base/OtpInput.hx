@@ -160,7 +160,7 @@ class OtpState extends Model implements Render {
     static function editValue(value:String, key:String, keyChar:Null<String>, length:Int):Null<String> {
         final chars = OtpState.chars(value);
         if (key == "backspace") {
-            chars.pop();
+            gpui.util.Stacks.drop(chars);
         } else {
             final keyChars = OtpState.chars(key);
             var digit:Null<Int> = keyChars.length > 0 ? toDigitChar(keyChars[0]) : null;
