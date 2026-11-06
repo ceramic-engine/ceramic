@@ -2072,8 +2072,12 @@ class Screen extends Entity implements Observable implements RenderTarget {
      * for apps that draw their own scrollbars. macOS native builds: the
      * preferred scroller style is overlay (System Settings, Appearance,
      * "Show scroll bars"; `autoHideScrollbarsChange` is emitted when it
-     * changes). Web, iOS and Android: true. Windows, Linux, headless (unless
-     * a test emits a change) and Unity: false.
+     * changes). Windows native builds: `UISettings.AutoHideScrollBars`
+     * (Settings, Accessibility, Visual effects, "Always show scrollbars"
+     * off), else the registry value `DynamicScrollbars`, else false; read
+     * once (untested: written without a Windows machine). Web, iOS and
+     * Android: true. Linux, headless (unless a test emits a change) and
+     * Unity: false.
      */
     public var autoHideScrollbars(default, null):Bool = false;
 
