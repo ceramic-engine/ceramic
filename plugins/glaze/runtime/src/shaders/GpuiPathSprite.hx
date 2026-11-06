@@ -114,14 +114,17 @@ class GpuiPathSprite_Vert extends Vert {
 }
 
 /**
- * `math: 'safe'`: on Unity, Metal's safe math (no effect on GLSL). With
- * Metal's fast math, the dither noise of gradient fills computed other bits
- * than the GLSL output through ANGLE on the same GPU (one level on most
- * dithered path pixels); with safe math the Unity captures are the same as
- * the web ones there. `GpuiQuad` keeps fast math: its dash code matches
- * the web only with it (see `dashAlpha()`).
+ * Unity (`shade_unity`): Metal compiles Unity's shaders with fast math, like
+ * ANGLE's code of the web build, but with `preserveInvariance` (Unity's
+ * vertex shaders declare an invariant position), which changes how the
+ * compiler rewrites some expressions. Two spots are written for Unity so
+ * that the bits match the web: the dither noise (`fract()` spelled out and
+ * multiplied by `min(pathCoverage, 1.0)`, a uniform equal to 1 that the
+ * compiler cannot fold, so it keeps the sum of the two noises as written)
+ * and the cosine of the slash pattern (the constant ANGLE's compiler folds,
+ * one ulp from the one FXC folds). Measured with Metal kernels of both
+ * compiled shaders on random inputs, then on the Unity golden.
  */
-@shade({ math: 'safe' })
 class GpuiPathSprite_Frag extends Frag {
 
     @param var mainTex:Sampler2D;
@@ -219,8 +222,15 @@ class GpuiPathSprite_Frag extends Frag {
 
             // Dither to reduce banding in gradients (triangular noise, like GPUI's Metal shader)
             var seed:Vec2 = position * 0.6180339887;
+            #if shade_unity
+            var s1:Float = sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453;
+            var s2:Float = sin(dot(seed, vec2(39.3460, 11.135))) * 24634.6345;
+            var r1:Float = min(s1 - floor(s1), 0.99999994039535522) * min(pathCoverage, 1.0);
+            var r2:Float = min(s2 - floor(s2), 0.99999994039535522) * min(pathCoverage, 1.0);
+            #else
             var r1:Float = fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
             var r2:Float = fract(sin(dot(seed, vec2(39.3460, 11.135))) * 24634.6345);
+            #end
             var tri:Float = r1 + r2 - 1.0;
             backgroundColor.rgb += vec3(tri * 2.0 / 255.0);
             backgroundColor.a += tri * 3.0 / 255.0;
@@ -235,7 +245,11 @@ class GpuiPathSprite_Frag extends Frag {
             var patternPeriod:Float = patternHeight * sin(stripeAngle);
             var relativePosition:Vec2 = position - origin;
             // Metal float2x2(c, -s, s, c) is column-major
+            #if shade_unity
+            var rotatedX:Float = 0.70710676908493042 * relativePosition.x + sin(stripeAngle) * relativePosition.y;
+            #else
             var rotatedX:Float = cos(stripeAngle) * relativePosition.x + sin(stripeAngle) * relativePosition.y;
+            #end
             var pattern:Float = fmodf(rotatedX, patternPeriod);
             var distance:Float = min(pattern, patternPeriod - pattern) - patternPeriod * (patternWidth / patternHeight) / 2.0;
             backgroundColor.a *= clamp(0.5 - distance, 0.0, 1.0);

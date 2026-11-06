@@ -121,6 +121,26 @@ class GpuiQuad_Vert extends Vert {
 
 }
 
+/**
+ * Unity (`shade_unity`): Metal compiles Unity's shaders with fast math, like
+ * ANGLE's code of the web build, but with `preserveInvariance` (Unity's
+ * vertex shaders declare an invariant position): the compiler then
+ * contracts and reassociates other operations than for ANGLE, and the
+ * premultiplied output is fused with the blending only when it is the last
+ * operation of the shader. Written for Unity so that the bits match the web
+ * (measured with Metal kernels and a blending pipeline of both compiled
+ * shaders, then on the Unity golden):
+ * - one exit: `blendColor()` returns the straight color and `main()`
+ *   premultiplies it (with early returns, FXC selects the result with
+ *   masks, which keeps Metal from fusing the multiply with the blending:
+ *   one level off on translucent fills, like a 0.3 alpha selection);
+ * - `mix()` as Metal computes it, `fma(t, b, fma(-t, a, a))`, through HLSL
+ *   `mad()`;
+ * - the dither noise with `fract()` spelled out and multiplied by `dashOne`
+ *   (a barrier against reassociation, see `dashAlpha()`);
+ * - the cosine of the slash pattern: the constant ANGLE's compiler folds,
+ *   one ulp from the one FXC folds.
+ */
 class GpuiQuad_Frag extends Frag {
 
     /**
@@ -268,7 +288,12 @@ class GpuiQuad_Frag extends Frag {
     /** Premultiplied output, as expected by Ceramic's blending */
     function blendColor(color:Vec4, alphaFactor:Float):Vec4 {
         var alpha:Float = color.a * alphaFactor;
+        #if shade_unity
+        // Premultiplied once at the end of `main()` (see the class doc)
+        return vec4(color.rgb, alpha);
+        #else
         return vec4(color.rgb * alpha, alpha);
+        #end
     }
 
     function gradientColor(position:Vec2):Vec4 {
@@ -307,16 +332,31 @@ class GpuiQuad_Frag extends Frag {
             t = clamp(t, 0.0, 1.0);
 
             if (params.y < 0.5) {
+                #if shade_unity
+                backgroundColor = GpuiQuadMad.mad(vec4(t), backgroundColor1, GpuiQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0));
+                #else
                 backgroundColor = mix(backgroundColor0, backgroundColor1, t);
+                #end
             }
             else {
+                #if shade_unity
+                backgroundColor = oklabToSrgb(GpuiQuadMad.mad(vec4(t), backgroundColor1, GpuiQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0)));
+                #else
                 backgroundColor = oklabToSrgb(mix(backgroundColor0, backgroundColor1, t));
+                #end
             }
 
             // Dither to reduce banding in gradients (triangular noise, like GPUI's Metal shader)
             var seed:Vec2 = position * 0.6180339887;
+            #if shade_unity
+            var s1:Float = sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453;
+            var s2:Float = sin(dot(seed, vec2(39.3460, 11.135))) * 24634.6345;
+            var r1:Float = min(s1 - floor(s1), 0.99999994039535522) * dashOne;
+            var r2:Float = min(s2 - floor(s2), 0.99999994039535522) * dashOne;
+            #else
             var r1:Float = fract(sin(dot(seed, vec2(12.9898, 78.233))) * 43758.5453);
             var r2:Float = fract(sin(dot(seed, vec2(39.3460, 11.135))) * 24634.6345);
+            #end
             var tri:Float = r1 + r2 - 1.0;
             backgroundColor.rgb += vec3(tri * 2.0 / 255.0);
             backgroundColor.a += tri * 3.0 / 255.0;
@@ -331,7 +371,11 @@ class GpuiQuad_Frag extends Frag {
             var patternPeriod:Float = patternHeight * sin(stripeAngle);
             var relativePosition:Vec2 = position - origin;
             // WGSL mat2x2(cos, -sin, sin, cos) is column-major
+            #if shade_unity
+            var rotatedX:Float = 0.70710676908493042 * relativePosition.x + sin(stripeAngle) * relativePosition.y;
+            #else
             var rotatedX:Float = cos(stripeAngle) * relativePosition.x + sin(stripeAngle) * relativePosition.y;
+            #end
             var pattern:Float = fmodf(rotatedX, patternPeriod);
             var distance:Float = min(pattern, patternPeriod - pattern) - patternPeriod * (patternWidth / patternHeight) / 2.0;
             backgroundColor.a *= clamp(0.5 - distance, 0.0, 1.0);
@@ -367,9 +411,18 @@ class GpuiQuad_Frag extends Frag {
         var unrounded:Bool = cornerRadii.x == 0.0 && cornerRadii.w == 0.0 && cornerRadii.y == 0.0 && cornerRadii.z == 0.0;
 
         // Fast path when the quad is not rounded and doesn't have any border
+        #if shade_unity
+        // One exit (see the class doc)
+        var result:Vec4 = vec4(0.0);
+        if (borderWidths.x == 0.0 && borderWidths.w == 0.0 && borderWidths.y == 0.0 && borderWidths.z == 0.0 && unrounded) {
+            result = blendColor(backgroundColor, 1.0);
+        }
+        else {
+        #else
         if (borderWidths.x == 0.0 && borderWidths.w == 0.0 && borderWidths.y == 0.0 && borderWidths.z == 0.0 && unrounded) {
             return blendColor(backgroundColor, 1.0);
         }
+        #end
 
         var size:Vec2 = bounds.zw;
         var halfSize:Vec2 = size / 2.0;
@@ -413,9 +466,16 @@ class GpuiQuad_Frag extends Frag {
             straightBorderInnerCornerToPoint.y < -antialiasThreshold;
 
         // Fast path for points that must be part of the background
+        #if shade_unity
+        if (isWithinInnerStraightBorder && !isNearRoundedCorner) {
+            result = blendColor(backgroundColor, 1.0);
+        }
+        else {
+        #else
         if (isWithinInnerStraightBorder && !isNearRoundedCorner) {
             return blendColor(backgroundColor, 1.0);
         }
+        #end
 
         // Signed distance of the point to the outside edge of the quad's border
         var outerSdf:Float = quadSdfImpl(cornerCenterToPoint, cornerRadius);
@@ -583,17 +643,46 @@ class GpuiQuad_Frag extends Frag {
             // Blend the border on top of the background, then linearly
             // interpolate between the two as we slide inside the background
             var blendedBorder:Vec4 = over(backgroundColor, borderColorValue);
+            #if shade_unity
+            var borderMix:Float = clamp(antialiasThreshold - innerSdf, 0.0, 1.0);
+            color = GpuiQuadMad.mad(vec4(borderMix), blendedBorder, GpuiQuadMad.mad(vec4(-borderMix), backgroundColor, backgroundColor));
+            #else
             color = mix(backgroundColor, blendedBorder, clamp(antialiasThreshold - innerSdf, 0.0, 1.0));
+            #end
         }
 
+        #if shade_unity
+        result = blendColor(color, clamp(antialiasThreshold - outerSdf, 0.0, 1.0));
+        }
+        }
+        return result;
+        #else
         return blendColor(color, clamp(antialiasThreshold - outerSdf, 0.0, 1.0));
+        #end
 
     }
 
     function main():Vec4 {
 
+        #if shade_unity
+        var color:Vec4 = fragmentColor();
+        return vec4(color.rgb * color.a, color.a);
+        #else
         return fragmentColor();
+        #end
 
     }
 
 }
+
+#if shade_unity
+/**
+ * HLSL `mad()`, written `fma()` in the MSL of Unity's Metal shaders: the
+ * multiply-adds that Metal's fast math contracts in the GLSL of the web
+ * build (ANGLE), spelled out for Unity, whose shaders are compiled with
+ * `preserveInvariance` (see `GpuiQuad_Frag`).
+ */
+extern class GpuiQuadMad {
+    static function mad(a:Vec4, b:Vec4, c:Vec4):Vec4;
+}
+#end
