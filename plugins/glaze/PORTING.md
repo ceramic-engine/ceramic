@@ -113,6 +113,8 @@ No license washing: ported code keeps its authors and license.
 
 The port must match the original GPUI and gpui-kit exactly. The only allowed differences are the fixes listed in [DEVIATIONS.md](DEVIATIONS.md), each motivated by a defect proven to exist in the original. A fix is applied to the port and, as a patch, to the copy of the original built by the reference harness, so the comparison stays strict. Any other difference is a bug of the port.
 
+A few entries are decisions of the owner rather than fixes of a rendered defect, and follow the same procedure (patch, declaration, safeguards): the web keyboard and comma of number fields (DEV-017, DEV-018), files in a browser (DEV-019) and the scrollbar mode (DEV-020: `Theme.init` sets `Hover` on every platform where gpui-kit syncs with the system; an app that wants the system setting calls GPUI's own `Theme.syncScrollbarAppearance(cx)` after `init`, read once, not followed afterwards).
+
 ## Writing style
 
 No em dash or en dash anywhere (code, comments, docs, commit messages). Rewrite the sentence with a comma, a colon, parentheses or two sentences.

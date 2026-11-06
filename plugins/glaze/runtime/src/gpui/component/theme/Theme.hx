@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/mod.rs, crates/component/src/theme/schema.rs (Theme::apply_config)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deliberate deviation DEV-020 (scrollbars shown on hover by default). See DEVIATIONS.md.
 package gpui.component.theme;
 
 import gpui.AppContext;
@@ -284,7 +285,14 @@ class Theme extends ThemeColor {
 
     /**
      * Initializes the theme system: the registry, the default light theme,
-     * then the scrollbar mode from the platform (Rust: `theme::init`).
+     * then the `Hover` scrollbar mode (Rust: `theme::init`).
+     *
+     * Deliberate deviation DEV-020: gpui-kit syncs the scrollbar mode with
+     * the platform here; the port uses `Hover` on every platform (the bars
+     * show on hover and for a moment after any scroll). An app that wants
+     * the system setting calls `syncScrollbarAppearance` after `init`
+     * (read once, like gpui-kit: a later change of the setting is not
+     * followed).
      */
     public static function init(cx:AppContext):Void {
 
@@ -292,7 +300,9 @@ class Theme extends ThemeColor {
 
         // Ensure theme is loaded directly on startup
         change(Light, null, cx);
-        syncScrollbarAppearance(cx);
+        // Modified for ceramic-gpui (DEV-020): Hover on every platform
+        // instead of syncScrollbarAppearance(cx)
+        setScrollbarMode(Hover, cx);
 
     }
 
@@ -311,6 +321,10 @@ class Theme extends ThemeColor {
     /**
      * Sync the scrollbar showing behavior with the system: `Scrolling` when
      * the platform auto-hides scrollbars, `Hover` otherwise.
+     *
+     * Not called by `init` in the port (DEV-020): call it after `init` to
+     * follow the system setting (macOS "Show scroll bars", Windows "Automatically
+     * hide scroll bars", `Scrolling` in a browser, `Hover` on Linux).
      */
     public static function syncScrollbarAppearance(cx:AppContext):Void {
 

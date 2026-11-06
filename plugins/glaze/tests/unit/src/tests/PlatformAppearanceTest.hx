@@ -38,7 +38,8 @@ using gpui.Menu.MenuItemTools;
  * The appearance of the windows follows Ceramic's system appearance (read
  * when a window opens, read again after the platform reports a change, the
  * observers running after the update that saw the change), the scrollbar
- * preference sets gpui-kit's scrollbar mode, and the dock menu is Ceramic's
+ * preference is what gpui-kit's opt-in sync reads (`Theme.init` itself sets
+ * `Hover`, deliberate deviation DEV-020), and the dock menu is Ceramic's
  * dock menu whose items dispatch their action.
  *
  * The Ceramic side is driven like a backend does: `systemAppearanceChange`,
@@ -212,22 +213,69 @@ class PlatformAppearanceTest extends TestCase {
 
 /// gpui-kit theme sync (theme/mod.rs)
 
-    function testScrollbarModeFollowsThePlatformAtInit() {
+    /**
+     * Deliberate deviation DEV-020: `Theme.init` sets `Hover` whatever the
+     * platform says (gpui-kit syncs with the platform there).
+     */
+    function testInitUsesHoverWhateverThePlatformSays() {
+        for (autoHide in [true, false]) {
+            emitAutoHideScrollbars(autoHide);
+            final app = new App(new TestDispatcher());
+            assertEquals(autoHide, app.shouldAutoHideScrollbars());
+            app.update(cx -> Component.init(cx));
+            assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode, 'auto hide $autoHide');
+            // The platform still answers what the system says
+            assertEquals(autoHide, app.shouldAutoHideScrollbars());
+        }
+    }
+
+    /**
+     * The opt-in: `syncScrollbarAppearance` after `init` is gpui-kit's sync,
+     * read when it is called (a later change is not followed).
+     */
+    function testSyncScrollbarAppearanceIsTheOptIn() {
+        app.update(cx -> Component.init(cx));
+        assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
+
         emitAutoHideScrollbars(true);
         assertTrue(app.shouldAutoHideScrollbars());
-        app.update(cx -> Component.init(cx));
+        app.update(cx -> Theme.syncScrollbarAppearance(cx));
         assertEquals(ScrollbarMode.Scrolling, Theme.global(app).scrollbarMode);
 
         emitAutoHideScrollbars(false);
+        assertFalse(app.shouldAutoHideScrollbars());
+        // Not followed until the app syncs again
+        assertEquals(ScrollbarMode.Scrolling, Theme.global(app).scrollbarMode);
         app.update(cx -> Theme.syncScrollbarAppearance(cx));
+        assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
+
+        emitAutoHideScrollbars(true);
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
     }
 
     function testInitOnTheTestPlatformUsesHover() {
-        // Like gpui-kit's own tests (TestPlatform: false)
+        // Like gpui-kit's own tests (TestPlatform: false), whatever the screen says
+        emitAutoHideScrollbars(true);
         app.platformOperations = new TestPlatformOperations();
         app.update(cx -> Component.init(cx));
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
+        app.update(cx -> Theme.syncScrollbarAppearance(cx));
+        assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
+    }
+
+    function testAModeChosenByTheAppIsKept() {
+        app.update(cx -> {
+            Component.init(cx);
+            Theme.setScrollbarMode(Always, cx);
+        });
+        assertEquals(ScrollbarMode.Always, Theme.global(app).scrollbarMode);
+        for (autoHide in [true, false]) {
+            emitAutoHideScrollbars(autoHide);
+            dispatcher.runUntilParked();
+            assertEquals(ScrollbarMode.Always, Theme.global(app).scrollbarMode, 'auto hide $autoHide');
+        }
+        // Projected onto the Base scrollbar theme too
+        assertEquals(ScrollbarMode.Always, gpui.base.theme.Theme.global(app).scrollbar.mode());
     }
 
     function testSyncSystemAppearance() {
@@ -331,6 +379,15 @@ class PlatformAppearanceTest extends TestCase {
         @:privateAccess (clay.Clay.app.runtime : clay.sdl.SDLRuntime).pollAutoHideScrollbars();
         flushInput();
         assertEquals(initialAutoHide, screen.autoHideScrollbars);
+    }
+
+    function testNativeInitUsesHoverAndTheSyncFollowsTheScrollerStyle() {
+        final overlay = clay.sdl.SDL.autoHideScrollbars();
+        assertEquals(overlay, app.shouldAutoHideScrollbars());
+        app.update(cx -> Component.init(cx));
+        assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
+        app.update(cx -> Theme.syncScrollbarAppearance(cx));
+        assertEquals(overlay ? ScrollbarMode.Scrolling : ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
     }
 
     function testNativeDockMenu() {

@@ -67,6 +67,44 @@ class StoryPlatformTest extends TestCase {
     }
 
     /**
+     * The gallery's saved scrollbar mode wins over the `Hover` default of
+     * `Theme.init` (deliberate deviation DEV-020); without a saved mode the
+     * default stays.
+     */
+    function testSavedScrollbarModeIsRestoredOverTheDefault() {
+        final previous = Themes.stateStorage;
+        try {
+            for (saved in [Scrolling, Always, Hover]) {
+                final state = new story.Themes.StoryThemeState();
+                state.scrollbarMode = saved;
+                final json = Themes.stateJson(state);
+                Themes.stateStorage = {read: () -> json, write: (_) -> {}};
+                final app = new App(new TestDispatcher());
+                app.update(cx -> {
+                    Component.init(cx);
+                    assertEquals(ScrollbarMode.Hover, gpui.component.theme.Theme.global(cx).scrollbarMode);
+                    story.AppState.init(cx);
+                    Themes.init(cx);
+                });
+                assertEquals(saved, gpui.component.theme.Theme.global(app).scrollbarMode);
+            }
+
+            Themes.stateStorage = {read: () -> '{"theme": "Default Light"}', write: (_) -> {}};
+            final app = new App(new TestDispatcher());
+            app.update(cx -> {
+                Component.init(cx);
+                story.AppState.init(cx);
+                Themes.init(cx);
+            });
+            assertEquals(ScrollbarMode.Hover, gpui.component.theme.Theme.global(app).scrollbarMode);
+        } catch (e:haxe.Exception) {
+            Themes.stateStorage = previous;
+            throw e;
+        }
+        Themes.stateStorage = previous;
+    }
+
+    /**
      * Unity draws the app inside a Unity view, with no system title bar and
      * no system menu bar: the title bar renders like the web (no room for
      * the macOS traffic lights) and the gallery shows its in-window menu bar,

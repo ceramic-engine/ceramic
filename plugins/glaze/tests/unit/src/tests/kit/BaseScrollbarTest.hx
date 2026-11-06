@@ -527,6 +527,103 @@ class BaseScrollbarTest extends TestCase {
         assertTrue(h.handle.offset().y < 0.);
     }
 
+    /// Hover while scrolling (the port's default mode, DEV-020)
+
+    /**
+     * A vertical `Hover` scrollbar over a 100 px scroll area of 500 px of
+     * content, the pointer never over the bar strip (x from 94 to 100).
+     */
+    function scrollAreaHarness():{cx:VisualTestContext, view:gpui.Entity<ScriptView>, handle:gpui.ScrollHandle, bar:BarHolder} {
+        final handle = new gpui.ScrollHandle();
+        final bar = new BarHolder();
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
+            final scrollbar = new Scrollbar(handle).axis(Vertical).mode(Hover);
+            bar.scrollbar = scrollbar;
+            return div()
+                .relative()
+                .size(px(100.))
+                .child(div().id('content').size(px(100.)).overflowYScroll().trackScroll(handle).child(div().wFull().h(px(500.))))
+                .child(scrollbar);
+        }));
+        contexts.push(opened.cx);
+        draw(opened.cx);
+        return {cx: opened.cx, view: opened.view, handle: handle, bar: bar};
+    }
+
+    /** Whether the vertical bar of the last drawn frame is shown. */
+    static function barShown(bar:BarHolder):Bool {
+        final states = @:privateAccess bar.scrollbar.states;
+        if (states.length == 0) return false;
+        final state = states[0];
+        return state.visibilityRequested && state.visibilityOpacity > 0.;
+    }
+
+    /** The bar hides once the idle hold after the last scroll is over. */
+    function assertHidesAfterTheIdleHold(cx:VisualTestContext, bar:BarHolder):Void {
+        cx.advanceClock(DEFAULT_IDLE - 0.1);
+        cx.runUntilParked();
+        draw(cx);
+        assertTrue(barShown(bar), 'still shown within the idle hold');
+        cx.advanceClock(0.1);
+        cx.runUntilParked();
+        draw(cx);
+        assertFalse(barShown(bar), 'hidden after the idle hold');
+    }
+
+    function testHoverRevealsTheBarForAWheelOutsideTheBarStrip() {
+        final h = scrollAreaHarness();
+        assertFalse(barShown(h.bar));
+        h.cx.simulateEvent(new gpui.ScrollEvent(new Point(30., 50.), gpui.ScrollDelta.Pixels(new Point(0., -40.))));
+        draw(h.cx);
+        assertEquals(-40., h.handle.offset().y);
+        assertTrue(barShown(h.bar));
+        assertHidesAfterTheIdleHold(h.cx, h.bar);
+    }
+
+    function testHoverRevealsTheBarForAProgrammaticScroll() {
+        final h = scrollAreaHarness();
+        assertFalse(barShown(h.bar));
+        h.handle.setOffset(new Point(0., -120.));
+        h.cx.update((_, cx) -> cx.notify(h.view.entityId()));
+        h.cx.runUntilParked();
+        draw(h.cx);
+        assertTrue(barShown(h.bar));
+        assertHidesAfterTheIdleHold(h.cx, h.bar);
+    }
+
+    function testHoverRevealsTheBarForAKeyboardDrivenListScroll() {
+        final handle = new gpui.UniformListScrollHandle();
+        final bar = new BarHolder();
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
+            final scrollbar = new Scrollbar(handle).axis(Vertical).mode(Hover);
+            bar.scrollbar = scrollbar;
+            return div()
+                .relative()
+                .size(px(100.))
+                .child(uniformList('rows', 50, (start, end, _, _) -> [for (ix in start...end) div().id(ix).h(px(20.))])
+                    .trackScroll(handle)
+                    .size(px(100.)))
+                .child(scrollbar);
+        }));
+        final cx = opened.cx;
+        contexts.push(cx);
+        draw(cx);
+        assertFalse(barShown(bar));
+
+        // What a key handler moving a selection does: scroll the row into
+        // view and notify the view
+        handle.scrollToItem(30, gpui.ScrollStrategy.Top);
+        cx.update((_, app) -> app.notify(opened.view.entityId()));
+        cx.runUntilParked();
+        draw(cx);
+        assertTrue(handle.state.baseHandle.offset().y < 0.);
+        // The list applies the deferred scroll at its own layout: the bar
+        // sees the new offset at the latest on the frame after
+        if (!barShown(bar)) draw(cx);
+        assertTrue(barShown(bar));
+        assertHidesAfterTheIdleHold(cx, bar);
+    }
+
     function testDragNotificationsAreThrottledAndDeliverTheLatestOffset() {
         final handle = new TestHandle(new Size(100., 1000.));
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> div()
@@ -706,6 +803,15 @@ class BaseScrollbarTest extends TestCase {
         assertTrue(theme.motion().equals(motion));
         assertEquals(styles, theme.styles());
     }
+
+}
+
+/** The scrollbar element of the last render. */
+class BarHolder {
+
+    public var scrollbar:Null<Scrollbar> = null;
+
+    public function new() {}
 
 }
 
