@@ -147,7 +147,14 @@ class SystemNotificationsTest extends TestCase {
         flushNotifications();
         @:privateAccess CeramicPlatformOperations.authorizationRequested = false;
         @:privateAccess CeramicPlatformOperations.postsAwaitingAuthorization = null;
+        // Native rule (GPUI's macOS platform) unless a test plays the browser
+        @:privateAccess CeramicPlatformOperations.askAgainWhileNotDetermined = false;
         return backend;
+    }
+
+    override function teardown() {
+        @:privateAccess CeramicPlatformOperations.askAgainWhileNotDetermined = #if web true #else false #end;
+        super.teardown();
     }
 
     function testCeramicOperationsAskOnceThenPost() {
@@ -222,6 +229,93 @@ class SystemNotificationsTest extends TestCase {
         backend.simulateResponse('thread-2', null);
         flushNotifications();
         assertEquals('again thread-2', calls[calls.length - 1]);
+    }
+
+    function testCeramicOperationsAskOnceEvenWhenTheAnswerIsNotDetermined() {
+        // Native rule (GPUI's macOS `authorization_requested`): asked once per process
+        final backend = headlessBackend();
+        final requestsBefore = backend.authorizationRequests;
+        backend.authorizationAnswer = NOT_DETERMINED;
+        app.update(cx -> cx.showSystemNotification(notification('a', 'A', '')));
+        flushNotifications();
+        app.update(cx -> cx.showSystemNotification(notification('b', 'B', '')));
+        flushNotifications();
+        assertEquals(requestsBefore + 1, backend.authorizationRequests);
+        assertEquals('a,b', [for (n in backend.shown) n.tag].join(','));
+    }
+
+    /**
+     * DEV-021 (browser rule): a post outside of a user gesture while the
+     * permission is not determined asks nobody (Ceramic answers
+     * `NOT_DETERMINED`, played here by the recording backend) and the
+     * browser drops it; the question stays open, so the next post (from a
+     * click) asks, and the posts made while that answer is pending are
+     * posted when it comes.
+     */
+    function testWebOperationsAskAgainWhileNotDetermined() {
+        final backend = headlessBackend();
+        @:privateAccess CeramicPlatformOperations.askAgainWhileNotDetermined = true;
+        final requestsBefore = backend.authorizationRequests;
+
+        // Outside of a gesture: answered NOT_DETERMINED, nothing decided
+        backend.authorizationAnswer = NOT_DETERMINED;
+        app.update(cx -> cx.showSystemNotification(notification('timer', 'From a timer', '')));
+        assertEquals(requestsBefore + 1, backend.authorizationRequests);
+        flushNotifications();
+        assertEquals(ceramic.NotificationAuthorization.NOT_DETERMINED, ceramic.Notifications.shared.authorization);
+        // Handed over like any post: the browser drops it without permission
+        assertEquals('timer', [for (n in backend.shown) n.tag].join(','));
+        backend.clear();
+
+        // From a click: asked again, the user allows
+        backend.authorizationAnswer = AUTHORIZED;
+        app.update(cx -> {
+            cx.showSystemNotification(notification('click', 'From a click', 'Body'));
+            cx.showSystemNotification(notification('second', 'While pending', ''));
+        });
+        assertEquals(requestsBefore + 2, backend.authorizationRequests);
+        assertEquals(0, backend.shown.length);
+        flushNotifications();
+        assertEquals(ceramic.NotificationAuthorization.AUTHORIZED, ceramic.Notifications.shared.authorization);
+        assertEquals('click:From a click,second:While pending', [for (n in backend.shown) n.tag + ':' + n.title].join(','));
+
+        // Decided: later posts go straight to the browser
+        app.update(cx -> cx.showSystemNotification(notification('later', 'Later', '')));
+        assertEquals(requestsBefore + 2, backend.authorizationRequests);
+        assertEquals('click,second,later', [for (n in backend.shown) n.tag].join(','));
+    }
+
+    function testWebOperationsDoNotAskAgainOnceDenied() {
+        final backend = headlessBackend();
+        @:privateAccess CeramicPlatformOperations.askAgainWhileNotDetermined = true;
+        final requestsBefore = backend.authorizationRequests;
+        backend.authorizationAnswer = DENIED;
+        app.update(cx -> cx.showSystemNotification(notification('a', 'A', '')));
+        flushNotifications();
+        app.update(cx -> cx.showSystemNotification(notification('b', 'B', '')));
+        flushNotifications();
+        assertEquals(requestsBefore + 1, backend.authorizationRequests);
+        assertEquals(ceramic.NotificationAuthorization.DENIED, ceramic.Notifications.shared.authorization);
+    }
+
+    /**
+     * DEV-021: a page has no action buttons (they need a service worker), so
+     * a click on a notification posted with actions answers a null action id,
+     * which gpui-kit's registry handles like a click on the body.
+     */
+    function testWebClickOnANotificationWithActionsIsABodyResponse() {
+        final backend = headlessBackend();
+        @:privateAccess CeramicPlatformOperations.askAgainWhileNotDetermined = true;
+        final responses:Array<String> = [];
+        app.update(cx -> {
+            cx.onSystemNotificationResponse((response, _) -> responses.push(response.tag + ' ' + response.actionId));
+            cx.showSystemNotification(notification('build', 'Build finished', '', [new SystemNotificationAction('open', 'Open')]));
+        });
+        flushNotifications();
+        assertEquals(1, backend.delivered.length);
+        backend.simulateResponse('build', null);
+        flushNotifications();
+        assertEquals('build null', responses.join(','));
     }
 
     #end

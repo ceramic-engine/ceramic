@@ -5,7 +5,8 @@
 // The system notifications follow gpui-pre-macos 0.3.10
 // src/system_notifications.rs (request the authorization on the first post),
 // gpui-pre-linux and gpui-pre-windows 0.3.10 (src/linux/system_notifications.rs,
-// src/system_notifications.rs) through Ceramic's notifications plugin.
+// src/system_notifications.rs) through Ceramic's notifications plugin, also
+// in a browser (deliberate deviation DEV-021, gpui-pre-web has none).
 // See NOTICE.md and DEVIATIONS.md.
 package gpui.platform;
 
@@ -78,9 +79,22 @@ import gpui.WindowAppearance;
  *   center (GPUI's macOS platform initializes it on the first
  *   `on_system_notification_response` too); the responses go to the last
  *   operations that registered a callback (one platform per process in
- *   GPUI). Without the plugin, in a browser (gpui-pre-web has no system
- *   notifications) and on Unity, the calls do nothing, like a GPUI platform
- *   without notifications.
+ *   GPUI). Without the plugin and on Unity, the calls do nothing, like a
+ *   GPUI platform without notifications.
+ * - In a browser (deliberate deviation DEV-021; gpui-pre-web has no system
+ *   notifications), the notifications are the browser's (Notification API,
+ *   through the plugin). Browsers ask for the permission only during a user
+ *   gesture: a first post made from a click or key handler (GPUI dispatches
+ *   the DOM event in the next frame, within the browser's activation
+ *   window) asks, and the posts made while the answer is pending are posted
+ *   when it comes. A post made outside of a gesture while the permission is
+ *   not determined asks nobody and is dropped (Ceramic answers
+ *   `NOT_DETERMINED` without asking the browser). The question stays open
+ *   while the answer is `NOT_DETERMINED` (outside of a gesture, or a prompt
+ *   closed without a choice): the next post asks again. Action buttons need
+ *   a service worker: a page shows the notification without them, and a
+ *   click on it is the response with a null action id (the browser focuses
+ *   the page). The same tag replaces the notification, `dismiss` closes it.
  */
 class CeramicPlatformOperations implements PlatformOperations {
 
@@ -396,7 +410,7 @@ class CeramicPlatformOperations implements PlatformOperations {
 
     var systemNotificationResponseCallback:Null<(SystemNotificationResponse) -> Void> = null;
 
-    #if (plugin_notifications && !web)
+    #if plugin_notifications
 
     /** Whether the user was asked for the authorization (GPUI's `authorization_requested`). */
     static var authorizationRequested:Bool = false;
@@ -409,17 +423,26 @@ class CeramicPlatformOperations implements PlatformOperations {
 
     static var listeningSystemNotifications:Bool = false;
 
+    /**
+     * Whether a `NOT_DETERMINED` answer leaves the question open, so that the
+     * next post asks again (DEV-021, in a browser: a request outside of a user
+     * gesture asks nobody, and a prompt closed without a choice decides
+     * nothing). Elsewhere the first post asks once, like GPUI's macOS
+     * platform. Tests may change it.
+     */
+    static var askAgainWhileNotDetermined:Bool = #if web true #else false #end;
+
     #end
 
     /** The process identity (Windows AppUserModelID, name shown on Linux and Windows). */
     public function setAppIdentity(identifier:String, name:String):Void {
-        #if (plugin_notifications && !web)
+        #if plugin_notifications
         ceramic.Notifications.shared.setAppIdentity(identifier, name);
         #end
     }
 
     public function showSystemNotification(notification:SystemNotification):Void {
-        #if (plugin_notifications && !web)
+        #if plugin_notifications
         final notifications = ceramic.Notifications.shared;
         if (!notifications.isAvailable())
             return;
@@ -427,9 +450,11 @@ class CeramicPlatformOperations implements PlatformOperations {
             // gpui-pre-macos `request_authorization` (once, on the first post)
             authorizationRequested = true;
             postsAwaitingAuthorization = [notification.clone()];
-            notifications.requestAuthorization(_ -> {
+            notifications.requestAuthorization(authorization -> {
                 final posts = postsAwaitingAuthorization;
                 postsAwaitingAuthorization = null;
+                if (askAgainWhileNotDetermined && authorization == ceramic.NotificationAuthorization.NOT_DETERMINED)
+                    authorizationRequested = false;
                 if (posts != null) {
                     for (post in posts)
                         postSystemNotification(post);
@@ -445,7 +470,7 @@ class CeramicPlatformOperations implements PlatformOperations {
         #end
     }
 
-    #if (plugin_notifications && !web)
+    #if plugin_notifications
     static function postSystemNotification(notification:SystemNotification):Void {
         ceramic.Notifications.shared.show({
             tag: notification.tag,
@@ -457,7 +482,7 @@ class CeramicPlatformOperations implements PlatformOperations {
     #end
 
     public function dismissSystemNotification(tag:String):Void {
-        #if (plugin_notifications && !web)
+        #if plugin_notifications
         if (postsAwaitingAuthorization != null) {
             var i = postsAwaitingAuthorization.length - 1;
             while (i >= 0) {
@@ -472,7 +497,7 @@ class CeramicPlatformOperations implements PlatformOperations {
 
     public function onSystemNotificationResponse(callback:(SystemNotificationResponse) -> Void):Void {
         systemNotificationResponseCallback = callback;
-        #if (plugin_notifications && !web)
+        #if plugin_notifications
         systemNotificationResponder = this;
         if (!listeningSystemNotifications) {
             listeningSystemNotifications = true;
