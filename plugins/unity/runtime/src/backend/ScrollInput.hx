@@ -26,7 +26,7 @@ import ceramic.ScrollUnit;
  *   fractional for precise devices: clay's macOS rule (whole values are
  *   lines, fractional ones are pixels once multiplied by 10, a precise device
  *   seen less than 0.5 s ago keeps the events in pixels). To calibrate on the
- *   owner's devices (docs/UNITY.md of the GPUI port).
+ *   owner's devices (docs/UNITY.md of glaze-golden).
  * - Windows: 120 per notch (`WHEEL_DELTA`), less for high resolution wheels
  *   and precision touchpads: lines, `raw / 120`, like SDL.
  * - Linux and others: about 1 per notch: lines.

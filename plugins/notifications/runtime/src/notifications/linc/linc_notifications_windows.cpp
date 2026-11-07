@@ -24,7 +24,7 @@
 //   no COM activator, so a click after the app quit does nothing.
 // - dismiss hides the toast posted for the tag.
 //
-// The test procedure for the owner is in ceramic-gpui docs/CERAMIC_APIS.md.
+// The test procedure for the owner is in docs/CERAMIC_APIS.md of glaze-golden.
 
 #include "linc_notifications.h"
 

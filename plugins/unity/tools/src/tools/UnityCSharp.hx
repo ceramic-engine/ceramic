@@ -214,7 +214,7 @@ class UnityCSharp {
         // before returning the instance itself. On IL2CPP, a generic virtual
         // call is resolved through a locked hash table and `typeof` in shared
         // generic code through a reflection lookup: about 9 % of a frame of
-        // the GPUI story on Unity (taffy reads its nodes this way). Return the
+        // the glaze story sample on Unity (taffy reads its nodes this way). Return the
         // instance at once when it already has the target type (what the cast
         // method returns in that case anyway).
         if (content.indexOf('public static object __hx_cast<') != -1) {

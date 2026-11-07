@@ -5,7 +5,7 @@
 # (hxcpp.h here) and run against a fake libdbus with a fake notification
 # service (fake_dbus.cpp), loaded with dlopen under the name libdbus-1.so.3
 # like the real one. What it cannot check: the real libdbus ABI and a real
-# notification service (see docs/CERAMIC_APIS.md in ceramic-gpui for the
+# notification service (see docs/CERAMIC_APIS.md in glaze-golden for the
 # Linux check procedure).
 #
 set -eu
