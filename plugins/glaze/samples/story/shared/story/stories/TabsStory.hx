@@ -4,34 +4,34 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.ScrollHandle;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.button.ButtonGroup;
-import gpui.component.menu.PopupMenu;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.ScrollHandle;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.button.ButtonGroup;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 @:action(namespace = tabs_story, noJson) private class ToggleMoreMenu implements Action {}
 
@@ -56,7 +56,7 @@ class TabsStory extends Model implements Story {
         return 'A set of layered sections of content\u2014known as tab panels\u2014that are displayed one at a time.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -76,7 +76,7 @@ class TabsStory extends Model implements Story {
 
     final dynamicScrollHandle = new ScrollHandle();
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     @observe var menu:Bool = false;
 

@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/registry.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.AppContext;
+import glaze.AppContext;
 
 /**
  * The registered themes, held as a global.
@@ -30,7 +30,7 @@ class ThemeRegistry {
 
     public function new() {}
 
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     static function init(cx:AppContext):Void {
 
         final registry = new ThemeRegistry();

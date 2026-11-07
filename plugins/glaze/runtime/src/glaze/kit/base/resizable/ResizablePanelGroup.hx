@@ -2,33 +2,33 @@
 // DragPanel, ResizablePanelGroup, ResizePanelGroupElement)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.MouseMoveEvent;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.KeyedEntity;
-import gpui.base.resizable.ResizeHandle.ResizeHandleRenderer;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.MouseMoveEvent;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.KeyedEntity;
+import glaze.kit.base.resizable.ResizeHandle.ResizeHandleRenderer;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.ElementExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.ElementExt;
 
 /**
  * The events of a `ResizableState`.
@@ -57,7 +57,7 @@ class DragPanelView extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }
@@ -259,7 +259,7 @@ class ResizePanelGroupElement extends Element {
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), null, cx);
+        return window.requestLayout(@:privateAccess glaze.Style.sharedDefaultStyle(), null, cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {}

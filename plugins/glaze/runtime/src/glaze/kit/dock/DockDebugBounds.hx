@@ -1,17 +1,17 @@
 // New code for the Haxe port of gpui-kit 0.8.1: stands for gpui-pre 0.3.10's
 // `debug_selector` / `debug_bounds` (src/elements/div.rs, src/window.rs, Zed
 // Industries, Apache-2.0) in the dock skin of crates/component/src/dock. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Window;
-import gpui.component.tab.Tab;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Window;
+import glaze.kit.tab.Tab;
 
 /**
  * The dock skin's `debug_selector` calls.
@@ -65,7 +65,7 @@ class DockDebugBounds {
         recorded.clear();
     }
 
-    @:allow(gpui.component.dock)
+    @:allow(glaze.kit.dock)
     static function record(window:Window, selector:String, bounds:Bounds):Void {
         var map = recorded.get(window.id);
         if (map == null) {
@@ -83,7 +83,7 @@ class DockDebugBounds {
     /**
      * `element.debug_selector(selector)`.
      */
-    @:allow(gpui.component.dock)
+    @:allow(glaze.kit.dock)
     static function wrap(selector:() -> String, element:IntoElement):IntoElement {
         return enabled ? new DebugSelectorElement(selector(), element) : element;
     }

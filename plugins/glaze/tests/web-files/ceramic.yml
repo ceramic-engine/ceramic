@@ -6,6 +6,6 @@ app:
     version: '1.0'
 
     plugins:
-        # GPUI port (its path prompts go through the dialogs plugin)
-        - gpui
+        # Glaze (its path prompts go through the dialogs plugin)
+        - glaze
         - dialogs

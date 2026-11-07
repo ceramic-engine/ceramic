@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Entity;
-import gpui.Window.StateModel;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Entity;
+import glaze.Window.StateModel;
 
 /**
  * The global state of the story gallery.

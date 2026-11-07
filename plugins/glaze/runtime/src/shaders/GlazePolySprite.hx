@@ -16,9 +16,9 @@ package shaders;
  * texture) the premultiplied sample is scaled as a whole and blended with
  * `ONE` / `ONE_MINUS_SRC_ALPHA`.
  */
-class GpuiPolySprite extends Shader<GpuiPolySprite_Vert, GpuiPolySprite_Frag> {}
+class GlazePolySprite extends Shader<GlazePolySprite_Vert, GlazePolySprite_Frag> {}
 
-class GpuiPolySprite_Vert extends Vert {
+class GlazePolySprite_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -67,7 +67,7 @@ class GpuiPolySprite_Vert extends Vert {
 
 }
 
-class GpuiPolySprite_Frag extends Frag {
+class GlazePolySprite_Frag extends Frag {
 
     @param var mainTex:Sampler2D;
 

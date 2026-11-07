@@ -3,33 +3,33 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.dialog.AlertDialog;
-import gpui.component.dialog.DialogDescription;
-import gpui.component.dialog.DialogFooter;
-import gpui.component.dialog.DialogHeader;
-import gpui.component.dialog.DialogTitle;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.dialog.AlertDialog;
+import glaze.kit.dialog.DialogDescription;
+import glaze.kit.dialog.DialogFooter;
+import glaze.kit.dialog.DialogHeader;
+import glaze.kit.dialog.DialogTitle;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.ParentElementTools;
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.ParentElementTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 class AlertDialogStory extends Model implements Story {
 

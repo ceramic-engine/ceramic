@@ -1,4 +1,4 @@
-package tools.tasks.gpui;
+package tools.tasks.glaze;
 
 import haxe.io.Path;
 import sys.FileSystem;
@@ -11,14 +11,14 @@ using StringTools;
  * Copies vscode-oniguruma's `onig.wasm` and its JavaScript binding
  * (`vscode-oniguruma.js`) from the plugin's `onig-wasm` folder into the
  * ceramic project's web directory, where the code highlighter loads them at
- * startup when the project sets the `gpui_onig_wasm` define. With `--remove`,
+ * startup when the project sets the `glaze_onig_wasm` define. With `--remove`,
  * deletes them from the web directory instead (builds without the define).
  */
 class SetupOnigWasm extends tools.Task {
 
     override public function info(cwd:String):String {
 
-        return "Copy onig.wasm and its JavaScript binding into this ceramic project (web target, gpui_onig_wasm define).";
+        return "Copy onig.wasm and its JavaScript binding into this ceramic project (web target, glaze_onig_wasm define).";
 
     }
 
@@ -70,11 +70,11 @@ class SetupOnigWasm extends tools.Task {
     static function pluginPath():String {
 
         for (plugin in context.plugins) {
-            if (plugin.name == 'Gpui') {
+            if (plugin.name == 'Glaze') {
                 return plugin.path;
             }
         }
-        fail('The gpui plugin is not loaded');
+        fail('The glaze plugin is not loaded');
         return null;
 
     }

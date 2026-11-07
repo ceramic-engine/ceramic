@@ -1,12 +1,12 @@
 // Ported from gpui-pre 0.3.10: src/window.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Stacks;
-import gpui.platform.SceneRenderable;
-import gpui.TouchGestureRecognizer.RecognizedTouchGesture;
-import gpui.scene.Scene;
+import glaze.util.Stacks;
+import glaze.platform.SceneRenderable;
+import glaze.TouchGestureRecognizer.RecognizedTouchGesture;
+import glaze.scene.Scene;
 import haxe.ds.IntMap;
 
 /**
@@ -27,13 +27,13 @@ class WindowOptions {
     /** Size of a rem, in logical pixels */
     public var remSize:Float = 16;
 
-    /** Draw automatically from the `GpuiSystem` when the window is dirty */
+    /** Draw automatically from the `GlazeSystem` when the window is dirty */
     public var autoDraw:Bool = true;
 
     /** Whether the window starts active (focused at the platform level) */
     public var active:Bool = true;
 
-    /** Route Ceramic input (mouse, keyboard) to this window, see `GpuiInput` */
+    /** Route Ceramic input (mouse, keyboard) to this window, see `GlazeInput` */
     public var bindInput:Bool = true;
 
     /**
@@ -72,18 +72,18 @@ class ElementStateBox<S> {
     public var value:Null<S> = null;
 
     /** The path of the element (Rust's `GlobalElementId` of the key) */
-    @:allow(gpui)
+    @:allow(glaze)
     final node:GlobalElementId;
 
     /** The id of the state type (Rust's `TypeId` of the key, see `ElementStateType`) */
-    @:allow(gpui)
+    @:allow(glaze)
     final typeId:Int;
 
     /** The frame whose element states hold this box (the box moves to the next frame when accessed) */
-    @:allow(gpui)
+    @:allow(glaze)
     var owner:Frame;
 
-    @:allow(gpui)
+    @:allow(glaze)
     function new(node:GlobalElementId, typeId:Int, owner:Frame) {
         this.node = node;
         this.typeId = typeId;
@@ -138,7 +138,7 @@ class StateModel<T> extends Model {
  * the element listeners in fields instead of closures).
  */
 @:noCompletion
-@:allow(gpui)
+@:allow(glaze)
 class MouseListenerEntry {
 
     public final kind:PlatformInputKind;
@@ -409,7 +409,7 @@ class WindowControlHitbox {
 
 }
 
-#if gpui_inspector
+#if glaze_inspector
 /**
  * An inspector element path and the next instance id given to an element
  * built at that path (an entry of Rust's `next_inspector_instance_ids`).
@@ -479,7 +479,7 @@ private class Frame {
      */
     public final textInputRegions:Array<TextInputRegion> = [];
 
-    #if gpui_inspector
+    #if glaze_inspector
     /** Next instance id of each inspector element path, by path key (Rust `next_inspector_instance_ids`) */
     public var nextInspectorInstanceIds:Map<String, InspectorInstanceCount> = new Map();
 
@@ -532,7 +532,7 @@ private class Frame {
         inputHandlers.resize(0);
         textInputRegions.resize(0);
 
-        #if gpui_inspector
+        #if glaze_inspector
         nextInspectorInstanceIds.clear();
         inspectorHitboxes.clear();
         #end
@@ -608,7 +608,7 @@ private class Frame {
  *
  * Drawing (`draw()`) renders the root view, lays out the element tree with
  * taffy, prepaints and paints it into the next frame's scene, then swaps
- * frames. It runs from the `GpuiSystem` in `lateUpdate`, only when the window
+ * frames. It runs from the `GlazeSystem` in `lateUpdate`, only when the window
  * is dirty: a view whose observed fields changed, `cx.notify()` on a view of
  * the window, `refresh()`... When nothing changed, `renderable` keeps drawing
  * the scene of the previous frame and nothing is rebuilt.
@@ -617,7 +617,7 @@ private class Frame {
  * hitboxes and mouse listeners of the last frame, capture then bubble; key
  * events along the dispatch tree from the root to the focused element, with
  * multi-stroke key bindings, their pending timeout and action dispatch).
- * `GpuiInput` feeds Ceramic input to the windows.
+ * `GlazeInput` feeds Ceramic input to the windows.
  *
  * View caching: like GPUI, a view embedded with `.cached(style)` reuses the
  * prepaint and paint of the previous frame (hitboxes, dispatch nodes,
@@ -662,7 +662,7 @@ class Window implements WindowInvalidator {
     public final renderable:SceneRenderable;
 
     /**
-     * Draw automatically from the `GpuiSystem` when dirty.
+     * Draw automatically from the `GlazeSystem` when dirty.
      */
     public var autoDraw:Bool;
 
@@ -708,7 +708,7 @@ class Window implements WindowInvalidator {
      * (Rust `refreshing`): after `refresh()`, and while a `.cached(style)`
      * view renders its content.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var refreshing:Bool = false;
 
     var focusMovedWhileDrawing:Bool = false;
@@ -718,7 +718,7 @@ class Window implements WindowInvalidator {
      * views cached by default render like GPUI's uncached views, views
      * cached with a style are reused.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var drawingClean:Bool = false;
 
     /** Views notified since the last frame (Rust: the invalidator's dirty views) */
@@ -734,15 +734,15 @@ class Window implements WindowInvalidator {
     final invalidatedTrackers:Array<ViewTracker> = [];
 
     /** Shared scroll states read by the views cached by default (port, see `ViewDependencies`) */
-    @:allow(gpui)
+    @:allow(glaze)
     final viewDependencies:ViewDependencies = new ViewDependencies();
 
     /** Hitbox ids of the groups being prepainted (see `ViewElement` cache keys) */
-    @:allow(gpui)
+    @:allow(glaze)
     final prepaintGroupHitboxes:Array<Int> = [];
 
     /** Product of the opacities of the elements being prepainted */
-    @:allow(gpui)
+    @:allow(glaze)
     var prepaintOpacity:Float = 1.0;
 
     final scratchPrepaintIndex:PrepaintStateIndex = new PrepaintStateIndex();
@@ -777,7 +777,7 @@ class Window implements WindowInvalidator {
 
     var nextFrame:Frame;
 
-    #if gpui_inspector
+    #if glaze_inspector
     var inspector:Null<Inspector> = null;
     #end
 
@@ -812,11 +812,11 @@ class Window implements WindowInvalidator {
      * (read, updated or created) while it draws (Rust: `accessed_entities`
      * of the entity map, cleared when a draw starts).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static var accessRecorder:Null<Window> = null;
 
     /** Where accesses are recorded: the accessed set of the view drawing, or `frameAccessed` */
-    @:allow(gpui)
+    @:allow(glaze)
     var currentAccessed:AccessedEntities;
 
     final accessedStack:Array<AccessedEntities> = [];
@@ -846,8 +846,8 @@ class Window implements WindowInvalidator {
 
     var _active:Bool = true;
 
-    /** Whether the pointer is over the window (set by `GpuiInput`) */
-    @:allow(gpui)
+    /** Whether the pointer is over the window (set by `GlazeInput`) */
+    @:allow(glaze)
     var hovered:Bool = false;
 
     var _mousePosition:Point = new Point(0, 0);
@@ -892,7 +892,7 @@ class Window implements WindowInvalidator {
      * Incremented every time focus moves. Used to invalidate a pending
      * keyboard activation state when focus changes.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var focusGeneration:Int = 0;
 
     var focusLostPath:Array<Int> = [];
@@ -923,7 +923,7 @@ class Window implements WindowInvalidator {
 
     /**
      * The platform side of text input (Rust `PlatformWindow` text input methods):
-     * configuration, text input state changes and IME position. `GpuiInput` sets
+     * configuration, text input state changes and IME position. `GlazeInput` sets
      * a `TextInputBridge` driving Ceramic's text editing; `null` ignores them.
      */
     public var textInputPlatform:Null<PlatformTextInput> = null;
@@ -955,7 +955,7 @@ class Window implements WindowInvalidator {
         if (options == null) options = {};
         this.id = nextWindowId++;
         this.app = app;
-        this.platformOperations = new gpui.platform.CeramicWindowOperations(this);
+        this.platformOperations = new glaze.platform.CeramicWindowOperations(this);
         this.autoDraw = options.autoDraw;
         this.viewCaching = options.viewCaching != null ? options.viewCaching : defaultViewCaching;
         fixedScaleFactor = options.scaleFactor;
@@ -982,7 +982,7 @@ class Window implements WindowInvalidator {
         }
         else {
             // The headless backend has no textures: pages stay on the CPU
-            final atlas = new gpui.platform.CeramicAtlas(1024, #if headless false #else true #end);
+            final atlas = new glaze.platform.CeramicAtlas(1024, #if headless false #else true #end);
             renderable.atlasTextures = atlas.textures;
             renderable.atlas = atlas;
             atlas.onTexturesChange = () -> renderable.usedTexturesDirty = true;
@@ -999,10 +999,10 @@ class Window implements WindowInvalidator {
             app.onRefreshWindows = refreshWindowsOf;
         }
         if (autoDraw) {
-            GpuiSystem.ensure();
+            GlazeSystem.ensure();
         }
         if (options.bindInput) {
-            GpuiInput.bind(this);
+            GlazeInput.bind(this);
         }
         // The platform window reports its new scale factor (Rust `on_resize`
         // callback, wired in `Window::new`): Ceramic emits `resize` when the
@@ -1065,7 +1065,7 @@ class Window implements WindowInvalidator {
             hitRegionsOwner = null;
             ceramic.App.app.screen.setWindowHitRegions([]);
         }
-        GpuiInput.unbind(this);
+        GlazeInput.unbind(this);
         clearPendingInput();
         for (entityId in trackerIds) {
             trackers.get(entityId).destroy();
@@ -1080,8 +1080,8 @@ class Window implements WindowInvalidator {
         nextFrame.clear();
         renderedFrame.clear();
         renderable.destroy();
-        if (Std.isOfType(spriteAtlas, gpui.platform.CeramicAtlas)) {
-            (cast spriteAtlas : gpui.platform.CeramicAtlas).destroy();
+        if (Std.isOfType(spriteAtlas, glaze.platform.CeramicAtlas)) {
+            (cast spriteAtlas : glaze.platform.CeramicAtlas).destroy();
         }
         root = null;
     }
@@ -1127,7 +1127,7 @@ class Window implements WindowInvalidator {
      * - Otherwise, the reaction runs as scheduled by tracker, or at the
      *   latest when the window draws (`reactToInvalidatedTrackers`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function viewTrackerInvalidated(tracker:ViewTracker):Void {
         if (drawing) {
             @:privateAccess tracker.reacted = true;
@@ -1203,7 +1203,7 @@ class Window implements WindowInvalidator {
     /**
      * Whether the given view must render during the frame being drawn.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function isViewDirty(viewId:Int):Bool {
         return dirtyViews.exists(viewId);
     }
@@ -1374,7 +1374,7 @@ class Window implements WindowInvalidator {
             drawingClean = false;
             AnyElement.clearArena();
             @:privateAccess app.pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         accessRecorder = previousRecorder;
         drawing = false;
@@ -1455,7 +1455,7 @@ class Window implements WindowInvalidator {
             textInputPlatform.textInputStateChanged(focusedTextInput != -1 ? FocusGained : FocusLost);
         }
 
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.FINISH);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.FINISH);
         layoutEngine.finishFrame();
         windowTextSystem.finishFrame();
         nextFrame.finish(renderedFrame);
@@ -1515,7 +1515,7 @@ class Window implements WindowInvalidator {
         resetCursorStyle();
         refreshing = false;
         focusMovedWhileDrawing = _focus != focusBeforeListeners;
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.FINISH);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.FINISH);
     }
 
     static function samePath(a:Array<Int>, b:Array<Int>):Bool {
@@ -1534,17 +1534,17 @@ class Window implements WindowInvalidator {
         // Layout all root elements. Like the root element on the web, which
         // stretches to fill the viewport unless explicitly sized, window roots
         // fill the window when their size is `auto`.
-        #if gpui_inspector
+        #if glaze_inspector
         final inspectorWidth:Float = 30.0 * (remSize() : Float);
         final rootSize = inspector != null
             ? new Size(Math.max(_viewportSize.width - inspectorWidth, 0.0), _viewportSize.height)
             : _viewportSize;
         final rootElement = root.intoAnyElement();
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.LAYOUT);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.LAYOUT);
         final rootLayoutId = rootElement.requestLayout(this, app);
         layoutEngine.stretchAutoSizeToFill(rootLayoutId, rootSize, _scaleFactor);
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.LAYOUT);
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PREPAINT);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.LAYOUT);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.PREPAINT);
         rootElement.prepaintAsRoot(
             new Point(0, 0),
             new SizeOf<AvailableSpace>(AvailableSpace.Definite(rootSize.width), AvailableSpace.Definite(rootSize.height)),
@@ -1555,11 +1555,11 @@ class Window implements WindowInvalidator {
         final inspectorElement = prepaintInspector(inspectorWidth, app);
         #else
         final rootElement = root.intoAnyElement();
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.LAYOUT);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.LAYOUT);
         final rootLayoutId = rootElement.requestLayout(this, app);
         layoutEngine.stretchAutoSizeToFill(rootLayoutId, _viewportSize, _scaleFactor);
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.LAYOUT);
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PREPAINT);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.LAYOUT);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.PREPAINT);
         rootElement.prepaintAsRoot(
             new Point(0, 0),
             new SizeOf<AvailableSpace>(AvailableSpace.Definite(_viewportSize.width), AvailableSpace.Definite(_viewportSize.height)),
@@ -1586,13 +1586,13 @@ class Window implements WindowInvalidator {
         }
 
         mouseHitTest = nextFrame.hitTest(_mousePosition);
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.PREPAINT);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.PREPAINT);
 
         // Now actually paint the elements.
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.PAINT);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.PAINT);
         rootElement.paint(this, app);
 
-        #if gpui_inspector
+        #if glaze_inspector
         paintInspector(inspectorElement, app);
         #end
 
@@ -1605,10 +1605,10 @@ class Window implements WindowInvalidator {
             tooltipElement.paint(this, app);
         }
 
-        #if gpui_inspector
+        #if glaze_inspector
         paintInspectorHitbox(app);
         #end
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.PAINT);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.PAINT);
     }
 
     static inline function minSize():SizeOf<AvailableSpace> {
@@ -1684,7 +1684,7 @@ class Window implements WindowInvalidator {
      * (`requestLayout`, which renders the view) drops the previous
      * dependencies; the next ones keep collecting.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function beginRenderedView(view:Model, firstPhase:Bool):Void {
         final entityId = view.entityId;
         renderedEntityStack.push(view);
@@ -1714,7 +1714,7 @@ class Window implements WindowInvalidator {
      * Records an access to the given entity while this window draws (Rust
      * `EntityMap::read` / `lease` / `insert` mark the entity accessed).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static inline function recordAccess(entityId:Int):Void {
         final window = accessRecorder;
         if (window != null) {
@@ -1725,7 +1725,7 @@ class Window implements WindowInvalidator {
     /**
      * `recordAccess` for a model, whose id is only read while a window draws.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static inline function recordModelAccess(model:Model):Void {
         final window = accessRecorder;
         if (window != null) {
@@ -1774,12 +1774,12 @@ class Window implements WindowInvalidator {
     /**
      * Counts a view reused from the cache during this frame.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function countReusedView():Void {
         reusedViewCount++;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function endRenderedView():Void {
         final view = renderedEntityStack.pop();
         final tracker = trackers.get(view.entityId);
@@ -1802,7 +1802,7 @@ class Window implements WindowInvalidator {
         }
         catch (e:haxe.Exception) {
             endRenderedView();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         endRenderedView();
         return result;
@@ -1839,7 +1839,7 @@ class Window implements WindowInvalidator {
      * `requestLayout()` giving `children` away: the layout node keeps the
      * array (the element may still read it, never change it). Internal.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function requestLayoutOwned(style:Style, children:Array<LayoutId>, cx:App):LayoutId {
         return layoutEngine.requestLayoutWith(style, remSize(), _scaleFactor, children, true);
     }
@@ -1854,7 +1854,7 @@ class Window implements WindowInvalidator {
     }
 
     /** `requestMeasuredLayout()` with the measure as an object (`TextLayout`). Internal. */
-    @:allow(gpui)
+    @:allow(glaze)
     function requestMeasuredNode(style:Style, measure:TaffyLayoutEngine.MeasuredNode):LayoutId {
         return layoutEngine.requestMeasuredNode(style, remSize(), _scaleFactor, measure);
     }
@@ -1876,9 +1876,9 @@ class Window implements WindowInvalidator {
     }
 
     // Result of `computeLayoutBounds()`: the bounds of a layout id without a `Bounds`
-    @:allow(gpui) var layoutBoundsX:Float = 0;
-    @:allow(gpui) var layoutBoundsY:Float = 0;
-    @:allow(gpui) var layoutBoundsSize:Size = null;
+    @:allow(glaze) var layoutBoundsX:Float = 0;
+    @:allow(glaze) var layoutBoundsY:Float = 0;
+    @:allow(glaze) var layoutBoundsSize:Size = null;
 
     /**
      * Computes the bounds of the given `LayoutId` relative to the window into
@@ -1886,7 +1886,7 @@ class Window implements WindowInvalidator {
      * `layoutBounds()` returns, without allocating): for callers that only
      * read them.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function computeLayoutBounds(layoutId:LayoutId):Void {
         final engine = layoutEngine;
         engine.computeBounds(layoutId, _scaleFactor);
@@ -1901,24 +1901,24 @@ class Window implements WindowInvalidator {
     /**
      * A `Bounds` of the last `computeLayoutBounds()` result.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function computedLayoutBounds():Bounds {
         return new Bounds(new Point(layoutBoundsX, layoutBoundsY), layoutBoundsSize);
     }
 
 /// Element ids and element state
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function pushElementId(id:ElementId):Void {
         elementIdNode = elementIdNode.child(id);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function popElementId():Void {
         elementIdNode = elementIdNode.parent;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function prepareElementId(id:ElementId):GlobalElementId {
         final node = elementIdNode.child(id);
         elementIdNode = node;
@@ -1971,7 +1971,7 @@ class Window implements WindowInvalidator {
      * from the last frame or created (the state is marked as accessed; Rust
      * `take_element_state` + `insert_element_state`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function elementStateBox(globalId:GlobalElementId, typeId:Int):ElementStateBox<Dynamic> {
         final next = nextFrame;
         var box = globalId.findState(typeId);
@@ -1993,7 +1993,7 @@ class Window implements WindowInvalidator {
      * The value of the given element state, from this frame or the last
      * one, without accessing it.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function peekElementState(globalId:GlobalElementId, typeId:Int):Dynamic {
         final box = globalId.findState(typeId);
         return box != null ? box.value : null;
@@ -2086,7 +2086,7 @@ class Window implements WindowInvalidator {
      * stack holds the same refinements: must not be modified (`textStyle()`
      * returns a copy to modify). Composed once per stack depth.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function currentTextStyle():TextStyle {
         final stack = textStyleStack;
         final length = stack.length;
@@ -2146,7 +2146,7 @@ class Window implements WindowInvalidator {
      * The current text style, shared (see `currentTextStyle()`). Used for
      * the cache keys of views (no allocation per view).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function sharedCurrentTextStyle():TextStyle {
         return currentTextStyle();
     }
@@ -2208,7 +2208,7 @@ class Window implements WindowInvalidator {
      * operations as `Bounds.intersect` (`Point.max`, `Point.min`,
      * `fromCorners`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function pushOverflowMask(style:Style, bounds:Bounds, ?like:ContentMask):Bool {
         if (!style.computeOverflowMask(bounds, remSize())) {
             return false;
@@ -2220,12 +2220,12 @@ class Window implements WindowInvalidator {
         final other = contentMask().bounds;
         final otherRight = other.origin.x + other.size.width;
         final otherBottom = other.origin.y + other.size.height;
-        final left = gpui.util.MathUtil.totalLess(other.origin.x, x) ? x : other.origin.x;
-        final top = gpui.util.MathUtil.totalLess(other.origin.y, y) ? y : other.origin.y;
-        final minRight = !gpui.util.MathUtil.totalLess(otherRight, right) ? right : otherRight;
-        final minBottom = !gpui.util.MathUtil.totalLess(otherBottom, bottom) ? bottom : otherBottom;
-        final width = (gpui.util.MathUtil.totalLess(left, minRight) ? minRight : left) - left;
-        final height = (gpui.util.MathUtil.totalLess(top, minBottom) ? minBottom : top) - top;
+        final left = glaze.util.MathUtil.totalLess(other.origin.x, x) ? x : other.origin.x;
+        final top = glaze.util.MathUtil.totalLess(other.origin.y, y) ? y : other.origin.y;
+        final minRight = !glaze.util.MathUtil.totalLess(otherRight, right) ? right : otherRight;
+        final minBottom = !glaze.util.MathUtil.totalLess(otherBottom, bottom) ? bottom : otherBottom;
+        final width = (glaze.util.MathUtil.totalLess(left, minRight) ? minRight : left) - left;
+        final height = (glaze.util.MathUtil.totalLess(top, minBottom) ? minBottom : top) - top;
         // `like` (the mask of the same element in the prepaint phase) when
         // it is the same: masks are immutable
         if (like != null) {
@@ -2836,10 +2836,10 @@ class Window implements WindowInvalidator {
             final widthRatio = visibleBounds.size.width / imageBounds.size.width;
             final heightRatio = visibleBounds.size.height / imageBounds.size.height;
 
-            final subOriginX = tileX + gpui.util.MathUtil.round(xOffsetRatio * tileW);
-            final subOriginY = tileY + gpui.util.MathUtil.round(yOffsetRatio * tileH);
-            final subWidth = gpui.util.MathUtil.round(widthRatio * tileW);
-            final subHeight = gpui.util.MathUtil.round(heightRatio * tileH);
+            final subOriginX = tileX + glaze.util.MathUtil.round(xOffsetRatio * tileW);
+            final subOriginY = tileY + glaze.util.MathUtil.round(yOffsetRatio * tileH);
+            final subWidth = glaze.util.MathUtil.round(widthRatio * tileW);
+            final subHeight = glaze.util.MathUtil.round(heightRatio * tileH);
 
             final maxX = tileX + tileW;
             final maxY = tileY + tileH;
@@ -3067,7 +3067,7 @@ class Window implements WindowInvalidator {
     /**
      * Writes the current position in the prepaint state of the next frame into `index`.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function prepaintIndexInto(index:PrepaintStateIndex):Void {
         final frame = nextFrame;
         index.hitboxesIndex = frame.hitboxes.length;
@@ -3084,7 +3084,7 @@ class Window implements WindowInvalidator {
      * states, line layouts, dispatch nodes (under the active node) and
      * deferred draws (reused as well when drawn).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function reusePrepaint(start:PrepaintStateIndex, end:PrepaintStateIndex):Void {
         final rendered = renderedFrame;
         final next = nextFrame;
@@ -3130,7 +3130,7 @@ class Window implements WindowInvalidator {
     /**
      * Number of element states accessed so far during this frame.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function accessedElementStatesIndex():Int {
         return nextFrame.accessedElementStates.length;
     }
@@ -3139,7 +3139,7 @@ class Window implements WindowInvalidator {
      * Marks the element states accessed between `start` and `end` during the
      * last frame as accessed again (they are kept for the next frame).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function reuseAccessedElementStates(start:Int, end:Int):Void {
         final rendered = renderedFrame;
         final next = nextFrame;
@@ -3153,7 +3153,7 @@ class Window implements WindowInvalidator {
     /**
      * Writes the current position in the paint state of the next frame into `index`.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function paintIndexInto(index:PaintIndex):Void {
         final frame = nextFrame;
         index.sceneIndex = frame.scene.paintIndex();
@@ -3172,7 +3172,7 @@ class Window implements WindowInvalidator {
      * listeners, accessed element states, tab stops, line layouts and the
      * scene paint operations (replayed).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function reusePaint(start:PaintIndex, end:PaintIndex):Void {
         final rendered = renderedFrame;
         final next = nextFrame;
@@ -3264,7 +3264,7 @@ class Window implements WindowInvalidator {
     /**
      * The layout engine frame number (see `TaffyLayoutEngine.retain`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function layoutFrame():Int {
         return layoutEngine.currentFrame();
     }
@@ -3272,7 +3272,7 @@ class Window implements WindowInvalidator {
     /**
      * Retains the layout subtree a cached view recorded during the last frame.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function retainLayout(layoutId:LayoutId, recordedFrame:Int):Bool {
         return layoutEngine.retain(layoutId, recordedFrame);
     }
@@ -3282,7 +3282,7 @@ class Window implements WindowInvalidator {
      * adopting `adopt` (its retained nodes) when they match (see
      * `TaffyLayoutEngine.beginViewNodes`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function beginViewLayoutNodes(adopt:Null<Array<Int>>):Void {
         layoutEngine.beginViewNodes(adopt);
     }
@@ -3290,7 +3290,7 @@ class Window implements WindowInvalidator {
     /**
      * Ends `beginViewLayoutNodes()`: the nodes the view requested, in order.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function endViewLayoutNodes():Array<Int> {
         return layoutEngine.endViewNodes();
     }
@@ -3298,7 +3298,7 @@ class Window implements WindowInvalidator {
     /**
      * Whether the last `endViewLayoutNodes()` adopted every node it was given.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function viewLayoutNodesAdopted():Bool {
         return layoutEngine.lastViewNodesAdopted;
     }
@@ -3307,7 +3307,7 @@ class Window implements WindowInvalidator {
      * Replaces a retained layout subtree by the subtree of the same view
      * rendered again (see `TaffyLayoutEngine.replaceRetained`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function replaceRetainedLayout(oldRoot:LayoutId, newRoot:LayoutId):Bool {
         return layoutEngine.replaceRetained(oldRoot, newRoot);
     }
@@ -3315,7 +3315,7 @@ class Window implements WindowInvalidator {
     /**
      * Marks a view dirty for the next frame (used when a cache turns out to be stale).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function invalidateViewForNextFrame(viewId:Int):Void {
         addPendingDirtyView(viewId);
         dirty = true;
@@ -3324,7 +3324,7 @@ class Window implements WindowInvalidator {
     /**
      * The image cache on top of the image cache stack, or null.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function currentImageCache():Null<AnyImageCache> {
         return imageCacheStack.length > 0 ? imageCacheStack[imageCacheStack.length - 1] : null;
     }
@@ -3332,7 +3332,7 @@ class Window implements WindowInvalidator {
     /**
      * The layout engine of this window.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function layoutEngineInstance():TaffyLayoutEngine {
         return layoutEngine;
     }
@@ -3542,7 +3542,7 @@ class Window implements WindowInvalidator {
      * Reads the appearance of the platform window again and runs the
      * appearance observers (Rust `appearance_changed`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function appearanceChanged(cx:App):Void {
         _appearance = platformAppearance();
         appearanceObservers.retain(0, callback -> callback(this, cx));
@@ -3565,7 +3565,7 @@ class Window implements WindowInvalidator {
      * Registers a callback called when the window appearance changes
      * (Rust `window.appearance_observers.insert`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function newAppearanceObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = appearanceObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
@@ -3614,9 +3614,9 @@ class Window implements WindowInvalidator {
      * one that had them last only if it was this one.
      */
     function publishHitRegions():Void {
-        if (!Std.isOfType(platformOperations, gpui.platform.CeramicWindowOperations))
+        if (!Std.isOfType(platformOperations, glaze.platform.CeramicWindowOperations))
             return;
-        final regions = gpui.platform.CeramicWindowOperations.hitRegions(this, hitRegionPoint);
+        final regions = glaze.platform.CeramicWindowOperations.hitRegions(this, hitRegionPoint);
         if (regions.length == 0 && hitRegionsOwner != this)
             return;
         var same = hitRegionsOwner == this && regions.length == publishedHitRegions.length;
@@ -3837,13 +3837,13 @@ class Window implements WindowInvalidator {
         return currentCursorStyle;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function resetCursorStyle():Void {
         final style = renderedFrame.cursorStyle(this);
         currentCursorStyle = style != null ? style : Arrow;
         // Set the cursor only if we're the hovered window.
         if (hovered) {
-            GpuiInput.setCursor(currentCursorStyle);
+            GlazeInput.setCursor(currentCursorStyle);
         }
     }
 
@@ -3894,7 +3894,7 @@ class Window implements WindowInvalidator {
     }
 
     /** Registers a mouse listener entry for the next frame (internal) */
-    @:allow(gpui)
+    @:allow(glaze)
     function addMouseListenerEntry(entry:MouseListenerEntry):Void {
         nextFrame.mouseListeners.push(entry);
     }
@@ -3903,7 +3903,7 @@ class Window implements WindowInvalidator {
      * The hover listener of an element (see `Interactivity.paintMouseListeners`),
      * without a closure. `paintedHovered`: -1 when not tracked, else 0 or 1.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function onElementHover(hitbox:Hitbox, hoverState:Null<Interactivity.ElementHoverState>, currentView:Int, paintedHovered:Int):Void {
         nextFrame.mouseListeners.push(new HoverListenerEntry(hitbox, hoverState, currentView, paintedHovered));
     }
@@ -3912,7 +3912,7 @@ class Window implements WindowInvalidator {
      * Like `onMouseEvent()`, for a listener of an element called with its
      * hitbox (the same as registering `(e, p, w, cx) -> listener(e, p, hitbox, w, cx)`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function onElementMouseEvent(kind:PlatformInputKind, listener:Interactivity.ElementMouseListener, hitbox:Hitbox):Void {
         nextFrame.mouseListeners.push(new MouseListenerEntry(kind, null, listener, hitbox));
     }
@@ -3941,7 +3941,7 @@ class Window implements WindowInvalidator {
     }
 
     /** `onAction()` with a listener entry, kept as is (no wrapper per frame) */
-    @:allow(gpui)
+    @:allow(glaze)
     function onActionEntry(entry:DispatchTree.DispatchActionListener):Void {
         nextFrame.dispatchTree.onActionEntry(entry);
     }
@@ -3997,12 +3997,12 @@ class Window implements WindowInvalidator {
     /**
      * The focus handle of the next frame, when an element painted so far is focused.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function nextFrameFocus():Null<FocusHandle> {
         return nextFrame.focus;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function nextFrameDispatchTree():DispatchTree {
         return nextFrame.dispatchTree;
     }
@@ -4122,7 +4122,7 @@ class Window implements WindowInvalidator {
      * Registers a focus listener (called after each frame whose focus path changed).
      * Returns the subscription and the function activating it.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function newFocusListener(listener:(WindowFocusEvent, Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = focusListeners.insert(0, listener);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
@@ -4132,7 +4132,7 @@ class Window implements WindowInvalidator {
      * Registers a callback called when the bounds of the window change
      * (Rust `window.bounds_observers.insert`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function newBoundsObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = boundsObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
@@ -4142,7 +4142,7 @@ class Window implements WindowInvalidator {
      * Registers a callback called when the window is activated or deactivated
      * (Rust `window.activation_observers.insert`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function newActivationObserver(callback:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = activationObservers.insert(0, callback);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
@@ -4151,7 +4151,7 @@ class Window implements WindowInvalidator {
     /**
      * Registers a listener called when the focus is lost (the focus path becomes empty).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function newFocusLostListener(listener:(Window, App) -> Bool):{subscription:Subscription, activate:() -> Void} {
         final subscriber = focusLostListeners.insert(0, listener);
         return {subscription: subscriber.subscription, activate: subscriber.activate};
@@ -4349,7 +4349,7 @@ class Window implements WindowInvalidator {
     /**
      * Requests the software keyboard (no-op: Ceramic's native backends show
      * it with text editing, and on the web the tap that focuses a text input
-     * opens it from inside the browser's touch handler, see `GpuiInput`).
+     * opens it from inside the browser's touch handler, see `GlazeInput`).
      */
     public function requestVirtualKeyboard():Void {}
 
@@ -4380,7 +4380,7 @@ class Window implements WindowInvalidator {
         catch (e:haxe.Exception) {
             tracker.Autorun.reobserve();
             @:privateAccess cx.pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         tracker.Autorun.reobserve();
         cx.finishUpdate();
@@ -4603,7 +4603,7 @@ class Window implements WindowInvalidator {
         }
         catch (e:haxe.Exception) {
             tracker.Autorun.reobserve();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         tracker.Autorun.reobserve();
     }
@@ -4661,7 +4661,7 @@ class Window implements WindowInvalidator {
             resetCursorStyle();
         }
 
-        #if gpui_inspector
+        #if glaze_inspector
         if (isInspectorPicking(cx)) {
             handleInspectorMouseEvent(event, cx);
             // When inspector is picking, all other mouse handling is skipped.
@@ -4908,7 +4908,7 @@ class Window implements WindowInvalidator {
         }
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function pendingInputChanged(cx:App):Void {
         pendingInputObservers.retain(0, callback -> callback(this, cx));
     }
@@ -5054,7 +5054,7 @@ class Window implements WindowInvalidator {
         return null;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function clearPendingKeystrokes(?cx:App):Void {
         if (pendingInput != null) {
             if (pendingInput.timeout != null) pendingInput.timeout.drop();
@@ -5115,7 +5115,7 @@ class Window implements WindowInvalidator {
         return changed;
     }
 
-    function replayPendingInput(replays:Array<gpui.keymap.Replay>, cx:App):Void {
+    function replayPendingInput(replays:Array<glaze.keymap.Replay>, cx:App):Void {
         final nodeId = focusNodeIdInRenderedFrame(focusId());
         final dispatchPath = renderedFrame.dispatchTree.dispatchPath(nodeId);
 
@@ -5173,7 +5173,7 @@ class Window implements WindowInvalidator {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function dispatchActionOnFocusHandle(handle:FocusHandle, action:Action, cx:App):Void {
         final nodeId = renderedFrame.dispatchTree.focusableNodeId(handle.id);
         if (nodeId != -1) {
@@ -5382,7 +5382,7 @@ class Window implements WindowInvalidator {
     }
 
     /**
-     * Runs the callbacks scheduled with `onNextFrame` (called by the `GpuiSystem` before drawing).
+     * Runs the callbacks scheduled with `onNextFrame` (called by the `GlazeSystem` before drawing).
      * Returns how many ran.
      */
     public function runNextFrameCallbacks():Int {
@@ -5425,7 +5425,7 @@ class Window implements WindowInvalidator {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     static function activeWindowOf(app:App):Null<Window> {
         var i = windows.length - 1;
         while (i >= 0) {
@@ -5439,8 +5439,8 @@ class Window implements WindowInvalidator {
     }
 
 
-    #if gpui_inspector
-/// Inspector (Rust feature `inspector`, define `gpui_inspector`)
+    #if glaze_inspector
+/// Inspector (Rust feature `inspector`, define `glaze_inspector`)
 
     /**
      * Toggles the inspector mode on this window.
@@ -5481,7 +5481,7 @@ class Window implements WindowInvalidator {
      * state of type `type` (the box holds `null` when there is none yet).
      * Returns `null` when `inspectorId` is not the active element.
      */
-    public function withInspectorState<T, R>(inspectorId:Null<InspectorElementId>, type:Class<T>, cx:App, f:(gpui.util.Ref<Null<T>>, Window) -> R):Null<R> {
+    public function withInspectorState<T, R>(inspectorId:Null<InspectorElementId>, type:Class<T>, cx:App, f:(glaze.util.Ref<Null<T>>, Window) -> R):Null<R> {
         if (inspectorId == null) return null;
         final inspector = this.inspector;
         if (inspector == null) return null;
@@ -5493,7 +5493,7 @@ class Window implements WindowInvalidator {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function inspectorEnabled():Bool {
         return inspector != null;
     }
@@ -5502,12 +5502,12 @@ class Window implements WindowInvalidator {
      * The global id of the current element id stack (Rust
      * `element_id_stack.global_id()`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function currentGlobalElementId():GlobalElementId {
         return elementIdNode;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function buildInspectorElementId(path:InspectorElementId.InspectorElementPath):InspectorElementId {
         var entry = nextFrame.nextInspectorInstanceIds.get(path.key);
         if (entry == null) {

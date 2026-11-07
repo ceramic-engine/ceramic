@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.Window.StateModel;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.groupbox.GroupBox.GroupBoxVariant;
-import gpui.component.setting.SettingGroup;
-import gpui.component.setting.SettingItem;
-import gpui.component.setting.SettingPage;
-import gpui.component.setting.Settings;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.Window.StateModel;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
+import glaze.kit.setting.SettingGroup;
+import glaze.kit.setting.SettingItem;
+import glaze.kit.setting.SettingPage;
+import glaze.kit.setting.Settings;
+import glaze.kit.theme.Theme;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `setting` module. Element
@@ -138,7 +138,7 @@ class ComponentSettingTest extends TestCase {
     static function noResults(host:Entity<SettingsHost>, cx:VisualTestContext):Bool {
         return cx.update((_, cx) -> {
             final query = host.read(cx).state.read(cx).value.searchInput.read(cx).value();
-            final filter = @:privateAccess new gpui.component.setting.Settings.SettingsFilter(host.read(cx).pages, query, cx);
+            final filter = @:privateAccess new glaze.kit.setting.Settings.SettingsFilter(host.read(cx).pages, query, cx);
             return filter.visiblePages().length == 0;
         });
     }
@@ -335,7 +335,7 @@ class ComponentSettingTest extends TestCase {
             cx.update((_, cx) -> {
                 final state = host.read(cx).state;
                 state.update(cx, (state, cx) -> {
-                    state.value.selectedIndex = new gpui.component.setting.Settings.SelectIndex(pageIx, groupIx);
+                    state.value.selectedIndex = new glaze.kit.setting.Settings.SelectIndex(pageIx, groupIx);
                     state.value.deferredScrollGroupIx = groupIx;
                     cx.notify();
                 });
@@ -356,7 +356,7 @@ private class SettingsHost extends Model implements Render {
 
     public var pages:Array<SettingPage>;
 
-    public var state:Null<Entity<StateModel<gpui.component.setting.Settings.SettingsState>>> = null;
+    public var state:Null<Entity<StateModel<glaze.kit.setting.Settings.SettingsState>>> = null;
 
     public function new(pages:Array<SettingPage>) {
         super();
@@ -366,7 +366,7 @@ private class SettingsHost extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final settings = new Settings('search-test')
             .pages([for (page in pages) page.clone()])
-            .defaultSelectedIndex(new gpui.component.setting.Settings.SelectIndex(1, null))
+            .defaultSelectedIndex(new glaze.kit.setting.Settings.SelectIndex(1, null))
             .render(window, cx.app)
             .intoAnyElement();
         state = @:privateAccess Settings.keyedState(window, 'search-test', cx.app);

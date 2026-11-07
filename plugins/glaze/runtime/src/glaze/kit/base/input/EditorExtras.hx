@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/kind.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
-import gpui.Task;
-import gpui.Unit;
+import glaze.Range;
+import glaze.Task;
+import glaze.Unit;
 import ropey.Rope;
 
 /**

@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.button.ButtonGroup;
-import gpui.component.progress.ProgressCircle;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.button.ButtonGroup;
+import glaze.kit.progress.ProgressCircle;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
 enum ButtonActionKind {

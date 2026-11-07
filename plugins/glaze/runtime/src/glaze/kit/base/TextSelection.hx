@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.LongPressEvent;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Point;
-import gpui.Range;
-import gpui.ScrollEvent;
-import gpui.Subscription;
-import gpui.TextLayout;
-import gpui.TouchDragEvent;
-import gpui.Window;
-import gpui.base.SelectableTextState;
-import gpui.base.TextSelectionRegistration.BoundsPair;
-import gpui.base.WindowSelectionState;
-import gpui.base.TextSelectionLayer.TextSelectionScopeMarker;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TextBoundary;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.LongPressEvent;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Point;
+import glaze.Range;
+import glaze.ScrollEvent;
+import glaze.Subscription;
+import glaze.TextLayout;
+import glaze.TouchDragEvent;
+import glaze.Window;
+import glaze.kit.base.SelectableTextState;
+import glaze.kit.base.TextSelectionRegistration.BoundsPair;
+import glaze.kit.base.WindowSelectionState;
+import glaze.kit.base.TextSelectionLayer.TextSelectionScopeMarker;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TextBoundary;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.util.Utf8;
 
 /**
  * Window-level operations for text selection, and the helpers of Rust's
@@ -185,7 +185,7 @@ class TextSelection {
      * The returned states retain the input order so callers can pair every
      * state with its run. The ranges are always character boundaries.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function projectRanges(snapshot:Null<TextSelectionSnapshot>, runs:Array<TextSelectionRun>):TextSelectionProjection {
         if (snapshot == null) {
             return new TextSelectionProjection([for (_ in runs) null], false);
@@ -244,7 +244,7 @@ class TextSelection {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /**
@@ -268,7 +268,7 @@ class TextSelection {
      * The carets at the two ends of what `clickCount` clicks at `position`
      * select: the word under it for two, its line or paragraph for three.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function caretsForMultiClick(runs:Array<TextSelectionRun>, position:Point, clickCount:Int):Null<BoundsPair> {
         var run:Null<TextSelectionRun> = null;
         for (candidate in runs) {
@@ -292,7 +292,7 @@ class TextSelection {
      * The carets at the two ends of the word (`clickCount` 2) or the run's
      * triple-click boundary (3 or more) at the byte `offset` of `run`.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function unitCarets(run:TextSelectionRun, offset:Int, clickCount:Int):Null<BoundsPair> {
         final range = if (clickCount == 2) {
             final range = TextBoundary.wordRangeAt(run._text, offset);
@@ -355,7 +355,7 @@ class TextSelection {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function resolveCopyItems(items:Array<CopyItem>, cx:App):String {
         // Stable, like Rust's `sort_by_key`.
         haxe.ds.ArraySort.sort(items, (a, b) -> a.documentOrder < b.documentOrder ? -1 : (a.documentOrder > b.documentOrder ? 1 : 0));
@@ -369,14 +369,14 @@ class TextSelection {
         return texts.join('\n');
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function dispatchClearHandlers(handlers:Array<ClearHandler>, cx:App):Void {
         for (handler in handlers) {
             handler(cx);
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function clearDepartedParticipants(participants:Array<Entity<SelectableTextState>>, cx:App):Array<ClearHandler> {
         final handlers:Array<ClearHandler> = [];
         for (participant in participants) {
@@ -405,21 +405,21 @@ class TextSelection {
         final stacks = WindowSelectionState.globalOf(cx, TextSelectionScopeStacks).map;
         final stack = stacks.get(windowId);
         if (stack != null) {
-            gpui.util.Stacks.drop(stack);
+            glaze.util.Stacks.drop(stack);
             if (stack.length == 0) {
                 stacks.remove(windowId);
             }
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function currentTextSelectionScope(windowId:Int, cx:App):Null<TextSelectionScopeId> {
         if (WindowSelectionState.globalOf(cx, TextSelectionScopeStacks) == null) return null;
         final stack = WindowSelectionState.globalOf(cx, TextSelectionScopeStacks).map.get(windowId);
         return stack != null && stack.length > 0 ? stack[stack.length - 1] : null;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function withTextSelectionScope<T>(windowId:Int, scope:TextSelectionScopeId, cx:App, callback:(App) -> T):T {
         pushTextSelectionScope(windowId, scope, cx);
         try {
@@ -429,7 +429,7 @@ class TextSelection {
         }
         catch (e:Dynamic) {
             popTextSelectionScope(windowId, cx);
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
     }
 
@@ -438,8 +438,8 @@ class TextSelection {
         return new TextSelectionScopeMarker(scope, element.intoAnyElement());
     }
 
-    @:allow(gpui.base)
-    static function retainTextSelectionState(globalId:Null<gpui.GlobalElementId>, window:Window, cx:App):Entity<WindowSelectionState> {
+    @:allow(glaze.kit.base)
+    static function retainTextSelectionState(globalId:Null<glaze.GlobalElementId>, window:Window, cx:App):Entity<WindowSelectionState> {
         if (globalId == null) throw 'TextSelection has a stable element id';
         final windowId = window.id;
         final state:Entity<WindowSelectionState> = window.withElementState(globalId, WindowSelectionState, (retained, window) -> {
@@ -464,7 +464,7 @@ class TextSelection {
         return state;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function scheduleSelectionFrame(state:Entity<WindowSelectionState>, window:Window, cx:App):Void {
         if (state.read(cx).scheduleFinishFrame()) {
             final weak = state.downgrade();
@@ -534,7 +534,7 @@ class TextSelection {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function paintTextSelection(state:Entity<WindowSelectionState>, window:Window, cx:App):Void {
         scheduleSelectionFrame(state, window, cx);
 
@@ -699,7 +699,7 @@ class TextSelection {
         });
         final dragUpState = state.downgrade();
         window.onMouseEvent(MouseUp, (event, phase, _, cx) -> {
-            final event:gpui.MouseUpEvent = cast event;
+            final event:glaze.MouseUpEvent = cast event;
             if (phase.bubble() && event.button == MouseButton.Left) {
                 final state = dragUpState.upgrade();
                 if (state != null) {
@@ -774,7 +774,7 @@ class TextSelection {
         return WindowSelectionState.existing(window, cx);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     static function clearWindowTextSelection(windowId:Int, cx:App):Void {
         if (WindowSelectionState.globalOf(cx, SelectionStateRegistry) == null) {
             return;

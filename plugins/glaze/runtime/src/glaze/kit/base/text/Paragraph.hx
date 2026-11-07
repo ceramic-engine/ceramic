@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * The text, highlights and links a text-only paragraph renders with.
@@ -42,10 +42,10 @@ class ParagraphRender {
  */
 class Paragraph {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var span:Null<Span> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var children_:Array<InlineNode> = [];
 
     /**
@@ -53,10 +53,10 @@ class Paragraph {
      *
      * The key is the identifier, the value is the url.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var linkRefs:Map<String, String> = new Map();
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var state:InlineState;
 
     /**
@@ -64,7 +64,7 @@ class Paragraph {
      * between frames; see `ParagraphRender`. Derived state, invisible to
      * equality. A clone carries what was cached so far.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var renderCache:Null<ParagraphRender> = null;
 
     /** `Paragraph::default()`. */
@@ -107,7 +107,7 @@ class Paragraph {
         return count == 0;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function take():Paragraph {
         final taken = new Paragraph();
         taken.span = span;
@@ -123,17 +123,17 @@ class Paragraph {
         return taken;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isImage():Bool {
         return false;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setSpan(span:Span):Void {
         this.span = span;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function pushStr(text:String):Void {
         final mark = new RangedMark(new Range(0, TextUtils.len(text)), new TextMark());
         children_.push(new InlineNode(text).marks([mark]));
@@ -167,7 +167,7 @@ class Paragraph {
      * another AST clone (or carry its transient selection into this
      * instance). Rust free `set_leaf_key`.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function leafKeyedState(state:InlineState, key:Int):InlineState {
         final keyed = new InlineState();
         keyed.text = state.text;
@@ -175,7 +175,7 @@ class Paragraph {
         return keyed;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function pushImage(image:ImageNode):Void {
         children_.push(InlineNode.ofImage(image));
         invalidateRenderCache();
@@ -186,7 +186,7 @@ class Paragraph {
         renderCache = null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isEmpty():Bool {
         if (children_.length == 0)
             return true;
@@ -198,7 +198,7 @@ class Paragraph {
     }
 
     /** Return length of children text. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function textLen():Int {
         var len = 0;
         for (node in children_)
@@ -206,14 +206,14 @@ class Paragraph {
         return len;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function merge(other:Paragraph):Void {
         for (child in other.children_)
             children_.push(child);
         invalidateRenderCache();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedText():String {
         final text = new StringBuf();
 
@@ -235,7 +235,7 @@ class Paragraph {
     }
 
     /** Map the current rendered selection to its exact Markdown source range. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSourceRange():SourceRangeSelection {
         final selected = SourceRangeSelection.unselected();
         var run:Array<RunChild> = [];
@@ -372,13 +372,13 @@ class Paragraph {
      * or ends with an image has no run on that side, which counts as
      * reaching it.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSource():String {
         return selectedMarkdown().finish();
     }
 
     /** How many styles the selection within this paragraph takes in. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectionStyles():SelectionStyles {
         return selectedMarkdown().styles();
     }
@@ -439,7 +439,7 @@ class Paragraph {
         return source;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function text():String {
         final text = new StringBuf();
         for (node in children_) {
@@ -451,7 +451,7 @@ class Paragraph {
     /**
      * Whether this paragraph carries a selection, even an empty one.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasSelection():Bool {
         for (c in children_) {
             if (c.state.selection != null || c.customSelection.value)
@@ -465,7 +465,7 @@ class Paragraph {
      *
      * Mirrors the `selectedText` traversal.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function clearSelection():Void {
         for (c in children_) {
             c.customSelection.value = false;
@@ -474,7 +474,7 @@ class Paragraph {
         state.selection = null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function toMarkdown():String {
         var anyCustom = false;
         for (node in children_) {

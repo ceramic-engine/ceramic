@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/measure.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
 /**
  * An elapsed-time measurement, logged when ended (Rust traces it with
  * `tracing::trace!`; here it goes to `ceramic.Shortcuts.log.debug`).
  *
- * Enabled by the `ZED_MEASUREMENTS` or `GPUI_MEASUREMENTS` environment
+ * Enabled by the `ZED_MEASUREMENTS` or `GLAZE_MEASUREMENTS` environment
  * variables, read once.
  */
 class Measure {
@@ -30,7 +30,7 @@ class Measure {
 
     public static function measurementEnabled():Bool {
         if (enabled == null) {
-            enabled = ceramic.Platform.getEnv('ZED_MEASUREMENTS') != null || ceramic.Platform.getEnv('GPUI_MEASUREMENTS') != null;
+            enabled = ceramic.Platform.getEnv('ZED_MEASUREMENTS') != null || ceramic.Platform.getEnv('GLAZE_MEASUREMENTS') != null;
         }
         return enabled;
     }

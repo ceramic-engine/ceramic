@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.base.input.BlinkCursor;
-import gpui.base.input.CursorBlink;
-import gpui.base.theme.Theme as BaseTheme;
+import glaze.App;
+import glaze.Entity;
+import glaze.kit.base.input.BlinkCursor;
+import glaze.kit.base.input.CursorBlink;
+import glaze.kit.base.theme.Theme as BaseTheme;
 
 /**
  * Tests of `BlinkCursor` and `CursorBlink` (Rust `blink_cursor.rs`), on the
@@ -391,7 +391,7 @@ class InputBlinkCursorTest extends KitTestCase {
     function testInitializationPreservesAnApplicationPolicy() {
         app.update(cx -> setCursorBlink(CursorBlink.steady(), cx));
         // `cx.update(crate::init)`: the Base init does not reset the policy.
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final cursor = newCursor();
         start(cursor);
         assertIdle(cursor, true);

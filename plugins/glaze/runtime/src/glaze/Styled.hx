@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/styled.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A trait for elements that can be styled.
@@ -11,7 +11,7 @@ package gpui;
  * `gap2()`, `roundedMd()`, `bg(...)`, about 900 of them) are added by
  * `StyledMacro.build()` as `extern inline` methods returning the class.
  */
-@:autoBuild(gpui.StyledMacro.build())
+@:autoBuild(glaze.StyledMacro.build())
 interface Styled {
 
     /**

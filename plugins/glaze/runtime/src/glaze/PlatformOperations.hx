@@ -4,10 +4,10 @@
 // identity and system notifications)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.Menu.MenuItem;
-import gpui.Menu.OwnedMenu;
+import glaze.Menu.MenuItem;
+import glaze.Menu.OwnedMenu;
 
 /**
  * The application operations of GPUI's `Platform` (`App.platformOperations`):
@@ -15,7 +15,7 @@ import gpui.Menu.OwnedMenu;
  * and dock menus, the system appearance and scrollbar preference, the app
  * identity and the system notifications.
  *
- * `gpui.platform.CeramicPlatformOperations` by default (through Ceramic: the
+ * `glaze.platform.CeramicPlatformOperations` by default (through Ceramic: the
  * app, the screen and the `dialogs` and `notifications` plugins),
  * `TestPlatformOperations` (like
  * GPUI's test platform: prompts wait for the test to answer them) in tests.

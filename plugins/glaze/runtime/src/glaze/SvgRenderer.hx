@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/svg_renderer.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 import plutovg.Utils.f32;
@@ -38,9 +38,9 @@ class SvgRenderer {
     public function new(assetSource:AssetSource, ?textSystem:TextSystem) {
         this.assetSource = assetSource;
         // SVG <text> uses the fonts of the GPUI text system
-        if (!fontProviderInstalled && textSystem != null && Std.isOfType(textSystem.platformTextSystem, gpui.platform.CeramicTextSystem)) {
+        if (!fontProviderInstalled && textSystem != null && Std.isOfType(textSystem.platformTextSystem, glaze.platform.CeramicTextSystem)) {
             fontProviderInstalled = true;
-            lunasvg.Lunasvg.setFontProvider(new gpui.platform.SvgFontProvider(cast textSystem.platformTextSystem));
+            lunasvg.Lunasvg.setFontProvider(new glaze.platform.SvgFontProvider(cast textSystem.platformTextSystem));
         }
     }
 
@@ -84,9 +84,9 @@ class SvgRenderer {
                     continue;
                 }
                 final f = a / 255.0;
-                bytes.set(dst, gpui.util.MathUtil.toU8(data.get(src) / f));
-                bytes.set(dst + 1, gpui.util.MathUtil.toU8(data.get(src + 1) / f));
-                bytes.set(dst + 2, gpui.util.MathUtil.toU8(data.get(src + 2) / f));
+                bytes.set(dst, glaze.util.MathUtil.toU8(data.get(src) / f));
+                bytes.set(dst + 1, glaze.util.MathUtil.toU8(data.get(src + 1) / f));
+                bytes.set(dst + 2, glaze.util.MathUtil.toU8(data.get(src + 2) / f));
                 bytes.set(dst + 3, a);
             }
         }

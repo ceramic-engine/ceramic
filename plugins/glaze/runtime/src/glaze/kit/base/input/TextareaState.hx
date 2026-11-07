@@ -4,14 +4,14 @@
 // (`token_api!(TextareaMode)`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Range;
-import gpui.TextInputConfiguration.Autocapitalize;
-import gpui.TextInputConfiguration.TextInputAction;
-import gpui.Window;
-import gpui.base.input.InputBaseState.IntoMaskPattern;
+import glaze.Context;
+import glaze.Range;
+import glaze.TextInputConfiguration.Autocapitalize;
+import glaze.TextInputConfiguration.TextInputAction;
+import glaze.Window;
+import glaze.kit.base.input.InputBaseState.IntoMaskPattern;
 
 /**
  * State for editing ordinary multi-line text.
@@ -26,7 +26,7 @@ import gpui.base.input.InputBaseState.IntoMaskPattern;
  * `MultiLineInputs`, static functions both `TextareaState` and
  * `EditorState` forward to.
  */
-@:access(gpui.base.input.LayoutMode)
+@:access(glaze.kit.base.input.LayoutMode)
 class TextareaState extends InputBaseState {
 
     /**

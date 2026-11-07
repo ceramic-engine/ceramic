@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): runs the frames of the
-// GPUI windows from Ceramic's update loop. See CERAMIC_GPUI_PLAN_1.md and NOTICE.md.
-package gpui;
+// GPUI windows from Ceramic's update loop. See NOTICE.md.
+package glaze;
 
 /**
  * Ceramic system drawing the dirty GPUI windows in `lateUpdate`, after input
@@ -11,23 +11,23 @@ package gpui;
  * in the same frame. A reaction triggered while drawing only marks its view
  * dirty for the next frame.
  */
-class GpuiSystem extends ceramic.System {
+class GlazeSystem extends ceramic.System {
 
-    static var instance:Null<GpuiSystem> = null;
+    static var instance:Null<GlazeSystem> = null;
 
     /**
      * Creates the system if needed.
      */
-    public static function ensure():GpuiSystem {
+    public static function ensure():GlazeSystem {
         if (instance == null || instance.destroyed) {
-            instance = new GpuiSystem();
+            instance = new GlazeSystem();
         }
         return instance;
     }
 
     function new() {
         super();
-        name = 'gpui';
+        name = 'glaze';
         lateUpdateOrder = 10000;
     }
 

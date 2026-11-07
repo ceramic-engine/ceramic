@@ -1,12 +1,12 @@
 // Ported from gpui-pre 0.3.10: src/elements/animation.rs (`AnimationElement`, `AnimationExt::with_animation(s)`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A GPUI element that applies an animation to another element.
  * Build one with `div().withAnimation(...)` / `withAnimations(...)`, or
- * `AnimationExt` (`using gpui.AnimationExt;`) for other elements.
+ * `AnimationExt` (`using glaze.AnimationExt;`) for other elements.
  *
  * The animator is called during `requestLayout` with the eased value; while
  * the animation runs, the element requests an animation frame (or, with

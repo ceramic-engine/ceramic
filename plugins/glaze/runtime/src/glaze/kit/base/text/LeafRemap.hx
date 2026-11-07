@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.base.text.TextLeaf.KeyedTextLeaf;
-import gpui.base.text.TextLeaf.TextLeafTools;
+import glaze.kit.base.text.TextLeaf.KeyedTextLeaf;
+import glaze.kit.base.text.TextLeaf.TextLeafTools;
 
 /** Rust `(TextLeafKey, usize)`: where a leaf is now, and how much of its text is unchanged. */
 class RemappedLeaf {

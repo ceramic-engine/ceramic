@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/window_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.App;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.component.dialog.AlertDialog;
-import gpui.component.dialog.Dialog;
-import gpui.component.notification.Notification;
-import gpui.component.sheet.Sheet;
+import glaze.App;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.dialog.AlertDialog;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.notification.Notification;
+import glaze.kit.sheet.Sheet;
 
 /**
  * Dialog, sheet and notification helpers on `Window`, as a static
- * extension: `using gpui.component.WindowExt;` then
+ * extension: `using glaze.kit.WindowExt;` then
  * `window.openDialog(cx, (dialog, window, cx) -> dialog.title('Title'))`
  * (Rust `WindowExt`).
  *
@@ -163,7 +163,7 @@ class WindowExt {
      * The input that holds the focus, if any (`Input`, `Textarea`, `Editor`
      * or `OtpInput` state).
      */
-    public static function focusedInput(window:Window, cx:App):Null<gpui.component.input.AnyInputState> {
+    public static function focusedInput(window:Window, cx:App):Null<glaze.kit.input.AnyInputState> {
         final state = WindowState.read(window).focusedInput;
         if (state == null) {
             return null;

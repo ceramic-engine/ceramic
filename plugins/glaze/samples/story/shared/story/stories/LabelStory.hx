@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.button.Toggle;
-import gpui.component.input.Input;
-import gpui.component.label.Label;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.button.Toggle;
+import glaze.kit.input.Input;
+import glaze.kit.label.Label;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 @:action(namespace = label_story, noJson) class TogglePrefix implements Action {}
 

@@ -2,7 +2,7 @@
 // `Local::now().date_naive()` in crates/base/src/calendar.rs)
 // Original code Copyright (c) 2014--2026, Kang Seonghoon and contributors, licensed under MIT OR Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic, with an injectable clock. See NOTICE.md.
-package gpui.base.chrono;
+package glaze.kit.base.chrono;
 
 /**
  * The local wall clock (chrono's `Local`).

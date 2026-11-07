@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/styled.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.BoxShadow;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.BoxShadow;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.base.StyledExt;
+using glaze.AbsoluteLengthTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * Where a borderless element draws its 1px focus line when
@@ -40,10 +40,10 @@ enum FocusLine {
 
 /**
  * Finished styles that read the theme, as a static extension:
- * `using gpui.component.ThemeStyled;` (Rust `ThemeStyled`), plus the shadow
+ * `using glaze.kit.ThemeStyled;` (Rust `ThemeStyled`), plus the shadow
  * recipes shared by popups, toasts and raised controls.
  *
- * Separate from `gpui.base.StyledExt`, which holds neutral helpers that make
+ * Separate from `glaze.kit.base.StyledExt`, which holds neutral helpers that make
  * no visual decisions.
  */
 class ThemeStyled {
@@ -73,7 +73,7 @@ class ThemeStyled {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static function clamp01(value:Float):Float {

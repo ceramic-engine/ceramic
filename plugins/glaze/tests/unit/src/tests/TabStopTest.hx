@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.FocusHandle;
-import gpui.TabStopMap;
-import gpui.TestDispatcher;
+import glaze.App;
+import glaze.FocusHandle;
+import glaze.TabStopMap;
+import glaze.TestDispatcher;
 import testing.TestCase;
 
 /**

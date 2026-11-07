@@ -4,45 +4,45 @@
 // Also modified: deliberate deviation DEV-019 (CSV export on the web, as a browser download). See DEVIATIONS.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Font;
-import gpui.FontWeight;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.TextAlign;
-import gpui.TextRun;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.spinner.Spinner;
-import gpui.component.table.Column;
-import gpui.component.table.DataTable;
-import gpui.component.table.TableDelegate.TableDelegateBase;
-import gpui.component.table.TableState;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Font;
+import glaze.FontWeight;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.TextAlign;
+import glaze.TextRun;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.table.Column;
+import glaze.kit.table.DataTable;
+import glaze.kit.table.TableDelegate.TableDelegateBase;
+import glaze.kit.table.TableState;
+import glaze.kit.theme.Theme;
 import story.Fake;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
 
 @:action(namespace = data_table_story, noJson)
 class ChangeSize implements Action {
@@ -572,7 +572,7 @@ class StockTableDelegate extends TableDelegateBase {
         final col = column(colIx, cx.app);
         function measure(text:String, weight:FontWeight):Pixels {
             final font = new Font(baseFont.family, baseFont.features, baseFont.fallbacks, weight, baseFont.style);
-            final run = new TextRun(gpui.util.Utf8.byteLength(text), font, new Hsla(0, 0, 0, 0));
+            final run = new TextRun(glaze.util.Utf8.byteLength(text), font, new Hsla(0, 0, 0, 0));
             return window.textSystem().shapeLine(text, fontSize, [run]).width();
         }
 
@@ -955,7 +955,7 @@ class DataTableStory extends Model implements Story {
     }
 
     /** One step of the Rust `loop`: wait 33ms, refresh the head of the table. */
-    static function tick(this_:gpui.WeakEntity<DataTableStory>, acx:gpui.AsyncApp):Task<Dynamic> {
+    static function tick(this_:glaze.WeakEntity<DataTableStory>, acx:glaze.AsyncApp):Task<Dynamic> {
         return acx.backgroundExecutor().timer(0.033).then(_ -> {
             if (!this_.isUpgradable()) return;
             this_.update(acx, (this_:DataTableStory, cx) -> {

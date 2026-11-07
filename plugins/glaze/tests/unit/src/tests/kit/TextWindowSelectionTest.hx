@@ -4,45 +4,45 @@
 package tests.kit;
 
 #if !macro
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ListOffset;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollEvent;
-import gpui.Style;
-import gpui.StyleBuilder;
-import gpui.StyledText;
-import gpui.Window;
-import gpui.base.AutoScroll;
-import gpui.base.Geometry.Placement;
-import gpui.base.GlobalState;
-import gpui.base.Root;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionHandle;
-import gpui.base.TextSelectionRegistration;
-import gpui.base.TextSelectionRun;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.TextViewState;
-import gpui.component.Component;
-import gpui.component.text.TextView;
-import gpui.component.text.TextViewStyle;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ListOffset;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollEvent;
+import glaze.Style;
+import glaze.StyleBuilder;
+import glaze.StyledText;
+import glaze.Window;
+import glaze.kit.base.AutoScroll;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.Root;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionHandle;
+import glaze.kit.base.TextSelectionRegistration;
+import glaze.kit.base.TextSelectionRun;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.TextViewState;
+import glaze.kit.Component;
+import glaze.kit.text.TextView;
+import glaze.kit.text.TextViewStyle;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 /** Rust `PlainSelectableText`: a `StyledText` registered as a window selection participant. */
 private class PlainSelectableText extends Element {
@@ -384,7 +384,7 @@ private class ModalScopeTestView extends Model implements Render {
  * port wraps the same element in a `DebugProbe`. Rust's `root.view().downcast()`
  * is the content entity kept when the root is built.
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextWindowSelectionTest #if !macro extends KitTestCase #end {
 
     #if !macro
@@ -408,7 +408,7 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
         app.update(cx -> {
             Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of the theme).
-            gpui.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
+            glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });
         var content:Entity<V> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
@@ -653,7 +653,7 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
         }
         final after = windowSelectedText(cx);
         cx.simulateMouseUp(edge, Left);
-        assertTrue(gpui.util.Utf8.byteLength(after) > gpui.util.Utf8.byteLength(before), 'holding at edge must expand selection: before=$before, after=$after');
+        assertTrue(glaze.util.Utf8.byteLength(after) > glaze.util.Utf8.byteLength(before), 'holding at edge must expand selection: before=$before, after=$after');
         final stoppedAt = listScrollPx(textView, cx);
         cx.advanceClock(0.064);
         cx.runUntilParked();
@@ -835,8 +835,8 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
         final cx = openRoot(cx -> new ScrollableTextViewTest(cx.newEntity(cx -> TextViewState.markdown("**Hello** world", cx)), Source)).cx;
 
         final position = point(px(10.), px(10.));
-        cx.simulateEvent(new gpui.MouseDownEvent(Left, position, Modifiers.none(), 2, false));
-        cx.simulateEvent(new gpui.MouseUpEvent(Left, position, Modifiers.none(), 2));
+        cx.simulateEvent(new glaze.MouseDownEvent(Left, position, Modifiers.none(), 2, false));
+        cx.simulateEvent(new glaze.MouseUpEvent(Left, position, Modifiers.none(), 2));
         draw(cx);
 
         final text = windowSelectedText(cx);
@@ -1213,8 +1213,8 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
         // Double-click inside the first view: must trigger the per-view word
         // selection, not a window-level drag selection.
         final position = point(px(10.), px(15.));
-        cx.simulateEvent(new gpui.MouseDownEvent(Left, position, Modifiers.none(), 2, false));
-        cx.simulateEvent(new gpui.MouseUpEvent(Left, position, Modifiers.none(), 2));
+        cx.simulateEvent(new glaze.MouseDownEvent(Left, position, Modifiers.none(), 2, false));
+        cx.simulateEvent(new glaze.MouseUpEvent(Left, position, Modifiers.none(), 2));
         draw(cx);
 
         final text = windowSelectedText(cx);

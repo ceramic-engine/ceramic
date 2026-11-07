@@ -4,18 +4,18 @@
 
 package story.stories.themestory;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.IntoElement;
-import gpui.PaintQuad;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.IntoElement;
+import glaze.PaintQuad;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 class Checkerboard implements RenderOnce implements ParentElement {
 
@@ -55,8 +55,8 @@ class Checkerboard implements RenderOnce implements ParentElement {
                 for (row in 0...rows) {
                     for (col in 0...cols) {
                         if ((row + col) % 2 == 0) {
-                            final quad = new PaintQuad(new Bounds(new gpui.Point(SpringMath.f32(bounds.origin.x + size * col), SpringMath.f32(bounds.origin.y + size * row)),
-                                new gpui.Size(size, size)));
+                            final quad = new PaintQuad(new Bounds(new glaze.Point(SpringMath.f32(bounds.origin.x + size * col), SpringMath.f32(bounds.origin.y + size * row)),
+                                new glaze.Size(size, size)));
                             quad.setSolidBackground(c2.h, c2.s, c2.l, c2.a);
                             window.paintQuad(quad);
                         }

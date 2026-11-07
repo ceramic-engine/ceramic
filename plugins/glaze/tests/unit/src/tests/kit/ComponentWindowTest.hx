@@ -4,36 +4,36 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Decorations;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.OperatingSystem;
-import gpui.PlatformWindowOperations;
-import gpui.Point;
-import gpui.ResizeEdge;
-import gpui.Rgba;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.TestDispatcher;
-import gpui.Decorations.Tiling;
-import gpui.Window;
-import gpui.WindowControlArea;
-import gpui.component.Component;
-import gpui.component.TitleBar;
-import gpui.component.WindowBorder;
+import glaze.App;
+import glaze.Context;
+import glaze.Decorations;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.OperatingSystem;
+import glaze.PlatformWindowOperations;
+import glaze.Point;
+import glaze.ResizeEdge;
+import glaze.Rgba;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.TestDispatcher;
+import glaze.Decorations.Tiling;
+import glaze.Window;
+import glaze.WindowControlArea;
+import glaze.kit.Component;
+import glaze.kit.TitleBar;
+import glaze.kit.WindowBorder;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `title_bar.rs` and
@@ -249,7 +249,7 @@ class ComponentWindowTest extends TestCase {
         final point = new ceramic.Point();
         final bar = titleBarWindow();
         bar.update((window, _) -> {
-            final regions = gpui.platform.CeramicWindowOperations.hitRegions(window, point);
+            final regions = glaze.platform.CeramicWindowOperations.hitRegions(window, point);
             assertEquals(5, regions.length);
             final drag = window.windowControlHitboxes()[0].hitbox.bounds;
             assertFloatEquals(drag.origin.x, regions[0], 1e-4);
@@ -264,7 +264,7 @@ class ComponentWindowTest extends TestCase {
             window.platformDecorations = Client(new Tiling(false, true, false, false));
         });
         border.update((window, _) -> {
-            final regions = gpui.platform.CeramicWindowOperations.hitRegions(window, point);
+            final regions = glaze.platform.CeramicWindowOperations.hitRegions(window, point);
             final kinds = [for (i in 0...Std.int(regions.length / 5)) Std.int(regions[i * 5 + 4])];
             // The left side is tiled (Tiling(top, left, right, bottom)): no
             // left edge nor left corners
@@ -348,7 +348,7 @@ private class RecordingOperations implements PlatformWindowOperations {
         calls.push('double-click');
     }
 
-    public function appearance():gpui.WindowAppearance {
+    public function appearance():glaze.WindowAppearance {
         return Light;
     }
 

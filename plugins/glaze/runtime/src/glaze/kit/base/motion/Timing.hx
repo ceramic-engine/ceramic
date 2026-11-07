@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion/timing.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.SpringMath.f32;
-import gpui.base.motion.SignedDuration.IntoSignedDuration;
-import gpui.base.motion.SignedDuration.SignedDurationTools;
+import glaze.SpringMath.f32;
+import glaze.kit.base.motion.SignedDuration.IntoSignedDuration;
+import glaze.kit.base.motion.SignedDuration.SignedDurationTools;
 
 /**
  * How many times a timing plays (Rust `u64` count).
@@ -143,7 +143,7 @@ class Timing {
         return sampleNanos(MotionTime.nanos(elapsed));
     }
 
-    @:allow(gpui.base.motion)
+    @:allow(glaze.kit.base.motion)
     function sampleNanos(elapsedNanos:Float):TimingSample {
         final activeElapsed = SignedDurationTools.activeElapsedNanos(delayValue, elapsedNanos);
         if (activeElapsed < 0) {

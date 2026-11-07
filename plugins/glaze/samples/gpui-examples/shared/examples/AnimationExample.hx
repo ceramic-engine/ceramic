@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package examples;
 
-import gpui.Animation;
-import gpui.AnimationPhase;
-import gpui.App;
-import gpui.Context;
-import gpui.Easing.*;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.SpringAnimation;
-import gpui.SpringConfig;
-import gpui.Svg;
-import gpui.Svg.Transformation;
-import gpui.Window;
+import glaze.Animation;
+import glaze.AnimationPhase;
+import glaze.App;
+import glaze.Context;
+import glaze.Easing.*;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.SpringAnimation;
+import glaze.SpringConfig;
+import glaze.Svg;
+import glaze.Svg.Transformation;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AnimationExt;
+using glaze.AnimationExt;
 
 class AnimationExample extends Model implements Render {
 
@@ -249,7 +249,7 @@ class AnimationExample extends Model implements Render {
                                                 .withEpsilon(0.001),
                                             (this_, phase:AnimationPhase) -> {
                                                 var width:Float;
-                                                var color:gpui.Rgba;
+                                                var color:glaze.Rgba;
                                                 if ((phase:Float) <= 1.0) {
                                                     width = phase.interpolateBetween(
                                                         0.0, 1.0,

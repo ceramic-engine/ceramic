@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/overscroll.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.TouchPhase;
-import gpui.base.ScrollBounce.Physics;
-import gpui.base.ScrollBounce.ScrollBounceMotion;
-import gpui.base.motion.MotionTime;
+import glaze.TouchPhase;
+import glaze.kit.base.ScrollBounce.Physics;
+import glaze.kit.base.ScrollBounce.ScrollBounceMotion;
+import glaze.kit.base.motion.MotionTime;
 
 /**
  * Boundary displacement shared by inputs and scroll viewports.
@@ -18,7 +18,7 @@ import gpui.base.motion.MotionTime;
  * Times are `Float` seconds (`cx.backgroundExecutor().now()`), compared as
  * whole nanoseconds like Rust's `Instant` and `Duration`.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class Overscroll {
 
     /**
@@ -115,7 +115,7 @@ class Overscroll {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static inline function since(now:Float, at:Float):Float {

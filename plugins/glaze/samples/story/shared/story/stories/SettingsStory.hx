@@ -4,43 +4,43 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.AnyElement;
-import gpui.Axis;
-import gpui.Pixels;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.groupbox.GroupBox.GroupBoxVariant;
-import gpui.component.label.Label;
-import gpui.component.setting.ElementField.SettingFieldElement;
-import gpui.component.setting.NumberField.NumberFieldOptions;
-import gpui.component.setting.RenderOptions;
-import gpui.component.setting.SettingField;
-import gpui.component.setting.SettingGroup;
-import gpui.component.setting.SettingItem;
-import gpui.component.setting.SettingPage;
-import gpui.component.setting.Settings;
-import gpui.component.text.TextView;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.AnyElement;
+import glaze.Axis;
+import glaze.Pixels;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
+import glaze.kit.label.Label;
+import glaze.kit.setting.ElementField.SettingFieldElement;
+import glaze.kit.setting.NumberField.NumberFieldOptions;
+import glaze.kit.setting.RenderOptions;
+import glaze.kit.setting.SettingField;
+import glaze.kit.setting.SettingGroup;
+import glaze.kit.setting.SettingItem;
+import glaze.kit.setting.SettingPage;
+import glaze.kit.setting.Settings;
+import glaze.kit.text.TextView;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 private class AppSettings {
 
@@ -116,7 +116,7 @@ class SettingsStory extends Model implements Story {
         return px(0.);
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -128,7 +128,7 @@ class SettingsStory extends Model implements Story {
 
     @observe var groupVariant:GroupBoxVariant = GroupBoxVariant.Outline;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(_:Window, cx:Context<SettingsStory>) {
         super();
@@ -186,13 +186,13 @@ class SettingsStory extends Model implements Story {
                             .description('Select the variant for setting groups.')
                             .disabled(disabled),
                         SettingItem.create('Group Size', SettingField.dropdown([
-                            {value: gpui.component.Size.Medium.asStr(), label: 'Medium'},
-                            {value: gpui.component.Size.Small.asStr(), label: 'Small'},
-                            {value: gpui.component.Size.XSmall.asStr(), label: 'XSmall'},
+                            {value: glaze.kit.Size.Medium.asStr(), label: 'Medium'},
+                            {value: glaze.kit.Size.Small.asStr(), label: 'Small'},
+                            {value: glaze.kit.Size.XSmall.asStr(), label: 'XSmall'},
                         ],
                             cx -> view.read(cx).size.asStr(),
-                            (val, cx) -> view.update(cx, (view, _) -> view.size = gpui.component.Size.SizeTools.fromStr(val))
-                        ).defaultValue(gpui.component.Size.Medium.asStr()))
+                            (val, cx) -> view.update(cx, (view, _) -> view.size = glaze.kit.Size.SizeTools.fromStr(val))
+                        ).defaultValue(glaze.kit.Size.Medium.asStr()))
                             .description('Select the size for the setting group.')
                             .disabled(disabled),
                     ]),

@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/slider.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.slider;
+package glaze.kit.slider;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.Axis;
-import gpui.Background;
-import gpui.Corners;
-import gpui.DefiniteLength;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Slider.SliderIndicator;
-import gpui.base.Slider.SliderState;
-import gpui.base.Slider.SliderThumb;
-import gpui.base.Slider.SliderTrack;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.Axis;
+import glaze.Background;
+import glaze.Corners;
+import glaze.DefiniteLength;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Slider.SliderIndicator;
+import glaze.kit.base.Slider.SliderState;
+import glaze.kit.base.Slider.SliderThumb;
+import glaze.kit.base.Slider.SliderTrack;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.base.Slider.SliderValueTools;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.AbsoluteLengthTools;
+using glaze.kit.base.Slider.SliderValueTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * Pointer state of one thumb, written by its own listeners and read on the
@@ -88,7 +88,7 @@ private class ThumbRing {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -97,7 +97,7 @@ private class ThumbRing {
  * A Slider element.
  *
  * `SliderState`, `SliderValue`, `SliderEvent` and `SliderScale` are the Base
- * ones (`gpui.base.Slider`).
+ * ones (`glaze.kit.base.Slider`).
  */
 class Slider implements RenderOnce implements Styled {
 
@@ -173,7 +173,7 @@ class Slider implements RenderOnce implements Styled {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -182,8 +182,8 @@ class Slider implements RenderOnce implements Styled {
         final current = state.read(cx);
         final isRange = current.value().isRange();
         final percentage = current.percentage();
-        final barStart:DefiniteLength = reverseValue && !isRange ? gpui.Prelude.relative(percentage.end) : gpui.Prelude.relative(percentage.start);
-        final barEnd:DefiniteLength = reverseValue && !isRange ? gpui.Prelude.relative(0.) : gpui.Prelude.relative(f32(1. - percentage.end));
+        final barStart:DefiniteLength = reverseValue && !isRange ? glaze.Prelude.relative(percentage.end) : glaze.Prelude.relative(percentage.start);
+        final barEnd:DefiniteLength = reverseValue && !isRange ? glaze.Prelude.relative(0.) : glaze.Prelude.relative(f32(1. - percentage.end));
         final remSize = window.remSize();
 
         final styleBg = sliderStyle.background != null ? sliderStyle.background.asSolid() : null;
@@ -208,9 +208,9 @@ class Slider implements RenderOnce implements Styled {
             final thumb = new SliderThumb(state).axis(axis).start(start).disabled(disabled);
             if (!disabled) {
                 thumb.absolute();
-                if (axis == Axis.Horizontal) thumb.top(gpui.Prelude.px(-5.)).left(position).ml(gpui.Prelude.px(-8.));
-                if (axis == Axis.Vertical) thumb.bottom(position).left(gpui.Prelude.px(-5.)).mb(gpui.Prelude.px(-8.));
-                thumb.flex().itemsCenter().justifyCenter().flexShrink0().roundedFullStyle(cx).bg(barColor.opacity(0.5)).size4().p(gpui.Prelude.px(1.));
+                if (axis == Axis.Horizontal) thumb.top(glaze.Prelude.px(-5.)).left(position).ml(glaze.Prelude.px(-8.));
+                if (axis == Axis.Vertical) thumb.bottom(position).left(glaze.Prelude.px(-5.)).mb(glaze.Prelude.px(-8.));
+                thumb.flex().itemsCenter().justifyCenter().flexShrink0().roundedFullStyle(cx).bg(barColor.opacity(0.5)).size4().p(glaze.Prelude.px(1.));
                 final interaction = ring.interaction;
                 thumb.base
                     .onHover((entered, _, _) -> {
@@ -232,10 +232,10 @@ class Slider implements RenderOnce implements Styled {
                 thumb.child(div()
                     .flexNone()
                     .absolute()
-                    .top(gpui.Prelude.px(-ring.width))
-                    .left(gpui.Prelude.px(-ring.width))
-                    .right(gpui.Prelude.px(-ring.width))
-                    .bottom(gpui.Prelude.px(-ring.width))
+                    .top(glaze.Prelude.px(-ring.width))
+                    .left(glaze.Prelude.px(-ring.width))
+                    .right(glaze.Prelude.px(-ring.width))
+                    .bottom(glaze.Prelude.px(-ring.width))
                     .roundedFullStyle(cx)
                     .border(ring.width)
                     .borderColor(ring.color));
@@ -244,10 +244,10 @@ class Slider implements RenderOnce implements Styled {
             return thumb;
         }
 
-        final root = new gpui.base.Slider(state).axis(axis).disabled(disabled);
+        final root = new glaze.kit.base.Slider(state).axis(axis).disabled(disabled);
         if (accessibilityLabelValue != null) root.accessibilityLabel(accessibilityLabelValue);
         root.flex().flex1().itemsCenter().justifyCenter();
-        if (axis == Axis.Vertical) root.h(gpui.Prelude.px(120.));
+        if (axis == Axis.Vertical) root.h(glaze.Prelude.px(120.));
         if (axis == Axis.Horizontal) root.wFull();
         root.refineStyle(sliderStyle).bg(theme.transparent).textColor(theme.foreground);
 
@@ -264,8 +264,8 @@ class Slider implements RenderOnce implements Styled {
         if (axis == Axis.Horizontal) bar.hFull().left(barStart).right(barEnd);
         if (axis == Axis.Vertical) bar.wFull().bottom(barStart).top(barEnd);
         indicator.child(bar.bg(barColor).roundedFullStyle(cx));
-        if (startRing != null) indicator.child(thumb(gpui.Prelude.relative(percentage.start), true, startRing));
-        indicator.child(thumb(gpui.Prelude.relative(percentage.end), false, endRing));
+        if (startRing != null) indicator.child(thumb(glaze.Prelude.relative(percentage.start), true, startRing));
+        indicator.child(thumb(glaze.Prelude.relative(percentage.end), false, endRing));
 
         track.child(indicator);
         root.child(track);

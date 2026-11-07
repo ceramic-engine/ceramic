@@ -1,47 +1,47 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/color_picker.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.Rgba;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Slider.SliderEvent;
-import gpui.base.Slider.SliderState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.util.MathUtil;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.Rgba;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Slider.SliderEvent;
+import glaze.kit.base.Slider.SliderState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.A11y.RoleOverrideTools;
-using gpui.base.Slider.SliderValueTools;
-using gpui.base.StyledExt;
+using glaze.kit.base.A11y.RoleOverrideTools;
+using glaze.kit.base.Slider.SliderValueTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * Events emitted by a `ColorPickerState`.
@@ -64,7 +64,7 @@ class HslaSliders {
     final lightnessSlider:Entity<SliderState>;
     final alphaSlider:Entity<SliderState>;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(cx:App) {
         final component = (cx:App) -> cx.newEntity(_ -> new SliderState().min(0.).max(1.).step(0.01).defaultValue(0.));
         hueSlider = component(cx);
@@ -93,7 +93,7 @@ class HslaSliders {
         return alphaSlider;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function read(cx:App):Hsla {
         return hsla(
             hueSlider.read(cx).value().start(),
@@ -103,7 +103,7 @@ class HslaSliders {
         );
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function write(color:Hsla, window:Window, cx:App):Void {
         final components = [
             {slider: hueSlider, value: color.h},
@@ -200,7 +200,7 @@ class ColorPickerState extends Model implements Render {
     }
 
     /** Parses `#rgb`, `#rgba`, `#rrggbb`, and `#rrggbbaa`, with or without the `#`. */
-    @:allow(gpui)
+    @:allow(glaze)
     @:allow(tests)
     static function parseHex(value:String):Null<Hsla> {
         final value = StringTools.startsWith(value, '#') ? value.substr(1) : value;
@@ -243,7 +243,7 @@ class ColorPickerState extends Model implements Render {
     }
 
     /** Formats a color as `#RRGGBB`, or `#RRGGBBAA` when it is translucent. */
-    @:allow(gpui)
+    @:allow(glaze)
     @:allow(tests)
     static function hexString(color:Hsla):String {
         final rgba = Rgba.fromHsla(color);
@@ -258,7 +258,7 @@ class ColorPickerState extends Model implements Render {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /** Sets the initial committed and previewed color. */
@@ -437,7 +437,7 @@ class ColorPickerState extends Model implements Render {
      */
     function writeHexInput(value:Null<Hsla>, window:Window, cx:App):Void {
         final text = value != null ? hexString(value) : '';
-        (cast _hexInput : Entity<gpui.base.input.InputBaseState>).update(cx, (input, cx) -> input.setValue(text, window, cx));
+        (cast _hexInput : Entity<glaze.kit.base.input.InputBaseState>).update(cx, (input, cx) -> input.setValue(text, window, cx));
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {

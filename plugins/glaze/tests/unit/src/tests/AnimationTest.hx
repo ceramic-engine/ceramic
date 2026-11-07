@@ -1,14 +1,14 @@
 package tests;
 
-import gpui.Animation;
-import gpui.AnimationState;
-import gpui.Easing;
-import gpui.Spring;
-import gpui.SpringAnimation;
-import gpui.SpringAnimationState;
-import gpui.SpringConfig;
-import gpui.SpringPlayback;
-import gpui.TestDispatcher;
+import glaze.Animation;
+import glaze.AnimationState;
+import glaze.Easing;
+import glaze.Spring;
+import glaze.SpringAnimation;
+import glaze.SpringAnimationState;
+import glaze.SpringConfig;
+import glaze.SpringPlayback;
+import glaze.TestDispatcher;
 import testing.TestCase;
 
 /**
@@ -31,7 +31,7 @@ class AnimationTest extends TestCase {
 
     /**
      * Largest absolute difference with GPUI for each easing, filled by
-     * `testEasingsMatchGpui` (printed when the define `gpui_animation_errors` is set).
+     * `testEasingsMatchGpui` (printed when the define `glaze_animation_errors` is set).
      */
     public static final maxErrors:Map<String, Float> = new Map();
 
@@ -69,7 +69,7 @@ class AnimationTest extends TestCase {
             maxErrors.set(fn.name, maxError);
         }
 
-        #if gpui_animation_errors
+        #if glaze_animation_errors
         for (name => error in maxErrors) trace('easing $name: max error $error');
         #end
 
@@ -455,7 +455,7 @@ class AnimationTest extends TestCase {
         assertEquals(0.0, animation.initial);
         assertTrue(animation.config.equals(config));
 
-        final phase = new SpringAnimation<Any>(config).toBool(true).from(gpui.SpringPhaseTarget.ofBool(false));
+        final phase = new SpringAnimation<Any>(config).toBool(true).from(glaze.SpringPhaseTarget.ofBool(false));
         assertEquals(1.0, phase.target.target());
         assertEquals(0.0, phase.initial);
         assertEquals(1.25, phase.target.resolve(1.25).value);

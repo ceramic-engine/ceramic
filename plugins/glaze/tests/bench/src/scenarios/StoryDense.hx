@@ -1,16 +1,16 @@
 package scenarios;
 
 import Scenario;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Model;
-import gpui.Window;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Model;
+import glaze.Window;
 import story.StoryContainer;
 import story.StoryMeta;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * One dense page of the story gallery (the theme colors story by default,
@@ -23,7 +23,7 @@ import gpui.Prelude.*;
  */
 class StoryDense extends BaseScenario {
 
-    /** Elements created by a full draw (needs `gpui_count_allocations`). */
+    /** Elements created by a full draw (needs `glaze_count_allocations`). */
     public var elementCount:Int = 0;
 
     var app:App;

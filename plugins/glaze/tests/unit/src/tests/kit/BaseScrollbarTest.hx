@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Scrollbar;
-import gpui.base.theme.ScrollbarMode;
-import gpui.base.theme.ScrollbarTheme;
-import gpui.base.theme.Theme as BaseTheme;
+import glaze.App;
+import glaze.Axis;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.base.theme.ScrollbarTheme;
+import glaze.kit.base.theme.Theme as BaseTheme;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's `scrollbar.rs` (and the scrollbar part of
@@ -50,8 +50,8 @@ class BaseScrollbarTest extends TestCase {
 
     static inline final DEFAULT_IDLE:Float = ScrollbarMotion.DEFAULT_IDLE;
 
-    static inline function bg(color:gpui.Hsla):Background {
-        return (color : gpui.IntoBackground);
+    static inline function bg(color:glaze.Hsla):Background {
+        return (color : glaze.IntoBackground);
     }
 
     override function setup() {
@@ -533,8 +533,8 @@ class BaseScrollbarTest extends TestCase {
      * A vertical `Hover` scrollbar over a 100 px scroll area of 500 px of
      * content, the pointer never over the bar strip (x from 94 to 100).
      */
-    function scrollAreaHarness():{cx:VisualTestContext, view:gpui.Entity<ScriptView>, handle:gpui.ScrollHandle, bar:BarHolder} {
-        final handle = new gpui.ScrollHandle();
+    function scrollAreaHarness():{cx:VisualTestContext, view:glaze.Entity<ScriptView>, handle:glaze.ScrollHandle, bar:BarHolder} {
+        final handle = new glaze.ScrollHandle();
         final bar = new BarHolder();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
             final scrollbar = new Scrollbar(handle).axis(Vertical).mode(Hover);
@@ -573,7 +573,7 @@ class BaseScrollbarTest extends TestCase {
     function testHoverRevealsTheBarForAWheelOutsideTheBarStrip() {
         final h = scrollAreaHarness();
         assertFalse(barShown(h.bar));
-        h.cx.simulateEvent(new gpui.ScrollEvent(new Point(30., 50.), gpui.ScrollDelta.Pixels(new Point(0., -40.))));
+        h.cx.simulateEvent(new glaze.ScrollEvent(new Point(30., 50.), glaze.ScrollDelta.Pixels(new Point(0., -40.))));
         draw(h.cx);
         assertEquals(-40., h.handle.offset().y);
         assertTrue(barShown(h.bar));
@@ -592,7 +592,7 @@ class BaseScrollbarTest extends TestCase {
     }
 
     function testHoverRevealsTheBarForAKeyboardDrivenListScroll() {
-        final handle = new gpui.UniformListScrollHandle();
+        final handle = new glaze.UniformListScrollHandle();
         final bar = new BarHolder();
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new ScriptView((_, _) -> {
             final scrollbar = new Scrollbar(handle).axis(Vertical).mode(Hover);
@@ -612,7 +612,7 @@ class BaseScrollbarTest extends TestCase {
 
         // What a key handler moving a selection does: scroll the row into
         // view and notify the view
-        handle.scrollToItem(30, gpui.ScrollStrategy.Top);
+        handle.scrollToItem(30, glaze.ScrollStrategy.Top);
         cx.update((_, app) -> app.notify(opened.view.entityId()));
         cx.runUntilParked();
         draw(cx);
@@ -727,7 +727,7 @@ class BaseScrollbarTest extends TestCase {
                 }
                 final startedPosition = touch ? start.add(axisDelta(5.)) : start;
                 if (touch) {
-                    cx.simulateEvent(new gpui.TouchDragEvent(Started, start, startedPosition));
+                    cx.simulateEvent(new glaze.TouchDragEvent(Started, start, startedPosition));
                 }
                 else {
                     cx.simulateMouseDown(start, Left);
@@ -739,7 +739,7 @@ class BaseScrollbarTest extends TestCase {
                 for (delta in [0., 24., -8., 32., -10., 8., 0.]) {
                     final position = start.add(axisDelta(delta));
                     if (touch) {
-                        cx.simulateEvent(new gpui.TouchDragEvent(Moved, start, position));
+                        cx.simulateEvent(new glaze.TouchDragEvent(Moved, start, position));
                     }
                     else {
                         cx.simulateMouseMove(position, Left);
@@ -758,7 +758,7 @@ class BaseScrollbarTest extends TestCase {
                 // Release contains a final displacement without an intervening move.
                 final expectedOffset = referenceOffset + 12. * offsetPerPixel;
                 if (touch) {
-                    cx.simulateEvent(new gpui.TouchDragEvent(Ended, start, start.add(axisDelta(12.))));
+                    cx.simulateEvent(new glaze.TouchDragEvent(Ended, start, start.add(axisDelta(12.))));
                 }
                 else {
                     cx.simulateMouseUp(start.add(axisDelta(12.)), Left);
@@ -774,9 +774,9 @@ class BaseScrollbarTest extends TestCase {
     function testTouchThumbDragMovesDownAndCancelReleasesHandle() {
         final h = harness(Vertical, Always, new Size(100., 500.));
         final startPosition = new Point(95., 20.);
-        h.cx.simulateEvent(new gpui.TouchDragEvent(Started, startPosition, startPosition));
-        h.cx.simulateEvent(new gpui.TouchDragEvent(Moved, startPosition, new Point(95., 45.)));
-        h.cx.simulateEvent(new gpui.TouchDragEvent(Cancelled, startPosition, new Point(95., 45.)));
+        h.cx.simulateEvent(new glaze.TouchDragEvent(Started, startPosition, startPosition));
+        h.cx.simulateEvent(new glaze.TouchDragEvent(Moved, startPosition, new Point(95., 45.)));
+        h.cx.simulateEvent(new glaze.TouchDragEvent(Cancelled, startPosition, new Point(95., 45.)));
         assertTrue(h.handle.offset().y < 0., 'thumb down must scroll toward later content');
         assertEquals(0., h.handle.offset().x);
         assertEquals(1, h.handle.dragStarts);

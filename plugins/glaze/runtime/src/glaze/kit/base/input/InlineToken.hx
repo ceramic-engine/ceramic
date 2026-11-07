@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/inline_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * An application-defined reference rendered as one inline editing unit. The
@@ -41,7 +41,7 @@ class InlineToken {
     }
 
     /** The validation error, or null when the token is valid. */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function validate():Null<InlineTokenError> {
         if (StringTools.trim(_id).length == 0 || isInvalidText(_text) || isInvalidText(_label)) {
             return InlineTokenError.InvalidToken;

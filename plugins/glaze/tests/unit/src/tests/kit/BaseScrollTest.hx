@@ -4,38 +4,38 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.ScrollStrategy;
-import gpui.Size;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.AutoScroll;
-import gpui.base.Overscroll;
-import gpui.base.ScrollBounce;
-import gpui.base.ScrollableMask;
-import gpui.base.Scrollbar.ListStateScrollbar;
-import gpui.base.VirtualList;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.ScrollStrategy;
+import glaze.Size;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.AutoScroll;
+import glaze.kit.base.Overscroll;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.Scrollbar.ListStateScrollbar;
+import glaze.kit.base.VirtualList;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's scrolling modules: `overscroll.rs`,
@@ -136,7 +136,7 @@ class BaseScrollTest extends TestCase {
         final start = 10.;
         final frame = 0.016667;
         final overscroll = new Overscroll();
-        var dy = gpui.SpringMath.f32(-speed / 60.);
+        var dy = glaze.SpringMath.f32(-speed / 60.);
         final held:Array<Float> = [];
         final path:Array<Float> = [];
         final roomRef = [room];
@@ -145,7 +145,7 @@ class BaseScrollTest extends TestCase {
             // Momentum keeps arriving well after the edge has settled.
             if (n < 100) {
                 held.push(dy);
-                dy = gpui.SpringMath.f32(dy * 0.95);
+                dy = glaze.SpringMath.f32(dy * 0.95);
                 var sum = 0.;
                 for (d in held) sum += d;
                 if (stall == 0 || n < stall || roomRef[0] == 0. || -sum > roomRef[0]) {
@@ -260,10 +260,10 @@ class BaseScrollTest extends TestCase {
     static function longText(offset:Array<Float>, end:Float):(Float) -> Float {
         return dy -> {
             final before = offset[0];
-            var next = gpui.SpringMath.f32(before + dy);
+            var next = glaze.SpringMath.f32(before + dy);
             next = next < -end ? -end : (next > 0. ? 0. : next);
             offset[0] = next;
-            return gpui.SpringMath.f32(next - before);
+            return glaze.SpringMath.f32(next - before);
         };
     }
 
@@ -749,7 +749,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testResistanceAndReversePreserveUnconsumedDistance() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         scroll.begin(600.);
         assertEquals(0., scroll.pull(100.));
         assertTrue(scroll.offset() > 0. && scroll.offset() < 55.);
@@ -777,7 +777,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testMotionBuilderConfiguresTrackingAndResponse() {
-        final motion = new gpui.base.ScrollBounce.ScrollBounceMotion().withTracking(0.4).withResponse(0.3).withMaxStretch(24.);
+        final motion = new glaze.kit.base.ScrollBounce.ScrollBounceMotion().withTracking(0.4).withResponse(0.3).withMaxStretch(24.);
         assertEquals(0.4, motion.tracking());
         assertEquals(0.3, motion.response());
         assertEquals(24., motion.maxStretch());
@@ -785,8 +785,8 @@ class BaseScrollTest extends TestCase {
 
     function testTrackingScalesTheFirstStretch() {
         function stretch(tracking:Float):Float {
-            final scroll = new gpui.base.ScrollBounce.Physics();
-            scroll.setMotion(new gpui.base.ScrollBounce.ScrollBounceMotion().withTracking(tracking));
+            final scroll = new glaze.kit.base.ScrollBounce.Physics();
+            scroll.setMotion(new glaze.kit.base.ScrollBounce.ScrollBounceMotion().withTracking(tracking));
             scroll.begin(600.);
             scroll.pull(100.);
             return scroll.offset();
@@ -797,8 +797,8 @@ class BaseScrollTest extends TestCase {
 
     function testResponseScalesTheReturnAndZeroSnaps() {
         function remaining(response:Float):Float {
-            final scroll = new gpui.base.ScrollBounce.Physics();
-            scroll.setMotion(new gpui.base.ScrollBounce.ScrollBounceMotion().withResponse(response));
+            final scroll = new glaze.kit.base.ScrollBounce.Physics();
+            scroll.setMotion(new glaze.kit.base.ScrollBounce.ScrollBounceMotion().withResponse(response));
             scroll.begin(600.);
             scroll.pull(180.);
             scroll.release();
@@ -811,7 +811,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testRegrabbingADisplacedEdgeKeepsItsExtent() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         scroll.begin(600.);
         scroll.pull(-150.);
         scroll.release();
@@ -828,7 +828,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testAGestureFromRestAdoptsTheCurrentExtent() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         scroll.begin(600.);
         scroll.begin(40.);
         scroll.pull(-100.);
@@ -837,7 +837,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testGrabbingTheSpringDoesNotJump() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         scroll.begin(600.);
         scroll.pull(-150.);
         scroll.release();
@@ -852,12 +852,12 @@ class BaseScrollTest extends TestCase {
 
     function testSpringHasTheSameTrajectoryAt60And120Hz() {
         function at(hz:Int):Float {
-            final scroll = new gpui.base.ScrollBounce.Physics();
+            final scroll = new glaze.kit.base.ScrollBounce.Physics();
             scroll.begin(600.);
             scroll.pull(180.);
             scroll.release();
             for (_ in 0...Std.int(hz / 4)) {
-                scroll.step(gpui.SpringMath.f32(1. / hz));
+                scroll.step(glaze.SpringMath.f32(1. / hz));
             }
             return scroll.offset();
         }
@@ -865,7 +865,7 @@ class BaseScrollTest extends TestCase {
     }
 
     function testReturnKeepsAVisibleTailAfterAQuarterSecond() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         @:privateAccess scroll.position = 100.;
         assertTrue(scroll.step(0.25));
         // A 100 px release should still have a visible, decelerating tail
@@ -875,13 +875,13 @@ class BaseScrollTest extends TestCase {
     }
 
     function testSpringSettlesWithoutCrossingTheBoundary() {
-        final scroll = new gpui.base.ScrollBounce.Physics();
+        final scroll = new glaze.kit.base.ScrollBounce.Physics();
         scroll.begin(600.);
         scroll.pull(-200.);
         scroll.release();
         var previous = scroll.offset();
         for (_ in 0...120) {
-            scroll.step(gpui.SpringMath.f32(1. / 120.));
+            scroll.step(glaze.SpringMath.f32(1. / 120.));
             assertTrue(scroll.offset() >= previous && scroll.offset() <= 0.);
             previous = scroll.offset();
         }
@@ -904,7 +904,7 @@ class BaseScrollTest extends TestCase {
             {name: 'bottom left', corner: new Point(0., height), xDir: 1., yDir: -1.}
         ];
         for (c in cases) {
-            final path = @:privateAccess gpui.base.ScrollableMask.RoundedFrameCover.cornerNotchPath(c.corner, c.xDir, c.yDir, radius);
+            final path = @:privateAccess glaze.kit.base.ScrollableMask.RoundedFrameCover.cornerNotchPath(c.corner, c.xDir, c.yDir, radius);
             assertNotNull(path, 'the notch tessellates');
             final bounds = path.bounds;
             // Curve tessellation may inset fractionally; one pixel of slack.
@@ -1312,7 +1312,7 @@ class BaseScrollTest extends TestCase {
     function exerciseAxis(axis:Axis) {
         final itemSize = axis == Horizontal ? new Size(20., 10.) : new Size(10., 20.);
         final itemSizes = [for (_ in 0...20) itemSize];
-        final scrollHandle = new gpui.base.VirtualList.VirtualListScrollHandle();
+        final scrollHandle = new glaze.kit.base.VirtualList.VirtualListScrollHandle();
         final visibleRanges:Array<Array<Int>> = [];
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new VirtualListHarness(axis, itemSizes, scrollHandle, visibleRanges));
         contexts.push(opened.cx);
@@ -1384,7 +1384,7 @@ class BaseScrollTest extends TestCase {
 
     function testEmptyListDrawsWithoutRequestingItems() {
         final visibleRanges:Array<Array<Int>> = [];
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new VirtualListHarness(Vertical, [], new gpui.base.VirtualList.VirtualListScrollHandle(), visibleRanges));
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new VirtualListHarness(Vertical, [], new glaze.kit.base.VirtualList.VirtualListScrollHandle(), visibleRanges));
         contexts.push(opened.cx);
         draw(opened.cx);
         assertEquals(0, visibleRanges.length);
@@ -1395,7 +1395,7 @@ class BaseScrollTest extends TestCase {
 private class MathSign {
 
     public static inline function of(value:Float):Float {
-        return gpui.util.MathUtil.signum(value);
+        return glaze.util.MathUtil.signum(value);
     }
 
 }
@@ -1409,11 +1409,11 @@ private class VirtualListHarness extends Model implements Render {
 
     final itemSizes:Array<Size>;
 
-    final scrollHandle:gpui.base.VirtualList.VirtualListScrollHandle;
+    final scrollHandle:glaze.kit.base.VirtualList.VirtualListScrollHandle;
 
     final visibleRanges:Array<Array<Int>>;
 
-    public function new(axis:Axis, itemSizes:Array<Size>, scrollHandle:gpui.base.VirtualList.VirtualListScrollHandle, visibleRanges:Array<Array<Int>>) {
+    public function new(axis:Axis, itemSizes:Array<Size>, scrollHandle:glaze.kit.base.VirtualList.VirtualListScrollHandle, visibleRanges:Array<Array<Int>>) {
         super();
         this.axis = axis;
         this.itemSizes = itemSizes;

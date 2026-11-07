@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/highlighter/wasm_stub.rs (SyntaxHighlighter)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.HighlightStyle;
-import gpui.Range;
-import gpui.base.input.InputEdit;
-import gpui.base.input.StyledRange;
+import glaze.HighlightStyle;
+import glaze.Range;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.StyledRange;
 import ropey.Rope;
-import gpui.component.highlighter.TextMateBackend.CaptureName;
+import glaze.kit.highlighter.TextMateBackend.CaptureName;
 
 /**
  * Syntax highlighter stub of gpui-kit's builds without tree-sitter. With a
@@ -38,7 +38,7 @@ class SyntaxHighlighter {
         return true;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function captureNames(text:Rope):Array<CaptureName> {
         if (Highlighter.enabled)
             return TextMateBackend.captureNames(_language, text.toString());

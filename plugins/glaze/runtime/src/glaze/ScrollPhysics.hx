@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/gestures.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * How free scrolling decelerates after a fling.
@@ -10,7 +10,7 @@ package gpui;
  * clamping) is the scroll container's policy: the container is the one that
  * knows its extents.
  */
-@:using(gpui.ScrollPhysics.ScrollPhysicsTools)
+@:using(glaze.ScrollPhysics.ScrollPhysicsTools)
 enum ScrollPhysics {
 
     /**
@@ -112,7 +112,7 @@ class ScrollPhysicsTools {
  * The fling model of Android's `OverScroller.SplineOverScroller`,
  * transcribed from AOSP (Apache-2.0) (Rust module `friction_spline`).
  */
-@:allow(gpui)
+@:allow(glaze)
 class FrictionSplineModel {
 
     static inline final NB_SAMPLES:Int = 100;

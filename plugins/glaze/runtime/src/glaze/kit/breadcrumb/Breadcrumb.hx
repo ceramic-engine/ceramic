@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/breadcrumb.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.breadcrumb;
+package glaze.kit.breadcrumb;
 
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An item of a `Breadcrumb`: a label, clickable when it has `onClick`.
@@ -54,13 +54,13 @@ class BreadcrumbItem implements RenderOnce implements Styled {
         return this;
     }
 
-    @:allow(gpui.component.breadcrumb)
+    @:allow(glaze.kit.breadcrumb)
     function withId(id:Int):BreadcrumbItem {
         this.id = ElementId.Integer(id);
         return this;
     }
 
-    @:allow(gpui.component.breadcrumb)
+    @:allow(glaze.kit.breadcrumb)
     function isLast(isLast:Bool):BreadcrumbItem {
         isLastValue = isLast;
         return this;
@@ -131,7 +131,7 @@ class Breadcrumb implements RenderOnce implements Styled {
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final itemsCount = items.length;
-        final element = gpui.base.Prelude.hFlex()
+        final element = glaze.kit.base.Prelude.hFlex()
             .gap1p5()
             .textSm()
             .textColor(theme.mutedForeground)

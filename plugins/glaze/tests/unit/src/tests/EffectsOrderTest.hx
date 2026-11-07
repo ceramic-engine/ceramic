@@ -1,10 +1,10 @@
 package tests;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.Model;
-import gpui.TestDispatcher;
-import testing.GpuiTruth;
+import glaze.App;
+import glaze.Entity;
+import glaze.Model;
+import glaze.TestDispatcher;
+import testing.GlazeTruth;
 import testing.TestCase;
 
 /**
@@ -15,7 +15,7 @@ import testing.TestCase;
 class EffectsOrderTest extends TestCase {
 
     function testEffectsOrderMatchesGpui() {
-        final expected:Array<String> = haxe.Json.parse(GpuiTruth.load('effects-order.json')).log;
+        final expected:Array<String> = haxe.Json.parse(GlazeTruth.load('effects-order.json')).log;
         final actual = run(new App(new TestDispatcher()));
         assertEquals(expected.length, actual.length, 'log length');
         for (i in 0...Std.int(Math.max(expected.length, actual.length))) {

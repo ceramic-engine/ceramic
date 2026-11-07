@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/textarea/mod.rs (`Textarea`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
+import glaze.App;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
 
-using gpui.base.input.InputTokenPresentation;
+using glaze.kit.base.input.InputTokenPresentation;
 
 /**
  * An unstyled ordinary multi-line text input.

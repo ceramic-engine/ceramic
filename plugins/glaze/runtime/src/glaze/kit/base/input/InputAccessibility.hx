@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/state.rs (`InputAccessibility`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.base.A11y.Role;
+import glaze.kit.base.A11y.Role;
 
 /**
  * Accessibility presentation for the editor's existing keyboard-focus boundary.
@@ -13,7 +13,7 @@ import gpui.base.A11y.Role;
  * supplies the live value and guards accessibility actions against its current
  * disabled, read-only and masked state.
  *
- * The GPUI port has no accessibility tree (see `gpui.Window`): the data is
+ * Glaze has no accessibility tree (see `glaze.Window`): the data is
  * kept so that facades can project it, the state does not export it.
  */
 class InputAccessibility {

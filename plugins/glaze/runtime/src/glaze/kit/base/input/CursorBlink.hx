@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/blink_cursor.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * Application-wide caret visibility policy (read from the Base theme).
@@ -57,7 +57,7 @@ class CursorBlink {
      * Collapse every steady spelling to one value, so a change between them
      * is not mistaken for a policy change.
      */
-    @:allow(gpui.base.input, tests)
+    @:allow(glaze.kit.base.input, tests)
     function normalized():CursorBlink {
         return isSteady() ? steady() : this;
     }

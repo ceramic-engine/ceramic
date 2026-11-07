@@ -4,31 +4,31 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Pixels;
-import gpui.UniformListScrollHandle;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Pixels;
+import glaze.UniformListScrollHandle;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
-using gpui.component.scroll.Scrollable;
+using glaze.kit.scroll.Scrollable;
 
 @:action(namespace = scrollbar_story, noJson) private class ChangeDataset implements Action {
     public final value:Int;
@@ -48,7 +48,7 @@ class ScrollbarStory extends Model implements Story {
         return 'Add scrollbar to a scrollable element.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -64,7 +64,7 @@ class ScrollbarStory extends Model implements Story {
 
     @observe var items:Array<String>;
 
-    var itemSizes:Array<gpui.Size>;
+    var itemSizes:Array<glaze.Size>;
 
     var testWidth:Pixels;
 

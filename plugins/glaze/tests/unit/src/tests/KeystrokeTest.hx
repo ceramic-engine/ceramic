@@ -1,12 +1,12 @@
 package tests;
 
-import gpui.InvalidKeystrokeError;
-import gpui.KeyBinding;
-import gpui.KeybindingKeystroke;
-import gpui.Keystroke;
-import gpui.Modifiers;
-import gpui.NoAction;
-import gpui.OperatingSystem;
+import glaze.InvalidKeystrokeError;
+import glaze.KeyBinding;
+import glaze.KeybindingKeystroke;
+import glaze.Keystroke;
+import glaze.Modifiers;
+import glaze.NoAction;
+import glaze.OperatingSystem;
 import testing.TestCase;
 
 /**

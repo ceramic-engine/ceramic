@@ -3,37 +3,37 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.OperatingSystem;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.input.InputState;
-import gpui.base.questionnaire.QuestionnaireChoiceDefinition;
-import gpui.base.questionnaire.QuestionnaireEvent;
-import gpui.base.questionnaire.QuestionnaireInputDefinition;
-import gpui.base.questionnaire.QuestionnaireItemDefinition;
-import gpui.base.questionnaire.QuestionnaireShortcutMode;
-import gpui.base.questionnaire.QuestionnaireState;
-import gpui.component.Component;
-import gpui.component.Size;
-import gpui.component.questionnaire.Questionnaire;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.OperatingSystem;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.questionnaire.QuestionnaireChoiceDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireEvent;
+import glaze.kit.base.questionnaire.QuestionnaireInputDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireItemDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireShortcutMode;
+import glaze.kit.base.questionnaire.QuestionnaireState;
+import glaze.kit.Component;
+import glaze.kit.Size;
+import glaze.kit.questionnaire.Questionnaire;
+import glaze.kit.theme.Theme;
 import tests.kit.BaseOverlaysTest.OverlayProbe;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's questionnaire skin.

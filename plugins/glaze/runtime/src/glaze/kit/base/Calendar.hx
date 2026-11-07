@@ -2,44 +2,44 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-012 (the year page follows the current year). See DEVIATIONS.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.chrono.Local;
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.Weekday;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.chrono.Local;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.Weekday;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A controlled calendar value (Rust `Date`, renamed: `Date` is Haxe's
  * standard date class).
  */
-@:using(gpui.base.Calendar.CalendarDateTools)
+@:using(glaze.kit.base.Calendar.CalendarDateTools)
 enum CalendarDate {
     Single(date:Null<NaiveDate>);
     Range(start:Null<NaiveDate>, end:Null<NaiveDate>);
@@ -143,7 +143,7 @@ class CalendarDateTools {
  * matches the dates before `before` or after `after`, `Range` the dates
  * between `from` and `to` (both included, either side open when null).
  */
-@:using(gpui.base.Calendar.MatcherTools)
+@:using(glaze.kit.base.Calendar.MatcherTools)
 enum Matcher {
     DayOfWeek(days:Array<Int>);
     Interval(before:Null<NaiveDate>, after:Null<NaiveDate>);
@@ -212,7 +212,7 @@ enum CalendarEvent {
  * The calendar state: the controlled value, the visible month, the view
  * (days, months or years) and the disabled dates.
  *
- * "Today" is read once, from `gpui.base.chrono.Local` (Rust
+ * "Today" is read once, from `glaze.kit.base.chrono.Local` (Rust
  * `Local::now().date_naive()`), whose clock tests and golden scenes fix.
  */
 class CalendarState extends Model implements Render {
@@ -390,7 +390,7 @@ class CalendarState extends Model implements Render {
      * months and is the preferred rendering API.
      */
     public function monthDays():Array<Array<Array<NaiveDate>>> {
-        return [for (n in 0..._numberOfMonths) Calendar.daysInMonth(_currentYear, _currentMonth + n, gpui.base.chrono.Weekday.Sun)];
+        return [for (n in 0..._numberOfMonths) Calendar.daysInMonth(_currentYear, _currentMonth + n, glaze.kit.base.chrono.Weekday.Sun)];
     }
 
     public function hasPrevYearPage():Bool {
@@ -588,7 +588,7 @@ class CalendarItemState {
 /**
  * An unstyled, pre-wired calendar item passed to the item slot.
  *
- * Interactive styles and listeners go to `base` (see `gpui.base.Button`).
+ * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
 class CalendarItem implements RenderOnce implements Styled implements ParentElement {
 
@@ -604,7 +604,7 @@ class CalendarItem implements RenderOnce implements Styled implements ParentElem
     /** The accessibility properties the item exports. */
     public final a11y:A11y = new A11y();
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(id:ElementIdArg, state:CalendarItemState) {
         this.base = div().id(id);
         this.state = state;
@@ -612,7 +612,7 @@ class CalendarItem implements RenderOnce implements Styled implements ParentElem
 
     // Keep the default visible label available to assistive technology even
     // when a presentation assigns a role that does not derive a name from children.
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function withLabel(label:String):CalendarItem {
         a11y.label = label;
         childElements.push((label : IntoElement).intoAnyElement());
@@ -694,7 +694,7 @@ class Calendar implements RenderOnce implements Styled {
 
     var numberOfMonthsValue:Int = 1;
 
-    var firstDayOfWeekValue:Weekday = gpui.base.chrono.Weekday.Sun;
+    var firstDayOfWeekValue:Weekday = glaze.kit.base.chrono.Weekday.Sun;
 
     final calendarStyle:StyleRefinement = new StyleRefinement();
 
@@ -809,7 +809,7 @@ class Calendar implements RenderOnce implements Styled {
         }
 
         final layout = pickerGridLayout(view);
-        final body = layout == null ? hFlex().justifyAround() : div().grid().gridCols(layout.columns).gapX(gpui.Prelude.px(layout.horizontalGap));
+        final body = layout == null ? hFlex().justifyAround() : div().grid().gridCols(layout.columns).gapX(glaze.Prelude.px(layout.horizontalGap));
         if (view.isDay()) {
             for (offset in 0...count) {
                 final ym = entity.read(cx).offsetYearMonth(offset);
@@ -898,7 +898,7 @@ class Calendar implements RenderOnce implements Styled {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     @:allow(tests)
     static function daysInMonth(year:Int, month:Int, firstDay:Weekday):Array<Array<NaiveDate>> {
         final total = year * 12 + month - 1;

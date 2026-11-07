@@ -3,30 +3,30 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.ColorPicker.ColorPickerEvent;
-import gpui.base.ColorPicker.ColorPickerState;
-import gpui.component.Size;
-import gpui.component.colorpicker.ColorPicker;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.ColorPicker.ColorPickerEvent;
+import glaze.kit.base.ColorPicker.ColorPickerState;
+import glaze.kit.Size;
+import glaze.kit.colorpicker.ColorPicker;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.StyledExt;
+using glaze.kit.theme.Colorize;
 
 class ColorPickerStory extends Model implements Story {
 

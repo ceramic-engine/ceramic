@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/sankey_chart.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.plot.PathCache.PathCaches;
-import gpui.base.plot.PathCache.ShapeKey;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotHover;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.shape.Sankey;
-import gpui.component.chart.Chart.ChartAppear;
-import gpui.component.plot.Tooltip;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.plot.PathCache.PathCaches;
+import glaze.kit.base.plot.PathCache.ShapeKey;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotHover;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.shape.Sankey;
+import glaze.kit.chart.Chart.ChartAppear;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.fill;
-import gpui.Prelude.linearColorStop;
-import gpui.Prelude.linearGradient;
+import glaze.Prelude.fill;
+import glaze.Prelude.linearColorStop;
+import glaze.Prelude.linearGradient;
 
 /**
  * The placed layout of a frame: the graph on the final extent, the label
@@ -92,11 +92,11 @@ private class SankeyHover {
  */
 class SankeyLabel {
 
-    @:allow(gpui.component.chart) @:allow(tests) final text:String;
+    @:allow(glaze.kit.chart) @:allow(tests) final text:String;
 
-    @:allow(gpui.component.chart) @:allow(tests) var colorValue:Null<Hsla> = null;
+    @:allow(glaze.kit.chart) @:allow(tests) var colorValue:Null<Hsla> = null;
 
-    @:allow(gpui.component.chart) @:allow(tests) var fontSizeValue:Null<Float> = null;
+    @:allow(glaze.kit.chart) @:allow(tests) var fontSizeValue:Null<Float> = null;
 
     public function new(text:String) {
         this.text = text;
@@ -112,13 +112,13 @@ class SankeyLabel {
         return this;
     }
 
-    @:allow(gpui.component.chart)
+    @:allow(glaze.kit.chart)
     @:allow(tests)
     function lineHeight():Float {
         return SpringMath.f32((fontSizeValue != null ? fontSizeValue : PlotLabel.TEXT_SIZE) + PlotLabel.TEXT_GAP);
     }
 
-    @:allow(gpui.component.chart)
+    @:allow(glaze.kit.chart)
     @:allow(tests)
     static function blockHeight(lines:Array<SankeyLabel>):Float {
         var height = 0.;
@@ -198,8 +198,8 @@ class SankeyChart<T> extends Plot {
 
     public function new(nodes:Iterable<T>, links:Iterable<SankeyLink>, ?pos:haxe.PosInfos) {
         super();
-        this.nodes = gpui.util.Iterables.toArray(nodes);
-        this.links = gpui.util.Iterables.toArray(links);
+        this.nodes = glaze.util.Iterables.toArray(nodes);
+        this.links = glaze.util.Iterables.toArray(links);
         idValue = Chart.callerId(pos);
     }
 
@@ -461,7 +461,7 @@ class SankeyChart<T> extends Plot {
         final nodeLabels = nodeLabels(cx);
 
         final key = frameKey(bounds, nodeLabels);
-        final state:gpui.Window.StateModel<SankeyFrameCache> = window.useKeyedState('sankey-frame', cx, _ -> new SankeyFrameCache());
+        final state:glaze.Window.StateModel<SankeyFrameCache> = window.useKeyedState('sankey-frame', cx, _ -> new SankeyFrameCache());
         final cache = state.value;
         if (cache.key == key) {
             frame = cache.frame;

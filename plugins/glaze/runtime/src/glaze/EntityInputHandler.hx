@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/input.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Ref;
+import glaze.util.Ref;
 
 /**
  * Implement this interface to allow views to handle textual input when
@@ -23,7 +23,7 @@ import gpui.util.Ref;
  * `textLengthUtf16`, `acceptsTextInput`, `textInputConfiguration`,
  * `textInputEditableRange`). Like `Render`, the context is a `Context<Dynamic>`.
  */
-@:autoBuild(gpui.EntityInputHandlerMacro.build())
+@:autoBuild(glaze.EntityInputHandlerMacro.build())
 interface EntityInputHandler {
 
     function textForRange(range:Range, adjustedRange:Ref<Null<Range>>, window:Window, cx:Context<Dynamic>):Null<String>;

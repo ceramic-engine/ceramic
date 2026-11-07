@@ -1,12 +1,12 @@
 package tests;
 
-import gpui.Action;
-import gpui.KeyBindingContextPredicate;
-import gpui.KeyBindingContextPredicateTools;
-import gpui.KeyContext;
+import glaze.Action;
+import glaze.KeyBindingContextPredicate;
+import glaze.KeyBindingContextPredicateTools;
+import glaze.KeyContext;
 import testing.TestCase;
 
-using gpui.KeyBindingContextPredicateTools;
+using glaze.KeyBindingContextPredicateTools;
 
 /**
  * Tests ported from gpui-pre 0.3.10: src/keymap/context.rs (all 11 tests).

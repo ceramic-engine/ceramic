@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/drag.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Bounds;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.base.Geometry.Placement;
+import glaze.Bounds;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.kit.base.Geometry.Placement;
 
 /**
  * The bounds a drop placeholder should occupy within a tab group, given
@@ -19,7 +19,7 @@ class DropPlaceholderBounds {
 
     final sizeValue:Size;
 
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function new(origin:Point, size:Size) {
         this.originValue = origin;
         this.sizeValue = size;

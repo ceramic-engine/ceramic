@@ -3,25 +3,25 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.TextSelectionLayer;
-import gpui.base.text.InlineElement;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.TextView;
-import gpui.base.text.TextViewState;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.TextSelectionLayer;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.TextView;
+import glaze.kit.base.text.TextViewState;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 private class VirtualInlineRoot extends Model implements Render {
 
@@ -43,7 +43,7 @@ private class VirtualInlineRoot extends Model implements Render {
             case _: null;
         }).renderWith((_, context, _, _) -> {
             final extent:Float = context.fontSize() * (root.preparedSize / 16.);
-            final image = gpui.Image.fromBytes(gpui.ImageFormat.Svg,
+            final image = glaze.Image.fromBytes(glaze.ImageFormat.Svg,
                 haxe.io.Bytes.ofString('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M0 0L40 40" stroke="black"/></svg>'));
             return new InlineElement(img(image).w(px(extent)).h(px(extent))).withBaseline(extent * 0.75);
         });
@@ -56,7 +56,7 @@ private class VirtualInlineRoot extends Model implements Render {
             .child(TextView.create(view)
                 .scrollable(true)
                 .selectionFormat(sourceFormat ? SelectionFormat.Source : SelectionFormat.Plain)
-                .plugin(new gpui.base.text.TextView.MarkdownTextViewPlugin(plugin)));
+                .plugin(new glaze.kit.base.text.TextView.MarkdownTextViewPlugin(plugin)));
     }
 
 }
@@ -66,7 +66,7 @@ private class VirtualInlineRoot extends Model implements Render {
  * growth and zoom remeasure blocks that are offscreen, and copy keeps the
  * logical text of covered blocks (Rust `text/inline_virtual_tests.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextInlineVirtualTest extends KitTestCase {
 
     static inline final BLOCKS = 24;

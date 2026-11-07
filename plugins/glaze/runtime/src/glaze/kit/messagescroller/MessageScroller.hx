@@ -1,39 +1,39 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/message_scroller.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.messagescroller;
+package glaze.kit.messagescroller;
 
-import gpui.App;
-import gpui.Context;
-import gpui.DefiniteLength;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FollowMode;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ScrollBounce;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.DefiniteLength;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FollowMode;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.StyledExt;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * The entity-owned scrolling state for a `MessageScroller`.
@@ -44,7 +44,7 @@ using gpui.component.scroll.Scrollable;
  */
 class MessageScrollerState extends Model {
 
-    @:allow(gpui.component.messagescroller, tests)
+    @:allow(glaze.kit.messagescroller, tests)
     final listState:ListState;
 
     /**
@@ -208,7 +208,7 @@ class MessageScrollerState extends Model {
  */
 class MessageScroller implements RenderOnce implements Styled {
 
-    @:allow(gpui.component.messagescroller)
+    @:allow(glaze.kit.messagescroller)
     static inline final LIST_OVERDRAW:Pixels = 400.;
 
     /** Seconds (Rust `Duration::from_millis(200)`). */

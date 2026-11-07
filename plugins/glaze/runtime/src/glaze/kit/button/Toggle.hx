@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/button/toggle.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.button;
+package glaze.kit.button;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
-import gpui.component.tooltip.Tooltip.ComponentTooltip;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
+import glaze.kit.tooltip.Tooltip.ComponentTooltip;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The variant of a `Toggle` (default `Ghost`).
@@ -38,36 +38,36 @@ enum abstract ToggleVariant(Int) {
 /**
  * A toggle button: a controlled pressed state shown with the accent colors.
  *
- * The tooltip is a managed tooltip (`gpui.component.tooltip`), also
+ * The tooltip is a managed tooltip (`glaze.kit.tooltip`), also
  * announced as the accessibility label.
  */
 class Toggle implements RenderOnce implements Styled implements ParentElement implements Sizable implements Disableable {
 
     final id:ElementId;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final toggleStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var checkedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var sizeValue:Size = Medium;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var variantValue:ToggleVariant = Ghost;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
     var borderCorners:Array<Bool> = [true, true, true, true];
 
     var borderEdges:Array<Bool> = [true, true, true, true];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final childElements:Array<AnyElement> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var onClickHandler:Null<(Bool, Window, App) -> Void> = null;
 
     var tooltipText:Null<String> = null;
@@ -143,13 +143,13 @@ class Toggle implements RenderOnce implements Styled implements ParentElement im
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function withBorderCorners(topLeft:Bool, topRight:Bool, bottomRight:Bool, bottomLeft:Bool):Toggle {
         borderCorners = [topLeft, topRight, bottomRight, bottomLeft];
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function withBorderEdges(top:Bool, right:Bool, bottom:Bool, left:Bool):Toggle {
         borderEdges = [top, right, bottom, left];
         return this;
@@ -191,13 +191,13 @@ class Toggle implements RenderOnce implements Styled implements ParentElement im
         final pressedForeground = theme.accentForeground;
         final instanceStyle = toggleStyle.clone();
 
-        final toggle = new gpui.base.Toggle(id).pressed(checked).disabled(disabled);
+        final toggle = new glaze.kit.base.Toggle(id).pressed(checked).disabled(disabled);
         if (tooltipText != null) toggle.accessibilityLabel(tooltipText);
         final onClick = onClickHandler;
         if (onClick != null) {
             toggle.onChange((next, _, window, cx) -> onClick(next, window, cx));
         }
-        toggle.flex().flexRow().lineHeight(gpui.Prelude.relative(1.25)).itemsCenter().justifyCenter();
+        toggle.flex().flexRow().lineHeight(glaze.Prelude.relative(1.25)).itemsCenter().justifyCenter();
         switch size {
             case XSmall: toggle.minW5().h5().px0p5().textXs();
             case Small: toggle.minW6().h6().px1().textSm();
@@ -238,22 +238,22 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var sizeValue:Size = Medium;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var variantValue:ToggleVariant = Ghost;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var segmentedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final items:Array<Toggle> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var onClickHandler:Null<(Array<Bool>, Window, App) -> Void> = null;
 
     /**
@@ -358,7 +358,7 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
             row.child(item);
         }
 
-        final group = new gpui.base.ToggleGroup(id).axis(Axis.Horizontal).child(row);
+        final group = new glaze.kit.base.ToggleGroup(id).axis(Axis.Horizontal).child(row);
         final onClick = onClickHandler;
         if (!disabled && onClick != null) {
             group.onClick((_, window, cx) -> {

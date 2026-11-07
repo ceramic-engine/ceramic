@@ -1,22 +1,22 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/animation.rs (EffectTransition)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.animation;
+package glaze.kit.base.animation;
 
-import gpui.Animation;
-import gpui.AnimationElement;
-import gpui.AnimationExt;
-import gpui.Element;
-import gpui.ElementIdArg;
-import gpui.IntoLength;
-import gpui.Pixels;
-import gpui.Styled;
+import glaze.Animation;
+import glaze.AnimationElement;
+import glaze.AnimationExt;
+import glaze.Element;
+import glaze.ElementIdArg;
+import glaze.IntoLength;
+import glaze.Pixels;
+import glaze.Styled;
 
 /**
  * A composable transition that applies concrete fade, slide, and size effects
  * to an element.
  *
- * This is distinct from `gpui.base.motion.Transition`, which is a timing
+ * This is distinct from `glaze.kit.base.motion.Transition`, which is a timing
  * policy for a caller-chosen value and never picks a visual property. Prefer
  * `motion` for new code.
  *

@@ -3,55 +3,55 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockAreaRendererBase;
-import gpui.base.dock.DockAreaState;
-import gpui.base.dock.DockEvent;
-import gpui.base.dock.DockLayout;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.EntityPanelView;
-import gpui.base.dock.InsertTarget;
-import gpui.base.dock.JsonValue;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PaneNode;
-import gpui.base.dock.PanelBase;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelInfo;
-import gpui.base.dock.PanelRegistry;
-import gpui.base.dock.PanelState;
-import gpui.base.dock.PanelView;
-import gpui.base.dock.TabGroup;
-import gpui.base.dock.TabGroupContext;
-import gpui.base.dock.TabGroupRenderer;
-import gpui.base.dock.TabGroupRendererBase;
-import gpui.base.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockAreaRendererBase;
+import glaze.kit.base.dock.DockAreaState;
+import glaze.kit.base.dock.DockEvent;
+import glaze.kit.base.dock.DockLayout;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.EntityPanelView;
+import glaze.kit.base.dock.InsertTarget;
+import glaze.kit.base.dock.JsonValue;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PaneNode;
+import glaze.kit.base.dock.PanelBase;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelInfo;
+import glaze.kit.base.dock.PanelRegistry;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.base.dock.PanelView;
+import glaze.kit.base.dock.TabGroup;
+import glaze.kit.base.dock.TabGroupContext;
+import glaze.kit.base.dock.TabGroupRenderer;
+import glaze.kit.base.dock.TabGroupRendererBase;
+import glaze.kit.base.theme.Theme;
 import tests.kit.DockTestSupport;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.dock.JsonValue.JsonValueTools;
-using gpui.base.dock.PanelInfo.PanelInfoTools;
+using glaze.kit.base.dock.JsonValue.JsonValueTools;
+using glaze.kit.base.dock.PanelInfo.PanelInfoTools;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's `DockArea` (`dock_area.rs`),
  * including the ones gpui-kit ported from the old `TabPanel` tests. Element
  * bounds are read through `DebugProbe` (Rust `debug_selector`).
  */
-@:access(gpui.base.dock.DockArea)
-@:access(gpui.base.dock.TabGroup)
+@:access(glaze.kit.base.dock.DockArea)
+@:access(glaze.kit.base.dock.TabGroup)
 class BaseDockAreaTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -1452,7 +1452,7 @@ private class SkinPlaceholder extends PanelBase {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }
@@ -1473,7 +1473,7 @@ private class PlaceholderSkin extends DockAreaRendererBase {
     }
 
     public function tabGroupRenderer():TabGroupRenderer {
-        return new gpui.base.dock.BareTabGroup();
+        return new glaze.kit.base.dock.BareTabGroup();
     }
 
 }
@@ -1509,7 +1509,7 @@ private class RecordingTabGroup extends TabGroupRendererBase {
 
     public function renderTabBar(group:TabGroupContext, window:Window, cx:App):AnyElement {
         drawn.push(group.node());
-        return new gpui.Empty().intoAnyElement();
+        return new glaze.Empty().intoAnyElement();
     }
 
 }
@@ -1518,7 +1518,7 @@ private class RecordingTabGroup extends TabGroupRendererBase {
  * A 20 pixel strip tracking `elsewhere` above the dock area (the
  * integration tests' `TwoTabs` view).
  */
-private class TwoTabsView extends gpui.Model implements gpui.Render {
+private class TwoTabsView extends glaze.Model implements glaze.Render {
 
     public final area:Entity<DockArea>;
 

@@ -1,13 +1,13 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
 /**
  * The platform side of the text system: font loading, metrics, shaping and
- * glyph rasterization. Implemented by `gpui.platform.CeramicTextSystem`
+ * glyph rasterization. Implemented by `glaze.platform.CeramicTextSystem`
  * (pure Haxe, over the `ttf` library) and by `NoopTextSystem` for tests.
  *
  * Errors (Rust `Result::Err`) are thrown. Device pixel bounds are `Bounds`

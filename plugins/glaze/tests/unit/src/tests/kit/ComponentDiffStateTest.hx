@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.IntoElement;
-import gpui.ListOffset;
-import gpui.Model;
-import gpui.Range;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffLinePosition;
-import gpui.component.diff.DiffLineRange;
-import gpui.component.diff.DiffMode;
-import gpui.component.diff.DiffSide;
-import gpui.component.diff.Diff;
-import gpui.component.diff.DiffState;
-import gpui.component.diff.DiffState.DiffEvent;
-import gpui.component.diff.Presentation.DiffStyledRange;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.IntoElement;
+import glaze.ListOffset;
+import glaze.Model;
+import glaze.Range;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffLinePosition;
+import glaze.kit.diff.DiffLineRange;
+import glaze.kit.diff.DiffMode;
+import glaze.kit.diff.DiffSide;
+import glaze.kit.diff.Diff;
+import glaze.kit.diff.DiffState;
+import glaze.kit.diff.DiffState.DiffEvent;
+import glaze.kit.diff.Presentation.DiffStyledRange;
 import tests.kit.ComponentDiffFixture as Fixture;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The state tests of gpui-kit's diff (`tests.rs`).
@@ -343,7 +343,7 @@ class ComponentDiffStateTest extends KitTestCase {
             final style = new HighlightStyle(null, weight);
             return (_, text) -> {
                 final space = text.indexOf(' ');
-                return [new DiffStyledRange(new Range(0, space == -1 ? gpui.util.Utf8.byteLength(text) : space), style)];
+                return [new DiffStyledRange(new Range(0, space == -1 ? glaze.util.Utf8.byteLength(text) : space), style)];
             };
         }
         final file = document('let a = 1;\n', 'let a = 2;\n').withLanguage('rust');

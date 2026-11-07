@@ -4,25 +4,25 @@
 package tests.kit;
 
 #if !macro
-import gpui.AbsoluteLength;
-import gpui.Context;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.text.FrontmatterPlugin;
-import gpui.component.text.TextView;
-import gpui.component.text.TextViewStyle;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.Context;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.text.FrontmatterPlugin;
+import glaze.kit.text.TextView;
+import glaze.kit.text.TextViewStyle;
+import glaze.kit.theme.Theme;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 private class StatelessMarkdown extends Model implements Render {
     final onRender:() -> Void;
@@ -48,7 +48,7 @@ private class StatelessMarkdown extends Model implements Render {
  * features, wave 11), `legacy_text_view_keeps_element_associated_types`
  * (a Rust type check with no runtime behaviour).
  */
-@:access(gpui.component.text)
+@:access(glaze.kit.text)
 class TextComponentTest #if !macro extends KitTestCase #end {
 
     #if !macro
@@ -96,7 +96,7 @@ class TextComponentTest #if !macro extends KitTestCase #end {
             .withStyle(style)
             .selectable(true)
             .scrollable(true)
-            .imageSource(uri -> gpui.ImageSource.Resource(gpui.Resource.Path(uri)));
+            .imageSource(uri -> glaze.ImageSource.Resource(glaze.Resource.Path(uri)));
         assertTrue(view != null);
     }
 
@@ -125,13 +125,13 @@ class TextComponentTest #if !macro extends KitTestCase #end {
         assertTrue(radiusEquals(style.table().cornerRadiusTopRight, radius));
         assertTrue(radiusEquals(style.table().cornerRadiusBottomLeft, radius));
         assertTrue(radiusEquals(style.table().cornerRadiusBottomRight, radius));
-        assertEquals(gpui.Overflow.Scroll, style.table().overflowX);
+        assertEquals(glaze.Overflow.Scroll, style.table().overflowX);
     }
 
     function testLegacyPartialStylesRefineComponentThemeDefaults() {
         final theme = new Theme();
         final tableHead = new StyleRefinement();
-        tableHead.text = new gpui.TextStyleRefinement();
+        tableHead.text = new glaze.TextStyleRefinement();
         tableHead.text.fontWeight = FontWeight.BOLD;
         final inlineCode = new HighlightStyle(null, null, FontStyle.Italic);
 
@@ -162,7 +162,7 @@ class TextComponentTest #if !macro extends KitTestCase #end {
         app.update(cx -> {
             Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of the theme).
-            gpui.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
+            glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });
         var renders = 0;
         final result = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new StatelessMarkdown(() -> renders++));
@@ -257,7 +257,7 @@ class TextComponentTest #if !macro extends KitTestCase #end {
 
     #end
 
-    /** `examples/fixtures/test.md` of gpui-kit (copied to `test/unit/data/text/test.md`). */
+    /** `examples/fixtures/test.md` of gpui-kit (copied to `tests/unit/data/text/test.md`). */
     public static macro function testMarkdown():haxe.macro.Expr {
         final file = haxe.macro.Context.getPosInfos(haxe.macro.Context.currentPos()).file;
         final path = haxe.io.Path.normalize(haxe.io.Path.directory(sys.FileSystem.absolutePath(file)) + '/../../../data/text/test.md');

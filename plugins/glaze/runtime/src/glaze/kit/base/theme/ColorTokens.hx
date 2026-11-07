@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/theme_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.theme;
+package glaze.kit.base.theme;
 
-import gpui.Hsla;
-import gpui.Prelude.hsla;
-import gpui.Prelude.rgb;
+import glaze.Hsla;
+import glaze.Prelude.hsla;
+import glaze.Prelude.rgb;
 
 /**
  * The semantic color roles. Mutable like the Rust struct (it is `Copy` in

@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/checkbox.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.A11y.RoleOverrideTools;
-using gpui.base.StyledExt;
+using glaze.kit.base.A11y.RoleOverrideTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * The semantic value exposed by an unstyled `Checkbox` (default `Unchecked`).
@@ -35,7 +35,7 @@ enum abstract CheckboxState(Int) {
     var Checked;
     var Indeterminate;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function toggled():Toggled {
         return switch (cast this:CheckboxState) {
             case Unchecked: Toggled.False;
@@ -44,7 +44,7 @@ enum abstract CheckboxState(Int) {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function activated():CheckboxState {
         return switch (cast this:CheckboxState) {
             case Unchecked | Indeterminate: Checked;
@@ -60,7 +60,7 @@ enum abstract CheckboxState(Int) {
  * The application owns all layout and visual state rendering. Child elements can
  * present the check mark, indeterminate mark, label, or any other design-system UI.
  *
- * Interactive styles and listeners go to `base` (see `gpui.base.Button`).
+ * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
 class Checkbox implements RenderOnce implements Styled implements ParentElement {
 
@@ -291,13 +291,13 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
  */
 class CheckboxStyles {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final checkedStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final indeterminateStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final disabledStyle:StyleRefinement = new StyleRefinement();
 
     public function new() {}

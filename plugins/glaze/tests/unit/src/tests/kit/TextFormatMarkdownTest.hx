@@ -3,38 +3,38 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.DefiniteLength;
-import gpui.Hsla;
-import gpui.ImageSource;
-import gpui.IntoElement;
-import gpui.Range;
-import gpui.Rgba;
-import gpui.Window;
-import gpui.base.input.Selection;
-import gpui.base.text.BlockNode;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.MarkdownParseContext;
-import gpui.base.text.MarkdownPlugin;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangedMark;
-import gpui.base.text.SourceSegment;
-import gpui.base.text.Span;
-import gpui.base.text.TextMark;
-import gpui.base.text.TextUtils;
-import gpui.base.text.format.MarkdownFormat;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.DefiniteLength;
+import glaze.Hsla;
+import glaze.ImageSource;
+import glaze.IntoElement;
+import glaze.Range;
+import glaze.Rgba;
+import glaze.Window;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.MarkdownParseContext;
+import glaze.kit.base.text.MarkdownPlugin;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.SourceSegment;
+import glaze.kit.base.text.Span;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.text.TextUtils;
+import glaze.kit.base.text.format.MarkdownFormat;
 import haxe.io.Bytes;
 import markdown.mdast.Node.Node;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.DefiniteLengthTools;
+using glaze.DefiniteLengthTools;
 
 private class Ticker {
 
@@ -98,10 +98,10 @@ private class TickerPlugin extends MarkdownPlugin {
 }
 
 /**
- * Tests of `gpui.base.text.format.MarkdownFormat` (Rust `text/format/markdown.rs`).
+ * Tests of `glaze.kit.base.text.format.MarkdownFormat` (Rust `text/format/markdown.rs`).
  */
-@:access(gpui.base.text)
-@:access(gpui.base.text.format.MarkdownFormat)
+@:access(glaze.kit.base.text)
+@:access(glaze.kit.base.text.format.MarkdownFormat)
 class TextFormatMarkdownTest extends TestCase {
 
     // Helpers
@@ -809,7 +809,7 @@ class TextFormatMarkdownTest extends TestCase {
                 switch image.source() {
                     case ImageSource.Image(_):
                         assertTrue(StringTools.startsWith(destination, "data:"));
-                    case ImageSource.Resource(gpui.Resource.Uri(uri)):
+                    case ImageSource.Resource(glaze.Resource.Uri(uri)):
                         assertFalse(StringTools.startsWith(destination, "data:"));
                         assertEquals(destination, uri);
                     case _:

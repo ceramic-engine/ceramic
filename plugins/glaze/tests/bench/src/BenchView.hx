@@ -1,10 +1,10 @@
 package;
 
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
 
 /**
  * A view rendering through a function.
@@ -18,7 +18,7 @@ class BenchView extends Model implements Render {
         this.renderFn = renderFn;
     }
 
-    public function render(window:gpui.Window, cx:gpui.Context<Dynamic>):gpui.IntoElement {
+    public function render(window:glaze.Window, cx:glaze.Context<Dynamic>):glaze.IntoElement {
         return renderFn(window, cx);
     }
 

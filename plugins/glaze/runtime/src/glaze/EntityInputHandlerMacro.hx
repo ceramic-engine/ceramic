@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI: adds the default methods of the
 // `EntityInputHandler` trait of gpui-pre 0.3.10 (src/input.rs, Zed Industries,
 // Apache-2.0) to implementing classes. See NOTICE.md.
-package gpui;
+package glaze;
 
 #if macro
 import haxe.macro.Context;
@@ -39,32 +39,32 @@ class EntityInputHandlerMacro {
         }
 
         final defaults = (macro class {
-            public function paste(item:gpui.ClipboardItem, window:gpui.Window, cx:gpui.Context<Dynamic>):Void {
+            public function paste(item:glaze.ClipboardItem, window:glaze.Window, cx:glaze.Context<Dynamic>):Void {
                 final text = item.text();
                 if (text != null) {
                     replaceTextInRange(null, text, window, cx);
                 }
             }
 
-            public function selectionBoundsForRange(rangeUtf16:gpui.Range, elementBounds:gpui.Bounds, window:gpui.Window, cx:gpui.Context<Dynamic>):Array<gpui.Bounds> {
+            public function selectionBoundsForRange(rangeUtf16:glaze.Range, elementBounds:glaze.Bounds, window:glaze.Window, cx:glaze.Context<Dynamic>):Array<glaze.Bounds> {
                 return [];
             }
 
-            public function setSelectedTextRange(rangeUtf16:gpui.Range, window:gpui.Window, cx:gpui.Context<Dynamic>):Void {}
+            public function setSelectedTextRange(rangeUtf16:glaze.Range, window:glaze.Window, cx:glaze.Context<Dynamic>):Void {}
 
-            public function textLengthUtf16(window:gpui.Window, cx:gpui.Context<Dynamic>):Null<Int> {
+            public function textLengthUtf16(window:glaze.Window, cx:glaze.Context<Dynamic>):Null<Int> {
                 return null;
             }
 
-            public function acceptsTextInput(window:gpui.Window, cx:gpui.Context<Dynamic>):Bool {
+            public function acceptsTextInput(window:glaze.Window, cx:glaze.Context<Dynamic>):Bool {
                 return true;
             }
 
-            public function textInputConfiguration(window:gpui.Window, cx:gpui.Context<Dynamic>):gpui.TextInputConfiguration {
-                return gpui.TextInputConfiguration.defaultValue();
+            public function textInputConfiguration(window:glaze.Window, cx:glaze.Context<Dynamic>):glaze.TextInputConfiguration {
+                return glaze.TextInputConfiguration.defaultValue();
             }
 
-            public function textInputEditableRange(window:gpui.Window, cx:gpui.Context<Dynamic>):Null<gpui.Range> {
+            public function textInputEditableRange(window:glaze.Window, cx:glaze.Context<Dynamic>):Null<glaze.Range> {
                 return null;
             }
         }).fields;

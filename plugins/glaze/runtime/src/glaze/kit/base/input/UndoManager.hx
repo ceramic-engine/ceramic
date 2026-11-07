@@ -2,9 +2,9 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-015 (a typing run may start by replacing text). See DEVIATIONS.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.util.Utf8;
+import glaze.util.Utf8;
 
 
 

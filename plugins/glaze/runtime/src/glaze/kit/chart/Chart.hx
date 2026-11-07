@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.ElementId;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.plot.Grid;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotAxis.AxisLabelPlacement;
-import gpui.base.plot.PlotAxis.AxisText;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
-import gpui.base.plot.scale.ScaleBand;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.scale.ScalePoint;
-import gpui.component.plot.Tooltip;
-import gpui.component.theme.Theme;
-import gpui.util.MathUtil;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.ElementId;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.plot.Grid;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotAxis.AxisLabelPlacement;
+import glaze.kit.base.plot.PlotAxis.AxisText;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
+import glaze.kit.base.plot.scale.ScaleBand;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.scale.ScalePoint;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.theme.Theme;
+import glaze.util.MathUtil;
 
 /**
- * The helpers the charts of `gpui.component.chart` share (Rust
+ * The helpers the charts of `glaze.kit.chart` share (Rust
  * `chart/mod.rs`).
  */
 class Chart {
@@ -116,7 +116,7 @@ class Chart {
         final top = f(padding[0]);
         final bottom = f(padding[1]);
         final domainValues:Array<Float> = domain != null ? [domain[0], domain[1]] : {
-            final list = gpui.util.Iterables.toArray(values);
+            final list = glaze.util.Iterables.toArray(values);
             list.push(0.);
             list;
         };
@@ -138,7 +138,7 @@ class Chart {
      */
     public static function valueAxisGap(labels:Iterable<String>, window:Window):Float {
         var gap = VALUE_AXIS_GAP;
-        for (label in gpui.util.Iterables.asArray(labels)) {
+        for (label in glaze.util.Iterables.asArray(labels)) {
             gap = Math.max(gap, f(PlotLabel.measureTextWidth(label, PlotLabel.TEXT_SIZE, window) + PlotLabel.TEXT_GAP * 2.));
         }
         return gap;

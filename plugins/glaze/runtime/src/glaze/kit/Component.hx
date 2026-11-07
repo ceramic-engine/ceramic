@@ -2,13 +2,13 @@
 // crates/component/src/root.rs (init)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.AppContext;
-import gpui.base.Base;
-import gpui.base.GlobalState;
-import gpui.base.Root;
-import gpui.component.theme.Theme;
+import glaze.AppContext;
+import glaze.kit.base.Base;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.Root;
+import glaze.kit.theme.Theme;
 
 /**
  * The styled component library of GPUI Kit (the `gpui-component` crate).
@@ -27,25 +27,25 @@ class Component {
         Theme.init(cx);
         // Rust `global_state::init`: the legacy initialization point of the Base global
         GlobalState.init(cx);
-        #if gpui_inspector
+        #if glaze_inspector
         // Rust `inspector::init` (feature `inspector`)
-        gpui.component.inspector.Inspector.init(cx);
+        glaze.kit.inspector.Inspector.init(cx);
         #end
         Root.registerPlugin(cx, WindowState, (window, cx) -> new WindowState(window, cx));
         Base.init(cx);
         // Rust order: gpui_base, input, diff, date_picker, dock, sheet...
-        gpui.component.input.ComponentLanguages.init(cx);
-        gpui.component.diff.DiffActions.init(cx);
-        gpui.component.time.DatePicker.DatePickerState.init(cx);
-        gpui.component.dock.DockSkin.init(cx);
-        gpui.component.sheet.Sheet.init(cx);
-        gpui.component.list.ListState.init(cx);
-        gpui.component.command.CommandState.init(cx);
-        gpui.component.carousel.Carousel.init(cx);
-        gpui.component.notification.Notification.NotificationList.init(cx);
+        glaze.kit.input.ComponentLanguages.init(cx);
+        glaze.kit.diff.DiffActions.init(cx);
+        glaze.kit.time.DatePicker.DatePickerState.init(cx);
+        glaze.kit.dock.DockSkin.init(cx);
+        glaze.kit.sheet.Sheet.init(cx);
+        glaze.kit.list.ListState.init(cx);
+        glaze.kit.command.CommandState.init(cx);
+        glaze.kit.carousel.Carousel.init(cx);
+        glaze.kit.notification.Notification.NotificationList.init(cx);
         // Rust order: ... popover, questionnaire, menu, table, tooltip
-        gpui.component.menu.Menus.init(cx);
-        gpui.component.table.DataTable.init(cx);
+        glaze.kit.menu.Menus.init(cx);
+        glaze.kit.table.DataTable.init(cx);
     }
 
     /**

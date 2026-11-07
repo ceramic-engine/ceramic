@@ -1,10 +1,10 @@
 // Ported from gpui-pre 0.3.10: src/element.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.ds.IntMap;
-import gpui.Window.ElementStateBox;
+import glaze.Window.ElementStateBox;
 
 /**
  * A globally unique identifier for an element: the path of element ids from
@@ -32,11 +32,11 @@ class GlobalElementId {
     static var nextId:Int = 1;
 
     /** The trie this node belongs to (frame counter and node count) */
-    @:allow(gpui)
+    @:allow(glaze)
     final trie:ElementIdTrie;
 
     /** The last frame of the trie that reached this node through `child()` */
-    @:allow(gpui)
+    @:allow(glaze)
     var lastVisit:Int = 0;
 
     /** Stable integer id of this path (unique within the process). */
@@ -69,11 +69,11 @@ class GlobalElementId {
      * The element state boxes of this path, one per state type, owned by one
      * of the two frames of the window (see `Window.elementStateBox`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var states:Null<Array<ElementStateBox<Dynamic>>> = null;
 
     function new(trie:ElementIdTrie, parent:Null<GlobalElementId>, segment:Null<ElementId>) {
-        #if gpui_count_allocations gpui.util.AllocationCounters.globalElementIds++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.globalElementIds++; #end
         this.id = nextId++;
         this.trie = trie;
         this.parent = parent;
@@ -175,7 +175,7 @@ class GlobalElementId {
     /**
      * The element state box of the given type id on this path, or `null`.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function findState(typeId:Int):Null<ElementStateBox<Dynamic>> {
         final states = this.states;
         var result:Null<ElementStateBox<Dynamic>> = null;
@@ -191,13 +191,13 @@ class GlobalElementId {
         return result;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function addState(box:ElementStateBox<Dynamic>):Void {
         if (states == null) states = [];
         states.push(box);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function removeState(box:ElementStateBox<Dynamic>):Void {
         if (states != null) states.remove(box);
     }
@@ -207,7 +207,7 @@ class GlobalElementId {
      * without element state, without a kept child) and returns whether this
      * node is stale itself (the caller detaches it).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function sweep(minVisit:Int):Bool {
         var live = false;
         if (viewChildren != null && !sweepIntMap(viewChildren, minVisit)) live = true;

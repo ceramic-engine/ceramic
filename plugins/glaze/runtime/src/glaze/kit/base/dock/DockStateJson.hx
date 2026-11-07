@@ -1,11 +1,11 @@
 // New code for the Haxe port of gpui-kit: the serde (de)serialization rules
 // the dock's persisted state (crates/base/src/dock/state.rs, Longbridge,
 // Apache-2.0) gets from `#[derive(Serialize, Deserialize)]`. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Pixels;
-import gpui.SpringMath;
-import gpui.base.dock.JsonValue;
+import glaze.Pixels;
+import glaze.SpringMath;
+import glaze.kit.base.dock.JsonValue;
 
 /**
  * Field readers with serde's checks: a required field must be present,

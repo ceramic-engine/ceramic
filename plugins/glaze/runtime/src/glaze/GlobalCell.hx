@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): observable storage of
 // a global, replacing the `globals_by_type` boxes of gpui-pre 0.3.10. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Holds the value of one global. Reading `value` inside a tracker capture

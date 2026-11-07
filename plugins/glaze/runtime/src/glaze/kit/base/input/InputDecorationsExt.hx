@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/decorations.rs (`impl InputBaseState<EditorMode>`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
+import glaze.Context;
 
 /**
  * The decoration methods of an editor state (Rust `impl InputBaseState<EditorMode>`
  * in `decorations.rs`), as static extensions: see `InputSearchExt`. They
  * only exist for the code editor (`EditorExtras` holds the collections).
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class InputDecorationsExt {
 
     static inline function extras(state:InputBaseState):EditorExtras {

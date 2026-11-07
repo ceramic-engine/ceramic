@@ -1,36 +1,36 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/form/field.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.form;
+package glaze.kit.form;
 
-import gpui.AlignItems;
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Axis;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Rems;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.AlignItems;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Axis;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Rems;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The properties a `Form` hands to each of its fields.
  */
-@:allow(gpui.component.form, tests)
+@:allow(glaze.kit.form, tests)
 class FieldProps {
 
     var size:Size = Medium;
@@ -105,7 +105,7 @@ class Field implements RenderOnce implements Styled implements ParentElement {
 
     var id:ElementId = ElementId.Integer(0);
 
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     var propsValue:FieldProps = new FieldProps();
 
     final fieldStyle:StyleRefinement = new StyleRefinement();
@@ -194,7 +194,7 @@ class Field implements RenderOnce implements Styled implements ParentElement {
     /**
      * Returns whether the form field is visible.
      */
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     function isVisible():Bool {
         return visibleValue;
     }
@@ -212,7 +212,7 @@ class Field implements RenderOnce implements Styled implements ParentElement {
      *
      * This is internal API for sync props from From.
      */
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     function props(ix:Int, props:FieldProps):Field {
         this.id = ElementId.Integer(ix);
         this.propsValue = props;

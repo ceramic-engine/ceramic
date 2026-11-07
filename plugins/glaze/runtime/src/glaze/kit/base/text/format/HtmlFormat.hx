@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/format/html.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text.format;
+package glaze.kit.base.text.format;
 
-import gpui.DefiniteLength;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.Rgba;
-import gpui.base.text.BlockNode;
-import gpui.base.text.ImageNode;
-import gpui.base.text.InlineNode;
-import gpui.base.text.LinkMark;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangedMark;
-import gpui.base.text.Table;
-import gpui.base.text.Table.TableCell;
-import gpui.base.text.Table.TableRow;
-import gpui.base.text.TextMark;
-import gpui.base.text.TextUtils;
-import gpui.base.text.format.html5minify.Minifier;
-import gpui.util.MathUtil;
-import gpui.util.Utf8;
+import glaze.DefiniteLength;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.Rgba;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.ImageNode;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.LinkMark;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.Table;
+import glaze.kit.base.text.Table.TableCell;
+import glaze.kit.base.text.Table.TableRow;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.text.TextUtils;
+import glaze.kit.base.text.format.html5minify.Minifier;
+import glaze.util.MathUtil;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
@@ -34,9 +34,9 @@ import html5ever.markup5ever_rcdom.NodeData;
 import html5ever.markup5ever_rcdom.RcDom;
 import html5ever.markup5ever_rcdom.RefCell;
 
-import gpui.Prelude.px;
-import gpui.Prelude.relative;
-import gpui.Prelude.rgb;
+import glaze.Prelude.px;
+import glaze.Prelude.relative;
+import glaze.Prelude.rgb;
 
 /**
  * A paragraph under construction. A literal line feed is content; only a
@@ -653,7 +653,7 @@ class HtmlFormat {
      * provenance. The break may be a separate node or part of a marked run.
      * A standalone break is retained for Markdown's inline-HTML parser.
      */
-    @:allow(gpui.base.text.format)
+    @:allow(glaze.kit.base.text.format)
     static function trimTrailingBreak(paragraph:Paragraph):Void {
         final children = paragraph.children_;
         if (children.length == 1 && children[0].text_ == '\n') {
@@ -668,7 +668,7 @@ class HtmlFormat {
         }
         final text = last.text_.substr(0, last.text_.length - 1);
         if (text == '') {
-            gpui.util.Stacks.drop(children);
+            glaze.util.Stacks.drop(children);
             return;
         }
         final len = TextUtils.len(text);

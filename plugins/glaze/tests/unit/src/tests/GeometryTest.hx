@@ -1,7 +1,7 @@
 package tests;
 
-import gpui.*;
-import gpui.Prelude.*;
+import glaze.*;
+import glaze.Prelude.*;
 import testing.TestCase;
 
 /**
@@ -36,9 +36,9 @@ class GeometryTest extends TestCase {
         }
         var checked = 0;
         for (_ in 0...4000) {
-            final a = new gpui.Bounds(new gpui.Point(next(), next()), new gpui.Size(Math.abs(next()), Math.abs(next())));
-            final b = new gpui.Bounds(new gpui.Point(next(), next()), new gpui.Size(Math.abs(next()), Math.abs(next())));
-            final p = new gpui.Point(next(), next());
+            final a = new glaze.Bounds(new glaze.Point(next(), next()), new glaze.Size(Math.abs(next()), Math.abs(next())));
+            final b = new glaze.Bounds(new glaze.Point(next(), next()), new glaze.Size(Math.abs(next()), Math.abs(next())));
+            final p = new glaze.Point(next(), next());
             if (a.intersect(b).contains(p) != a.intersectContains(b, p)) {
                 fail('mismatch for $a $b $p');
             }
@@ -418,9 +418,9 @@ class GeometryTest extends TestCase {
         assertEquals(3, (new DevicePixels(7).half():Int));
         assertFloatEquals(Math.PI, (percentage(0.5).toRadians():Float));
         // `impl Into<Radians>` arguments take a percentage of a full circle
-        final quarter:gpui.Radians = percentage(0.25);
+        final quarter:glaze.Radians = percentage(0.25);
         assertFloatEquals(Math.PI / 2, (quarter:Float));
-        assertFloatEquals(Math.PI, (gpui.Svg.Transformation.rotated(percentage(0.5)).rotate:Float));
+        assertFloatEquals(Math.PI, (glaze.Svg.Transformation.rotated(percentage(0.5)).rotate:Float));
         assertEquals(1.5, (radians(1.5):Float));
 
         assertEquals(12.5, (Pixels.parse('12.5px'):Float));

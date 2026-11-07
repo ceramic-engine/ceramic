@@ -1,6 +1,6 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
 import textmate.OnigLib;
 
@@ -8,7 +8,7 @@ import textmate.OnigLib;
  * The `IOnigLib` of the pure Haxe `oniguruma` library (the port of
  * Oniguruma 6.9.8 with the vscode-oniguruma API), for the `textmate`
  * registry. It is the regex engine of the highlighter on every target,
- * unless the web build opts in to onig.wasm (`gpui_onig_wasm` define, see `OnigWasm`).
+ * unless the web build opts in to onig.wasm (`glaze_onig_wasm` define, see `OnigWasm`).
  */
 class PureOnigLib implements IOnigLib {
 

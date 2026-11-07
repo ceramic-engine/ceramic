@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/drag.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Point;
-import gpui.Size;
+import glaze.Point;
+import glaze.Size;
 
 /**
  * A panel being dragged out of a tab group.

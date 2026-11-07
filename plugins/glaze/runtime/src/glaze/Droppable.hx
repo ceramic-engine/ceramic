@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI: stands for Rust's `Drop` on element
 // state values (gpui-pre 0.3.10, src/window.rs element states, Zed Industries,
 // Apache-2.0). See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A value kept in an element state (`withElementState`, `useKeyedState`)

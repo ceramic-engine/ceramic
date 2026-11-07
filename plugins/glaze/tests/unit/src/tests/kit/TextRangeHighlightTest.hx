@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Hsla;
-import gpui.Range;
-import gpui.base.text.BlockNode;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.LeafRemap;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangeHighlight;
-import gpui.base.text.RangeHighlightFrame;
-import gpui.base.text.RangedColor;
-import gpui.base.text.RenderedIndex.LeafSpan;
-import gpui.base.text.RenderedText;
-import gpui.base.text.TextLeafKey;
-import gpui.base.text.format.HtmlFormat;
-import gpui.base.text.format.MarkdownFormat;
-import gpui.util.Utf8;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.LeafRemap;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangeHighlight;
+import glaze.kit.base.text.RangeHighlightFrame;
+import glaze.kit.base.text.RangedColor;
+import glaze.kit.base.text.RenderedIndex.LeafSpan;
+import glaze.kit.base.text.RenderedText;
+import glaze.kit.base.text.TextLeafKey;
+import glaze.kit.base.text.format.HtmlFormat;
+import glaze.kit.base.text.format.MarkdownFormat;
+import glaze.util.Utf8;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /** A block whose text is a leaf, in the order of the rendered text (Rust `LeafNode`). */
 private enum LeafNode {
@@ -36,7 +36,7 @@ private enum LeafNode {
  * Tests of the range highlights and source conversion (Rust
  * `text/range_highlight.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextRangeHighlightTest extends TestCase {
 
     static function parse(markdown:String):ParsedDocument {
@@ -44,7 +44,7 @@ class TextRangeHighlightTest extends TestCase {
     }
 
     static function rendered(document:ParsedDocument):RenderedText {
-        return new RenderedText(1, 0, document, new gpui.base.text.RenderedText.RenderedIndexCell());
+        return new RenderedText(1, 0, document, new glaze.kit.base.text.RenderedText.RenderedIndexCell());
     }
 
     /** Byte offset of the `nth` (zero-based) occurrence of `needle` in `text`. */
@@ -134,7 +134,7 @@ class TextRangeHighlightTest extends TestCase {
             final remap = new LeafRemap(old, next, false);
             assertEquals(rows + 1, remap.tableRows.length);
             final frame = new RangeHighlightFrame([
-                for (leaf in remap.oldLeaves) new gpui.base.text.RangeHighlightFrame.LeafBackgrounds(leaf.key, [new RangedColor(new Range(0, 1), color)])
+                for (leaf in remap.oldLeaves) new glaze.kit.base.text.RangeHighlightFrame.LeafBackgrounds(leaf.key, [new RangedColor(new Range(0, 1), color)])
             ]);
             assertEquals((rows + 1) * columns, frame.leaves.length);
             final kept = frame.remap(remap);
@@ -402,7 +402,7 @@ class TextRangeHighlightTest extends TestCase {
         switch leaf {
             case ParagraphLeaf(paragraph):
                 final text = leafText(leaf);
-                function selectRun(state:gpui.base.text.InlineState, runStart:Int, runEnd:Int) {
+                function selectRun(state:glaze.kit.base.text.InlineState, runStart:Int, runEnd:Int) {
                     state.setText(Utf8.substring(text, runStart, runEnd));
                     if (range == null) {
                         state.selection = null;
@@ -410,7 +410,7 @@ class TextRangeHighlightTest extends TestCase {
                     else {
                         final start = range.start > runStart ? range.start : runStart;
                         final end = range.end < runEnd ? range.end : runEnd;
-                        state.selection = start < end ? new gpui.base.input.Selection(start - runStart, end - runStart) : null;
+                        state.selection = start < end ? new glaze.kit.base.input.Selection(start - runStart, end - runStart) : null;
                     }
                 }
                 var runStart = 0;

@@ -1,17 +1,17 @@
 package tests;
 
-import gpui.Path;
-import gpui.Path.FillOptions;
-import gpui.Path.StrokeOptions;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.SpringMath.f32;
+import glaze.Path;
+import glaze.Path.FillOptions;
+import glaze.Path.StrokeOptions;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.SpringMath.f32;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
- * The port of lyon (`gpui.PathTessellator`, used by `PathBuilder`) against
+ * The port of lyon (`glaze.PathTessellator`, used by `PathBuilder`) against
  * the vertices of GPUI's own tessellation, dumped by the reference harness
  * (`PathReference`, from the scene dumps of `paths` and `kit-scroll-masks`):
  * the same paths must give exactly the same vertex positions (bit for bit),
@@ -30,7 +30,7 @@ class PathTessellatorTest extends TestCase {
         b.close();
         result.push(b.build());
 
-        final rules:Array<gpui.Path.FillRule> = [EvenOdd, NonZero];
+        final rules:Array<glaze.Path.FillRule> = [EvenOdd, NonZero];
         for (i in 0...rules.length) {
             final cx = f32(190. + i * 120.);
             final cy = 60.;
@@ -225,12 +225,12 @@ class PathTessellatorTest extends TestCase {
 
     function testFastAtan2() {
         // euclid's approximation, in f32 (about 2e-4 from atan2 at 45 degrees)
-        assertEquals(0.0, gpui.PathTessellator.fastAtan2(0, 1));
-        assertEquals(f32(Math.PI / 2), gpui.PathTessellator.fastAtan2(1, 0));
+        assertEquals(0.0, glaze.PathTessellator.fastAtan2(0, 1));
+        assertEquals(f32(Math.PI / 2), glaze.PathTessellator.fastAtan2(1, 0));
         final a = f32(f32(f32(f32(f32(f32(-0.0464964749) + f32(0.15931422)) - f32(0.327622764))) * 1) + 1);
-        assertEquals(a, gpui.PathTessellator.fastAtan2(1, 1));
-        assertEquals(-f32(f32(Math.PI) - a), gpui.PathTessellator.fastAtan2(-1, -1));
-        assertTrue(Math.abs(gpui.PathTessellator.fastAtan2(1, 1) - Math.PI / 4) < 1e-3);
+        assertEquals(a, glaze.PathTessellator.fastAtan2(1, 1));
+        assertEquals(-f32(f32(Math.PI) - a), glaze.PathTessellator.fastAtan2(-1, -1));
+        assertTrue(Math.abs(glaze.PathTessellator.fastAtan2(1, 1) - Math.PI / 4) < 1e-3);
     }
 
 }

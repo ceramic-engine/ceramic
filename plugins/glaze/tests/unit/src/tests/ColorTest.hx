@@ -1,7 +1,7 @@
 package tests;
 
-import gpui.*;
-import gpui.Prelude.*;
+import glaze.*;
+import glaze.Prelude.*;
 import testing.TestCase;
 
 /**

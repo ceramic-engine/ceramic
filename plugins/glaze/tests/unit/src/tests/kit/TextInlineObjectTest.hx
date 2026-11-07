@@ -3,13 +3,13 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.Size;
-import gpui.TextStyle;
-import gpui.base.text.InlineElement;
-import gpui.base.text.InlineNode.SharedFlag;
-import gpui.base.text.InlineObject;
-import gpui.base.text.InlineObject.MeasuredInlineObject;
+import glaze.Bounds;
+import glaze.Size;
+import glaze.TextStyle;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.InlineNode.SharedFlag;
+import glaze.kit.base.text.InlineObject;
+import glaze.kit.base.text.InlineObject.MeasuredInlineObject;
 import tests.kit.TextInlineTest.TextTestDraw;
 import testing.TestCase;
 
@@ -21,9 +21,9 @@ import testing.TestCase;
  * accessibility node the element writes (role and label): the port has no
  * accessibility tree, so it only checks that the element keeps its label.
  */
-@:access(gpui.base.text.MeasuredInlineObject)
-@:access(gpui.base.text.InlineMetrics)
-@:access(gpui.base.text.InlineObject)
+@:access(glaze.kit.base.text.MeasuredInlineObject)
+@:access(glaze.kit.base.text.InlineMetrics)
+@:access(glaze.kit.base.text.InlineObject)
 class TextInlineObjectTest extends TestCase {
 
     static function sizeString(size:Size):String {
@@ -33,7 +33,7 @@ class TextInlineObjectTest extends TestCase {
     function testNativePaddingAndFixedSizeAreMeasuredWithoutFakeScaling() {
         final app = TextTestDraw.testApp();
         TextTestDraw.inPrepaint(app, (window, cx) -> {
-            final native = new InlineElement(gpui.Prelude.div().px(gpui.Prelude.px(4.)).py(gpui.Prelude.px(2.)).child(gpui.Prelude.div().w(gpui.Prelude.px(40.)).h(gpui.Prelude.px(10.)))).withBaseline(10.);
+            final native = new InlineElement(glaze.Prelude.div().px(glaze.Prelude.px(4.)).py(glaze.Prelude.px(2.)).child(glaze.Prelude.div().w(glaze.Prelude.px(40.)).h(glaze.Prelude.px(10.)))).withBaseline(10.);
             final measured = MeasuredInlineObject.measure("badge", native, new TextStyle(), window, cx);
             assertEquals('48x14', sizeString(measured.metrics.size));
             assertEquals(10., measured.metrics.baseline);
@@ -47,7 +47,7 @@ class TextInlineObjectTest extends TestCase {
         final app = TextTestDraw.testApp();
         TextTestDraw.inPrepaint(app, (window, cx) -> {
             for (baseline in [Math.NaN, -1., 30.]) {
-                final native = new InlineElement(gpui.Prelude.div().w(gpui.Prelude.px(20.)).h(gpui.Prelude.px(20.))).withBaseline(baseline);
+                final native = new InlineElement(glaze.Prelude.div().w(glaze.Prelude.px(20.)).h(glaze.Prelude.px(20.))).withBaseline(baseline);
                 final measured = MeasuredInlineObject.measure("fallback", native, new TextStyle(), window, cx);
                 assertTrue(measured.content == null);
                 assertTrue(measured.metrics.isValid());
@@ -61,7 +61,7 @@ class TextInlineObjectTest extends TestCase {
 
     function testAtomicWrapperDoesNotMislabelNativeControlsAsImages() {
         final app = TextTestDraw.testApp();
-        final window = TextTestDraw.openWindow(app, (_, _) -> new gpui.Empty());
+        final window = TextTestDraw.openWindow(app, (_, _) -> new glaze.Empty());
         app.update(cx -> {
             final measured = MeasuredInlineObject.measure("member", null, new TextStyle(), window, cx);
             final object = new InlineObject("member", "member", "Member profile", measured, new SharedFlag(), new Bounds(), new Bounds());

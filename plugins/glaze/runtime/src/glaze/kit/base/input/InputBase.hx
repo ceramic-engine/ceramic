@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.StateStyle;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.StateStyle;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.A11y.RoleOverrideTools;
-using gpui.base.StyledExt;
+using glaze.kit.base.A11y.RoleOverrideTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * The foundational input frame.
@@ -92,7 +92,7 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
      * Exposes an editor's native semantics through this frame's component ID.
      *
      * This only declares an observation relationship with gpui-kit's
-     * `test-support` layer, which is not ported (see `gpui.base.Observe`):
+     * `test-support` layer, which is not ported (see `glaze.kit.base.Observe`):
      * like a build without that feature, it changes nothing.
      */
     public function semanticOwner(editor:Int):InputBase {
@@ -124,7 +124,7 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
 
     public function render(window:Window, cx:App):IntoElement {
         final style = resolvedStyle();
-        // `Role::TextInput` (not declared by `gpui.base.A11y.Role` yet).
+        // `Role::TextInput` (not declared by `glaze.kit.base.A11y.Role` yet).
         final role = roleValue.resolve(() -> (cast 'textInput' : Role));
         if (role != null) a11y.role = role;
         base.extend(childElements);
@@ -138,10 +138,10 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
  */
 class InputStyles {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final focusedStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final disabledStyle:StyleRefinement = new StyleRefinement();
 
     public function new() {}

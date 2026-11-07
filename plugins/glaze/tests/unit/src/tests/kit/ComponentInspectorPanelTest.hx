@@ -4,40 +4,40 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-#if gpui_inspector
+#if glaze_inspector
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DivInspectorState;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.MouseMoveEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.input.CompletionContext;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.component.Component;
-import gpui.component.inspector.Inspector;
-import gpui.component.inspector.Inspector.DivInspector;
-import gpui.component.inspector.Inspector.InspectorCompletionProvider;
-import gpui.component.inspector.StyleJson;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DivInspectorState;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.MouseMoveEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.input.CompletionContext;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.Component;
+import glaze.kit.inspector.Inspector;
+import glaze.kit.inspector.Inspector.DivInspector;
+import glaze.kit.inspector.Inspector.InspectorCompletionProvider;
+import glaze.kit.inspector.StyleJson;
+import glaze.kit.theme.Theme;
 import ropey.Rope;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.StyleRefinementOps;
+using glaze.StyleRefinementOps;
 
 /**
  * gpui-kit's inspector panel (`inspector.rs`, feature `inspector`): the
@@ -52,7 +52,7 @@ using gpui.StyleRefinementOps;
  * edit), and Reset puts the initial style back in the editors but not on
  * the element (it writes the panel's own copy of the state).
  */
-@:access(gpui.component.inspector.DivInspector)
+@:access(glaze.kit.inspector.DivInspector)
 class ComponentInspectorPanelTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -99,13 +99,13 @@ class ComponentInspectorPanelTest extends TestCase {
     function testInitBindsTheToggleKeyAndTheAction() {
         openWindow();
         assertFalse(window.isInspectorPicking(app));
-        app.update(cx -> window.dispatchKeystroke(Keystroke.parseWithOs('cmd-alt-i', gpui.OperatingSystem.Mac), cx));
+        app.update(cx -> window.dispatchKeystroke(Keystroke.parseWithOs('cmd-alt-i', glaze.OperatingSystem.Mac), cx));
         dispatcher.runUntilParked();
         draw();
         assertTrue(window.inspectorEntity() != null);
         assertTrue(window.isInspectorPicking(app));
         // The close button dispatches ToggleInspector
-        app.update(cx -> window.dispatchAction(new gpui.component.inspector.Inspector.ToggleInspector(), cx));
+        app.update(cx -> window.dispatchAction(new glaze.kit.inspector.Inspector.ToggleInspector(), cx));
         dispatcher.runUntilParked();
         draw();
         assertTrue(window.inspectorEntity() == null);
@@ -128,7 +128,7 @@ class ComponentInspectorPanelTest extends TestCase {
         });
     }
 
-    function divInspector():{view:Entity<DivInspector>, state:DivInspectorState, id:gpui.InspectorElementId} {
+    function divInspector():{view:Entity<DivInspector>, state:DivInspectorState, id:glaze.InspectorElementId} {
         openWindow();
         app.update(cx -> window.toggleInspector(cx));
         draw();

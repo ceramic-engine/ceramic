@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/state.rs (`init`, the key bindings)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.KeyBinding;
-import gpui.OperatingSystem;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.Actions.SelectUp;
-import gpui.base.input.InputActions;
+import glaze.App;
+import glaze.AppContext;
+import glaze.KeyBinding;
+import glaze.OperatingSystem;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.input.InputActions;
 
 /**
  * The key bindings of the text inputs, in the `Input` key context.
@@ -35,7 +35,7 @@ class InputKeyBindings {
         final windows = os == Windows;
         final context = InputActions.CONTEXT;
         final list:Array<KeyBinding> = [];
-        inline function bind(keystrokes:String, action:gpui.Action):Void {
+        inline function bind(keystrokes:String, action:glaze.Action):Void {
             list.push(new KeyBinding(keystrokes, action, context));
         }
 

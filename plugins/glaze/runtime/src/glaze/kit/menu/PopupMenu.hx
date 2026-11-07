@@ -1,52 +1,52 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/popup_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.menu;
+package glaze.kit.menu;
 
-import gpui.Action;
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ClickEvent.KeyboardClickEvent;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Edges;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Menu.OwnedMenuItem;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollHandle;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.Actions.SelectUp;
-import gpui.base.Geometry.Side;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.kbd.Kbd;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ClickEvent.KeyboardClickEvent;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Edges;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Menu.OwnedMenuItem;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollHandle;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.component.ThemeStyled;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.ElementExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * The kind of a `PopupMenuItem` (the variants of the Rust enum).
@@ -77,39 +77,39 @@ enum abstract PopupMenuItemKind(Int) {
  * mutate the variant's fields in place, like the Rust `match &mut self`.
  * Fields that a variant does not have stay at their default.
  */
-@:allow(gpui.component.menu)
+@:allow(glaze.kit.menu)
 class PopupMenuItem {
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final kind:PopupMenuItemKind;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var iconValue:Null<Icon> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var labelValue:Null<String> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var checkedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var isLink:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var actionValue:Null<Action> = null;
 
     /** For link items, and the `on_click` of items and element items. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var handler:Null<(ClickEvent, Window, App) -> Void> = null;
 
     /** The custom element render of an `ElementItem`. */
     var renderFn:Null<(Window, App) -> IntoElement> = null;
 
     /** The menu of a `Submenu`. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menu:Null<Entity<PopupMenu>> = null;
 
     function new(kind:PopupMenuItemKind) {
@@ -321,11 +321,11 @@ class PopupMenu extends Model implements Render {
 
     public final focusHandle:FocusHandle;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menuItems:Array<PopupMenuItem> = [];
 
     /** The focus handle of Entity to handle actions. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var actionContextValue:Null<FocusHandle> = null;
 
     /**
@@ -333,7 +333,7 @@ class PopupMenu extends Model implements Render {
      * not change where actions are dispatched: they still bubble from the
      * menu's own focus path (through the trigger element's ancestors).
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var previousFocusHandle:Null<FocusHandle> = null;
 
     /**
@@ -342,10 +342,10 @@ class PopupMenu extends Model implements Render {
      * the very frame the menu opens. GPUI looks a handle up in the previously
      * rendered frame, and the trigger was in it when the menu was not yet.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var triggerFocusHandle:Null<FocusHandle> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     @observe var selectedIndex:Null<Int> = null;
 
     var minWidth:Null<Pixels> = null;
@@ -355,30 +355,30 @@ class PopupMenu extends Model implements Render {
     var maxHeight:Null<Pixels> = null;
 
     /** Updated on prepaint (not observable, like Rust's plain field). */
-    @:allow(gpui.component, tests)
-    var bounds:Bounds = new Bounds(new Point(0., 0.), new gpui.Size(0., 0.));
+    @:allow(glaze.kit, tests)
+    var bounds:Bounds = new Bounds(new Point(0., 0.), new glaze.Size(0., 0.));
 
     var size:Size = Medium;
 
     var checkSideValue:Side = Left;
 
     /** The parent menu of this menu, if this is a submenu */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var parentMenu:Null<WeakEntity<PopupMenu>> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var scrollableValue:Bool = false;
 
     var externalLinkIconValue:Bool = true;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final scrollHandle:ScrollHandle = new ScrollHandle();
 
     // This will update on render
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var submenuAnchor:Anchor = TopLeft;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var submenuAnchorLeft:Pixels = 0.;
 
     /**
@@ -396,10 +396,10 @@ class PopupMenu extends Model implements Render {
      * content mask, so the items container's `overflowYScroll` clip never
      * reaches it, while the scroll offset is still baked into its anchor.
      */
-    @:allow(gpui.component, tests)
-    var priority:Int = gpui.base.Popup.POPUP_PRIORITY;
+    @:allow(glaze.kit, tests)
+    var priority:Int = glaze.kit.base.Popup.POPUP_PRIORITY;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function new(cx:AppContext) {
         super();
         focusHandle = (cx:App).focusHandle();
@@ -422,7 +422,7 @@ class PopupMenu extends Model implements Render {
         return this;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function setActionContext(actionContext:Null<FocusHandle>, cx:Context<PopupMenu>):Void {
         this.actionContextValue = actionContext;
 
@@ -439,7 +439,7 @@ class PopupMenu extends Model implements Render {
      * Set the focus to restore when the menu is dismissed, without changing
      * where actions are dispatched.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function setPreviousFocus(handle:Null<FocusHandle>, cx:Context<PopupMenu>):Void {
         this.previousFocusHandle = handle;
 
@@ -456,7 +456,7 @@ class PopupMenu extends Model implements Render {
      * Set the focus handle on the trigger's dispatch path that shortcut hints
      * resolve against, without changing focus or where actions are dispatched.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function setTriggerFocus(handle:Null<FocusHandle>, cx:Context<PopupMenu>):Void {
         this.triggerFocusHandle = handle;
 
@@ -745,7 +745,7 @@ class PopupMenu extends Model implements Render {
         return this;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function withMenuItems(items:Array<OwnedMenuItem>, window:Window, cx:Context<PopupMenu>):PopupMenu {
         var self = this;
         for (item in items) {
@@ -769,7 +769,7 @@ class PopupMenu extends Model implements Render {
         return self;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function activeSubmenu():Null<Entity<PopupMenu>> {
         final ix = selectedIndex;
         if (ix != null) {
@@ -799,7 +799,7 @@ class PopupMenu extends Model implements Render {
 
     function confirm(_:Confirm, window:Window, cx:Context<PopupMenu>):Void {
         // Rust `ClickEvent::default()`: a keyboard click of enter with empty bounds
-        activate(Keyboard(new KeyboardClickEvent(Enter, new Bounds(new Point(0., 0.), new gpui.Size(0., 0.)))), window, cx);
+        activate(Keyboard(new KeyboardClickEvent(Enter, new Bounds(new Point(0., 0.), new glaze.Size(0., 0.)))), window, cx);
     }
 
     function activate(event:ClickEvent, window:Window, cx:Context<PopupMenu>):Void {

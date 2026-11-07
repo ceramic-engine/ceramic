@@ -1,14 +1,14 @@
 // New code for the Haxe port of GPUI (no GPUI origin): per-phase timing
-// accumulator used by test/bench. Compiled to no-ops without the
-// `gpui_profile_frames` define.
-package gpui.util;
+// accumulator used by tests/bench. Compiled to no-ops without the
+// `glaze_profile_frames` define.
+package glaze.util;
 
 /**
  * Static accumulator of the time spent in each phase of a frame.
  *
- * Without `-D gpui_profile_frames` every method is an inline no-op (or
- * returns 0), so the calls can stay in the hot paths of `gpui.Window` and
- * `gpui.platform.SceneRenderable` at no cost. With the define, `begin(phase)`
+ * Without `-D glaze_profile_frames` every method is an inline no-op (or
+ * returns 0), so the calls can stay in the hot paths of `glaze.Window` and
+ * `glaze.platform.SceneRenderable` at no cost. With the define, `begin(phase)`
  * stores `haxe.Timer.stamp()` in a preallocated array and `end(phase)` adds
  * the elapsed seconds to the phase total and increments its count. Nothing is
  * allocated per call.
@@ -22,7 +22,7 @@ package gpui.util;
  * - `LAYOUT`: in `Window.drawRoots`, from just before
  *   `rootElement.requestLayout(this, app)` to just after
  *   `layoutEngine.stretchAutoSizeToFill(...)` (both branches of the
- *   `gpui_inspector` conditional). This includes rendering the dirty views,
+ *   `glaze_inspector` conditional). This includes rendering the dirty views,
  *   since `requestLayout` renders them.
  * - `PREPAINT`: in `Window.drawRoots`, from just before
  *   `rootElement.prepaintAsRoot(...)` to just after
@@ -62,11 +62,11 @@ class FrameProfiler {
     public static final NAMES:Array<String> = ['update', 'layout', 'prepaint', 'paint', 'finish', 'render'];
 
     /**
-     * True when the profiler is compiled in (`gpui_profile_frames`).
+     * True when the profiler is compiled in (`glaze_profile_frames`).
      */
-    public static inline final ENABLED:Bool = #if gpui_profile_frames true #else false #end;
+    public static inline final ENABLED:Bool = #if glaze_profile_frames true #else false #end;
 
-    #if gpui_profile_frames
+    #if glaze_profile_frames
 
     // Public so that the inline `begin` / `end` compile wherever they are
     // called; zeroed explicitly because a JS Vector starts undefined.

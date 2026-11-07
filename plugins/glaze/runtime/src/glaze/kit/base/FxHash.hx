@@ -2,7 +2,7 @@
 // (https://github.com/rust-lang/rustc-hash, Copyright The Rust Project Developers, MIT / Apache-2.0)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
 import haxe.Int64;
 import haxe.io.Bytes;

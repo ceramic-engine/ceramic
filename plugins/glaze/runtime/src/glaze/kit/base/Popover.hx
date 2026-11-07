@@ -1,39 +1,39 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/popover.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.NoAction;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.base.GlobalState.DeferredPopover;
-import gpui.base.Positioner.ResolvedPosition;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.NoAction;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.base.GlobalState.DeferredPopover;
+import glaze.kit.base.Positioner.ResolvedPosition;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * State and focus lifecycle for an unstyled popover.
@@ -294,7 +294,7 @@ class Popover implements RenderOnce implements Styled {
             final component:RenderOnce = cast trigger;
             return (component : IntoElement);
         }
-        final element:gpui.Element = cast trigger;
+        final element:glaze.Element = cast trigger;
         return (element : IntoElement);
     }
 

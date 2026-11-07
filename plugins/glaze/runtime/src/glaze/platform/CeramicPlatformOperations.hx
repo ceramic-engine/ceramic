@@ -8,16 +8,16 @@
 // src/system_notifications.rs) through Ceramic's notifications plugin, also
 // in a browser (deliberate deviation DEV-021, gpui-pre-web has none).
 // See NOTICE.md and DEVIATIONS.md.
-package gpui.platform;
+package glaze.platform;
 
-import gpui.AnyTask;
-import gpui.Keymap;
-import gpui.Menu;
-import gpui.Menu.OwnedMenu;
-import gpui.PathPromptOptions;
-import gpui.PlatformOperations;
-import gpui.Task;
-import gpui.WindowAppearance;
+import glaze.AnyTask;
+import glaze.Keymap;
+import glaze.Menu;
+import glaze.Menu.OwnedMenu;
+import glaze.PathPromptOptions;
+import glaze.PlatformOperations;
+import glaze.Task;
+import glaze.WindowAppearance;
 
 /**
  * `PlatformOperations` through Ceramic:
@@ -221,9 +221,9 @@ class CeramicPlatformOperations implements PlatformOperations {
         return app != null && app.screen != null && app.screen.autoHideScrollbars;
     }
 
-    var menuCommand:Null<(gpui.Action) -> Void> = null;
+    var menuCommand:Null<(glaze.Action) -> Void> = null;
 
-    var validateMenuCommand:Null<(gpui.Action) -> Bool> = null;
+    var validateMenuCommand:Null<(glaze.Action) -> Bool> = null;
 
     var willOpenMenu:Null<() -> Void> = null;
 
@@ -279,7 +279,7 @@ class CeramicPlatformOperations implements PlatformOperations {
         return owner != null && owner.validateMenuItem(item);
     }
 
-    public function onAppMenuAction(callback:(gpui.Action) -> Void):Void {
+    public function onAppMenuAction(callback:(glaze.Action) -> Void):Void {
         menuCommand = callback;
     }
 
@@ -287,13 +287,13 @@ class CeramicPlatformOperations implements PlatformOperations {
         willOpenMenu = callback;
     }
 
-    public function onValidateAppMenuCommand(callback:(gpui.Action) -> Bool):Void {
+    public function onValidateAppMenuCommand(callback:(glaze.Action) -> Bool):Void {
         validateMenuCommand = callback;
     }
 
     /** Rust `handle_menu_item`: the action of the item goes to the menu command callback. */
     function handleMenuItem(item:ceramic.MenuItem):Void {
-        final action:Null<gpui.Action> = Std.isOfType(item.data, gpui.Action) ? cast item.data : null;
+        final action:Null<glaze.Action> = Std.isOfType(item.data, glaze.Action) ? cast item.data : null;
         if (action != null && menuCommand != null) {
             menuCommand(action.boxedClone());
         }
@@ -301,7 +301,7 @@ class CeramicPlatformOperations implements PlatformOperations {
 
     /** Rust `validate_menu_item`: false without a callback or an action. */
     function validateMenuItem(item:ceramic.MenuItem):Bool {
-        final action:Null<gpui.Action> = Std.isOfType(item.data, gpui.Action) ? cast item.data : null;
+        final action:Null<glaze.Action> = Std.isOfType(item.data, glaze.Action) ? cast item.data : null;
         if (action != null && validateMenuCommand != null) {
             return validateMenuCommand(action.boxedClone());
         }
@@ -332,7 +332,7 @@ class CeramicPlatformOperations implements PlatformOperations {
         return result;
     }
 
-    static var defaultContext:Null<Array<gpui.KeyContext>> = null;
+    static var defaultContext:Null<Array<glaze.KeyContext>> = null;
 
     /**
      * Rust `create_menu_item`: the shortcut is the first binding of the
@@ -381,17 +381,17 @@ class CeramicPlatformOperations implements PlatformOperations {
         }
     }
 
-    static function menuKeystrokes(action:gpui.Action, keymap:Keymap):Null<Array<gpui.KeybindingKeystroke>> {
+    static function menuKeystrokes(action:glaze.Action, keymap:Keymap):Null<Array<glaze.KeybindingKeystroke>> {
         final bindings = keymap.bindingsForAction(action);
         if (bindings.length == 0) {
             return null;
         }
         if (defaultContext == null) {
-            final workspaceContext = gpui.KeyContext.newWithDefaults(Mac);
+            final workspaceContext = glaze.KeyContext.newWithDefaults(Mac);
             workspaceContext.add('Workspace');
-            final paneContext = gpui.KeyContext.newWithDefaults(Mac);
+            final paneContext = glaze.KeyContext.newWithDefaults(Mac);
             paneContext.add('Pane');
-            final editorContext = gpui.KeyContext.newWithDefaults(Mac);
+            final editorContext = glaze.KeyContext.newWithDefaults(Mac);
             editorContext.add('Editor');
             paneContext.extend(editorContext);
             workspaceContext.extend(paneContext);
@@ -399,7 +399,7 @@ class CeramicPlatformOperations implements PlatformOperations {
         }
         for (binding in bindings) {
             final predicate = binding.predicate();
-            if (predicate == null || gpui.KeyBindingContextPredicateTools.eval(predicate, defaultContext)) {
+            if (predicate == null || glaze.KeyBindingContextPredicateTools.eval(predicate, defaultContext)) {
                 return binding.keystrokes;
             }
         }

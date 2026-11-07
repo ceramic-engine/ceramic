@@ -3,41 +3,41 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollHandle;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.TextSelectionLayer;
-import gpui.base.motion.Easing;
-import gpui.base.text.BlockNode;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangeHighlight;
-import gpui.base.text.RangeHighlightError;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.Span;
-import gpui.base.text.TextLeafKey;
-import gpui.base.text.TextView;
-import gpui.base.text.TextViewFormat;
-import gpui.base.text.TextViewMotion;
-import gpui.base.text.TextViewState;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollHandle;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.TextSelectionLayer;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangeHighlight;
+import glaze.kit.base.text.RangeHighlightError;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.Span;
+import glaze.kit.base.text.TextLeafKey;
+import glaze.kit.base.text.TextView;
+import glaze.kit.base.text.TextViewFormat;
+import glaze.kit.base.text.TextViewMotion;
+import glaze.kit.base.text.TextViewState;
+import glaze.util.Utf8;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.text.BlockNode.BlockNodeTools;
+using glaze.kit.base.text.BlockNode.BlockNodeTools;
 
 private class FadeRoot extends Model implements Render {
     final state:Entity<TextViewState>;
@@ -140,12 +140,12 @@ private class RevealRoot extends Model implements Render {
 }
 
 /**
- * Tests of `gpui.base.text.TextViewState` (Rust `text/state.rs`).
+ * Tests of `glaze.kit.base.text.TextViewState` (Rust `text/state.rs`).
  *
  * Not ported: `parse_ack::acknowledging_a_parse_leaves_its_readers_retained`,
  * which only builds with the `gpui-fast` feature.
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextViewStateTest extends KitTestCase {
 
     /** Long enough that a test cannot outrun the fade before it samples the first frame. */
@@ -162,7 +162,7 @@ class TextViewStateTest extends KitTestCase {
     function initBase():Void {
         app.update(cx -> {
             Base.init(cx);
-            gpui.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
+            glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });
     }
 
@@ -255,17 +255,17 @@ class TextViewStateTest extends KitTestCase {
      * Push `chunk` and parse it the way the background parser would, without
      * running the parser, returning the update it would send.
      */
-    function pushAndParse(state:Entity<TextViewState>, chunk:String):gpui.base.text.TextViewState.ParsedUpdate {
+    function pushAndParse(state:Entity<TextViewState>, chunk:String):glaze.kit.base.text.TextViewState.ParsedUpdate {
         var revision = 0;
-        var baseline:gpui.base.text.TextViewState.ParsedContent = null;
+        var baseline:glaze.kit.base.text.TextViewState.ParsedContent = null;
         update(state, (state, cx) -> {
             state.pushStr(chunk, cx);
             revision = state.revision;
-            baseline = new gpui.base.text.TextViewState.ParsedContent(state.parsedContent.document, state.parsedContent.nodeCx);
+            baseline = new glaze.kit.base.text.TextViewState.ParsedContent(state.parsedContent.document, state.parsedContent.nodeCx);
         });
-        final options = new gpui.base.text.TextViewState.UpdateOptions(revision, chunk, true, Compatible, new MarkdownExtensions());
-        return new gpui.base.text.TextViewState.ParsedUpdate(revision, false, true, false,
-            gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, baseline, options), null);
+        final options = new glaze.kit.base.text.TextViewState.UpdateOptions(revision, chunk, true, Compatible, new MarkdownExtensions());
+        return new glaze.kit.base.text.TextViewState.ParsedUpdate(revision, false, true, false,
+            glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, baseline, options), null);
     }
 
     function testOvertakenParsePreservesTheRemainingChunksFade() {
@@ -730,9 +730,9 @@ class TextViewStateTest extends KitTestCase {
     }
 
     function testUpdateOptionsMergeKeepsLatestFullText() {
-        final options = new gpui.base.text.TextViewState.UpdateOptions(1, "old", true, Compatible, new MarkdownExtensions());
-        options.merge(new gpui.base.text.TextViewState.UpdateOptions(2, "new", false, BaselineAck, new MarkdownExtensions()));
-        options.merge(new gpui.base.text.TextViewState.UpdateOptions(3, " text", true, Compatible, new MarkdownExtensions()));
+        final options = new glaze.kit.base.text.TextViewState.UpdateOptions(1, "old", true, Compatible, new MarkdownExtensions());
+        options.merge(new glaze.kit.base.text.TextViewState.UpdateOptions(2, "new", false, BaselineAck, new MarkdownExtensions()));
+        options.merge(new glaze.kit.base.text.TextViewState.UpdateOptions(3, " text", true, Compatible, new MarkdownExtensions()));
 
         assertEquals(3, options.revision);
         assertEquals("new text", options.pendingText);
@@ -740,20 +740,20 @@ class TextViewStateTest extends KitTestCase {
     }
 
     function testAppendMergedIntoAsyncReplaceRemainsAReplacement() {
-        final options = new gpui.base.text.TextViewState.UpdateOptions(1, "new", false, Replace, new MarkdownExtensions());
-        options.merge(new gpui.base.text.TextViewState.UpdateOptions(2, " text", true, Compatible, new MarkdownExtensions()));
+        final options = new glaze.kit.base.text.TextViewState.UpdateOptions(1, "new", false, Replace, new MarkdownExtensions());
+        options.merge(new glaze.kit.base.text.TextViewState.UpdateOptions(2, " text", true, Compatible, new MarkdownExtensions()));
 
         assertEquals(2, options.revision);
         assertEquals("new text", options.pendingText);
         assertFalse(options.append);
-        assertEquals(gpui.base.text.TextViewState.ParseMode.Replace, options.mode);
+        assertEquals(glaze.kit.base.text.TextViewState.ParseMode.Replace, options.mode);
     }
 
     function testUpdateFutureYieldsBeforeCoalescingAllQueuedUpdates() {
         final totalUpdates = 128;
-        final future = new gpui.base.text.TextViewState.UpdateFuture(Markdown, app, _ -> {});
+        final future = new glaze.kit.base.text.TextViewState.UpdateFuture(Markdown, app, _ -> {});
         for (revision in 1...totalUpdates + 1) {
-            future.queue.push(new gpui.base.text.TextViewState.UpdateOptions(revision, '$revision\n', revision != 1,
+            future.queue.push(new glaze.kit.base.text.TextViewState.UpdateOptions(revision, '$revision\n', revision != 1,
                 revision == 1 ? BaselineAck : Compatible, new MarkdownExtensions()));
         }
 
@@ -815,14 +815,14 @@ class TextViewStateTest extends KitTestCase {
     }
 
     function testSelectedSourceRangeKeepsGlobalOffsetsAfterIncrementalTailParse() {
-        final options = new gpui.base.text.TextViewState.UpdateOptions(1, "first\n\nsecond", false, Replace, new MarkdownExtensions());
-        var content = gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new gpui.base.text.TextViewState.ParsedContent(), options);
-        content = gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, content,
-            new gpui.base.text.TextViewState.UpdateOptions(2, "\n\n**écho**", true, Compatible, new MarkdownExtensions()));
+        final options = new glaze.kit.base.text.TextViewState.UpdateOptions(1, "first\n\nsecond", false, Replace, new MarkdownExtensions());
+        var content = glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new glaze.kit.base.text.TextViewState.ParsedContent(), options);
+        content = glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, content,
+            new glaze.kit.base.text.TextViewState.UpdateOptions(2, "\n\n**écho**", true, Compatible, new MarkdownExtensions()));
         switch content.document.blocks[2] {
             case Paragraph(paragraph):
                 paragraph.state.setText(paragraph.text());
-                paragraph.state.selection = new gpui.base.input.Selection(0, Utf8.byteLength("écho"));
+                paragraph.state.selection = new glaze.kit.base.input.Selection(0, Utf8.byteLength("écho"));
             case _:
                 fail('expected appended paragraph');
         }
@@ -832,10 +832,10 @@ class TextViewStateTest extends KitTestCase {
     }
 
     function testStreamedOrderedListContinuationPreservesStart() {
-        final initial = gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new gpui.base.text.TextViewState.ParsedContent(),
-            new gpui.base.text.TextViewState.UpdateOptions(1, "3. three", false, Replace, new MarkdownExtensions()));
-        final continued = gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, initial,
-            new gpui.base.text.TextViewState.UpdateOptions(2, "\n4. four", true, Compatible, new MarkdownExtensions()));
+        final initial = glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new glaze.kit.base.text.TextViewState.ParsedContent(),
+            new glaze.kit.base.text.TextViewState.UpdateOptions(1, "3. three", false, Replace, new MarkdownExtensions()));
+        final continued = glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, initial,
+            new glaze.kit.base.text.TextViewState.UpdateOptions(2, "\n4. four", true, Compatible, new MarkdownExtensions()));
 
         switch continued.document.blocks[0] {
             case List(children, _, start, _):
@@ -910,7 +910,7 @@ class TextViewStateTest extends KitTestCase {
             try {
                 state.setRangeHighlights([for (range in ranges) highlight(range)], cx);
             }
-            catch (e:gpui.base.text.RangeHighlightError.RangeHighlightException) {
+            catch (e:glaze.kit.base.text.RangeHighlightError.RangeHighlightException) {
                 error = e.error;
             }
         });
@@ -1151,8 +1151,8 @@ class TextViewStateTest extends KitTestCase {
         assertEquals(null, set(state, [new Range(0, 5)]));
         // An append result whose baseline was a full update that has not been
         // committed: its earlier blocks are not the current ones.
-        final options = new gpui.base.text.TextViewState.UpdateOptions(0, "FIRST\n\nsecond", false, Replace, new MarkdownExtensions());
-        final next = gpui.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new gpui.base.text.TextViewState.ParsedContent(), options).document;
+        final options = new glaze.kit.base.text.TextViewState.UpdateOptions(0, "FIRST\n\nsecond", false, Replace, new MarkdownExtensions());
+        final next = glaze.kit.base.text.TextViewState.UpdateFuture.parseContent(Markdown, new glaze.kit.base.text.TextViewState.ParsedContent(), options).document;
         update(state, (state, _) -> {
             state.fullUpdateRevision = state.committedRevision + 1;
             final revision = state.committedRevision + 2;
@@ -1707,7 +1707,7 @@ class TextViewStateTest extends KitTestCase {
         update(state, (state, cx) -> {
             for (range in [new Range(5, 3), new Range(0, 100)]) {
                 var error:Null<RangeHighlightError> = null;
-                try state.revealRange(range, cx) catch (e:gpui.base.text.RangeHighlightError.RangeHighlightException) error = e.error;
+                try state.revealRange(range, cx) catch (e:glaze.kit.base.text.RangeHighlightError.RangeHighlightException) error = e.error;
                 assertTrue(error != null && Type.enumEq(error, InvalidRange(0)));
             }
             state.revealRange(new Range(0, 5), cx);
@@ -1717,7 +1717,7 @@ class TextViewStateTest extends KitTestCase {
         runUntilParked();
         update(html, (html, cx) -> {
             var error:Null<RangeHighlightError> = null;
-            try html.revealRange(new Range(0, 3), cx) catch (e:gpui.base.text.RangeHighlightError.RangeHighlightException) error = e.error;
+            try html.revealRange(new Range(0, 3), cx) catch (e:glaze.kit.base.text.RangeHighlightError.RangeHighlightException) error = e.error;
             assertTrue(error != null && Type.enumEq(error, Unsupported));
         });
     }

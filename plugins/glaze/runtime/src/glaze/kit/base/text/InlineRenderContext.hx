@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline_element.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Pixels;
-import gpui.TextStyle;
+import glaze.Pixels;
+import glaze.TextStyle;
 
 /**
  * Inherited typography for a format-independent inline renderer.
@@ -18,7 +18,7 @@ class InlineRenderContext {
     final lineHeight_:Pixels;
     final remSize_:Pixels;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(textStyle:TextStyle, fontSize:Pixels, lineHeight:Pixels, remSize:Pixels) {
         this.textStyle_ = textStyle;
         this.fontSize_ = fontSize;

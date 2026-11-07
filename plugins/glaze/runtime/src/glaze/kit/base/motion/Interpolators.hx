@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (impls of Interpolate)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.Bounds;
-import gpui.Hsla;
-import gpui.Point;
-import gpui.Size;
-import gpui.base.animation.Lerp;
+import glaze.Bounds;
+import glaze.Hsla;
+import glaze.Point;
+import glaze.Size;
+import glaze.kit.base.animation.Lerp;
 
 /**
  * The `Interpolator` of each type Rust implements `Interpolate` for.

@@ -3,17 +3,17 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.Action;
-import gpui.App;
-import gpui.AppContext;
-import gpui.base.IndexPath;
-import gpui.base.theme.ScrollbarMode;
-import gpui.component.IconName;
-import gpui.component.command.CommandItem;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeConfig;
-import gpui.component.theme.ThemeMode;
-import gpui.component.theme.ThemeRegistry;
+import glaze.Action;
+import glaze.App;
+import glaze.AppContext;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.IconName;
+import glaze.kit.command.CommandItem;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeConfig;
+import glaze.kit.theme.ThemeMode;
+import glaze.kit.theme.ThemeRegistry;
 
 /**
  * Rust `struct State`: the persisted settings of the gallery.

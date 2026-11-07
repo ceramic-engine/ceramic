@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/cursor.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Pixels;
+import glaze.Pixels;
 
 /**
  * The remembered column of a cursor moving vertically: Rust

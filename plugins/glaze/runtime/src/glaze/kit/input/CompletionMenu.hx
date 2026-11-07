@@ -1,60 +1,60 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/popovers/completion_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.HighlightStyle;
-import gpui.HighlightStyle.TextHighlight;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.StyledText;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.IndexPath;
-import gpui.base.Popup;
-import gpui.base.input.CompletionHighlighter;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.Completions;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.component.label.Label;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate;
-import gpui.component.list.ListState;
-import gpui.component.menu.MenuItemElement;
-import gpui.component.theme.Theme;
-import gpui.util.Utf8;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.HighlightStyle;
+import glaze.HighlightStyle.TextHighlight;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.StyledText;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.Popup;
+import glaze.kit.base.input.CompletionHighlighter;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.Completions;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.label.Label;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate;
+import glaze.kit.list.ListState;
+import glaze.kit.menu.MenuItemElement;
+import glaze.kit.theme.Theme;
+import glaze.util.Utf8;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.input.InputLspExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.Observe;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * A context menu for code completions and code actions.
  */
-@:access(gpui.component.list.ListState)
+@:access(glaze.kit.list.ListState)
 class CompletionMenu extends Model implements Render {
 
     static inline final MAX_MENU_HEIGHT:Pixels = 240.;
@@ -70,7 +70,7 @@ class CompletionMenu extends Model implements Render {
     var open:Bool = false;
 
     /** The offset of the first character that triggered the completion. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     var triggerStartOffset:Null<Int> = null;
 
     var query:String = '';
@@ -82,7 +82,7 @@ class CompletionMenu extends Model implements Render {
      *
      * NOTE: This element should not call from EditorState::new, unless that will stack overflow.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function create(editor:Entity<EditorState>, window:Window, cx:App):Entity<CompletionMenu> {
         return cx.newEntity((c:Context<CompletionMenu>) -> new CompletionMenu(editor, window, c));
     }
@@ -116,7 +116,7 @@ class CompletionMenu extends Model implements Render {
      * are ordered and do not overlap, and an overlap makes the run longer than
      * the label.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function retainedHighlightRanges(label:String, ranges:Array<Range>):Array<Range> {
         final labelLen = Utf8.byteLength(label);
         final kept:Array<Range> = [];
@@ -145,7 +145,7 @@ class CompletionMenu extends Model implements Render {
         return merged;
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function selectItem(item:CompletionItem, window:Window, cx:Context<CompletionMenu>):Void {
         final range = new Range(triggerStartOffset != null ? triggerStartOffset : offset, offset);
 
@@ -153,7 +153,7 @@ class CompletionMenu extends Model implements Render {
 
         cx.spawn((_, acx) -> {
             if (window.isDestroyed())
-                throw new gpui.EntityReleasedError(0);
+                throw new glaze.EntityReleasedError(0);
             editor.update(acx, (editor:EditorState, cx:Context<EditorState>) -> {
                 InputLspExt.insertCompletion(editor, item, range, window, cast cx);
             });
@@ -163,7 +163,7 @@ class CompletionMenu extends Model implements Render {
         dismiss(cx);
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function handleAction(action:Action, window:Window, cx:Context<CompletionMenu>):Bool {
         if (!open)
             return false;
@@ -208,7 +208,7 @@ class CompletionMenu extends Model implements Render {
     }
 
     /** Synchronize a hidden editor menu without dismissing a newer response. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function hide(cx:Context<CompletionMenu>):Void {
         open = false;
         triggerStartOffset = null;
@@ -226,7 +226,7 @@ class CompletionMenu extends Model implements Render {
     }
 
     /** Sets the trigger start offset if it is not already set. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function updateQuery(startOffset:Int, query:String):Void {
         if (triggerStartOffset == null) {
             triggerStartOffset = startOffset;
@@ -234,7 +234,7 @@ class CompletionMenu extends Model implements Render {
         this.query = query;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function show(offset:Int, items:Array<CompletionItem>, window:Window, cx:Context<CompletionMenu>):Void {
         this.offset = offset;
         open = true;
@@ -262,7 +262,7 @@ class CompletionMenu extends Model implements Render {
     }
 
     /** Replace the label highlighter and repaint an open menu. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function setHighlight(highlight:CompletionHighlighter, cx:Context<CompletionMenu>):Void {
         list.update(cx, (list, cx) -> {
             if (Reflect.compareMethods(list.delegate().highlight, highlight))
@@ -348,30 +348,30 @@ class CompletionMenu extends Model implements Render {
 
 class ContextMenuDelegate extends ListDelegateBase {
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     var query:String = '';
 
     final menu:WeakEntity<CompletionMenu>;
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     var items:Array<CompletionItem> = [];
 
     var selectedIx:Int = 0;
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     var highlight:CompletionHighlighter = Completions.highlightPrefix;
 
     public function new(menu:WeakEntity<CompletionMenu>) {
         this.menu = menu;
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function setItems(items:Array<CompletionItem>):Void {
         this.items = items.copy();
         selectedIx = 0;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function selectedItem():Null<CompletionItem> {
         return selectedIx >= 0 && selectedIx < items.length ? items[selectedIx] : null;
     }

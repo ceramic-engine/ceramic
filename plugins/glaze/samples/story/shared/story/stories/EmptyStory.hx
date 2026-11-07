@@ -3,34 +3,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.avatar.Avatar;
-import gpui.component.avatar.AvatarGroup;
-import gpui.component.button.Button;
-import gpui.component.empty.Empty;
-import gpui.component.input.Input;
-import gpui.component.link.Link;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.avatar.AvatarGroup;
+import glaze.kit.button.Button;
+import glaze.kit.empty.Empty;
+import glaze.kit.input.Input;
+import glaze.kit.link.Link;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 class EmptyStory extends Model implements Story {
 
@@ -77,7 +77,7 @@ class EmptyStory extends Model implements Story {
         return view(window, cx);
     }
 
-    static function openInfoDialog(title:String, text:String):(gpui.ClickEvent, Window, App) -> Void {
+    static function openInfoDialog(title:String, text:String):(glaze.ClickEvent, Window, App) -> Void {
         return (_, window, cx) -> {
             window.openDialog(cx, (dialog, _, _) -> dialog.title(title).child(text));
         };

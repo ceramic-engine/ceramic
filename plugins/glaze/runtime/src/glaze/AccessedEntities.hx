@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): the entities accessed
 // by a view or a window while it draws. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.ds.IntMap;
 

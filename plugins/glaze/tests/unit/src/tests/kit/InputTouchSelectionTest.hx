@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.Point;
-import gpui.Size;
-import gpui.base.input.EdgeDrag;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TouchSelectionSnapshot;
+import glaze.Bounds;
+import glaze.Point;
+import glaze.Size;
+import glaze.kit.base.input.EdgeDrag;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TouchSelectionSnapshot;
 import testing.TestCase;
 
 /**

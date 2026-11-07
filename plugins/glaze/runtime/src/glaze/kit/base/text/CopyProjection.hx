@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/selection_adapter.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Point;
-import gpui.base.text.BlockState.CustomBlockSelectionProjection;
-import gpui.base.text.Inline.InlineSelectionProjection;
-import gpui.base.text.InlineObject.InlineObjectSelectionProjection;
+import glaze.Point;
+import glaze.kit.base.text.BlockState.CustomBlockSelectionProjection;
+import glaze.kit.base.text.Inline.InlineSelectionProjection;
+import glaze.kit.base.text.InlineObject.InlineObjectSelectionProjection;
 
 /** What one painted piece of a view projects a selection onto, for copy. */
 enum CopyProjection {

@@ -3,22 +3,22 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 @:action(namespace = test_only) class InteractiveTestAction implements Action {}
 

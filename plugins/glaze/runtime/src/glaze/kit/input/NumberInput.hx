@@ -2,39 +2,39 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-007 (the placeholder is used). See DEVIATIONS.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.base.input.InputState;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.input.InputState;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A number input element with increment and decrement buttons.
  *
  * `NumberInputEvent`, `NumberStep` and `StepAction` are gpui-base's
- * (`gpui.base.NumberInput.NumberInputEvent`, `gpui.base.NumberStep`,
- * `gpui.base.StepAction`), re-exported by Rust.
+ * (`glaze.kit.base.NumberInput.NumberInputEvent`, `glaze.kit.base.NumberStep`,
+ * `glaze.kit.base.StepAction`), re-exported by Rust.
  */
 class NumberInput implements RenderOnce implements Styled implements Sizable implements Disableable implements FocusableExt {
 
@@ -149,16 +149,16 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
         final buttonSize = size;
         // The buttons sit inside the 1px frame, so their corners are a pixel
         // tighter than the frame's, or they paint over its inner curve.
-        final buttonRadius:gpui.Pixels = appearanceValue ? Math.max(theme.radius - 1., 0.) : theme.radius;
+        final buttonRadius:glaze.Pixels = appearanceValue ? Math.max(theme.radius - 1., 0.) : theme.radius;
         // Deliberate deviation DEV-007: the original never used the
         // placeholder. Pass it to the input state, only when it is set and
         // differs (`setPlaceholder` notifies).
         if (placeholderValue != "" && state.read(cx).presentation().placeholder() != placeholderValue) {
             final placeholder = placeholderValue;
-            (cast state : Entity<gpui.base.input.InputBaseState>).update(cx, (input, cx) -> input.setPlaceholder(placeholder, window, cx));
+            (cast state : Entity<glaze.kit.base.input.InputBaseState>).update(cx, (input, cx) -> input.setPlaceholder(placeholder, window, cx));
         }
         final baseState = state;
-        final content = new gpui.base.NumberInput(baseState).disabled(disabledValue);
+        final content = new glaze.kit.base.NumberInput(baseState).disabled(disabledValue);
         if (accessibilityLabelValue != null) content.accessibilityLabel(accessibilityLabelValue);
         content.sizeFull();
         content.decrementButton(button -> {
@@ -180,7 +180,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
             return button.roundedTl(buttonRadius).roundedBl(buttonRadius).child(new Icon(IconName.Minus).withSize(buttonSize));
         });
         final input = new Input(state).appearance(false).withSize(buttonSize).hFull().disabled(disabledValue);
-        input.gap0().roundedNone().textAlign(gpui.TextAlign.Center);
+        input.gap0().roundedNone().textAlign(glaze.TextAlign.Center);
         if (prefixElement != null) input.prefix(prefixElement);
         if (suffixElement != null) input.suffix(suffixElement);
         content.input(input);

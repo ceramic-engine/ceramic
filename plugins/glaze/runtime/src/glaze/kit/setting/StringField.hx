@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/fields/string.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Entity;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.input.Input;
-import gpui.component.setting.SettingField.AnySettingField;
-import gpui.component.setting.SettingField.SettingFieldRender;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Entity;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.input.Input;
+import glaze.kit.setting.SettingField.AnySettingField;
+import glaze.kit.setting.SettingField.SettingFieldRender;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Renders a string field as an input.
  */
-@:allow(gpui.component.setting)
+@:allow(glaze.kit.setting)
 class StringField implements SettingFieldRender {
 
     /**
@@ -83,8 +83,8 @@ class StringField implements SettingFieldRender {
  * The keyed state of a string field: its input and the subscription that
  * writes the input's changes to the setting.
  */
-@:allow(gpui.component.setting)
-class StringFieldState implements gpui.Droppable {
+@:allow(glaze.kit.setting)
+class StringFieldState implements glaze.Droppable {
 
     final input:Entity<InputState>;
 

@@ -1,12 +1,12 @@
 // Ported from gpui-pre 0.3.10: src/interactive.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The scroll delta for a scroll wheel event.
  */
-@:using(gpui.ScrollDelta.ScrollDeltaTools)
+@:using(glaze.ScrollDelta.ScrollDeltaTools)
 enum ScrollDelta {
 
     /** An exact scroll delta in pixels. */
@@ -47,7 +47,7 @@ class ScrollDeltaTools {
      */
     public static function coalesce(delta:ScrollDelta, other:ScrollDelta):ScrollDelta {
         inline function combine(a:Float, b:Float):Float {
-            return gpui.util.MathUtil.signum(a) == gpui.util.MathUtil.signum(b) ? a + b : b;
+            return glaze.util.MathUtil.signum(a) == glaze.util.MathUtil.signum(b) ? a + b : b;
         }
         return switch [delta, other] {
             case [Pixels(a), Pixels(b)]: Pixels(new Point(combine(a.x, b.x), combine(a.y, b.y)));

@@ -3,9 +3,9 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.App;
-import gpui.Window;
-import gpui.base.dock.JsonValue;
+import glaze.App;
+import glaze.Window;
+import glaze.kit.base.dock.JsonValue;
 
 /**
  * The persisted state of a `StoryContainer` panel: its story class.
@@ -39,7 +39,7 @@ class StoryState {
      * The story of `storyKlass` (Rust `to_story`, which returns its title,
      * description, closable, zoomable, view and `on_active_any`).
      */
-    public function toStory(window:Window, cx:gpui.AppContext):StoryMeta {
+    public function toStory(window:Window, cx:glaze.AppContext):StoryMeta {
         final meta:Null<StoryMeta> = switch storyKlass {
             case 'AttachmentStory': StoryMeta.optional(story.stories.AttachmentStory);
             case 'BreadcrumbStory': StoryMeta.optional(story.stories.BreadcrumbStory);

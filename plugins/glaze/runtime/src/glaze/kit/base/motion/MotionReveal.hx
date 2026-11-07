@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion/reveal.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.IntoLength;
-import gpui.LayoutId;
-import gpui.Length;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.Window;
-import gpui.util.MathUtil;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.IntoLength;
+import glaze.LayoutId;
+import glaze.Length;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.Window;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.px;
-import gpui.Prelude.relative;
+import glaze.Prelude.px;
+import glaze.Prelude.relative;
 
 /**
  * A measured, clipped vertical reveal driven by normalized progress.

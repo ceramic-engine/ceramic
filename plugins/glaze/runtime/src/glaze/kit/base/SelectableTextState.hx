@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Model;
-import gpui.Point;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Context;
+import glaze.Model;
+import glaze.Point;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.util.Utf8;
 
 typedef FocusCallback = (Window, App) -> Void;
 typedef ClearHandler = (App) -> Void;
@@ -33,7 +33,7 @@ class CopyItem {
  * The entity behind a `TextSelectionHandle` (crate-private in Rust).
  * Emits `TextSelectionEvent`.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class SelectableTextState extends Model {
 
     var fallbackCopyText:String;

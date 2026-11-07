@@ -2,7 +2,7 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * The `(Duration, impl Fn(f32) -> f32)` tuple returned by `Spring.sampledEasing`.

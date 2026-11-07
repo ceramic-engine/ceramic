@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/touch.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.LongPressEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.AutoScroll;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.LongPressEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.AutoScroll;
 
-using gpui.base.input.InputMovement;
-using gpui.base.input.InputWordSelection;
+using glaze.kit.base.input.InputMovement;
+using glaze.kit.base.input.InputWordSelection;
 
 /**
  * Touch selection for the input engine: grab handles and the edit menu (the
  * `impl InputBaseState` block of touch.rs, as static extensions:
- * `using gpui.base.input.InputTouch;`).
+ * `using glaze.kit.base.input.InputTouch;`).
  *
  * The touch selection remembers the range it made. As soon as the selection
  * is something else (the caret moved, text was typed, another cursor was
@@ -173,9 +173,9 @@ class InputTouch {
     static function allWhitespace(text:String):Bool {
         final codePoints:Array<Int> = [];
         final byteOffsets:Array<Int> = [];
-        final count = gpui.util.Utf8.decode(text, codePoints, byteOffsets);
+        final count = glaze.util.Utf8.decode(text, codePoints, byteOffsets);
         for (i in 0...count) {
-            if (!gpui.util.Utf8.isWhitespace(codePoints[i])) return false;
+            if (!glaze.util.Utf8.isWhitespace(codePoints[i])) return false;
         }
         return true;
     }
@@ -198,7 +198,7 @@ class InputTouch {
                 }
                 // The input selects on its own; keep the window text
                 // selection from starting a drag under it.
-                gpui.base.GlobalState.suppressTextSelection(cx.app);
+                glaze.kit.base.GlobalState.suppressTextSelection(cx.app);
                 self.undoManager.breakTransactionCoalescing();
                 self.modeKind.clearInlineCompletion(self, cx);
                 self.touchSelection = new TouchSelection();

@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/textarea.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.DefiniteLength;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.input.InlineTokenClickListener;
-import gpui.base.input.InlineTokenContext;
-import gpui.base.input.InlineTokenHoverListener;
-import gpui.base.input.InlineTokenRenderer;
-import gpui.base.input.NativeMenu;
-import gpui.base.input.TextareaState;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.DefiniteLength;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.input.InlineTokenClickListener;
+import glaze.kit.base.input.InlineTokenContext;
+import glaze.kit.base.input.InlineTokenHoverListener;
+import glaze.kit.base.input.InlineTokenRenderer;
+import glaze.kit.base.input.NativeMenu;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A styled ordinary multi-line text field.
@@ -84,7 +84,7 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
      * `InputToken`; editing and history stay with the input.
      */
     public function token(render:(InlineTokenContext, Window, App) -> IntoElement):Textarea {
-        tokenRenderer = (token, window, cx) -> (render(token, window, cx) : gpui.AnyElement);
+        tokenRenderer = (token, window, cx) -> (render(token, window, cx) : glaze.AnyElement);
         return this;
     }
 
@@ -103,7 +103,7 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    public function h(height:gpui.IntoDefiniteLength):Textarea {
+    public function h(height:glaze.IntoDefiniteLength):Textarea {
         this.height = height;
         return this;
     }
@@ -186,7 +186,7 @@ class Textarea implements RenderOnce implements Styled implements Sizable {
     }
 
     /** The `Input` this textarea renders, for a compound control that frames it. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function intoInput():Input {
         final input = @:privateAccess Input.fromState((state : TextareaState));
         if (tokenRenderer != null) {

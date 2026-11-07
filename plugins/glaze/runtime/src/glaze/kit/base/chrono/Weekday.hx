@@ -1,7 +1,7 @@
 // Ported from chrono 0.4.45: src/weekday.rs (the subset gpui-kit 0.8.1 uses)
 // Original code Copyright (c) 2014--2026, Kang Seonghoon and contributors, licensed under MIT OR Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.chrono;
+package glaze.kit.base.chrono;
 
 /**
  * The day of week (chrono's `Weekday`). The underlying value is
@@ -57,10 +57,10 @@ enum abstract Weekday(Int) {
         return SHORT_NAMES[this];
     }
 
-    @:allow(gpui.base.chrono)
+    @:allow(glaze.kit.base.chrono)
     static final SHORT_NAMES:Array<String> = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    @:allow(gpui.base.chrono)
+    @:allow(glaze.kit.base.chrono)
     static final LONG_NAMES:Array<String> = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 }

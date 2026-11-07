@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/window.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.scene.BorderStyle;
+import glaze.scene.BorderStyle;
 
 /**
  * A rectangle to be rendered in the window at the given position and size.

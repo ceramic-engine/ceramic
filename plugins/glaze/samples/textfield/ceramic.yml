@@ -57,9 +57,8 @@ app:
         # Add entity runtime scripting support: entity.scriptContent = ...
         #- script
 
-        # GPUI port (linked through plugins/gpui.plugin)
-        - gpui
-
+        # Glaze, the GPUI port (built-in plugin)
+        - glaze
     # The text field (shared with the unit tests)
     paths:
         - shared

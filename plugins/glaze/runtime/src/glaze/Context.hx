@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/app/context.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The app context, with specialized behavior for the given entity.
@@ -18,7 +18,7 @@ package gpui;
  */
 class Context<T:Model> extends EntitySlot {
 
-    @:allow(gpui)
+    @:allow(glaze)
     function new(app:App, id:Int) {
         super(app, id);
     }

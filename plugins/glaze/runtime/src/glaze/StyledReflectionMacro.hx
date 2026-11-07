@@ -1,7 +1,7 @@
 // Ported from gpui-pre-macros 0.3.10: src/derive_inspector_reflection.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from a Rust procedural macro to a Haxe build macro for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 #if macro
 import haxe.macro.Context;
@@ -32,7 +32,7 @@ class StyledReflectionMacro {
     /**
      * `file`: the JSON table, relative to the class being built.
      * `ext`: true for gpui-base's `StyledExt` (static extension methods of
-     * `gpui.base.StyledExt`), false for `Styled` (methods of `StyleBuilder`).
+     * `glaze.kit.base.StyledExt`), false for `Styled` (methods of `StyleBuilder`).
      */
     public static function build(file:String, ext:Bool):Array<Field> {
         final fields = Context.getBuildFields();
@@ -44,7 +44,7 @@ class StyledReflectionMacro {
 
         final available = new Map<String, Bool>();
         if (!ext) {
-            switch Context.getType('gpui.StyleBuilder') {
+            switch Context.getType('glaze.StyleBuilder') {
                 case TInst(ref, _):
                     for (field in ref.get().fields.get()) {
                         available.set(field.name, true);
@@ -53,7 +53,7 @@ class StyledReflectionMacro {
             }
         }
         else {
-            switch Context.getType('gpui.base.StyledExt') {
+            switch Context.getType('glaze.kit.base.StyledExt') {
                 case TInst(ref, _):
                     for (field in ref.get().statics.get()) {
                         available.set(field.name, true);
@@ -78,7 +78,7 @@ class StyledReflectionMacro {
             docIndices.push(macro $v{docIndex});
             final index = names.length - 1;
             final call = ext
-                ? macro gpui.base.StyledExt.$method(builder)
+                ? macro glaze.kit.base.StyledExt.$method(builder)
                 : macro builder.$method();
             cases.push({values: [macro $v{index}], expr: macro $call});
         }
@@ -99,8 +99,8 @@ class StyledReflectionMacro {
 
             static final DOCS:Array<String> = $a{docs};
 
-            static function dispatch(index:Int, style:gpui.StyleRefinement):gpui.StyleRefinement {
-                final builder = new gpui.StyleBuilder(style);
+            static function dispatch(index:Int, style:glaze.StyleRefinement):glaze.StyleRefinement {
+                final builder = new glaze.StyleBuilder(style);
                 $switchExpr;
                 return style;
             }
@@ -108,14 +108,14 @@ class StyledReflectionMacro {
             /**
              * Get all reflectable methods for a style refinement.
              */
-            public static function methods():Array<gpui.FunctionReflection<gpui.StyleRefinement>> {
-                return [for (i in 0...NAMES.length) new gpui.FunctionReflection<gpui.StyleRefinement>(NAMES[i], DOC_INDICES[i] >= 0 ? DOCS[DOC_INDICES[i]] : null, i, dispatch)];
+            public static function methods():Array<glaze.FunctionReflection<glaze.StyleRefinement>> {
+                return [for (i in 0...NAMES.length) new glaze.FunctionReflection<glaze.StyleRefinement>(NAMES[i], DOC_INDICES[i] >= 0 ? DOCS[DOC_INDICES[i]] : null, i, dispatch)];
             }
 
             /**
              * Find a method by name.
              */
-            public static function findMethod(name:String):Null<gpui.FunctionReflection<gpui.StyleRefinement>> {
+            public static function findMethod(name:String):Null<glaze.FunctionReflection<glaze.StyleRefinement>> {
                 for (method in methods()) {
                     if (method.name == name) return method;
                 }

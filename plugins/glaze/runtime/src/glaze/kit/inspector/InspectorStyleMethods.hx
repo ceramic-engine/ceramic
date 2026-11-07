@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/inspector.rs (StyleMethods)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.inspector;
+package glaze.kit.inspector;
 
-import gpui.FunctionReflection;
-import gpui.StyleRefinement;
-import gpui.StyledReflection;
-import gpui.base.StyledExtReflection;
+import glaze.FunctionReflection;
+import glaze.StyleRefinement;
+import glaze.StyledReflection;
+import glaze.kit.base.StyledExtReflection;
 
 /**
  * One entry of the table: the style a method sets on a default refinement,

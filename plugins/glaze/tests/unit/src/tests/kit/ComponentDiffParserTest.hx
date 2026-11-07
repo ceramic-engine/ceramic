@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffParseError;
-import gpui.component.diff.DiffParseOptions;
-import gpui.component.diff.DiffSide;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffParseError;
+import glaze.kit.diff.DiffParseOptions;
+import glaze.kit.diff.DiffSide;
 import testing.TestCase;
 
 /**

@@ -11,9 +11,9 @@ package shaders;
  * drop shadow, element bounds for an inset shadow) is computed on the CPU
  * side and given as `vertexGeometry`.
  */
-class GpuiShadow extends Shader<GpuiShadow_Vert, GpuiShadow_Frag> {}
+class GlazeShadow extends Shader<GlazeShadow_Vert, GlazeShadow_Frag> {}
 
-class GpuiShadow_Vert extends Vert {
+class GlazeShadow_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -70,7 +70,7 @@ class GpuiShadow_Vert extends Vert {
 
 }
 
-class GpuiShadow_Frag extends Frag {
+class GlazeShadow_Frag extends Frag {
 
     @in var scenePosition:Vec2;
     @in var clipDistances:Vec4;

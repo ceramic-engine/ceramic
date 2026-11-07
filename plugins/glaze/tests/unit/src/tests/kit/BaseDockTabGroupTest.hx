@@ -3,44 +3,44 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.AnyDrag;
-import gpui.base.dock.DragPanel;
-import gpui.base.dock.DropIndicator;
-import gpui.base.dock.DropPlaceholderBounds;
-import gpui.base.dock.InsertTarget;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelView;
-import gpui.base.dock.TabGroup;
-import gpui.base.dock.TabGroupConstraints;
-import gpui.base.dock.TabGroupContext;
-import gpui.base.dock.TabGroupEvent;
-import gpui.base.dock.TabGroupRendererBase;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.AnyDrag;
+import glaze.kit.base.dock.DragPanel;
+import glaze.kit.base.dock.DropIndicator;
+import glaze.kit.base.dock.DropPlaceholderBounds;
+import glaze.kit.base.dock.InsertTarget;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelView;
+import glaze.kit.base.dock.TabGroup;
+import glaze.kit.base.dock.TabGroupConstraints;
+import glaze.kit.base.dock.TabGroupContext;
+import glaze.kit.base.dock.TabGroupEvent;
+import glaze.kit.base.dock.TabGroupRendererBase;
 import tests.kit.DockTestSupport;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's `TabGroup` (`tab_group.rs`).
  */
-@:access(gpui.base.dock.TabGroup)
-@:access(gpui.base.dock.DropPlaceholderBounds)
+@:access(glaze.kit.base.dock.TabGroup)
+@:access(glaze.kit.base.dock.DropPlaceholderBounds)
 class BaseDockTabGroupTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -646,7 +646,7 @@ private class RecordingRenderer extends TabGroupRendererBase {
         if (drag != null) {
             tab.onDrag(drag, (drag:DragPanel, offset, _, cx) -> {
                 drag.setDragOffset(offset);
-                return (cx.newEntity((_:Context<gpui.base.dock.DragPanelView>) -> new gpui.base.dock.DragPanelView(drag.clone())) : AnyView);
+                return (cx.newEntity((_:Context<glaze.kit.base.dock.DragPanelView>) -> new glaze.kit.base.dock.DragPanelView(drag.clone())) : AnyView);
             });
         }
         return tab.intoAnyElement();

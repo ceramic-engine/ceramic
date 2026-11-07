@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Entity;
-import gpui.HitboxBehavior;
-import gpui.Hsla;
-import gpui.TouchDragEvent;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.Point;
-import gpui.Subscription;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.SelectableTextState;
-import gpui.base.WindowSelectionState.TableCellAnchor;
-import gpui.base.TouchHandleLayout.TouchHandleHitbox;
-import gpui.base.input.TouchHandle;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Entity;
+import glaze.HitboxBehavior;
+import glaze.Hsla;
+import glaze.TouchDragEvent;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.Point;
+import glaze.Subscription;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.SelectableTextState;
+import glaze.kit.base.WindowSelectionState.TableCellAnchor;
+import glaze.kit.base.TouchHandleLayout.TouchHandleHitbox;
+import glaze.kit.base.input.TouchHandle;
 
 /**
  * A stable, participant-neutral handle for text that participates in window
@@ -26,7 +26,7 @@ import gpui.base.input.TouchHandle;
  */
 class TextSelectionHandle {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final state:Entity<SelectableTextState>;
 
     function new(state:Entity<SelectableTextState>) {
@@ -49,7 +49,7 @@ class TextSelectionHandle {
     }
 
     /** Records the anchor cell during prepaint, before any participant paints. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function recordTableCell(bounds:Bounds, cx:App):Void {
         final state = windowSelection(cx);
         if (state == null) {
@@ -70,7 +70,7 @@ class TextSelectionHandle {
     }
 
     /** The current gesture's anchor cell, shared only by participants in its window. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function tableCellSelection(cx:App):Null<Bounds> {
         final state = windowSelection(cx);
         if (state == null) return null;
@@ -86,7 +86,7 @@ class TextSelectionHandle {
     }
 
     /** Retires an anchor projection when its participant replaces its content. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function clearTableCellSelection(cx:App):Void {
         final state = windowSelection(cx);
         if (state != null) {
@@ -150,14 +150,14 @@ class TextSelectionHandle {
      * The projected text this participant adds to the window's selected text,
      * or `null` when it adds none or copies through its own callback.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function projectedCopyText(cx:App):Null<String> {
         final item = state.read(cx).copyItem(0);
         return item != null && item.callback == null ? item.fallback : null;
     }
 
     /** Rich text renders its own selection; retain geometry only for word hit testing. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function setHitTestRuns(runs:Array<TextSelectionRun>, cx:App):Void {
         state.read(cx).runs = runs.copy();
     }
@@ -168,7 +168,7 @@ class TextSelectionHandle {
      * coordinates, extend the selection by the same unit through the window
      * selection, as a shift-click after it does.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function holdMultiClick(start:Bounds, end:Bounds, clickCount:Int, cx:App):Void {
         final windowState = windowSelection(cx);
         if (windowState == null) {
@@ -290,7 +290,7 @@ class TextSelectionHandle {
         state.update(cx, (state, _) -> state.resolveContentKeyWith(callback));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function downgrade():WeakEntity<SelectableTextState> {
         return state.downgrade();
     }

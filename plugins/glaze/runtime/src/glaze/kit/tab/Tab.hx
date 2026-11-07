@@ -2,62 +2,62 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviations DEV-013 (icon-only tab width) and DEV-014 (disabled selected tab). See DEVIATIONS.md.
-package gpui.component.tab;
+package glaze.kit.tab;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.IntoBackground;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Path.FillOptions;
-import gpui.PathBuilder;
-import gpui.PathBuilder.PathStyle;
-import gpui.Point;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.base.animation.Easings;
-import gpui.base.animation.Lerp;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.tab.TabVariant;
-import gpui.component.tab.TabVariant.FolderTabConstants;
-import gpui.component.tab.TabVariant.FolderTabMetrics;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.IntoBackground;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Path.FillOptions;
+import glaze.PathBuilder;
+import glaze.PathBuilder.PathStyle;
+import glaze.Point;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.base.animation.Lerp;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.tab.TabVariant;
+import glaze.kit.tab.TabVariant.FolderTabConstants;
+import glaze.kit.tab.TabVariant.FolderTabMetrics;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A Tab element for the `TabBar`.
  */
 class Tab implements RenderOnce implements Styled implements ParentElement implements Sizable implements Selectable {
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var ix:Int = 0;
 
-    final base:gpui.base.Tabs.BaseTab = new gpui.base.Tabs.BaseTab(0);
+    final base:glaze.kit.base.Tabs.BaseTab = new glaze.kit.base.Tabs.BaseTab(0);
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var labelValue:Null<String> = null;
 
     var ariaLabelValue:Null<String> = null;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var iconValue:Null<Icon> = null;
 
     var prefixValue:Null<AnyElement> = null;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var tabBarPrefixValue:Null<Bool> = null;
 
     var suffixValue:Null<AnyElement> = null;
@@ -68,16 +68,16 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
 
     var size:Size = Medium;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var selectedValue:Bool = false;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var indicatorActive:Bool = false;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var indicatorReady:Bool = true;
 
     /**
@@ -85,24 +85,24 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
      * switch. Used to key the selected tab's text color fade so it restarts
      * in sync with the indicator slide.
      */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var indicatorEpoch:Int = 0;
 
     /** Whether a `TabVariant.Folder` tab draws the divider after it. */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var separator:Bool = false;
 
     /**
      * Whether the `TabBar` reports the pointer over this tab. Kept there
      * rather than in a hover group, which would replace the caller's.
      */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var hovered:Bool = false;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var maxWidthValue:Null<Pixels> = null;
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
     /** Create a new tab. */
@@ -196,7 +196,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     }
 
     /** Set index to the tab. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function withIx(ix:Int):Tab {
         this.ix = ix;
         base.id(ix);
@@ -204,14 +204,14 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     }
 
     /** Set if the tab bar has a prefix. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function tabBarPrefix(tabBarPrefix:Bool):Tab {
         tabBarPrefixValue = tabBarPrefix;
         return this;
     }
 
     /** Set the maximum width of the tab, see `TabBar.maxWidth`. */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function maxWidth(maxWidth:Null<Pixels>):Tab {
         maxWidthValue = maxWidth;
         return this;
@@ -227,19 +227,19 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     }
 
     /** A mouse down listener. */
-    public function onMouseDown(button:gpui.MouseButton, listener:(gpui.MouseDownEvent, Window, App) -> Void):Tab {
+    public function onMouseDown(button:glaze.MouseButton, listener:(glaze.MouseDownEvent, Window, App) -> Void):Tab {
         base.onMouseDown(button, listener);
         return this;
     }
 
     /** A mouse up listener. */
-    public function onMouseUp(button:gpui.MouseButton, listener:(gpui.MouseUpEvent, Window, App) -> Void):Tab {
+    public function onMouseUp(button:glaze.MouseButton, listener:(glaze.MouseUpEvent, Window, App) -> Void):Tab {
         base.base.onMouseUp(button, listener);
         return this;
     }
 
     /** Starts a drag of `value` from this tab, previewed by the view `constructor` builds. */
-    public function onDrag<T>(value:T, constructor:(T, Point, Window, App) -> gpui.AnyView):Tab {
+    public function onDrag<T>(value:T, constructor:(T, Point, Window, App) -> glaze.AnyView):Tab {
         base.base.onDrag(value, constructor);
         return this;
     }
@@ -263,7 +263,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     }
 
     /** A tooltip shown while the pointer rests on the tab. */
-    public function tooltip(buildTooltip:(Window, App) -> gpui.AnyView):Tab {
+    public function tooltip(buildTooltip:(Window, App) -> glaze.AnyView):Tab {
         base.base.tooltip(buildTooltip);
         return this;
     }
@@ -319,7 +319,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         if (!tabBarPrefix) {
             if (ix == 0 && variant == TabVariant.Tab) {
                 for (style in [normalStyle, selectedStyle, disabledStyle, hoverStyle]) {
-                    style.borders = new gpui.Edges(style.borders.top, style.borders.right, style.borders.bottom, 0.);
+                    style.borders = new glaze.Edges(style.borders.top, style.borders.right, style.borders.bottom, 0.);
                 }
             }
         }
@@ -380,12 +380,12 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         final innerContent = hFlex()
             .flex1()
             .h(innerHeight)
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .whitespaceNowrap()
             .itemsCenter()
             .justifyCenter()
             .overflowHidden()
-            .margins(gpui.Prelude.px(innerMargins.top), gpui.Prelude.px(innerMargins.right), gpui.Prelude.px(innerMargins.bottom), gpui.Prelude.px(innerMargins.left));
+            .margins(glaze.Prelude.px(innerMargins.top), glaze.Prelude.px(innerMargins.right), glaze.Prelude.px(innerMargins.bottom), glaze.Prelude.px(innerMargins.left));
         // Normally the label decides the tab width, so it never shrinks. With
         // `max_width` it is the one part that gives way.
         if (maxWidth != null) innerContent.flexAuto() else innerContent.flexShrink0();
@@ -414,7 +414,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
             }
             innerContent.extend(childElements);
             // With the prefix's gap, 8px between icon and title, as in a Button.
-            if (folder && hasPrefix) innerContent.pl(gpui.Prelude.px(4.));
+            if (folder && hasPrefix) innerContent.pl(glaze.Prelude.px(4.));
         }
         innerContent.bg(innerBg).rounded(innerRadius);
         if (innerShadow) innerContent.shadowXs();
@@ -423,7 +423,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         final innerElement:AnyElement = if (animateFg) {
             innerContent.withAnimation(
                 ElementId.NamedInteger('tab-fg', indicatorEpoch),
-                new gpui.Animation(0.2).withEasing(Easings.easeInOutCubic),
+                new glaze.Animation(0.2).withEasing(Easings.easeInOutCubic),
                 (this_, delta) -> this_.textColor(Lerp.hsla(fgFrom, fgTo, delta))
             ).intoAnyElement();
         } else {
@@ -439,18 +439,18 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
             .selected(style -> style
                 .textColor(selectedStyleValue.fg)
                 .bg(selectedOuterBg)
-                .borderL(gpui.Prelude.px(selectedStyleValue.borders.left))
-                .borderR(gpui.Prelude.px(selectedStyleValue.borders.right))
-                .borderT(gpui.Prelude.px(selectedStyleValue.borders.top))
-                .borderB(gpui.Prelude.px(selectedStyleValue.borders.bottom))
+                .borderL(glaze.Prelude.px(selectedStyleValue.borders.left))
+                .borderR(glaze.Prelude.px(selectedStyleValue.borders.right))
+                .borderT(glaze.Prelude.px(selectedStyleValue.borders.top))
+                .borderB(glaze.Prelude.px(selectedStyleValue.borders.bottom))
                 .borderColor(selectedOuterBorderColor))
             .disabled(style -> style
                 .textColor(disabledStyle.fg)
                 .bg(disabledStyle.bg)
-                .borderL(gpui.Prelude.px(disabledStyle.borders.left))
-                .borderR(gpui.Prelude.px(disabledStyle.borders.right))
-                .borderT(gpui.Prelude.px(disabledStyle.borders.top))
-                .borderB(gpui.Prelude.px(disabledStyle.borders.bottom))
+                .borderL(glaze.Prelude.px(disabledStyle.borders.left))
+                .borderR(glaze.Prelude.px(disabledStyle.borders.right))
+                .borderT(glaze.Prelude.px(disabledStyle.borders.top))
+                .borderB(glaze.Prelude.px(disabledStyle.borders.bottom))
                 .borderColor(disabledStyle.borderColor)));
         base.relative().flex();
         // Wrapping would move the overflow onto a clipped second line instead
@@ -469,10 +469,10 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         if (!selectedValue && !disabledValue) {
             base.textColor(normalStyle.fg)
                 .bg(normalStyle.bg)
-                .borderL(gpui.Prelude.px(normalStyle.borders.left))
-                .borderR(gpui.Prelude.px(normalStyle.borders.right))
-                .borderT(gpui.Prelude.px(normalStyle.borders.top))
-                .borderB(gpui.Prelude.px(normalStyle.borders.bottom))
+                .borderL(glaze.Prelude.px(normalStyle.borders.left))
+                .borderR(glaze.Prelude.px(normalStyle.borders.right))
+                .borderT(glaze.Prelude.px(normalStyle.borders.top))
+                .borderB(glaze.Prelude.px(normalStyle.borders.bottom))
                 .borderColor(normalStyle.borderColor);
         }
         final selected = selectedValue;
@@ -486,10 +486,10 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
             }
             return s.textColor(hoverStyle.fg)
                 .bg(hoverStyle.bg)
-                .borderL(gpui.Prelude.px(hoverStyle.borders.left))
-                .borderR(gpui.Prelude.px(hoverStyle.borders.right))
-                .borderT(gpui.Prelude.px(hoverStyle.borders.top))
-                .borderB(gpui.Prelude.px(hoverStyle.borders.bottom))
+                .borderL(glaze.Prelude.px(hoverStyle.borders.left))
+                .borderR(glaze.Prelude.px(hoverStyle.borders.right))
+                .borderT(glaze.Prelude.px(hoverStyle.borders.top))
+                .borderB(glaze.Prelude.px(hoverStyle.borders.bottom))
                 .borderColor(hoverStyle.borderColor)
                 .rounded(radius);
         });
@@ -502,7 +502,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
                 .top0()
                 .left0()
                 .right0()
-                .bottom(gpui.Prelude.px(metrics.topPadding))
+                .bottom(glaze.Prelude.px(metrics.topPadding))
                 .rounded(metrics.radius)
                 .bg(theme.tokens.secondary.background));
         }
@@ -510,9 +510,9 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
         if (folder && separator) {
             base.child(div()
                 .absolute()
-                .right(gpui.Prelude.px(-(@:privateAccess FolderTabConstants.FOLDER_TAB_GAP / 2.)))
-                .top(gpui.Prelude.px((height - metrics.topPadding - metrics.separatorHeight) / 2.))
-                .w(gpui.Prelude.px(1.))
+                .right(glaze.Prelude.px(-(@:privateAccess FolderTabConstants.FOLDER_TAB_GAP / 2.)))
+                .top(glaze.Prelude.px((height - metrics.topPadding - metrics.separatorHeight) / 2.))
+                .w(glaze.Prelude.px(1.))
                 .h(metrics.separatorHeight)
                 .bg(theme.border));
         }
@@ -588,8 +588,8 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
             .absolute()
             .top0()
             .bottom0()
-            .left(gpui.Prelude.px(-curve))
-            .right(gpui.Prelude.px(-curve));
+            .left(glaze.Prelude.px(-curve))
+            .right(glaze.Prelude.px(-curve));
     }
 
     /** Adds a quarter circle from `from` to `to`, whose tangents meet at `corner`. */
@@ -604,7 +604,7 @@ class Tab implements RenderOnce implements Styled implements ParentElement imple
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }

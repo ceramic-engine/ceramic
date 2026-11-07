@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sidebar/header.rs, crates/component/src/sidebar/footer.rs (impl DropdownMenu)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.sidebar;
+package glaze.kit.sidebar;
 
-import gpui.Anchor;
-import gpui.ElementId;
-import gpui.component.menu.ContextMenu.MenuBuilder;
-import gpui.component.menu.DropdownMenu.DropdownMenuPopover;
+import glaze.Anchor;
+import glaze.ElementId;
+import glaze.kit.menu.ContextMenu.MenuBuilder;
+import glaze.kit.menu.DropdownMenu.DropdownMenuPopover;
 
 /**
  * The `DropdownMenu` trait the original implements for `SidebarHeader` and
  * `SidebarFooter`, as a static extension:
- * `using gpui.component.sidebar.SidebarDropdownMenu;`.
+ * `using glaze.kit.sidebar.SidebarDropdownMenu;`.
  */
 class SidebarDropdownMenu {
 
@@ -32,7 +32,7 @@ class SidebarDropdownMenu {
 
 /**
  * The `DropdownMenu` trait of `SidebarFooter`:
- * `using gpui.component.sidebar.SidebarDropdownMenu.SidebarFooterDropdownMenu;`.
+ * `using glaze.kit.sidebar.SidebarDropdownMenu.SidebarFooterDropdownMenu;`.
  */
 class SidebarFooterDropdownMenu {
 

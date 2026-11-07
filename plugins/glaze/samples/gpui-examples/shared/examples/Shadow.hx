@@ -3,17 +3,17 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package examples;
 
-import gpui.App;
-import gpui.BoxShadow;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
+import glaze.App;
+import glaze.BoxShadow;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 class Shadow extends Model implements Render {
 

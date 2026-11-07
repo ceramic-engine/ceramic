@@ -1,18 +1,18 @@
 package scenarios;
 
 import Scenario;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.Window;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.Window;
 import story.StoryContainer;
 import story.StoryMeta;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * One story page of the gallery (`StoryContainer.panel`, the scrollable
@@ -61,7 +61,7 @@ class StoryScroll extends BaseScenario {
             // The whole gallery, the story picked in the sidebar like a click
             // does (`Gallery.selectStory`); the wheel goes to the center of
             // the story area (right of the 255 px sidebar, below the header)
-            var gallery:Null<gpui.Entity<story.Gallery>> = null;
+            var gallery:Null<glaze.Entity<story.Gallery>> = null;
             window = KitBench.openWindow(app, caching, (window, cx) -> {
                 gallery = story.Gallery.view(null, window, cx);
                 return gallery;

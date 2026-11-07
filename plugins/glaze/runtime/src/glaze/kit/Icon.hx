@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/icon.rs, crates/assets/src/icon.rs (IconNamed)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Radians;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Svg;
-import gpui.Svg.Transformation;
-import gpui.Window;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Radians;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Svg;
+import glaze.Svg.Transformation;
+import glaze.Window;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 import haxe.io.Bytes;
 
-using gpui.AbsoluteLengthTools;
+using glaze.AbsoluteLengthTools;
 
 /**
  * A named icon that resolves to a path in an application's asset source.
@@ -86,16 +86,16 @@ class Icon implements RenderOnce implements Styled implements Sizable {
 
     final iconStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var source:IconSource = Path('');
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var textColorValue:Null<Hsla> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Null<Size> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var transformation:Null<Transformation> = null;
 
     /**
@@ -120,7 +120,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
     /**
      * An icon drawing the asset at `path`.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function build(path:String):Icon {
         return new Icon().path(path);
     }
@@ -202,7 +202,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function resolved(cx:App):Icon {
         switch source {
             case Path(path):
@@ -212,12 +212,12 @@ class Icon implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function intoSvg(textSize:Pixels, fallbackColor:Hsla):Svg {
         final textColor = textColorValue != null ? textColorValue : fallbackColor;
         final hasBaseSize = iconStyle.sizeWidth != null || iconStyle.sizeHeight != null;
 
-        final svg = gpui.Prelude.svg();
+        final svg = glaze.Prelude.svg();
         svg.style().refine(iconStyle);
         svg.flexShrink0().textColor(textColor);
         if (!hasBaseSize) {

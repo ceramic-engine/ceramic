@@ -1,12 +1,12 @@
 // New code for the Haxe port of gpui-kit (no Rust origin). See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Context;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.Model;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.Model;
+import glaze.Window;
 
 /**
  * Rust's `window.use_keyed_state(key, cx, |window, cx| State::new(..))`

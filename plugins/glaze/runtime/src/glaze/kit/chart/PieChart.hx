@@ -1,34 +1,34 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/pie_chart.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.plot.PathCache.PathCaches;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotHover;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.shape.Arc;
-import gpui.base.plot.shape.Arc.ArcData;
-import gpui.base.plot.shape.Pie;
-import gpui.component.chart.Chart.ChartAppear;
-import gpui.component.plot.Tooltip;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.plot.PathCache.PathCaches;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotHover;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.shape.Arc;
+import glaze.kit.base.plot.shape.Arc.ArcData;
+import glaze.kit.base.plot.shape.Pie;
+import glaze.kit.chart.Chart.ChartAppear;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.theme.Theme;
 
 private class PieHover {
 
@@ -129,7 +129,7 @@ class PieChart<T> extends Plot {
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
-        this.data = gpui.util.Iterables.toArray(data);
+        this.data = glaze.util.Iterables.toArray(data);
         idValue = Chart.callerId(pos);
     }
 

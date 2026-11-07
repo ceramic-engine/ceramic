@@ -1,12 +1,12 @@
 package;
 
-import gpui.App;
-import gpui.Window;
+import glaze.App;
+import glaze.Window;
 
 /**
  * The idle check of the original bench: the cards window (view caching on)
  * is drawn once, then 120 frames of the real update loop must not draw and
- * must not allocate anything (gpui or the renderable). The run fails when
+ * must not allocate anything (Glaze or the renderable). The run fails when
  * they do.
  */
 class IdleCardsScenario extends BaseScenario implements IdleScenario {

@@ -2,20 +2,20 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/area
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.Background;
-import gpui.Bounds;
-import gpui.IntoBackground;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.Curve;
-import gpui.base.plot.PathCache;
-import gpui.base.plot.PathCache.ShapeKey;
-import gpui.base.plot.Plot;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.IntoBackground;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.Curve;
+import glaze.kit.base.plot.PathCache;
+import glaze.kit.base.plot.PathCache.ShapeKey;
+import glaze.kit.base.plot.Plot;
 
 /**
  * An area under a line through data points, filled down to `y0`, with the
@@ -41,7 +41,7 @@ class Area<T> {
 
     /** Set the data of the Area. */
     public function data(data:Iterable<T>):Area<T> {
-        dataValues = gpui.util.Iterables.toArray(data);
+        dataValues = glaze.util.Iterables.toArray(data);
         return this;
     }
 

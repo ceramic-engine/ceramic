@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/number_input.rs (`NumberStep`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
+import glaze.App;
 
 /**
  * Strategy used by numeric editors when stepping their value. Methods are in
  * `NumberStepTools`; a number converts implicitly through `IntoNumberStep`
  * (Rust `From<f64>`).
  */
-@:using(gpui.base.NumberStep.NumberStepTools)
+@:using(glaze.kit.base.NumberStep.NumberStepTools)
 enum NumberStep {
     Fixed(step:Float);
     ByValue(f:(Float, StepAction, App) -> Float);

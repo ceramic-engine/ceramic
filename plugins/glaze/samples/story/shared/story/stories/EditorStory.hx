@@ -3,50 +3,50 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Task;
-import gpui.UnderlineStyle;
-import gpui.Window;
-import gpui.base.input.CompletionContext;
-import gpui.base.input.CompletionHighlighter;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.CompletionProvider.CompletionProviderBase;
-import gpui.base.input.Completions;
-import gpui.base.input.EditorState;
-import gpui.base.input.RangeDecoration;
-import gpui.base.input.RangeDecorationCollection;
-import gpui.base.input.RangeDecorationStyle;
-import gpui.base.input.TabSize;
-import gpui.base.input.TextDecoration;
-import gpui.base.input.TextDecorationCollection;
-import gpui.component.button.Button;
-import gpui.component.input.Editor;
-import gpui.component.label.Label;
-import gpui.component.menu.PopupMenu.PopupMenuItem;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Task;
+import glaze.UnderlineStyle;
+import glaze.Window;
+import glaze.kit.base.input.CompletionContext;
+import glaze.kit.base.input.CompletionHighlighter;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.CompletionProvider.CompletionProviderBase;
+import glaze.kit.base.input.Completions;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.RangeDecoration;
+import glaze.kit.base.input.RangeDecorationCollection;
+import glaze.kit.base.input.RangeDecorationStyle;
+import glaze.kit.base.input.TabSize;
+import glaze.kit.base.input.TextDecoration;
+import glaze.kit.base.input.TextDecorationCollection;
+import glaze.kit.button.Button;
+import glaze.kit.input.Editor;
+import glaze.kit.label.Label;
+import glaze.kit.menu.PopupMenu.PopupMenuItem;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.theme.Theme;
 import ropey.Rope;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.base.input.InputDecorationsExt;
-using gpui.base.input.InputIndentExt;
-using gpui.base.input.InputLspExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.base.input.InputDecorationsExt;
+using glaze.kit.base.input.InputIndentExt;
+using glaze.kit.base.input.InputLspExt;
 
 enum StoryCompletionHighlight {
     Prefix;
@@ -175,7 +175,7 @@ class EditorStory extends Model implements Story {
     /** Rust `str::find` as a byte offset (0 when missing, like `unwrap_or_default`). */
     static function find(text:String, needle:String):Int {
         final ix = text.indexOf(needle);
-        return ix < 0 ? 0 : gpui.util.Utf8.indexToByteOffset(text, ix);
+        return ix < 0 ? 0 : glaze.util.Utf8.indexToByteOffset(text, ix);
     }
 
     function new(window:Window, cx:Context<EditorStory>) {
@@ -190,7 +190,7 @@ class EditorStory extends Model implements Story {
 
         // Rust swaps in a `syntect` highlighter on WASM here (no tree-sitter
         // grammars there). The port uses its TextMate highlighter on every
-        // target, see `gpui.component.highlighter.Highlighter`.
+        // target, see `glaze.kit.highlighter.Highlighter`.
 
         final decorationText = 'Decoration styles\nColor highlights important text.\nItalic adds emphasis.\nUnderline marks review text.\n\nFill: marks a tracked range.\n\nFrame: outlines a tracked range.';
         decorationsState = cx.newEntity((cx:Context<EditorState>) -> new EditorState(window, cx)
@@ -209,7 +209,7 @@ class EditorStory extends Model implements Story {
         final underlineStart = find(decorationText, underlineRange);
         final fillStart = find(decorationText, fillRange);
         final frameStart = find(decorationText, frameRange);
-        final len = gpui.util.Utf8.byteLength;
+        final len = glaze.util.Utf8.byteLength;
         decorations = decorationsState.update(cx, (state, cx) -> {
             final theme = Theme.global(cx.app);
             return state.createDecorationsCollection([

@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/presentation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.HighlightStyle;
-import gpui.Range;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.component.highlighter.LanguageName;
-import gpui.component.highlighter.SyntaxHighlighter;
-import gpui.util.Utf8;
+import glaze.HighlightStyle;
+import glaze.Range;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.highlighter.LanguageName;
+import glaze.kit.highlighter.SyntaxHighlighter;
+import glaze.util.Utf8;
 import ropey.Rope;
 import similar.ChangeTag;
 import similar.DiffableStr;
@@ -17,7 +17,7 @@ import similar.TextDiff;
 /**
  * Settings that determine prepared presentation.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class PresentationOptions {
 
     public var inlineUnit:Null<DiffInlineUnit>;
@@ -65,7 +65,7 @@ typedef DiffSyntaxHighlighter = (language:String, text:String) -> Array<DiffStyl
  * the theme when the line paints), or a style the application's highlighter
  * returned.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class SyntaxPaint {
 
     final name:Int;
@@ -82,7 +82,7 @@ private class SyntaxPaint {
 /**
  * Byte ranges relative to each line's source start, with a payload.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class LineSpans<T> {
 
     /** `starts[ix]..starts[ix + 1]` index the spans of line `ix`. */
@@ -122,7 +122,7 @@ private class LineSpans<T> {
  * highlight names or an application highlighter's styles, and inline
  * changes between paired lines.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class FilePresentation {
 
     final names:Array<String> = [];
@@ -203,7 +203,7 @@ class FilePresentation {
 /**
  * The functions of `presentation.rs`.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class Presentation {
 
     /**

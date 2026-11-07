@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Bounds;
-import gpui.Point;
+import glaze.Bounds;
+import glaze.Point;
 
 /** Rust `BlockSelection`. */
 enum abstract BlockSelection(Int) {
@@ -26,27 +26,27 @@ class BlockState {
 
     public function new() {}
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selection():Null<BlockSelection> {
         return selection_;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setSelection(value:Null<BlockSelection>):Void {
         selection_ = value;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isSelected():Bool {
         return selection_ == Full;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasSelectionObservation():Bool {
         return selection_ != null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function clearSelection():Void {
         setSelection(null);
     }
@@ -60,7 +60,7 @@ class BlockState {
      * The selection of a custom block the gesture from `start` to `end`
      * covers (Rust free `custom_block_selection`).
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function customBlockSelection(bounds:Bounds, start:Point, end:Point):Null<BlockSelection> {
         if (bounds.size.width <= 0 || bounds.size.height <= 0 || bounds.bottom() <= Math.min(start.y, end.y)
             || bounds.top() > Math.max(start.y, end.y)) {
@@ -77,7 +77,7 @@ class BlockState {
      * a quick click, so counting that travel as a drag would paint the whole
      * block as selected.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function customBlockIsSelected(bounds:Bounds, start:Point, end:Point):Bool {
         final startInside = bounds.contains(start);
         final endInside = bounds.contains(end);
@@ -96,7 +96,7 @@ class CustomBlockSelectionProjection {
     final state:BlockState;
     final bounds:Bounds;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(state:BlockState, bounds:Bounds) {
         this.state = state;
         this.bounds = bounds;

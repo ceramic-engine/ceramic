@@ -3,13 +3,13 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: rewritten in Haxe on top of Ceramic's text editing events. See NOTICE.md.
 // Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
-package gpui;
+package glaze;
 
 /**
  * The platform text input layer of a window on Ceramic: what GPUI's platform
  * windows do with their input handler, driven by Ceramic's key events and
  * text editing events (`input.onTextCommit`, `input.onTextComposition`).
- * `GpuiInput` creates one per bound window and sets it as the window's
+ * `GlazeInput` creates one per bound window and sets it as the window's
  * `textInputPlatform`.
  *
  * Ceramic delivers a key down, then (when the key types text) a text commit

@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/otp_input.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.base.OtpInput.OtpState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.OtpInput.OtpState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A One Time Password (OTP) input element.
@@ -35,7 +35,7 @@ using gpui.component.ThemeStyled;
  * - SMS OTP
  * - Authenticator OTP
  *
- * `OtpEvent` and `OtpState` are gpui-base's (`gpui.base.OtpInput`),
+ * `OtpEvent` and `OtpState` are gpui-base's (`glaze.kit.base.OtpInput`),
  * re-exported by Rust.
  */
 class OtpInput implements RenderOnce implements Sizable implements Disableable implements FocusableExt {
@@ -168,7 +168,7 @@ class OtpInput implements RenderOnce implements Sizable implements Disableable i
             groups[groupIx].push(cell);
         }
 
-        return new gpui.base.OtpInput(this.state)
+        return new glaze.kit.base.OtpInput(this.state)
             .disabled(disabledValue)
             .child(
                 vFlex()

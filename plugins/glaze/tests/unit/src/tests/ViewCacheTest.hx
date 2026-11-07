@@ -1,29 +1,29 @@
 package tests;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.PathBuilder;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.scene.SceneDump;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.PathBuilder;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.scene.SceneDump;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * View caching: GPUI's opt-in `.cached(style)` and the port's default
@@ -74,7 +74,7 @@ class ViewCacheTest extends TestCase {
         return app.newEntity((_:Context<CountingView>) -> new CountingView(render));
     }
 
-    /** Draws the dirty windows, like the GpuiSystem does every frame. */
+    /** Draws the dirty windows, like the GlazeSystem does every frame. */
     function frame():Void {
         flushImmediate();
         for (window in windows) {
@@ -238,7 +238,7 @@ class ViewCacheTest extends TestCase {
 
     function testReusedViewsKeepTheirTrackerBindingsAndElementStates() {
         final counter = app.newEntity(_ -> new CacheCounter());
-        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        var state:Entity<glaze.Window.StateModel<Int>> = null;
         final child = view((window, cx) -> {
             state = window.useKeyedState('kept', cx.app, _ -> 7);
             return div().id('c').w(px(10 + counter.read(cx).count)).h(px(state.read(cx).value)).bg(red());
@@ -280,7 +280,7 @@ class ViewCacheTest extends TestCase {
      */
     function testMovedViewKeepsItsElementStatesOnceReused() {
         final counter = app.newEntity(_ -> new CacheCounter());
-        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        var state:Entity<glaze.Window.StateModel<Int>> = null;
         final child = view((window, cx) -> {
             state = window.useKeyedState('kept', cx.app, _ -> 7);
             return div().id('c').w(px(20)).h(px(state.read(cx).value)).bg(red());
@@ -442,8 +442,8 @@ class ViewCacheTest extends TestCase {
     function testCachedWithStyleFollowsGpui() {
         final counter = app.newEntity(_ -> new CacheCounter());
         final inner = view((_, cx) -> div().size(px(5)).bg(red()));
-        final cachedChild = view((_, cx) -> div().sizeFull().bg(hsla(counter.read(cx).count / 10, 0.5, 0.5, 1)).child(inner.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))));
-        final root = view((_, _) -> div().size(px(100)).child(cachedChild.cached(gpui.StyleBuilder.build(s -> s.size(px(50))))));
+        final cachedChild = view((_, cx) -> div().sizeFull().bg(hsla(counter.read(cx).count / 10, 0.5, 0.5, 1)).child(inner.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))));
+        final root = view((_, _) -> div().size(px(100)).child(cachedChild.cached(glaze.StyleBuilder.build(s -> s.size(px(50))))));
         final window = openWindow(root, true);
         window.viewCaching = false;
         window.draw();
@@ -479,7 +479,7 @@ class ViewCacheTest extends TestCase {
                 )
             ).withPriority(1)
         ));
-        final root = view((_, _) -> div().keyContext('Root').sizeFull().child(panel.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))));
+        final root = view((_, _) -> div().keyContext('Root').sizeFull().child(panel.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))));
         final window = openWindow(root, true, 800, 600);
         window.viewCaching = false;
         window.draw();
@@ -556,7 +556,7 @@ class ViewCacheTest extends TestCase {
         s.stepWithoutRefresh('refresh', (window, _) -> window.refresh());
         s.destroy();
 
-        final expected:Array<String> = haxe.Json.parse(testing.GpuiTruth.load('view-cache.json')).log;
+        final expected:Array<String> = haxe.Json.parse(testing.GlazeTruth.load('view-cache.json')).log;
         var firstDifference = -1;
         for (i in 0...Std.int(Math.max(expected.length, log.length))) {
             if (expected[i] != log[i]) {
@@ -609,9 +609,9 @@ class ViewCacheTest extends TestCase {
             frame();
             reused += cached.reusedViewCount;
             rendered += cached.renderedViewCount;
-            if (dump(cached) != dump(reference) && Sys.getEnv('GPUI_CACHE_DEBUG') != null) {
-                sys.io.File.saveContent(Sys.getEnv('GPUI_CACHE_DEBUG') + '/cached.json', dump(cached) + cached.debugFrameSummary());
-                sys.io.File.saveContent(Sys.getEnv('GPUI_CACHE_DEBUG') + '/reference.json', dump(reference) + reference.debugFrameSummary());
+            if (dump(cached) != dump(reference) && Sys.getEnv('GLAZE_CACHE_DEBUG') != null) {
+                sys.io.File.saveContent(Sys.getEnv('GLAZE_CACHE_DEBUG') + '/cached.json', dump(cached) + cached.debugFrameSummary());
+                sys.io.File.saveContent(Sys.getEnv('GLAZE_CACHE_DEBUG') + '/reference.json', dump(reference) + reference.debugFrameSummary());
             }
             if (!sameFrames(cached, reference)) {
                 assertSameFrames(cached, reference, 'seed $initialSeed, random step $i: $name');
@@ -649,7 +649,7 @@ class ScriptLeaf extends Model implements Render {
         final element = div().id(name).sizeFull().bg(color).hover(s -> s.bg(hsla(0.15, 0.8, 0.6, 1)))
             .onClick((e, _, _) -> log.push('$name click ${testing.InteractionScript.pt(e.position())}'));
         if (child != null) {
-            element.child(child.cached(gpui.StyleBuilder.build(s -> s.size(px(20)))));
+            element.child(child.cached(glaze.StyleBuilder.build(s -> s.size(px(20)))));
         }
         return element;
     }
@@ -678,8 +678,8 @@ class ScriptRoot extends Model implements Render {
         log.push('root render');
         inline function at(x:Float, y:Float) return div().absolute().left(px(x)).top(px(y)).size(px(100));
         return div().sizeFull().relative().bg(hsla(0.61, 0.20, 0.13, 1.0))
-            .child(at(50, 50).child(a.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))))
-            .child(at(200, 50).child(b.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))))
+            .child(at(50, 50).child(a.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))))
+            .child(at(200, 50).child(b.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))))
             .child(at(50, 200).child((c : AnyView)));
     }
 
@@ -844,7 +844,7 @@ class Dashboard {
                 .child(div().flex().flexCol().gap1()
                     .child(div().textColor(hsla(m.accent, 0.6, 0.3, 1)).child('Dashboard with ${cardViews.length} cards'))
                     .child(grid)
-                    .child(div().w(px(80)).h(px(40)).child(pinned.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))))
+                    .child(div().w(px(80)).h(px(40)).child(pinned.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))))
                 );
         }));
     }

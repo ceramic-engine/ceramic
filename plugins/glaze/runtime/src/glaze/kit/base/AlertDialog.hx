@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/alert_dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Dialog;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Dialog;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The unstyled alert dialog parts (Rust `alert_part!`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 abstract class AlertDialogPart implements RenderOnce implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
@@ -133,7 +133,7 @@ class AlertDialogTrigger implements RenderOnce {
 /**
  * The parts that dispatch `Cancel` on click (Rust `alert_close_part!`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 abstract class AlertDialogClosePart implements RenderOnce implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
@@ -215,7 +215,7 @@ class AlertDialogAction implements RenderOnce implements Styled implements Paren
 class AlertDialog implements RenderOnce implements Styled implements ParentElement {
 
     /** The wrapped host (Rust `AlertDialog(Dialog)`). */
-    @:allow(gpui.base, gpui.component)
+    @:allow(glaze.kit.base, glaze.kit)
     var inner:Dialog;
 
     public function new(cx:App) {

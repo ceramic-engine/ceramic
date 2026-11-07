@@ -1,41 +1,41 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/context_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.menu;
+package glaze.kit.menu;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Adds a context menu to an element, as a static extension:
- * `using gpui.component.menu.ContextMenu.ContextMenuExt;`.
+ * `using glaze.kit.menu.ContextMenu.ContextMenuExt;`.
  */
 class ContextMenuExt {
 
@@ -98,7 +98,7 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
     /**
      * Build the context menu using the given builder function.
      */
-    @:allow(gpui.component.menu)
+    @:allow(glaze.kit.menu)
     function menu(builder:MenuBuilder):ContextMenu<E> {
         menuBuilder = builder;
         return this;
@@ -201,12 +201,12 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
         // trigger claims its long press first. Rich-text selection is handled
         // by the window layer, which runs later; yield over its text geometry.
         window.onMouseEvent(LongPress, (event, phase, window, cx) -> {
-            final event:gpui.LongPressEvent = cast event;
+            final event:glaze.LongPressEvent = cast event;
             if (phase.bubble()
                 && event.phase == Started
                 && !window.defaultPrevented()
                 && hitbox.isHovered(window)
-                && !gpui.base.TextSelection.isSelectableAt(event.startPosition, window, cx)) {
+                && !glaze.kit.base.TextSelection.isSelectableAt(event.startPosition, window, cx)) {
                 window.preventDefault();
                 openMenu(sharedState, builder, event.startPosition, window, cx);
             }
@@ -294,13 +294,13 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
      * The id of an interactive element (Rust `interactivity().element_id`):
      * a `Div`'s or a component `Button`'s, else null.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function interactiveElementId(element:Dynamic):Null<ElementId> {
         if (Std.isOfType(element, Div)) {
             return (element : Div).interactivity.elementId;
         }
-        if (Std.isOfType(element, gpui.component.button.Button)) {
-            return @:privateAccess (element : gpui.component.button.Button).id;
+        if (Std.isOfType(element, glaze.kit.button.Button)) {
+            return @:privateAccess (element : glaze.kit.button.Button).id;
         }
         return null;
     }
@@ -308,7 +308,7 @@ class ContextMenu<E:ParentElement & Styled> extends Element implements ParentEle
     /**
      * Rust's `{:?}` of an `ElementId`.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function debugElementId(id:ElementId):String {
         return switch id {
             case View(entityId): 'View(EntityId($entityId))';
@@ -403,7 +403,7 @@ class ContextMenuSharedState {
  * of one `PopupMenu` share an item's pending-click state, and the covered
  * copies clear it on mouse up before the visible one fires.
  */
-class ContextMenuState implements gpui.Droppable {
+class ContextMenuState implements glaze.Droppable {
 
     public final sharedState:ContextMenuSharedState = new ContextMenuSharedState();
 
@@ -454,13 +454,13 @@ private class DeferredMenu extends Element {
                     .child(
                         anchored()
                             .position(position)
-                            .snapToWindowWithMargin(gpui.Edges.all(px(8.)))
+                            .snapToWindowWithMargin(glaze.Edges.all(px(8.)))
                             .anchor(anchor)
                             .child(menuView)
                     )
             )
         )
-            .withPriority(gpui.base.Popup.POPUP_PRIORITY)
+            .withPriority(glaze.kit.base.Popup.POPUP_PRIORITY)
             .intoAnyElement();
     }
 

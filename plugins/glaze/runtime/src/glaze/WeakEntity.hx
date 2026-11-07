@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/app/entity_map.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A handle to an entity that does not keep it alive: once the entity is
@@ -11,7 +11,7 @@ package gpui;
  */
 abstract WeakEntity<T:Model>(EntitySlot) {
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function new(slot:EntitySlot) {
         this = slot;
     }

@@ -1,11 +1,11 @@
-package gpui;
+package glaze;
 
 /**
  * Haxe port of GPUI (Zed's UI framework) running on Ceramic.
  *
- * See CERAMIC_GPUI_PLAN_1.md at the root of this repository.
+ * Glaze, built into Ceramic as the `glaze` plugin. See NOTICE.md.
  */
-class Gpui {
+class Glaze {
 
     public static inline final VERSION:String = '0.0.1';
 

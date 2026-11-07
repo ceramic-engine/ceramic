@@ -1,16 +1,16 @@
-// Original code (not a port), written for ceramic-gpui: the behaviour of the
+// Original code (not a port), written for Glaze: the behaviour of the
 // input state of gpui-kit 0.8.1 (crates/base/src/input/base/state.rs,
 // rope_ext.rs) on emoji sequences.
 package tests.kit;
 
-import gpui.Point;
-import gpui.Range;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.util.Utf8;
+import glaze.Point;
+import glaze.Range;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.util.Utf8;
 import tests.kit.InputStateTestCase.InputView;
 
-using gpui.base.input.InputMovement;
+using glaze.kit.base.input.InputMovement;
 
 /**
  * Inputs and the code editor on emoji made of several code points (ZWJ
@@ -122,7 +122,7 @@ class InputEmojiTest extends InputStateTestCase {
         view.update((state, window, cx) -> {
             final sel = state.selectedTextRange(false, window, cx);
             assertEquals('1..4', sel.range.start + '..' + sel.range.end);
-            final adjusted = new gpui.util.Ref<Null<Range>>(null);
+            final adjusted = new glaze.util.Ref<Null<Range>>(null);
             assertEquals(THUMB, state.textForRange(new Range(9, 13), adjusted, window, cx));
         });
         // Selecting everything and typing replaces every sequence

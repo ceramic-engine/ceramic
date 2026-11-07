@@ -4,43 +4,43 @@
 package;
 
 import ceramic.Platform;
-import gpui.App;
-import gpui.Entity;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.Window;
-import gpui.base.IndexPath;
+import glaze.App;
+import glaze.Entity;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
 import story.Gallery;
 
 using StringTools;
 
 /**
  * Visits every story page of the gallery, captures each one to a PNG and
- * logs the cost of its frames, then quits. Off unless `GPUI_STORY_TOUR` is
+ * logs the cost of its frames, then quits. Off unless `GLAZE_STORY_TOUR` is
  * set to a folder (absolute path, created if needed).
  *
  * For each page, in the order of the sidebar: the page is selected like a
- * click in the sidebar (`Gallery.selectStoryIndex`), `GPUI_STORY_TOUR_FRAMES`
+ * click in the sidebar (`Gallery.selectStoryIndex`), `GLAZE_STORY_TOUR_FRAMES`
  * frames run (default 30), the screen is written to
  * `<folder>/<index>-<name>.png`, and a line `story tour: page ...` gives the
  * highest frame cost and the median of the frames after the first one (CPU time from
  * the start of Ceramic's update to the end of its last render of visuals,
  * in ms). With
- * `GPUI_STORY_TOUR_SCROLL_FRAMES` (default 0), the page is then scrolled
+ * `GLAZE_STORY_TOUR_SCROLL_FRAMES` (default 0), the page is then scrolled
  * with the mouse wheel during that many frames (30 pixels per frame at the
  * center of the story area, the direction flips at the ends) and a line
  * `story tour: scroll ...` gives the median, mean, 95th percentile and highest
  * frame cost.
  *
- * `GPUI_STORY_TOUR_ONLY` restricts the tour to a comma separated list of
+ * `GLAZE_STORY_TOUR_ONLY` restricts the tour to a comma separated list of
  * story names. Errors and exceptions are left to the app's log.
  *
  * On the headless backend nothing is drawn, so no PNG is written (the
  * frame costs are still logged), and Ceramic runs its headless loop at 10
  * frames per second on node: each page takes about
- * `(GPUI_STORY_TOUR_FRAMES + GPUI_STORY_TOUR_SCROLL_FRAMES) / 10` seconds
+ * `(GLAZE_STORY_TOUR_FRAMES + GLAZE_STORY_TOUR_SCROLL_FRAMES) / 10` seconds
  * (the whole gallery with the defaults: about 4 minutes).
  */
 class StoryTour {
@@ -84,7 +84,7 @@ class StoryTour {
     var firstCost:Float = -1;
 
     public static function startIfRequested(gallery:Entity<Gallery>, window:Window):Void {
-        final dir = Platform.getEnv('GPUI_STORY_TOUR');
+        final dir = Platform.getEnv('GLAZE_STORY_TOUR');
         if (dir == null || dir == '') return;
         new StoryTour(dir, gallery, window);
     }
@@ -93,13 +93,13 @@ class StoryTour {
         this.dir = dir;
         this.gallery = gallery;
         this.window = window;
-        waitFrames = intEnv('GPUI_STORY_TOUR_FRAMES', 30);
-        scrollFrames = intEnv('GPUI_STORY_TOUR_SCROLL_FRAMES', 0);
+        waitFrames = intEnv('GLAZE_STORY_TOUR_FRAMES', 30);
+        scrollFrames = intEnv('GLAZE_STORY_TOUR_SCROLL_FRAMES', 0);
 
         final cx = App.current;
         final all = @:privateAccess gallery.read(cx).stories;
         names = [for (group in all) for (story in group.stories) story.read(cx).name];
-        final only = Platform.getEnv('GPUI_STORY_TOUR_ONLY');
+        final only = Platform.getEnv('GLAZE_STORY_TOUR_ONLY');
         final wanted = only != null && only != '' ? [for (name in only.split(',')) name.trim().toLowerCase()] : null;
         indices = [for (i in 0...names.length) if (wanted == null || wanted.indexOf(names[i].toLowerCase()) >= 0) i];
 

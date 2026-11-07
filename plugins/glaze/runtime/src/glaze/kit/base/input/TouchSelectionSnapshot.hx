@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/touch_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.Window;
+import glaze.Bounds;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Where a touch selection's ends are laid out this frame, and what the
@@ -42,12 +42,12 @@ class TouchSelectionSnapshot {
         _dragging = dragging;
     }
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     static function create(start:Bounds, end:Bounds):TouchSelectionSnapshot {
         return new TouchSelectionSnapshot(start, end, true, true, false, null);
     }
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withEdgeVisible(edge:SelectionEdge, visible:Bool):TouchSelectionSnapshot {
         return switch edge {
             case Start: new TouchSelectionSnapshot(_start, _end, visible, endVisible, menuOpen, _dragging);
@@ -55,12 +55,12 @@ class TouchSelectionSnapshot {
         }
     }
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withMenuOpen(menuOpen:Bool):TouchSelectionSnapshot {
         return new TouchSelectionSnapshot(_start, _end, startVisible, endVisible, menuOpen, _dragging);
     }
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withDragging(dragging:Null<SelectionEdge>):TouchSelectionSnapshot {
         return new TouchSelectionSnapshot(_start, _end, startVisible, endVisible, menuOpen, dragging);
     }

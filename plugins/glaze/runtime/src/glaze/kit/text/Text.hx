@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/text/compat.rs (Text)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.text;
+package glaze.kit.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Window;
 
 /**
  * Either a plain string or a rich `TextView`.
  */
-@:using(gpui.component.text.Text.TextTools)
+@:using(glaze.kit.text.Text.TextTools)
 enum Text {
     String(value:std.String);
-    TextView(view:gpui.component.text.TextView);
+    TextView(view:glaze.kit.text.TextView);
 }
 
 /**
@@ -27,7 +27,7 @@ abstract IntoText(Text) from Text to Text {
         return Text.String(value);
     }
 
-    @:from static inline function fromTextView(view:gpui.component.text.TextView):IntoText {
+    @:from static inline function fromTextView(view:glaze.kit.text.TextView):IntoText {
         return Text.TextView(view);
     }
 
@@ -51,7 +51,7 @@ class TextTools {
     public static function getText(self:Text, cx:App):std.String {
         return switch self {
             case String(value): value;
-            case TextView(view): gpui.base.text.Text.ofTextView(view.inner).getText(cx);
+            case TextView(view): glaze.kit.base.text.Text.ofTextView(view.inner).getText(cx);
         }
     }
 

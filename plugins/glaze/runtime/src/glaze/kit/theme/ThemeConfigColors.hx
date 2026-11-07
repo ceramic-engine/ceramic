@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/schema.rs (ThemeConfigColors)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
 /**
  * The `colors` section of a theme file: every value is the raw string of the

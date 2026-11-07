@@ -3,16 +3,16 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.base.input.Diagnostic;
-import gpui.base.input.DiagnosticSet;
-import gpui.base.input.DiagnosticSeverity;
-import gpui.base.input.LspPosition;
+import glaze.Range;
+import glaze.kit.base.input.Diagnostic;
+import glaze.kit.base.input.DiagnosticSet;
+import glaze.kit.base.input.DiagnosticSeverity;
+import glaze.kit.base.input.LspPosition;
 import ropey.Rope;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.DiagnosticSet` (Rust `diagnostics.rs`).
+ * Tests of `glaze.kit.base.input.DiagnosticSet` (Rust `diagnostics.rs`).
  */
 class InputDiagnosticsTest extends TestCase {
 

@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/line_chart.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.Curve;
-import gpui.base.plot.PathCache.PathCaches;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotAxis;
-import gpui.base.plot.PlotAxis.AxisLabelPlacement;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.scale.ScalePoint;
-import gpui.base.plot.shape.Line;
-import gpui.component.chart.Chart.ChartAppear;
-import gpui.component.chart.Chart.PointAxes;
-import gpui.component.chart.Chart.TooltipContent;
-import gpui.component.chart.Chart.ValueExtent;
-import gpui.component.plot.Tooltip;
-import gpui.component.plot.Tooltip.CrossLine;
-import gpui.component.plot.Tooltip.Dot;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.Curve;
+import glaze.kit.base.plot.PathCache.PathCaches;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotAxis;
+import glaze.kit.base.plot.PlotAxis.AxisLabelPlacement;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.scale.ScalePoint;
+import glaze.kit.base.plot.shape.Line;
+import glaze.kit.chart.Chart.ChartAppear;
+import glaze.kit.chart.Chart.PointAxes;
+import glaze.kit.chart.Chart.TooltipContent;
+import glaze.kit.chart.Chart.ValueExtent;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.plot.Tooltip.CrossLine;
+import glaze.kit.plot.Tooltip.Dot;
+import glaze.kit.theme.Theme;
 
 /**
  * A line chart: one series of `Float` values over categorical x values
@@ -76,7 +76,7 @@ class LineChart<T> extends Plot {
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
-        this.data = gpui.util.Iterables.toArray(data);
+        this.data = glaze.util.Iterables.toArray(data);
         idValue = Chart.callerId(pos);
     }
 

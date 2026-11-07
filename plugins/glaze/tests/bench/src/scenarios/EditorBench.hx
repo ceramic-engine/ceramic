@@ -1,22 +1,22 @@
 package scenarios;
 
 import Scenario;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Window;
-import gpui.base.input.EditorState;
-import gpui.component.highlighter.Highlighter;
-import gpui.component.highlighter.TextMateGrammars;
-import gpui.component.input.Editor;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Window;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.highlighter.Highlighter;
+import glaze.kit.highlighter.TextMateGrammars;
+import glaze.kit.input.Editor;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Base of the code editor scenarios: a gpui-kit `EditorState` with the JSON
@@ -37,7 +37,7 @@ class EditorBench extends BaseScenario {
 
     public static inline final PADDING:Float = 12;
 
-    /** Elements created by a full draw (needs `gpui_count_allocations`). */
+    /** Elements created by a full draw (needs `glaze_count_allocations`). */
     public var elementCount:Int = 0;
 
     var app:App;

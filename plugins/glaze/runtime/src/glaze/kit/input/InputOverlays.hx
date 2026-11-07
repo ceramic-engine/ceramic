@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/overlay.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Range;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.input.CompletionHighlighter;
-import gpui.base.input.DiagnosticEntry;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputOverlayKind;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Range;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.input.CompletionHighlighter;
+import glaze.kit.base.input.DiagnosticEntry;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputOverlayKind;
 import ropey.Rope;
 
-using gpui.base.input.InputLspExt;
-using gpui.base.input.InputSearchExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.base.input.InputSearchExt;
 
 /**
  * The overlays an input renders around its text: the search panel (placed
@@ -47,13 +47,13 @@ class InputOverlays {
      * Rust `!cfg!(test)`: the search panel moves the focus when the host shows
      * or hides it, except in gpui-kit's own unit tests of this module.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static var focusOnSync:Bool = true;
 
     /**
      * Builds and syncs the overlays of `state` (Rust `render_overlays`).
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function renderOverlays(state:Entity<InputBaseState>, window:Window, cx:App):InputOverlays {
         OverlayMode.installActionHandler(state, cx);
         final hasOverlay = {
@@ -88,7 +88,7 @@ class InputOverlays {
  * an overlay, by entity id. The port keeps one registry for every kind of
  * input (each state has its own entity id).
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class InputOverlayRegistry {
 
     final hosts:Map<Int, RegistryEntry> = new Map();
@@ -139,7 +139,7 @@ class InputOverlayRegistry {
 
 }
 
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 private class RegistryEntry {
 
     final owner:WeakEntity<InputBaseState>;
@@ -162,7 +162,7 @@ private class RegistryEntry {
  * open session leaves every other field alone, and without the revision the
  * second request would compare equal and be dropped.
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class SearchSignature {
 
     final open:Bool;
@@ -202,7 +202,7 @@ class SearchSignature {
  * content, and the popovers are keyed by cheap identity instead: a revision,
  * a reference, or a range.
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class OverlaySignature {
 
     final open:Bool;
@@ -225,7 +225,7 @@ class OverlaySignature {
  * and diagnostics. They belong to a code editor, so they are built and synced
  * by `OverlayMode`, where the state's kind is concrete.
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class LspOverlays {
 
     final completion:Entity<CompletionMenu>;
@@ -266,7 +266,7 @@ class LspOverlays {
  * popover is shown and whether it changed. The content is read from the state
  * again, on the frames where it actually did.
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class LspSnapshot {
 
     final completion:OverlaySignature;
@@ -302,7 +302,7 @@ class LspSnapshot {
  * `EditorMode`). The code-editor implementation is the only one that builds
  * language-feature popovers; the port picks it from the state's class.
  */
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class OverlayMode {
 
     static inline function isEditor(state:InputBaseState):Bool {
@@ -425,7 +425,7 @@ class OverlayMode {
 
 }
 
-@:allow(gpui.component.input, tests)
+@:allow(glaze.kit.input, tests)
 class InputOverlayHost {
 
     final search:Entity<SearchPanel>;

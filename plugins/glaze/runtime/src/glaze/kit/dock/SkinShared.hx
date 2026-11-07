@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.App;
-import gpui.WeakEntity;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockPlacement;
+import glaze.App;
+import glaze.WeakEntity;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockPlacement;
 
 /**
  * What every part of the skin reads, and the dock area it belongs to.
@@ -21,7 +21,7 @@ import gpui.base.dock.DockPlacement;
  * render again when one changes: the port caches every view by default, and
  * notifying the area alone would leave the groups' cached frames in place.
  */
-@:allow(gpui.component.dock)
+@:allow(glaze.kit.dock)
 class SkinShared extends ceramic.Entity implements tracker.Observable {
 
     final areaValue:WeakEntity<DockArea>;

@@ -2,16 +2,16 @@
 // FontWeightContent, ThemeStyle, SyntaxColors)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.Hsla;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.Hsla;
 
 /**
  * The font style of a syntax style (Rust `highlighter::FontStyle`, renamed:
- * clashes with `gpui.FontStyle`). Serialized lowercase.
+ * clashes with `glaze.FontStyle`). Serialized lowercase.
  */
 enum abstract HighlightFontStyle(Int) {
 
@@ -141,9 +141,9 @@ class ThemeStyle {
         return new ThemeStyle(color, HighlightFontStyle.fromJson(Reflect.field(json, "font_style")), FontWeightContent.fromJson(Reflect.field(json, "font_weight")));
     }
 
-    @:allow(gpui.component.highlighter)
+    @:allow(glaze.kit.highlighter)
     static function parseColor(value:String):Null<Hsla> {
-        final rgba = gpui.Rgba.tryParse(value);
+        final rgba = glaze.Rgba.tryParse(value);
         return rgba != null ? Hsla.fromRgba(rgba) : null;
     }
 

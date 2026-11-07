@@ -5,14 +5,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.text.format.html5minify.Minifier;
+import glaze.kit.base.text.format.html5minify.Minifier;
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
 import haxe.io.BytesOutput;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.text.format.html5minify.Minifier` (Rust
+ * Tests of `glaze.kit.base.text.format.html5minify.Minifier` (Rust
  * `text/format/html5minify/mod.rs`).
  */
 class TextHtml5MinifyTest extends TestCase {

@@ -3,53 +3,53 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.Range;
-import gpui.TestDispatcher;
-import gpui.base.text.InlineFlow.InlineFlowItem;
-import gpui.base.text.InlineNode;
-import gpui.base.text.LinkMark;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.NodeContext;
-import gpui.base.text.NodeRender;
-import gpui.base.text.Paragraph;
-import gpui.base.text.RangedMark;
-import gpui.base.text.TextMark;
-import gpui.base.theme.Theme;
-import gpui.AbsoluteLength;
-import gpui.HighlightStyle;
-import gpui.StyleBuilder;
-import gpui.TextStyle;
-import gpui.TextStyleRefinement;
-import gpui.base.text.BlockNode;
-import gpui.base.text.ColumnumnAlign;
-import gpui.base.text.InlineElement;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.NodeRenderOptions;
-import gpui.base.text.Table;
-import gpui.base.text.Table.TableCell;
-import gpui.base.text.Table.TableColumnWidths;
-import gpui.base.text.Table.TableRow;
-import gpui.base.text.TextUtils;
-import gpui.base.text.TextViewStyle;
-import gpui.base.text.format.MarkdownFormat;
+import glaze.App;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.Range;
+import glaze.TestDispatcher;
+import glaze.kit.base.text.InlineFlow.InlineFlowItem;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.LinkMark;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.NodeRender;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.HighlightStyle;
+import glaze.StyleBuilder;
+import glaze.TextStyle;
+import glaze.TextStyleRefinement;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.ColumnumnAlign;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.NodeRenderOptions;
+import glaze.kit.base.text.Table;
+import glaze.kit.base.text.Table.TableCell;
+import glaze.kit.base.text.Table.TableColumnWidths;
+import glaze.kit.base.text.Table.TableRow;
+import glaze.kit.base.text.TextUtils;
+import glaze.kit.base.text.TextViewStyle;
+import glaze.kit.base.text.format.MarkdownFormat;
 import tests.kit.TextInlineTest.TextTestDraw;
 import tests.kit.TextInlineTest.TextTestFonts;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.base.text.BlockNode.BlockNodeTools;
+using glaze.AbsoluteLengthTools;
+using glaze.kit.base.text.BlockNode.BlockNodeTools;
 
 /**
  * The tests of node.rs that render or measure blocks in a window.
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextNodeRenderTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -81,7 +81,7 @@ class TextNodeRenderTest extends TestCase {
     static inline final CELL_BORDER_PX:Float = 1.0;
 
     static function plainCell(text:String):TableCell {
-        return new TableCell(gpui.base.text.Paragraph.ofText(text));
+        return new TableCell(glaze.kit.base.text.Paragraph.ofText(text));
     }
 
     static function tableOf(rows:Array<Array<TableCell>>, columnAligns:Array<ColumnumnAlign>):Table {
@@ -95,8 +95,8 @@ class TextNodeRenderTest extends TestCase {
         return table.columnWidthsCache;
     }
 
-    static function codeParagraph(code:String):gpui.base.text.Paragraph {
-        final paragraph = new gpui.base.text.Paragraph();
+    static function codeParagraph(code:String):glaze.kit.base.text.Paragraph {
+        final paragraph = new glaze.kit.base.text.Paragraph();
         paragraph.push(new InlineNode(code).marks([new RangedMark(new Range(0, TextUtils.len(code)), new TextMark().withCode())]));
         return paragraph;
     }
@@ -113,10 +113,10 @@ class TextNodeRenderTest extends TestCase {
         var width = 400;
         final nodeCx = new NodeContext();
         nodeCx.markdownExtensions = new MarkdownExtensions().plugin(new TextTestInlinePlugin('test').renderWith((_, _, _, _) -> {
-            return new InlineElement(img(gpui.Image.fromBytes(gpui.ImageFormat.Svg, haxe.io.Bytes.ofString('<svg/>'))).w(px(width)).h(px(20.)))
+            return new InlineElement(img(glaze.Image.fromBytes(glaze.ImageFormat.Svg, haxe.io.Bytes.ofString('<svg/>'))).w(px(width)).h(px(20.)))
                 .withBaseline(15.);
         }));
-        final custom = new gpui.base.text.Paragraph();
+        final custom = new glaze.kit.base.text.Paragraph();
         custom.children_ = [InlineNode.ofCustom(new MarkdownNode('test', null).text('x'))];
         final table = tableOf([[plainCell('ordinary text')], [new TableCell(custom)]], []);
         TextTestDraw.inPrepaint(app, (window, cx) -> {
@@ -142,7 +142,7 @@ class TextNodeRenderTest extends TestCase {
             cx.setGlobal(new Theme(), Theme);
             window.withTextStyle(StyleBuilder.build(s -> s.fontFamily(TextTestFonts.BODY).textSize(px(15.))).text, window -> {
                 for (item in [
-                    {refinement: new gpui.StyleRefinement(), expected: 94.},
+                    {refinement: new glaze.StyleRefinement(), expected: 94.},
                     {
                         refinement: StyleBuilder.build(s -> s.fontFamily(TextTestFonts.MONO).textSize(px(30.)).fontWeight(FontWeight.BOLD)),
                         expected: 199.
@@ -324,7 +324,7 @@ class TextNodeRenderTest extends TestCase {
         });
 
         final monoW = TextTestFonts.widthOf(code, TextTestFonts.MONO, TextTestFonts.f32(result.fontSize * 0.875));
-        assertTrue(Math.abs(result.colW[0] - (monoW + CELL_PAD_PX + gpui.base.text.InlineFlow.INLINE_CODE_PADDING * 2.)) < 0.01,
+        assertTrue(Math.abs(result.colW[0] - (monoW + CELL_PAD_PX + glaze.kit.base.text.InlineFlow.INLINE_CODE_PADDING * 2.)) < 0.01,
             'colW ${result.colW[0]} must fit the mono width $monoW plus padding $CELL_PAD_PX');
     }
 

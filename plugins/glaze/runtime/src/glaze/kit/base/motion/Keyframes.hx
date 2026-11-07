@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion/keyframes.rs (Keyframe, KeyframeError, Keyframes)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.SpringMath.f32;
-import gpui.util.MathUtil;
+import glaze.SpringMath.f32;
+import glaze.util.MathUtil;
 
 /**
  * One value of a `Keyframes` track at an `offset` in `0..=1`, with the easing

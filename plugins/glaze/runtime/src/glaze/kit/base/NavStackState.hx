@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/nav_stack.rs (NavStackState, NavOperation, NavMotion, NavStackEvent, Transit)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyView;
-import gpui.Context;
-import gpui.Model;
+import glaze.AnyView;
+import glaze.Context;
+import glaze.Model;
 import haxe.ds.ReadOnlyArray;
 
 /**
@@ -258,7 +258,7 @@ class NavStackState extends Model {
      * Forgets the change in transit once its exit has run (written by
      * `NavStack` while it renders, without notifying, as Rust does).
      */
-    @:allow(gpui.base.NavStack)
+    @:allow(glaze.kit.base.NavStack)
     function clearTransit():Void {
         transit = null;
     }

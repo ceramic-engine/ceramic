@@ -4,28 +4,28 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.spinner.Spinner;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
-import gpui.Easing.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
+import glaze.Easing.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class SpinnerStory extends Model implements Story {
 
@@ -37,7 +37,7 @@ class SpinnerStory extends Model implements Story {
         return 'Displays an spinner showing the completion progress of a task.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -49,7 +49,7 @@ class SpinnerStory extends Model implements Story {
 
     var value:Float = 50.;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(_:Window, cx:Context<SpinnerStory>) {
         super();

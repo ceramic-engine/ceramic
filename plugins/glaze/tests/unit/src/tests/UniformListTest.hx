@@ -3,23 +3,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollStrategy;
-import gpui.TestDispatcher;
-import gpui.UniformListScrollHandle;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollStrategy;
+import glaze.TestDispatcher;
+import glaze.UniformListScrollHandle;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `uniform_list.rs`, all ported. The list items of

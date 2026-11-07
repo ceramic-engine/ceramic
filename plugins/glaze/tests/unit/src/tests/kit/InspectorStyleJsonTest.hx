@@ -5,24 +5,24 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-#if gpui_inspector
+#if glaze_inspector
 
-import gpui.FontWeight;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.component.inspector.Inspector;
-import gpui.component.inspector.InspectorStyleMethods;
-import gpui.component.inspector.SerdeJson.SerdeError;
-import gpui.component.inspector.StyleJson;
+import glaze.FontWeight;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.kit.inspector.Inspector;
+import glaze.kit.inspector.InspectorStyleMethods;
+import glaze.kit.inspector.SerdeJson.SerdeError;
+import glaze.kit.inspector.StyleJson;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.StyleRefinementOps;
+using glaze.StyleRefinementOps;
 
 /**
  * The data side of the inspector against the outputs of the real code
- * (`test/unit/data/inspector-reference.json`, written by the reference's
+ * (`tests/unit/data/inspector-reference.json`, written by the reference's
  * `examples/inspector_reflection.rs` with the feature `inspector`):
  *
  * - the serde JSON of the style each of the 3137 reflected methods sets;

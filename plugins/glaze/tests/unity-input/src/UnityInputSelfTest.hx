@@ -4,17 +4,17 @@ package;
 
 import ceramic.ScanCode;
 import ceramic.ScrollUnit;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.InputState;
-import gpui.component.input.Input;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.InputState;
+import glaze.kit.input.Input;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Input self test of Ceramic's Unity backend, in batch mode (no window):
@@ -525,13 +525,13 @@ class UnityInputSelfTest {
 
     function inputValue():String {
 
-        return keyboardInput.read(gpui.App.current).value();
+        return keyboardInput.read(glaze.App.current).value();
 
     }
 
     function inputFocused():Bool {
 
-        return keyboardInput.read(gpui.App.current).focusHandle.isFocused(keyboardWindow);
+        return keyboardInput.read(glaze.App.current).focusHandle.isFocused(keyboardWindow);
 
     }
 
@@ -548,8 +548,8 @@ class UnityInputSelfTest {
             keyboard = new FakeVirtualKeyboard();
             textInput.virtualKeyboard = keyboard;
             // A gpui-kit input in a second window
-            final cx = gpui.App.current;
-            gpui.component.Component.init(cx);
+            final cx = glaze.App.current;
+            glaze.kit.Component.init(cx);
             keyboardWindow = Window.open(cx, {width: 400, height: 60}, (window, cx) -> {
                 return cx.newEntity((rootCx:Context<Root>) -> {
                     final content = rootCx.newEntity((viewCx:Context<KeyboardView>) -> {
@@ -563,13 +563,13 @@ class UnityInputSelfTest {
             });
             scene.add(keyboardWindow.renderable);
             keyboardWindow.renderable.depth = 10;
-            gpui.GpuiInput.activateWindow(keyboardWindow);
+            glaze.GlazeInput.activateWindow(keyboardWindow);
             0.3;
         });
 
         steps.push(() -> {
             check(!textInput.keyboardOpen, 'keyboard closed before the focus');
-            keyboardInput.read(gpui.App.current).focusHandle.focus(keyboardWindow, gpui.App.current);
+            keyboardInput.read(glaze.App.current).focusHandle.focus(keyboardWindow, glaze.App.current);
             0.4;
         });
 

@@ -3,8 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.Action;
-import gpui.base.theme.ScrollbarMode;
+import glaze.Action;
+import glaze.kit.base.theme.ScrollbarMode;
 
 /**
  * The actions of the story gallery (namespace `story`). Import this module
@@ -35,7 +35,7 @@ class SelectRadius implements Action {
 
 @:action(namespace = story, noJson)
 class ChangeStorySize implements Action {
-    public final value:gpui.component.Size;
+    public final value:glaze.kit.Size;
 }
 
 @:action(namespace = story) class About implements Action {}

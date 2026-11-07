@@ -2,7 +2,7 @@
 // (role, aria label, numeric values) Base controls set through GPUI's accesskit API
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
 /**
  * The accessibility role of an element (the subset of accesskit's roles
@@ -74,7 +74,7 @@ enum abstract Orientation(String) to String {
 /**
  * Accessibility properties of a Base element.
  *
- * The GPUI port has no accessibility tree (no accesskit): the properties a
+ * Glaze has no accessibility tree (no accesskit): the properties a
  * control would export are kept here, as plain data, so applications and
  * tests can read what the control declares (Rust writes them to an
  * `accesskit::Node` in `write_a11y_info`).

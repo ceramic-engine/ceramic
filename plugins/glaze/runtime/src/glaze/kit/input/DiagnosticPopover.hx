@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/popovers/diagnostic_popover.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.input.DiagnosticEntry;
-import gpui.base.input.EditorState;
-import gpui.component.highlighter.DiagnosticStyles;
-import gpui.component.input.HoverPopover.Popover;
+import glaze.App;
+import glaze.Context;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.input.DiagnosticEntry;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.highlighter.DiagnosticStyles;
+import glaze.kit.input.HoverPopover.Popover;
 
 /**
  * The popover of the diagnostic under the pointer.
@@ -24,7 +24,7 @@ class DiagnosticPopover extends Model implements Render {
 
     final state:WeakEntity<EditorState>;
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     final diagnostic:DiagnosticEntry;
 
     public static function create(diagnostic:DiagnosticEntry, state:Entity<EditorState>, cx:App):Entity<DiagnosticPopover> {

@@ -4,28 +4,28 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.ChildElement;
-import gpui.component.Size;
-import gpui.component.table.Table;
-import gpui.component.tag.Tag;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.ChildElement;
+import glaze.kit.Size;
+import glaze.kit.table.Table;
+import glaze.kit.tag.Tag;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class TableStory extends Model implements Story {
 
@@ -37,7 +37,7 @@ class TableStory extends Model implements Story {
         return 'A basic table component for directly rendering tabular data.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -47,7 +47,7 @@ class TableStory extends Model implements Story {
 
     final focusHandle_:FocusHandle;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(_:Window, cx:Context<TableStory>) {
         super();

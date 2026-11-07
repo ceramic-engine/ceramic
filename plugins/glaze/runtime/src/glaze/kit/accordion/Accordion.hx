@@ -2,37 +2,37 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-008 (on_toggle_click reported by the toggled item). See DEVIATIONS.md.
-package gpui.component.accordion;
+package glaze.kit.accordion;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Rems;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Accordion.AccordionHeader as BaseAccordionHeader;
-import gpui.base.Accordion.AccordionItem as BaseAccordionItem;
-import gpui.base.Accordion.AccordionPanel as BaseAccordionPanel;
-import gpui.base.Accordion.AccordionTrigger;
-import gpui.base.motion.Motion;
-import gpui.base.motion.MotionReveal;
-import gpui.base.motion.TransitionId;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Rems;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Accordion.AccordionHeader as BaseAccordionHeader;
+import glaze.kit.base.Accordion.AccordionItem as BaseAccordionItem;
+import glaze.kit.base.Accordion.AccordionPanel as BaseAccordionPanel;
+import glaze.kit.base.Accordion.AccordionTrigger;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.MotionReveal;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Accordion element.
@@ -128,7 +128,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
         // by a click anywhere on the accordion (the original's root `on_click`).
         final onToggle = disabledValue ? null : onToggleClickHandler;
 
-        final root = new gpui.base.Accordion(id)
+        final root = new glaze.kit.base.Accordion(id)
             .vFlex()
             .sizeFull();
         // The bordered accordion is a single rounded card, the items are
@@ -195,12 +195,12 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
 
     final childElements:Array<AnyElement> = [];
 
-    @:allow(gpui.component.accordion)
+    @:allow(glaze.kit.accordion)
     var openValue:Bool = false;
 
     var size:Size = Medium;
 
-    @:allow(gpui.component.accordion)
+    @:allow(glaze.kit.accordion)
     var disabledValue:Bool = false;
 
     var onToggleClickHandler:Null<(Bool, Window, App) -> Void> = null;
@@ -264,19 +264,19 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
         return this;
     }
 
-    @:allow(gpui.component.accordion)
+    @:allow(glaze.kit.accordion)
     function index(index:Int):AccordionItem {
         indexValue = index;
         return this;
     }
 
-    @:allow(gpui.component.accordion)
+    @:allow(glaze.kit.accordion)
     function last(last:Bool):AccordionItem {
         lastValue = last;
         return this;
     }
 
-    @:allow(gpui.component.accordion)
+    @:allow(glaze.kit.accordion)
     function onToggleClick(onToggleClick:(Bool, Window, App) -> Void):AccordionItem {
         onToggleClickHandler = onToggleClick;
         return this;

@@ -2,10 +2,10 @@
 // gpui-kit 0.8.1 components (crates/component/src/link.rs)
 // Original code Copyright 2022-2025 Zed Industries, Inc. and 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.App;
-import gpui.AppContext;
+import glaze.App;
+import glaze.AppContext;
 
 /**
  * Opens URLs with the platform, like GPUI's `App::open_url`, which the

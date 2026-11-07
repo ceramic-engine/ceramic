@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Window;
 
 /**
  * The block-level nodes.
@@ -16,15 +16,15 @@ import gpui.Window;
  *
  * Methods are in `BlockNodeTools` (attached with `@:using`).
  */
-@:using(gpui.base.text.BlockNode.BlockNodeTools)
+@:using(glaze.kit.base.text.BlockNode.BlockNodeTools)
 enum BlockNode {
 
     /** Something like a Div container in HTML. */
     Root(children:Array<BlockNode>, span:Null<Span>);
 
-    Paragraph(paragraph:gpui.base.text.Paragraph);
+    Paragraph(paragraph:glaze.kit.base.text.Paragraph);
 
-    Heading(level:Int, children:gpui.base.text.Paragraph, span:Null<Span>);
+    Heading(level:Int, children:glaze.kit.base.text.Paragraph, span:Null<Span>);
 
     Blockquote(children:Array<BlockNode>, span:Null<Span>);
 
@@ -37,12 +37,12 @@ enum BlockNode {
     /** `checked`: whether the list item is checked, if null, it's not a checkbox. */
     ListItem(children:Array<BlockNode>, spread:Bool, checked:Null<Bool>, span:Null<Span>);
 
-    CodeBlock(codeBlock:gpui.base.text.CodeBlock);
+    CodeBlock(codeBlock:glaze.kit.base.text.CodeBlock);
 
     /** A custom Markdown node produced by `MarkdownExtensions`. */
     Custom(node:MarkdownNode, state:BlockState);
 
-    Table(table:gpui.base.text.Table);
+    Table(table:glaze.kit.base.text.Table);
 
     Break(html:Bool, span:Null<Span>);
 
@@ -70,7 +70,7 @@ enum abstract BlockTextKind(Int) {
 /**
  * Methods of `BlockNode`.
  */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class BlockNodeTools {
 
     public static function isListItem(self:BlockNode):Bool {
@@ -273,7 +273,7 @@ class BlockNodeTools {
                 }
             case Table(table):
                 if (kind == SelectedSource) {
-                    final blockText = gpui.base.text.Table.tableSelectedSource(table);
+                    final blockText = glaze.kit.base.text.Table.tableSelectedSource(table);
                     if (blockText != '') {
                         text.add(blockText);
                         text.add('\n');

@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/native.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Action;
+import glaze.Action;
 
 /**
  * Presentation-independent context-menu model produced by the editor. The
- * styled layer draws it as a popup menu (`gpui.component.menu`).
+ * styled layer draws it as a popup menu (`glaze.kit.menu`).
  *
  * Not ported: the macOS `set_text_content_type` (it installs an
  * `NSTextContent` protocol on GPUI's AppKit view through the Objective-C
@@ -37,5 +37,5 @@ class NativeMenu {
 
 enum NativeMenuItem {
     Separator;
-    Action(label:String, disabled:Bool, action:gpui.Action);
+    Action(label:String, disabled:Bool, action:glaze.Action);
 }

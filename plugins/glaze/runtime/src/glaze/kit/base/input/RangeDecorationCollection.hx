@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/decorations.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Range;
-import gpui.WeakEntity;
+import glaze.App;
+import glaze.Range;
+import glaze.WeakEntity;
 
 /**
  * An independently managed collection of geometric range decorations.
@@ -14,7 +14,7 @@ import gpui.WeakEntity;
  * `clear` to empty it or `dispose` to release it permanently.
  * Operations on a disposed collection or a dropped editor are harmless no-ops.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class RangeDecorationCollection {
 
     final state:WeakEntity<InputBaseState>;

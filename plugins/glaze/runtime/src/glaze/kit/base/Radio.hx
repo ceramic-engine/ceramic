@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/radio.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An unstyled radio control that owns activation, focus, and accessibility behavior.
@@ -32,7 +32,7 @@ using gpui.base.StyledExt;
  * Selection is controlled through `checked`; activating an unchecked radio
  * requests `true` through `onChange`.
  *
- * Interactive styles and listeners go to `base` (see `gpui.base.Button`).
+ * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
 class Radio implements RenderOnce implements Styled implements ParentElement {
 
@@ -240,10 +240,10 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
  */
 class RadioStyles {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final checkedStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final disabledStyle:StyleRefinement = new StyleRefinement();
 
     public function new() {}

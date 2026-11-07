@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/theme_color.rs (ThemeToken), crates/component/src/theme/schema.rs (try_parse_theme_token)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.Background;
-import gpui.Hsla;
+import glaze.Background;
+import glaze.Hsla;
 
 /**
  * A theme token that keeps a solid representative color and its renderable background.

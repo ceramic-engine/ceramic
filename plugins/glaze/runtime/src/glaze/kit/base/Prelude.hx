@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/styled.rs (h_flex, v_flex, box_shadow), crates/base/src/lib.rs (is_mobile)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.BoxShadow;
-import gpui.Div;
-import gpui.Hsla;
-import gpui.Pixels;
+import glaze.BoxShadow;
+import glaze.Div;
+import glaze.Hsla;
+import glaze.Pixels;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
- * Free functions of gpui-base, used with `import gpui.base.Prelude.*;`.
+ * Free functions of gpui-base, used with `import glaze.kit.base.Prelude.*;`.
  */
 class Prelude {
 
@@ -22,7 +22,7 @@ class Prelude {
      * with `vFlex`.
      */
     public static function hFlex():Div {
-        return gpui.Prelude.div().hFlex();
+        return glaze.Prelude.div().hFlex();
     }
 
     /**
@@ -32,7 +32,7 @@ class Prelude {
      * with `hFlex`.
      */
     public static function vFlex():Div {
-        return gpui.Prelude.div().vFlex();
+        return glaze.Prelude.div().vFlex();
     }
 
     public static function boxShadow(x:Pixels, y:Pixels, blur:Pixels, spread:Pixels, color:Hsla):BoxShadow {

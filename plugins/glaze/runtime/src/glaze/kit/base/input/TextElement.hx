@@ -2,65 +2,65 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-016 (no notify when the input only moved). See DEVIATIONS.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.CornersOf;
-import gpui.Edges;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementInputHandler;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.HighlightStyle;
-import gpui.Hitbox;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Length;
-import gpui.LineLayout;
-import gpui.MouseButton;
-import gpui.MouseMoveEvent;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.ScrollEvent;
-import gpui.ShapedLine;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.TextAlign;
-import gpui.TextRun;
-import gpui.TextStyle;
-import gpui.TransformationMatrix;
-import gpui.UnderlineStyle;
-import gpui.Window;
-import gpui.base.ScrollBounce;
-import gpui.base.input.InlineTokenPresentation.TokenLayoutCache;
-import gpui.base.input.InlineTokenPresentation.TokenLayoutKey;
-import gpui.base.input.InlineTokenPresentation.TokenMetric;
-import gpui.base.input.InputLine.InlineFragment;
-import gpui.base.input.LongestLineKey.LongestLineWidth;
-import gpui.util.MathUtil;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.CornersOf;
+import glaze.Edges;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementInputHandler;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.HighlightStyle;
+import glaze.Hitbox;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Length;
+import glaze.LineLayout;
+import glaze.MouseButton;
+import glaze.MouseMoveEvent;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.ScrollEvent;
+import glaze.ShapedLine;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.TextAlign;
+import glaze.TextRun;
+import glaze.TextStyle;
+import glaze.TransformationMatrix;
+import glaze.UnderlineStyle;
+import glaze.Window;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.input.InlineTokenPresentation.TokenLayoutCache;
+import glaze.kit.base.input.InlineTokenPresentation.TokenLayoutKey;
+import glaze.kit.base.input.InlineTokenPresentation.TokenMetric;
+import glaze.kit.base.input.InputLine.InlineFragment;
+import glaze.kit.base.input.LongestLineKey.LongestLineWidth;
+import glaze.util.MathUtil;
+import glaze.util.Utf8;
 import ropey.Rope;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-import gpui.LongPressEvent;
-import gpui.TouchDragEvent;
-import gpui.base.GlobalState;
+import glaze.LongPressEvent;
+import glaze.TouchDragEvent;
+import glaze.kit.base.GlobalState;
 
-using gpui.ScrollDelta.ScrollDeltaTools;
-using gpui.base.input.InputTouch;
-using gpui.base.input.InputTokenPresentation;
-using gpui.base.input.InputTokens;
-using gpui.base.input.RopeExt;
+using glaze.ScrollDelta.ScrollDeltaTools;
+using glaze.kit.base.input.InputTouch;
+using glaze.kit.base.input.InputTokenPresentation;
+using glaze.kit.base.input.InputTokens;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * The element drawing the text of an input: the visible lines laid out
@@ -75,11 +75,11 @@ using gpui.base.input.RopeExt;
  * `paint`; the port keeps it in `prepaintState` (an element is drawn once).
  *
  * Not ported: the accessibility role, label and click action of inline
- * tokens (the GPUI port has no accessibility tree).
+ * tokens (Glaze has no accessibility tree).
  */
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.base.input.LayoutMode)
-@:access(gpui.base.ScrollBounce)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.base.input.LayoutMode)
+@:access(glaze.kit.base.ScrollBounce)
 class TextElement extends Element {
 
     /** Character used by masked editor modes (Rust `input::MASK_CHAR`, U+2022 BULLET, a code point). */
@@ -1423,7 +1423,7 @@ class TextElement extends Element {
         id = ElementId.NamedChild(id, token.token().label());
         id = ElementId.NamedChild(id, hoverEnabled ? 'hover-enabled' : 'hover-disabled');
         // Not ported: the `Button` role, aria label and accessible click
-        // action (`presentation.has_listener() && !disabled`): the GPUI port
+        // action (`presentation.has_listener() && !disabled`): Glaze
         // has no accessibility tree.
         return (div()
             .id(id)
@@ -1777,7 +1777,7 @@ class TextElement extends Element {
      */
     function requestReveal(inputBounds:Bounds, cursorInfos:Array<CursorRenderInfo>, cursorScrollOffset:Point, lineHeight:Float, window:Window, cx:App):Void {
         final focused = this.state.read(cx).focusHandle.isFocused(window);
-        // `Window::fully_visible_bounds`: the GPUI port has no safe area insets
+        // `Window::fully_visible_bounds`: Glaze has no safe area insets
         // nor visual viewport, so it is the whole viewport.
         final viewport = new Bounds(new Point(0., 0.), window.viewportSize());
         final reveal = this.state.update(cx, (state, _) -> {
@@ -3115,7 +3115,7 @@ class TextElementPrepaintState {
 }
 
 /** Claims the wheel of text with room to scroll (`TextElement.paintMouseListeners`) */
-private class TextScrollEntry extends gpui.Window.MouseListenerEntry {
+private class TextScrollEntry extends glaze.Window.MouseListenerEntry {
 
     final state:Entity<InputBaseState>;
 
@@ -3127,7 +3127,7 @@ private class TextScrollEntry extends gpui.Window.MouseListenerEntry {
         this.hitboxId = hitboxId;
     }
 
-    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+    override function call(event:glaze.PlatformInput, phase:glaze.DispatchPhase, window:Window, cx:App):Void {
         final event:ScrollEvent = cast event;
         if (phase == Capture && window.shouldHitboxIdHandleScroll(hitboxId)
             && state.read(cx).takesScroll(event.delta.pixelDelta(window.lineHeight()))) {
@@ -3138,13 +3138,13 @@ private class TextScrollEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** Notes touches (`TextElement.paintMouseListeners`) */
-private class TextTouchDragEntry extends gpui.Window.MouseListenerEntry {
+private class TextTouchDragEntry extends glaze.Window.MouseListenerEntry {
 
     public function new() {
         super(TouchDrag, null, null, null);
     }
 
-    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+    override function call(event:glaze.PlatformInput, phase:glaze.DispatchPhase, window:Window, cx:App):Void {
         final event:TouchDragEvent = cast event;
         if (phase.capture() && event.phase == Started) {
             GlobalState.noteTouch(cx);
@@ -3154,7 +3154,7 @@ private class TextTouchDragEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** Long press selection (`TextElement.paintMouseListeners`) */
-private class TextLongPressEntry extends gpui.Window.MouseListenerEntry {
+private class TextLongPressEntry extends glaze.Window.MouseListenerEntry {
 
     final state:Entity<InputBaseState>;
 
@@ -3166,7 +3166,7 @@ private class TextLongPressEntry extends gpui.Window.MouseListenerEntry {
         this.textHitbox = textHitbox;
     }
 
-    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+    override function call(event:glaze.PlatformInput, phase:glaze.DispatchPhase, window:Window, cx:App):Void {
         final event:LongPressEvent = cast event;
         if (!phase.bubble()) {
             return;
@@ -3195,7 +3195,7 @@ private class TextLongPressEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** Drag selection moves (`TextElement.paintMouseListeners`) */
-private class TextMouseMoveEntry extends gpui.Window.MouseListenerEntry {
+private class TextMouseMoveEntry extends glaze.Window.MouseListenerEntry {
 
     final state:Entity<InputBaseState>;
 
@@ -3204,7 +3204,7 @@ private class TextMouseMoveEntry extends gpui.Window.MouseListenerEntry {
         this.state = state;
     }
 
-    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+    override function call(event:glaze.PlatformInput, phase:glaze.DispatchPhase, window:Window, cx:App):Void {
         final event:MouseMoveEvent = cast event;
         if (event.pressedButton == Left) {
             state.update(cx, (state, cx) -> {
@@ -3216,7 +3216,7 @@ private class TextMouseMoveEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** Ends the drag selection (`TextElement.paintMouseListeners`) */
-private class TextMouseUpEntry extends gpui.Window.MouseListenerEntry {
+private class TextMouseUpEntry extends glaze.Window.MouseListenerEntry {
 
     final state:Entity<InputBaseState>;
 
@@ -3225,7 +3225,7 @@ private class TextMouseUpEntry extends gpui.Window.MouseListenerEntry {
         this.state = state;
     }
 
-    override function call(event:gpui.PlatformInput, phase:gpui.DispatchPhase, window:Window, cx:App):Void {
+    override function call(event:glaze.PlatformInput, phase:glaze.DispatchPhase, window:Window, cx:App):Void {
         if (phase != Bubble) {
             return;
         }

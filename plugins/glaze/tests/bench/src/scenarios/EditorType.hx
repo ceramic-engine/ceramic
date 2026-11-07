@@ -1,7 +1,7 @@
 package scenarios;
 
-import gpui.Keystroke;
-import gpui.Modifiers;
+import glaze.Keystroke;
+import glaze.Modifiers;
 
 /**
  * Typing in the code editor of `EditorBench`: `step` types one character per

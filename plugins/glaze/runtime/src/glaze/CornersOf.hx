@@ -2,7 +2,7 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * Generic version of `Corners`, for non numeric values (`Corners<AbsoluteLength>`...).
@@ -12,7 +12,7 @@ package gpui;
  *
  * Immutable: every operation returns a new instance.
  */
-@:using(gpui.CornersOfAbsoluteLength)
+@:using(glaze.CornersOfAbsoluteLength)
 class CornersOf<T> {
 
     /**

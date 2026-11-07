@@ -2,10 +2,10 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic; the build features become a runtime
 // switch. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.App;
-import gpui.base.input.InputHighlighterFactory;
+import glaze.App;
+import glaze.kit.base.input.InputHighlighterFactory;
 
 /**
  * The code highlighter switch.
@@ -24,7 +24,7 @@ import gpui.base.input.InputHighlighterFactory;
  * - `SyntaxHighlighter.captureNames` (used by the diff) names highlights.
  *
  * On targets without a file system (the web), call `preload` before the
- * grammars are needed. Web builds with the `gpui_onig_wasm` define use
+ * grammars are needed. Web builds with the `glaze_onig_wasm` define use
  * vscode-oniguruma's onig.wasm as the regex engine (faster) once it is
  * loaded at startup (`OnigWasm`), the pure Haxe Oniguruma port otherwise.
  */
@@ -50,8 +50,8 @@ class Highlighter {
     }
 
     static function reinstall(cx:Null<App>):Void {
-        if (cx != null && cx.hasGlobal(gpui.component.theme.Theme)) {
-            gpui.component.text.TextView.installTextViewDefaults(gpui.component.theme.Theme.global(cx), cx);
+        if (cx != null && cx.hasGlobal(glaze.kit.theme.Theme)) {
+            glaze.kit.text.TextView.installTextViewDefaults(glaze.kit.theme.Theme.global(cx), cx);
         }
     }
 
@@ -76,10 +76,10 @@ class Highlighter {
         TextMateGrammars.preload(languages, done);
     }
 
-    #if (js && gpui_onig_wasm)
+    #if (js && glaze_onig_wasm)
     /**
      * Uses vscode-oniguruma's onig.wasm as the regex engine instead of the
-     * pure Haxe Oniguruma port (web builds with the `gpui_onig_wasm` define).
+     * pure Haxe Oniguruma port (web builds with the `glaze_onig_wasm` define).
      *
      * `onigModule` is the vscode-oniguruma JavaScript module on which
      * `loadWASM` already completed. The plugin calls this at startup, once

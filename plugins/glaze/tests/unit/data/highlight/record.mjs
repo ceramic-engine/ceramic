@@ -5,7 +5,7 @@
 // vscode-oniguruma 2.0.1, in truth.json next to this script.
 //
 // The tokens (and their scopes) come from vscode-textmate running the
-// grammars bundled in assets/gpui/grammars. Each token gets the highlight
+// grammars bundled in assets/glaze/grammars. Each token gets the highlight
 // name of gpui-kit's syntect backend rules (`semantic_name` of
 // crates/component/src/highlighter/syntect_backend.rs, transliterated below
 // from the Rust, independently of the Haxe port), and that name is resolved
@@ -14,7 +14,7 @@
 // of the build without tree-sitter: `comment_doc`, not `comment.doc`).
 //
 // Usage:
-//   VTM_NODE_MODULES=/path/to/node_modules node test/unit/data/highlight/record.mjs
+//   VTM_NODE_MODULES=/path/to/node_modules node tests/unit/data/highlight/record.mjs
 //
 // The node_modules folder must hold vscode-textmate@9.2.0 and
 // vscode-oniguruma@2.0.1 (npm install them in a scratch folder, never in this
@@ -27,7 +27,7 @@ import { fileURLToPath } from 'node:url';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, '../../../..');
-const grammarsDir = path.join(root, 'assets/gpui/grammars');
+const grammarsDir = path.join(root, 'assets/glaze/grammars');
 const samplesDir = path.join(here, 'samples');
 
 const nodeModules = process.env.VTM_NODE_MODULES;

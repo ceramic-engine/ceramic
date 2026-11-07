@@ -1,23 +1,23 @@
 package tests;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.HighlightStyle;
-import gpui.HighlightStyle.TextHighlight;
-import gpui.InteractiveText;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.StyledText;
-import gpui.TestDispatcher;
-import gpui.Text;
-import gpui.TextLayout;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.HighlightStyle;
+import glaze.HighlightStyle.TextHighlight;
+import glaze.InteractiveText;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.StyledText;
+import glaze.TestDispatcher;
+import glaze.Text;
+import glaze.TextLayout;
+import glaze.Window;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of the text elements (`src/elements/text.rs`): strings as elements,
@@ -185,7 +185,7 @@ class TextElementTest extends TestCase {
         open((window, cx) -> div().textColor(white()).fontFamily('Inter').textSize(px(16)).lineHeight(px(20)).child(
             new StyledText('Hello world').withHighlights([
                 new TextHighlight(0, 5, HighlightStyle.ofColor(red())),
-                new TextHighlight(6, 11, {underline: new gpui.UnderlineStyle(1.0, blue(), false)})
+                new TextHighlight(6, 11, {underline: new glaze.UnderlineStyle(1.0, blue(), false)})
             ])
         ));
         window.draw();
@@ -204,7 +204,7 @@ class TextElementTest extends TestCase {
 
     function testCombineHighlights() {
         final a = [new TextHighlight(0, 10, HighlightStyle.ofColor(red()))];
-        final b = [new TextHighlight(5, 15, HighlightStyle.ofFontWeight(gpui.FontWeight.BOLD))];
+        final b = [new TextHighlight(5, 15, HighlightStyle.ofFontWeight(glaze.FontWeight.BOLD))];
         final combined = HighlightStyle.combineHighlights(a, b);
         assertEquals(3, combined.length);
         assertEquals(0, combined[0].start);
@@ -213,7 +213,7 @@ class TextElementTest extends TestCase {
         assertEquals(5, combined[1].start);
         assertEquals(10, combined[1].end);
         assertTrue(combined[1].style.color != null);
-        assertEquals((gpui.FontWeight.BOLD:Float), (combined[1].style.fontWeight:Float));
+        assertEquals((glaze.FontWeight.BOLD:Float), (combined[1].style.fontWeight:Float));
         assertEquals(10, combined[2].start);
         assertEquals(15, combined[2].end);
         assertEquals(null, combined[2].style.color);
@@ -225,7 +225,7 @@ class TextElementTest extends TestCase {
             // Overrides apply to whole runs: the highlight splits the text in two runs
             final styled = new StyledText('abc def')
                 .withHighlights([new TextHighlight(4, 7, HighlightStyle.ofColor(red()))])
-                .withFontFamilyOverrides([new gpui.StyledText.FontFamilyOverride(4, 7, 'JetBrains Mono')]);
+                .withFontFamilyOverrides([new glaze.StyledText.FontFamilyOverride(4, 7, 'JetBrains Mono')]);
             layout = styled.layout();
             return div().fontFamily('Inter').textSize(px(16)).child(styled);
         });
@@ -239,7 +239,7 @@ class TextElementTest extends TestCase {
     function testInteractiveTextClickOnRanges() {
         final clicks:Array<Int> = [];
         open((window, cx) -> div().fontFamily('Inter').textSize(px(16)).lineHeight(px(20)).child(
-            new InteractiveText('links', new StyledText('one two three')).onClick([new gpui.InteractiveText.TextRange(0, 3), new gpui.InteractiveText.TextRange(8, 13)], (ix, window, cx) -> clicks.push(ix))
+            new InteractiveText('links', new StyledText('one two three')).onClick([new glaze.InteractiveText.TextRange(0, 3), new glaze.InteractiveText.TextRange(8, 13)], (ix, window, cx) -> clicks.push(ix))
         ));
         window.draw();
         // Click on "one"
@@ -258,7 +258,7 @@ class TextElementTest extends TestCase {
 
 }
 
-class TextTestView extends gpui.Model implements gpui.Render {
+class TextTestView extends glaze.Model implements glaze.Render {
 
     public var renderFn:(Window, Context<Dynamic>) -> IntoElement;
 

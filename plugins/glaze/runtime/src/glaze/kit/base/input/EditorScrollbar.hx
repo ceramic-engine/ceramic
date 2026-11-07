@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/element.rs (`EditorScrollbar`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.LayoutId;
-import gpui.Length;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.Scrollbar;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.LayoutId;
+import glaze.Length;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.Scrollbar;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The scrollbar of a multi-line input, laid over the whole input and placed
  * from the snapshot the text element left at its last prepaint.
  */
-@:access(gpui.base.Scrollbar)
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.base.input.EditorScrollbarContext)
+@:access(glaze.kit.base.Scrollbar)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.base.input.EditorScrollbarContext)
 class EditorScrollbar extends Element {
 
     final state:Entity<InputBaseState>;

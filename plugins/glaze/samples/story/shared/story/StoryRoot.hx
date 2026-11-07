@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.TitleBar;
-import gpui.component.command.Command;
-import gpui.component.command.CommandItem.CommandEntry;
-import gpui.component.command.CommandState;
-import gpui.component.notification.Notification;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.TitleBar;
+import glaze.kit.command.Command;
+import glaze.kit.command.CommandItem.CommandEntry;
+import glaze.kit.command.CommandState;
+import glaze.kit.notification.Notification;
+import glaze.kit.theme.Theme;
 import story.StoryActions;
 import story.Themes.SelectTheme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 /** Notification ids (Rust local `struct Info;` and `struct Search;`). */
 private class InfoNote {}

@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/elements/img.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.ImageLoadResult;
+import glaze.ImageLoadResult;
 
 /**
  * An image element. Create one with `Prelude.img(source)`.
@@ -41,14 +41,14 @@ class Img extends Element implements Styled {
 
     var hitbox:Null<Hitbox> = null;
 
-    public function new(source:ImageSource #if gpui_inspector , ?pos:haxe.PosInfos #end) {
+    public function new(source:ImageSource #if glaze_inspector , ?pos:haxe.PosInfos #end) {
         this.source = source;
-        #if gpui_inspector
+        #if glaze_inspector
         interactivity.sourceLocation = pos;
         #end
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     override function sourceLocation():Null<haxe.PosInfos> {
         return interactivity.sourceLocation;
     }
@@ -198,7 +198,7 @@ class Img extends Element implements Styled {
 
             var frameIndex = state != null ? state.frameIndex : 0;
 
-            final layoutId = interactivity.requestLayout(globalId, #if gpui_inspector inspectorId, #end window, cx, (style, window, cx) -> {
+            final layoutId = interactivity.requestLayout(globalId, #if glaze_inspector inspectorId, #end window, cx, (style, window, cx) -> {
                 var replacementId:Null<LayoutId> = null;
 
                 final data = source.useData(currentImageCache(window), window, cx);
@@ -315,7 +315,7 @@ class Img extends Element implements Styled {
     }
 
     public function prepaint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
-        hitbox = interactivity.prepaint(globalId, #if gpui_inspector inspectorId, #end bounds, bounds.size, window, cx, (_, _, hitbox, window, cx) -> {
+        hitbox = interactivity.prepaint(globalId, #if glaze_inspector inspectorId, #end bounds, bounds.size, window, cx, (_, _, hitbox, window, cx) -> {
             if (replacement != null) {
                 replacement.prepaint(window, cx);
             }
@@ -326,7 +326,7 @@ class Img extends Element implements Styled {
     public function paint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hitbox = this.hitbox;
         this.hitbox = null;
-        interactivity.paint(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (style, window, cx) -> {
+        interactivity.paint(globalId, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx, (style, window, cx) -> {
             final data = source.useData(currentImageCache(window), window, cx).okOrNull();
             if (data != null) {
                 if (data.frameCount() == 0)

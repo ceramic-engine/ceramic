@@ -2,18 +2,18 @@
 // lsp/semantic_tokens.rs (the `Lsp` parts)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.Rgba;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
+import glaze.Context;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.Rgba;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
 import ropey.Rope;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * A document color (Rust tuple `(lsp_types::Range, Hsla)`).

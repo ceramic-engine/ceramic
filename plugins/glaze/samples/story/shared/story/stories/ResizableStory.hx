@@ -4,32 +4,32 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.AnyElement;
-import gpui.base.resizable.PixelsRange;
-import gpui.base.resizable.Resizable.resizablePanel;
-import gpui.base.resizable.ResizablePanel;
-import gpui.base.resizable.ResizableState;
-import gpui.component.button.Button;
-import gpui.component.resizable.Resizable.hResizable;
-import gpui.component.resizable.Resizable.vResizable;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.AnyElement;
+import glaze.kit.base.resizable.PixelsRange;
+import glaze.kit.base.resizable.Resizable.resizablePanel;
+import glaze.kit.base.resizable.ResizablePanel;
+import glaze.kit.base.resizable.ResizableState;
+import glaze.kit.button.Button;
+import glaze.kit.resizable.Resizable.hResizable;
+import glaze.kit.resizable.Resizable.vResizable;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class ResizableStory extends Model implements Story {
 
@@ -41,7 +41,7 @@ class ResizableStory extends Model implements Story {
         return 'The resizable panels.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -116,7 +116,7 @@ class ResizableStory extends Model implements Story {
                         .child(panelBox('Center', app))
                         .child(resizablePanel()
                             .size(px(80.))
-                            .sizeRange(new PixelsRange(px(80.), gpui.Pixels.MAX))
+                            .sizeRange(new PixelsRange(px(80.), glaze.Pixels.MAX))
                             .child(panelBox('Bottom (80px .. 150px)', app))))))
             .child(section('Growing Panel')
                 .description('A flexible panel absorbs the space left by a constrained neighbor.')

@@ -3,14 +3,14 @@
 // used by the form, setting, sidebar and resizable tests. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Window;
 
 /**
  * Records the bounds of its child in prepaint under a selector. GPUI's

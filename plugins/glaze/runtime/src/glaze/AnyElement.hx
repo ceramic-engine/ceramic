@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/element.rs (`AnyElement`, `Drawable`, `ElementDrawPhase`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A dynamically typed element that can be used to store any element type,
@@ -91,7 +91,7 @@ class AnyElement {
         final elementId = element.elementId();
         globalId = elementId != null ? window.prepareElementId(elementId) : null;
 
-        #if gpui_inspector
+        #if glaze_inspector
         var inspectorId:Null<InspectorElementId> = null;
         if (window.inspectorEnabled()) {
             final source = element.sourceLocation();
@@ -111,7 +111,7 @@ class AnyElement {
         return layoutId;
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     static function prepareInspectorId(source:haxe.PosInfos, window:Window):InspectorElementId {
         final path = new InspectorElementId.InspectorElementPath(window.currentGlobalElementId(), source);
         return window.buildInspectorElementId(path);

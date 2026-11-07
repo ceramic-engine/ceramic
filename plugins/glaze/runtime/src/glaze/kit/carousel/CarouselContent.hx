@@ -2,38 +2,38 @@
 // (CarouselContent, CarouselGeometry, same_bounds, CarouselLoopItem)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.carousel;
+package glaze.kit.carousel;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ParentElement;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ParentElement;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The layout the content last read (Rust `CarouselGeometry` of
  * carousel.rs), kept in a keyed state.
  */
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class CarouselContentGeometry {
 
     var viewport:Bounds = new Bounds();
@@ -77,7 +77,7 @@ private class CarouselContentGeometry {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /**
@@ -248,8 +248,8 @@ class CarouselContent implements RenderOnce implements Styled implements ParentE
         final children:Array<IntoElement> = [for (index in 0...childElements.length) new CarouselLoopItem(childElements[index], index, loopState).intoAnyElement()];
         function runwaySpacer(runway:Float):IntoElement {
             final spacer = div().flexNone();
-            if (axis == Horizontal) spacer.w(gpui.Prelude.px(runway));
-            if (axis == Vertical) spacer.h(gpui.Prelude.px(runway));
+            if (axis == Horizontal) spacer.w(glaze.Prelude.px(runway));
+            if (axis == Vertical) spacer.h(glaze.Prelude.px(runway));
             return spacer;
         }
         final hasRunway = loopRunway != null;

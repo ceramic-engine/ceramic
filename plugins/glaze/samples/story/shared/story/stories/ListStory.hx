@@ -3,43 +3,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.DragMoveEvent;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.ScrollStrategy;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.label.Label;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate.ListDelegateBase;
-import gpui.component.list.ListDelegate.ListDelegateItem;
-import gpui.component.list.ListItem;
-import gpui.component.list.ListState;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.DragMoveEvent;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.ScrollStrategy;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.label.Label;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate.ListDelegateBase;
+import glaze.kit.list.ListDelegate.ListDelegateItem;
+import glaze.kit.list.ListItem;
+import glaze.kit.list.ListState;
+import glaze.kit.theme.Theme;
 import story.Fake;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 @:action(namespace = list_story) class SelectedCompany implements Action {}
 

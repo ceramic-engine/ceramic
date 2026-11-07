@@ -2,47 +2,47 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-014 (no indicator under a disabled selected tab). See DEVIATIONS.md.
-package gpui.component.tab;
+package glaze.kit.tab;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Edges;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.IntoBackground;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.ScrollHandle;
-import gpui.Window.StateModel;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ScrollableMask;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu.PopupMenuItem;
-import gpui.component.tab.TabVariant.FolderTabConstants;
-import gpui.component.tab.TabVariant.FolderTabMetrics;
-import gpui.component.theme.Theme;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Edges;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.IntoBackground;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.ScrollHandle;
+import glaze.Window.StateModel;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu.PopupMenuItem;
+import glaze.kit.tab.TabVariant.FolderTabConstants;
+import glaze.kit.tab.TabVariant.FolderTabMetrics;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.InteractiveElementExt;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.InteractiveElementExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * The measured bounds the sliding indicator is placed from (Rust
@@ -85,7 +85,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
 
     final idString:String;
 
-    final base:gpui.base.Tabs;
+    final base:glaze.kit.base.Tabs;
 
     final tabBarStyle:StyleRefinement = new StyleRefinement();
 
@@ -115,7 +115,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
     public function new(id:ElementIdArg) {
         this.id = id;
         this.idString = Std.string((id : ElementId));
-        this.base = new gpui.base.Tabs(id).px(gpui.Prelude.px(-1.));
+        this.base = new glaze.kit.base.Tabs(id).px(glaze.Prelude.px(-1.));
         this.lastEmptySpaceValue = div().w3().intoAnyElement();
     }
 
@@ -294,8 +294,8 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             .absolute()
             .top0()
             .bottom0()
-            .left(gpui.Prelude.px(left))
-            .w(gpui.Prelude.px(width));
+            .left(glaze.Prelude.px(left))
+            .w(glaze.Prelude.px(width));
         switch variant {
             case Segmented:
                 indicator.flex().itemsCenter().child(div()
@@ -315,7 +315,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
                     .left0()
                     .right0()
                     .bottom0()
-                    .h(gpui.Prelude.px(2.))
+                    .h(glaze.Prelude.px(2.))
                     .bg(theme.tokens.primary.background));
             case _:
         }
@@ -373,7 +373,7 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -600,9 +600,9 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             // explicit reveals leave space at both ends of the bar.
             .relative()
             // Room for the end tabs' curves inside the viewport.
-            .px(gpui.Prelude.px(overhang))
-            .pt(gpui.Prelude.px(tabsTopPadding))
-            .gap(gpui.Prelude.px(gap))
+            .px(glaze.Prelude.px(overhang))
+            .pt(glaze.Prelude.px(tabsTopPadding))
+            .gap(glaze.Prelude.px(gap))
             .overflowXScroll()
             .lockScrollAxis()
             .trackScroll(scrollHandle)
@@ -613,8 +613,8 @@ class TabBar implements RenderOnce implements Styled implements Sizable {
             .id('tabs')
             .flex1()
             .minW0()
-            .mx(gpui.Prelude.px(-paddingX))
-            .px(gpui.Prelude.px(paddingX))
+            .mx(glaze.Prelude.px(-paddingX))
+            .px(glaze.Prelude.px(paddingX))
             .overflowXHidden();
         // `on_prepaint` adds a canvas child. Keep that helper on
         // the non-scrolling wrapper so it cannot shift tab indices.
@@ -783,7 +783,7 @@ private class TabReveal {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }

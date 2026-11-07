@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sizing.rs (default methods of Sizable)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
 #if macro
 import haxe.macro.Context;
@@ -57,16 +57,16 @@ class SizableMacro {
             });
         }
 
-        add('xsmall', macro return this.withSize(gpui.component.Size.XSmall), selfType, 'Set to `Size.XSmall`.');
-        add('small', macro return this.withSize(gpui.component.Size.Small), selfType, 'Set to `Size.Small`.');
-        add('large', macro return this.withSize(gpui.component.Size.Large), selfType, 'Set to `Size.Large`.');
+        add('xsmall', macro return this.withSize(glaze.kit.Size.XSmall), selfType, 'Set to `Size.XSmall`.');
+        add('small', macro return this.withSize(glaze.kit.Size.Small), selfType, 'Set to `Size.Small`.');
+        add('large', macro return this.withSize(glaze.kit.Size.Large), selfType, 'Set to `Size.Large`.');
         add('prepareForToolbar', macro return this, selfType,
             'Apply control-specific presentation when this element is hosted by a toolbar (default: unchanged).');
         if (!existing.exists('setSize')) {
             fields.push({
                 name: 'setSize',
                 access: [APublic],
-                kind: FFun({args: [{name: 'size', type: macro :gpui.component.Size}], ret: macro :Void, expr: macro this.withSize(size)}),
+                kind: FFun({args: [{name: 'size', type: macro :glaze.kit.Size}], ret: macro :Void, expr: macro this.withSize(size)}),
                 pos: pos
             });
         }

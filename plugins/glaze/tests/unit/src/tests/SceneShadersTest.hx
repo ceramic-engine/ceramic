@@ -1,6 +1,6 @@
 package tests;
 
-import gpui.platform.SceneRenderable;
+import glaze.platform.SceneRenderable;
 import testing.TestCase;
 
 /**
@@ -22,7 +22,7 @@ class SceneShadersTest extends TestCase {
     }
 
     function testThresholds():Void {
-        // GpuiQuad reads 12 attributes and 10 varying rows
+        // GlazeQuad reads 12 attributes and 10 varying rows
         assertFalse(SceneRenderable.needsCompactShaders(12, 10));
         assertTrue(SceneRenderable.needsCompactShaders(11, 10));
         assertTrue(SceneRenderable.needsCompactShaders(12, 9));
@@ -36,7 +36,7 @@ class SceneShadersTest extends TestCase {
     }
 
     function testHeadlessBackendChoosesDefaultShaders():Void {
-        #if (!gpui_compact_shaders && !unity)
+        #if (!glaze_compact_shaders && !unity)
         assertFalse(SceneRenderable.chooseShaders());
         assertFalse(SceneRenderable.useCompactShaders);
         #end
@@ -44,7 +44,7 @@ class SceneShadersTest extends TestCase {
 
     function testUnityBackendChoosesCompactShaders():Void {
         // Unity meshes give position, color, uv and 7 custom attributes
-        // (TEXCOORD1 to TEXCOORD7): GpuiQuad's 9 custom attributes do not
+        // (TEXCOORD1 to TEXCOORD7): GlazeQuad's 9 custom attributes do not
         // fit (Metal refused its pipeline state), the compact shaders do
         assertTrue(SceneRenderable.needsCompactShaders(10, 32));
         #if unity

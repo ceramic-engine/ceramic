@@ -1,11 +1,11 @@
 // New code for the Haxe port of GPUI (no GPUI origin): debug counters of the
-// objects built every frame, to measure allocations (see test/bench).
-package gpui.util;
+// objects built every frame, to measure allocations (see tests/bench).
+package glaze.util;
 
 /**
  * Counts the creation of the main objects built while drawing frames:
  * elements, styles, element ids, layout nodes. Only compiled with the
- * `gpui_count_allocations` define (otherwise every counter stays 0).
+ * `glaze_count_allocations` define (otherwise every counter stays 0).
  * `AnyElement.allocatedCount` and scene primitive pools are counted apart.
  */
 class AllocationCounters {

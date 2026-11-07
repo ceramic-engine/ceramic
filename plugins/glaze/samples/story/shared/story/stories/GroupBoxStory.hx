@@ -3,30 +3,30 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.StyleBuilder;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.groupbox.GroupBox;
-import gpui.component.radio.Radio;
-import gpui.component.switch_.Switch;
-import gpui.component.text.TextView;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.StyleBuilder;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.groupbox.GroupBox;
+import glaze.kit.radio.Radio;
+import glaze.kit.switch_.Switch;
+import glaze.kit.text.TextView;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class GroupBoxStory extends Model implements Story {
 

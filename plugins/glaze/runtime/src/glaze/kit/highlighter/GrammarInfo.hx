@@ -1,6 +1,6 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
 /**
  * A TextMate grammar known to the highlighter: a bundled one

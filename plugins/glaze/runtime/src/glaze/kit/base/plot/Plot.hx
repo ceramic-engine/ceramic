@@ -2,19 +2,19 @@
 // crates/component-macros/src/derive_into_plot.rs (IntoPlot)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.SpringMath;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.SpringMath;
+import glaze.Window;
 
 /**
  * Unstyled plotting (Rust trait `Plot`): a plot paints itself into the

@@ -2,10 +2,10 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic, on top of the ttf library
 // instead of cosmic-text and swash. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
-import gpui.*;
-import gpui.util.Utf8;
+import glaze.*;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import ttf.GlyphRasterizer;
 import ttf.shape.Features;
@@ -17,7 +17,7 @@ import ttf.shape.Shaper;
  *
  * It follows GPUI's font file based text system (`CosmicTextSystem` of
  * gpui-pre-wgpu, used on Linux and the web), and is validated against it
- * (`test/unit/data/gpui-text-reference.json`):
+ * (`tests/unit/data/gpui-text-reference.json`):
  *
  * - fonts are only the ones added with `addFonts()` (no system fonts);
  *   `.SystemUIFont` maps to `systemFontFallback` (Inter by default), and a
@@ -63,7 +63,7 @@ import ttf.shape.Shaper;
  * maps the whole cluster (cosmic-text keeps it there: `❤️` after Inter text
  * is Inter's heart), and the system fallback loads the emoji font of the
  * platform for them. With the define
- * `gpui_bundled_emoji`, the gpui plugin ships Noto Color Emoji and adds it
+ * `glaze_bundled_emoji`, the glaze plugin ships Noto Color Emoji and adds it
  * to the default text system (`BundledEmojiFont`, `addBundledEmojiFace()`):
  * it is a face of the font database, so it comes first for emoji, before
  * the system emoji font and the browser canvas, which keep the graphemes it
@@ -115,7 +115,7 @@ class CeramicTextSystem implements PlatformTextSystem {
      * Fonts of the operating system tried, after every added face, for the
      * characters no added face covers (null: only the added fonts, like
      * GPUI's `new_without_system_fonts`). `App.defaultTextSystem()` sets it
-     * on native targets unless `gpui_no_system_fonts` is defined.
+     * on native targets unless `glaze_no_system_fonts` is defined.
      */
     public var systemFallback(default, set):Null<SystemFontFallback> = null;
 
@@ -131,7 +131,7 @@ class CeramicTextSystem implements PlatformTextSystem {
     /**
      * The browser canvas used for the Canvas fallback (null: no fallback,
      * like a native GPUI platform). `App.defaultTextSystem()` sets a
-     * `BrowserCanvasText` on the web, unless `gpui_no_canvas_fallback` is
+     * `BrowserCanvasText` on the web, unless `glaze_no_canvas_fallback` is
      * defined.
      */
     public var canvasText(get, set):Null<CanvasText.CanvasTextBackend>;

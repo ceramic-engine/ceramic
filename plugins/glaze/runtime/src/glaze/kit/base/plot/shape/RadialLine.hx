@@ -2,27 +2,27 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/radial-line
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.Background;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.IntoHsla;
-import gpui.PaintQuad;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.Plot;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.IntoHsla;
+import glaze.PaintQuad;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.Plot;
 
-import gpui.Prelude.quad;
-import gpui.Prelude.transparentBlack;
+import glaze.Prelude.quad;
+import glaze.Prelude.transparentBlack;
 
 /**
  * A radial line generator, like `d3.lineRadial`.
@@ -64,7 +64,7 @@ class RadialLine<T> {
 
     /** Set the data of the RadialLine. */
     public function data(data:Iterable<T>):RadialLine<T> {
-        dataValues = gpui.util.Iterables.toArray(data);
+        dataValues = glaze.util.Iterables.toArray(data);
         return this;
     }
 

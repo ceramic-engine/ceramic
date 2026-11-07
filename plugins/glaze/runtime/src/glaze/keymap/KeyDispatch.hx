@@ -1,13 +1,13 @@
 // Ported from gpui-pre 0.3.10: src/key_dispatch.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.keymap;
+package glaze.keymap;
 
-import gpui.Action;
-import gpui.KeyBinding;
-import gpui.KeyContext;
-import gpui.Keymap;
-import gpui.Keystroke;
+import glaze.Action;
+import glaze.KeyBinding;
+import glaze.KeyContext;
+import glaze.Keymap;
+import glaze.Keystroke;
 
 /**
  * The keystroke matching part of GPUI's `DispatchTree`, independent of the

@@ -1,19 +1,19 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sidebar/group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.sidebar;
+package glaze.kit.sidebar;
 
-import gpui.App;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.component.sidebar.Sidebar.SidebarItem;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.sidebar.Sidebar.SidebarItem;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A group of items in the `Sidebar`.
@@ -47,7 +47,7 @@ class SidebarGroup<E:SidebarItem> implements SidebarItem {
      * See also `child`.
      */
     public function children(children:Iterable<E>):SidebarGroup<E> {
-        gpui.util.Iterables.appendNonNull(childItems, children);
+        glaze.util.Iterables.appendNonNull(childItems, children);
         return this;
     }
 

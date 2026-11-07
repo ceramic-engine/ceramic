@@ -4,27 +4,27 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.separator.Separator;
-import gpui.component.switch_.Switch;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.separator.Separator;
+import glaze.kit.switch_.Switch;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class SwitchStory extends Model implements Story {
 
@@ -36,7 +36,7 @@ class SwitchStory extends Model implements Story {
         return 'Turn a setting on or off.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -58,7 +58,7 @@ class SwitchStory extends Model implements Story {
 
     @observe var longLabelChecked:Bool = false;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(_:Window, cx:Context<SwitchStory>) {
         super();

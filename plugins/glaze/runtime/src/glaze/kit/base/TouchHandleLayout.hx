@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Hitbox;
-import gpui.base.input.SelectionEdge;
+import glaze.Hitbox;
+import glaze.kit.base.input.SelectionEdge;
 
 /**
  * The touch handles a participant laid out for a frame, with their hitboxes.
  */
 class TouchHandleLayout {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final hitboxes:Array<TouchHandleHitbox>;
 
     public function new(?hitboxes:Array<TouchHandleHitbox>) {

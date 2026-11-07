@@ -3,19 +3,19 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Range;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Pagination;
+import glaze.App;
+import glaze.Range;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Pagination;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Pagination.PaginationItemTools;
+using glaze.kit.base.Pagination.PaginationItemTools;
 
 /**
  * The tests of gpui-base's `pagination.rs`.

@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/animation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.animation;
+package glaze.kit.base.animation;
 
-import gpui.SpringMath.f32;
-import gpui.util.MathUtil;
+import glaze.SpringMath.f32;
+import glaze.util.MathUtil;
 
 /**
  * Easing helpers of gpui-base: a CSS-like `cubic-bezier` and cubic presets.
@@ -49,7 +49,7 @@ class Easings {
 
     /**
      * Samples the unclamped cubic bezier at `t` without building a closure
-     * (used by `gpui.base.motion.Easing`). Control points must already be `f32`.
+     * (used by `glaze.kit.base.motion.Easing`). Control points must already be `f32`.
      */
     public static function sampleCubicBezier(x1:Float, y1:Float, x2:Float, y2:Float, t:Float):Float {
 

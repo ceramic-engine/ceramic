@@ -4,38 +4,38 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Corners;
-import gpui.Hsla;
-import gpui.Subscription;
-import gpui.base.Slider.SliderEvent;
-import gpui.base.Slider.SliderScale;
-import gpui.base.Slider.SliderState;
-import gpui.base.Slider.SliderValue;
-import gpui.component.button.Button;
-import gpui.component.chart.ChartFormat;
-import gpui.component.clipboard.Clipboard;
-import gpui.component.slider.Slider;
-import gpui.component.theme.Colorize;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Corners;
+import glaze.Hsla;
+import glaze.Subscription;
+import glaze.kit.base.Slider.SliderEvent;
+import glaze.kit.base.Slider.SliderScale;
+import glaze.kit.base.Slider.SliderState;
+import glaze.kit.base.Slider.SliderValue;
+import glaze.kit.button.Button;
+import glaze.kit.chart.ChartFormat;
+import glaze.kit.clipboard.Clipboard;
+import glaze.kit.slider.Slider;
+import glaze.kit.theme.Colorize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 @:action(namespace = slider_story, noJson) private class ToggleDisabled implements Action {}
 
@@ -49,7 +49,7 @@ class SliderStory extends Model implements Story {
         return 'Displays a slider control for selecting a value within a range.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -156,7 +156,7 @@ class SliderStory extends Model implements Story {
 
     /** Rust `format!("{}", f32)`: the shortest digits, no `.0` on integers. */
     static function display(value:Float):String {
-        final text = gpui.base.dock.JsonValue.JsonValueTools.formatF32(value);
+        final text = glaze.kit.base.dock.JsonValue.JsonValueTools.formatF32(value);
         return StringTools.endsWith(text, '.0') ? text.substr(0, text.length - 2) : text;
     }
 
@@ -234,7 +234,7 @@ class SliderStory extends Model implements Story {
                 .child(vFlex()
                     .w(px(360.))
                     .gap4()
-                    .child(labelRow(app, 'Storage remaining', '${display(gpui.SpringMath.f32(10. - sliderReverse.read(app).value().start()))} GB'))
+                    .child(labelRow(app, 'Storage remaining', '${display(glaze.SpringMath.f32(10. - sliderReverse.read(app).value().start()))} GB'))
                     .child(new Slider(sliderReverse).horizontal().reverse().disabled(disabled))))
             .child(section('Duration')
                 .description('Compose a slider with a labeled tick scale.')

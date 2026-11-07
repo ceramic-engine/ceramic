@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/highlighter/diagnostic_styles.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.App;
-import gpui.Hsla;
-import gpui.base.input.DiagnosticSeverity;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Hsla;
+import glaze.kit.base.input.DiagnosticSeverity;
+import glaze.kit.theme.Theme;
 
 /**
  * The colors of a diagnostic, from the status colors of the highlight theme.

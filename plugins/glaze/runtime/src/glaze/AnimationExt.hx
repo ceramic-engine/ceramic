@@ -1,11 +1,11 @@
 // Ported from gpui-pre 0.3.10: src/elements/animation.rs (`AnimationExt`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * An extension trait for adding the animation wrapper to both Elements and Components.
- * Use it with `using gpui.AnimationExt;` (`Div` has the same methods built in).
+ * Use it with `using glaze.AnimationExt;` (`Div` has the same methods built in).
  */
 class AnimationExt {
 

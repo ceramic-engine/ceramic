@@ -1,37 +1,37 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/radar_chart.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Point;
-import gpui.SizeOf;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.shape.Arc;
-import gpui.base.plot.shape.RadialLine;
-import gpui.component.chart.Chart.ChartAppear;
-import gpui.component.chart.Chart.TooltipContent;
-import gpui.component.plot.Tooltip;
-import gpui.component.plot.Tooltip.Dot;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Point;
+import glaze.SizeOf;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.shape.Arc;
+import glaze.kit.base.plot.shape.RadialLine;
+import glaze.kit.chart.Chart.ChartAppear;
+import glaze.kit.chart.Chart.TooltipContent;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.plot.Tooltip.Dot;
+import glaze.kit.theme.Theme;
 
 /**
  * The label of a radar dimension: text the chart draws, or an element it
@@ -116,7 +116,7 @@ class RadarChart<T> extends Plot {
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
-        this.data = gpui.util.Iterables.toArray(data);
+        this.data = glaze.util.Iterables.toArray(data);
         idValue = Chart.callerId(pos);
     }
 
@@ -286,7 +286,7 @@ class RadarChart<T> extends Plot {
 
         // Screen angle -> chart angle (0 at 12 o'clock, clockwise).
         final angle = Arc.remEuclid(f(f(Math.atan2(dy, dx)) + Arc.HALF_PI), Arc.TAU);
-        final rounded = gpui.util.MathUtil.round(f(f(angle * n) / Arc.TAU));
+        final rounded = glaze.util.MathUtil.round(f(f(angle * n) / Arc.TAU));
         return Std.int(rounded) % n;
     }
 

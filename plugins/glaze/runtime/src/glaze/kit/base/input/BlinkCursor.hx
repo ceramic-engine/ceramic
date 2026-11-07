@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/blink_cursor.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.Unit;
-import gpui.base.theme.Theme as BaseTheme;
+import glaze.App;
+import glaze.Context;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.Unit;
+import glaze.kit.base.theme.Theme as BaseTheme;
 
 /**
  * The caret blink of a focused input: an entity that toggles `visible` on

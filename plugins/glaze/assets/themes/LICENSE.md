@@ -37,6 +37,6 @@ license texts of the original color schemes. Check the upstream project before
 redistributing a theme outside this plugin.
 
 The default light and dark themes are not here: they are compiled in from
-`runtime/src/gpui/component/theme/default-theme.json` (same origin and license).
+`runtime/src/glaze/kit/theme/default-theme.json` (same origin and license).
 Load the others at runtime with
 `ThemeRegistry.globalMut(cx).loadThemesFromStr(content)`.

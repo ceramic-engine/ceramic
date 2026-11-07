@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/select.rs (`SelectOptions`, `Select`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.select;
+package glaze.kit.select;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.IntoLength;
-import gpui.Length;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.FocusableExt;
-import gpui.component.Icon;
-import gpui.component.Icon.IntoIcon;
-import gpui.component.Sizable;
-import gpui.component.Size;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.IntoLength;
+import glaze.Length;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.FocusableExt;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IntoIcon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The builder options of a `Select`, applied to the state during render.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class SelectOptions {
 
     var style:StyleRefinement = new StyleRefinement();
@@ -64,7 +64,7 @@ class SelectOptions {
 /**
  * A Select element.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class Select<I> implements RenderOnce implements Styled implements Sizable implements FocusableExt {
 
     var idValue:ElementId;
@@ -228,7 +228,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
         final contentFocusHandle = state.read(cx).state.list.read(cx).focusHandle(cx);
         final openState = state;
 
-        final root = new gpui.base.Select(idValue)
+        final root = new glaze.kit.base.Select(idValue)
             .open(isOpen)
             .disabled(disabled);
         if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);

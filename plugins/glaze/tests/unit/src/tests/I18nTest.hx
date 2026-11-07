@@ -1,7 +1,7 @@
 package tests;
 
-import gpui.ViewTracker;
-import gpui.component.I18n;
+import glaze.ViewTracker;
+import glaze.kit.I18n;
 import testing.TestCase;
 
 /**

@@ -4,28 +4,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.list.ListItem;
-import gpui.component.tree.Tree;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.list.ListItem;
+import glaze.kit.tree.Tree;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The test of gpui-component's `tree.rs` and the tree test of gpui-kit's
@@ -57,7 +57,7 @@ class ComponentTreeTest extends TestCase {
     }
 
     function testLegacyTreeTypesAreBaseTypes() {
-        function acceptsBase(item:gpui.base.Tree.TreeItem):String {
+        function acceptsBase(item:glaze.kit.base.Tree.TreeItem):String {
             return item.id;
         }
         assertEquals('id', acceptsBase(new TreeItem('id', 'Label')));

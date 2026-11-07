@@ -2,13 +2,13 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://github.com/d3/d3-sankey
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.base.plot.Plot;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.kit.base.plot.Plot;
 
 /**
  * Horizontal alignment of nodes across layers. Mirrors d3-sankey's
@@ -44,7 +44,7 @@ enum abstract SankeyValueScale(Int) {
         return this;
     }
 
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     function apply(value:Float):Float {
         return switch (cast this : SankeyValueScale) {
             case Linear: value;

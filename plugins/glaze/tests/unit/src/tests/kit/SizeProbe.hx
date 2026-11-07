@@ -3,14 +3,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Records the size a toolbar gives it.
@@ -28,7 +28,7 @@ class SizeProbe implements RenderOnce implements Sizable {
         this.index = index;
     }
 
-    public function withSize(size:gpui.component.Size.IntoSize):SizeProbe {
+    public function withSize(size:glaze.kit.Size.IntoSize):SizeProbe {
         this.size = size;
         return this;
     }

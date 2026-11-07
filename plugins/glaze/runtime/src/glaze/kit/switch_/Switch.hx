@@ -1,45 +1,45 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/switch.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.switch_;
+package glaze.kit.switch_;
 
-import gpui.App;
-import gpui.Background;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.base.Geometry.Side;
-import gpui.base.Switch.SwitchThumb;
-import gpui.base.Switch.SwitchTrack;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Background;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.base.Switch.SwitchThumb;
+import glaze.kit.base.Switch.SwitchTrack;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.component.tooltip.Tooltip.ComponentTooltip;
+import glaze.Prelude.*;
+import glaze.kit.tooltip.Tooltip.ComponentTooltip;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A Switch element that can be toggled on or off.
  *
  * The package is `switch_` because `switch` is a Haxe keyword. The label is
  * a plain string (Rust `Text::String`). The tooltip is a managed tooltip on
- * the track (`gpui.component.tooltip`).
+ * the track (`glaze.kit.tooltip`).
  */
 class Switch implements RenderOnce implements Styled implements Sizable implements Disableable implements FocusableExt {
 
@@ -244,7 +244,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
         // thumb is when the switch is toggled again mid-travel.
         final thumbX = Motion.spring(TransitionId.named(id, 'thumb'), checked ? bgWidth - barWidth - inset * 2 : 0., theme.motionTokens().springMove, window, cx);
 
-        final base = new gpui.base.Switch(id)
+        final base = new glaze.kit.base.Switch(id)
             .checked(checked)
             .disabled(disabledValue)
             .styles(styles -> styles.disabled(s -> s.textColor(disabledLabelColor).cursorNotAllowed()));
@@ -271,14 +271,14 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
             // both default modes.
             .border1()
             .borderColor(theme.transparent)
-            .p(gpui.Prelude.px(inset - 1.));
+            .p(glaze.Prelude.px(inset - 1.));
         if (!checked) track.bg(uncheckedBg);
         track.styles(styles -> styles.checked(s -> s.bg(checkedBg)).disabled(s -> s.bg(disabledBg)));
         // The ring hugs the track, not the row, so the label stays outside it.
         if (isFocused && focusRingEnabled) track.focusRingStyle(window, cx);
         ComponentTooltip.of(tooltipText, tooltipShowDelayValue).apply(track, @:privateAccess track.base);
         // Switch Toggle
-        track.child(new SwitchThumb(checked).rounded(radius).size(barWidth).left(gpui.Prelude.px(thumbX)).bg(toggleBg));
+        track.child(new SwitchThumb(checked).rounded(radius).size(barWidth).left(glaze.Prelude.px(thumbX)).bg(toggleBg));
         base.child(track);
 
         if (labelValue != null) {

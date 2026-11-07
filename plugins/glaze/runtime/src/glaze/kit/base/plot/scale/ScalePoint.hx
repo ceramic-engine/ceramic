@@ -2,10 +2,10 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-scale/point
-package gpui.base.plot.scale;
+package glaze.kit.base.plot.scale;
 
-import gpui.SpringMath;
-import gpui.util.MathUtil;
+import glaze.SpringMath;
+import glaze.util.MathUtil;
 
 /**
  * Point scale maps discrete domain values to continuous range positions.
@@ -27,7 +27,7 @@ class ScalePoint<T> implements Scale<T> {
      * sits in the middle of the range.
      */
     public function new(domain:Iterable<T>, range:Array<Float>) {
-        this.domain = gpui.util.Iterables.toArray(domain);
+        this.domain = glaze.util.Iterables.toArray(domain);
         final len = this.domain.length;
         final r0 = f(range[0]);
         final rangeDiff = f(f(range[1]) - r0);

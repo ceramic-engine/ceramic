@@ -1,15 +1,15 @@
 package tests;
 
-import gpui.Action;
-import gpui.KeyBinding;
-import gpui.KeyBindingMetaIndex;
-import gpui.KeyContext;
-import gpui.Keymap;
-import gpui.Keystroke;
-import gpui.NoAction;
-import gpui.OperatingSystem;
-import gpui.Unbind;
-import gpui.keymap.KeyDispatch;
+import glaze.Action;
+import glaze.KeyBinding;
+import glaze.KeyBindingMetaIndex;
+import glaze.KeyContext;
+import glaze.Keymap;
+import glaze.Keystroke;
+import glaze.NoAction;
+import glaze.OperatingSystem;
+import glaze.Unbind;
+import glaze.keymap.KeyDispatch;
 import testing.TestCase;
 
 /**

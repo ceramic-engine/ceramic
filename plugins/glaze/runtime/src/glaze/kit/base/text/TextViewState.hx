@@ -1,40 +1,40 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.ListAlignment;
-import gpui.ListState;
-import gpui.Model;
-import gpui.OperatingSystem;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.TextStyle;
-import gpui.Window;
-import gpui.base.AutoScroll;
-import gpui.base.TextSelection;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.input.InputActions.SelectAll;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.base.text.RangeHighlightError;
-import gpui.base.text.TextViewSelectionAdapter.BoundsPoints;
-import gpui.base.text.RenderedText.RenderedIndexCell;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.ListAlignment;
+import glaze.ListState;
+import glaze.Model;
+import glaze.OperatingSystem;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.TextStyle;
+import glaze.Window;
+import glaze.kit.base.AutoScroll;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.input.InputActions.SelectAll;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.kit.base.text.RangeHighlightError;
+import glaze.kit.base.text.TextViewSelectionAdapter.BoundsPoints;
+import glaze.kit.base.text.RenderedText.RenderedIndexCell;
+import glaze.util.Utf8;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.base.ElementExt;
+using glaze.AbsoluteLengthTools;
+using glaze.kit.base.ElementExt;
 
 /** Rust `ParsedContent`: a parsed document with the node context it was parsed with. */
 class ParsedContent {
@@ -83,43 +83,43 @@ class TextViewState extends Model implements Render {
     }
 
     final _entityId:Int;
-    @:allow(gpui.base.text) final focusHandle:FocusHandle;
-    @:allow(gpui.base.text) final listState:ListState;
+    @:allow(glaze.kit.base.text) final focusHandle:FocusHandle;
+    @:allow(glaze.kit.base.text) final listState:ListState;
 
     /** The bounds of the text view */
     var _bounds:Bounds = new Bounds();
 
-    @:allow(gpui.base.text) var selectable:Bool = false;
-    @:allow(gpui.base.text) var selectionFormat:SelectionFormat = Plain;
-    @:allow(gpui.base.text) var scrollable:Bool = false;
-    @:allow(gpui.base.text) var maxLines:Null<Int> = null;
+    @:allow(glaze.kit.base.text) var selectable:Bool = false;
+    @:allow(glaze.kit.base.text) var selectionFormat:SelectionFormat = Plain;
+    @:allow(glaze.kit.base.text) var scrollable:Bool = false;
+    @:allow(glaze.kit.base.text) var maxLines:Null<Int> = null;
     /**
      * Line spans reported by `Inline` during prepaint (collected only while
      * `maxLines` is set); cleared by `TextView` at each frame start.
      */
-    @:allow(gpui.base.text) final lineSpans:Array<LineSpan> = [];
+    @:allow(glaze.kit.base.text) final lineSpans:Array<LineSpan> = [];
     /** Whether the last painted frame clipped content due to `maxLines`. */
-    @:allow(gpui.base.text) var clamped:Bool = false;
-    @:allow(gpui.base.text) var textViewStyle:TextViewStyle;
-    @:allow(gpui.base.text) var codeBlockActions:Null<CodeBlockActionsFn> = null;
-    @:allow(gpui.base.text) var codeBlockHighlighter:Null<CodeBlockHighlighterFn> = null;
-    @:allow(gpui.base.text) var tableActions:Null<TableActionsFn> = null;
-    @:allow(gpui.base.text) var imageSource:Null<ImageSourceFn> = null;
-    @:allow(gpui.base.text) var linkClickHandler:Null<LinkClickHandlerFn> = null;
-    @:allow(gpui.base.text) var markdownExtensions:MarkdownExtensions;
+    @:allow(glaze.kit.base.text) var clamped:Bool = false;
+    @:allow(glaze.kit.base.text) var textViewStyle:TextViewStyle;
+    @:allow(glaze.kit.base.text) var codeBlockActions:Null<CodeBlockActionsFn> = null;
+    @:allow(glaze.kit.base.text) var codeBlockHighlighter:Null<CodeBlockHighlighterFn> = null;
+    @:allow(glaze.kit.base.text) var tableActions:Null<TableActionsFn> = null;
+    @:allow(glaze.kit.base.text) var imageSource:Null<ImageSourceFn> = null;
+    @:allow(glaze.kit.base.text) var linkClickHandler:Null<LinkClickHandlerFn> = null;
+    @:allow(glaze.kit.base.text) var markdownExtensions:MarkdownExtensions;
 
-    @:allow(gpui.base.text) var _isSelecting:Bool = false;
+    @:allow(glaze.kit.base.text) var _isSelecting:Bool = false;
     /** Logical ranges retained across compatible resource or presentation reflow. */
-    @:allow(gpui.base.text) var preserveInlineSelection:Bool = false;
+    @:allow(glaze.kit.base.text) var preserveInlineSelection:Bool = false;
     var _multiClickSelection:Null<TextViewMultiClickSelection> = null;
     var selectedTextOverride:Null<String> = null;
     var _selectAll:Bool = false;
-    @:allow(gpui.base.text) final autoScroll:AutoScroll = new AutoScroll();
-    @:allow(gpui.base.text) final selectionAdapter:TextViewSelectionAdapter;
+    @:allow(glaze.kit.base.text) final autoScroll:AutoScroll = new AutoScroll();
+    @:allow(glaze.kit.base.text) final selectionAdapter:TextViewSelectionAdapter;
 
-    @:allow(gpui.base.text) var parsedContent:ParsedContent = new ParsedContent();
-    @:allow(gpui.base.text) final streamFade:StreamFadeTracker = new StreamFadeTracker();
-    var fadeTick:Null<gpui.Task<gpui.Unit>> = null;
+    @:allow(glaze.kit.base.text) var parsedContent:ParsedContent = new ParsedContent();
+    @:allow(glaze.kit.base.text) final streamFade:StreamFadeTracker = new StreamFadeTracker();
+    var fadeTick:Null<glaze.Task<glaze.Unit>> = null;
     /**
      * Content format (markdown / html), used for bounded synchronous parsing of
      * small full-replace updates.
@@ -139,8 +139,8 @@ class TextViewState extends Model implements Render {
     /** The rendered text of `parsedContent`, built when first read. */
     var renderedIndex:RenderedIndexCell = new RenderedIndexCell();
     var rangeHighlights:Null<RangeHighlightFrame> = null;
-    @:allow(gpui.base.text) var pendingReveal:Null<PendingReveal> = null;
-    @:allow(gpui.base.text) var selectionRevision:Int = 0;
+    @:allow(glaze.kit.base.text) var pendingReveal:Null<PendingReveal> = null;
+    @:allow(glaze.kit.base.text) var selectionRevision:Int = 0;
     var compatibleLayoutUpdate:Bool = false;
     var layoutTextStyle:Null<{style:TextStyle, remSize:Float}> = null;
     var parsedError:Null<String> = null;
@@ -281,7 +281,7 @@ class TextViewState extends Model implements Render {
      * Haxe strings have no identity to compare: the same string compares equal
      * here, which is what Rust's pointer test stands for.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setElementText(text:String, cx:Context<TextViewState>):Void {
         final sameString = elementText != null && elementText == text;
         if (sameString && this.text.length == text.length) {
@@ -312,7 +312,7 @@ class TextViewState extends Model implements Render {
         streamFade.setMotion(motion);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setMarkdownExtensions(markdownExtensions:MarkdownExtensions, cx:Context<TextViewState>):Void {
         if (@:privateAccess this.markdownExtensions.revision() == @:privateAccess markdownExtensions.revision()) {
             return;
@@ -363,7 +363,7 @@ class TextViewState extends Model implements Render {
      * A pending full replacement leaves the previous document on screen, but
      * that document must no longer supply clipboard content.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasCurrentCopyDocument():Bool {
         return committedRevision >= fullUpdateRevision;
     }
@@ -372,7 +372,7 @@ class TextViewState extends Model implements Render {
      * Return the selected text, with `blocks` (an inclusive `[start, end]`)
      * bounding which top-level blocks the selection covers.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedTextIn(blocks:Null<Array<Int>>):String {
         final format = effectiveFormat();
 
@@ -415,7 +415,7 @@ class TextViewState extends Model implements Render {
         cx.notify();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function preserveSelectionForReflow():Void {
         preserveInlineSelection = true;
         compatibleLayoutUpdate = true;
@@ -557,7 +557,7 @@ class TextViewState extends Model implements Render {
      * rendered text, as with `setRangeHighlights`.
      *
      * A `scrollable` view scrolls itself. Otherwise the nearest enclosing
-     * `gpui.list` scrolls, as long as the row holding the view is laid out.
+     * `glaze.list` scrolls, as long as the row holding the view is laid out.
      * Any other scroll container scrolls through `TextView.onReveal`.
      *
      * Only the latest reveal is carried out, and it is dropped when its text
@@ -636,7 +636,7 @@ class TextViewState extends Model implements Render {
     }
 
     /** Save bounds and unselect if bounds changed. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function updateBounds(bounds:Bounds, _cx:App):Void {
         _bounds = bounds;
     }
@@ -646,7 +646,7 @@ class TextViewState extends Model implements Render {
      * coordinates (the same space the base selection endpoint stores its point
      * in). Returns `null` for a view that is not virtualized.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function blockIxAt(contentY:Float):Null<Int> {
         if (!scrollable) {
             return null;
@@ -687,17 +687,17 @@ class TextViewState extends Model implements Render {
      * Whether this view has a view-local selection (select-all, multi-click,
      * or override), independent of the window-level selection.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasViewSelection():Bool {
         return _selectAll || _multiClickSelection != null || selectedTextOverride != null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function stopAutoScroll():Void {
         autoScroll.stop();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function resetSelection():Void {
         preserveInlineSelection = false;
         _multiClickSelection = null;
@@ -722,7 +722,7 @@ class TextViewState extends Model implements Render {
         cx.notify();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function scrollOffset():Point {
         return scrollable ? listState.scrollPxOffsetForScrollbar() : new Point(0, 0);
     }
@@ -743,7 +743,7 @@ class TextViewState extends Model implements Render {
      * the caret `end` in window coordinates. A drag from the click extends it
      * by the same unit.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setMultiClickSelection(pos:Point, kind:TextViewMultiClickKind, selectedText:String, start:Bounds, end:Bounds, cx:App):Void {
         preserveInlineSelection = false;
         final scrollOffset = this.scrollOffset();
@@ -765,7 +765,7 @@ class TextViewState extends Model implements Render {
      * Hands a multi-click selection over to the window selection, which a drag
      * from the click has taken beyond what the click selected.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function endMultiClickSelection(cx:App):Void {
         if (_multiClickSelection != null) {
             _multiClickSelection = null;
@@ -774,7 +774,7 @@ class TextViewState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setMultiClickLine(bounds:Bounds, cx:App):Void {
         setMultiClickSelection(bounds.center(), Line, '',
             TouchSelectionSnapshot.caretLineBox(bounds.origin, bounds.size.height),
@@ -787,7 +787,7 @@ class TextViewState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setAutoScroll(delta:Null<Float>, cx:Context<TextViewState>):Void {
         autoScroll.set(delta, cx, (delta, state, cx) -> {
             state.listState.scrollBy(delta);
@@ -799,7 +799,7 @@ class TextViewState extends Model implements Render {
      * Return the window selection (anchor, cursor) in window coordinates if
      * this view participates in it.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectionPoints(cx:App):Null<BoundsPoints> {
         if (!selectable) {
             return null;
@@ -811,7 +811,7 @@ class TextViewState extends Model implements Render {
      * `selectionPoints` for the text that paints now: a drag that started in a
      * table cell selects only in that cell. Call it only while painting.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function paintedSelectionPoints(cx:App):Null<BoundsPoints> {
         if (!selectable) {
             return null;
@@ -819,12 +819,12 @@ class TextViewState extends Model implements Render {
         return selectionAdapter.paintedSelectionPoints(cx);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasSelection(cx:App):Bool {
         return hasViewSelection() || selectionPoints(cx) != null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function onActionSelectAll(_:SelectAll, _:Window, cx:Context<TextViewState>):Void {
         if (!selectable) {
             cx.propagate();
@@ -834,17 +834,17 @@ class TextViewState extends Model implements Render {
         selectAll(cx);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isSelectable():Bool {
         return selectable;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isAllSelected():Bool {
         return _selectAll;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function multiClickSelection():Null<TextViewMultiClickSelection> {
         final selection = _multiClickSelection;
         if (selection == null) return null;
@@ -910,7 +910,7 @@ class TextViewState extends Model implements Render {
                         state.fadeTick = null;
                         cx.notify();
                     });
-                    gpui.Unit.unit;
+                    glaze.Unit.unit;
                 });
             });
         }
@@ -1100,7 +1100,7 @@ class UpdateFuture {
         app.backgroundExecutor().spawn(() -> {
             pollScheduled = false;
             poll();
-            return gpui.Unit.unit;
+            return glaze.Unit.unit;
         });
     }
 
@@ -1181,8 +1181,8 @@ class UpdateFuture {
         }
 
         final newDocument = switch format {
-            case Markdown: gpui.base.text.format.MarkdownFormat.parse(source, nodeCx);
-            case Html: gpui.base.text.format.HtmlFormat.parse(source, nodeCx);
+            case Markdown: glaze.kit.base.text.format.MarkdownFormat.parse(source, nodeCx);
+            case Html: glaze.kit.base.text.format.HtmlFormat.parse(source, nodeCx);
         }
 
         if (options.append) {

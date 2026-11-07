@@ -4,38 +4,38 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.AlertDialog;
-import gpui.base.Base;
-import gpui.base.Dialog;
-import gpui.base.Sheet;
-import gpui.base.Toast;
-import gpui.base.FocusTrap;
-import gpui.base.Actions.Cancel;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.AlertDialog;
+import glaze.kit.base.Base;
+import glaze.kit.base.Dialog;
+import glaze.kit.base.Sheet;
+import glaze.kit.base.Toast;
+import glaze.kit.base.FocusTrap;
+import glaze.kit.base.Actions.Cancel;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The tests of gpui-base's `dialog.rs`, `alert_dialog.rs`, `sheet.rs` and
@@ -85,7 +85,7 @@ class BaseModalsTest extends TestCase {
 // dialog.rs
 
     function testCloseTriggerSuppliesAccessibleButton() {
-        var captured:Null<gpui.base.Button> = null;
+        var captured:Null<glaze.kit.base.Button> = null;
         final cx = open((window, cx) -> {
             new DialogClose().trigger(button -> {
                 button.render(window, cx.app);
@@ -96,7 +96,7 @@ class BaseModalsTest extends TestCase {
         });
         draw(cx);
         assertTrue(captured != null);
-        assertEquals(gpui.base.A11y.Role.Button, captured.a11y.role);
+        assertEquals(glaze.kit.base.A11y.Role.Button, captured.a11y.role);
         assertEquals('Close', captured.a11y.label);
         assertTrue(captured.a11y.clickable);
     }
@@ -388,7 +388,7 @@ class BaseModalsTest extends TestCase {
 
     function testToastExposesAlertSemantics() {
         final toast = new Toast('toast');
-        assertEquals(gpui.base.A11y.Role.Alert, toast.a11y.role);
+        assertEquals(glaze.kit.base.A11y.Role.Alert, toast.a11y.role);
     }
 
     function testStackBootstrapsMeasurementWithoutZeroHeightClipping() {
@@ -397,7 +397,7 @@ class BaseModalsTest extends TestCase {
             .w(px(300.))
             .item('first', div().h(px(80.)).child('Visible')));
         draw(cx);
-        assertEquals(80., state.heights.get(Std.string(gpui.ElementId.Name('first'))));
+        assertEquals(80., state.heights.get(Std.string(glaze.ElementId.Name('first'))));
     }
 
     function testStackExpandsForHoverAndFocus() {

@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/inline_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.util.Utf8;
 
 using unicode_segmentation.UnicodeSegmentation;
 
@@ -17,10 +17,10 @@ using unicode_segmentation.UnicodeSegmentation;
  */
 class InputContent {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final _text:String;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final _tokens:Array<InlineTokenSpan>;
 
     public function new(text:String) {
@@ -28,7 +28,7 @@ class InputContent {
         this._tokens = [];
     }
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     static function withSpans(text:String, tokens:Array<InlineTokenSpan>):InputContent {
         final content = new InputContent(text);
         for (span in tokens) content._tokens.push(span);
@@ -78,7 +78,7 @@ class InputContent {
     }
 
     /** The validation error of a range of `text`, or null when it is valid. */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     static function validateRange(text:String, range:Range):Null<InlineTokenError> {
         final len = Utf8.byteLength(text);
         if (range.start > range.end || range.end > len) {

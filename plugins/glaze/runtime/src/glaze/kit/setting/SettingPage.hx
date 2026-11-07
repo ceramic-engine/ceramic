@@ -1,61 +1,61 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/page.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.Window.StateModel;
-import gpui.base.ScrollBounce;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.label.Label;
-import gpui.component.setting.Settings.SelectIndex;
-import gpui.component.setting.Settings.SettingsState;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.Window.StateModel;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.label.Label;
+import glaze.kit.setting.Settings.SelectIndex;
+import glaze.kit.setting.Settings.SettingsState;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.StyledExt;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * A setting page that can contain multiple setting groups.
  */
 class SettingPage {
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var iconValue:Null<Icon> = null;
 
     var resettableValue:Bool = true;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var defaultOpenValue:Bool = false;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var titleValue:String;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var titleSuffixValue:Null<(Window, App) -> AnyElement> = null;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var descriptionValue:Null<String> = null;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var groupsValue:Array<SettingGroup> = [];
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var headerStyleValue:StyleRefinement = new StyleRefinement();
 
     public function new(title:String) {
@@ -143,7 +143,7 @@ class SettingPage {
      * Add multiple setting groups to the page.
      */
     public function groups(groups:Iterable<SettingGroup>):SettingPage {
-        gpui.util.Iterables.append(groupsValue, groups);
+        glaze.util.Iterables.append(groupsValue, groups);
         return this;
     }
 
@@ -178,7 +178,7 @@ class SettingPage {
      * stays marked, and the last group is marked otherwise. `null` marks the
      * page itself.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function groupAtScrollTop(groupIndices:Array<Int>, selectedGroupIx:Null<Int>, scrollTop:ListOffset, isScrolledToEnd:Bool):Null<Int> {
         final selectedPos:Null<Int> = if (selectedGroupIx != null) {
             final pos = groupIndices.indexOf(selectedGroupIx);
@@ -213,7 +213,7 @@ class SettingPage {
         return true;
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function render(ix:Int, groupIndices:Array<Int>, state:Entity<StateModel<SettingsState>>, options:RenderOptions, window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final searchInput = state.read(cx).value.searchInput;
@@ -339,7 +339,7 @@ class SettingPage {
 /**
  * The keyed state of a page: its list and what it was last rendered with.
  */
-@:allow(gpui.component.setting, tests)
+@:allow(glaze.kit.setting, tests)
 class PageState {
 
     final list:ListState;

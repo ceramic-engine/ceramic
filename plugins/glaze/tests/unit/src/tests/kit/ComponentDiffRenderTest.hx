@@ -4,34 +4,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.diff.Diff;
-import gpui.component.diff.DiffAnnotation;
-import gpui.component.diff.DiffDecoration;
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffGutterMarker;
-import gpui.component.diff.DiffLinePosition;
-import gpui.component.diff.DiffLineRange;
-import gpui.component.diff.DiffSide;
-import gpui.component.diff.DiffState;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.diff.Diff;
+import glaze.kit.diff.DiffAnnotation;
+import glaze.kit.diff.DiffDecoration;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffGutterMarker;
+import glaze.kit.diff.DiffLinePosition;
+import glaze.kit.diff.DiffLineRange;
+import glaze.kit.diff.DiffSide;
+import glaze.kit.diff.DiffState;
 import testing.TestCase;
 import testing.VisualTestContext;
 import tests.kit.ComponentDiffFixture as Fixture;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-kit's diff that build or render the component.
@@ -50,7 +50,7 @@ class ComponentDiffRenderTest extends TestCase {
         app.update(cx -> {
             Component.init(cx);
             // The tests run without system fonts: use the bundled monospace font.
-            gpui.component.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
+            glaze.kit.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
         });
         ceramic.App.app.flushImmediate();
     }

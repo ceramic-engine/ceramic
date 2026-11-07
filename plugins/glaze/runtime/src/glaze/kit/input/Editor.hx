@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/editor.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.DefiniteLength;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.input.EditorState;
-import gpui.base.input.NativeMenu;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.DefiniteLength;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.NativeMenu;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A styled source-code editor.
@@ -78,7 +78,7 @@ class Editor implements RenderOnce implements Styled implements Sizable {
         return editorStyle;
     }
 
-    public function h(height:gpui.IntoDefiniteLength):Editor {
+    public function h(height:glaze.IntoDefiniteLength):Editor {
         this.height = height;
         return this;
     }
@@ -168,7 +168,7 @@ class Editor implements RenderOnce implements Styled implements Sizable {
             // keep working.
             .fontFamily(theme.monoFontFamily)
             .textSize(theme.monoFontSize)
-            .lineHeight(gpui.Prelude.relative(EDITOR_LINE_HEIGHT))
+            .lineHeight(glaze.Prelude.relative(EDITOR_LINE_HEIGHT))
             .withSize(size)
             .appearance(appearanceValue)
             .bordered(borderedValue)

@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/token_presentation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Font;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Font;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Presentation shared by Base and styled controls. It owns no content.
@@ -19,16 +19,16 @@ import gpui.Prelude.*;
  */
 class InlineTokenPresentation {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final renderer:Null<InlineTokenRenderer>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final listener:Null<InlineTokenClickListener>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final hoverListener:Null<InlineTokenHoverListener>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final secret:Bool;
 
     public function new(?renderer:InlineTokenRenderer, ?listener:InlineTokenClickListener, ?hoverListener:InlineTokenHoverListener,

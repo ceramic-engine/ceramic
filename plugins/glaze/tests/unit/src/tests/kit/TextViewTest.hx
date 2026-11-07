@@ -3,43 +3,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.ImageFormat;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionLayer;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.text.InlineElement;
-import gpui.base.text.LineSpan;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.TextView;
-import gpui.base.text.TextViewState;
-import gpui.base.text.TextViewStyle;
-import gpui.base.theme.ColorTokens;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.ImageFormat;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionLayer;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.LineSpan;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.TextView;
+import glaze.kit.base.text.TextViewState;
+import glaze.kit.base.text.TextViewStyle;
+import glaze.kit.base.theme.ColorTokens;
+import glaze.util.Utf8;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 private class TextColorRoot extends Model implements Render {
     public final inherited:Entity<TextViewState>;
@@ -136,7 +136,7 @@ private class InlinePluginTestRoot extends Model implements Render {
                 }).renderWith((_, context, _, _) -> {
                     if (preparedSize == null) return null;
                     final value:Float = preparedSize.value;
-                    final image = gpui.Image.fromBytes(ImageFormat.Svg, haxe.io.Bytes.ofString(
+                    final image = glaze.Image.fromBytes(ImageFormat.Svg, haxe.io.Bytes.ofString(
                         '<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M0 0L40 40" stroke="black"/></svg>'));
                     final unit:Float = context.fontSize() / 16.;
                     return new InlineElement(img(image).w(px(unit * value)).h(px(unit * value))).withBaseline(px(unit * value * 0.75));
@@ -159,9 +159,9 @@ private class PlainRoot extends Model implements Render {
 }
 
 /**
- * Tests of `gpui.base.text.TextView` (Rust `text/text_view.rs`).
+ * Tests of `glaze.kit.base.text.TextView` (Rust `text/text_view.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextViewTest extends KitTestCase {
 
     final contexts:Array<VisualTestContext> = [];
@@ -184,7 +184,7 @@ class TextViewTest extends KitTestCase {
      */
     public static function initBase(cx:App):Void {
         Base.init(cx);
-        gpui.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
+        glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
     }
 
     static function draw(cx:VisualTestContext):Void {
@@ -198,7 +198,7 @@ class TextViewTest extends KitTestCase {
         final colors = ColorTokens.light();
         app.update(cx -> {
             initBase(cx);
-            new gpui.base.text.TextView.TextViewDefaults()
+            new glaze.kit.base.text.TextView.TextViewDefaults()
                 .withStyle(TextViewStyle.defaultValue())
                 .withInheritTextColor(true)
                 .install(cx);
@@ -277,7 +277,7 @@ class TextViewTest extends KitTestCase {
     }
 
     function testPluginAcceptsTextViewPluginsBeyondMarkdown() {
-        final plugin:gpui.base.text.TextView.TextViewPlugin = new DummyTextViewPlugin();
+        final plugin:glaze.kit.base.text.TextView.TextViewPlugin = new DummyTextViewPlugin();
         final view = TextView.markdown("plugin-test", "").selectable(false).plugin(plugin);
         assertTrue(view._selectable);
     }
@@ -286,7 +286,7 @@ class TextViewTest extends KitTestCase {
         final defaultView = TextView.markdown("default-code", "```rust\nfn main() {}\n```");
         assertTrue(defaultView._codeBlockHighlighter == null);
         final view = defaultView.codeBlockHighlighter(block -> [
-            new gpui.base.input.StyledRange(new gpui.Range(0, Utf8.byteLength(block.code())), new gpui.HighlightStyle())
+            new glaze.kit.base.input.StyledRange(new glaze.Range(0, Utf8.byteLength(block.code())), new glaze.HighlightStyle())
         ]);
         assertTrue(view._codeBlockHighlighter != null);
     }
@@ -294,7 +294,7 @@ class TextViewTest extends KitTestCase {
     function testUnstyledTextViewUsesBaseTokensForLinkAndInputSelection() {
         initApp();
         app.update(cx -> {
-            final colors = gpui.base.theme.Theme.globalMut(cx).tokens.colors;
+            final colors = glaze.kit.base.theme.Theme.globalMut(cx).tokens.colors;
             colors.primary = rgb(0x55aaff).toHsla();
             colors.selection = rgb(0x335577).toHsla();
         });
@@ -310,10 +310,10 @@ class TextViewTest extends KitTestCase {
         initApp();
         app.update(cx -> {
             final base = new StyleRefinement();
-            base.text = new gpui.TextStyleRefinement();
-            base.text.fontSize = gpui.AbsoluteLength.Rems(1.);
-            base.background = new gpui.Background(Solid, Srgb, red());
-            new gpui.base.text.TextView.TextViewDefaults()
+            base.text = new glaze.TextStyleRefinement();
+            base.text.fontSize = glaze.AbsoluteLength.Rems(1.);
+            base.background = new glaze.Background(Solid, Srgb, red());
+            new glaze.kit.base.text.TextView.TextViewDefaults()
                 .withStyle(TextViewStyle.defaultValue().withInlineCodeStyle(base))
                 .install(cx);
         });
@@ -322,30 +322,30 @@ class TextViewTest extends KitTestCase {
             state = cx.newEntity(cx -> TextViewState.markdown("before `code` after", cx));
             final s = state;
             final refinement = new StyleRefinement();
-            refinement.borderWidthLeft = gpui.AbsoluteLength.Pixels(1.);
-            refinement.borderWidthRight = gpui.AbsoluteLength.Pixels(1.);
-            refinement.borderWidthTop = gpui.AbsoluteLength.Pixels(1.);
-            refinement.borderWidthBottom = gpui.AbsoluteLength.Pixels(1.);
+            refinement.borderWidthLeft = glaze.AbsoluteLength.Pixels(1.);
+            refinement.borderWidthRight = glaze.AbsoluteLength.Pixels(1.);
+            refinement.borderWidthTop = glaze.AbsoluteLength.Pixels(1.);
+            refinement.borderWidthBottom = glaze.AbsoluteLength.Pixels(1.);
             refinement.borderColor = blue();
             return new PlainRoot(() -> TextView.create(s).inlineCodeStyle(refinement));
         });
         drawn(result.cx);
         final style = state.read(app).textViewStyle.inlineCodeStyle();
-        assertTrue(style.text != null && Type.enumEq(style.text.fontSize, gpui.AbsoluteLength.Rems(1.)));
+        assertTrue(style.text != null && Type.enumEq(style.text.fontSize, glaze.AbsoluteLength.Rems(1.)));
         assertTrue(style.background != null);
         assertTrue(style.borderColor != null && style.borderColor.equals(blue()));
-        assertTrue(Type.enumEq(style.borderWidthLeft, gpui.AbsoluteLength.Pixels(1.)));
+        assertTrue(Type.enumEq(style.borderWidthLeft, glaze.AbsoluteLength.Pixels(1.)));
     }
 
     function testListAndBlockquoteViewRefinementsKeepUnspecifiedStyleProperties() {
         initApp();
         app.update(cx -> {
             final list = new StyleRefinement();
-            list.text = new gpui.TextStyleRefinement();
-            list.text.fontWeight = gpui.FontWeight.BOLD;
+            list.text = new glaze.TextStyleRefinement();
+            list.text.fontWeight = glaze.FontWeight.BOLD;
             final quote = new StyleRefinement();
-            quote.borderWidthLeft = gpui.AbsoluteLength.Pixels(4.);
-            new gpui.base.text.TextView.TextViewDefaults()
+            quote.borderWidthLeft = glaze.AbsoluteLength.Pixels(4.);
+            new glaze.kit.base.text.TextView.TextViewDefaults()
                 .withStyle(TextViewStyle.defaultValue().withListStyle(list).withBlockquoteStyle(quote))
                 .install(cx);
         });
@@ -354,7 +354,7 @@ class TextViewTest extends KitTestCase {
             state = cx.newEntity(cx -> TextViewState.markdown("- item\n\n> quote", cx));
             final s = state;
             final listRefinement = new StyleRefinement();
-            listRefinement.text = new gpui.TextStyleRefinement();
+            listRefinement.text = new glaze.TextStyleRefinement();
             listRefinement.text.color = blue();
             final quoteRefinement = new StyleRefinement();
             quoteRefinement.borderColor = blue();
@@ -364,10 +364,10 @@ class TextViewTest extends KitTestCase {
         final style = state.read(app).textViewStyle;
         final marker = style.listStyle();
         assertTrue(marker.text.color.equals(blue()));
-        assertEquals(gpui.FontWeight.BOLD, marker.text.fontWeight);
+        assertEquals(glaze.FontWeight.BOLD, marker.text.fontWeight);
         final quote = style.blockquoteStyle();
         assertTrue(quote.borderColor.equals(blue()));
-        assertTrue(Type.enumEq(quote.borderWidthLeft, gpui.AbsoluteLength.Pixels(4.)));
+        assertTrue(Type.enumEq(quote.borderWidthLeft, glaze.AbsoluteLength.Pixels(4.)));
     }
 
     // Documents
@@ -506,17 +506,17 @@ class TextViewTest extends KitTestCase {
         addWindowView((_, cx) -> {
             state = cx.newEntity(cx -> TextViewState.markdown("first\n\nsecond\n\nthird\n\nfourth\n\nfifth\n\nsixth\n\nseventh", cx));
             final s = state;
-            return new PlainRoot(() -> gpui.base.Prelude.vFlex()
+            return new PlainRoot(() -> glaze.kit.base.Prelude.vFlex()
                 .sizeFull()
                 .p4()
                 .gap4()
-                .child(gpui.base.Prelude.hFlex().maxW(px(480.)).gap3().child("header"))
-                .child(gpui.base.Prelude.vFlex()
+                .child(glaze.kit.base.Prelude.hFlex().maxW(px(480.)).gap3().child("header"))
+                .child(glaze.kit.base.Prelude.vFlex()
                     .flex1()
                     .minH0()
                     .gap4()
                     .id("clamped-page-scroll")
-                    .child(gpui.base.Prelude.vFlex().maxW(px(480.)).p3().gap2().child(TextView.create(s).maxLines(3)))
+                    .child(glaze.kit.base.Prelude.vFlex().maxW(px(480.)).p3().gap2().child(TextView.create(s).maxLines(3)))
                     .overflowYScroll()));
         });
         assertTrue(state.read(app).isClamped());
@@ -572,10 +572,10 @@ class TextViewTest extends KitTestCase {
 
         assertEquals(3, clicks.length);
         assertEquals("https://example.com", clicks[0].url);
-        assertTrue(!gpui.ClickEvent.ClickEventTools.isRightClick(clicks[0].event) && !gpui.ClickEvent.ClickEventTools.isMiddleClick(clicks[0].event));
-        assertTrue(gpui.ClickEvent.ClickEventTools.modifiers(clicks[0].event).control);
-        assertTrue(gpui.ClickEvent.ClickEventTools.isMiddleClick(clicks[1].event));
-        assertTrue(gpui.ClickEvent.ClickEventTools.isRightClick(clicks[2].event));
+        assertTrue(!glaze.ClickEvent.ClickEventTools.isRightClick(clicks[0].event) && !glaze.ClickEvent.ClickEventTools.isMiddleClick(clicks[0].event));
+        assertTrue(glaze.ClickEvent.ClickEventTools.modifiers(clicks[0].event).control);
+        assertTrue(glaze.ClickEvent.ClickEventTools.isMiddleClick(clicks[1].event));
+        assertTrue(glaze.ClickEvent.ClickEventTools.isRightClick(clicks[2].event));
         assertEquals(0, opened.length);
     }
 
@@ -645,8 +645,8 @@ class TextViewTest extends KitTestCase {
         assertEquals("quick", StringTools.trim(selectedOf(result.view.read(app).textView)));
     }
 
-    static function longPressEvent(cx:VisualTestContext, phase:gpui.TouchPhase, start:Point, position:Point):Void {
-        cx.simulateEvent(new gpui.LongPressEvent(phase, start, position));
+    static function longPressEvent(cx:VisualTestContext, phase:glaze.TouchPhase, start:Point, position:Point):Void {
+        cx.simulateEvent(new glaze.LongPressEvent(phase, start, position));
     }
 
     function testLongPressSelectsWordThenDragExtendsSelection() {
@@ -658,7 +658,7 @@ class TextViewTest extends KitTestCase {
         longPressEvent(cx, Started, startPosition, startPosition);
         draw(cx);
         assertEquals("quick", StringTools.trim(selectedOf(result.view.read(app).textView)));
-        for (phase in [gpui.TouchPhase.Moved, gpui.TouchPhase.Ended]) {
+        for (phase in [glaze.TouchPhase.Moved, glaze.TouchPhase.Ended]) {
             longPressEvent(cx, phase, startPosition, new Point(220., 16.));
         }
         draw(cx);
@@ -676,7 +676,7 @@ class TextViewTest extends KitTestCase {
         drawn(cx);
 
         final startPosition = new Point(70., 16.);
-        for (phase in [gpui.TouchPhase.Started, gpui.TouchPhase.Ended]) {
+        for (phase in [glaze.TouchPhase.Started, glaze.TouchPhase.Ended]) {
             longPressEvent(cx, phase, startPosition, startPosition);
             draw(cx);
         }
@@ -691,10 +691,10 @@ class TextViewTest extends KitTestCase {
         // knob below the line, the selection follows along the line.
         final end = snapshot.end();
         final finger = new Point(end.left(), end.bottom() + 20.);
-        cx.update((window, app) -> TextSelection.beginEdgeDrag(gpui.base.input.SelectionEdge.End, finger, window, app));
+        cx.update((window, app) -> TextSelection.beginEdgeDrag(glaze.kit.base.input.SelectionEdge.End, finger, window, app));
         draw(cx);
         snapshot = cx.update((window, app) -> TextSelection.touchSelection(window, app));
-        assertEquals(gpui.base.input.SelectionEdge.End, snapshot.dragging());
+        assertEquals(glaze.kit.base.input.SelectionEdge.End, snapshot.dragging());
         assertFalse(snapshot.isMenuOpen());
         cx.update((window, app) -> TextSelection.updateEdgeDrag(new Point(290., finger.y), window, app));
         draw(cx);
@@ -715,7 +715,7 @@ class TextViewTest extends KitTestCase {
         assertNotNull(snapshot, "select all keeps the touch selection");
         final start = snapshot.start();
         cx.update((window, app) -> {
-            TextSelection.beginEdgeDrag(gpui.base.input.SelectionEdge.Start, start.origin, window, app);
+            TextSelection.beginEdgeDrag(glaze.kit.base.input.SelectionEdge.Start, start.origin, window, app);
             TextSelection.updateEdgeDrag(new Point(selectStart, start.origin.y), window, app);
             TextSelection.endEdgeDrag(window, app);
         });
@@ -724,7 +724,7 @@ class TextViewTest extends KitTestCase {
 
         // A press on the menu leaves the selection alone; one on the text
         // clears it.
-        final menu = new gpui.Bounds(new Point(0., 200.), new gpui.Size(120., 32.));
+        final menu = new glaze.Bounds(new Point(0., 200.), new glaze.Size(120., 32.));
         cx.update((window, app) -> TextSelection.registerTouchUi(menu, window, app));
         cx.simulateEvent(new MouseDownEvent(Left, new Point(10., 210.), Modifiers.none(), 1, false));
         assertEquals("select value", selected());
@@ -1277,7 +1277,7 @@ class TextViewTest extends KitTestCase {
         final result = copyDocument(markdown, Plain, true);
         final state = result.view.read(app).textView;
         function scrollTo(ix:Int) {
-            state.read(app).listState.scrollTo(new gpui.ListOffset(ix, 0.));
+            state.read(app).listState.scrollTo(new glaze.ListOffset(ix, 0.));
             draw(result.cx);
         }
         scrollTo(90);
@@ -1314,7 +1314,7 @@ class TextViewTest extends KitTestCase {
                 return true;
             });
             draw(result.cx);
-            state.read(app).listState.scrollTo(new gpui.ListOffset(179, 0.));
+            state.read(app).listState.scrollTo(new glaze.ListOffset(179, 0.));
             draw(result.cx);
             // Two completed frames let GPUI retire temporary flow fragments.
             draw(result.cx);
@@ -1342,7 +1342,7 @@ class TextViewTest extends KitTestCase {
         initApp();
         final state = new ListState(n, ListAlignment.Top, 2048.).measureAll();
         final result = addWindowView((_, _) -> new PlainRoot(() -> div().w(px(360.)).h(px(500.)).child(
-            list(state, (ix, _, _) -> div().wFull().child(TextView.markdown(gpui.ElementId.NamedInteger("md", ix), items[ix % items.length]))).sizeFull()
+            list(state, (ix, _, _) -> div().wFull().child(TextView.markdown(glaze.ElementId.NamedInteger("md", ix), items[ix % items.length]))).sizeFull()
         )));
         final cx = result.cx;
         cx.runUntilParked();
@@ -1419,7 +1419,7 @@ class TextViewTest extends KitTestCase {
                 case _: null;
             }
         }).renderWith((_, _, _, _) -> {
-            return new InlineElement(new gpui.base.HoverCard("mention-hover")
+            return new InlineElement(new glaze.kit.base.HoverCard("mention-hover")
                 .anchor(TopCenter)
                 .trigger(div().child("@member"))
                 .content((_, _, cx) -> {
@@ -1481,9 +1481,9 @@ class TextViewTest extends KitTestCase {
         // from the same body finds the entry the text view's `img` registered
         // when it rendered: proof the body was decoded in place instead of
         // being fetched over HTTP.
-        final bytes = gpui.base.text.DataUrl.process('data:image/png;base64,$pngBase64').decodeToVec().body;
-        final image = gpui.Image.fromBytes(ImageFormat.Png, bytes);
-        assertTrue(gpui.ImageSource.ImageSourceTools.isAssetCached(gpui.ImageSource.Image(image), app),
+        final bytes = glaze.kit.base.text.DataUrl.process('data:image/png;base64,$pngBase64').decodeToVec().body;
+        final image = glaze.Image.fromBytes(ImageFormat.Png, bytes);
+        assertTrue(glaze.ImageSource.ImageSourceTools.isAssetCached(glaze.ImageSource.Image(image), app),
             "the data URL image must be handed to GPUI as decoded bytes");
     }
 
@@ -1491,9 +1491,9 @@ class TextViewTest extends KitTestCase {
         initApp();
         final recorder = new DebugBoundsRecorder();
         final result = addWindowView((_, _) -> new PlainRoot(() -> div().w(px(840.)).h(px(400.)).child(
-            gpui.base.resizable.Resizable.hResizable("markdown-width-test")
-                .child(gpui.base.resizable.Resizable.resizablePanel().child(div()))
-                .child(gpui.base.resizable.Resizable.resizablePanel().child(
+            glaze.kit.base.resizable.Resizable.hResizable("markdown-width-test")
+                .child(glaze.kit.base.resizable.Resizable.resizablePanel().child(div()))
+                .child(glaze.kit.base.resizable.Resizable.resizablePanel().child(
                     TextView.markdown(
                         "list-with-code",
                         "1. List item\n   ```rust\n   nested code\n   ```\n\n```rust\ntop-level code\n```"
@@ -1526,7 +1526,7 @@ class TextViewTest extends KitTestCase {
         final extensions = new MarkdownExtensions().plugin(new TextTestInlinePlugin("math")
             .parseWith((node, _) -> node.match(InlineMath(_)) ? new MarkdownNode("math", null).text("formula") : null)
             .renderWith((_, context, _, _) -> {
-                if (context.textStyle().fontWeight != gpui.FontWeight.BOLD) sawBold = false;
+                if (context.textStyle().fontWeight != glaze.FontWeight.BOLD) sawBold = false;
                 return new InlineElement(div().child("formula"));
             }));
         final result = addWindowView((_, cx) -> {
@@ -1578,16 +1578,16 @@ class TextViewTest extends KitTestCase {
         }
         assertEquals(3, clicks.length);
         for (click in clicks) assertEquals("https://example.com/image-link", click.url);
-        assertTrue(!gpui.ClickEvent.ClickEventTools.isRightClick(clicks[0].event) && !gpui.ClickEvent.ClickEventTools.isMiddleClick(clicks[0].event));
-        assertTrue(gpui.ClickEvent.ClickEventTools.isMiddleClick(clicks[1].event));
-        assertTrue(gpui.ClickEvent.ClickEventTools.isRightClick(clicks[2].event));
+        assertTrue(!glaze.ClickEvent.ClickEventTools.isRightClick(clicks[0].event) && !glaze.ClickEvent.ClickEventTools.isMiddleClick(clicks[0].event));
+        assertTrue(glaze.ClickEvent.ClickEventTools.isMiddleClick(clicks[1].event));
+        assertTrue(glaze.ClickEvent.ClickEventTools.isRightClick(clicks[2].event));
         assertEquals(0, opened.length);
     }
 
     function testTableActionsRenderBelowTheTable() {
         for (scroll in [false, true]) {
             initApp();
-            final captured:Array<gpui.base.text.TableData> = [];
+            final captured:Array<glaze.kit.base.text.TableData> = [];
             var actionBounds:Null<Bounds> = null;
             final tableStyle = new StyleRefinement();
             if (scroll) tableStyle.overflowX = Scroll;
@@ -1597,7 +1597,7 @@ class TextViewTest extends KitTestCase {
                     .tableActions((table, _, _) -> {
                         captured.push(table);
                         // Rust reads the action's debug bounds.
-                        return gpui.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> actionBounds = bounds).child("Copy");
+                        return glaze.kit.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> actionBounds = bounds).child("Copy");
                     })
             )));
             drawn(result.cx);
@@ -1616,12 +1616,12 @@ class TextViewTest extends KitTestCase {
         final boxes = new Map<String, Bounds>();
         function probe(name:String, view:TextView):IntoElement {
             // Rust reads the wrappers' debug bounds.
-            return gpui.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> boxes.set(name, bounds)).child(view);
+            return glaze.kit.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> boxes.set(name, bounds)).child(view);
         }
         function custom():TextViewStyle {
             return TextViewStyle.defaultValue().withHeading(level -> {
                 final refinement = new StyleRefinement();
-                if (level == 1) refinement.paddingBottom = gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Rems(2.));
+                if (level == 1) refinement.paddingBottom = glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Rems(2.));
                 return refinement;
             });
         }
@@ -1699,12 +1699,12 @@ class TextViewTest extends KitTestCase {
                 final s = state;
                 return new PlainRoot(() -> {
                     final codeBlock = new StyleRefinement();
-                    codeBlock.maxSizeHeight = gpui.Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(codeHeight)));
+                    codeBlock.maxSizeHeight = glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(codeHeight)));
                     codeBlock.overflowY = Scroll;
                     var view = TextView.create(s).withStyle(TextViewStyle.defaultValue().withCodeBlock(codeBlock)).scrollable(true);
                     if (actions) {
                         // Rust reads the action's debug bounds.
-                        view = view.codeBlockActions((_, _, _) -> gpui.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> action = bounds).child("Copy"));
+                        view = view.codeBlockActions((_, _, _) -> glaze.kit.base.ElementExt.onPrepaint(div(), (bounds, _, _) -> action = bounds).child("Copy"));
                     }
                     return div().w(px(320.)).h(px(200.)).child(view);
                 });
@@ -1712,7 +1712,7 @@ class TextViewTest extends KitTestCase {
             final cx = result.cx;
             final step = 20.;
             function wheelAt(y:Float) {
-                cx.simulateEvent(new gpui.ScrollEvent(new Point(20., y), gpui.ScrollDelta.Pixels(new Point(0., -step))));
+                cx.simulateEvent(new glaze.ScrollEvent(new Point(20., y), glaze.ScrollDelta.Pixels(new Point(0., -step))));
             }
             // The code block is first in the view, and painted lines are
             // clipped to its viewport.
@@ -1749,7 +1749,7 @@ class TextViewTest extends KitTestCase {
 
 }
 
-private class DummyTextViewPlugin implements gpui.base.text.TextView.TextViewPlugin {
+private class DummyTextViewPlugin implements glaze.kit.base.text.TextView.TextViewPlugin {
     public function new() {}
 
     public function setup(textView:TextView):TextView {
@@ -1781,7 +1781,7 @@ private class InlineHoverCard extends Model implements Render {
  * per window and draw.
  */
 private class DebugBoundsRecorder {
-    final recorded:Map<String, {window:Int, draw:Int, bounds:gpui.Bounds}> = new Map();
+    final recorded:Map<String, {window:Int, draw:Int, bounds:glaze.Bounds}> = new Map();
 
     public function new() {}
 
@@ -1789,21 +1789,21 @@ private class DebugBoundsRecorder {
         return new DebugBoundsElement(this, selector, element);
     }
 
-    public function record(window:Window, selector:String, bounds:gpui.Bounds):Void {
+    public function record(window:Window, selector:String, bounds:glaze.Bounds):Void {
         recorded.set(selector, {window: window.id, draw: window.drawCount, bounds: bounds});
     }
 
     /** The bounds `selector` was drawn at by the last frame of `window`. */
-    public function bounds(window:Window, selector:String):Null<gpui.Bounds> {
+    public function bounds(window:Window, selector:String):Null<glaze.Bounds> {
         final entry = recorded.get(selector);
         return entry != null && entry.window == window.id && entry.draw == window.drawCount - 1 ? entry.bounds : null;
     }
 }
 
-private class DebugBoundsElement extends gpui.Element {
+private class DebugBoundsElement extends glaze.Element {
     final recorder:DebugBoundsRecorder;
     final selector:String;
-    final child:gpui.AnyElement;
+    final child:glaze.AnyElement;
 
     public function new(recorder:DebugBoundsRecorder, selector:String, child:IntoElement) {
         this.recorder = recorder;
@@ -1811,16 +1811,16 @@ private class DebugBoundsElement extends gpui.Element {
         this.child = child.intoAnyElement();
     }
 
-    public function requestLayout(id:Null<gpui.GlobalElementId>, window:Window, cx:App):gpui.LayoutId {
+    public function requestLayout(id:Null<glaze.GlobalElementId>, window:Window, cx:App):glaze.LayoutId {
         return child.requestLayout(window, cx);
     }
 
-    public function prepaint(id:Null<gpui.GlobalElementId>, bounds:gpui.Bounds, window:Window, cx:App):Void {
+    public function prepaint(id:Null<glaze.GlobalElementId>, bounds:glaze.Bounds, window:Window, cx:App):Void {
         recorder.record(window, selector, bounds);
         child.prepaint(window, cx);
     }
 
-    public function paint(id:Null<gpui.GlobalElementId>, bounds:gpui.Bounds, window:Window, cx:App):Void {
+    public function paint(id:Null<glaze.GlobalElementId>, bounds:glaze.Bounds, window:Window, cx:App):Void {
         child.paint(window, cx);
     }
 }

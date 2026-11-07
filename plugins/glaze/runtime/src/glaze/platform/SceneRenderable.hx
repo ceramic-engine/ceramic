@@ -4,25 +4,25 @@
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 // Contrast and gamma correction adapted by GPUI from Windows Terminal,
 // Copyright (c) Microsoft Corporation, licensed under MIT.
-package gpui.platform;
+package glaze.platform;
 
 import backend.BlendMode;
 import ceramic.Renderable;
 import ceramic.Shader;
 import ceramic.Texture;
-import gpui.scene.MonochromeSprite;
-import gpui.scene.PolychromeSprite;
-import gpui.scene.PrimitiveBatch;
-import gpui.scene.Quad;
-import gpui.scene.Scene;
-import gpui.scene.Shadow;
-import gpui.scene.Underline;
+import glaze.scene.MonochromeSprite;
+import glaze.scene.PolychromeSprite;
+import glaze.scene.PrimitiveBatch;
+import glaze.scene.Quad;
+import glaze.scene.Scene;
+import glaze.scene.Shadow;
+import glaze.scene.Underline;
 
 /**
  * Ceramic renderable that draws a GPUI `Scene`.
  *
  * Primitives are emitted batch by batch through Ceramic's `backend.Draw`,
- * with the `shaders.Gpui*` shaders. Each primitive is a quad of 4 vertices
+ * with the `shaders.Glaze*` shaders. Each primitive is a quad of 4 vertices
  * carrying its data as custom float attributes (Ceramic has no instancing).
  *
  * The scene is in scaled pixels: positions are divided by `sceneScale` to get
@@ -41,23 +41,23 @@ import gpui.scene.Underline;
  * one pass with a scissor per damage rectangle, which gives the same bytes
  * as a full redraw.
  */
-@:allow(gpui.platform.SceneTargetDrawer)
+@:allow(glaze.platform.SceneTargetDrawer)
 class SceneRenderable extends Renderable {
 
     /**
      * Whether new renderables draw into a render texture (see
      * `renderToTexture`). On by default: the 425 golden scenes give the same
-     * bytes in both modes. The `gpui_no_render_to_texture` define turns it off.
+     * bytes in both modes. The `glaze_no_render_to_texture` define turns it off.
      */
-    public static var defaultRenderToTexture:Bool = #if gpui_no_render_to_texture false #else true #end;
+    public static var defaultRenderToTexture:Bool = #if glaze_no_render_to_texture false #else true #end;
 
     /**
      * Whether new renderables draw only the changed region of their render
      * texture (see `partialRendering`). On by default: every frame of the
      * golden scenes (scripts replayed frame by frame) gives the same bytes
-     * as a full redraw. The `gpui_no_partial_rendering` define turns it off.
+     * as a full redraw. The `glaze_no_partial_rendering` define turns it off.
      */
-    public static var defaultPartialRendering:Bool = #if gpui_no_partial_rendering false #else true #end;
+    public static var defaultPartialRendering:Bool = #if glaze_no_partial_rendering false #else true #end;
 
     /**
      * Test aid: with `partialRendering`, also draw every frame entirely into
@@ -303,7 +303,7 @@ class SceneRenderable extends Renderable {
 
     /**
      * Vertex attributes and varying rows (GLSL ES 1.0 appendix A packing)
-     * the default shaders need: `shaders.GpuiQuad` reads 12 attributes and
+     * the default shaders need: `shaders.GlazeQuad` reads 12 attributes and
      * 10 varying rows.
      */
     public static inline final DEFAULT_SHADERS_VERTEX_ATTRIBUTES = 12;
@@ -311,12 +311,12 @@ class SceneRenderable extends Renderable {
 
     /**
      * Whether quads, shadows and paths are drawn with the compact shaders
-     * (`shaders.GpuiQuadCompact`, `shaders.GpuiShadowCompact`,
-     * `shaders.GpuiPathSpriteCompact`), which fit in 8 vertex attributes
+     * (`shaders.GlazeQuadCompact`, `shaders.GlazeShadowCompact`,
+     * `shaders.GlazePathSpriteCompact`), which fit in 8 vertex attributes
      * and 8 varying rows: only when the GPU gives less than the default
      * shaders need, like WebGL in Firefox with fingerprinting resistance
      * or `webgl.min_capability_mode`. Chosen once by `chooseShaders()`,
-     * before the shaders are loaded (define `gpui_compact_shaders` to
+     * before the shaders are loaded (define `glaze_compact_shaders` to
      * force them, for tests).
      */
     public static var useCompactShaders(default, null):Bool = false;
@@ -335,12 +335,12 @@ class SceneRenderable extends Renderable {
 
     /**
      * Sets `useCompactShaders` from the limits of the GPU and returns it.
-     * Called by `ceramic.GpuiPlugin` before it adds the shaders to the
+     * Called by `ceramic.GlazePlugin` before it adds the shaders to the
      * default assets.
      */
     public static function chooseShaders():Bool {
 
-        #if gpui_compact_shaders
+        #if glaze_compact_shaders
         useCompactShaders = true;
         #else
         final backendShaders = ceramic.App.app.backend.shaders;
@@ -523,7 +523,7 @@ class SceneRenderable extends Renderable {
             targetQuad = new ceramic.Quad();
             // Rows bottom up (see `SceneTargetDrawer.render()`)
             if (MIRROR_TARGET) targetQuad.scaleY = -1;
-            // Input goes to this renderable (see `GpuiInput`)
+            // Input goes to this renderable (see `GlazeInput`)
             targetQuad.touchable = false;
             add(targetQuad);
         }
@@ -662,25 +662,25 @@ class SceneRenderable extends Renderable {
 
     /**
      * Loads the GPUI shaders. They must have been added to the assets first,
-     * which `GpuiPlugin` does with the default assets.
+     * which `GlazePlugin` does with the default assets.
      */
     function ensureShaders():Bool {
 
         if (quadShader == null) {
             final assets = ceramic.App.app.assets;
             if (useCompactShaders) {
-                quadShader = assets.shader(shaders.GpuiQuadCompact);
-                shadowShader = assets.shader(shaders.GpuiShadowCompact);
-                pathSpriteShader = assets.shader(shaders.GpuiPathSpriteCompact);
+                quadShader = assets.shader(shaders.GlazeQuadCompact);
+                shadowShader = assets.shader(shaders.GlazeShadowCompact);
+                pathSpriteShader = assets.shader(shaders.GlazePathSpriteCompact);
             }
             else {
-                quadShader = assets.shader(shaders.GpuiQuad);
-                shadowShader = assets.shader(shaders.GpuiShadow);
-                pathSpriteShader = assets.shader(shaders.GpuiPathSprite);
+                quadShader = assets.shader(shaders.GlazeQuad);
+                shadowShader = assets.shader(shaders.GlazeShadow);
+                pathSpriteShader = assets.shader(shaders.GlazePathSprite);
             }
-            underlineShader = assets.shader(shaders.GpuiUnderline);
-            monoSpriteShader = assets.shader(shaders.GpuiMonoSprite);
-            polySpriteShader = assets.shader(shaders.GpuiPolySprite);
+            underlineShader = assets.shader(shaders.GlazeUnderline);
+            monoSpriteShader = assets.shader(shaders.GlazeMonoSprite);
+            polySpriteShader = assets.shader(shaders.GlazePolySprite);
         }
 
         return quadShader != null
@@ -697,9 +697,9 @@ class SceneRenderable extends Renderable {
         // In `renderToTexture` mode, `targetDrawer` draws the scene into the
         // texture shown by `targetQuad`
         if (renderToTexture) return;
-        gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
+        glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.RENDER);
         renderScene(draw, matA, matB, matC, matD, matTX, matTY);
-        gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
+        glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.RENDER);
 
     }
 
@@ -885,7 +885,7 @@ class SceneRenderable extends Renderable {
 
     function drawQuads(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
-        // Order barrier of the dash code (see `GpuiQuad_Frag.dashOne`)
+        // Order barrier of the dash code (see `GlazeQuad_Frag.dashOne`)
         dashOneUniform.setFloat(quadShader, 1);
         useShader(draw, quadShader);
         final quads = scene.quads;
@@ -1179,7 +1179,7 @@ class SceneRenderable extends Renderable {
 
     /**
      * Paths are 4x MSAA coverage tiles in the atlas (see `PathRasterizer`),
-     * drawn with `shaders.GpuiPathSprite`, which fills them with their
+     * drawn with `shaders.GlazePathSprite`, which fills them with their
      * background (solid, linear gradient or pattern) evaluated at each pixel
      * center like GPUI's `path_rasterization_fragment`, and quantizes the
      * color like GPUI's Metal path pipeline (8-bit samples, resolved).
@@ -1314,11 +1314,11 @@ class SceneRenderable extends Renderable {
 /// Compact shaders
 
     /**
-     * `drawQuads()` with `shaders.GpuiQuadCompact` (see `useCompactShaders`).
+     * `drawQuads()` with `shaders.GlazeQuadCompact` (see `useCompactShaders`).
      */
     function drawQuadsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
-        // Order barrier of the dash code (see `GpuiQuadCompact_Frag.dashOne`)
+        // Order barrier of the dash code (see `GlazeQuadCompact_Frag.dashOne`)
         dashOneUniform.setFloat(quadShader, 1);
         useShader(draw, quadShader);
         final quads = scene.quads;
@@ -1362,7 +1362,7 @@ class SceneRenderable extends Renderable {
             final borderG = g;
             final borderB = b;
             final borderA = a;
-            // Unit vertex and flags (see `GpuiQuadCompact_Vert.vertexTCoord`)
+            // Unit vertex and flags (see `GlazeQuadCompact_Vert.vertexTCoord`)
             final flags = (4.0 * (quad.backgroundTag + 4 * quad.backgroundColorSpace + 8 * quad.borderStyle));
             final value = quad.backgroundGradientAngleOrPatternHeight;
 
@@ -1409,7 +1409,7 @@ class SceneRenderable extends Renderable {
     }
 
     /**
-     * `drawShadows()` with `shaders.GpuiShadowCompact` (see `useCompactShaders`).
+     * `drawShadows()` with `shaders.GlazeShadowCompact` (see `useCompactShaders`).
      */
     function drawShadowsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
@@ -1443,7 +1443,7 @@ class SceneRenderable extends Renderable {
                 gh = shadow.boundsHeight + 2.0 * margin;
             }
 
-            // Unit vertex and inset flag, blur radius (see `GpuiShadowCompact_Vert.vertexTCoord`)
+            // Unit vertex and inset flag, blur radius (see `GlazeShadowCompact_Vert.vertexTCoord`)
             final insetFlag = shadow.inset ? 4.0 : 0.0;
 
             for (i in 0...4) {
@@ -1490,7 +1490,7 @@ class SceneRenderable extends Renderable {
     }
 
     /**
-     * `drawPaths()` with `shaders.GpuiPathSpriteCompact` (see `useCompactShaders`).
+     * `drawPaths()` with `shaders.GlazePathSpriteCompact` (see `useCompactShaders`).
      */
     function drawPathsCompact(draw:backend.Draw, batch:PrimitiveBatch):Void {
 
@@ -1624,7 +1624,7 @@ class SceneRenderable extends Renderable {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     function drawPolychromeSprites(draw:backend.Draw, batch:PrimitiveBatch):Void {
@@ -1754,7 +1754,7 @@ class SceneRenderable extends Renderable {
  * The renderable drawing the scene of a `SceneRenderable` into its render
  * texture (`renderToTexture` mode), at the origin of the texture.
  */
-@:allow(gpui.platform.SceneRenderable)
+@:allow(glaze.platform.SceneRenderable)
 class SceneTargetDrawer extends Renderable {
 
     final owner:SceneRenderable;
@@ -1794,7 +1794,7 @@ class SceneTargetDrawer extends Renderable {
         final height = owner.targetTexture != null ? owner.targetTexture.height : owner.height;
 
         // The reference drawer of `verifyPartialRendering` is left out
-        if (!reference) gpui.util.FrameProfiler.begin(gpui.util.FrameProfiler.RENDER);
+        if (!reference) glaze.util.FrameProfiler.begin(glaze.util.FrameProfiler.RENDER);
         #if clay
         if (!reference && owner.partialRendering && owner.targetTexture != null) {
             renderPartial(draw, height);
@@ -1809,7 +1809,7 @@ class SceneTargetDrawer extends Renderable {
             owner.regionClip = false;
             owner.renderScene(draw, matA, matB, matC, matD, matTX, matTY);
         }
-        if (!reference) gpui.util.FrameProfiler.end(gpui.util.FrameProfiler.RENDER);
+        if (!reference) glaze.util.FrameProfiler.end(glaze.util.FrameProfiler.RENDER);
 
     }
 

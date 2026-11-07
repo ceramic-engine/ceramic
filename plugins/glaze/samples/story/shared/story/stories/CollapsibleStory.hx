@@ -3,33 +3,33 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.avatar.Avatar;
-import gpui.component.button.Button;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.collapsible.Collapsible;
-import gpui.component.groupbox.GroupBox;
-import gpui.component.progress.Progress;
-import gpui.component.tag.Tag;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.button.Button;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.collapsible.Collapsible;
+import glaze.kit.groupbox.GroupBox;
+import glaze.kit.progress.Progress;
+import glaze.kit.tag.Tag;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class CollapsibleStory extends Model implements Story {
 

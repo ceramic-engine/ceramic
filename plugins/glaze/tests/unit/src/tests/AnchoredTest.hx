@@ -3,21 +3,21 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `anchored.rs`, all ported. Debug selectors are not ported: the

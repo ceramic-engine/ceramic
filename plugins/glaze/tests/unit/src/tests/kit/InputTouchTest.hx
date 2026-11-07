@@ -3,22 +3,22 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.LongPressEvent;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.TouchPhase;
-import gpui.base.GlobalState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TextareaState;
-import gpui.base.input.InputTouch;
+import glaze.LongPressEvent;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.TouchPhase;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.base.input.InputTouch;
 import tests.kit.InputStateTestCase.InputView;
 
-using gpui.base.input.InputTouch;
+using glaze.kit.base.input.InputTouch;
 
 /**
  * Touch selection of the input engine: a long press selects the word under
@@ -27,13 +27,13 @@ using gpui.base.input.InputTouch;
  * swap when crossed, and the touch selection goes away when something else
  * moves the selection.
  */
-@:access(gpui.base.input.InputTouch)
+@:access(glaze.kit.base.input.InputTouch)
 class InputTouchTest extends InputStateTestCase {
 
     override function setup() {
         super.setup();
         // Rust `cx.update(crate::init)`
-        gpui.base.Base.init(app);
+        glaze.kit.base.Base.init(app);
     }
 
     function openInput(value:String):InputView {
@@ -217,13 +217,13 @@ class InputTouchTest extends InputStateTestCase {
 
     function testScrollingClosesTheMenuAndKeepsTheHandles() {
         // Short enough that forty lines scroll (Rust `TextareaRoot`).
-        var input:gpui.Entity<InputBaseState> = null;
-        final opened = testing.VisualTestContext.addWindowView(app, dispatcher, (window, cx:gpui.Context<testing.InteractionScript.ScriptView>) -> {
-            gpui.base.theme.Theme.globalMut(cx.app);
-            gpui.base.input.InputKeyBindings.init(cx.app);
-            input = cx.app.newEntity((cx:gpui.Context<InputBaseState>) -> (new TextareaState(window, cx) : InputBaseState));
+        var input:glaze.Entity<InputBaseState> = null;
+        final opened = testing.VisualTestContext.addWindowView(app, dispatcher, (window, cx:glaze.Context<testing.InteractionScript.ScriptView>) -> {
+            glaze.kit.base.theme.Theme.globalMut(cx.app);
+            glaze.kit.base.input.InputKeyBindings.init(cx.app);
+            input = cx.app.newEntity((cx:glaze.Context<InputBaseState>) -> (new TextareaState(window, cx) : InputBaseState));
             final child = input;
-            return new testing.InteractionScript.ScriptView((_, _) -> gpui.Prelude.div().w(gpui.Prelude.px(300)).h(gpui.Prelude.px(80)).child(child));
+            return new testing.InteractionScript.ScriptView((_, _) -> glaze.Prelude.div().w(glaze.Prelude.px(300)).h(glaze.Prelude.px(80)).child(child));
         });
         contexts.push(opened.cx);
         final view = new InputView(input, opened.cx);

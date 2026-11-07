@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/popup.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Action;
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.IntoKeyContext;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Positioner.PointCell;
-import gpui.base.Positioner.ResolvedPosition;
+import glaze.Action;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.IntoKeyContext;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Positioner.PointCell;
+import glaze.kit.base.Positioner.ResolvedPosition;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The trigger bounds a popup measured during the last prepaint (Rust

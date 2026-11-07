@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI: the native window operations of GPUI's
 // `PlatformWindow` (gpui-pre 0.3.10, src/platform.rs, Zed Industries,
 // Apache-2.0), implemented with Ceramic's screen API. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
 import ceramic.WindowHitKind;
 
@@ -30,13 +30,13 @@ class CeramicWindowOperations implements PlatformWindowOperations {
     }
 
     /**
-     * Makes this window the one receiving the keyboard (`GpuiInput`) and
+     * Makes this window the one receiving the keyboard (`GlazeInput`) and
      * activates the app window (`ceramic.Screen.activateWindow`). The window
      * becomes active right away when the app window has the system focus,
      * otherwise once it gains it (like a native window becoming key).
      */
     public function activate():Void {
-        GpuiInput.activateWindow(window);
+        GlazeInput.activateWindow(window);
         ceramic.App.app.screen.activateWindow();
     }
 

@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): support of the port's
 // default view caching. See ViewElement and NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.ds.IntMap;
 import haxe.ds.ObjectMap;
@@ -36,7 +36,7 @@ class ViewDependencies {
      * Depth of the views cached with a style (`.cached(style)`) being
      * rendered, prepainted or painted.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var cachedStyleDepth:Int = 0;
 
     public function new() {}
@@ -69,7 +69,7 @@ class ViewDependencies {
      * (they render and record again). Views missing from the last frame are
      * forgotten.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function invalidateChanged(lastFrame:DispatchTree, window:Window):Void {
         final views = this.views;
         var kept = 0;

@@ -1,45 +1,45 @@
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.resizable.Resizable;
-import gpui.base.resizable.ResizablePanelGroup;
-import gpui.base.resizable.ResizablePanelGroup.IntoResizablePanel;
-import gpui.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
-import gpui.base.resizable.ResizableState;
-import gpui.component.Component;
-import gpui.component.breadcrumb.Breadcrumb;
-import gpui.component.breadcrumb.Breadcrumb.BreadcrumbItem;
-import gpui.component.breadcrumb.Breadcrumb.IntoBreadcrumbItem;
-import gpui.component.chart.RadarChart;
-import gpui.component.chart.RadarChart.RadarLabel;
-import gpui.component.chart.RadarChart.RadarLabelKind;
-import gpui.component.descriptionlist.DescriptionList;
-import gpui.component.descriptionlist.DescriptionList.DescriptionItem;
-import gpui.component.descriptionlist.DescriptionList.DescriptionText;
-import gpui.component.hovercard.HoverCard;
-import gpui.component.message.Message;
-import gpui.component.text.Text;
-import gpui.scene.SceneDump;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.resizable.Resizable;
+import glaze.kit.base.resizable.ResizablePanelGroup;
+import glaze.kit.base.resizable.ResizablePanelGroup.IntoResizablePanel;
+import glaze.kit.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
+import glaze.kit.base.resizable.ResizableState;
+import glaze.kit.Component;
+import glaze.kit.breadcrumb.Breadcrumb;
+import glaze.kit.breadcrumb.Breadcrumb.BreadcrumbItem;
+import glaze.kit.breadcrumb.Breadcrumb.IntoBreadcrumbItem;
+import glaze.kit.chart.RadarChart;
+import glaze.kit.chart.RadarChart.RadarLabel;
+import glaze.kit.chart.RadarChart.RadarLabelKind;
+import glaze.kit.descriptionlist.DescriptionList;
+import glaze.kit.descriptionlist.DescriptionList.DescriptionItem;
+import glaze.kit.descriptionlist.DescriptionList.DescriptionText;
+import glaze.kit.hovercard.HoverCard;
+import glaze.kit.message.Message;
+import glaze.kit.text.Text;
+import glaze.scene.SceneDump;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Null in the slot APIs beyond `child()` (see `NullChildTest`): a null slot
@@ -225,7 +225,7 @@ class NullSlotTest extends TestCase {
         final element:Null<Div> = none();
         final into:Null<IntoElement> = none();
         final nested:Null<ResizablePanelGroup> = none();
-        final panel:Null<gpui.base.resizable.ResizablePanel> = none();
+        final panel:Null<glaze.kit.base.resizable.ResizablePanel> = none();
         final hidden = false;
 
         final expected = resizableRun((log, state, resizes) -> frame(group(state, resizes, log)
@@ -327,7 +327,7 @@ class NullSlotTest extends TestCase {
         final into:Null<IntoElement> = none();
         final list = (columns:Int) -> new DescriptionList().columns(columns);
 
-        for (layout in [gpui.Axis.Horizontal, gpui.Axis.Vertical]) {
+        for (layout in [glaze.Axis.Horizontal, glaze.Axis.Vertical]) {
             for (bordered in [true, false]) {
                 final shape = (l:DescriptionList) -> l.layout(layout).bordered(bordered);
                 // A null value is the value `DescriptionItem.create` leaves unset.
@@ -432,7 +432,7 @@ class NullSlotTest extends TestCase {
             assertEquals(message, thrown);
             thrown = null;
             try {
-                new gpui.base.HoverCard('card').trigger(trigger);
+                new glaze.kit.base.HoverCard('card').trigger(trigger);
             }
             catch (e:Dynamic) {
                 thrown = Std.string(e);
@@ -441,7 +441,7 @@ class NullSlotTest extends TestCase {
         }
         // A real trigger is accepted.
         new HoverCard('card').trigger('Hover me');
-        new gpui.base.HoverCard('card').trigger(div());
+        new glaze.kit.base.HoverCard('card').trigger(div());
     }
 
 }

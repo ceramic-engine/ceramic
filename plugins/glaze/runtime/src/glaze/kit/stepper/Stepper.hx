@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/stepper/stepper.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.stepper;
+package glaze.kit.stepper;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A step-by-step progress for users to navigate through a series of steps or stages.

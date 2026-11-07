@@ -1,27 +1,27 @@
 package tests;
 
-import gpui.AbsoluteLength;
-import gpui.AlignContent;
-import gpui.AlignItems;
-import gpui.CursorStyle;
-import gpui.DefiniteLength;
-import gpui.Display;
-import gpui.Div;
-import gpui.FlexDirection;
-import gpui.FontWeight;
-import gpui.GridPlacement;
-import gpui.Length;
-import gpui.Overflow;
-import gpui.Position;
-import gpui.Style;
-import gpui.StyleRefinement;
-import gpui.StyledMacro;
-import gpui.TextOverflow;
-import gpui.Visibility;
-import gpui.WhiteSpace;
+import glaze.AbsoluteLength;
+import glaze.AlignContent;
+import glaze.AlignItems;
+import glaze.CursorStyle;
+import glaze.DefiniteLength;
+import glaze.Display;
+import glaze.Div;
+import glaze.FlexDirection;
+import glaze.FontWeight;
+import glaze.GridPlacement;
+import glaze.Length;
+import glaze.Overflow;
+import glaze.Position;
+import glaze.Style;
+import glaze.StyleRefinement;
+import glaze.StyledMacro;
+import glaze.TextOverflow;
+import glaze.Visibility;
+import glaze.WhiteSpace;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests for `Style`, `StyleRefinement` (refineable behaviour) and the
@@ -74,7 +74,7 @@ class StyleTest extends TestCase {
 
         assertTrue(style.textStyle().fontSize.equals(AbsoluteLength.Pixels(20.0)));
         assertEquals(FontWeight.SEMIBOLD, style.textStyle().fontWeight);
-        assertTrue(style.textStyle().has(gpui.TextStyleRefinement.FONT_WEIGHT));
+        assertTrue(style.textStyle().has(glaze.TextStyleRefinement.FONT_WEIGHT));
     }
 
     function testRefineOnlyAppliesSetFields() {
@@ -251,13 +251,13 @@ class StyleTest extends TestCase {
 
         style.refine(div().borderColor(red()).style());
         final mask = style.overflowMask(bounds, 16).bounds;
-        assertTrue(mask.equals(gpui.Prelude.bounds(point(12, 22), size(96, 46))), '$mask');
+        assertTrue(mask.equals(glaze.Prelude.bounds(point(12, 22), size(96, 46))), '$mask');
 
         final xOnly = new Style();
         xOnly.refine(div().overflowXHidden().border2().borderColor(red()).style());
         // Like GPUI (style.rs): with only x hidden, the border insets the y axis of the mask
         final xMask = xOnly.overflowMask(bounds, 16).bounds;
-        assertTrue(xMask.equals(gpui.Prelude.bounds(point(10, 22), size(100, 46))), '$xMask');
+        assertTrue(xMask.equals(glaze.Prelude.bounds(point(10, 22), size(100, 46))), '$xMask');
     }
 
 
@@ -276,7 +276,7 @@ class StyleTest extends TestCase {
         final selected = div();
         assertTrue(selected.debugSelector(() -> 'x') == selected);
 
-        final track = new gpui.base.Progress.ProgressTrack();
+        final track = new glaze.kit.base.Progress.ProgressTrack();
         assertTrue(track.child('a').children(['b', 'c']) == track);
         final rendered = track.intoDiv();
         assertEquals(3, @:privateAccess rendered.childElements.length);

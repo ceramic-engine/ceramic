@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.component.I18n;
+import glaze.kit.I18n;
 import story.Gallery;
 import story.Lib;
 import testing.TestCase;

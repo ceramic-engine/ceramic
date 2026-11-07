@@ -1,34 +1,34 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/alert.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.alert;
+package glaze.kit.alert;
 
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.text.Text;
-import gpui.component.text.TextViewStyle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.text.Text;
+import glaze.kit.text.TextViewStyle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
+using glaze.kit.theme.Colorize;
 
 /**
  * The color scheme of an `Alert`.
@@ -169,7 +169,7 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
     public function render(window:Window, cx:App):IntoElement {
         if (!visibleValue) {
-            return new gpui.Empty();
+            return new glaze.Empty();
         }
 
         final theme = Theme.global(cx);
@@ -190,7 +190,7 @@ class Alert implements RenderOnce implements Styled implements Sizable {
         final banner = bannerValue;
 
         final iconSlot = div();
-        if (!banner) iconSlot.mt(gpui.Prelude.px(5.));
+        if (!banner) iconSlot.mt(glaze.Prelude.px(5.));
         iconSlot.child(iconValue);
 
         final body = div().flex1().overflowHidden().gap3();
@@ -201,16 +201,16 @@ class Alert implements RenderOnce implements Styled implements Sizable {
 
         final content = div().flex().flex1();
         if (banner) content.itemsCenter();
-        content.overflowHidden().gap(gpui.Prelude.px(gap)).child(iconSlot).child(body);
+        content.overflowHidden().gap(glaze.Prelude.px(gap)).child(iconSlot).child(body);
 
-        final element = gpui.base.Prelude.hFlex()
+        final element = glaze.kit.base.Prelude.hFlex()
             .id(id)
             .wFull()
             .textColor(fg)
             .bg(bg)
-            .px(gpui.Prelude.px(paddingX))
-            .py(gpui.Prelude.px(paddingY))
-            .gap(gpui.Prelude.px(gap))
+            .px(glaze.Prelude.px(paddingX))
+            .py(glaze.Prelude.px(paddingY))
+            .gap(glaze.Prelude.px(gap))
             .justifyBetween()
             .textSm()
             .border1()

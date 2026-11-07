@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/sheet.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.MouseButton;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Dialog.DialogKeys;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.MouseButton;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Dialog.DialogKeys;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.FocusTrap;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.FocusTrap;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 private typedef CloseHandler = (ClickEvent, Window, App) -> Void;
 private typedef CloseRequest = (Window, App) -> Void;
@@ -134,8 +134,8 @@ class Sheet implements RenderOnce implements Styled {
             .absolute()
             .top0()
             .left0()
-            .w(gpui.Prelude.px(viewport.width))
-            .h(gpui.Prelude.px(viewport.height))
+            .w(glaze.Prelude.px(viewport.width))
+            .h(glaze.Prelude.px(viewport.height))
             .keyContext(CONTEXT)
             .trackFocus(focus);
         final container = host.focusTrap('sheet', focus);
@@ -171,7 +171,7 @@ class Sheet implements RenderOnce implements Styled {
         }
         trapped.refineStyle(sheetStyle);
 
-        return anchored().position(point(gpui.Prelude.px(0.), gpui.Prelude.px(0.))).child(container);
+        return anchored().position(point(glaze.Prelude.px(0.), glaze.Prelude.px(0.))).child(container);
     }
 
 }

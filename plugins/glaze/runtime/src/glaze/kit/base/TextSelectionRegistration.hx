@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.Hitbox;
-import gpui.Point;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.Window.StateModel;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.Hitbox;
+import glaze.Point;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.Window.StateModel;
 
 /**
  * Per-frame geometry reported by a `TextSelectionHandle` participant.
@@ -21,22 +21,22 @@ import gpui.Window.StateModel;
  */
 class TextSelectionRegistration {
 
-    @:allow(gpui.base) final _hitbox:Hitbox;
-    @:allow(gpui.base) final _bounds:Bounds;
-    @:allow(gpui.base) var _scrollOffset:Point;
-    @:allow(gpui.base) var _scope:TextSelectionScopeId;
-    @:allow(gpui.base) var _documentOrder:Int = 0;
-    @:allow(gpui.base) var paintOrder:Bool = false;
-    @:allow(gpui.base) var _textBounds:Array<Bounds>;
-    @:allow(gpui.base) var selfScroll:Bool = false;
-    @:allow(gpui.base) var _selectionEdges:Null<BoundsPair> = null;
+    @:allow(glaze.kit.base) final _hitbox:Hitbox;
+    @:allow(glaze.kit.base) final _bounds:Bounds;
+    @:allow(glaze.kit.base) var _scrollOffset:Point;
+    @:allow(glaze.kit.base) var _scope:TextSelectionScopeId;
+    @:allow(glaze.kit.base) var _documentOrder:Int = 0;
+    @:allow(glaze.kit.base) var paintOrder:Bool = false;
+    @:allow(glaze.kit.base) var _textBounds:Array<Bounds>;
+    @:allow(glaze.kit.base) var selfScroll:Bool = false;
+    @:allow(glaze.kit.base) var _selectionEdges:Null<BoundsPair> = null;
 
     /**
      * Retained element state proving a participant is still in the window
      * (Rust `RenderedMarker`): it outlives the frames a cached view replays,
      * and dies with the frame that drops the element for good.
      */
-    @:allow(gpui.base) var rendered:Null<WeakEntity<StateModel<Bool>>> = null;
+    @:allow(glaze.kit.base) var rendered:Null<WeakEntity<StateModel<Bool>>> = null;
 
     /** Creates a registration with default scope, order, and scroll offset. */
     public function new(hitbox:Hitbox, bounds:Bounds) {
@@ -63,7 +63,7 @@ class TextSelectionRegistration {
      * Whether the element that reported this registration is still part of
      * the window, even if it did not paint the frame that just finished.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function isRendered():Bool {
         return rendered != null && rendered.upgrade() != null;
     }
@@ -72,7 +72,7 @@ class TextSelectionRegistration {
      * Marks a participant that scrolls its own content in response to
      * `TextSelectionEvent.AutoScroll`.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function withSelfScroll(selfScroll:Bool):TextSelectionRegistration {
         this.selfScroll = selfScroll;
         return this;
@@ -100,7 +100,7 @@ class TextSelectionRegistration {
      * Uses the order of the TextViews in a complete painted frame. A cached
      * view keeps that order while only some of its siblings paint again.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function inPaintOrder():TextSelectionRegistration {
         paintOrder = true;
         return this;

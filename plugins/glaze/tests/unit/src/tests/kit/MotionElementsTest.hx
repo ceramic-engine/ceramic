@@ -3,19 +3,19 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.animation.EffectTransition;
-import gpui.base.motion.MotionReveal;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.animation.EffectTransition;
+import glaze.kit.base.motion.MotionReveal;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 class RecordingDiv extends Div {
 

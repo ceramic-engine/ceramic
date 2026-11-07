@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Actions;
-import gpui.base.Avatar;
-import gpui.base.ComponentTraits;
-import gpui.base.GlobalState;
-import gpui.base.IndexPath;
-import gpui.base.StateStyle;
-import gpui.StyleRefinement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Actions;
+import glaze.kit.base.Avatar;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.StateStyle;
+import glaze.StyleRefinement;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Observe;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's small foundation modules.
@@ -61,7 +61,7 @@ class BaseFoundationsTest extends TestCase {
         return new Bounds(point(x, 0.), size(100., 30.));
     }
 
-    function pair(result:Null<Array<gpui.Point>>):String {
+    function pair(result:Null<Array<glaze.Point>>):String {
         return result == null ? 'none' : result.map(p -> '${p.x},${p.y}').join(' ');
     }
 
@@ -183,15 +183,15 @@ class BaseFoundationsTest extends TestCase {
     // observe.rs
 
     function testObservationPreservesIdentityAndNativeTypeInNormalBuilds() {
-        final element:gpui.Div = div().id('target').testSupport().testSupport();
-        assertTrue(Type.enumEq(gpui.ElementId.Name('target'), element.elementId()));
+        final element:glaze.Div = div().id('target').testSupport().testSupport();
+        assertTrue(Type.enumEq(glaze.ElementId.Name('target'), element.elementId()));
     }
 
     // index_path.rs
 
     function testIntoElementId() {
         final path = new IndexPath(2).withSection(1).withColumn(3);
-        assertTrue(Type.enumEq(gpui.ElementId.Name('index-path(1,2,3)'), path.toElementId()));
+        assertTrue(Type.enumEq(glaze.ElementId.Name('index-path(1,2,3)'), path.toElementId()));
     }
 
     function testDisplay() {
@@ -211,13 +211,13 @@ class BaseFoundationsTest extends TestCase {
 
     // progress.rs (accessibility properties on the A11y record)
 
-    function renderOnce(component:gpui.RenderOnce):Void {
+    function renderOnce(component:glaze.RenderOnce):Void {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _:Context<Host>) -> new Host(() -> component));
         cx = opened.cx;
     }
 
     function testClampsAndProjectsNumericAccessibility() {
-        final progress = new gpui.base.Progress('progress').value(120.);
+        final progress = new glaze.kit.base.Progress('progress').value(120.);
         renderOnce(progress);
         assertEquals(100., progress.a11y.numericValue);
         assertEquals(0., progress.a11y.minNumericValue);
@@ -225,13 +225,13 @@ class BaseFoundationsTest extends TestCase {
     }
 
     function testIndeterminateProgressOmitsNumericValue() {
-        final progress = new gpui.base.Progress('loading').value(40.).indeterminate(true);
+        final progress = new glaze.kit.base.Progress('loading').value(40.).indeterminate(true);
         renderOnce(progress);
         assertNull(progress.a11y.numericValue);
     }
 
     function testProgressProjectsItsAccessibleName() {
-        final progress = new gpui.base.Progress('download').accessibilityLabel('Downloading release');
+        final progress = new glaze.kit.base.Progress('download').accessibilityLabel('Downloading release');
         renderOnce(progress);
         assertEquals('Downloading release', progress.a11y.label);
     }

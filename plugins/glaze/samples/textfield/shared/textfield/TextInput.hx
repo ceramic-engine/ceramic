@@ -3,39 +3,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package textfield;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.CursorStyle;
-import gpui.Element;
-import gpui.ElementInputHandler;
-import gpui.Entity;
-import gpui.EntityInputHandler;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.PaintQuad;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ShapedLine;
-import gpui.Style;
-import gpui.TextRun;
-import gpui.UTF16Selection;
-import gpui.UnderlineStyle;
-import gpui.Window;
-import gpui.util.Ref;
-import gpui.util.Utf8;
-import gpui.util.Utf8.Utf8Text;
+import glaze.Action;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.CursorStyle;
+import glaze.Element;
+import glaze.ElementInputHandler;
+import glaze.Entity;
+import glaze.EntityInputHandler;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.PaintQuad;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ShapedLine;
+import glaze.Style;
+import glaze.TextRun;
+import glaze.UTF16Selection;
+import glaze.UnderlineStyle;
+import glaze.Window;
+import glaze.util.Ref;
+import glaze.util.Utf8;
+import glaze.util.Utf8.Utf8Text;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 @:action(namespace = text_input) class Backspace implements Action {}
 @:action(namespace = text_input) class Delete implements Action {}
@@ -58,7 +58,7 @@ import gpui.Prelude.*;
  * keyboard (shift-left / shift-right, cmd-a) and the mouse, copy / cut /
  * paste. Text goes through `EntityInputHandler` (registered in paint by
  * `TextElement` with `window.handleInput`), so the platform (Ceramic's text
- * editing, through `gpui.TextInputBridge`) types into it.
+ * editing, through `glaze.TextInputBridge`) types into it.
  *
  * Offsets are UTF-8 bytes (`selectedRange`, `markedRange`), converted to and
  * from UTF-16 for the input handler. Difference with the Rust example: cursor
@@ -102,21 +102,21 @@ class TextInput extends Model implements Render implements EntityInputHandler {
      * outside macOS).
      */
     public static function bindKeys(cx:App):Void {
-        final mod = gpui.OperatingSystem.current.isMac() ? 'cmd' : 'ctrl';
+        final mod = glaze.OperatingSystem.current.isMac() ? 'cmd' : 'ctrl';
         cx.bindKeys([
-            new gpui.KeyBinding('backspace', new Backspace(), null),
-            new gpui.KeyBinding('delete', new Delete(), null),
-            new gpui.KeyBinding('left', new Left(), null),
-            new gpui.KeyBinding('right', new Right(), null),
-            new gpui.KeyBinding('shift-left', new SelectLeft(), null),
-            new gpui.KeyBinding('shift-right', new SelectRight(), null),
-            new gpui.KeyBinding('$mod-a', new SelectAll(), null),
-            new gpui.KeyBinding('$mod-v', new Paste(), null),
-            new gpui.KeyBinding('$mod-c', new Copy(), null),
-            new gpui.KeyBinding('$mod-x', new Cut(), null),
-            new gpui.KeyBinding('home', new Home(), null),
-            new gpui.KeyBinding('end', new End(), null),
-            new gpui.KeyBinding('ctrl-cmd-space', new ShowCharacterPalette(), null),
+            new glaze.KeyBinding('backspace', new Backspace(), null),
+            new glaze.KeyBinding('delete', new Delete(), null),
+            new glaze.KeyBinding('left', new Left(), null),
+            new glaze.KeyBinding('right', new Right(), null),
+            new glaze.KeyBinding('shift-left', new SelectLeft(), null),
+            new glaze.KeyBinding('shift-right', new SelectRight(), null),
+            new glaze.KeyBinding('$mod-a', new SelectAll(), null),
+            new glaze.KeyBinding('$mod-v', new Paste(), null),
+            new glaze.KeyBinding('$mod-c', new Copy(), null),
+            new glaze.KeyBinding('$mod-x', new Cut(), null),
+            new glaze.KeyBinding('home', new Home(), null),
+            new glaze.KeyBinding('end', new End(), null),
+            new glaze.KeyBinding('ctrl-cmd-space', new ShowCharacterPalette(), null),
         ]);
     }
 
@@ -495,9 +495,9 @@ class TextInput extends Model implements Render implements EntityInputHandler {
             .onAction(Paste, cx.listener((input:TextInput, action:Paste, window, cx) -> input.pasteAction(action, window, cx)))
             .onAction(Cut, cx.listener((input:TextInput, action:Cut, window, cx) -> input.cut(action, window, cx)))
             .onAction(Copy, cx.listener((input:TextInput, action:Copy, window, cx) -> input.copy(action, window, cx)))
-            .onMouseDown(gpui.MouseButton.Left, cx.listener((input:TextInput, event:MouseDownEvent, window, cx) -> input.onMouseDown(event, window, cx)))
-            .onMouseUp(gpui.MouseButton.Left, cx.listener((input:TextInput, event:MouseUpEvent, window, cx) -> input.onMouseUp(event, window, cx)))
-            .onMouseUpOut(gpui.MouseButton.Left, cx.listener((input:TextInput, event:MouseUpEvent, window, cx) -> input.onMouseUp(event, window, cx)))
+            .onMouseDown(glaze.MouseButton.Left, cx.listener((input:TextInput, event:MouseDownEvent, window, cx) -> input.onMouseDown(event, window, cx)))
+            .onMouseUp(glaze.MouseButton.Left, cx.listener((input:TextInput, event:MouseUpEvent, window, cx) -> input.onMouseUp(event, window, cx)))
+            .onMouseUpOut(glaze.MouseButton.Left, cx.listener((input:TextInput, event:MouseUpEvent, window, cx) -> input.onMouseUp(event, window, cx)))
             .onMouseMove(cx.listener((input:TextInput, event:MouseMoveEvent, window, cx) -> input.onMouseMove(event, window, cx)))
             .bg(rgb(0xeeeeee))
             .lineHeight(px(30))
@@ -533,8 +533,8 @@ class TextElement extends Element {
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         final style = new Style();
-        style.sizeWidth = gpui.Length.Definite(relative(1));
-        style.sizeHeight = gpui.Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(window.lineHeight())));
+        style.sizeWidth = glaze.Length.Definite(relative(1));
+        style.sizeHeight = glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(window.lineHeight())));
         return window.requestLayout(style, null, cx);
     }
 
@@ -563,7 +563,7 @@ class TextElement extends Element {
             runs.push(new TextRun(displayLen, style.font(), textColor));
         }
 
-        final fontSize = gpui.AbsoluteLengthTools.toPixels(style.fontSize, window.remSize());
+        final fontSize = glaze.AbsoluteLengthTools.toPixels(style.fontSize, window.remSize());
         final line = window.textSystem().shapeLine(displayText, fontSize, runs);
 
         final cursorPos = line.xForIndex(cursor);
@@ -596,7 +596,7 @@ class TextElement extends Element {
         }
         final line = this.line;
         this.line = null;
-        line.paint(bounds.origin, window.lineHeight(), gpui.TextAlign.Left, null, window.textPainter());
+        line.paint(bounds.origin, window.lineHeight(), glaze.TextAlign.Left, null, window.textPainter());
 
         if (focusHandle.isFocused(window) && cursor != null) {
             window.paintQuad(cursor);

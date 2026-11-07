@@ -57,9 +57,8 @@ app:
         # Add entity runtime scripting support: entity.scriptContent = ...
         #- script
 
-        # GPUI port and gpui-kit components (linked through plugins/gpui.plugin)
-        - gpui
-
+        # Glaze, the GPUI port with the gpui-kit components (built-in plugin)
+        - glaze
     libs:
         #- somelib
         #- somelib: someversion

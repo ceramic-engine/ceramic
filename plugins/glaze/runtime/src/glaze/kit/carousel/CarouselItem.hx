@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/carousel/carousel.rs (CarouselItem)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.carousel;
+package glaze.kit.carousel;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.I18n;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.I18n;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * One logical slide in a `CarouselContent`.
  *
  * The group role, its "Slide N of M" label and the position in the set are
- * computed (`accessibilityLabel`) but not exported: the GPUI port has no
+ * computed (`accessibilityLabel`) but not exported: Glaze has no
  * accessibility tree.
  */
 class CarouselItem implements RenderOnce implements Styled implements ParentElement {

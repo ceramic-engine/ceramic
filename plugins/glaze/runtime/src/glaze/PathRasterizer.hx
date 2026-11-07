@@ -1,9 +1,9 @@
-// Original code (not a port), written for ceramic-gpui: rasterizes GPUI
+// Original code (not a port), written for Glaze: rasterizes GPUI
 // paths for Window.paintPath() like GPUI's Metal renderer (gpui-pre-apple
 // 0.3.10: metal_renderer.rs draw_paths_to_intermediate with 4x MSAA, and
 // shaders.metal path_rasterization_vertex / path_rasterization_fragment).
 // MIT License, see Ceramic's LICENSE file.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
@@ -34,7 +34,7 @@ import haxe.io.Bytes;
  *
  * - plain coverage (`rasterize()`): one byte per pixel, the mean of the 4
  *   samples (0, 64, 128, 191 or 255), decoded by the plain coverage mode of
- *   `shaders.GpuiPathSprite`, which reproduces the per sample storage and
+ *   `shaders.GlazePathSprite`, which reproduces the per sample storage and
  *   the resolve;
  * - paths with Loop-Blinn curve triangles (`rasterizeCurves()`): GPUI's
  *   fragment shader gives the samples of a curve triangle the alpha of the
@@ -135,7 +135,7 @@ class PathRasterizer {
 
     static final keyHash:PathKeyHash = new PathKeyHash();
 
-    /** Number of tiles rasterized so far (instrumentation, see `test/bench`) */
+    /** Number of tiles rasterized so far (instrumentation, see `tests/bench`) */
     public static var rasterizedCount:Int = 0;
 
     /**

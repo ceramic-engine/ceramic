@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/touch_selection/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.touchselection;
+package glaze.kit.touchselection;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.Point;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TouchHandle;
-import gpui.component.touchselection.EditMenu.EditMenuItem;
-import gpui.component.touchselection.SelectionHandles.DragHandler;
-import gpui.component.touchselection.SelectionHandles.SnapshotSource;
-import gpui.component.touchselection.SelectionHandles.SurfaceHandler;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.Point;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TouchHandle;
+import glaze.kit.touchselection.EditMenu.EditMenuItem;
+import glaze.kit.touchselection.SelectionHandles.DragHandler;
+import glaze.kit.touchselection.SelectionHandles.SnapshotSource;
+import glaze.kit.touchselection.SelectionHandles.SurfaceHandler;
 
 /**
  * Touch selection: the grab handles and the edit menu a long press leaves
@@ -83,7 +83,7 @@ class TouchSelectionOverlay {
         if (onDrag != null) {
             final handles = new SelectionHandles(source, onDrag);
             if (onPaintHandler != null) handles.onPaint(onPaintHandler);
-            elements.push((handles : gpui.IntoElement).intoAnyElement());
+            elements.push((handles : glaze.IntoElement).intoAnyElement());
         }
 
         final bounds = snapshot.bounds();
@@ -94,12 +94,12 @@ class TouchSelectionOverlay {
             if (!snapshot.isEmpty()) {
                 anchor = new Bounds(
                     new Point(anchor.origin.x, anchor.origin.y - TouchHandle.EXTENT),
-                    new gpui.Size(anchor.size.width, anchor.size.height + TouchHandle.EXTENT * 2.)
+                    new glaze.Size(anchor.size.width, anchor.size.height + TouchHandle.EXTENT * 2.)
                 );
             }
             final menu = new EditMenu(id, anchor).items(itemList);
             if (onPaintHandler != null) menu.onPaint(onPaintHandler);
-            elements.push((menu : gpui.IntoElement).intoAnyElement());
+            elements.push((menu : glaze.IntoElement).intoAnyElement());
         }
         return elements;
     }

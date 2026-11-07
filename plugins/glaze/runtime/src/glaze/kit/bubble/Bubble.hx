@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/bubble.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.bubble;
+package glaze.kit.bubble;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.message.Message.MessageAlignment;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.message.Message.MessageAlignment;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.StyledExt;
+using glaze.kit.theme.Colorize;
 
 /**
  * Visual treatment for a chat bubble.
@@ -98,7 +98,7 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function isGhost():Bool {
         return variant == Ghost;
     }
@@ -156,7 +156,7 @@ class Bubble implements RenderOnce implements Styled implements ParentElement {
             .flexCol()
             .flexNone()
             .gap1()
-            .maxW(gpui.Prelude.relative(0.8));
+            .maxW(glaze.Prelude.relative(0.8));
         if (variant == Ghost) element.wFull().maxWFull();
         if (alignmentValue != null) {
             switch (alignmentValue : MessageAlignment) {
@@ -181,13 +181,13 @@ class BubbleContent implements RenderOnce implements Styled implements ParentEle
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.bubble, tests)
+    @:allow(glaze.kit.bubble, tests)
     var variant:BubbleVariant = Filled;
 
-    @:allow(gpui.component.bubble, tests)
+    @:allow(glaze.kit.bubble, tests)
     var alignment:Null<MessageAlignment> = null;
 
-    @:allow(gpui.component.bubble, tests)
+    @:allow(glaze.kit.bubble, tests)
     final childElements:Array<AnyElement> = [];
 
     /** Create an empty bubble content surface. */
@@ -228,7 +228,7 @@ class BubbleContent implements RenderOnce implements Styled implements ParentEle
             .px3()
             .py2()
             .textSm()
-            .lineHeight(gpui.Prelude.relative(1.625));
+            .lineHeight(glaze.Prelude.relative(1.625));
         if (alignment != null) {
             switch (alignment : MessageAlignment) {
                 case Start: element.selfStart();
@@ -312,7 +312,7 @@ class BubbleGroup implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .minW0()
             .gap2()
             .refineStyle(groupStyle);
@@ -333,7 +333,7 @@ enum BubbleReactionChild {
 /**
  * A styleable reaction region positioned on a bubble edge.
  *
- * Compose existing `gpui.component.button.Button` values inside this region
+ * Compose existing `glaze.kit.button.Button` values inside this region
  * to preserve button semantics and keyboard behavior.
  */
 class BubbleReactions implements RenderOnce implements Styled implements ParentElement {

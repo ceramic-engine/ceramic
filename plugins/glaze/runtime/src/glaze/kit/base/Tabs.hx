@@ -1,27 +1,27 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/tabs.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An unstyled tab that owns pointer activation and accessibility behavior.
@@ -29,8 +29,8 @@ using gpui.base.StyledExt;
  * Tabs do not participate in keyboard focus by themselves. A compound tab
  * list may add keyboard navigation when that behavior is introduced.
  *
- * Rust `gpui_base::Tab`, renamed: `gpui.base.Tab` is the Tab key action
- * of `gpui.base.Root`.
+ * Rust `gpui_base::Tab`, renamed: `glaze.kit.base.Tab` is the Tab key action
+ * of `glaze.kit.base.Root`.
  *
  * Interactive styles and listeners go to `base`.
  */
@@ -150,7 +150,7 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
             .flex()
             .itemsCenter()
             .justifyCenter()
-            .lineHeight(gpui.Prelude.relative(1.));
+            .lineHeight(glaze.Prelude.relative(1.));
         if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
         a11y.selected = selectedValue;
         if (positionInSet != null) a11y.positionInSet = positionInSet;
@@ -171,10 +171,10 @@ class BaseTab implements RenderOnce implements Styled implements ParentElement {
 
 class TabStyles {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final selectedStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final disabledStyle:StyleRefinement = new StyleRefinement();
 
     public function new() {}

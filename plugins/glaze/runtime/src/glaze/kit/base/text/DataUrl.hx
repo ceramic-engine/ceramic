@@ -1,7 +1,7 @@
 // Ported from data-url 0.3.2 (https://github.com/servo/rust-url/tree/main/data-url): src/lib.rs, src/mime.rs, src/forgiving_base64.rs
 // Original code Copyright 2013-2025 The rust-url developers, licensed under MIT OR Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;

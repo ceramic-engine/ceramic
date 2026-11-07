@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/scrollbar_presentation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Point;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.Window;
-import gpui.base.Scrollbar.ScrollbarAxis;
-import gpui.base.Scrollbar.ScrollbarHandleImpl;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Point;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.Window;
+import glaze.kit.base.Scrollbar.ScrollbarAxis;
+import glaze.kit.base.Scrollbar.ScrollbarHandleImpl;
 
 /**
  * Presentation hook for an editor's existing viewport, without a second
@@ -24,22 +24,22 @@ import gpui.base.Scrollbar.ScrollbarHandleImpl;
  */
 class EditorScrollbarContext implements ScrollbarHandleImpl {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final handle:ScrollHandle;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final viewport:Bounds;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final scrollViewport:Size;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final content:Size;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final _axis:ScrollbarAxis;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function new(handle:ScrollHandle, viewport:Bounds, scrollViewport:Size, content:Size, axis:ScrollbarAxis) {
         this.handle = handle;
         this.viewport = viewport;

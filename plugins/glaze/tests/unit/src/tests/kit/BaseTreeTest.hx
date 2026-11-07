@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollStrategy;
-import gpui.StyleBuilder;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Tree;
-import gpui.base.Tree.TreeEvent;
-import gpui.base.Tree.TreeItem;
-import gpui.base.Tree.TreeState;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollStrategy;
+import glaze.StyleBuilder;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Tree;
+import glaze.kit.base.Tree.TreeEvent;
+import glaze.kit.base.Tree.TreeItem;
+import glaze.kit.base.Tree.TreeState;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's `tree.rs`. `debug_bounds` lookups use
@@ -256,7 +256,7 @@ private class TreeHarness extends Model implements Render {
             .listStyle(StyleBuilder.build(s -> s.sizeFull()))
             .item((ix, _, _, _, _) -> {
                 final entry = div()
-                    .id(gpui.ElementId.NamedInteger('tree-entry', ix))
+                    .id(glaze.ElementId.NamedInteger('tree-entry', ix))
                     .h(px(20.))
                     .wFull();
                 if (draggable) {

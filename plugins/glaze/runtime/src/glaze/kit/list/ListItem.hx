@@ -2,34 +2,34 @@
 // crates/component/src/list/separator_item.rs, crates/component/src/list/loading.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.list;
+package glaze.kit.list;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.component.Icon;
-import gpui.component.Icon.IntoIcon;
-import gpui.component.skeleton.Skeleton;
-import gpui.component.theme.Theme;
-import gpui.component.list.ListDelegate.ListDelegateItem;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IntoIcon;
+import glaze.kit.skeleton.Skeleton;
+import glaze.kit.theme.Theme;
+import glaze.kit.list.ListDelegate.ListDelegateItem;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 private enum abstract ListItemMode(Int) {
     var Entry;
@@ -58,16 +58,16 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var secondarySelectedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var confirmedValue:Bool = false;
 
     var checkIconValue:Null<Icon> = null;
@@ -82,7 +82,7 @@ class ListItem implements ListDelegateItem implements Styled implements ParentEl
 
     final childElements:Array<AnyElement> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var accessibilityLabelValue:Null<String> = null;
 
     public function new(id:ElementIdArg) {

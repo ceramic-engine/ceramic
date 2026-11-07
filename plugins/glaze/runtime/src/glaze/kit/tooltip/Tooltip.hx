@@ -1,41 +1,41 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tooltip.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.tooltip;
+package glaze.kit.tooltip;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.ParentElement;
-import gpui.MouseButton;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.Tooltip as BaseTooltip;
-import gpui.base.Tooltip.TooltipOverlay as BaseTooltipOverlay;
-import gpui.base.Tooltip.TooltipRequest as BaseTooltipRequest;
-import gpui.base.Tooltip.TooltipTransition as BaseTooltipTransition;
-import gpui.base.animation.EffectTransition;
-import gpui.base.animation.Easings;
-import gpui.component.WindowState;
-import gpui.component.kbd.Kbd;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.ParentElement;
+import glaze.MouseButton;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.Tooltip as BaseTooltip;
+import glaze.kit.base.Tooltip.TooltipOverlay as BaseTooltipOverlay;
+import glaze.kit.base.Tooltip.TooltipRequest as BaseTooltipRequest;
+import glaze.kit.base.Tooltip.TooltipTransition as BaseTooltipTransition;
+import glaze.kit.base.animation.EffectTransition;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.WindowState;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The content of a tooltip: rich `Text` (a plain string or a text view) or a
@@ -43,7 +43,7 @@ using gpui.base.StyledExt;
  */
 enum TooltipContext {
 
-    Text(text:gpui.component.text.Text);
+    Text(text:glaze.kit.text.Text);
 
     Element(builder:(Window, App) -> AnyElement);
 
@@ -70,7 +70,7 @@ class Tooltip extends Model implements Render implements Styled {
     /**
      * Create a Tooltip with a text content.
      */
-    public function new(text:gpui.component.text.Text.IntoText) {
+    public function new(text:glaze.kit.text.Text.IntoText) {
         super();
         content = Text(text);
     }
@@ -143,7 +143,7 @@ class Tooltip extends Model implements Render implements Styled {
         final inner = div();
         switch content {
             case Text(text):
-                inner.child(gpui.component.text.Text.TextTools.intoAnyElement(text));
+                inner.child(glaze.kit.text.Text.TextTools.intoAnyElement(text));
             case Element(builder):
                 inner.child(builder(window, cx.app));
         }
@@ -169,7 +169,7 @@ class Tooltip extends Model implements Render implements Styled {
     /** Duration of the position-slide animation when switching tooltips, in seconds. */
     static inline final SLIDE_DURATION:Float = 0.2;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     static function renderTooltip(contentView:AnyView, transition:BaseTooltipTransition, _:Window, _:App):AnyElement {
         final element = div().child(contentView);
@@ -283,7 +283,7 @@ private class TooltipTrigger {
 
 /**
  * The managed tooltip of a stateful `Div`, as a static extension:
- * `using gpui.component.tooltip.Tooltip.ManagedTooltip;` (Rust's crate
+ * `using glaze.kit.tooltip.Tooltip.ManagedTooltip;` (Rust's crate
  * private `ManagedTooltipExt`).
  */
 class ManagedTooltip {

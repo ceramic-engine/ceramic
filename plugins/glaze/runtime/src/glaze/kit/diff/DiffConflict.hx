@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/conflict.rs (`DiffConflict`, `DiffConflictResolution`, `ConflictPart`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * A parsed merge conflict in a working file.
@@ -13,7 +13,7 @@ import gpui.Range;
  * accepted by `DiffState.resolveConflict`. Fields are private and only the
  * parser constructs these snapshots.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class DiffConflict {
 
     var _lines:Range;

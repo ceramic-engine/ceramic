@@ -4,28 +4,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.Root;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.Root;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.FocusTrap;
-using gpui.base.StyledExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.FocusTrap;
+using glaze.kit.base.StyledExt;
 
 /**
  * The tests of gpui-base's `root.rs` (focus trap navigation, plugins) and
@@ -86,7 +86,7 @@ class BaseRootTest extends TestCase {
         return harness;
     }
 
-    function dispatch(action:gpui.Action):Void {
+    function dispatch(action:glaze.Action):Void {
         cx.update((window, app) -> window.dispatchAction(action, app));
         cx.runUntilParked();
     }
@@ -323,7 +323,7 @@ private class TrapContent extends Model implements Render {
             .tabGroup()
             .sizeFull()
             .children([for (index in 0...background.length) div()
-                .id(gpui.ElementId.NamedInteger('background', index))
+                .id(glaze.ElementId.NamedInteger('background', index))
                 .trackFocus(background[index])
                 .tabIndex(0)
                 .size(px(1.))
@@ -334,7 +334,7 @@ private class TrapContent extends Model implements Render {
                     .trackFocus(container)
                     .tabStop(false)
                     .children([for (index in 0...controls.length) div()
-                        .id(gpui.ElementId.NamedInteger('control', index))
+                        .id(glaze.ElementId.NamedInteger('control', index))
                         .trackFocus(controls[index])
                         .tabIndex(0)
                         .size(px(1.))
@@ -357,7 +357,7 @@ private class Content extends Model implements Render {
 
 }
 
-private class Layer extends gpui.base.Root.RootPlugin {
+private class Layer extends glaze.kit.base.Root.RootPlugin {
 
     public function new() {
         super();
@@ -389,7 +389,7 @@ private class NestedTraps extends Model implements Render {
         var index = depth - 1;
         while (index >= 0) {
             final control = (side:Int) -> div()
-                .id(gpui.ElementId.NamedInteger('nested-control', index * 2 + side))
+                .id(glaze.ElementId.NamedInteger('nested-control', index * 2 + side))
                 .trackFocus(controls[index][side])
                 .tabIndex(0)
                 .size(px(10.));
@@ -398,7 +398,7 @@ private class NestedTraps extends Model implements Render {
                 .child(control(0))
                 .child(child)
                 .child(control(1))
-                .focusTrap(gpui.ElementId.NamedInteger('nested-trap', index), containers[index])
+                .focusTrap(glaze.ElementId.NamedInteger('nested-trap', index), containers[index])
                 .intoAnyElement();
             index--;
         }
@@ -416,7 +416,7 @@ private class CrossAxisTest extends Model implements Render {
         this.bounds = bounds;
     }
 
-    function column(selector:String, height:Float):gpui.Div {
+    function column(selector:String, height:Float):glaze.Div {
         return div()
             .w(px(20.))
             .h(px(height))
@@ -429,14 +429,14 @@ private class CrossAxisTest extends Model implements Render {
             .w(px(200.))
             .h(px(100.))
             .child(
-                gpui.base.Prelude.hFlex()
+                glaze.kit.base.Prelude.hFlex()
                     .sizeFull()
                     .child(column('row-child', 40.))
                     .child(column('row-overflowing-child', 140.))
                     .child(div().w(px(20.)).onPrepaint((b, _, _) -> bounds.set('row-stretch', b)))
             )
             .child(
-                gpui.base.Prelude.vFlex().sizeFull().child(div().h(px(20.)).onPrepaint((b, _, _) -> bounds.set('col-stretch', b)))
+                glaze.kit.base.Prelude.vFlex().sizeFull().child(div().h(px(20.)).onPrepaint((b, _, _) -> bounds.set('col-stretch', b)))
             );
     }
 

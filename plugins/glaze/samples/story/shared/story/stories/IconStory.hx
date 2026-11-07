@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.Icon.IconView;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.dock.PanelControl;
-import gpui.component.menu.PopupMenu;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IconView;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
 import story.Include;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.DropdownMenu;
 
 class IconStory extends Model implements Story {
 

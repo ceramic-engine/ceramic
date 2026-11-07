@@ -1,9 +1,9 @@
 package tests;
 
-import gpui.scene.BoundsTree;
-import gpui.scene.PrimitiveKind;
-import gpui.scene.Scene;
-import gpui.TextPainter;
+import glaze.scene.BoundsTree;
+import glaze.scene.PrimitiveKind;
+import glaze.scene.Scene;
+import glaze.TextPainter;
 import testing.TestCase;
 
 /**
@@ -233,11 +233,11 @@ class SceneTest extends TestCase {
         }
         for (size in [0, 1, 2, 5, 11, 12, 13, 40, 257, 1000]) {
             for (mode in 0...4) {
-                final quads:Array<gpui.scene.Quad> = [];
-                final sprites:Array<gpui.scene.MonochromeSprite> = [];
+                final quads:Array<glaze.scene.Quad> = [];
+                final sprites:Array<glaze.scene.MonochromeSprite> = [];
                 for (i in 0...size) {
-                    final q = new gpui.scene.Quad();
-                    final s = new gpui.scene.MonochromeSprite();
+                    final q = new glaze.scene.Quad();
+                    final s = new glaze.scene.MonochromeSprite();
                     final order = switch mode {
                         case 0: random(8);
                         case 1: size - i;
@@ -296,8 +296,8 @@ class SceneTest extends TestCase {
         final scene = new Scene();
         final x = 66.4000015258789;
         final width = 54.60000228881836;
-        assertEquals(x, gpui.SpringMath.f32(x));
-        assertEquals(width, gpui.SpringMath.f32(width));
+        assertEquals(x, glaze.SpringMath.f32(x));
+        assertEquals(width, glaze.SpringMath.f32(width));
         assertTrue(x + width > 121, 'the f64 sum is above 121');
         assertTrue(TextPainter.pushCoverLayer(scene, x, 41, width, 20, 0, 0, 512, 512, 2));
         scene.popLayer();

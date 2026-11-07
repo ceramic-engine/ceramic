@@ -3,14 +3,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.base.input.SearchMatcher;
-import gpui.base.input.SearchSession;
+import glaze.Range;
+import glaze.kit.base.input.SearchMatcher;
+import glaze.kit.base.input.SearchSession;
 import ropey.Rope;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.SearchMatcher` and `SearchSession` (Rust `search.rs`).
+ * Tests of `glaze.kit.base.input.SearchMatcher` and `SearchSession` (Rust `search.rs`).
  */
 class InputSearchTest extends TestCase {
 

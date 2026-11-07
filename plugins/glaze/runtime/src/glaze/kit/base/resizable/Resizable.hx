@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/mod.rs (free functions)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.ElementIdArg;
-import gpui.Pixels;
+import glaze.ElementIdArg;
+import glaze.Pixels;
 
 /**
  * The free functions of gpui-base's `resizable` module.

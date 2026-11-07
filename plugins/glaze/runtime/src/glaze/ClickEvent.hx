@@ -1,13 +1,13 @@
 // Ported from gpui-pre 0.3.10: src/interactive.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A click event, generated when a mouse button or keyboard button is pressed
  * and released, or when a tap gesture is recognized on a touch screen.
  */
-@:using(gpui.ClickEvent.ClickEventTools)
+@:using(glaze.ClickEvent.ClickEventTools)
 enum ClickEvent {
 
     /** A click event triggered by a mouse button being pressed and released. */

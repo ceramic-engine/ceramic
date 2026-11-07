@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/drag.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Bounds;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.base.Geometry.Placement;
+import glaze.Bounds;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.kit.base.Geometry.Placement;
 
 /**
  * Drag hit-testing for the dock: the free function and constant of
@@ -23,14 +23,14 @@ class Drag {
      * carry no session of their own. Session ids start at 1, so 0 never
      * collides.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     static inline final ITEM_DRAG_SESSION_ID:Int = 0;
 
     /**
      * Which split zone `position` falls into within `bounds`, or `null` for
      * the centre zone (merge into the tab group rather than split).
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     static function splitPlacementAt(bounds:Bounds, position:Point):Null<Placement> {
         final width = bounds.size.width;
         final height = bounds.size.height;

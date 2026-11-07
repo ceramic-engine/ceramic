@@ -3,30 +3,30 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.TextSelectionLayer;
-import gpui.base.text.TextView;
-import gpui.base.text.TextViewState;
-import gpui.base.text.TextViewStyle;
-import gpui.base.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.TextSelectionLayer;
+import glaze.kit.base.text.TextView;
+import glaze.kit.base.text.TextViewState;
+import glaze.kit.base.text.TextViewStyle;
+import glaze.kit.base.theme.Theme;
 import tests.kit.TextInlineTest.TextTestDraw;
 import tests.kit.TextInlineTest.TextTestFonts;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `TextView` tests of Rust `text/text_view.rs` that draw with a
  * `TestApp` of their own (the wide-mono test text system of `inline.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextViewLayoutTest extends TestCase {
 
     final windows:Array<Window> = [];
@@ -60,14 +60,14 @@ class TextViewLayoutTest extends TestCase {
         return app.update(cx -> cx.newEntity(cx -> TextViewState.markdown(text, cx)));
     }
 
-    static function quadsOf(window:Window, color:Hsla):Array<gpui.scene.Quad> {
+    static function quadsOf(window:Window, color:Hsla):Array<glaze.scene.Quad> {
         return [for (quad in window.renderedScene().quads) if (quad.backgroundTag == 0
             && Math.abs(quad.backgroundSolidH - color.h) < 1e-6 && Math.abs(quad.backgroundSolidS - color.s) < 1e-6
             && Math.abs(quad.backgroundSolidL - color.l) < 1e-6 && Math.abs(quad.backgroundSolidA - color.a) < 1e-6) quad];
     }
 
-    static function quadBounds(quad:gpui.scene.Quad):Bounds {
-        return new Bounds(new gpui.Point(quad.boundsX, quad.boundsY), new gpui.Size(quad.boundsWidth, quad.boundsHeight));
+    static function quadBounds(quad:glaze.scene.Quad):Bounds {
+        return new Bounds(new glaze.Point(quad.boundsX, quad.boundsY), new glaze.Size(quad.boundsWidth, quad.boundsHeight));
     }
 
     function testInlineCodeHeadingReservesPaintedWrappedLinesAndListBaseline() {
@@ -208,10 +208,10 @@ class TextViewLayoutTest extends TestCase {
             final state = markdown(app, "| a | b |\n| --- | --- |\n| 1 | 2 |");
             final window = open(app, () -> {
                 final table = new StyleRefinement();
-                table.cornerRadiusTopLeft = gpui.AbsoluteLength.Pixels(radius);
-                table.cornerRadiusTopRight = gpui.AbsoluteLength.Pixels(radius);
-                table.cornerRadiusBottomLeft = gpui.AbsoluteLength.Pixels(radius);
-                table.cornerRadiusBottomRight = gpui.AbsoluteLength.Pixels(radius);
+                table.cornerRadiusTopLeft = glaze.AbsoluteLength.Pixels(radius);
+                table.cornerRadiusTopRight = glaze.AbsoluteLength.Pixels(radius);
+                table.cornerRadiusBottomLeft = glaze.AbsoluteLength.Pixels(radius);
+                table.cornerRadiusBottomRight = glaze.AbsoluteLength.Pixels(radius);
                 if (scroll) table.overflowX = Scroll;
                 final style = TextViewStyle.defaultValue().withCodeBackground(headBackground).withTable(table);
                 return div().w(px(400.)).child(TextView.create(state).withStyle(style));
@@ -245,7 +245,7 @@ class TextViewLayoutTest extends TestCase {
             final app = TextTestDraw.wideMonoApp();
             initApp(app, false);
             final cell = style.tableCell().clone();
-            cell.background = new gpui.Background(Solid, Srgb, cellBackground);
+            cell.background = new glaze.Background(Solid, Srgb, cellBackground);
             final styled = style.withTableCell(cell);
             final state = markdown(app, source);
             final window = open(app, () -> div().w(px(width)).child(TextView.create(state).withStyle(styled)));
@@ -273,12 +273,12 @@ class TextViewLayoutTest extends TestCase {
 
         final singleLine = firstColumn(4000., TextViewStyle.defaultValue())[0];
         final padding = new StyleRefinement();
-        padding.paddingLeft = gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Rems(1.));
-        padding.paddingRight = gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Rems(1.));
+        padding.paddingLeft = glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Rems(1.));
+        padding.paddingRight = glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Rems(1.));
         assertEquals(singleLine, firstColumn(4000., TextViewStyle.defaultValue().withTableCell(padding))[0], 'the cell padding refinement leaves the text its measured width');
         final bold = new StyleRefinement();
-        bold.text = new gpui.TextStyleRefinement();
-        bold.text.fontWeight = gpui.FontWeight.BOLD;
+        bold.text = new glaze.TextStyleRefinement();
+        bold.text.fontWeight = glaze.FontWeight.BOLD;
         assertEquals(singleLine, firstColumn(4000., TextViewStyle.defaultValue().withTable(bold))[0], 'the table text refinement is measured');
     }
 

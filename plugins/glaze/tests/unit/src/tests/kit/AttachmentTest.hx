@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.ScrollHandle;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.Size;
-import gpui.component.attachment.Attachment;
-import gpui.component.button.Button;
-import gpui.component.shimmer.ShimmerText.ShimmerStyle;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.ScrollHandle;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.Size;
+import glaze.kit.attachment.Attachment;
+import glaze.kit.button.Button;
+import glaze.kit.shimmer.ShimmerText.ShimmerStyle;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.Size.SizeTools;
+using glaze.kit.Size.SizeTools;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `attachment` module,
@@ -54,7 +54,7 @@ class AttachmentTest extends TestCase {
         final attachment = new Attachment()
             .status(Uploading)
             .axis(Vertical)
-            .withSize(gpui.component.Size.Small)
+            .withSize(glaze.kit.Size.Small)
             .media(new AttachmentMedia().src('preview.png'))
             .content(new AttachmentContent()
                 .title(new AttachmentTitle('report.pdf'))
@@ -62,7 +62,7 @@ class AttachmentTest extends TestCase {
             .actions(new AttachmentActions().child('Cancel'));
 
         assertEquals(AttachmentStatus.Uploading, attachment.statusValue);
-        assertEquals(gpui.Axis.Vertical, attachment.axisValue);
+        assertEquals(glaze.Axis.Vertical, attachment.axisValue);
         assertTrue(attachment.size.equals(Small));
         assertNotNull(attachment.mediaValue);
         assertNotNull(attachment.contentValue);
@@ -252,7 +252,7 @@ class AttachmentTest extends TestCase {
         final attachment = new Attachment()
             .status(Processing)
             .content(new AttachmentContent().title(new AttachmentTitle('report.pdf')
-                .withShimmerStyle(new ShimmerStyle().spread(gpui.component.shimmer.ShimmerText.ShimmerSpread.Relative(0.45)).reverse(true))));
+                .withShimmerStyle(new ShimmerStyle().spread(glaze.kit.shimmer.ShimmerText.ShimmerSpread.Relative(0.45)).reverse(true))));
 
         attachment.layoutSlots();
 
@@ -277,12 +277,12 @@ class AttachmentTest extends TestCase {
     }
 
     function testAttachmentMediaSizeInheritsRootUnlessExplicit() {
-        function slot(size:Size, status:AttachmentStatus, axis:gpui.Axis, flush:Bool):SlotLayout {
+        function slot(size:Size, status:AttachmentStatus, axis:glaze.Axis, flush:Bool):SlotLayout {
             return new SlotLayout(size, status, axis, flush, null, null, null);
         }
         final inherited = new AttachmentMedia().layout(slot(Small, Complete, Vertical, true));
         assertTrue(inherited.size.equals(Small));
-        assertEquals(gpui.Axis.Vertical, inherited.axis);
+        assertEquals(glaze.Axis.Vertical, inherited.axis);
         assertTrue(inherited.flush);
 
         final explicit = new AttachmentMedia().withSize(XSmall).layout(slot(Large, Failed, Horizontal, false));

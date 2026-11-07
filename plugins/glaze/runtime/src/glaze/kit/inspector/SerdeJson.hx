@@ -3,9 +3,9 @@
 // `serde_json::from_str::<StyleRefinement>` goes through in gpui-kit 0.8.1's inspector.
 // Original code Copyright David Tolnay and the serde contributors, licensed under MIT OR Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.inspector;
+package glaze.kit.inspector;
 
-import gpui.base.dock.JsonValue.JsonValueTools;
+import glaze.kit.base.dock.JsonValue.JsonValueTools;
 import haxe.io.Bytes;
 
 /**

@@ -2,7 +2,7 @@
 // Original code Copyright 2020 Nicolas Silva, licensed under MIT or Apache-2.0 (at your option).
 // Modified: translated from Rust to Haxe for Ceramic (default options only:
 // horizontal shelves, alignment 1x1, one column; no grow() or SVG dump). See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
 /**
  * A faster but less precise shelf packing dynamic texture atlas allocator,

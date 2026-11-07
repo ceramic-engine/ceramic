@@ -4,26 +4,26 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.accordion.Accordion;
-import gpui.component.collapsible.Collapsible;
-import gpui.component.stepper.Stepper;
-import gpui.component.stepper.StepperItem;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.accordion.Accordion;
+import glaze.kit.collapsible.Collapsible;
+import glaze.kit.stepper.Stepper;
+import glaze.kit.stepper.StepperItem;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `accordion.rs` and

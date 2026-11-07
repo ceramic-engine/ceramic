@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.component.I18n;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.I18n;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
 
 /**
  * The default methods of both panel traits: base's (behavior, from
- * `gpui.base.dock.PanelBase`) and this crate's `Panel` (presentation). A
+ * `glaze.kit.base.dock.PanelBase`) and this crate's `Panel` (presentation). A
  * panel extends this and implements `panelName`, `render` and
  * `focusHandle`.
  */
-abstract class PanelBase extends gpui.base.dock.PanelBase implements Panel {
+abstract class PanelBase extends glaze.kit.base.dock.PanelBase implements Panel {
 
     public function new() {
         super();

@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/carousel/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.carousel;
+package glaze.kit.carousel;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.Model;
-import gpui.Point;
-import gpui.ScrollHandle;
-import gpui.TouchPhase;
-import gpui.util.MathUtil;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.Model;
+import glaze.Point;
+import glaze.ScrollHandle;
+import glaze.TouchPhase;
+import glaze.util.MathUtil;
 
 /**
  * An event emitted when user interaction selects another carousel item.
@@ -30,7 +30,7 @@ enum CarouselEvent {
  * input all resolve to the same snap points without making the content own a
  * second copy of the selection state.
  */
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class CarouselStateGeometry {
 
     var viewport:Null<Bounds> = null;
@@ -43,7 +43,7 @@ private class CarouselStateGeometry {
 
 }
 
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class PointerGesture {
 
     var startPosition:Point;
@@ -66,7 +66,7 @@ private class PointerGesture {
 
 }
 
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class ScrollGesture {
 
     var startOffset:Point;
@@ -84,7 +84,7 @@ private class ScrollGesture {
 }
 
 /** A `Copy` value in Rust: never mutated, replaced instead. */
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class LoopLayout {
 
     final cycleExtent:Float;
@@ -125,7 +125,7 @@ class CarouselState extends Model {
      * emit `Moved`, so a quiet period is the only signal that a new gesture
      * began (seconds).
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     static inline final SCROLL_EVENT_SEPARATION:Float = 0.028;
 
@@ -184,7 +184,7 @@ class CarouselState extends Model {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /** Sets the initially selected item. */
@@ -368,7 +368,7 @@ class CarouselState extends Model {
     }
 
     /** Returns the shared scroll handle used by the content viewport. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function scrollHandle():ScrollHandle {
         return scrollHandleValue;
@@ -378,31 +378,31 @@ class CarouselState extends Model {
      * Hides or restores the focus ring. Focus that arrives through the
      * pointer keeps the arrow keys working without drawing the ring.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function suppressFocusRing(suppressed:Bool):Void {
         focusRingSuppressed = suppressed;
     }
 
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function isFocusRingSuppressed():Bool {
         return focusRingSuppressed;
     }
 
     /** Returns whether pointer or trackpad input is currently active. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function isInteracting():Bool {
         return pointerGesture != null || scrollGesture != null;
     }
 
     /** Returns whether a trackpad gesture is being tracked. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function hasScrollGesture():Bool {
         return scrollGesture != null;
     }
 
     /** Returns whether the active pointer gesture has committed to this axis. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function isPointerDragLocked():Bool {
         return pointerGesture != null && pointerGesture.axisLocked;
@@ -415,7 +415,7 @@ class CarouselState extends Model {
      * Capture-phase handlers still run first, so descendant controls clear
      * their pending press and ancestor gesture surfaces can finish.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function shouldSuppressPointerClick():Bool {
         return suppressPointerClick;
@@ -429,7 +429,7 @@ class CarouselState extends Model {
      * equivalent cycle, letting the content start a fresh spring at the same
      * visual position.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function motionRevision():Int {
         return _motionRevision;
@@ -439,9 +439,9 @@ class CarouselState extends Model {
      * Returns the size of the clipped content frame that controls and the
      * focus ring are positioned around.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
-    function frameSize():Null<gpui.Size> {
+    function frameSize():Null<glaze.Size> {
         return geometry.frame != null ? geometry.frame.size : null;
     }
 
@@ -456,7 +456,7 @@ class CarouselState extends Model {
      * Records the scroll track (`viewport`), the clipped content `frame`, and
      * the item bounds after layout.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function setGeometryWithRunway(viewport:Bounds, frame:Bounds, items:Array<Bounds>, hasRunway:Bool):Void {
         geometry.viewport = viewport;
         geometry.frame = frame;
@@ -466,21 +466,21 @@ class CarouselState extends Model {
     }
 
     /** Returns the runway reserved on both sides of the real item cycle. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function loopRunway():Null<Float> {
         return loopLayout != null ? loopLayout.cycleExtent : null;
     }
 
     /** Returns whether content layout is moving into or out of its runway. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function isLoopLayoutTransitioning():Bool {
         return loopLayoutRemovalPending || (loopLayout != null && !loopLayout.runwayReady);
     }
 
     /** Returns the visual offset applied to one item in the circular track. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function loopItemOffset(index:Int):Point {
         final layout = loopLayout;
@@ -510,7 +510,7 @@ class CarouselState extends Model {
      * Returns the target used by content motion. During a boundary wrap this
      * is the equivalent snap in the adjacent runway cycle.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function motionTargetFor(index:Int):Null<Point> {
         if (loopMotionTarget != null && _selectedIndex == index) {
@@ -520,7 +520,7 @@ class CarouselState extends Model {
     }
 
     /** Silently returns a settled virtual target to the middle cycle. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function settleLoopMotion(rendered:Point, cx:Context<CarouselState>):Null<Point> {
         final target = loopMotionTarget;
@@ -547,7 +547,7 @@ class CarouselState extends Model {
     }
 
     /** Returns the geometry-derived snap offset for `index`. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function snapTargetFor(index:Int):Null<Point> {
         final viewport = geometry.viewport;
@@ -561,7 +561,7 @@ class CarouselState extends Model {
     }
 
     /** Returns the nearest item index for a scroll offset. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function nearestIndex(offset:Point):Null<Int> {
         final viewport = geometry.viewport;
@@ -582,7 +582,7 @@ class CarouselState extends Model {
     }
 
     /** Begins a pointer drag and notifies the owning entity. */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function beginDrag(position:Point, cx:Context<CarouselState>):Bool {
         final cancelledScroll = scrollGesture != null;
@@ -600,7 +600,7 @@ class CarouselState extends Model {
      * Updates the active pointer drag after locking it to the carousel axis.
      * Cross-axis drags cancel this gesture so an ancestor can handle them.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function updateDrag(position:Point, cx:Context<CarouselState>):Bool {
         final gesture = pointerGesture;
@@ -642,7 +642,7 @@ class CarouselState extends Model {
      * Finishes a pointer drag by selecting the nearest item and settling the
      * handle to its snap point.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function finishDrag(cx:Context<CarouselState>):Bool {
         final suppressedClick = suppressPointerClick;
@@ -663,7 +663,7 @@ class CarouselState extends Model {
      * Returns whether the delta moved the handle or can be consumed by a
      * looping carousel.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function handleScrollDelta(axis:Axis, delta:Float, phase:TouchPhase, cx:Context<CarouselState>):Bool {
         if (axis != _axis || _itemCount < 2) {
@@ -722,7 +722,7 @@ class CarouselState extends Model {
      * Finishes a precise trackpad gesture. Cancelled gestures restore the
      * original offset and never emit a selection event.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     function finishScroll(cancelled:Bool, cx:Context<CarouselState>):Bool {
         invalidateScrollSettle();
@@ -748,7 +748,7 @@ class CarouselState extends Model {
      * Hands a trackpad gesture that began at an edge to an ancestor scroller
      * until it ends or goes quiet.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function deferScrollToAncestor(cx:Context<CarouselState>):Void {
         scrollGesture = null;
         invalidateScrollSettle();
@@ -762,7 +762,7 @@ class CarouselState extends Model {
      * assigns: a step keeps the whole burst here, while a burst that cannot
      * step belongs to an ancestor scroller.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     function handleWheelStep(axis:Axis, delta:Float, cx:Context<CarouselState>):Bool {
         if (axis != _axis || delta == 0.) {
             return false;

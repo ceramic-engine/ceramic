@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/registry.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.WeakEntity;
-import gpui.Window;
+import glaze.App;
+import glaze.WeakEntity;
+import glaze.Window;
 
 /**
  * Global registry of panel builders, keyed by panel name, used to reconstruct
@@ -31,7 +31,7 @@ class PanelRegistry {
     /**
      * Initialize the panel registry.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     static function init(cx:App):Void {
         if (cx.tryGlobal(PanelRegistry) == null) {
             cx.setGlobal(new PanelRegistry());

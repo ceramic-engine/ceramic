@@ -4,32 +4,32 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.WeakEntity;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.progress.Progress;
-import gpui.component.progress.ProgressCircle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.WeakEntity;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.progress.Progress;
+import glaze.kit.progress.ProgressCircle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /** Rust `ProgressAction::SetValue(f32)`. */
 @:action(namespace = progress_story) private class ProgressSetValue implements Action {
@@ -53,7 +53,7 @@ class ProgressStory extends Model implements Story {
         return 'Show task completion with determinate or loading indicators.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -67,7 +67,7 @@ class ProgressStory extends Model implements Story {
 
     @observe var loading:Bool = false;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     /**
      * Rust keeps the animation task in `_task` (replacing it drops the

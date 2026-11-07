@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/otp_input.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.Model;
-import gpui.ParentElement;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.BlinkCursor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.Model;
+import glaze.ParentElement;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.BlinkCursor;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A semantic notification from a one-time-code state.
@@ -160,7 +160,7 @@ class OtpState extends Model implements Render {
     static function editValue(value:String, key:String, keyChar:Null<String>, length:Int):Null<String> {
         final chars = OtpState.chars(value);
         if (key == "backspace") {
-            gpui.util.Stacks.drop(chars);
+            glaze.util.Stacks.drop(chars);
         } else {
             final keyChars = OtpState.chars(key);
             var digit:Null<Int> = keyChars.length > 0 ? toDigitChar(keyChars[0]) : null;

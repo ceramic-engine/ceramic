@@ -1,27 +1,27 @@
 package tests;
 
-import gpui.Font;
-import gpui.FontFallbacks;
-import gpui.FontId;
-import gpui.FontRun;
-import gpui.GlyphId;
-import gpui.LineLayout;
-import gpui.Point;
-import gpui.RenderGlyphParams;
-import gpui.ShapedGlyph;
-import gpui.ShapedRun;
-import gpui.platform.CanvasFallback;
-import gpui.platform.CanvasFallbackText;
-import gpui.platform.CanvasFontFallback;
-import gpui.platform.CanvasGlyphCache;
-import gpui.platform.CanvasText;
-import gpui.platform.CeramicTextSystem;
-import gpui.platform.RunReplacements;
-import gpui.platform.RunReplacements.Replacement;
-import gpui.platform.CanvasText.CanvasTextBackend;
-import gpui.platform.CanvasText.CanvasTextMetrics;
-import gpui.platform.CanvasFallbackText.CanvasFont;
-import gpui.util.Utf8;
+import glaze.Font;
+import glaze.FontFallbacks;
+import glaze.FontId;
+import glaze.FontRun;
+import glaze.GlyphId;
+import glaze.LineLayout;
+import glaze.Point;
+import glaze.RenderGlyphParams;
+import glaze.ShapedGlyph;
+import glaze.ShapedRun;
+import glaze.platform.CanvasFallback;
+import glaze.platform.CanvasFallbackText;
+import glaze.platform.CanvasFontFallback;
+import glaze.platform.CanvasGlyphCache;
+import glaze.platform.CanvasText;
+import glaze.platform.CeramicTextSystem;
+import glaze.platform.RunReplacements;
+import glaze.platform.RunReplacements.Replacement;
+import glaze.platform.CanvasText.CanvasTextBackend;
+import glaze.platform.CanvasText.CanvasTextMetrics;
+import glaze.platform.CanvasFallbackText.CanvasFont;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import testing.TestCase;
 
@@ -31,7 +31,7 @@ import testing.TestCase;
  * canvas_text.rs and text_system.rs), on every target with a fake canvas
  * (`FakeCanvas`): the Rust tests of those files, the classification of every
  * code point and of sequences compared with the original
- * (`test/unit/data/canvas-fallback-reference.json`, dumped by a Rust program
+ * (`tests/unit/data/canvas-fallback-reference.json`, dumped by a Rust program
  * that compiles the original canvas_fallback.rs), the CSS fonts, the font and
  * glyph id scheme and the layout replacements.
  */
@@ -212,7 +212,7 @@ class CanvasFallbackTest extends TestCase {
         for (c in 0...0x110000) {
             if (c >= 0xD800 && c <= 0xDFFF)
                 continue;
-            if (single(c) != 0 || gpui.platform.CanvasFallbackTables.emojiStatus(c) != 0 || (c >= 0x1100 && c <= 0x1112))
+            if (single(c) != 0 || glaze.platform.CanvasFallbackTables.emojiStatus(c) != 0 || (c >= 0x1100 && c <= 0x1112))
                 bases.push(c);
         }
         final sequences:Array<Dynamic> = reference.sequences;
@@ -544,7 +544,7 @@ class CanvasFallbackTest extends TestCase {
         final mono = p.fontId(Font.of('JetBrains Mono'));
         final system = p.fontId(Font.of('.SystemUIFont'));
         final bold = Font.of('Inter');
-        bold.weight = gpui.FontWeight.BOLD;
+        bold.weight = glaze.FontWeight.BOLD;
         bold.fallbacks = FontFallbacks.fromFonts(['Noto Sans CJK SC', 'A"b']);
         final boldId = p.fontId(bold);
         inline function css(nativeId:FontId, size:Float, color:Bool):String {
@@ -670,11 +670,11 @@ class CanvasFallbackTest extends TestCase {
         assertEquals(23 * 30 * 4, p.rasterizeGlyph(lcd, bounds).length);
 
         // Limits of canvas_text::rasterize
-        assertEquals(0, CanvasText.rasterize(canvas, 'x', '10px a', new gpui.Bounds(new Point(0, 0), new gpui.Size(0, 5)), 0, 0, false).length);
-        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new gpui.Bounds(new Point(0, 0), new gpui.Size(4097, 1)), 0, 0, false));
-        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new gpui.Bounds(new Point(0, 0), new gpui.Size(4096, 1025)), 0, 0, false));
-        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new gpui.Bounds(new Point(0, 0), new gpui.Size(2, 2)), Math.NaN, 0, false));
-        assertRaises(() -> CanvasText.rasterize(canvas, 'x', ' ', new gpui.Bounds(new Point(0, 0), new gpui.Size(2, 2)), 0, 0, false));
+        assertEquals(0, CanvasText.rasterize(canvas, 'x', '10px a', new glaze.Bounds(new Point(0, 0), new glaze.Size(0, 5)), 0, 0, false).length);
+        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new glaze.Bounds(new Point(0, 0), new glaze.Size(4097, 1)), 0, 0, false));
+        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new glaze.Bounds(new Point(0, 0), new glaze.Size(4096, 1025)), 0, 0, false));
+        assertRaises(() -> CanvasText.rasterize(canvas, 'x', '10px a', new glaze.Bounds(new Point(0, 0), new glaze.Size(2, 2)), Math.NaN, 0, false));
+        assertRaises(() -> CanvasText.rasterize(canvas, 'x', ' ', new glaze.Bounds(new Point(0, 0), new glaze.Size(2, 2)), 0, 0, false));
     }
 
     static function lineOf(p:CeramicTextSystem, text:String, family:String = 'Inter', size:Float = 16):LineLayout {
@@ -783,9 +783,9 @@ class CanvasFallbackTest extends TestCase {
     }
 
     function testDefaultTextSystemHasNoCanvasOnNode() {
-        #if (js && !gpui_no_canvas_fallback)
-        if (!gpui.platform.CanvasText.BrowserCanvasText.available()) {
-            final ts:CeramicTextSystem = cast gpui.App.defaultTextSystem().platformTextSystem;
+        #if (js && !glaze_no_canvas_fallback)
+        if (!glaze.platform.CanvasText.BrowserCanvasText.available()) {
+            final ts:CeramicTextSystem = cast glaze.App.defaultTextSystem().platformTextSystem;
             assertNull(ts.canvasText);
             assertEquals(Emoji, ts.canvasFontFallback);
         }

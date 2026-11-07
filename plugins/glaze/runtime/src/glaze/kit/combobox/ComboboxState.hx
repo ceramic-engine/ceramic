@@ -4,53 +4,53 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-006 (default placeholder key). See DEVIATIONS.md.
 // Also modified: deliberate deviation DEV-010 (the menu is measured from the trigger). See DEVIATIONS.md.
-package gpui.component.combobox;
+package glaze.kit.combobox;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Length;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.IndexPath;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.input.ClearButton;
-import gpui.component.input.Input;
-import gpui.component.list.List;
-import gpui.component.list.ListState;
-import gpui.component.popover.Popover;
-import gpui.component.searchablelist.SearchableListAdapter;
-import gpui.component.searchablelist.SearchableListChange;
-import gpui.component.searchablelist.SearchableListDelegate;
-import gpui.component.searchablelist.SearchableListItems;
-import gpui.component.searchablelist.SearchableListState;
-import gpui.component.searchablelist.SelectedItem;
-import gpui.component.select.Caret;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Length;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.IndexPath;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.input.ClearButton;
+import glaze.kit.input.Input;
+import glaze.kit.list.List;
+import glaze.kit.list.ListState;
+import glaze.kit.popover.Popover;
+import glaze.kit.searchablelist.SearchableListAdapter;
+import glaze.kit.searchablelist.SearchableListChange;
+import glaze.kit.searchablelist.SearchableListDelegate;
+import glaze.kit.searchablelist.SearchableListItems;
+import glaze.kit.searchablelist.SearchableListState;
+import glaze.kit.searchablelist.SelectedItem;
+import glaze.kit.select.Caret;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * Context passed to the `renderTrigger` closure on `Combobox`.
@@ -70,7 +70,7 @@ class ComboboxTriggerContext<I> {
 
     final sizeValue:Size;
 
-    @:allow(gpui.component.combobox)
+    @:allow(glaze.kit.combobox)
     function new(selection:Array<SelectedItem<I>>, placeholder:Null<String>, open:Bool, disabled:Bool, size:Size) {
         this.selectionValue = selection;
         this.placeholderValue = placeholder;
@@ -119,7 +119,7 @@ enum ComboboxEvent {
  *
  * `I` is the item type of the delegate (Rust `D::Item`).
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class ComboboxState<I> extends Model implements Render {
 
     final state:SearchableListState<I>;
@@ -265,7 +265,7 @@ class ComboboxState<I> extends Model implements Render {
     /** Rust `Icon::new(IconName::Inbox).size(px(28.))` (`Styled::size`). */
     static function inboxIcon():Icon {
         final icon = new Icon(IconName.Inbox);
-        new gpui.StyleBuilder(icon.style()).size(px(28.));
+        new glaze.StyleBuilder(icon.style()).size(px(28.));
         return icon;
     }
 
@@ -692,7 +692,7 @@ class ComboboxState<I> extends Model implements Render {
                     dismissHandler,
                     cx.app
                 ))
-                    .withPriority(gpui.base.Popup.POPUP_PRIORITY)
+                    .withPriority(glaze.kit.base.Popup.POPUP_PRIORITY)
             );
         }
 
@@ -772,7 +772,7 @@ class ComboboxState<I> extends Model implements Render {
         final listElement = new List(list);
         if (searchPlaceholder != null) listElement.searchPlaceholder(searchPlaceholder);
         listElement.withSize(size).maxH(menuMaxH);
-        listElement.paddingsEdges(gpui.Edges.all(SizeTools.DROPDOWN_LIST_PADDING));
+        listElement.paddingsEdges(glaze.Edges.all(SizeTools.DROPDOWN_LIST_PADDING));
         surface.popoverStyle(cx).child(listElement);
         if (hasFooter) {
             surface.child(

@@ -3,23 +3,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Font;
-import gpui.NoopTextSystem;
-import gpui.Range;
-import gpui.TestDispatcher;
-import gpui.TextSystem;
-import gpui.base.input.InlineMetric;
-import gpui.base.input.TextWrapper;
-import gpui.base.input.WrappingIndent;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Font;
+import glaze.NoopTextSystem;
+import glaze.Range;
+import glaze.TestDispatcher;
+import glaze.TextSystem;
+import glaze.kit.base.input.InlineMetric;
+import glaze.kit.base.input.TextWrapper;
+import glaze.kit.base.input.WrappingIndent;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import haxe.io.FPHelper;
 import ropey.Rope;
 import testing.TestCase;
 import unicode_segmentation.UnicodeSegmentation;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * Differential wrapping and edit invalidation checks over the display-map

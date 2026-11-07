@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.SpringMath.f32;
-import gpui.base.animation.Easings;
+import glaze.SpringMath.f32;
+import glaze.kit.base.animation.Easings;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.animation.Easings` (Rust `animation.rs`). The curve is
+ * Tests of `glaze.kit.base.animation.Easings` (Rust `animation.rs`). The curve is
  * computed in `f32` like Rust, so Rust's tolerances are kept as they are.
  */
 class EasingsTest extends TestCase {

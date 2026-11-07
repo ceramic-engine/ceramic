@@ -1,19 +1,19 @@
 package tests;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.scene.BorderStyle;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.scene.BorderStyle;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests for elements and the window frame cycle: painting into the scene,
@@ -91,22 +91,22 @@ class WindowTest extends TestCase {
         // `textStyle()` composes the stack once per depth: pushes, pops and a
         // replaced stack (deferred draws) compose again
         open((window, cx) -> div());
-        inline function size(style:gpui.TextStyle):Float {
+        inline function size(style:glaze.TextStyle):Float {
             return switch style.fontSize {
                 case Pixels(value): value;
                 case _: Math.NaN;
             }
         }
-        function refinement(fontSize:Null<Float>, ?color:gpui.Hsla):gpui.TextStyleRefinement {
-            final result = new gpui.TextStyleRefinement();
-            if (fontSize != null) result.fontSize = gpui.AbsoluteLength.Pixels(fontSize);
+        function refinement(fontSize:Null<Float>, ?color:glaze.Hsla):glaze.TextStyleRefinement {
+            final result = new glaze.TextStyleRefinement();
+            if (fontSize != null) result.fontSize = glaze.AbsoluteLength.Pixels(fontSize);
             if (color != null) result.color = color;
             return result;
         }
         final a = refinement(10);
         final b = refinement(20);
         final c = refinement(null, red());
-        assertTrue(window.textStyle().equals(new gpui.TextStyle()), 'empty stack: default style');
+        assertTrue(window.textStyle().equals(new glaze.TextStyle()), 'empty stack: default style');
         window.pushTextStyle(a);
         assertEquals(10.0, size(window.textStyle()));
         window.pushTextStyle(c);
@@ -121,7 +121,7 @@ class WindowTest extends TestCase {
         assertEquals(20.0, size(bc));
         assertTrue(bc.color.equals(red()));
         // The returned style is a copy that can be changed
-        bc.fontSize = gpui.AbsoluteLength.Pixels(99);
+        bc.fontSize = glaze.AbsoluteLength.Pixels(99);
         assertEquals(20.0, size(window.textStyle()));
         window.popTextStyle();
         assertEquals(20.0, size(window.textStyle()));
@@ -135,7 +135,7 @@ class WindowTest extends TestCase {
         stack.push(b);
         assertEquals(20.0, size(window.textStyle()));
         stack.resize(0);
-        assertTrue(window.textStyle().equals(new gpui.TextStyle()));
+        assertTrue(window.textStyle().equals(new glaze.TextStyle()));
     }
 
     function testDashedBorderWithoutBackgroundIsSplitIntoStrips() {
@@ -276,7 +276,7 @@ class WindowTest extends TestCase {
     function testElementStateLifetime() {
         final flags:Entity<TestCounter> = app.newEntity(_ -> new TestCounter());
         flags.read(app).count = 1;
-        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        var state:Entity<glaze.Window.StateModel<Int>> = null;
         var renders = 0;
         open((window, cx) -> {
             renders++;
@@ -324,7 +324,7 @@ class WindowTest extends TestCase {
         open((window, cx) -> {
             final root = div();
             for (i in 0...8) {
-                root.child(div().id(gpui.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
+                root.child(div().id(glaze.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
             }
             return root;
         });
@@ -338,25 +338,25 @@ class WindowTest extends TestCase {
         }
         assertTrue(trie.sweeps > 0);
         // 80000 paths were interned: at most about two sweep thresholds survive at once
-        assertTrue(maxNodes < 3 * gpui.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
-        assertTrue(trie.nodeCount < 3 * gpui.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
+        assertTrue(maxNodes < 3 * glaze.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
+        assertTrue(trie.nodeCount < 3 * glaze.GlobalElementId.ElementIdTrie.MIN_SWEEP_NODES);
     }
 
     function testElementStateOnStableIdSurvivesTheSweep() {
         var frame = 0;
-        var state:Entity<gpui.Window.StateModel<Int>> = null;
+        var state:Entity<glaze.Window.StateModel<Int>> = null;
         final view = open((window, cx) -> {
             state = window.useKeyedState('counter', cx.app, _ -> 42);
             final root = div().child(div().id('stable').w(px(state.read(cx).value)).h(px(1)));
             for (i in 0...8) {
-                root.child(div().id(gpui.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
+                root.child(div().id(glaze.ElementId.Integer(frame * 8 + i)).w(px(1)).h(px(1)));
             }
             return root;
         });
         final trie = @:privateAccess window.elementIdRoot.trie;
         window.draw();
         final first = state;
-        final viewId = gpui.ElementId.View(view.entityId());
+        final viewId = glaze.ElementId.View(view.entityId());
         final stableNode = @:privateAccess window.elementIdRoot.child(viewId);
         for (_ in 0...10000) {
             frame++;
@@ -415,7 +415,7 @@ class WindowTest extends TestCase {
     }
 
     function testTextStyleStack() {
-        var color:gpui.Hsla = null;
+        var color:glaze.Hsla = null;
         open((window, cx) -> div().textColor(red()).child(
             canvas((_, window, _) -> {
                 color = window.textStyle().color;
@@ -465,7 +465,7 @@ class WindowTest extends TestCase {
      * A crash inside a view's render is reported from the render, not from
      * the `catch` blocks of `ViewElement` and `Window.draw` that clean up
      * and rethrow it (they rethrow with `cpp.Lib.rethrow`, see
-     * `gpui.util.Exceptions`).
+     * `glaze.util.Exceptions`).
      */
     function testRenderCrashKeepsTheRenderFrame() {
         open((window, cx) -> failInRender());
@@ -480,8 +480,8 @@ class WindowTest extends TestCase {
         assertTrue(hasFrame(haxe.CallStack.exceptionStack(), 'tests.WindowTest', 'failInRender'));
         final stack = @:privateAccess ceramic.Errors.uncaughtErrorStack(caught);
         assertTrue(hasFrame(stack, 'tests.WindowTest', 'failInRender'));
-        assertTrue(hasFrame(stack, 'gpui.ViewElement', 'renderAndRequestLayout'));
-        assertTrue(hasFrame(stack, 'gpui.Window', 'draw'));
+        assertTrue(hasFrame(stack, 'glaze.ViewElement', 'renderAndRequestLayout'));
+        assertTrue(hasFrame(stack, 'glaze.Window', 'draw'));
     }
 
     /**

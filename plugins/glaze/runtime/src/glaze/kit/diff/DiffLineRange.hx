@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/document.rs (`DiffLineRange`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
 /**
  * An inclusive range of source lines in one file, identified by its
@@ -63,18 +63,18 @@ class DiffLineRange {
         return _end;
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function startPosition():DiffLinePosition {
         return new DiffLinePosition(_path, _side, _start);
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function endPosition():DiffLinePosition {
         return new DiffLinePosition(_path, _endSide, _end);
     }
 
     /** Whether the range covers lines on one side only. */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function isSingleSide():Bool {
         return _side == _endSide;
     }

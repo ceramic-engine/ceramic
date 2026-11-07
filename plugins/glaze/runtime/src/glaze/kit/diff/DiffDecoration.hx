@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/decoration.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.ElementId;
-import gpui.Hsla;
+import glaze.ElementId;
+import glaze.Hsla;
 
 /**
  * A background that marks source lines in place, without changing the
@@ -46,7 +46,7 @@ class DiffDecoration {
         return _background;
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function contains(side:DiffSide, line:Int):Bool {
         final range = _range;
         if (range.isSingleSide())
@@ -61,13 +61,13 @@ class DiffDecoration {
 /**
  * Decorations by file path, in supplied order.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class Decorations {
 
     final files:Map<String, Array<DiffDecoration>> = new Map();
 
     function new(decorations:Iterable<DiffDecoration>) {
-        for (decoration in gpui.util.Iterables.asArray(decorations)) {
+        for (decoration in glaze.util.Iterables.asArray(decorations)) {
             final path = decoration.range().path();
             var list = files.get(path);
             if (list == null) {
@@ -97,7 +97,7 @@ class Decorations {
 /**
  * Gutter markers by line, keeping the first supplied for each line.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class GutterMarkers {
 
     final lines:Map<String, DiffGutterMarker> = new Map();
@@ -105,7 +105,7 @@ class GutterMarkers {
     var count = 0;
 
     function new(markers:Iterable<DiffGutterMarker>) {
-        for (marker in gpui.util.Iterables.asArray(markers)) {
+        for (marker in glaze.util.Iterables.asArray(markers)) {
             final key = marker.position().key();
             if (!lines.exists(key)) {
                 lines.set(key, marker);

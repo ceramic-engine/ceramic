@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/tab_group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DragMoveEvent;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.SpringMath;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DragMoveEvent;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.SpringMath;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Observe;
+using glaze.kit.base.Observe;
 
 /**
  * A tab group's behavior, with no appearance of its own.
@@ -53,10 +53,10 @@ class TabGroup extends Model implements Render {
 
     final ownFocusHandle:FocusHandle;
 
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     final active:ActiveTracker = new ActiveTracker();
 
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     var dropIndicator:Null<DropIndicator> = null;
 
     var renderer:TabGroupRenderer;
@@ -66,7 +66,7 @@ class TabGroup extends Model implements Render {
      * `Tabs` node, and it is created when that node first appears in the
      * tree. `DockArea` is the only caller outside tests.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function new(node:NodeId, window:Window, cx:Context<TabGroup>) {
         super();
         this.nodeValue = node;
@@ -201,7 +201,7 @@ class TabGroup extends Model implements Render {
      * group. `onAddedTo` fires for arrivals; departures are silent here
      * because only the container can tell a move from a removal.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function syncFromTree(panels:Array<PanelView>, activeIx:Int, window:Window, cx:Context<TabGroup>):Void {
         final group = cx.weakEntity();
         final existing = [for (panel in panelsValue) panel.panelId(cx.app)];
@@ -222,7 +222,7 @@ class TabGroup extends Model implements Render {
      * Replace everything the container knows about this group's place in the
      * dock, in one call.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function setConstraints(constraints:TabGroupConstraints, window:Window, cx:Context<TabGroup>):Void {
         if (this.constraints.equals(constraints)) return;
 
@@ -246,7 +246,7 @@ class TabGroup extends Model implements Render {
      * refused: a group that became unzoomable while zoomed still has to be
      * able to give the dock back.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function setZoomed(zoomed:Bool, window:Window, cx:Context<TabGroup>):Void {
         if (this.zoomed == zoomed) return;
         final panel = activePanel(cx.app);
@@ -273,7 +273,7 @@ class TabGroup extends Model implements Render {
      * What this group last told `panel` about being active, for handing to
      * `seedActive` on the group it is moving to.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function lastNotifiedActive(panel:PanelId):Null<Bool> {
         return active.lastNotified(panel);
     }
@@ -282,7 +282,7 @@ class TabGroup extends Model implements Render {
      * Record what an arriving panel already believes, so a move between
      * groups does not read as a fresh activation.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function seedActive(panel:PanelId, active:Bool):Void {
         this.active.seed(panel, active);
     }
@@ -374,7 +374,7 @@ class TabGroup extends Model implements Render {
      * Where a dragged panel would land, tracked while it moves over the
      * group's content.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function onPanelDragMove(drag:DragMoveEvent<DragPanel>, window:Window, cx:Context<TabGroup>):Void {
         final bounds = drag.bounds;
         if (!bounds.contains(drag.event.position)) {
@@ -401,7 +401,7 @@ class TabGroup extends Model implements Render {
      * A drag item has no dragged tab to fly the placeholder in from, so it
      * starts at its resting position and only animates between placements.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function onItemDragMove(drag:DragMoveEvent<AnyDrag>, window:Window, cx:Context<TabGroup>):Void {
         final bounds = drag.bounds;
         if (!bounds.contains(drag.event.position)) {
@@ -415,7 +415,7 @@ class TabGroup extends Model implements Render {
         syncDropPlaceholder(bounds, placement, Drag.ITEM_DRAG_SESSION_ID, source, cx);
     }
 
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function syncDropPlaceholder(bounds:Bounds, placement:Null<Placement>, dragSessionId:Int, source:DropPlaceholderBounds,
             cx:Context<TabGroup>):Void {
         final to = DropPlaceholderBounds.forPlacement(bounds, placement);
@@ -453,7 +453,7 @@ class TabGroup extends Model implements Render {
      * Report a host-owned drag landing on this group. `placement` is `null`
      * to merge into the tab group instead of splitting.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function emitDragDrop(item:AnyDrag, placement:Null<Placement>, cx:Context<TabGroup>):Void {
         dropIndicator = null;
         cx.emit(TabGroupEvent.DragDrop(item.clone(), new DropTarget(nodeValue, placement)));
@@ -468,7 +468,7 @@ class TabGroup extends Model implements Render {
      * drag had resolved. `activate` decides whether the arriving panel
      * becomes the displayed tab.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function onDrop(drag:DragPanel, ix:Null<Int>, activate:Bool, cx:Context<TabGroup>):Void {
         final indicator = dropIndicator;
         dropIndicator = null;

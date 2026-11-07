@@ -3,25 +3,25 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.FollowMode;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.util.Ref;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.FollowMode;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.util.Ref;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `list.rs`, all ported.
@@ -76,7 +76,7 @@ class ListTest extends TestCase {
     }
 
     /** Rust `cx.draw(point(px(0.), px(0.)), size(px(width), px(height)), ...)` */
-    function drawAt(width:Float, height:Float, build:() -> gpui.Element):Void {
+    function drawAt(width:Float, height:Float, build:() -> glaze.Element):Void {
         host.width = width;
         host.height = height;
         host.build = build;
@@ -1222,7 +1222,7 @@ class ListTestHost extends Model implements Render {
 
     public var height:Float = 0;
 
-    public var build:Null<() -> gpui.Element> = null;
+    public var build:Null<() -> glaze.Element> = null;
 
     public function new() {
         super();

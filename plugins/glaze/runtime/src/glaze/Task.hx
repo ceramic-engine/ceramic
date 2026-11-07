@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/executor.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import tracker.Autorun;
 
@@ -61,7 +61,7 @@ class Task<T> extends AnyTask {
         rejectWith(error);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function resolveDynamic(value:Dynamic):Void {
         if (state != Pending)
             return;
@@ -74,7 +74,7 @@ class Task<T> extends AnyTask {
     /**
      * Completes this task the same way as `other`, once `other` completes.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function follow(other:Task<T>):Void {
         final prevHook = cancelHook;
         cancelHook = () -> {

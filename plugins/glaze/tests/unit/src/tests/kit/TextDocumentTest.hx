@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.text.NodeContext;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.PrevBlock;
-import gpui.base.text.format.MarkdownFormat;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.PrevBlock;
+import glaze.kit.base.text.format.MarkdownFormat;
 import testing.TestCase;
 
 /**

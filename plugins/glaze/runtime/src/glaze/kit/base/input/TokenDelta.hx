@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/inline_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * The tokens an edit removed and inserted. Only affected records are
@@ -9,13 +9,13 @@ package gpui.base.input;
  */
 class TokenDelta {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final removed:Array<InlineTokenSpan>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     final inserted:Array<InlineTokenSpan>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function new(removed:Array<InlineTokenSpan>, inserted:Array<InlineTokenSpan>) {
         this.removed = removed;
         this.inserted = inserted;

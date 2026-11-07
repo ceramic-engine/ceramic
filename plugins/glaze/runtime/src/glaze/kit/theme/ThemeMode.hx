@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/mod.rs (ThemeMode)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
 /**
  * The theme mode: light (the default) or dark.
@@ -45,7 +45,7 @@ enum abstract ThemeMode(Int) {
      * The mode of a window appearance (Rust `From<WindowAppearance>`): dark
      * for `Dark` and `VibrantDark`.
      */
-    public static function fromAppearance(appearance:gpui.WindowAppearance):ThemeMode {
+    public static function fromAppearance(appearance:glaze.WindowAppearance):ThemeMode {
 
         return appearance.isDark() ? Dark : Light;
 

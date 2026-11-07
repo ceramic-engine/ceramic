@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.ReduceMotion;
+import glaze.kit.base.ReduceMotion;
 
 /**
- * Tests of `gpui.base.ReduceMotion` (Rust `reduce_motion.rs`).
+ * Tests of `glaze.kit.base.ReduceMotion` (Rust `reduce_motion.rs`).
  */
 class ReduceMotionTest extends KitTestCase {
 

@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/display_map/text_wrapper.rs (`LineLayout`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Point;
-import gpui.ShapedLine;
-import gpui.Size;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.util.MathUtil;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Point;
+import glaze.ShapedLine;
+import glaze.Size;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.util.MathUtil;
+import glaze.util.Utf8;
 
 /**
  * A soft wrapped visual line position: the result of
@@ -54,7 +54,7 @@ class WhitespaceChar {
 /**
  * The layout info of a line with soft wrapped lines.
  *
- * Rust names it `LineLayout`: renamed because `gpui.LineLayout` (the shaped
+ * Rust names it `LineLayout`: renamed because `glaze.LineLayout` (the shaped
  * line of the text system) has the same name.
  */
 class InputLineLayout {

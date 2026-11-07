@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/geometry.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AbsoluteLength;
-import gpui.Axis;
-import gpui.Length;
-import gpui.Pixels;
+import glaze.AbsoluteLength;
+import glaze.Axis;
+import glaze.Length;
+import glaze.Pixels;
 
-using gpui.DefiniteLengthTools;
+using glaze.DefiniteLengthTools;
 
 /**
  * Module of the geometry helpers: `Placement`, `Side`, `AxisExt` and
- * `LengthExt`. Rust's serializable `Edges<T>` is `gpui.EdgesOf<T>` here.
+ * `LengthExt`. Rust's serializable `Edges<T>` is `glaze.EdgesOf<T>` here.
  */
 class Geometry {}
 
@@ -74,7 +74,7 @@ enum abstract Side(Int) to Int {
 }
 
 /**
- * Extends `Axis` with utility methods (`using gpui.base.Geometry.AxisExt;`).
+ * Extends `Axis` with utility methods (`using glaze.kit.base.Geometry.AxisExt;`).
  */
 class AxisExt {
 
@@ -89,7 +89,7 @@ class AxisExt {
 }
 
 /**
- * Extends `Length` with utility methods (`using gpui.base.Geometry.LengthExt;`).
+ * Extends `Length` with utility methods (`using glaze.kit.base.Geometry.LengthExt;`).
  */
 class LengthExt {
 

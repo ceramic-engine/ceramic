@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scrollbar.rs (ScrollbarMode)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.theme;
+package glaze.kit.base.theme;
 
 /**
  * Scrollbar show mode.
  *
  * Defined in `scrollbar.rs` in Rust; it lives with the theme here, and
- * `gpui.base.Scrollbar` names it as a typedef.
+ * `glaze.kit.base.Scrollbar` names it as a typedef.
  */
 enum abstract ScrollbarMode(Int) {
 

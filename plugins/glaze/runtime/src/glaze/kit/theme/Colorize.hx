@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/color.rs (Colorize for Hsla)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.Hsla;
-import gpui.Rgba;
-import gpui.util.MathUtil;
+import glaze.Hsla;
+import glaze.Rgba;
+import glaze.util.MathUtil;
 
 /**
- * Color helpers on `Hsla`, as a static extension: `using gpui.component.theme.Colorize;`.
+ * Color helpers on `Hsla`, as a static extension: `using glaze.kit.theme.Colorize;`.
  *
  * `opacity` is not repeated here: `Hsla.opacity` already does exactly what
  * the trait method does (the alpha multiplied by the clamped factor).

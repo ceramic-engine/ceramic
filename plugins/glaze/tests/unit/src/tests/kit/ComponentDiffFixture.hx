@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.component.diff.DiffFile;
+import glaze.kit.diff.DiffFile;
 import similar.ChangeTag;
 import similar.TextDiff;
 

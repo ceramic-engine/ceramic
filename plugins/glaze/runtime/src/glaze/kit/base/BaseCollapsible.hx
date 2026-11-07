@@ -1,22 +1,22 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/collapsible.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.motion.MotionReveal;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.motion.MotionReveal;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A child of a `BaseCollapsible`: an element always shown, or the content shown
@@ -30,7 +30,7 @@ private enum CollapsibleChild {
 /**
  * An unstyled controlled region whose content can be expanded or collapsed.
  *
- * Rust `gpui_base::Collapsible`, renamed: `gpui.base.Collapsible` is the
+ * Rust `gpui_base::Collapsible`, renamed: `glaze.kit.base.Collapsible` is the
  * component trait of `ComponentTraits`.
  */
 class BaseCollapsible implements RenderOnce implements Styled implements ParentElement {

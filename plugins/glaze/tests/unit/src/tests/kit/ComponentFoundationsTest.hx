@@ -4,20 +4,20 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.TestDispatcher;
-import gpui.Svg.Transformation;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.label.Label;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.TestDispatcher;
+import glaze.Svg.Transformation;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.label.Label;
+import glaze.kit.theme.Theme;
 import haxe.io.Bytes;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.Size.SizeTools;
+using glaze.kit.Size.SizeTools;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's sizing, icon and label modules.
@@ -105,7 +105,7 @@ class ComponentFoundationsTest extends TestCase {
 
         final svg = cloned.intoSvg(12., blue());
         assertTrue(svg.style().text.color.equals(red()));
-        assertTrue(Type.enumEq(svg.style().sizeWidth, gpui.Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Rems(1.5)))));
+        assertTrue(Type.enumEq(svg.style().sizeWidth, glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Rems(1.5)))));
 
         final rotated = icon.rotate(radians(Math.PI)).clone();
         assertEquals(Math.PI, (rotated.transformation.rotate : Float));
@@ -214,7 +214,7 @@ class ComponentFoundationsTest extends TestCase {
     }
 
     function testLegacyIndexPathExportIsTheBaseType() {
-        final legacy:gpui.base.IndexPath = new gpui.base.IndexPath(2).withSection(1).withColumn(3);
+        final legacy:glaze.kit.base.IndexPath = new glaze.kit.base.IndexPath(2).withSection(1).withColumn(3);
         assertEquals(1, legacy.section);
     }
 

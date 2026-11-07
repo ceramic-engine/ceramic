@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/dock_placement.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Pixels;
-import gpui.base.resizable.Resizable;
-import gpui.util.MathUtil;
+import glaze.Pixels;
+import glaze.kit.base.resizable.Resizable;
+import glaze.util.MathUtil;
 
 /**
  * Runtime state for one dock: whether it is open, collapsible, its current
@@ -77,12 +77,12 @@ class Dock {
      * never persisted: the drag's release settles it into either a closed
      * dock or one at the minimum.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     inline function liveSize():Null<Pixels> {
         return liveSizeValue;
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     inline function setLiveSize(size:Null<Pixels>):Void {
         liveSizeValue = size;
     }

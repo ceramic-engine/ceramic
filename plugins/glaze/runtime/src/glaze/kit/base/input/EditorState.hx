@@ -2,12 +2,12 @@
 // crates/base/src/input/base/state.rs (`impl InputBaseState<EditorMode>`, the multi-line builders)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Window;
+import glaze.Context;
+import glaze.Window;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * State for source-code editing.
@@ -23,8 +23,8 @@ using gpui.base.input.RopeExt;
  * `impl InputBaseState<EditorMode>` blocks are the static extensions
  * `InputLspExt`, `InputDecorationsExt` and `InputIndentExt`.
  */
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.base.input.LayoutMode)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.base.input.LayoutMode)
 class EditorState extends InputBaseState {
 
     /**

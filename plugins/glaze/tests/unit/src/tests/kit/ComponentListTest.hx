@@ -4,30 +4,30 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Component;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate.ListDelegateBase;
-import gpui.component.list.ListDelegate.ListDelegateItem;
-import gpui.component.list.ListItem;
-import gpui.component.list.ListState;
-import gpui.component.list.RowsCache;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Component;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate.ListDelegateBase;
+import glaze.kit.list.ListDelegate.ListDelegateItem;
+import glaze.kit.list.ListItem;
+import glaze.kit.list.ListState;
+import glaze.kit.list.RowsCache;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-component's list: the flattened rows cache
@@ -221,7 +221,7 @@ class ComponentListTest extends TestCase {
     function testListItemInteractivity() {
         final item = new ListItem('item');
         item.base
-            .onDrag(0, (_, _, _, cx) -> (cx.newEntity((c:Context<ProbeView>) -> new ProbeView()) : gpui.AnyView))
+            .onDrag(0, (_, _, _, cx) -> (cx.newEntity((c:Context<ProbeView>) -> new ProbeView()) : glaze.AnyView))
             .onHover((_, _, _) -> {});
 
         assertEquals('Name(item)', Std.string(item.base.elementId()));

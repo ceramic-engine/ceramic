@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Pixels;
-import gpui.SpringMath;
-import gpui.base.dock.JsonValue;
+import glaze.Pixels;
+import glaze.SpringMath;
+import glaze.kit.base.dock.JsonValue;
 
 /**
  * Used to serialize and deserialize the Dock.

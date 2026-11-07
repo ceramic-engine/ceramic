@@ -6,7 +6,7 @@ package scenarios;
  * JSON (about 54 KB, under gpui-kit's 64 KB `SYNC_PARSE_MAX_BYTES`), so
  * every frame tokenizes and folds the whole document again: the cost of the
  * highlighter's regex engine (the pure Haxe Oniguruma, or onig.wasm with
- * `gpui_onig_wasm` on the web).
+ * `glaze_onig_wasm` on the web).
  */
 class EditorOpen extends EditorBench {
 

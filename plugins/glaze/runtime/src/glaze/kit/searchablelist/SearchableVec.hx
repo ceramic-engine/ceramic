@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/searchable_list/vec.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
 
 /**
  * A vector of items that supports incremental filtering.
@@ -25,10 +25,10 @@ import gpui.component.searchablelist.SearchableListDelegate.SearchableListDelega
  */
 class SearchableVec<T> extends SearchableListDelegateBase<T> {
 
-    @:allow(gpui.component.searchablelist)
+    @:allow(glaze.kit.searchablelist)
     var items:Array<T>;
 
-    @:allow(gpui.component.searchablelist)
+    @:allow(glaze.kit.searchablelist)
     var matched:Array<Matched>;
 
     /**
@@ -126,7 +126,7 @@ class SearchableGroup<I> {
      * The rows matching `query`, or `null` when neither the title nor any
      * row matches and the whole group is hidden.
      */
-    @:allow(gpui.component.searchablelist)
+    @:allow(glaze.kit.searchablelist)
     function matchedRows(query:String):Null<Array<Int>> {
         final rows = [for (ix in 0...items.length) if (SearchableListItems.matches(items[ix], query)) ix];
         return (rows.length > 0 || SearchableListItems.containsIgnoreCase(title, query)) ? rows : null;
@@ -140,10 +140,10 @@ class SearchableGroup<I> {
  */
 class SearchableGroupVec<I> extends SearchableListDelegateBase<I> {
 
-    @:allow(gpui.component.searchablelist)
+    @:allow(glaze.kit.searchablelist)
     var items:Array<SearchableGroup<I>>;
 
-    @:allow(gpui.component.searchablelist)
+    @:allow(glaze.kit.searchablelist)
     var matched:Array<Matched>;
 
     public function new(groups:Array<SearchableGroup<I>>) {
@@ -252,7 +252,7 @@ class VecDelegate<T> extends SearchableListDelegateBase<T> {
 /**
  * An entry of the filtered view, pointing into `SearchableVec.items`.
  */
-@:allow(gpui.component.searchablelist)
+@:allow(glaze.kit.searchablelist)
 class Matched {
 
     public final ix:Int;

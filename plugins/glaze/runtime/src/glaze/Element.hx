@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/element.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Implemented by every element (Rust trait `Element`). Elements are built
@@ -28,7 +28,7 @@ abstract class Element {
         return null;
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     /**
      * The inspector id of this element, given by `AnyElement` before
      * `requestLayout` (Rust passes it to every draw phase), or `null`.

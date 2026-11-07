@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/elements/img.rs (ImageSource)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.ImageLoadResult;
+import glaze.ImageLoadResult;
 
 /**
  * A source of image content.
@@ -12,17 +12,17 @@ import gpui.ImageLoadResult;
  * otherwise a path in the app's asset source), a `Resource`, a
  * `RenderImage`, an `Image`, a `ceramic.Texture` or a custom loading function.
  */
-@:using(gpui.ImageSource.ImageSourceTools)
+@:using(glaze.ImageSource.ImageSourceTools)
 enum ImageSource {
 
     /** The image content will be loaded from some resource location */
-    Resource(resource:gpui.Resource);
+    Resource(resource:glaze.Resource);
 
     /** Cached image data */
     Render(image:RenderImage);
 
     /** Cached image data (encoded, decoded through the asset cache) */
-    Image(image:gpui.Image);
+    Image(image:glaze.Image);
 
     /** A custom loading function to use (`null`: still loading) */
     Custom(load:(Window, App) -> Null<ImageLoadResult>);
@@ -37,11 +37,11 @@ enum ImageSource {
 
 class ImageSourceTools {
 
-    static inline function resourceKey(resource:gpui.Resource):String {
+    static inline function resourceKey(resource:glaze.Resource):String {
         return 'resource:' + resource.key();
     }
 
-    static inline function imageKey(image:gpui.Image):String {
+    static inline function imageKey(image:glaze.Image):String {
         return 'image:' + image.id;
     }
 

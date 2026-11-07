@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/rope_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 import ropey.Rope;
 import ropey.RopeSlice;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * An iterator over the lines of a `Rope`. Each line slice includes `\r` if

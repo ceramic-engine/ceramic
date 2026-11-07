@@ -2,22 +2,22 @@
 // `impl TextElement` block)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Hsla;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.Range;
-import gpui.TextRun;
-import gpui.TextStyle;
-import gpui.Window;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Hsla;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.Range;
+import glaze.TextRun;
+import glaze.TextStyle;
+import glaze.Window;
 
-import gpui.base.input.InputActions;
+import glaze.kit.base.input.InputActions;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * A text edit of a batch (Rust tuple `(Range<usize>, String)`).
@@ -60,15 +60,15 @@ enum abstract IndentDirection(Int) {
  * `undoManager`) and methods (`isEditable`, `isMultiLine`,
  * `replaceTextInRanges`, `scrollTo`, `cursor`), named like the Rust ones.
  */
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.base.input.LayoutMode)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.base.input.LayoutMode)
 class InputIndentExt {
 
 /// impl<M: InputModeKind> TextElement<M>
 
     /** Measure the indent width in pixels for given column count. */
     public static function measureIndentWidth(style:TextStyle, column:Int, window:Window):Float {
-        final fontSize = gpui.AbsoluteLengthTools.toPixels(style.fontSize, window.remSize());
+        final fontSize = glaze.AbsoluteLengthTools.toPixels(style.fontSize, window.remSize());
         final layout = window.textSystem().shapeLine(StringTools.lpad('', ' ', column), fontSize, [new TextRun(column, style.font(), new Hsla())]);
 
         return layout.width();
@@ -198,7 +198,7 @@ class InputIndentExt {
         }
 
         final tabIndent = self.mode.tabSize().toString();
-        final tabLen = gpui.util.Utf8.byteLength(tabIndent);
+        final tabLen = glaze.util.Utf8.byteLength(tabIndent);
 
         // Non-collapsed selections and explicit block operations indent whole lines.
         var hasNonCollapsed = false;

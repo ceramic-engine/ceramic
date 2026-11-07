@@ -3,19 +3,19 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.base.input.DecorationCollections;
-import gpui.base.input.DecorationCollections.DecorationIndex;
-import gpui.base.input.RangeDecoration;
-import gpui.base.input.TextDecoration;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.kit.base.input.DecorationCollections;
+import glaze.kit.base.input.DecorationCollections.DecorationIndex;
+import glaze.kit.base.input.RangeDecoration;
+import glaze.kit.base.input.TextDecoration;
 import ropey.Rope;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.DecorationCollections` (Rust `decorations.rs`).
+ * Tests of `glaze.kit.base.input.DecorationCollections` (Rust `decorations.rs`).
  */
 class InputDecorationsTest extends TestCase {
 
@@ -23,7 +23,7 @@ class InputDecorationsTest extends TestCase {
         return new Range(a, b);
     }
 
-    static function rangesOf<T:gpui.base.input.TrackedDecoration>(decorations:Array<T>):String {
+    static function rangesOf<T:glaze.kit.base.input.TrackedDecoration>(decorations:Array<T>):String {
         return [for (d in decorations) d.getRange().toString()].join(',');
     }
 

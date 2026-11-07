@@ -1,19 +1,19 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/description.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Description element for a dialog header.
@@ -22,7 +22,7 @@ using gpui.base.StyledExt;
  */
 class DialogDescription implements RenderOnce implements Styled implements ParentElement {
 
-    final base:gpui.base.Dialog.DialogDescription = new gpui.base.Dialog.DialogDescription();
+    final base:glaze.kit.base.Dialog.DialogDescription = new glaze.kit.base.Dialog.DialogDescription();
 
     final descriptionStyle:StyleRefinement = new StyleRefinement();
 

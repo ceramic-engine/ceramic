@@ -3,45 +3,45 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Range;
-import gpui.Window;
-import gpui.base.NumberStep;
-import gpui.base.StepAction;
-import gpui.base.input.EditorState;
-import gpui.base.input.EditedText;
-import gpui.base.input.FoldRange;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.InputEdit;
-import gpui.base.input.InputHighlighter.InputHighlighterBase;
-import gpui.base.input.InputBaseState.TextEdit;
-import gpui.base.input.LspHover;
-import gpui.base.input.LspPosition;
-import gpui.base.input.StyledRange;
-import gpui.base.input.TabSize;
-import gpui.base.input.TextDecoration;
-import gpui.base.input.TextElement;
-import gpui.base.input.WrappingIndent;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.base.NumberStep;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.EditedText;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.InputHighlighter.InputHighlighterBase;
+import glaze.kit.base.input.InputBaseState.TextEdit;
+import glaze.kit.base.input.LspHover;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.input.TabSize;
+import glaze.kit.base.input.TextDecoration;
+import glaze.kit.base.input.TextElement;
+import glaze.kit.base.input.WrappingIndent;
 import ropey.Rope;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputKeyBindings;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.base.input.TextareaState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputKeyBindings;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.base.input.TextareaState;
 import testing.InteractionScript.ScriptView;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputMovement;
-using gpui.base.input.InputDecorationsExt;
-using gpui.base.input.InputLspExt;
-using gpui.base.input.MaskPattern.MaskPatternTools;
-using gpui.base.NumberStep.NumberStepTools;
+using glaze.kit.base.input.InputMovement;
+using glaze.kit.base.input.InputDecorationsExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.base.input.MaskPattern.MaskPatternTools;
+using glaze.kit.base.NumberStep.NumberStepTools;
 
 /** Rust `InputView<M>`: a state of one mode opened in a window. */
 class InputView {
@@ -86,7 +86,7 @@ class InputStateTestCase extends KitTestCase {
         var input:Entity<InputBaseState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
             // Set up the theme first
-            gpui.base.theme.Theme.globalMut(cx.app);
+            glaze.kit.base.theme.Theme.globalMut(cx.app);
             // Initialize input keybindings
             InputKeyBindings.init(cx.app);
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> make(window, cx));
@@ -141,7 +141,7 @@ class InputStateTestCase extends KitTestCase {
     function buildSized(width:Float, height:Float, make:(Window, Context<InputBaseState>) -> InputBaseState):InputView {
         var input:Entity<InputBaseState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
-            gpui.base.theme.Theme.globalMut(cx.app);
+            glaze.kit.base.theme.Theme.globalMut(cx.app);
             InputKeyBindings.init(cx.app);
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> make(window, cx));
             final child = input;
@@ -156,8 +156,8 @@ class InputStateTestCase extends KitTestCase {
     }
 
     /** Sends one trackpad packet straight to the input. */
-    function swipe(view:InputView, dy:Float, phase:gpui.TouchPhase):Void {
-        view.update((state, window, cx) -> state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Pixels(new gpui.Point(0., dy)), null, phase), window, cx));
+    function swipe(view:InputView, dy:Float, phase:glaze.TouchPhase):Void {
+        view.update((state, window, cx) -> state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(0., dy)), null, phase), window, cx));
     }
 
     function draw(view:InputView):Void {

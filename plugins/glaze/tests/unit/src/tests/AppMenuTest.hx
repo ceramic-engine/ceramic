@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Menu;
-import gpui.NoAction;
+import glaze.Menu;
+import glaze.NoAction;
 import testing.TestCase;
 
-using gpui.Menu.MenuItemTools;
+using glaze.Menu.MenuItemTools;
 
 class AppMenuTest extends TestCase {
 

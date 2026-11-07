@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/mod.rs (`actions`, `init`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.KeyBinding;
-import gpui.OperatingSystem;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.input.InputActions.SelectAll;
+import glaze.App;
+import glaze.AppContext;
+import glaze.KeyBinding;
+import glaze.OperatingSystem;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.input.InputActions.SelectAll;
 
 // Private: bindings serve the focused code body only.
-@:action(namespace = diff) class ScrollUp implements gpui.Action {}
+@:action(namespace = diff) class ScrollUp implements glaze.Action {}
 
-@:action(namespace = diff) class ScrollDown implements gpui.Action {}
+@:action(namespace = diff) class ScrollDown implements glaze.Action {}
 
-@:action(namespace = diff) class ScrollLeft implements gpui.Action {}
+@:action(namespace = diff) class ScrollLeft implements glaze.Action {}
 
-@:action(namespace = diff) class ScrollRight implements gpui.Action {}
+@:action(namespace = diff) class ScrollRight implements glaze.Action {}
 
-@:action(namespace = diff) class PageUp implements gpui.Action {}
+@:action(namespace = diff) class PageUp implements glaze.Action {}
 
-@:action(namespace = diff) class PageDown implements gpui.Action {}
+@:action(namespace = diff) class PageDown implements glaze.Action {}
 
-@:action(namespace = diff) class First implements gpui.Action {}
+@:action(namespace = diff) class First implements glaze.Action {}
 
-@:action(namespace = diff) class Last implements gpui.Action {}
+@:action(namespace = diff) class Last implements glaze.Action {}
 
-@:action(namespace = diff) class ExtendUp implements gpui.Action {}
+@:action(namespace = diff) class ExtendUp implements glaze.Action {}
 
-@:action(namespace = diff) class ExtendDown implements gpui.Action {}
+@:action(namespace = diff) class ExtendDown implements glaze.Action {}
 
 /**
  * The key bindings of the diff (Rust `diff::init`), in a module of their own
@@ -39,7 +39,7 @@ class DiffActions {
 
     public static inline final CONTEXT:String = 'Diff';
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function init(cx:AppContext):Void {
         final mac = OperatingSystem.current.isMac();
         (cx : App).bindKeys([

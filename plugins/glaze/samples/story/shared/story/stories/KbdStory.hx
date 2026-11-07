@@ -3,20 +3,20 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.kbd.Kbd;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.kbd.Kbd;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
 class KbdStory extends Model implements Story {
@@ -35,7 +35,7 @@ class KbdStory extends Model implements Story {
         return view(window, cx);
     }
 
-    function new(_:Window, cx:gpui.AppContext) {
+    function new(_:Window, cx:glaze.AppContext) {
         super();
         focusHandle = cx.focusHandle();
     }

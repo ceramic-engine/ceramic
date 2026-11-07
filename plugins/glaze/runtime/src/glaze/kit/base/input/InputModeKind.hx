@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/kind.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.Hitbox;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Range;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.Hitbox;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Range;
+import glaze.Window;
 import ropey.Rope;
 
 /**

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/elements/text.rs (Text, `impl Element for &str / SharedString`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * An `Element` that renders text with the current text style of the window.
@@ -23,7 +23,7 @@ class Text extends Element {
      * (Rust `Text::new` and `Text::new_inaccessible`).
      */
     public function new(id:Null<ElementId>, text:String) {
-        #if gpui_count_allocations gpui.util.AllocationCounters.texts++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.texts++; #end
         this.id = id;
         this.textValue = text;
     }

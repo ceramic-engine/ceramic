@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/table/table.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.table;
+package glaze.kit.table;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.Table as BaseTable;
-import gpui.base.Table.TableBody as BaseTableBody;
-import gpui.base.Table.TableCaption as BaseTableCaption;
-import gpui.base.Table.TableCell as BaseTableCell;
-import gpui.base.Table.TableHead as BaseTableHead;
-import gpui.base.Table.TableHeader as BaseTableHeader;
-import gpui.base.Table.TableRow as BaseTableRow;
-import gpui.component.ChildElement;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.Table as BaseTable;
+import glaze.kit.base.Table.TableBody as BaseTableBody;
+import glaze.kit.base.Table.TableCaption as BaseTableCaption;
+import glaze.kit.base.Table.TableCell as BaseTableCell;
+import glaze.kit.base.Table.TableHead as BaseTableHead;
+import glaze.kit.base.Table.TableHeader as BaseTableHeader;
+import glaze.kit.base.Table.TableRow as BaseTableRow;
+import glaze.kit.ChildElement;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
 
 /**
  * A basic table component for directly rendering tabular data.
@@ -364,11 +364,11 @@ class TableHead implements RenderOnce implements Styled implements ParentElement
             .flex()
             .itemsCenter();
         if (headStyle.sizeWidth == null) {
-            cell.flexShrink1().flexBasis(gpui.Prelude.relative(colSpanValue));
+            cell.flexShrink1().flexBasis(glaze.Prelude.relative(colSpanValue));
         }
-        cell.minW(gpui.Prelude.px(MIN_CELL_WIDTH * colSpanValue))
-            .px(gpui.Prelude.px(paddings.left))
-            .py(gpui.Prelude.px(paddings.top));
+        cell.minW(glaze.Prelude.px(MIN_CELL_WIDTH * colSpanValue))
+            .px(glaze.Prelude.px(paddings.left))
+            .py(glaze.Prelude.px(paddings.top));
         if (align == Center) cell.justifyCenter();
         if (align == Right) cell.justifyEnd();
         cell.refineStyle(headStyle);
@@ -438,11 +438,11 @@ class TableCell implements RenderOnce implements Styled implements ParentElement
             .flex()
             .itemsCenter();
         if (cellStyle.sizeWidth == null) {
-            cell.flexShrink1().flexBasis(gpui.Prelude.relative(colSpanValue));
+            cell.flexShrink1().flexBasis(glaze.Prelude.relative(colSpanValue));
         }
-        cell.minW(gpui.Prelude.px(MIN_CELL_WIDTH * colSpanValue))
-            .px(gpui.Prelude.px(paddings.left))
-            .py(gpui.Prelude.px(paddings.top));
+        cell.minW(glaze.Prelude.px(MIN_CELL_WIDTH * colSpanValue))
+            .px(glaze.Prelude.px(paddings.left))
+            .py(glaze.Prelude.px(paddings.top));
         if (align == Center) cell.justifyCenter();
         if (align == Right) cell.justifyEnd();
         cell.refineStyle(cellStyle);
@@ -489,8 +489,8 @@ class TableCaption implements RenderOnce implements Styled implements ParentElem
         final paddings = size.tableCellPadding();
         final caption = new BaseTableCaption(NamedInteger("table-caption", ix))
             .wFull()
-            .px(gpui.Prelude.px(paddings.left))
-            .py(gpui.Prelude.px(paddings.top))
+            .px(glaze.Prelude.px(paddings.left))
+            .py(glaze.Prelude.px(paddings.top))
             .textSm()
             .textColor(theme.mutedForeground)
             .textCenter()

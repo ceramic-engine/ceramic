@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/invalid_panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.App;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.base.dock.PanelState;
-import gpui.component.I18n;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.I18n;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Stands in for a panel this build cannot construct: one whose `panelName`
@@ -22,7 +22,7 @@ import gpui.Prelude.*;
  * build that knows the panel survives a load and a save here rather than
  * losing it.
  */
-@:allow(gpui.component.dock)
+@:allow(glaze.kit.dock)
 class InvalidPanel extends PanelBase {
 
     final focus:FocusHandle;

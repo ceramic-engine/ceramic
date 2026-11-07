@@ -1,27 +1,27 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/command/command.rs, crates/component/src/command/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.command;
+package glaze.kit.command;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.DefiniteLength;
-import gpui.Entity;
-import gpui.IntoDefiniteLength;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.command.CommandItem.CommandEntry;
-import gpui.component.command.CommandItem.CommandGroup;
-import gpui.component.command.CommandState.CommandModel;
-import gpui.component.command.CommandState.OnCancel;
-import gpui.component.command.CommandState.OnIndex;
-import gpui.component.command.CommandState.OnQuery;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.DefiniteLength;
+import glaze.Entity;
+import glaze.IntoDefiniteLength;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.command.CommandItem.CommandEntry;
+import glaze.kit.command.CommandItem.CommandGroup;
+import glaze.kit.command.CommandState.CommandModel;
+import glaze.kit.command.CommandState.OnCancel;
+import glaze.kit.command.CommandState.OnIndex;
+import glaze.kit.command.CommandState.OnQuery;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A slot of the palette (Rust `CommandSlot`): header, footer or empty content.
@@ -31,7 +31,7 @@ typedef CommandSlot = (CommandState, Window, App) -> AnyElement;
 /**
  * Presentation of a `Command`, pushed into its state on every render.
  */
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 class CommandOptions {
 
     public var style:StyleRefinement = new StyleRefinement();

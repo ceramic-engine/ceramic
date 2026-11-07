@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/tab_panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.dock.PanelId;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The preview that follows the cursor while a panel is dragged.
  *
- * `gpui.base.dock.DragPanel` is the payload and draws nothing; this is the
+ * `glaze.kit.base.dock.DragPanel` is the payload and draws nothing; this is the
  * appearance half.
  */
 class DragPanelPreview extends Model implements Render {
 
-    final panel:gpui.base.dock.PanelView;
+    final panel:glaze.kit.base.dock.PanelView;
 
-    @:allow(gpui.component.dock)
-    function new(panel:gpui.base.dock.PanelView) {
+    @:allow(glaze.kit.dock)
+    function new(panel:glaze.kit.base.dock.PanelView) {
         super();
         this.panel = panel;
     }
@@ -63,8 +63,8 @@ class DragPanelPreview extends Model implements Render {
      * this crate's handle and so carries no presentation. See
      * `PanelHandle.of`.
      */
-    @:allow(gpui.component.dock)
-    static function panelTitle(panel:gpui.base.dock.PanelView, window:Window, cx:App):AnyElement {
+    @:allow(glaze.kit.dock)
+    static function panelTitle(panel:glaze.kit.base.dock.PanelView, window:Window, cx:App):AnyElement {
         final handle = PanelHandle.of(panel);
         if (handle == null) {
             final name = panel.panelName(cx);

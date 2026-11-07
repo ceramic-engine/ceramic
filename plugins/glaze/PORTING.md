@@ -1,11 +1,11 @@
 # Porting conventions (Rust to Haxe)
 
-Rules shared by every port in this project: GPUI itself (`runtime/src/gpui`), gpui-kit later, and the pure Haxe libraries written in `ceramic/git/` (plutovg, lunasvg, taffy...). The goal is code that can be compared line by line with the Rust (or C / C++) source, while staying idiomatic Haxe and fast on hxcpp.
+Rules shared by every port in this project: GPUI itself (`runtime/src/glaze`), gpui-kit later, and the pure Haxe libraries written in `ceramic/git/` (plutovg, lunasvg, taffy...). The goal is code that can be compared line by line with the Rust (or C / C++) source, while staying idiomatic Haxe and fast on hxcpp.
 
 ## Sources and files
 
-- Reference sources: `gpui-src/gpui-pre-0.3.10/src` (GPUI), `gpui-src/gpui-pre-wgpu-0.3.10/src` (renderer and shaders), `gpui-kit/crates/*` (gpui-kit).
-- One Haxe module per main type. A Rust file `src/foo/bar_baz.rs` defining `BarBaz` becomes `gpui/foo/BarBaz.hx`. Small helper types closely tied to the main one can live in the same module.
+- Reference sources: `gpui-src/gpui-pre-0.3.10/src` (GPUI), `gpui-src/gpui-pre-wgpu-0.3.10/src` (renderer and shaders), `gpui-kit/crates/*` (gpui-kit), local clones in glaze-golden.
+- One Haxe module per main type. A Rust file `src/foo/bar_baz.rs` defining `BarBaz` becomes `glaze/foo/BarBaz.hx`. Small helper types closely tied to the main one can live in the same module.
 - Every ported file starts with a header naming its origin, the original copyright and license, and stating that the file was modified (required by Apache-2.0, section 4):
 
   ```haxe
@@ -27,7 +27,7 @@ Rules shared by every port in this project: GPUI itself (`runtime/src/gpui`), gp
 
 ## Free functions
 
-Rust free functions used everywhere (`px`, `rems`, `relative`, `point`, `size`, `bounds`, `div`, `rgb`, `hsla`...) are static functions of `gpui.Prelude`, used with `import gpui.Prelude.*;`.
+Rust free functions used everywhere (`px`, `rems`, `relative`, `point`, `size`, `bounds`, `div`, `rgb`, `hsla`...) are static functions of `glaze.Prelude`, used with `import glaze.Prelude.*;`.
 
 ## Types
 
@@ -66,11 +66,11 @@ Null in the other slots: the `@:from` conversions of `IntoBreadcrumbItem`, `Into
 ## Strings and text indices
 
 - GPUI and gpui-kit use **UTF-8 byte offsets** for text ranges. We keep that convention everywhere (`TextRun.len`, ranges, selections), and convert at the boundaries only (Haxe string indices, UTF-16 for IME).
-- Use the helpers of `gpui.util.Utf8` (to be written with the text system) instead of `String.length` / `charAt` on text that may contain non-ASCII characters.
+- Use the helpers of `glaze.util.Utf8` (to be written with the text system) instead of `String.length` / `charAt` on text that may contain non-ASCII characters.
 
 ## Reactivity
 
-- Entity state that is read during render is a `gpui.Model` with `@observe` fields (tracker).
+- Entity state that is read during render is a `glaze.Model` with `@observe` fields (tracker).
 - `cx.notify()` stays available for state that is not observable.
 
 ## Performance (hxcpp first)
@@ -82,7 +82,7 @@ Null in the other slots: the `@:from` conversions of `IntoBreadcrumbItem`, `Into
 ## Tests
 
 - Port the Rust `#[cfg(test)]` tests that check behaviour (not the ones that only check Rust traits or formatting).
-- GPUI tests go in `test/unit/src/tests/<Module>Test.hx` and are registered in `test/unit/src/Tests.hx`. Run with `cd test/unit && ceramic headless run node --setup --assets`.
+- GPUI tests go in `tests/unit/src/tests/<Module>Test.hx` and are registered in `tests/unit/src/Tests.hx`. Run with `cd tests/unit && ceramic headless run node --setup --assets`.
 - Pure Haxe libraries in `ceramic/git/<lib>` carry their own `test/` folder, runnable without Ceramic (`haxe` with `--interp`, or Node).
 
 ## Credits and licenses
@@ -98,14 +98,14 @@ No license washing: ported code keeps its authors and license.
 ## Decisions taken while porting geometry and color
 
 - Rust enums carrying data (`AbsoluteLength`, `DefiniteLength`, `Length`) are plain Haxe enums with the same names; their methods live in a `XxxTools` class attached with `@:using` (abstract wrappers would break nested pattern matching like `Definite(Absolute(Pixels(v)))`).
-- `AbsoluteLength.Pixels` and `Rems` share their names with the unit types: import with `import gpui.*` and qualify enum constructors.
+- `AbsoluteLength.Pixels` and `Rems` share their names with the unit types: import with `import glaze.*` and qualify enum constructors.
 - Fieldless Rust enums (`Axis`, `Anchor`, `ColorSpace`, `BackgroundTag`, `BorderStyle`...) are `enum abstract(Int)`, with methods when needed.
 - Methods Rust defines on one generic instantiation go in a module named after it (`EdgesOfLength.auto()`), attached with `@:using` when they are instance methods.
 - Bridges between numeric and generic geometry: `mapOf<U>()` on numeric classes, `mapToPoint` / `mapToSize` / `mapToEdges` / `mapToCorners` / `mapToBounds` on generic ones.
 - `From` conversions become `toX()` methods; `impl Into<X>` arguments become `abstract IntoX(X) from X` with `@:from` (`IntoHsla`, `IntoBackground`).
 - Rust operators become `add`, `sub`, `mul`, `div`, `neg` methods; unit abstracts also get `@:op` overloads (comparisons included).
 - `TryFrom<&str>` becomes `parse()` (throws) and `tryParse()` (returns null).
-- Rust float semantics (`round` half away from zero, `rem_euclid`, `signum`, saturating casts) are in `gpui.util.MathUtil`: never use Haxe's `Math.round` on ported code.
+- Rust float semantics (`round` half away from zero, `rem_euclid`, `signum`, saturating casts) are in `glaze.util.MathUtil`: never use Haxe's `Math.round` on ported code.
 - Builders whose name clashes with a field get a `with` prefix (`Background.withColorSpace`).
 - Device pixels are stored as Float, so halving them is exact (Rust truncates).
 

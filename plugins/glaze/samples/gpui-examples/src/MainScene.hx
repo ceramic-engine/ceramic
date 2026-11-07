@@ -5,16 +5,16 @@ import ceramic.KeyCode;
 import ceramic.Platform;
 import ceramic.Scene;
 import examples.Examples;
-import gpui.App;
-import gpui.Window;
+import glaze.App;
+import glaze.Window;
 
 /**
  * GPUI's own examples ported to Haxe (`shared/examples`), one at a time:
  * left / right arrows switch example (the window title shows its name).
- * Start with another one with `GPUI_EXAMPLE=<name>` (`hello_world`,
+ * Start with another one with `GLAZE_EXAMPLE=<name>` (`hello_world`,
  * `uniform_list`, `text_wrapper`, `tab_stop`, `drag_drop`, `animation`).
  *
- * Self-test (`GPUI_EXAMPLES_SELFTEST=<dir>`): shows every example, writes
+ * Self-test (`GLAZE_EXAMPLES_SELFTEST=<dir>`): shows every example, writes
  * `<dir>/<name>.png` for each one, then quits.
  */
 class MainScene extends Scene {
@@ -34,7 +34,7 @@ class MainScene extends Scene {
 
     function start():Void {
 
-        final id = Platform.getEnv('GPUI_EXAMPLE');
+        final id = Platform.getEnv('GLAZE_EXAMPLE');
         if (id != null && id != '') {
             for (i in 0...Examples.ALL.length) {
                 if (Examples.ALL[i].id == id) index = i;
@@ -44,7 +44,7 @@ class MainScene extends Scene {
         show();
         input.onKeyDown(this, handleKey);
 
-        final selfTest = Platform.getEnv('GPUI_EXAMPLES_SELFTEST');
+        final selfTest = Platform.getEnv('GLAZE_EXAMPLES_SELFTEST');
         if (selfTest != null && selfTest != '') {
             index = 0;
             show();

@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): the platform
 // dispatcher backed by Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Default `PlatformDispatcher`: `dispatch` uses `app.onceImmediate` (flushed

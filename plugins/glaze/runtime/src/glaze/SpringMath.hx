@@ -1,4 +1,4 @@
-package gpui;
+package glaze;
 
 /**
  * Single precision (`f32`) emulation for the spring and interpolation math.
@@ -17,7 +17,7 @@ package gpui;
  * functions used by Rust in all the reference samples.
  *
  * This helper only exists for the animation code; it could move to
- * `gpui.util.MathUtil` if other modules need it.
+ * `glaze.util.MathUtil` if other modules need it.
  */
 class SpringMath {
 

@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/link.rs (LinkStyles)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.StyleRefinement;
+import glaze.StyleRefinement;
 
 /**
  * Semantic-state styles of a `Link`.
  */
 class LinkStyles {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final disabledStyle:StyleRefinement = new StyleRefinement();
 
     public function new() {}

@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/toolbar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.toolbar;
+package glaze.kit.toolbar;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
 
 /**
  * An item of a toolbar: a sized control (it takes the toolbar's size when
@@ -43,8 +43,8 @@ class ToolbarItemTools {
     public static function intoElement(item:ToolbarItem, size:Size):AnyElement {
         return switch item {
             case Sized(sizable, item):
-                if (Std.isOfType(sizable, gpui.component.button.Button)) {
-                    (cast sizable:gpui.component.button.Button).prepareForToolbar();
+                if (Std.isOfType(sizable, glaze.kit.button.Button)) {
+                    (cast sizable:glaze.kit.button.Button).prepareForToolbar();
                 }
                 sizable.setSize(size);
                 div().flex().itemsCenter().inputH(size).child(item).intoAnyElement();
@@ -128,7 +128,7 @@ class ToolbarGroup implements RenderOnce implements Styled implements ParentElem
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
-        final group = new gpui.base.Toolbar.ToolbarGroup(id);
+        final group = new glaze.kit.base.Toolbar.ToolbarGroup(id);
         if (labelValue != null) group.label(labelValue);
         group.extend([for (item in items) ToolbarItemTools.intoElement(item, size)]);
         return group.refineStyle(groupStyle);
@@ -244,7 +244,7 @@ class Toolbar implements RenderOnce implements Styled implements ParentElement i
 
     public function render(window:Window, cx:App):IntoElement {
         final size = sizeValue;
-        final toolbar = new gpui.base.Toolbar(id).disabled(disabledValue);
+        final toolbar = new glaze.kit.base.Toolbar(id).disabled(disabledValue);
         toolbar.flex().itemsCenter().flexShrink0();
         switch size {
             case XSmall: toolbar.minH7().p1().gap1().textXs();

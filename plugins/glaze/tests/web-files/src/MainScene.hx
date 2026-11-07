@@ -2,15 +2,15 @@ package;
 
 import ceramic.Files;
 import ceramic.Scene;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.PathPromptOptions;
-import gpui.Render;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.PathPromptOptions;
+import glaze.Render;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Three click zones of a GPUI window, each asking a path prompt from its
@@ -41,7 +41,7 @@ class MainScene extends Scene {
         trace('WEBFILES ready');
     }
 
-    public static function report(label:String, task:gpui.Task<Null<Array<String>>>):Void {
+    public static function report(label:String, task:glaze.Task<Null<Array<String>>>):Void {
         task.catchError(error -> {
             trace('WEBFILES $label error $error');
             return null;

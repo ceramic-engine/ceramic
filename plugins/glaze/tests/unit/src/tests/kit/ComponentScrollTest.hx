@@ -4,35 +4,35 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.Element;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.VirtualList;
-import gpui.component.scroll.Scrollbar;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.Element;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.VirtualList;
+import glaze.kit.scroll.Scrollbar;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.scroll.Scrollable;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * The tests of gpui-component's `scroll` module (`Scrollable` and the
@@ -109,14 +109,14 @@ class ComponentScrollTest extends TestCase {
             .thumb(style -> style.bg(transparentBlack()))
             .thumbHover(style -> style.bg(transparentBlack()))
             .thumbActive(style -> style.bg(transparentBlack())));
-        final base:gpui.base.Scrollbar = scrollbar;
+        final base:glaze.kit.base.Scrollbar = scrollbar;
         assertTrue(base != null);
     }
 
     function testLegacyHandleIsTheBaseTypeAndAScrollbarHandle() {
-        final handle:gpui.component.VirtualList.VirtualListScrollHandle = new gpui.base.VirtualList.VirtualListScrollHandle();
-        final base:gpui.base.VirtualList.VirtualListScrollHandle = handle;
-        final asScrollbar:gpui.component.scroll.Scrollbar.ScrollbarHandle = handle;
+        final handle:glaze.kit.VirtualList.VirtualListScrollHandle = new glaze.kit.base.VirtualList.VirtualListScrollHandle();
+        final base:glaze.kit.base.VirtualList.VirtualListScrollHandle = handle;
+        final asScrollbar:glaze.kit.scroll.Scrollbar.ScrollbarHandle = handle;
         assertTrue(base != null && asScrollbar != null);
     }
 
@@ -519,7 +519,7 @@ class Probe extends Element {
 
 private class VirtualRows extends Model implements Render {
 
-    final scrollHandle = new gpui.base.VirtualList.VirtualListScrollHandle();
+    final scrollHandle = new glaze.kit.base.VirtualList.VirtualListScrollHandle();
 
     public function new() {
         super();

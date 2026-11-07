@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/scroll/scrollable.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.scroll;
+package glaze.kit.scroll;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.Overflow;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.ScrollHandle;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ScrollBounce;
-import gpui.base.ScrollableMask;
-import gpui.base.Scrollbar;
-import gpui.base.Scrollbar.ScrollbarAxis;
-import gpui.base.Scrollbar.ScrollbarHandle;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.Overflow;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.ScrollHandle;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.Scrollbar.ScrollbarAxis;
+import glaze.kit.base.Scrollbar.ScrollbarHandle;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.InteractiveElementExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Makes elements scrollable with scrollbars (Rust trait `ScrollableElement`,
- * implemented for `Div`): `using gpui.component.scroll.Scrollable;`.
+ * implemented for `Div`): `using glaze.kit.scroll.Scrollable;`.
  *
  * The wrapped element is the scroll area itself, rather than being inserted as
  * a child of a new scroll area.
@@ -95,7 +95,7 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
 
     var _scrollBounce:Null<Bool> = null;
 
-    @:allow(gpui.component.scroll)
+    @:allow(glaze.kit.scroll)
     function new(element:Div, axis:ScrollbarAxis, ?pos:haxe.PosInfos) {
         _id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
         this.element = element;
@@ -141,11 +141,11 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
     }
 
     /** `InteractiveElement::interactivity`. */
-    public inline function interactivity():gpui.Interactivity {
+    public inline function interactivity():glaze.Interactivity {
         return element.interactivity;
     }
 
-    public function trackFocus(focus:gpui.FocusHandle):Scrollable {
+    public function trackFocus(focus:glaze.FocusHandle):Scrollable {
         element.trackFocus(focus);
         return this;
     }
@@ -259,12 +259,12 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
         return root.child(renderScrollbar(scrollbarId, scrollHandle, axis, window, cx));
     }
 
-    @:allow(gpui.component.scroll)
+    @:allow(glaze.kit.scroll)
     static function renderScrollbar(id:ElementIdArg, scrollHandle:ScrollbarHandle, axis:ScrollbarAxis, window:Window, cx:App):Div {
         // Do not render scrollbar when inspector is picking elements, to
         // allow us to pick the background elements (the port has no
         // inspector).
-        #if gpui_inspector
+        #if glaze_inspector
         final isInspectorPicking = window.isInspectorPicking(cx);
         if (isInspectorPicking) {
             return div();

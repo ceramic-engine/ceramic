@@ -2,25 +2,25 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic, on TextMate grammars (the `textmate`
 // library) instead of syntect. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.Context;
-import gpui.HighlightStyle;
-import gpui.Range;
-import gpui.Task;
-import gpui.Window;
-import gpui.base.input.FoldRange;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEdit;
-import gpui.base.input.InputHighlighter;
-import gpui.base.input.InputHighlighterFactory;
-import gpui.base.input.StyledRange;
+import glaze.Context;
+import glaze.HighlightStyle;
+import glaze.Range;
+import glaze.Task;
+import glaze.Window;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.InputHighlighter;
+import glaze.kit.base.input.InputHighlighterFactory;
+import glaze.kit.base.input.StyledRange;
 import ropey.Rope;
 import textmate.IGrammar;
 import textmate.Textmate;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * A highlight name over a byte range (Rust tuple `(Range<usize>, &'static str)`).
@@ -186,7 +186,7 @@ class TextMateBackend {
     }
 
     /** Runs the grammar over `text` and keeps the spans that map to a highlight name. */
-    @:allow(gpui.component.highlighter, tests)
+    @:allow(glaze.kit.highlighter, tests)
     static function parse(syntax:Syntax, text:String):Array<Highlight> {
         final highlights:Array<Highlight> = [];
         var state = Textmate.INITIAL;
@@ -218,7 +218,7 @@ class TextMateBackend {
      * highlights are relative to the start of the line; like syntect's lines
      * with endings, the newline (`newlineBytes`) belongs to the last token.
      */
-    @:allow(gpui.component.highlighter)
+    @:allow(glaze.kit.highlighter)
     static function tokenizeLine(grammar:IGrammar, lineText:String, lineBytes:Int, newlineBytes:Int, state:textmate.IGrammar.StateStack):LineResult {
         final result = grammar.tokenizeLine(lineText, state, lineTimeLimit);
         final highlights:Array<Highlight> = [];
@@ -282,7 +282,7 @@ class TextMateBackend {
     }
 
     /** Appends line highlights shifted by `offset`, merging with the previous one like `push`. */
-    @:allow(gpui.component.highlighter)
+    @:allow(glaze.kit.highlighter)
     static function appendHighlights(into:Array<Highlight>, lineHighlights:Array<Highlight>, offset:Int):Void {
         for (highlight in lineHighlights) {
             final start = highlight.start + offset;
@@ -499,7 +499,7 @@ class TextMateBackend {
         // empty last line after a final newline.
         final lines = text.split('\n');
         if (lines.length > 0 && lines[lines.length - 1].length == 0)
-            gpui.util.Stacks.drop(lines);
+            glaze.util.Stacks.drop(lines);
         for (lineNumber in 0...lines.length) {
             var line = lines[lineNumber];
             if (StringTools.endsWith(line, '\r'))
@@ -539,7 +539,7 @@ class TextMateBackend {
                         // `pop()` without boxing (an empty stack pops nothing)
                         if (starts.length == 0)
                             continue;
-                        final start = gpui.util.Stacks.popInt(starts);
+                        final start = glaze.util.Stacks.popInt(starts);
                         if (lineNumber - start >= 2) {
                             ranges.push(new FoldRange(start, lineNumber));
                         }
@@ -566,7 +566,7 @@ class TextMateBackend {
      * `line` is the text of the line without its `\n` (a trailing `\r` is
      * ignored like Rust `str::lines`).
      */
-    @:allow(gpui.component.highlighter)
+    @:allow(glaze.kit.highlighter)
     static function scanLineBraces(line:String, info:LineInfo):Void {
         var length = line.length;
         if (length > 0 && line.charCodeAt(length - 1) == '\r'.code)
@@ -620,7 +620,7 @@ class TextMateBackend {
      * lines (`scanLineBraces`): the same ranges, without converting the
      * text to a string or scanning the lines that did not change.
      */
-    @:allow(gpui.component.highlighter)
+    @:allow(glaze.kit.highlighter)
     static function braceFoldRangesOfLines(lines:Array<LineInfo>):Array<FoldRange> {
         final starts:Array<Int> = [];
         final ranges:Array<FoldRange> = [];
@@ -630,7 +630,7 @@ class TextMateBackend {
                 // `pop()` without boxing (an empty stack pops nothing)
                 if (starts.length == 0)
                     continue;
-                final start = gpui.util.Stacks.popInt(starts);
+                final start = glaze.util.Stacks.popInt(starts);
                 if (lineNumber - start >= 2) {
                     ranges.push(new FoldRange(start, lineNumber));
                 }
@@ -785,10 +785,10 @@ class TextMateInputHighlighter extends InputHighlighterBase {
 
     var folds:Array<FoldRange> = [];
 
-    var parseTask:Null<gpui.AnyTask> = null;
+    var parseTask:Null<glaze.AnyTask> = null;
 
     /** Lines tokenized by the last update (for tests and measurements). */
-    @:allow(gpui.component.highlighter, tests)
+    @:allow(glaze.kit.highlighter, tests)
     var lastTokenizedLines:Int = 0;
 
     public function new(language:String, syntax:Syntax) {
@@ -844,7 +844,7 @@ class TextMateInputHighlighter extends InputHighlighterBase {
      * The highlights of the lines overlapping `range`, absolute and merged
      * across lines like a whole-document parse would give them.
      */
-    @:allow(gpui.component.highlighter, tests)
+    @:allow(glaze.kit.highlighter, tests)
     function highlightsIn(range:Range):Array<Highlight> {
         final starts = ensureLineStarts();
         final result:Array<Highlight> = [];

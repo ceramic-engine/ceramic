@@ -1,64 +1,64 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/radio.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.radio;
+package glaze.kit.radio;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
-import gpui.component.tooltip.Tooltip.ComponentTooltip;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
+import glaze.kit.tooltip.Tooltip.ComponentTooltip;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A Radio element.
  *
  * This does not include the radio group behavior: manage the group yourself
  * or use `RadioGroup`. The label is a plain string (Rust `Text::String`).
- * The tooltip is a managed tooltip (`gpui.component.tooltip`).
+ * The tooltip is a managed tooltip (`glaze.kit.tooltip`).
  */
 class Radio implements RenderOnce implements Styled implements ParentElement implements Sizable implements FocusableExt {
 
     /** The Base radio the component renders (interactive listeners go to `base.base`). */
-    public final base:gpui.base.Radio;
+    public final base:glaze.kit.base.Radio;
 
     final radioStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var id:ElementId;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var labelValue:Null<String> = null;
 
     /** The announced name, when the visible label is not it. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var accessibilityLabelValue:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
     var checkedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
     var tabStopValue:Bool = true;
@@ -73,10 +73,10 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
 
     var tooltipShowDelayValue:Null<Float> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var positionInSet:Null<Int> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var sizeOfSet:Null<Int> = null;
 
     var focusRingEnabled:Bool = true;
@@ -86,7 +86,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
      */
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new gpui.base.Radio(id);
+        this.base = new glaze.kit.base.Radio(id);
     }
 
     /**
@@ -240,7 +240,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         final element = base.id(id).checked(checkedValue).disabled(disabledValue).trackFocus(focusHandle).tabStop(tabStopValue).tabIndex(tabIndexValue);
         if (accessibilityLabel != null) element.accessibilityLabel(accessibilityLabel);
         if (positionInSet != null && sizeOfSet != null) element.setPosition(positionInSet, sizeOfSet);
-        element.hFlex().gapX2().textColor(theme.foreground).itemsStart().lineHeight(gpui.Prelude.relative(1.)).rounded(theme.radius * 0.5);
+        element.hFlex().gapX2().textColor(theme.foreground).itemsStart().lineHeight(glaze.Prelude.relative(1.)).rounded(theme.radius * 0.5);
         if (isFocused && focusRingEnabled) element.focusRingStyle(window, cx);
         switch size {
             case Size(_):
@@ -263,7 +263,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
         element.child(indicator);
 
         if (childElements.length > 0 || labelValue != null) {
-            final column = vFlex().wFull().lineHeight(gpui.Prelude.relative(1.25)).gap1();
+            final column = vFlex().wFull().lineHeight(glaze.Prelude.relative(1.25)).gap1();
             if (labelValue != null) {
                 final labelDiv = div().sizeFull();
                 if (disabledValue) labelDiv.textColor(theme.mutedForeground);
@@ -294,7 +294,7 @@ class RadioGroup implements RenderOnce implements Styled {
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final radios:Array<Radio> = [];
 
     var layoutValue:Axis = Axis.Vertical;
@@ -310,7 +310,7 @@ class RadioGroup implements RenderOnce implements Styled {
      */
     public function new(id:ElementIdArg) {
         this.id = id;
-        new gpui.StyleBuilder(groupStyle).flex1();
+        new glaze.StyleBuilder(groupStyle).flex1();
     }
 
     /**
@@ -412,7 +412,7 @@ class RadioGroup implements RenderOnce implements Styled {
             }
             base.child(radio);
         }
-        return new gpui.base.RadioGroup(id).axis(layoutValue).refineStyle(groupStyle).child(base);
+        return new glaze.kit.base.RadioGroup(id).axis(layoutValue).refineStyle(groupStyle).child(base);
     }
 
 }

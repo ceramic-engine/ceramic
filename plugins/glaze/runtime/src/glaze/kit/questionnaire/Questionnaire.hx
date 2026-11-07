@@ -1,47 +1,47 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/questionnaire/components.rs and mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.questionnaire;
+package glaze.kit.questionnaire;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FontWeight;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.OperatingSystem;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.RadioGroup;
-import gpui.base.questionnaire.QuestionnaireChoiceControl;
-import gpui.base.questionnaire.QuestionnaireChoiceState;
-import gpui.base.questionnaire.QuestionnaireItemDefinition;
-import gpui.base.questionnaire.QuestionnaireKeyboard;
-import gpui.base.questionnaire.QuestionnaireState;
-import gpui.base.questionnaire.QuestionnaireValidationError;
-import gpui.base.theme.TextStyleToken;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.input.Input;
-import gpui.component.kbd.Kbd;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FontWeight;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.OperatingSystem;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.RadioGroup;
+import glaze.kit.base.questionnaire.QuestionnaireChoiceControl;
+import glaze.kit.base.questionnaire.QuestionnaireChoiceState;
+import glaze.kit.base.questionnaire.QuestionnaireItemDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireKeyboard;
+import glaze.kit.base.questionnaire.QuestionnaireState;
+import glaze.kit.base.questionnaire.QuestionnaireValidationError;
+import glaze.kit.base.theme.TextStyleToken;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.input.Input;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * Rust `ChoiceRenderer`: renders a custom indicator or shortcut for a choice.
@@ -86,7 +86,7 @@ class QuestionnaireSizes {
         return sizes;
     }
 
-    @:allow(gpui.component.questionnaire)
+    @:allow(glaze.kit.questionnaire)
     static function publish(state:Entity<QuestionnaireState>, size:Size, cx:App):Void {
         final id = state.entityId();
         final sizes = global(cx, true).sizes;
@@ -98,7 +98,7 @@ class QuestionnaireSizes {
         sizes.set(id, size);
     }
 
-    @:allow(gpui.component.questionnaire)
+    @:allow(glaze.kit.questionnaire)
     static function resolve(own:Null<Size>, state:Entity<QuestionnaireState>, cx:App):Size {
         if (own != null) return own;
         final sizes = global(cx, false);
@@ -116,7 +116,7 @@ class QuestionnaireSizes {
  * questionnaire at `Medium`. Every number comes from the semantic spacing and
  * radius tokens; the size picks which of them apply.
  */
-@:allow(gpui.component.questionnaire)
+@:allow(glaze.kit.questionnaire)
 class QuestionnaireMetrics {
 
     var rootGap:Pixels;
@@ -140,7 +140,7 @@ class QuestionnaireMetrics {
         final spacing = tokens.spacing;
         final radius = tokens.radius;
         // Rust adds and scales `Pixels` in f32.
-        inline function f(value:Float):Pixels return gpui.SpringMath.f32(value);
+        inline function f(value:Float):Pixels return glaze.SpringMath.f32(value);
         switch size {
             case XSmall:
                 rootGap = spacing.sm;
@@ -230,11 +230,11 @@ class QuestionnaireMetrics {
 /**
  * The text styles and helpers shared by the questionnaire parts.
  */
-@:allow(gpui.component.questionnaire)
+@:allow(glaze.kit.questionnaire)
 class QuestionnaireStyles {
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static function applyTextToken<T:Styled>(element:T, token:TextStyleToken):T {
@@ -605,7 +605,7 @@ class QuestionnaireDescription implements RenderOnce implements Styled implement
  */
 class QuestionnaireItemPart {
 
-    @:allow(gpui.component.questionnaire)
+    @:allow(glaze.kit.questionnaire)
     static function render(state:Entity<QuestionnaireState>, item:String, partStyle:StyleRefinement, sizeValue:Null<Size>, childElements:Array<AnyElement>,
             isTitle:Bool, cx:App):IntoElement {
         final definition = state.read(cx).itemDefinition(item);
@@ -1340,7 +1340,7 @@ enum abstract QuestionnaireAction(Int) {
  */
 class QuestionnaireActionPart {
 
-    @:allow(gpui.component.questionnaire)
+    @:allow(glaze.kit.questionnaire)
     static function render(state:Entity<QuestionnaireState>, action:QuestionnaireAction, translation:String, outline:Bool, primary:Bool,
             partStyle:StyleRefinement, sizeValue:Null<Size>, childElements:Array<AnyElement>, cx:App):IntoElement {
         final navigation = state.read(cx).navigationState();
@@ -1361,7 +1361,7 @@ class QuestionnaireActionPart {
         }
         final hasChildren = childElements.length > 0;
         // Rust adds the debug selector `questionnaire-<id>-<action>` (test builds only).
-        final button = new gpui.component.button.Button(QuestionnaireStyles.elementId(state, action.name()))
+        final button = new glaze.kit.button.Button(QuestionnaireStyles.elementId(state, action.name()))
             .withSize(QuestionnaireSizes.resolve(sizeValue, state, cx));
         if (outline) button.outline();
         if (primary) button.primary();

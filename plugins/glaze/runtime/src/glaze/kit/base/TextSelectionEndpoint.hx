@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Point;
+import glaze.Point;
 
 /**
  * A selection endpoint anchored to a participant's content coordinates.
@@ -18,7 +18,7 @@ class TextSelectionEndpoint {
     final _contentKey:Null<TextSelectionContentKey>;
 
     /** Creates an endpoint at a participant-relative content point. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function new(entityId:Null<Int>, point:Point, ?contentKey:Null<TextSelectionContentKey>) {
         _entityId = entityId;
         _point = point;
@@ -26,7 +26,7 @@ class TextSelectionEndpoint {
     }
 
     /** Sets participant-defined endpoint metadata. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withContentKey(contentKey:TextSelectionContentKey):TextSelectionEndpoint {
         return new TextSelectionEndpoint(_entityId, _point, contentKey);
     }

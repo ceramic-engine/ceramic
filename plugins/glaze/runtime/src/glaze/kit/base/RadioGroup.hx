@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/radio_group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An unstyled container for a set of radio elements.

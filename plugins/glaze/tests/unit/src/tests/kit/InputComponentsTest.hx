@@ -4,39 +4,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.NumberInput.NumberInputEvent;
-import gpui.base.OtpInput.OtpState;
-import gpui.base.StepAction;
-import gpui.base.input.InputState;
-import gpui.base.input.TextareaState;
-import gpui.component.Component;
-import gpui.component.input.AnyInputState;
-import gpui.component.input.Input;
-import gpui.component.input.InputContentType;
-import gpui.component.input.NumberInput;
-import gpui.component.input.OtpInput;
-import gpui.component.input.Textarea;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.NumberInput.NumberInputEvent;
+import glaze.kit.base.OtpInput.OtpState;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.Component;
+import glaze.kit.input.AnyInputState;
+import glaze.kit.input.Input;
+import glaze.kit.input.InputContentType;
+import glaze.kit.input.NumberInput;
+import glaze.kit.input.OtpInput;
+import glaze.kit.input.Textarea;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's `number_input.rs` and
@@ -81,18 +81,18 @@ class InputComponentsTest extends TestCase {
     /// base number_input.rs
 
     function testSteppingPreservesPrecisionAndDirectionalBounds() {
-        assertEquals('0.3', gpui.base.NumberInput.stepValue('0.1', Increment, 0.2, null, null));
-        assertEquals(null, gpui.base.NumberInput.stepValue('10', Decrement, 1., 10., null));
-        assertEquals('100.0', gpui.base.NumberInput.stepValue('99.5', Increment, 1., null, 100.));
-        assertEquals(null, gpui.base.NumberInput.stepValue('10', Increment, 1., null, 10.));
-        assertEquals('0', gpui.base.NumberInput.stepValue('5', Decrement, 10., 0., null));
+        assertEquals('0.3', glaze.kit.base.NumberInput.stepValue('0.1', Increment, 0.2, null, null));
+        assertEquals(null, glaze.kit.base.NumberInput.stepValue('10', Decrement, 1., 10., null));
+        assertEquals('100.0', glaze.kit.base.NumberInput.stepValue('99.5', Increment, 1., null, 100.));
+        assertEquals(null, glaze.kit.base.NumberInput.stepValue('10', Increment, 1., null, 10.));
+        assertEquals('0', glaze.kit.base.NumberInput.stepValue('5', Decrement, 10., 0., null));
     }
 
     /// component number_input.rs
 
     function testStepValue() {
         function step(value:String, action:StepAction, step:Float, min:Null<Float>, max:Null<Float>):Null<String> {
-            return gpui.base.NumberInput.stepValue(value, action, step, min, max);
+            return glaze.kit.base.NumberInput.stepValue(value, action, step, min, max);
         }
         // Step from empty value
         assertEquals('1', step('', Increment, 1., null, null));

@@ -1,60 +1,60 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/inspector.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.inspector;
+package glaze.kit.inspector;
 
-import gpui.App;
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.StyleRefinement;
-import gpui.base.input.CompletionContext;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.CompletionProvider.CompletionProviderBase;
-import gpui.base.input.CompletionTextEdit;
-import gpui.base.input.Diagnostic;
-import gpui.base.input.DiagnosticSeverity;
-import gpui.base.input.LspPosition;
-import gpui.base.input.LspRange;
-import gpui.base.input.LspTextEdit;
-import gpui.Task;
-import gpui.Window;
+import glaze.App;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.StyleRefinement;
+import glaze.kit.base.input.CompletionContext;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.CompletionProvider.CompletionProviderBase;
+import glaze.kit.base.input.CompletionTextEdit;
+import glaze.kit.base.input.Diagnostic;
+import glaze.kit.base.input.DiagnosticSeverity;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.LspRange;
+import glaze.kit.base.input.LspTextEdit;
+import glaze.Task;
+import glaze.Window;
 import ropey.Rope;
 
-using gpui.StyleRefinementOps;
-using gpui.base.input.RopeExt;
+using glaze.StyleRefinementOps;
+using glaze.kit.base.input.RopeExt;
 
-#if gpui_inspector
-import gpui.AnyElement;
-import gpui.Context;
-import gpui.DivInspectorState;
-import gpui.Entity;
-import gpui.InspectorElementId;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.OperatingSystem;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.TabSize;
-import gpui.component.IconName;
-import gpui.component.TitleBar;
-import gpui.component.alert.Alert;
-import gpui.component.button.Button;
-import gpui.component.clipboard.Clipboard;
-import gpui.component.descriptionlist.DescriptionList;
-import gpui.component.input.Editor;
-import gpui.component.link.Link;
-import gpui.component.theme.Theme;
-import gpui.component.inspector.SerdeJson.SerdeError;
+#if glaze_inspector
+import glaze.AnyElement;
+import glaze.Context;
+import glaze.DivInspectorState;
+import glaze.Entity;
+import glaze.InspectorElementId;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.OperatingSystem;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.TabSize;
+import glaze.kit.IconName;
+import glaze.kit.TitleBar;
+import glaze.kit.alert.Alert;
+import glaze.kit.button.Button;
+import glaze.kit.clipboard.Clipboard;
+import glaze.kit.descriptionlist.DescriptionList;
+import glaze.kit.input.Editor;
+import glaze.kit.link.Link;
+import glaze.kit.theme.Theme;
+import glaze.kit.inspector.SerdeJson.SerdeError;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.base.input.InputIndentExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.base.input.InputIndentExt;
 #end
 
 /**
@@ -65,7 +65,7 @@ using gpui.base.input.InputIndentExt;
  * with diagnostics), `styleToRust` and `styleToJson`, and the completion
  * provider of the Rust editor (`InspectorCompletionProvider`).
  *
- * The panel needs GPUI's inspector (define `gpui_inspector`, Rust feature
+ * The panel needs GPUI's inspector (define `glaze_inspector`, Rust feature
  * `inspector`): `Inspector.init` (called by `Component.init`) binds
  * `ToggleInspector` (cmd-alt-i on macOS, ctrl-shift-i elsewhere), registers
  * `DivInspector` for `DivInspectorState` and sets `renderInspector` as the
@@ -73,7 +73,7 @@ using gpui.base.input.InputIndentExt;
  */
 class Inspector {
 
-    #if gpui_inspector
+    #if glaze_inspector
     /**
      * Initialize the inspector and register the action to toggle it.
      */
@@ -245,11 +245,11 @@ class Inspector {
         return [for (elementId in id.ids()) elementIdDisplay(elementId)].join('.');
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     /**
      * Renders GPUI's inspector panel (Rust `render_inspector`).
      */
-    public static function renderInspector(inspector:gpui.Inspector, window:Window, cx:Context<gpui.Inspector>):AnyElement {
+    public static function renderInspector(inspector:glaze.Inspector, window:Window, cx:Context<glaze.Inspector>):AnyElement {
         final theme = Theme.global(cx.app);
         final inspectorElementId = inspector.activeElementId();
         final sourceLocation = inspectorElementId != null ? InspectorElementId.InspectorElementPath.formatLocation(inspectorElementId.path.sourceLocation) : null;
@@ -311,7 +311,7 @@ class Inspector {
                                     .toggled(inspector.isPicking())
                                     .small()
                                     .ghost()
-                                    .onClick(cx.listener((this_:gpui.Inspector, _, window:Window, _) -> {
+                                    .onClick(cx.listener((this_:glaze.Inspector, _, window:Window, _) -> {
                                         this_.startPicking();
                                         window.refresh();
                                     }))
@@ -335,11 +335,11 @@ class Inspector {
 
 }
 
-#if gpui_inspector
+#if glaze_inspector
 /**
  * Toggles the inspector of the active window.
  */
-@:action(namespace = inspector) class ToggleInspector implements gpui.Action {}
+@:action(namespace = inspector) class ToggleInspector implements glaze.Action {}
 
 /**
  * An editor of the inspector panel, with its parse error.
@@ -522,12 +522,12 @@ class DivInspector extends Model implements Render {
     }
 
     /** Rust `Display` of a `Point<Pixels>` */
-    static function pointDisplay(point:gpui.Point):String {
+    static function pointDisplay(point:glaze.Point):String {
         return '(' + StyleJson.absoluteDisplay(Pixels(point.x)) + ', ' + StyleJson.absoluteDisplay(Pixels(point.y)) + ')';
     }
 
     /** Rust `Display` of a `Size<Pixels>` */
-    static function sizeDisplay(size:gpui.Size):String {
+    static function sizeDisplay(size:glaze.Size):String {
         return StyleJson.absoluteDisplay(Pixels(size.width)) + ' × ' + StyleJson.absoluteDisplay(Pixels(size.height));
     }
 

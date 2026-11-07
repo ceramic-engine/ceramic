@@ -1,47 +1,47 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scrollbar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.ElementIdArg;
-import gpui.Length;
-import gpui.LayoutId;
-import gpui.ListState;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.Style;
-import gpui.UniformListScrollHandle;
-import gpui.Window;
-import gpui.base.animation.Easings;
-import gpui.base.motion.MotionTime;
-import gpui.base.theme.ScrollbarMode;
-import gpui.base.theme.Theme as BaseTheme;
+import glaze.App;
+import glaze.Axis;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.ElementIdArg;
+import glaze.Length;
+import glaze.LayoutId;
+import glaze.ListState;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.Style;
+import glaze.UniformListScrollHandle;
+import glaze.Window;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.base.motion.MotionTime;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.base.theme.Theme as BaseTheme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
- * Scrollbar show mode (defined with the Base theme, `gpui.base.theme.ScrollbarMode`).
+ * Scrollbar show mode (defined with the Base theme, `glaze.kit.base.theme.ScrollbarMode`).
  */
-typedef ScrollbarMode = gpui.base.theme.ScrollbarMode;
+typedef ScrollbarMode = glaze.kit.base.theme.ScrollbarMode;
 
 /**
  * A scroll handle that can get and set offset (Rust trait `ScrollbarHandle`).
@@ -205,7 +205,7 @@ class ListStateScrollbar implements ScrollbarHandleImpl {
  * A transition of a scalar (Rust `ScalarTransition<T>`). Times are in
  * seconds (`cx.backgroundExecutor().now()`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class ScalarTransition {
 
     var from:Float;
@@ -262,7 +262,7 @@ class ScalarTransition {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -286,7 +286,7 @@ class TransitionSample {
 /**
  * The animated width of a thumb (Rust `WidthAnimation`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class WidthAnimation {
 
     var transition:ScalarTransition;
@@ -327,7 +327,7 @@ class WidthAnimation {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -457,7 +457,7 @@ class ScrollbarMotion {
         return _thumbHoverEntrance;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function entranceFor(mode:ScrollbarMode, thumbHovered:Bool):ScrollbarEntrance {
         if (mode == Hover && thumbHovered) {
             return _thumbHoverEntrance;
@@ -499,7 +499,7 @@ class VisibilitySample {
  * The visibility of a scrollbar: an opacity and a slide position (Rust
  * `VisibilityAnimation`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class VisibilityAnimation {
 
     var opacity:ScalarTransition;
@@ -569,7 +569,7 @@ class VisibilityAnimation {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -578,7 +578,7 @@ class VisibilityAnimation {
  * The state of a scrollbar kept across frames (Rust `ScrollbarStateInner`,
  * mutated in place instead of copied in and out of a `Cell`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class ScrollbarState {
 
     var hoveredAxis:Null<Axis> = null;
@@ -756,11 +756,11 @@ enum abstract ScrollbarAxis(Int) {
  */
 class ScrollbarTrackStyle {
 
-    @:allow(gpui.base) var _background:Null<Hsla> = null;
+    @:allow(glaze.kit.base) var _background:Null<Hsla> = null;
 
-    @:allow(gpui.base) var _border:Null<Hsla> = null;
+    @:allow(glaze.kit.base) var _border:Null<Hsla> = null;
 
-    @:allow(gpui.base) var _width:Null<Float> = null;
+    @:allow(glaze.kit.base) var _width:Null<Float> = null;
 
     public function new() {}
 
@@ -803,15 +803,15 @@ class ScrollbarTrackStyle {
  */
 class ScrollbarThumbStyle {
 
-    @:allow(gpui.base) var _background:Null<Background> = null;
+    @:allow(glaze.kit.base) var _background:Null<Background> = null;
 
-    @:allow(gpui.base) var _width:Null<Float> = null;
+    @:allow(glaze.kit.base) var _width:Null<Float> = null;
 
-    @:allow(gpui.base) var _inset:Null<Float> = null;
+    @:allow(glaze.kit.base) var _inset:Null<Float> = null;
 
-    @:allow(gpui.base) var _radius:Null<Float> = null;
+    @:allow(glaze.kit.base) var _radius:Null<Float> = null;
 
-    @:allow(gpui.base) var _minLength:Null<Float> = null;
+    @:allow(glaze.kit.base) var _minLength:Null<Float> = null;
 
     public function new() {}
 
@@ -872,17 +872,17 @@ class ScrollbarThumbStyle {
  */
 class ScrollbarStyles {
 
-    @:allow(gpui.base) final _track:ScrollbarTrackStyle = new ScrollbarTrackStyle();
+    @:allow(glaze.kit.base) final _track:ScrollbarTrackStyle = new ScrollbarTrackStyle();
 
-    @:allow(gpui.base) final _trackHover:ScrollbarTrackStyle = new ScrollbarTrackStyle();
+    @:allow(glaze.kit.base) final _trackHover:ScrollbarTrackStyle = new ScrollbarTrackStyle();
 
-    @:allow(gpui.base) final _trackActive:ScrollbarTrackStyle = new ScrollbarTrackStyle();
+    @:allow(glaze.kit.base) final _trackActive:ScrollbarTrackStyle = new ScrollbarTrackStyle();
 
-    @:allow(gpui.base) final _thumb:ScrollbarThumbStyle = new ScrollbarThumbStyle();
+    @:allow(glaze.kit.base) final _thumb:ScrollbarThumbStyle = new ScrollbarThumbStyle();
 
-    @:allow(gpui.base) final _thumbHover:ScrollbarThumbStyle = new ScrollbarThumbStyle();
+    @:allow(glaze.kit.base) final _thumbHover:ScrollbarThumbStyle = new ScrollbarThumbStyle();
 
-    @:allow(gpui.base) final _thumbActive:ScrollbarThumbStyle = new ScrollbarThumbStyle();
+    @:allow(glaze.kit.base) final _thumbActive:ScrollbarThumbStyle = new ScrollbarThumbStyle();
 
     public function new() {}
 
@@ -1034,7 +1034,7 @@ class ThumbGeometry {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -1090,13 +1090,13 @@ class Scrollbar extends Element {
 
     static inline final THUMB_ACTIVE_INSET:Float = 4.;
 
-    @:allow(gpui.base) var _id:ElementId;
+    @:allow(glaze.kit.base) var _id:ElementId;
 
     var _axis:ScrollbarAxis = Both;
 
     var _mode:Null<ScrollbarMode> = null;
 
-    @:allow(gpui.base) final scrollHandle:ScrollbarHandle;
+    @:allow(glaze.kit.base) final scrollHandle:ScrollbarHandle;
 
     var _scrollSize:Null<Size> = null;
 
@@ -1115,14 +1115,14 @@ class Scrollbar extends Element {
      */
     var _maxFps:Int = 120;
 
-    @:allow(gpui.base) final _styles:ScrollbarStyles = new ScrollbarStyles();
+    @:allow(glaze.kit.base) final _styles:ScrollbarStyles = new ScrollbarStyles();
 
     /** The prepaint state (Rust `PrepaintState`). */
     var hitbox:Null<Hitbox> = null;
 
     var scrollbarState:Null<ScrollbarState> = null;
 
-    @:allow(gpui.base) var states:Array<AxisPrepaintState> = [];
+    @:allow(glaze.kit.base) var states:Array<AxisPrepaintState> = [];
 
     /**
      * Create a new scrollbar.
@@ -1187,7 +1187,7 @@ class Scrollbar extends Element {
         return this;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function scrollViewportSize(size:Size):Scrollbar {
         _scrollViewportSize = size;
         return this;
@@ -1205,7 +1205,7 @@ class Scrollbar extends Element {
         return this;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function resolvedViewportBounds(layoutBounds:Bounds):Bounds {
         if (_viewportBounds != null) {
             return _viewportBounds;
@@ -1304,40 +1304,40 @@ class Scrollbar extends Element {
         return new ScrollbarResolvedStyle(thumbStyle._background, trackStyle.track, trackStyle.border, thumbStyle._width, thumbStyle._inset, thumbStyle._radius, thumbStyle._minLength);
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function styleForActive(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbActive, global._thumbActive,
             thumbDefaults(thumbDefaultBackground(cx, 0.55), THUMB_ACTIVE_WIDTH, THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function styleForHoveredThumb(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
         return resolved(cx, _styles._trackActive, global._trackActive, _styles._thumbHover, global._thumbHover,
             thumbDefaults(thumbDefaultBackground(cx, 0.55), THUMB_ACTIVE_WIDTH, THUMB_ACTIVE_INSET, THUMB_ACTIVE_RADIUS));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function styleForHoveredBar(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
         return resolved(cx, _styles._trackHover, global._trackHover, _styles._thumb, global._thumb,
             thumbDefaults(thumbDefaultBackground(cx, 0.35), THUMB_WIDTH, THUMB_INSET, THUMB_RADIUS));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function styleForNormal(cx:App):ScrollbarResolvedStyle {
         final global = baseTheme(cx).scrollbar.styles();
         return resolved(cx, _styles._track, global._track, _styles._thumb, global._thumb,
             thumbDefaults(thumbDefaultBackground(cx, 0.35), THUMB_WIDTH, THUMB_INSET, THUMB_RADIUS));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function clampThumbRadius(radius:Float, bounds:Bounds):Float {
         return Math.min(Math.min(radius, bounds.size.width / 2.), bounds.size.height / 2.);
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function visibilityTranslation(axis:Axis, trackWidth:Float, progress:Float):Point {
         final clamped = progress < 0 ? 0 : (progress > 1 ? 1 : progress);
         final offset = f32(trackWidth * f32(1.0 - clamped));
@@ -1347,7 +1347,7 @@ class Scrollbar extends Element {
         return new Point(0, offset);
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function wantsVisible(mode:ScrollbarMode, isHovered:Bool, isDragging:Bool, lastScrollTime:Null<Float>, idle:Float, now:Float):Bool {
         return mode == Always
             || isDragging
@@ -1355,18 +1355,18 @@ class Scrollbar extends Element {
             || (lastScrollTime != null && sinceNanos(now, lastScrollTime) < MotionTime.nanos(idle));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function tracksThumbHover(mode:ScrollbarMode, isVisible:Bool):Bool {
         return mode == Hover || isVisible;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function hoverKeepsVisible(mode:ScrollbarMode, isHovered:Bool, isCurrentlyVisible:Bool):Bool {
         return isHovered && (mode == Hover || (mode == Scrolling && isCurrentlyVisible));
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /** `now.saturating_duration_since(at)` in whole nanoseconds. */
@@ -1598,7 +1598,7 @@ class Scrollbar extends Element {
                 // A thumb follows the finger, unlike content panning. Claim
                 // this touch before the window turns it into wheel deltas.
                 window.onMouseEvent(TouchDrag, (event, phase, window, cx) -> {
-                    final event:gpui.TouchDragEvent = cast event;
+                    final event:glaze.TouchDragEvent = cast event;
                     if (!phase.bubble()) {
                         return;
                     }

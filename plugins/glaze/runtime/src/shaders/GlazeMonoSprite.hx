@@ -25,11 +25,11 @@ package shaders;
  * gives its world position, its scene position (for the content mask) and
  * its atlas texture coordinates.
  *
- * Paths have their own shader, `GpuiPathSprite`.
+ * Paths have their own shader, `GlazePathSprite`.
  */
-class GpuiMonoSprite extends Shader<GpuiMonoSprite_Vert, GpuiMonoSprite_Frag> {}
+class GlazeMonoSprite extends Shader<GlazeMonoSprite_Vert, GlazeMonoSprite_Frag> {}
 
-class GpuiMonoSprite_Vert extends Vert {
+class GlazeMonoSprite_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -65,7 +65,7 @@ class GpuiMonoSprite_Vert extends Vert {
 
 }
 
-class GpuiMonoSprite_Frag extends Frag {
+class GlazeMonoSprite_Frag extends Frag {
 
     @param var mainTex:Sampler2D;
     /** See `get_gamma_correction_ratios()` in GPUI's platform.rs */

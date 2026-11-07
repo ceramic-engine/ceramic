@@ -1,33 +1,33 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/searchable_list/item.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.component.Icon;
-import gpui.component.Icon.IntoIcon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.list.ListDelegate.ListDelegateItem;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IntoIcon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.list.ListDelegate.ListDelegateItem;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
 
 /**
  * A single row element used inside searchable-list dropdowns (Select, ComboBox, MultiComboBox).
@@ -41,26 +41,26 @@ class SearchableListItemElement implements RenderOnce implements Styled implemen
 
     final id:ElementId;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Size = Medium;
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
     /** Cursor/highlight background (overridden by `List` to the keyboard cursor row). */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectedValue:Bool = false;
 
     /** Whether the trailing check icon is shown. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var checkedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
     /** The icon drawn at the trailing edge when `checked` is `true`. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var checkIconValue:Null<Icon>;
 
     public function new(ix:Int) {

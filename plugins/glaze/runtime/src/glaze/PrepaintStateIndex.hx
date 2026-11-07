@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/window.rs (`PrepaintStateIndex`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A position in the prepaint state of the next frame (hitboxes, tooltips,

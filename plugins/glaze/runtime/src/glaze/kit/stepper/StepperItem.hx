@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/stepper/item.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.stepper;
+package glaze.kit.stepper;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A step item within a `Stepper`.
@@ -78,37 +78,37 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function textCenter(center:Bool):StepperItem {
         textCenterValue = center;
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function step(ix:Int):StepperItem {
         stepValue = ix;
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function checkedStep(checkedStep:Int):StepperItem {
         checkedStepValue = checkedStep;
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function layout(layout:Axis):StepperItem {
         layoutValue = layout;
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function isLast(isLast:Bool):StepperItem {
         isLastValue = isLast;
         return this;
     }
 
-    @:allow(gpui.component.stepper)
+    @:allow(glaze.kit.stepper)
     function onClick(f:(ClickEvent, Window, App) -> Void):StepperItem {
         onClickHandler = f;
         return this;
@@ -144,10 +144,10 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
     public function render(window:Window, cx:App):IntoElement {
         final isPassed = stepValue < checkedStepValue;
         final iconSize:Pixels = switch size {
-            case XSmall: gpui.Prelude.px(8.);
-            case Small: gpui.Prelude.px(18.);
-            case Large: gpui.Prelude.px(32.);
-            case _: gpui.Prelude.px(24.);
+            case XSmall: glaze.Prelude.px(8.);
+            case Small: glaze.Prelude.px(18.);
+            case Large: glaze.Prelude.px(32.);
+            case _: glaze.Prelude.px(24.);
         };
 
         a11y.positionInSet = stepValue + 1;
@@ -192,7 +192,7 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
  *
  * Default is `absolute` positioned.
  */
-@:allow(gpui.component.stepper)
+@:allow(glaze.kit.stepper)
 class StepperSeparator implements RenderOnce implements Styled {
 
     var size:Size = Medium;
@@ -243,12 +243,12 @@ class StepperSeparator implements RenderOnce implements Styled {
         final iconSize = iconSizeValue;
         final textCenter = textCenterValue;
         final separatorWide:Pixels = switch size {
-            case XSmall: gpui.Prelude.px(1.5);
-            case Large: gpui.Prelude.px(3.);
-            case _: gpui.Prelude.px(2.);
+            case XSmall: glaze.Prelude.px(1.5);
+            case Large: glaze.Prelude.px(3.);
+            case _: glaze.Prelude.px(2.);
         };
 
-        final gap = gpui.Prelude.px(4.);
+        final gap = glaze.Prelude.px(4.);
 
         final root = div()
             .absolute()
@@ -259,8 +259,8 @@ class StepperSeparator implements RenderOnce implements Styled {
                 root.ml(iconSize + gap).mr(gap).left0().right0();
             } else {
                 root.mx(iconSize.half() + gap)
-                    .left(gpui.Prelude.relative(0.5))
-                    .right(gpui.Prelude.relative(-0.5));
+                    .left(glaze.Prelude.relative(0.5))
+                    .right(glaze.Prelude.relative(-0.5));
             }
         }
         if (layoutValue.isVertical()) {
@@ -269,8 +269,8 @@ class StepperSeparator implements RenderOnce implements Styled {
                 root.mt(iconSize + gap).mb(gap).top0().bottom0();
             } else {
                 root.mx(iconSize.half() + gap)
-                    .top(gpui.Prelude.relative(0.5))
-                    .bottom(gpui.Prelude.relative(-0.5));
+                    .top(glaze.Prelude.relative(0.5))
+                    .bottom(glaze.Prelude.relative(-0.5));
             }
         }
         root.refineStyle(separatorStyle)

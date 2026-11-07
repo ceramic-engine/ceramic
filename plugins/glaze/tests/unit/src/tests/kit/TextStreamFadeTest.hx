@@ -3,14 +3,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.Range;
-import gpui.TextLayout;
-import gpui.base.text.EditorSeam;
-import gpui.base.text.RangedColor;
-import gpui.base.text.StreamFade;
-import gpui.base.text.TextViewMotion;
-import gpui.util.Utf8;
+import glaze.Bounds;
+import glaze.Range;
+import glaze.TextLayout;
+import glaze.kit.base.text.EditorSeam;
+import glaze.kit.base.text.RangedColor;
+import glaze.kit.base.text.StreamFade;
+import glaze.kit.base.text.TextViewMotion;
+import glaze.util.Utf8;
 import testing.TestCase;
 
 private class Nop implements EditorSink {
@@ -29,7 +29,7 @@ private class Nop implements EditorSink {
  * Tests of the streamed fade-in (Rust `text/stream_fade.rs`) and of the
  * editor seam (Rust `text/editor_seam.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextStreamFadeTest extends TestCase {
 
     static function ranges(ranges:Array<Range>):String {

@@ -1,22 +1,22 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/resizable.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.resizable;
+package glaze.kit.resizable;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementIdArg;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.resizable.ResizablePanel;
-import gpui.base.resizable.ResizablePanelGroup;
-import gpui.base.resizable.ResizeHandle;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementIdArg;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.resizable.ResizablePanel;
+import glaze.kit.base.resizable.ResizablePanelGroup;
+import glaze.kit.base.resizable.ResizeHandle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * What this design system paints inside a resize handle.
@@ -27,7 +27,7 @@ import gpui.Prelude.*;
  * available, held, being dragged.
  *
  * The other types (`ResizablePanel`, `ResizablePanelGroup`, `ResizableState`,
- * `ResizeHandle`, `HandleEdge`) are gpui-base's, in `gpui.base.resizable`.
+ * `ResizeHandle`, `HandleEdge`) are gpui-base's, in `glaze.kit.base.resizable`.
  */
 class Resizable {
 
@@ -40,21 +40,21 @@ class Resizable {
      * Create a `ResizablePanelGroup` with horizontal resizing.
      */
     public static function hResizable(id:ElementIdArg):ResizablePanelGroup {
-        return gpui.base.resizable.Resizable.hResizable(id).withHandleAppearance(resizeHandleAppearance());
+        return glaze.kit.base.resizable.Resizable.hResizable(id).withHandleAppearance(resizeHandleAppearance());
     }
 
     /**
      * Create a `ResizablePanelGroup` with vertical resizing.
      */
     public static function vResizable(id:ElementIdArg):ResizablePanelGroup {
-        return gpui.base.resizable.Resizable.vResizable(id).withHandleAppearance(resizeHandleAppearance());
+        return glaze.kit.base.resizable.Resizable.vResizable(id).withHandleAppearance(resizeHandleAppearance());
     }
 
     /**
      * Create a `ResizablePanel`.
      */
     public static inline function resizablePanel():ResizablePanel {
-        return gpui.base.resizable.Resizable.resizablePanel();
+        return glaze.kit.base.resizable.Resizable.resizablePanel();
     }
 
     /**
@@ -81,7 +81,7 @@ class Resizable {
      * Idle draws nothing. The hairline is the resting appearance of a
      * divider.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function indicator(state:ResizeHandleState):{length:Pixels, opacity:Float} {
         return switch state {
             case Idle: {length: 0., opacity: 0.};
@@ -94,7 +94,7 @@ class Resizable {
     /**
      * The hairline, and the indicator riding on it.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function renderResizeHandle(handle:ResizeHandleContext, window:Window, cx:App):AnyElement {
         final theme = Theme.global(cx);
         final axis = handle.axis();

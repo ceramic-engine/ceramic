@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.Render;
-import gpui.WeakEntity;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.Render;
+import glaze.WeakEntity;
+import glaze.Window;
 
 /**
  * Behavior a dockable panel provides. Presentation lives in the layer above:
- * `gpui.component.dock.Panel` extends this with titles, toolbars, and menus.
+ * `glaze.kit.dock.Panel` extends this with titles, toolbars, and menus.
  *
  * Rust `trait Panel: EventEmitter<PanelEvent> + Render + Focusable`. The
  * trait's default methods are in `PanelBase`, which a panel extends; the

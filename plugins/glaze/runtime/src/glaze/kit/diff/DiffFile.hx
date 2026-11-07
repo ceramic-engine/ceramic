@@ -2,15 +2,15 @@
 // and crates/component/src/diff/conflict.rs (`DiffFile::unchanged`, `DiffFile::parse_conflicts`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.Range;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.util.Utf8;
 
 /**
  * One row of the side-by-side alignment: a line on either or both sides.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class LinePair {
 
     final _original:Null<Int>;
@@ -50,7 +50,7 @@ class LinePair {
 /**
  * One `@@` hunk: its pairs and the source lines it supplies on each side.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class Hunk {
 
     final _pairs:Range;
@@ -108,7 +108,7 @@ class Hunk {
  * One side of a file: its path, unless the side is missing such as
  * `/dev/null`, and the source fragments the patch supplies.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class FileSide {
 
     final path:Null<String>;
@@ -153,7 +153,7 @@ class FileSide {
  * One line of the patch body in patch order: an unchanged line on both
  * sides, or a deleted or added line on one side.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class PatchLine {
 
     final original:Null<Int>;
@@ -171,7 +171,7 @@ class PatchLine {
 
 }
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class DocumentInner {
 
     var path:String;
@@ -208,7 +208,7 @@ private class DocumentInner {
  */
 class DiffFile {
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     var inner:DocumentInner;
 
     var _language:Null<String> = null;
@@ -235,7 +235,7 @@ class DiffFile {
      * Assembles a parsed file, pairing counterpart lines and deriving its
      * display path, change counts and line-number width.
      */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     static function create(status:DiffFileStatus, original:FileSide, modified:FileSide, pairs:Array<LinePair>, hunks:Array<Hunk>,
             extendedHeaders:Array<String>, binary:Bool):DiffFile {
         var additions = 0;
@@ -308,7 +308,7 @@ class DiffFile {
         return _language != null ? _language : Presentation.detectedLanguage(path());
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function languageOverride():Null<String> {
         return _language;
     }
@@ -379,7 +379,7 @@ class DiffFile {
     }
 
     /** Whether the file has one column in every display mode. */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function isSingleColumn():Bool {
         return status() == Unchanged || status() == Conflicted;
     }
@@ -389,13 +389,13 @@ class DiffFile {
         return inner.conflicts;
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function withConflicts(conflicts:Array<DiffConflict>):DiffFile {
         inner.conflicts = conflicts;
         return this;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function linesCount(side:DiffSide):Int {
         return lines(side).length;
     }
@@ -404,7 +404,7 @@ class DiffFile {
      * Copies patch-provided lines. Unavailable context is omitted, without
      * inventing source lines.
      */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function textForLines(side:DiffSide, start:Int, end:Int):String {
         final lines = lines(side);
         var startIx = 0;
@@ -421,12 +421,12 @@ class DiffFile {
     }
 
     /** The one-based line number of the line at `index` on `side`. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function lineNumber(side:DiffSide, index:Int):Int {
         return lines(side)[index]._lineNumber;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function lineIndex(side:DiffSide, line:Int):Null<Int> {
         final lines = lines(side);
         var lo = 0;
@@ -444,34 +444,34 @@ class DiffFile {
         return null;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function pairs():Array<LinePair> {
         return inner.pairs;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function hunks():Array<Hunk> {
         return inner.hunks;
     }
 
     /** Width of the widest supplied line number, in digits. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function lineNumberDigits():Int {
         return inner.lineNumberDigits;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function patchLines():Array<PatchLine> {
         return inner.patchLines;
     }
 
     /** The position of a side's line in `patchLines()`. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function patchIx(side:DiffSide, ix:Int):Int {
         return inner.patchIxs[side.index()][ix];
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function sidePath(side:DiffSide):Null<String> {
         return fileSide(side).path;
     }
@@ -480,12 +480,12 @@ class DiffFile {
         return side == Original ? inner.original : inner.modified;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function lines(side:DiffSide):Array<SourceLine> {
         return fileSide(side).lines;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function source(side:DiffSide):String {
         return fileSide(side).source;
     }
@@ -678,7 +678,7 @@ class DiffFile {
     }
 
     /** Rust `str::trim` (Unicode whitespace). */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     static function trimUnicode(s:String):String {
         var start = 0;
         var end = s.length;

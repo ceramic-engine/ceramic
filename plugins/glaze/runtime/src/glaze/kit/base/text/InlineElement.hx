@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline_element.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.IntoElement;
-import gpui.Pixels;
+import glaze.AnyElement;
+import glaze.IntoElement;
+import glaze.Pixels;
 
 /**
  * A GPUI element participating as one atomic object in a text line.
@@ -17,10 +17,10 @@ import gpui.Pixels;
  */
 class InlineElement {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var element:AnyElement;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var baseline:Null<Pixels> = null;
 
     public function new(element:IntoElement) {

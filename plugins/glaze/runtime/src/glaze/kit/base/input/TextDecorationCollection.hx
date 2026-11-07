@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/decorations.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Range;
-import gpui.WeakEntity;
+import glaze.App;
+import glaze.Range;
+import glaze.WeakEntity;
 
 /**
  * An independently managed collection of `TextDecoration`s.
@@ -13,7 +13,7 @@ import gpui.WeakEntity;
  * This is the GPUI Component counterpart of Monaco's `IEditorDecorationsCollection`.
  * The state is an editor's (`EditorExtras` holds the collections).
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class TextDecorationCollection {
 
     final state:WeakEntity<InputBaseState>;

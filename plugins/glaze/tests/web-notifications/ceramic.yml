@@ -6,6 +6,6 @@ app:
     version: '1.0'
 
     plugins:
-        # GPUI port (its system notifications go through the notifications plugin)
-        - gpui
+        # Glaze (its system notifications go through the notifications plugin)
+        - glaze
         - notifications

@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/theme.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.theme;
+package glaze.kit.base.theme;
 
-import gpui.AppContext;
+import glaze.AppContext;
 
 /**
  * Application-wide defaults for Base behavior modules, held as a global.
  *
  * Construct with `new Theme()` and assign fields. The styled layer
- * (`gpui.component.theme.Theme`) projects itself onto it with `syncBase`.
+ * (`glaze.kit.theme.Theme`) projects itself onto it with `syncBase`.
  * `plot` (`PlotTheme`) and `cursorBlink` (`CursorBlink`) come with their
  * modules.
  */
@@ -24,14 +24,14 @@ class Theme {
     public var resizable:ResizableTheme = new ResizableTheme();
 
     /**
-     * Global defaults used by `gpui.base.plot` (motionless by default).
+     * Global defaults used by `glaze.kit.base.plot` (motionless by default).
      */
     public var plot:PlotTheme = new PlotTheme();
 
     /**
      * Application-wide caret blink behavior.
      */
-    public var cursorBlink:gpui.base.input.CursorBlink = gpui.base.input.CursorBlink.defaultValue();
+    public var cursorBlink:glaze.kit.base.input.CursorBlink = glaze.kit.base.input.CursorBlink.defaultValue();
 
     public function new() {}
 

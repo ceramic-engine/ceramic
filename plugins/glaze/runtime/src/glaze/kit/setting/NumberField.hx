@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/fields/number.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Entity;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.input.NumberInput;
-import gpui.component.setting.SettingField.AnySettingField;
-import gpui.component.setting.SettingField.SettingFieldRender;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Entity;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.input.NumberInput;
+import glaze.kit.setting.SettingField.AnySettingField;
+import glaze.kit.setting.SettingField.SettingFieldRender;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The options of a number field.
@@ -55,7 +55,7 @@ class NumberFieldOptions {
 /**
  * Renders a number field as a number input.
  */
-@:allow(gpui.component.setting)
+@:allow(glaze.kit.setting)
 class NumberField implements SettingFieldRender {
 
     final options:NumberFieldOptions;
@@ -72,7 +72,7 @@ class NumberField implements SettingFieldRender {
 
     /** Rust's `{}` of an `f64`. */
     static inline function f64ToString(value:Float):String {
-        return @:privateAccess gpui.base.NumberInput.f64ToString(value);
+        return @:privateAccess glaze.kit.base.NumberInput.f64ToString(value);
     }
 
     public function render(field:AnySettingField, options:RenderOptions, style:StyleRefinement, window:Window, cx:App):AnyElement {
@@ -105,7 +105,7 @@ class NumberField implements SettingFieldRender {
                             // them. Out-of-range text stays too (the engine
                             // clamps it on blur), but the setting only ever
                             // receives a value inside `min..=max`.
-                            final parsed = @:privateAccess gpui.base.NumberInput.parseF64(text);
+                            final parsed = @:privateAccess glaze.kit.base.NumberInput.parseF64(text);
                             if (parsed != null) {
                                 final clamped = parsed < numOptions.min ? numOptions.min : (parsed > numOptions.max ? numOptions.max : parsed);
                                 setValue(clamped, cx.app);
@@ -156,8 +156,8 @@ class NumberField implements SettingFieldRender {
 /**
  * The keyed state of a number field.
  */
-@:allow(gpui.component.setting)
-class NumberFieldState implements gpui.Droppable {
+@:allow(glaze.kit.setting)
+class NumberFieldState implements glaze.Droppable {
 
     final input:Entity<InputState>;
 

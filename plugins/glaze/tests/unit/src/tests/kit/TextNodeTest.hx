@@ -3,48 +3,48 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.HighlightStyle;
-import gpui.ImageFormat;
-import gpui.ImageSource;
-import gpui.Point;
-import gpui.Range;
-import gpui.Resource;
-import gpui.Size;
-import gpui.base.input.Selection;
-import gpui.base.input.StyledRange;
-import gpui.base.text.BlockNode;
-import gpui.base.text.BlockState;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.ColumnumnAlign;
-import gpui.base.text.ImageNode;
-import gpui.base.text.InlineNode;
-import gpui.base.text.LinkMark;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.Paragraph;
-import gpui.base.text.Paragraph.MarkdownSource;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangedMark;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.Span;
-import gpui.base.text.Table;
-import gpui.base.text.Table.TableCell;
-import gpui.base.text.Table.TableRow;
-import gpui.base.text.TableData;
-import gpui.base.text.TextMark;
-import gpui.base.text.TextUtils;
+import glaze.Bounds;
+import glaze.HighlightStyle;
+import glaze.ImageFormat;
+import glaze.ImageSource;
+import glaze.Point;
+import glaze.Range;
+import glaze.Resource;
+import glaze.Size;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.BlockState;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.ColumnumnAlign;
+import glaze.kit.base.text.ImageNode;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.LinkMark;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.Paragraph.MarkdownSource;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.Span;
+import glaze.kit.base.text.Table;
+import glaze.kit.base.text.Table.TableCell;
+import glaze.kit.base.text.Table.TableRow;
+import glaze.kit.base.text.TableData;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.text.TextUtils;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.text.BlockNode.BlockNodeTools;
+using glaze.kit.base.text.BlockNode.BlockNodeTools;
 
 /**
  * Tests of the document model of node.rs (selection, source
  * reconstruction, tables, code blocks, images). The measurement and render
  * tests are in `TextNodeRenderTest`.
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextNodeTest extends TestCase {
 
     static inline function len(s:String):Int {
@@ -98,7 +98,7 @@ class TextNodeTest extends TestCase {
     function testBlockPluginEmptyEndpointSuppressesVirtualizedCopyFallback() {
         final state = new BlockState();
         final block = BlockNode.Custom(new MarkdownNode("math", null).text("formula").markdown("$$formula$$"), state);
-        final after = gpui.base.text.CodeBlock.fromCode("after");
+        final after = glaze.kit.base.text.CodeBlock.fromCode("after");
         after.setSelection(new Range(0, 5));
         final document = new ParsedDocument('', [block, BlockNode.CodeBlock(after)]);
         assertTrue(document.selectedText(Plain, [0, 1]).indexOf("formula") >= 0);
@@ -185,7 +185,7 @@ class TextNodeTest extends TestCase {
             calls++;
             return ([] : Array<StyledRange>);
         };
-        final block = new gpui.base.text.CodeBlock("fn main() {}", "rust", null);
+        final block = new glaze.kit.base.text.CodeBlock("fn main() {}", "rust", null);
 
         block.highlightedStyles(highlighter);
         block.highlightedStyles(highlighter);
@@ -202,7 +202,7 @@ class TextNodeTest extends TestCase {
         // new highlighter rather than from the styles cached for the old one.
         final light = (_:CodeBlock) -> [new StyledRange(new Range(0, 2), HighlightStyle.ofColor(rgb(0x0000ff).toHsla()))];
         final dark = (_:CodeBlock) -> [new StyledRange(new Range(0, 2), HighlightStyle.ofColor(rgb(0xffff00).toHsla()))];
-        final block = gpui.base.text.CodeBlock.fromCode("42", "json");
+        final block = glaze.kit.base.text.CodeBlock.fromCode("42", "json");
 
         final lightStyles = block.highlightedStyles(light);
         final darkStyles = block.highlightedStyles(dark);
@@ -343,7 +343,7 @@ class TextNodeTest extends TestCase {
         final heading = BlockNode.Heading(2, selectedParagraph("Title"), null);
         assertEquals("Title\n", copyAcrossStyles([heading]));
 
-        final code = gpui.base.text.CodeBlock.fromCode("let a = 1;\nlet b = 2;", "rust");
+        final code = glaze.kit.base.text.CodeBlock.fromCode("let a = 1;\nlet b = 2;", "rust");
         code.setSelection(new Range(0, 10));
         assertEquals("let a = 1;\n", copyAcrossStyles([BlockNode.CodeBlock(code)]));
 
@@ -484,7 +484,7 @@ class TextNodeTest extends TestCase {
      * see it (neither needs a selection).
      */
     static function plainCell(text:String):TableCell {
-        return new TableCell(gpui.base.text.Paragraph.ofText(text));
+        return new TableCell(glaze.kit.base.text.Paragraph.ofText(text));
     }
 
     static function tableOf(rows:Array<Array<TableCell>>, columnAligns:Array<ColumnumnAlign>):Table {
@@ -672,7 +672,7 @@ class TextNodeTest extends TestCase {
     }
 
     static function selectedCodeBlock(code:String, ?lang:String):BlockNode {
-        final block = new gpui.base.text.CodeBlock(code, lang, null);
+        final block = new glaze.kit.base.text.CodeBlock(code, lang, null);
         block.state.selection = new Selection(0, len(block.state.text));
         return BlockNode.CodeBlock(block);
     }
@@ -713,8 +713,8 @@ class TextNodeTest extends TestCase {
     }
 
     function testCodeBlockEqualityIncludesCodeContent() {
-        final first = new gpui.base.text.CodeBlock("let value = 1;", "rust", null);
-        final second = new gpui.base.text.CodeBlock("let value = 2;", "rust", null);
+        final first = new glaze.kit.base.text.CodeBlock("let value = 1;", "rust", null);
+        final second = new glaze.kit.base.text.CodeBlock("let value = 2;", "rust", null);
 
         assertFalse(first.equals(second));
     }

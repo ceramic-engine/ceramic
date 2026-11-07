@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Bounds;
-import gpui.Range;
-import gpui.base.text.RenderedIndex.RevealTarget;
+import glaze.Bounds;
+import glaze.Range;
+import glaze.kit.base.text.RenderedIndex.RevealTarget;
 
 /**
  * Where the line a reveal starts on was laid out in one frame, in window
@@ -79,7 +79,7 @@ class PendingReveal {
      * The start of `range` in `text`, asked for at `now`, or `null` when
      * the range is not a range of it.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function create(text:RenderedText, range:Range, now:Float):Null<PendingReveal> {
         final target = text.index().locate(range);
         return target != null ? new PendingReveal(target, now) : null;

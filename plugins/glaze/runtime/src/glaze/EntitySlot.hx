@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/app/entity_map.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Bookkeeping of one entity: its id, the model once built, and what it owns.
@@ -27,13 +27,13 @@ class EntitySlot {
     /**
      * The model, `null` while it is being built and once it has been released.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var model:Null<Model> = null;
 
     /**
      * The entity that created this one through its `Context`, if any.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var parent:Null<EntitySlot> = null;
 
     var ownedSubscriptions:Null<Array<Subscription>> = null;
@@ -42,7 +42,7 @@ class EntitySlot {
 
     var ownedEntities:Null<Array<Model>> = null;
 
-    @:allow(gpui)
+    @:allow(glaze)
     function new(app:App, id:Int) {
         this.app = app;
         this.id = id;
@@ -55,7 +55,7 @@ class EntitySlot {
         return model != null && !model.destroyed;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function ownSubscription(subscription:Subscription):Subscription {
         if (subscription.owner != null || !subscription.isActive)
             return subscription;
@@ -71,14 +71,14 @@ class EntitySlot {
         return subscription;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function removeOwnedSubscription(subscription:Subscription):Void {
         if (ownedSubscriptions != null) {
             ownedSubscriptions.remove(subscription);
         }
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function ownTask(task:AnyTask):Void {
         if (!task.isPending || task.owner != null)
             return;
@@ -93,14 +93,14 @@ class EntitySlot {
         ownedTasks.push(task);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function removeOwnedTask(task:AnyTask):Void {
         if (ownedTasks != null) {
             ownedTasks.remove(task);
         }
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function ownEntity(entity:Model):Void {
         if (ownedEntities == null) {
             ownedEntities = [];
@@ -108,7 +108,7 @@ class EntitySlot {
         ownedEntities.push(entity);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function removeOwnedEntity(entity:Model):Void {
         if (ownedEntities != null) {
             ownedEntities.remove(entity);
@@ -119,7 +119,7 @@ class EntitySlot {
      * Disposes owned subscriptions, cancels owned tasks and destroys owned
      * entities (what dropping the fields of the entity does in Rust).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function releaseOwned():Void {
         final subscriptions = ownedSubscriptions;
         if (subscriptions != null) {

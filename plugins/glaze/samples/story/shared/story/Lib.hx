@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.KeyBinding;
-import gpui.OperatingSystem;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.I18n;
-import gpui.component.Size;
-import gpui.component.TitleBar;
-import gpui.component.button.Button;
-import gpui.component.command.Command;
-import gpui.component.command.CommandItem.CommandEntry;
-import gpui.component.dock.PanelInfo;
-import gpui.component.dock.PanelRegistry;
-import gpui.component.text.TextView;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.KeyBinding;
+import glaze.OperatingSystem;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.I18n;
+import glaze.kit.Size;
+import glaze.kit.TitleBar;
+import glaze.kit.button.Button;
+import glaze.kit.command.Command;
+import glaze.kit.command.CommandItem.CommandEntry;
+import glaze.kit.dock.PanelInfo;
+import glaze.kit.dock.PanelRegistry;
+import glaze.kit.text.TextView;
 import story.StoryActions;
 import story.Themes.SelectTheme;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 /**
  * The free functions of the story crate's root (`lib.rs`). Stories use
@@ -66,7 +66,7 @@ class Lib {
      */
     public static function createNewWindowWithSize(title:String, width:Null<Float>, height:Null<Float>, crateViewFn:(Window, App) -> AnyView,
             cx:App):Window {
-        final options:gpui.Window.WindowOptions = {};
+        final options:glaze.Window.WindowOptions = {};
         if (width != null) options.width = width;
         if (height != null) options.height = height;
 
@@ -121,7 +121,7 @@ class Lib {
         story.stories.Stories.init(cx);
 
         #if (plugin_http && !web)
-        cx.setHttpClient(gpui.CeramicHttpClient.withUserAgent('gpui-component/story'));
+        cx.setHttpClient(glaze.CeramicHttpClient.withUserAgent('gpui-component/story'));
         #end
 
         cx.bindKeys([
@@ -171,7 +171,7 @@ class Lib {
                 container.zoomable_ = meta.zoomable;
                 return container;
             });
-            return gpui.component.dock.PanelHandle.panelHandle(view);
+            return glaze.kit.dock.PanelHandle.panelHandle(view);
         });
 
         cx.activate(true);

@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/path_cache.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.App;
-import gpui.ElementIdArg;
-import gpui.Path;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.Window;
+import glaze.App;
+import glaze.ElementIdArg;
+import glaze.Path;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.Window;
 
 /**
  * A tessellated path reused across frames while its shape is unchanged.
@@ -56,7 +56,7 @@ class PathCache {
         final dx = offset.x;
         final dy = offset.y;
         final result = new Path(new Point(0, 0));
-        result.bounds = new gpui.Bounds(new Point(f(path.bounds.origin.x + dx), f(path.bounds.origin.y + dy)), path.bounds.size);
+        result.bounds = new glaze.Bounds(new Point(f(path.bounds.origin.x + dx), f(path.bounds.origin.y + dy)), path.bounds.size);
         for (vertex in path.vertices) {
             result.vertices.push(new Path.PathVertex(new Point(f(vertex.xyPosition.x + dx), f(vertex.xyPosition.y + dy)), vertex.s, vertex.t));
         }
@@ -96,7 +96,7 @@ class PathCaches {
      * returns the state entity; the port returns its value.
      */
     public static function forPaint(key:ElementIdArg, window:Window, cx:App):PathCaches {
-        final state:gpui.Window.StateModel<PathCaches> = window.useKeyedState(key, cx, _ -> new PathCaches());
+        final state:glaze.Window.StateModel<PathCaches> = window.useKeyedState(key, cx, _ -> new PathCaches());
         return state.value;
     }
 

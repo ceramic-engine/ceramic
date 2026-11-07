@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
 /**
  * Participant-relative selection endpoints with an optional rendering
@@ -28,25 +28,25 @@ class TextSelectionSnapshot {
     }
 
     /** Creates a snapshot from stable participant-relative endpoints (Rust `new`). */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     static function create(anchor:TextSelectionEndpoint, cursor:TextSelectionEndpoint):TextSelectionSnapshot {
         return new TextSelectionSnapshot(anchor, cursor, false, null, Bounded);
     }
 
     /** Sets whether the pointer gesture is still active. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withSelecting(isSelecting:Bool):TextSelectionSnapshot {
         return new TextSelectionSnapshot(_anchor, _cursor, isSelecting, _windowPoints, _coverage);
     }
 
     /** Sets the current window-coordinate rendering projection. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withWindowPoints(windowPoints:Null<TextSelectionWindowPoints>):TextSelectionSnapshot {
         return new TextSelectionSnapshot(_anchor, _cursor, _isSelecting, windowPoints, _coverage);
     }
 
     /** Sets the portion of the receiving participant covered by this selection. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function withCoverage(coverage:TextSelectionCoverage):TextSelectionSnapshot {
         return new TextSelectionSnapshot(_anchor, _cursor, _isSelecting, _windowPoints, coverage);
     }

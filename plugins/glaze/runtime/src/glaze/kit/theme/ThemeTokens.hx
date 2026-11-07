@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/theme_color.rs (define_theme_tokens!)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
 /**
  * Legacy resolved tokens retained for compatibility with existing
@@ -9,7 +9,7 @@ package gpui.component.theme;
  *
  * This type intentionally includes component-specific fields such as
  * `buttonPrimary`, `tabActive`, and `tableHover`. New application-owned
- * components should use `gpui.base.theme.SemanticThemeTokens` instead.
+ * components should use `glaze.kit.base.theme.SemanticThemeTokens` instead.
  *
  * The fields are the ones of `ThemeColor`, as `ThemeToken`s (a solid
  * representative color plus a renderable background that may be a gradient).
@@ -619,7 +619,7 @@ class ThemeTokens {
      * applying a theme config does, keeps its token, so a gradient from a
      * theme file survives; so does an untouched field.
      */
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     function reconcile(colors:ThemeColor, colorsBefore:ThemeColor, tokensBefore:ThemeTokens):Void {
 
         if (!colors.accent.equals(colorsBefore.accent)) {

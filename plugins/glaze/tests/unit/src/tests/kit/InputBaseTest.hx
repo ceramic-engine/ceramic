@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.StyleRefinement;
-import gpui.base.input.InputBase;
-import gpui.base.input.InputContextMenuCapabilities;
+import glaze.StyleRefinement;
+import glaze.kit.base.input.InputBase;
+import glaze.kit.base.input.InputContextMenuCapabilities;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `InputBase` and `InputContextMenuCapabilities` (Rust

@@ -3,17 +3,17 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.FontId;
-import gpui.GlyphId;
-import gpui.LineLayout;
-import gpui.Point;
-import gpui.ShapedGlyph;
-import gpui.ShapedRun;
-import gpui.base.input.TabStops;
+import glaze.FontId;
+import glaze.GlyphId;
+import glaze.LineLayout;
+import glaze.Point;
+import glaze.ShapedGlyph;
+import glaze.ShapedRun;
+import glaze.kit.base.input.TabStops;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.TabStops` (Rust `tab_stops.rs`).
+ * Tests of `glaze.kit.base.input.TabStops` (Rust `tab_stops.rs`).
  */
 class InputTabStopsTest extends TestCase {
 

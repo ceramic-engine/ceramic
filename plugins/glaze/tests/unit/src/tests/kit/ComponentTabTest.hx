@@ -4,46 +4,46 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Element;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.TestDispatcher;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.tab.TabVariant;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Element;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.TestDispatcher;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.tab.TabVariant;
+import glaze.kit.theme.Theme;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
-using gpui.component.scroll.Scrollable.ScrollableElement;
+using glaze.kit.base.InteractiveElementExt;
+using glaze.kit.scroll.Scrollable.ScrollableElement;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `tab` module (`tab.rs` and
@@ -405,7 +405,7 @@ class ComponentTabTest extends TestCase {
     }
 
     function testScrollingToANewTabPreservesBarPadding() {
-        for (entry in [{size: gpui.component.Size.XSmall, padding: 2.}, {size: gpui.component.Size.Small, padding: 3.}, {size: gpui.component.Size.Medium, padding: 4.}, {size: gpui.component.Size.Large, padding: 4.}]) {
+        for (entry in [{size: glaze.kit.Size.XSmall, padding: 2.}, {size: glaze.kit.Size.Small, padding: 3.}, {size: glaze.kit.Size.Medium, padding: 4.}, {size: glaze.kit.Size.Large, padding: 4.}]) {
             final scrollHandle = new ScrollHandle();
             final h = new Harness(dynamicScroll);
             h.scrollHandle = scrollHandle;
@@ -845,7 +845,7 @@ class ComponentTabTest extends TestCase {
             for (quad in window.renderedScene().quads) {
                 if (quad.backgroundTag != 0) continue;
                 if (quad.backgroundSolidH != primary.h || quad.backgroundSolidS != primary.s || quad.backgroundSolidL != primary.l || quad.backgroundSolidA != primary.a) continue;
-                final b = new Bounds(new Point(quad.boundsX / scaleFactor, quad.boundsY / scaleFactor), new gpui.Size(quad.boundsWidth / scaleFactor, quad.boundsHeight / scaleFactor));
+                final b = new Bounds(new Point(quad.boundsX / scaleFactor, quad.boundsY / scaleFactor), new glaze.Size(quad.boundsWidth / scaleFactor, quad.boundsHeight / scaleFactor));
                 if (b.size.height == 2.) result.push(b);
             }
             return result;

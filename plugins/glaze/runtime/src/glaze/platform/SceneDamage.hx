@@ -1,13 +1,13 @@
-package gpui.platform;
+package glaze.platform;
 
 import ceramic.Texture;
-import gpui.scene.MonochromeSprite;
-import gpui.scene.PathSprite;
-import gpui.scene.PolychromeSprite;
-import gpui.scene.Quad;
-import gpui.scene.Scene;
-import gpui.scene.Shadow;
-import gpui.scene.Underline;
+import glaze.scene.MonochromeSprite;
+import glaze.scene.PathSprite;
+import glaze.scene.PolychromeSprite;
+import glaze.scene.Quad;
+import glaze.scene.Scene;
+import glaze.scene.Shadow;
+import glaze.scene.Underline;
 
 /**
  * The region of a render texture that changes between two scenes, for the

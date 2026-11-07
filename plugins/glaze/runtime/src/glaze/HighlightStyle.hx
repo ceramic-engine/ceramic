@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/style.rs (HighlightStyle, combine_highlights)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A highlight style to apply, similar to a `TextStyle` except
@@ -74,7 +74,7 @@ class HighlightStyle {
         }
         var resultFade = fadeOut;
         if (other.fadeOut != null) {
-            resultFade = fadeOut != null ? gpui.util.MathUtil.clamp(fadeOut * (1.0 + other.fadeOut), 0.0, 1.0) : other.fadeOut;
+            resultFade = fadeOut != null ? glaze.util.MathUtil.clamp(fadeOut * (1.0 + other.fadeOut), 0.0, 1.0) : other.fadeOut;
         }
         return new HighlightStyle(
             resultColor,

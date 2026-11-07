@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/button/dropdown_button.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.button;
+package glaze.kit.button;
 
-import gpui.Anchor;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.component.I18n;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.button.Button.ButtonVariant;
-import gpui.component.menu.ContextMenu.MenuBuilder;
+import glaze.Anchor;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.I18n;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.button.Button.ButtonVariant;
+import glaze.kit.menu.ContextMenu.MenuBuilder;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * A split button: an action button with an attached menu trigger.
@@ -43,32 +43,32 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
 
     final dropdownButtonStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var buttonValue:Null<Button> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menu:Null<MenuBuilder> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectedValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
     var menuAccessibilityLabelValue:Null<String> = null;
 
     // The button props, applied to both halves. Unset means the inner
     // `Button` keeps whatever it was given.
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var outlineValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var variant:Null<ButtonVariant> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Null<Size> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var anchor:Anchor = TopRight;
 
     /**
@@ -78,7 +78,7 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
         this.id = id;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function effectiveVariant():ButtonVariant {
         if (variant != null)
             return variant;
@@ -87,7 +87,7 @@ class DropdownButton implements RenderOnce implements Styled implements Sizable 
         return Default;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function effectiveSize():Size {
         if (size != null)
             return size;

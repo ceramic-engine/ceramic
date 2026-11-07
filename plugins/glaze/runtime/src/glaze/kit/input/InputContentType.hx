@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/content_type.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.Window;
+import glaze.Window;
 
 /**
  * Semantic content type for an `Input`.
@@ -165,7 +165,7 @@ enum abstract InputContentType(Int) {
      * Ceramic has no native text field to tell: like the Rust build for tests
      * and for other platforms than macOS, this does nothing.
      */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function syncNativeContentType(window:Window, contentType:Null<InputContentType>, editable:Bool):Void {
         if (!editable) {
             return;

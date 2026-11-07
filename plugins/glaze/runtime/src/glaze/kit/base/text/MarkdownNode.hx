@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/markdown_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
 /**
  * A custom Markdown node produced by `MarkdownExtensions`.
@@ -14,7 +14,7 @@ class MarkdownNode {
     var accessibilityLabel_:Null<String> = null;
     var data_:Dynamic;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var span:Null<Span> = null;
 
     /** Create a custom Markdown node with a stable name and typed data. */
@@ -49,8 +49,8 @@ class MarkdownNode {
     }
 
     /** Full-document UTF-8 source byte range, including syntax delimiters. */
-    public function sourceRange():Null<gpui.Range> {
-        return span != null ? new gpui.Range(span.start, span.end) : null;
+    public function sourceRange():Null<glaze.Range> {
+        return span != null ? new glaze.Range(span.start, span.end) : null;
     }
 
     /** Name exposed to accessibility clients, defaulting to the plain text. */
@@ -64,18 +64,18 @@ class MarkdownNode {
     }
 
     /** Plain text, sharing this node's buffer. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     inline function sharedText():String {
         return text_;
     }
 
     /** Accessible name, sharing this node's buffer. Defaults to the plain text. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     inline function sharedAccessibilityName():String {
         return accessibilityName();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function withInlineSource(source:String):MarkdownNode {
         if (text_ == '') {
             text_ = source;
@@ -108,12 +108,12 @@ class MarkdownNode {
         return cast data_;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setSpan(span:Null<Span>):Void {
         this.span = span;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function toMarkdown():String {
         return markdown_ == '' ? text_ : markdown_;
     }

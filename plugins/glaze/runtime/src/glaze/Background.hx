@@ -2,7 +2,7 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * A background: a solid color, a linear gradient, or a pattern.

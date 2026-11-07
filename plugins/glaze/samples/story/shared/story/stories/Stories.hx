@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.App;
+import glaze.App;
 import story.StoryMeta;
 
 /**

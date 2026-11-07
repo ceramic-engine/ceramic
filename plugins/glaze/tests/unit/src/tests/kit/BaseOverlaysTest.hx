@@ -4,47 +4,47 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Decorations;
-import gpui.Decorations.Tiling;
-import gpui.Edges;
-import gpui.Element;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.base.Geometry.Placement;
-import gpui.base.GlobalState;
-import gpui.base.Popover;
-import gpui.base.Popover.PopoverState;
-import gpui.base.Popup;
-import gpui.base.Positioner;
-import gpui.base.Positioner.Align;
-import gpui.base.Positioner.PositionerStrategy;
-import gpui.base.Positioner.ResolvedPosition;
-import gpui.base.HoverCard;
-import gpui.base.Tooltip.TooltipDefaults;
-import gpui.base.Tooltip.TooltipOverlay;
-import gpui.base.Tooltip.TooltipRequest;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Decorations;
+import glaze.Decorations.Tiling;
+import glaze.Edges;
+import glaze.Element;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.Popover;
+import glaze.kit.base.Popover.PopoverState;
+import glaze.kit.base.Popup;
+import glaze.kit.base.Positioner;
+import glaze.kit.base.Positioner.Align;
+import glaze.kit.base.Positioner.PositionerStrategy;
+import glaze.kit.base.Positioner.ResolvedPosition;
+import glaze.kit.base.HoverCard;
+import glaze.kit.base.Tooltip.TooltipDefaults;
+import glaze.kit.base.Tooltip.TooltipOverlay;
+import glaze.kit.base.Tooltip.TooltipRequest;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's overlays: `positioner.rs`, `popup.rs`,
@@ -444,7 +444,7 @@ class BaseOverlaysTest extends TestCase {
         final state = opened.view;
         final cx = opened.cx;
         draw(cx);
-        final request = () -> new TooltipRequest(bounds(0., 0., 20., 20.), (_, cx) -> (cx.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> new gpui.Empty())) : gpui.AnyView));
+        final request = () -> new TooltipRequest(bounds(0., 0., 20., 20.), (_, cx) -> (cx.newEntity((_:Context<ScriptView>) -> new ScriptView((_, _) -> new glaze.Empty())) : glaze.AnyView));
 
         cx.update((window, cx) -> state.update(cx, (tooltip, cx) -> tooltip.requestShow(request(), window, cx)));
         advanceClock(cx, 0.099);
@@ -662,7 +662,7 @@ private class KeyboardPopoverHarness extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         return new Popover('keyboard-popover')
-            .trigger(new gpui.base.Button('keyboard-trigger').trackFocus(triggerFocus).child('Open'))
+            .trigger(new glaze.kit.base.Button('keyboard-trigger').trackFocus(triggerFocus).child('Open'))
             .content((_, _, _) -> new OverlayProbe('keyboard-popover-content', div().size(px(40.))));
     }
 

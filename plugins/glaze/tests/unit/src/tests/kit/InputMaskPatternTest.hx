@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.input.MaskPattern;
+import glaze.kit.base.input.MaskPattern;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.MaskPattern` (Rust `mask_pattern.rs`).
+ * Tests of `glaze.kit.base.input.MaskPattern` (Rust `mask_pattern.rs`).
  */
 class InputMaskPatternTest extends TestCase {
 

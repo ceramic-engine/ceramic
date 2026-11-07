@@ -7,7 +7,7 @@
 //
 // - V8 collections per measured block: the runner is started with
 //   `--js-flags=--trace-gc`, BenchRunner marks each block on the renderer's
-//   stdout (`GPUI_BENCH_MARK`), and the trace lines between the marks are
+//   stdout (`GLAZE_BENCH_MARK`), and the trace lines between the marks are
 //   summed (count, pause, minor and major, allocation volume: the growth of
 //   `performance.memory.usedJSHeapSize` over the block plus what the
 //   collections freed);
@@ -17,21 +17,21 @@
 //   times printed;
 // - with `--alloc`: V8's sampling heap profiler until the end of the first
 //   measured block (run one scenario and mode), from the start of the page
-//   (setup and warmup included) or, with GPUI_BENCH_SCREEN=1, from the start
+//   (setup and warmup included) or, with GLAZE_BENCH_SCREEN=1, from the start
 //   of the block; saved as `alloc.heapprofile` with the functions that
 //   allocate the most printed.
 //
 // Usage:
-//   GPUI_BENCH_SCENARIOS=cards,scroll-table GPUI_BENCH_FRAMES=200 \
-//   GPUI_BENCH_RESULTS=/some/dir node web-run.js [--profile] [--top 40]
+//   GLAZE_BENCH_SCENARIOS=cards,scroll-table GLAZE_BENCH_FRAMES=200 \
+//   GLAZE_BENCH_RESULTS=/some/dir node web-run.js [--profile] [--top 40]
 //
-// Soak runs (GPUI_BENCH_SOAK_SECONDS) write their series as `-soak.json`;
+// Soak runs (GLAZE_BENCH_SOAK_SECONDS) write their series as `-soak.json`;
 // V8 runs with --expose-gc for their live memory samples.
-// Every GPUI_BENCH_* variable of BenchRunner applies (the page reads them from
+// Every GLAZE_BENCH_* variable of BenchRunner applies (the page reads them from
 // process.env). Results: one JSON per block like the other targets, with a
-// `webGc` object, in GPUI_BENCH_RESULTS (printed only when it is not set).
+// `webGc` object, in GLAZE_BENCH_RESULTS (printed only when it is not set).
 // CERAMIC_PATH: the Ceramic checkout (default: ../../../ceramic).
-// GPUI_BENCH_WEB_DIR: another copy of project/web (A/B runs on frozen builds).
+// GLAZE_BENCH_WEB_DIR: another copy of project/web (A/B runs on frozen builds).
 
 const fs = require('fs');
 const path = require('path');
@@ -50,12 +50,12 @@ const runnerPath = path.join(ceramicPath, 'runner');
 const electron = process.platform === 'darwin'
     ? path.join(runnerPath, 'node_modules/electron/dist/Electron.app/Contents/MacOS/Electron')
     : path.join(runnerPath, 'node_modules/electron/dist/electron');
-const appFiles = process.env.GPUI_BENCH_WEB_DIR || path.join(__dirname, 'project/web');
-const resultsDir = process.env.GPUI_BENCH_RESULTS || null;
+const appFiles = process.env.GLAZE_BENCH_WEB_DIR || path.join(__dirname, 'project/web');
+const resultsDir = process.env.GLAZE_BENCH_RESULTS || null;
 
 const env = Object.assign({}, process.env);
 delete env.ELECTRON_RUN_AS_NODE;
-if (profile || alloc) env.GPUI_BENCH_PROFILE = '1';
+if (profile || alloc) env.GLAZE_BENCH_PROFILE = '1';
 
 const electronArgs = ['.', '--scripts-prepend-node-path', '--app-files', appFiles, '--hidden',
     '--js-flags=--trace-gc --expose-gc', '--enable-precise-memory-info'];
@@ -84,7 +84,7 @@ function onLine(line) {
         lastAfter[pid] = event.after;
         return;
     }
-    const mark = /GPUI_BENCH_MARK (begin|end) (\S+) (\d+) ([\d.]+)/.exec(line);
+    const mark = /GLAZE_BENCH_MARK (begin|end) (\S+) (\d+) ([\d.]+)/.exec(line);
     if (mark) {
         const [, kind, label, pid, heap] = mark;
         if (kind === 'begin') {
@@ -152,7 +152,7 @@ let stopAlloc = null;
 let startAlloc = null;
 // On screen the page returns to its event loop between frames: the sampling
 // can start with the measured block instead of with the page
-const allocFromBlock = process.env.GPUI_BENCH_SCREEN === '1';
+const allocFromBlock = process.env.GLAZE_BENCH_SCREEN === '1';
 let heapProfile = null;
 function getJson(url) {
     return new Promise((resolve, reject) => {
@@ -183,7 +183,7 @@ async function attachProfiler() {
         if (data.id === allocStopId) {
             if (data.result) heapProfile = data.result.profile;
             else console.error('web-run: stopSampling: ' + JSON.stringify(data.error));
-            send('Runtime.evaluate', { expression: 'window.gpuiBenchMayQuit = true' });
+            send('Runtime.evaluate', { expression: 'window.glazeBenchMayQuit = true' });
         }
         if (data.method === 'Profiler.consoleProfileFinished') {
             profiles.push({ title: data.params.title, profile: data.params.profile });
@@ -205,9 +205,9 @@ async function attachProfiler() {
         }
         // Without allocation sampling the profiles come with the page's
         // console.profileEnd: the page may quit right after the last one
-        if (!alloc) send('Runtime.evaluate', { expression: 'window.gpuiBenchMayQuit = true' });
+        if (!alloc) send('Runtime.evaluate', { expression: 'window.glazeBenchMayQuit = true' });
         // The page may still be loading: set the flags until they stick
-        const ready = setInterval(() => send('Runtime.evaluate', { expression: 'window.gpuiBenchProfilerReady = true' + (alloc ? '' : '; window.gpuiBenchMayQuit = true') }), 200);
+        const ready = setInterval(() => send('Runtime.evaluate', { expression: 'window.glazeBenchProfilerReady = true' + (alloc ? '' : '; window.glazeBenchMayQuit = true') }), 200);
         child.on('exit', () => clearInterval(ready));
     };
 }
@@ -237,7 +237,7 @@ child.on('exit', code => {
     const byLabel = {};
     for (const json of jsons) {
         if (json.soak != null) {
-            // Endurance run (GPUI_BENCH_SOAK_SECONDS): written as is
+            // Endurance run (GLAZE_BENCH_SOAK_SECONDS): written as is
             const s = json.soak.summary;
             console.log(`${json.scenario}-${json.mode} soak: live ${s.live.mbPerMinute.toFixed(3)} MB/min (mean ${s.live.meanMb.toFixed(1)} MB), V8 used ${s.jsUsed.mbPerMinute.toFixed(3)} MB/min, leak suspected: ${s.leakSuspected}`);
             if (resultsDir) {

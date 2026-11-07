@@ -4,18 +4,18 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Pixels;
-import gpui.TestDispatcher;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.DockLayout;
-import gpui.base.dock.InsertTarget;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PaneNode;
-import gpui.base.dock.PaneTree;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.RootKind;
+import glaze.App;
+import glaze.Axis;
+import glaze.Pixels;
+import glaze.TestDispatcher;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.DockLayout;
+import glaze.kit.base.dock.InsertTarget;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PaneNode;
+import glaze.kit.base.dock.PaneTree;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.RootKind;
 import tests.kit.DockTestSupport;
 import testing.TestCase;
 
@@ -23,7 +23,7 @@ import testing.TestCase;
  * The `#[cfg(test)]` tests of gpui-base's dock layout tree: `tree.rs`,
  * `edit.rs`, `normalize.rs` and `builder.rs`.
  */
-@:access(gpui.base.dock.PaneTree)
+@:access(glaze.kit.base.dock.PaneTree)
 class BaseDockLayoutTest extends TestCase {
 
     static function panel(n:Int):PanelId {

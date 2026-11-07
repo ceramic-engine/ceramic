@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.Render;
+import glaze.Render;
 
 /**
  * Rust `trait Story: Render`.
@@ -11,7 +11,7 @@ import gpui.Render;
  * Haxe interfaces cannot carry static functions, so the trait is split:
  *
  * - the instance part is this interface. A story view is a
- *   `class XStory extends gpui.Model implements Story` and may define
+ *   `class XStory extends glaze.Model implements Story` and may define
  *   `public function onActive(active:Bool, window:Window, cx:App):Void`
  *   (the trait's default does nothing);
  * - the static part (`title`, `description`, `closable`, `zoomable`,

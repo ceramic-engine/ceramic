@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion/easing.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.SpringMath.f32;
-import gpui.base.animation.Easings;
-import gpui.util.MathUtil;
+import glaze.SpringMath.f32;
+import glaze.kit.base.animation.Easings;
+import glaze.util.MathUtil;
 
 /**
  * The point at which a stepped easing jumps.
@@ -46,7 +46,7 @@ class LinearStop {
 /**
  * Invalid easing configuration, thrown by the `Easing` factories (Rust `Result`).
  */
-@:using(gpui.base.motion.Easing.EasingErrorTools)
+@:using(glaze.kit.base.motion.Easing.EasingErrorTools)
 enum EasingError {
     /**
      * Retained for source compatibility. New validation reports

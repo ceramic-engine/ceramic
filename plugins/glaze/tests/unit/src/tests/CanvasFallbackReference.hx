@@ -7,7 +7,7 @@ import haxe.macro.Expr;
 
 /**
  * The classification of the original gpui-pre-web canvas_fallback.rs
- * (`test/unit/data/canvas-fallback-reference.json`), embedded at compile
+ * (`tests/unit/data/canvas-fallback-reference.json`), embedded at compile
  * time. Dumped by a Rust program that compiles the original file with
  * `#[path]` against unicode-properties 0.1.3, unicode-script 0.5.8 and
  * unicode-segmentation 1.13.2 (the versions of the reference harness): for

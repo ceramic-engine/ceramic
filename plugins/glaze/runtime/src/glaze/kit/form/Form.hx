@@ -1,27 +1,27 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/form/form.rs, crates/component/src/form/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.form;
+package glaze.kit.form;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Rems;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.form.Field.FieldProps;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Rems;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.form.Field.FieldProps;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A form element that contains multiple form fields.
@@ -51,13 +51,13 @@ class Form implements RenderOnce implements Styled implements Sizable {
 
     final formStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     final fields:Array<Field> = [];
 
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     var footerValue:Null<AnyElement> = null;
 
-    @:allow(gpui.component.form, tests)
+    @:allow(glaze.kit.form, tests)
     final props:FieldProps = new FieldProps();
 
     /**
@@ -127,7 +127,7 @@ class Form implements RenderOnce implements Styled implements Sizable {
      * Add multiple children to the form.
      */
     public function children(fields:Iterable<Field>):Form {
-        gpui.util.Iterables.appendNonNull(this.fields, fields);
+        glaze.util.Iterables.appendNonNull(this.fields, fields);
         return this;
     }
 

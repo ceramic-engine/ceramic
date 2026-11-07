@@ -4,22 +4,22 @@
 // `write_csv`, Longbridge, Apache-2.0). See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.Window;
-import gpui.base.theme.ScrollbarMode;
-import gpui.component.Component;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.Window;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.Component;
 import story.Themes;
 import story.stories.DataTableStory;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The gallery's settings (Rust `State` as `serde_json` reads and writes it)
@@ -82,11 +82,11 @@ class StoryPlatformTest extends TestCase {
                 final app = new App(new TestDispatcher());
                 app.update(cx -> {
                     Component.init(cx);
-                    assertEquals(ScrollbarMode.Hover, gpui.component.theme.Theme.global(cx).scrollbarMode);
+                    assertEquals(ScrollbarMode.Hover, glaze.kit.theme.Theme.global(cx).scrollbarMode);
                     story.AppState.init(cx);
                     Themes.init(cx);
                 });
-                assertEquals(saved, gpui.component.theme.Theme.global(app).scrollbarMode);
+                assertEquals(saved, glaze.kit.theme.Theme.global(app).scrollbarMode);
             }
 
             Themes.stateStorage = {read: () -> '{"theme": "Default Light"}', write: (_) -> {}};
@@ -96,7 +96,7 @@ class StoryPlatformTest extends TestCase {
                 story.AppState.init(cx);
                 Themes.init(cx);
             });
-            assertEquals(ScrollbarMode.Hover, gpui.component.theme.Theme.global(app).scrollbarMode);
+            assertEquals(ScrollbarMode.Hover, glaze.kit.theme.Theme.global(app).scrollbarMode);
         } catch (e:haxe.Exception) {
             Themes.stateStorage = previous;
             throw e;
@@ -114,9 +114,9 @@ class StoryPlatformTest extends TestCase {
         final app = new App(new TestDispatcher());
         story.AppState.init(app);
         #if unity
-        assertTrue(gpui.component.TitleBar.isWeb);
+        assertTrue(glaze.kit.TitleBar.isWeb);
         assertTrue(story.AppState.global(app).showAppMenuBar);
-        assertEquals(gpui.OperatingSystem.current == Mac, story.Lib.isMacos());
+        assertEquals(glaze.OperatingSystem.current == Mac, story.Lib.isMacos());
         #else
         assertEquals(!story.Lib.isMacos(), story.AppState.global(app).showAppMenuBar);
         #end
@@ -172,7 +172,7 @@ class StoryPlatformTest extends TestCase {
             DataTableStory.writeCsvRecord(expectedHeader, table.headers(app));
             assertEquals(expectedHeader.toString(), lines[0] + '\n');
             final firstRow = new StringBuf();
-            DataTableStory.writeCsvRecord(firstRow, table.dumpRange(new gpui.Range(0, 1), app).rows[0]);
+            DataTableStory.writeCsvRecord(firstRow, table.dumpRange(new glaze.Range(0, 1), app).rows[0]);
             assertEquals(firstRow.toString(), lines[1] + '\n');
             ceramic.Files.deleteFile(path);
         } catch (e:haxe.Exception) {

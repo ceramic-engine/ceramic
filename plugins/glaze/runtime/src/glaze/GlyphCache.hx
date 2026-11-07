@@ -1,4 +1,4 @@
-package gpui;
+package glaze;
 
 import haxe.ds.IntMap;
 import haxe.io.FPHelper;

@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/button/button_group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.button;
+package glaze.kit.button;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.button.Button;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.button.Button;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A ButtonGroup element, to wrap multiple buttons in a group.
@@ -31,32 +31,32 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final childButtons:Array<Button> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var multipleValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var layoutValue:Axis = Axis.Horizontal;
 
     // The button props
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var compactValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var outlineValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var variantValue:Null<ButtonVariant> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var sizeValue:Null<Size> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var onClickHandler:Null<(Array<Int>, Window, App) -> Void> = null;
 
     /**

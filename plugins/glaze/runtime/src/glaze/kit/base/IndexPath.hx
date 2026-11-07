@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/index_path.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.ElementId;
+import glaze.ElementId;
 
 /**
  * Represents an index path in a list: a section index, a row and a column

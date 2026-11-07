@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/inline_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * The tokens of a document, sorted by start.
  */
 class InlineTokenStore {
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     var spans:Array<InlineTokenSpan>;
 
     public function new(?spans:Array<InlineTokenSpan>) {
@@ -22,7 +22,7 @@ class InlineTokenStore {
      * edit, and adds `inserted` (relative to the edit start). Returns the
      * delta, or null when no token was touched.
      */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function replace(range:Range, newLen:Int, inserted:Array<InlineTokenSpan>):Null<TokenDelta> {
         final removed:Array<InlineTokenSpan> = [];
         final shift = newLen - range.len();

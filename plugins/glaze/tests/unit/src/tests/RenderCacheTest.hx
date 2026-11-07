@@ -1,14 +1,14 @@
 package tests;
 
-import gpui.AtlasKey;
-import gpui.AtlasTile.AtlasTileSource;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.PathRasterizer;
-import gpui.platform.CeramicAtlas;
-import gpui.scene.Scene;
+import glaze.AtlasKey;
+import glaze.AtlasTile.AtlasTileSource;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.PathRasterizer;
+import glaze.platform.CeramicAtlas;
+import glaze.scene.Scene;
 import testing.TestCase;
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Caches of the rendering path: the path tile key (`PathRasterizer.cacheKey`),

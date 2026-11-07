@@ -2,10 +2,10 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/pie
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.SpringMath;
-import gpui.base.plot.shape.Arc.ArcData;
+import glaze.SpringMath;
+import glaze.kit.base.plot.shape.Arc.ArcData;
 
 /**
  * A pie generator, like `d3.pie`: lays data values out as arcs.

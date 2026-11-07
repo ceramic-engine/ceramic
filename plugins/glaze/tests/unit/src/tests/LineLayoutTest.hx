@@ -1,28 +1,28 @@
 package tests;
 
-import gpui.DecorationRun;
-import gpui.Font;
-import gpui.FontId;
-import gpui.HeadlessAtlas;
-import gpui.Hsla;
-import gpui.IndexResult;
-import gpui.LineLayout;
-import gpui.LineLayoutCache;
-import gpui.LinePaint;
-import gpui.NoopTextSystem;
-import gpui.Point;
-import gpui.ShapedGlyph;
-import gpui.ShapedLine;
-import gpui.ShapedRun;
-import gpui.Size;
-import gpui.TextPainter;
-import gpui.TextSystem;
-import gpui.UnderlineStyle;
-import gpui.WindowTextSystem;
-import gpui.WrapBoundary;
-import gpui.WrappedLine;
-import gpui.WrappedLineLayout;
-import gpui.scene.Scene;
+import glaze.DecorationRun;
+import glaze.Font;
+import glaze.FontId;
+import glaze.HeadlessAtlas;
+import glaze.Hsla;
+import glaze.IndexResult;
+import glaze.LineLayout;
+import glaze.LineLayoutCache;
+import glaze.LinePaint;
+import glaze.NoopTextSystem;
+import glaze.Point;
+import glaze.ShapedGlyph;
+import glaze.ShapedLine;
+import glaze.ShapedRun;
+import glaze.Size;
+import glaze.TextPainter;
+import glaze.TextSystem;
+import glaze.UnderlineStyle;
+import glaze.WindowTextSystem;
+import glaze.WrapBoundary;
+import glaze.WrappedLine;
+import glaze.WrappedLineLayout;
+import glaze.scene.Scene;
 import testing.TestCase;
 
 /**
@@ -138,7 +138,7 @@ class LineLayoutTest extends TestCase {
         final windowTs = new WindowTextSystem(TextFixtures.textSystem());
         final f:Dynamic = ref.force_width;
         final text:String = f.text;
-        final runs = [new gpui.TextRun(gpui.util.Utf8.byteLength(text), Font.of('JetBrains Mono'), new Hsla(0, 0, 0, 1))];
+        final runs = [new glaze.TextRun(glaze.util.Utf8.byteLength(text), Font.of('JetBrains Mono'), new Hsla(0, 0, 0, 1))];
         final layout = windowTs.layoutLine(text, f.size, runs, f.force_width);
         compareLayout(f.layout, layout, 'force width "$text"');
     }
@@ -274,7 +274,7 @@ class LineLayoutTest extends TestCase {
     /** Builds a ShapedLine from (byte_index, x_position) pairs, without a text system. */
     static function makeShapedLine(text:String, glyphs:Array<Array<Float>>, width:Float, decorations:Array<DecorationRun>):ShapedLine {
         final shapedGlyphs = [for (g in glyphs) new ShapedGlyph(0, new Point(g[1], 0), Std.int(g[0]), false)];
-        return new ShapedLine(new LineLayout(16, width, 12, 4, [new ShapedRun(0, shapedGlyphs)], gpui.util.Utf8.byteLength(text)), text, decorations);
+        return new ShapedLine(new LineLayout(16, width, 12, 4, [new ShapedRun(0, shapedGlyphs)], glaze.util.Utf8.byteLength(text)), text, decorations);
     }
 
     function testAlignedLinePaintBounds() {
@@ -293,7 +293,7 @@ class LineLayoutTest extends TestCase {
             [false, 0., [[10., 50.], [-10., 50.], [-30., 50.]]],
             [true, 0., [[10., 50.], [0., 50.], [-10., 50.]]],
         ];
-        final aligns:Array<gpui.TextAlign> = [Left, Center, Right];
+        final aligns:Array<glaze.TextAlign> = [Left, Center, Right];
         for (c in cases) {
             final wrapped:Bool = c[0];
             final alignWidth:Null<Float> = c[1];
@@ -303,21 +303,21 @@ class LineLayoutTest extends TestCase {
                 final bounds = LinePaint.linePaintBounds(origin, line.layout, lineHeight, aligns[i], alignWidth, boundaries);
                 final left = edges[i][0];
                 final right = edges[i][1];
-                final expected = new gpui.Bounds(new Point(left, origin.y), new Size(right - left, wrapped ? 32 : 16));
+                final expected = new glaze.Bounds(new Point(left, origin.y), new Size(right - left, wrapped ? 32 : 16));
                 assertTrue(bounds.equals(expected), 'wrapped=$wrapped, align=${aligns[i]}, align_width=$alignWidth: expected $expected, got $bounds');
             }
         }
         final empty = makeShapedLine('', [], 0, []);
         for (align in aligns) {
             final bounds = LinePaint.linePaintBounds(origin, empty.layout, lineHeight, align, 100, []);
-            assertTrue(bounds.equals(new gpui.Bounds(origin, new Size(0, lineHeight))));
+            assertTrue(bounds.equals(new glaze.Bounds(origin, new Size(0, lineHeight))));
         }
     }
 
     // Test window: GPUI's TestAppContext uses NoopTextSystem
     static function noopPainter(scaleFactor:Float):TextPainter {
         final textSystem = new TextSystem(new NoopTextSystem());
-        final painter = new TextPainter(new Scene(), new HeadlessAtlas(), textSystem, scaleFactor, new gpui.Bounds(new Point(0, 0), new Size(1024, 1024)));
+        final painter = new TextPainter(new Scene(), new HeadlessAtlas(), textSystem, scaleFactor, new glaze.Bounds(new Point(0, 0), new Size(1024, 1024)));
         // `window.with_element_opacity(Some(0.5), ...)`
         painter.elementOpacity = 0.5;
         return painter;
@@ -325,7 +325,7 @@ class LineLayoutTest extends TestCase {
 
     static function underlineTestLine(text:String, decorations:Array<DecorationRun>, zeroAdvance:Bool, textSystem:TextSystem):ShapedLine {
         final windowTs = new WindowTextSystem(textSystem);
-        final line = windowTs.shapeLine(text, 16, [new gpui.TextRun(gpui.util.Utf8.byteLength(text), Font.of('.ZedMono'), Hsla.black())]);
+        final line = windowTs.shapeLine(text, 16, [new glaze.TextRun(glaze.util.Utf8.byteLength(text), Font.of('.ZedMono'), Hsla.black())]);
         line.decorationRuns = decorations;
         final layout = line.layout;
         final runs = [for (run in layout.runs) run.clone()];
@@ -367,15 +367,15 @@ class LineLayoutTest extends TestCase {
             assertFloatEquals(48, line.width());
             for (originX in [-3.25, 0., 4.25]) {
                 final cases:Array<Array<Dynamic>> = [
-                    [gpui.TextAlign.Left, null, 0.],
-                    [gpui.TextAlign.Center, null, 0.],
-                    [gpui.TextAlign.Right, null, 0.],
-                    [gpui.TextAlign.Left, 96., 0.],
-                    [gpui.TextAlign.Center, 96., 24.],
-                    [gpui.TextAlign.Right, 96., 48.],
+                    [glaze.TextAlign.Left, null, 0.],
+                    [glaze.TextAlign.Center, null, 0.],
+                    [glaze.TextAlign.Right, null, 0.],
+                    [glaze.TextAlign.Left, 96., 0.],
+                    [glaze.TextAlign.Center, 96., 24.],
+                    [glaze.TextAlign.Right, 96., 48.],
                 ];
                 for (c in cases) {
-                    final align:gpui.TextAlign = c[0];
+                    final align:glaze.TextAlign = c[0];
                     final alignWidth:Null<Float> = c[1];
                     final offset:Float = c[2];
                     final origin = new Point(originX, 12.25);
@@ -431,9 +431,9 @@ class LineLayoutTest extends TestCase {
             final origin = new Point(40.25, 10.25);
             final lineHeight = 20.0;
             final y = origin.y + TextSystem.underlineYOffset(lineHeight, line.ascent(), line.descent());
-            final cases:Array<Array<Dynamic>> = [[gpui.TextAlign.Left, 0.], [gpui.TextAlign.Center, 16.], [gpui.TextAlign.Right, 32.]];
+            final cases:Array<Array<Dynamic>> = [[glaze.TextAlign.Left, 0.], [glaze.TextAlign.Center, 16.], [glaze.TextAlign.Right, 32.]];
             for (c in cases) {
-                final align:gpui.TextAlign = c[0];
+                final align:glaze.TextAlign = c[0];
                 final offset:Float = c[1];
                 painter.scene.clear();
                 line.paint(origin, lineHeight, align, 32, painter);
@@ -716,9 +716,9 @@ class LineLayoutTest extends TestCase {
         final ts = TextFixtures.textSystem();
         final atlas = new HeadlessAtlas();
         final scene = new Scene();
-        final painter = new TextPainter(scene, atlas, ts, 2.0, new gpui.Bounds(new Point(0, 0), new Size(512, 512)));
+        final painter = new TextPainter(scene, atlas, ts, 2.0, new glaze.Bounds(new Point(0, 0), new Size(512, 512)));
         final fontId = ts.resolveFont(Font.of('Inter'));
-        final glyphId:gpui.GlyphId = ts.platformTextSystem.glyphForChar(fontId, 'a'.code);
+        final glyphId:glaze.GlyphId = ts.platformTextSystem.glyphForChar(fontId, 'a'.code);
         // x origins (logical) and their expected (integer x, variant) at scale 2
         final cases:Array<Array<Float>> = [[10.0, 20, 0], [10.06, 20, 0], [10.07, 20, 1], [10.125, 20, 1], [10.2, 20, 2], [10.3, 20, 2], [10.32, 20, 3], [10.45, 21, 0], [-0.3, 0, 0]];
         for (c in cases) {
@@ -727,7 +727,7 @@ class LineLayoutTest extends TestCase {
             assertEquals(1, scene.monochromeSprites.length);
             final sprite = scene.monochromeSprites[0];
             final variant = Std.int(c[2]);
-            final params = new gpui.RenderGlyphParams(fontId, glyphId, 16, variant, 0, 2.0);
+            final params = new glaze.RenderGlyphParams(fontId, glyphId, 16, variant, 0, 2.0);
             final raster = ts.rasterBounds(params);
             assertFloatEquals(c[1] + raster.origin.x, sprite.boundsX, 0, 'x of origin ${c[0]}');
             assertFloatEquals(60 + raster.origin.y, sprite.boundsY, 0, 'y of origin ${c[0]}');
@@ -740,14 +740,14 @@ class LineLayoutTest extends TestCase {
     function testShapedLinePaintEmitsSpritesAndDecorations() {
         final ts = TextFixtures.textSystem();
         final windowTs = new WindowTextSystem(ts);
-        final atlas = new gpui.platform.CeramicAtlas(256, false, false);
+        final atlas = new glaze.platform.CeramicAtlas(256, false, false);
         final scene = new Scene();
-        final painter = new TextPainter(scene, atlas, ts, 2.0, new gpui.Bounds(new Point(0, 0), new Size(512, 512)));
+        final painter = new TextPainter(scene, atlas, ts, 2.0, new glaze.Bounds(new Point(0, 0), new Size(512, 512)));
         final underline = new UnderlineStyle(1, null, false);
-        final strike = new gpui.StrikethroughStyle(1, Hsla.red());
+        final strike = new glaze.StrikethroughStyle(1, Hsla.red());
         final runs = [
-            new gpui.TextRun(6, Font.of('Inter'), Hsla.black(), null, underline),
-            new gpui.TextRun(5, Font.of('Inter'), Hsla.blue(), Hsla.yellow(), null, strike),
+            new glaze.TextRun(6, Font.of('Inter'), Hsla.black(), null, underline),
+            new glaze.TextRun(5, Font.of('Inter'), Hsla.blue(), Hsla.yellow(), null, strike),
         ];
         final line = windowTs.shapeLine('Hello world', 16, runs);
         line.paintBackground(new Point(10, 20), 24, Left, null, painter);

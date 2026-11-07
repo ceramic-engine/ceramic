@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/scene.rs (Path primitive)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
-package gpui.scene;
+package glaze.scene;
 
 /**
  * A path primitive (Rust `Path<ScaledPixels>` in the scene).
@@ -12,12 +12,12 @@ package gpui.scene;
  * exact bounds of the path (used for ordering and dumps, like GPUI);
  * `sprite*` is the device pixel rectangle where the tile is drawn.
  * Gradient and pattern backgrounds are kept in `background` and shaded per
- * pixel by `shaders.GpuiPathSprite`.
+ * pixel by `shaders.GlazePathSprite`.
  */
 class PathSprite extends MonochromeSprite {
 
     /** The color of the path (`null`: the solid color fields) */
-    public var background:Null<gpui.Background> = null;
+    public var background:Null<glaze.Background> = null;
 
     public var spriteX:Float = 0;
     public var spriteY:Float = 0;

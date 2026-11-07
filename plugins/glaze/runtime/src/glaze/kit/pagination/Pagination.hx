@@ -1,33 +1,33 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/pagination.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.pagination;
+package glaze.kit.pagination;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.Range;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Pagination.PaginationItem as PageItem;
-import gpui.base.Pagination.PaginationState;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu.PopupMenuItem;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.Range;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Pagination.PaginationItem as PageItem;
+import glaze.kit.base.Pagination.PaginationState;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu.PopupMenuItem;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * Pagination with page navigation, next and previous links.
@@ -197,7 +197,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
         final isDisabled = disabledValue;
         final itemState = state.clone();
 
-        final root = new gpui.base.Pagination(id, state.clone())
+        final root = new glaze.kit.base.Pagination(id, state.clone())
             .hFlex()
             .px2()
             .py2()
@@ -240,7 +240,7 @@ class Pagination implements RenderOnce implements Styled implements Sizable {
                                     }));
                             }
 
-                            return menu.minW(gpui.Prelude.px(55.)).maxH(gpui.Prelude.px(240.)).scrollable(true);
+                            return menu.minW(glaze.Prelude.px(55.)).maxH(glaze.Prelude.px(240.)).scrollable(true);
                         }));
             }
         }

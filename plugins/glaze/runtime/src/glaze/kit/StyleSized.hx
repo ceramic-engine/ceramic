@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sizing.rs (StyleSized)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.StyleBuilder;
-import gpui.Styled;
+import glaze.StyleBuilder;
+import glaze.Styled;
 
-using gpui.component.Size.SizeTools;
+using glaze.kit.Size.SizeTools;
 
 /**
  * Size-driven style helpers on any `Styled` element, as a static extension:
- * `using gpui.component.StyleSized;` then `div().inputTextSize(size)`.
+ * `using glaze.kit.StyleSized;` then `div().inputTextSize(size)`.
  */
 class StyleSized {
 
@@ -25,7 +25,7 @@ class StyleSized {
             case Small: b(self).textSm();
             case Medium: b(self).textSm();
             case Large: b(self).textBase();
-            case Size(value): b(self).textSize(gpui.Prelude.px(gpui.SpringMath.f32(value * 0.875)));
+            case Size(value): b(self).textSize(glaze.Prelude.px(glaze.SpringMath.f32(value * 0.875)));
         }
         return self;
     }
@@ -113,7 +113,7 @@ class StyleSized {
             case Large: b(self).textBase();
             case _:
         }
-        b(self).pl(gpui.Prelude.px(padding.left)).pr(gpui.Prelude.px(padding.right)).pt(gpui.Prelude.px(padding.top)).pb(gpui.Prelude.px(padding.bottom));
+        b(self).pl(glaze.Prelude.px(padding.left)).pr(glaze.Prelude.px(padding.right)).pt(glaze.Prelude.px(padding.top)).pb(glaze.Prelude.px(padding.bottom));
         return self;
     }
 

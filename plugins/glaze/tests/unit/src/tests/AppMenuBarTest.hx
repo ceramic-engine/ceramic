@@ -7,26 +7,26 @@
 // equivalent before the menu) (Zed Industries, Apache-2.0). See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.GpuiInput;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Menu;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.Window;
-import gpui.platform.CeramicPlatformOperations;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.GlazeInput;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Menu;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.Window;
+import glaze.platform.CeramicPlatformOperations;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.Menu.MenuItemTools;
+using glaze.Menu.MenuItemTools;
 
 /**
  * `App.setMenus` builds Ceramic's menu bar like GPUI's macOS platform builds
@@ -63,7 +63,7 @@ class AppMenuBarTest extends TestCase {
         final screen = ceramic.App.app.screen;
         screen.offMenuAction(recordMenuAction);
         for (cx in contexts) {
-            GpuiInput.unbind(cx.window);
+            GlazeInput.unbind(cx.window);
             cx.destroy();
         }
         contexts.resize(0);
@@ -367,7 +367,7 @@ class AppMenuBarTest extends TestCase {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<MenuView>) -> new MenuView(editor, log), 200, 100, 1);
         contexts.push(opened.cx);
         final window = opened.cx.window;
-        GpuiInput.bind(window);
+        GlazeInput.bind(window);
         window.activateWindow();
         opened.cx.update((window, cx) -> window.focus(editor, cx));
         opened.cx.runUntilParked();

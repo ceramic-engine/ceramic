@@ -3,9 +3,9 @@
 // reads and writes for the dock's persisted layout, floats formatted like
 // zmij 1.0.23 (David Tolnay, MIT OR Apache-2.0), the formatter serde_json
 // uses. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.SpringMath;
+import glaze.SpringMath;
 
 /**
  * A JSON value, like `serde_json::Value` built with the `preserve_order`

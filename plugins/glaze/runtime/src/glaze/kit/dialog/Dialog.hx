@@ -1,48 +1,48 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.Action;
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.BoxShadow;
-import gpui.ClickEvent;
-import gpui.DefiniteLengthTools;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.SpringMath.f32;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Positioner;
-import gpui.base.animation.Easings;
-import gpui.base.motion.Transition;
-import gpui.component.IconName;
-import gpui.component.TitleBar;
-import gpui.component.WindowBorder;
-import gpui.component.WindowState;
-import gpui.component.button.Button;
-import gpui.component.button.Button.ButtonVariant;
-import gpui.component.dialog.DialogEntrance.EntranceSurface;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.BoxShadow;
+import glaze.ClickEvent;
+import glaze.DefiniteLengthTools;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.SpringMath.f32;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Positioner;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.IconName;
+import glaze.kit.TitleBar;
+import glaze.kit.WindowBorder;
+import glaze.kit.WindowState;
+import glaze.kit.button.Button;
+import glaze.kit.button.Button.ButtonVariant;
+import glaze.kit.dialog.DialogEntrance.EntranceSurface;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
+using glaze.kit.scroll.Scrollable;
 
 private typedef OkHandler = (ClickEvent, Window, App) -> Bool;
 private typedef CancelHandler = (ClickEvent, Window, App) -> Bool;
@@ -60,7 +60,7 @@ private typedef ContentBuilderFn = (DialogContent, Window, App) -> DialogContent
  * Rust builders take the value and return it: here they set the field and
  * return the same object, so share a props value only through `clone()`.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class DialogButtonProps {
 
     var okTextValue:Null<String> = null;
@@ -207,7 +207,7 @@ private class DialogButton implements RenderOnce {
 
 }
 
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class DialogProps {
 
     var width:Pixels = 448.;
@@ -248,16 +248,16 @@ class DialogProps {
  */
 private class BaseDialogRoot {
 
-    final dialog:Null<gpui.base.Dialog>;
+    final dialog:Null<glaze.kit.base.Dialog>;
 
-    final alert:Null<gpui.base.AlertDialog>;
+    final alert:Null<glaze.kit.base.AlertDialog>;
 
-    public function new(?dialog:gpui.base.Dialog, ?alert:gpui.base.AlertDialog) {
+    public function new(?dialog:glaze.kit.base.Dialog, ?alert:glaze.kit.base.AlertDialog) {
         this.dialog = dialog;
         this.alert = alert;
     }
 
-    inline function host():gpui.base.Dialog {
+    inline function host():glaze.kit.base.Dialog {
         return dialog != null ? dialog : @:privateAccess alert.inner;
     }
 
@@ -327,7 +327,7 @@ private class BaseDialogRoot {
  *
  * Built by the window dialog layer with stable per-dialog identity.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class DialogMotion {
 
     final visibility:Float;
@@ -344,7 +344,7 @@ class DialogMotion {
 /**
  * A modal to display content in a dialog box.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class Dialog implements RenderOnce implements Styled implements ParentElement {
 
     /** The legacy entrance and exit duration, in seconds. */
@@ -375,7 +375,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
 
     var layerIx:Int = 0;
 
-    var selectionScope:gpui.base.TextSelectionScopeId = gpui.base.TextSelectionScopeId.DEFAULT;
+    var selectionScope:glaze.kit.base.TextSelectionScopeId = glaze.kit.base.TextSelectionScopeId.DEFAULT;
 
     var motion:Null<DialogMotion> = null;
 
@@ -385,7 +385,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
      * Create a new dialog.
      */
     public function new(cx:App) {
-        base = new BaseDialogRoot(new gpui.base.Dialog(cx));
+        base = new BaseDialogRoot(new glaze.kit.base.Dialog(cx));
         focusHandle = cx.focusHandle();
     }
 
@@ -468,7 +468,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    function withBaseAlertDialog(base:gpui.base.AlertDialog):Dialog {
+    function withBaseAlertDialog(base:glaze.kit.base.AlertDialog):Dialog {
         this.base = new BaseDialogRoot(null, base);
         props.overlayClosable = false;
         return this;
@@ -640,12 +640,12 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
     }
 
     static function dialogShadow(delta:Float):Array<BoxShadow> {
-        final first = new BoxShadow(gpui.Prelude.px(0.), gpui.Prelude.px(20.), hsla(0., 0., 0., f32(0.1 * delta)));
-        first.blurRadius = gpui.Prelude.px(25.);
-        first.spreadRadius = gpui.Prelude.px(-5.);
-        final second = new BoxShadow(gpui.Prelude.px(0.), gpui.Prelude.px(8.), hsla(0., 0., 0., f32(0.1 * delta)));
-        second.blurRadius = gpui.Prelude.px(10.);
-        second.spreadRadius = gpui.Prelude.px(-6.);
+        final first = new BoxShadow(glaze.Prelude.px(0.), glaze.Prelude.px(20.), hsla(0., 0., 0., f32(0.1 * delta)));
+        first.blurRadius = glaze.Prelude.px(25.);
+        first.spreadRadius = glaze.Prelude.px(-5.);
+        final second = new BoxShadow(glaze.Prelude.px(0.), glaze.Prelude.px(8.), hsla(0., 0., 0., f32(0.1 * delta)));
+        second.blurRadius = glaze.Prelude.px(10.);
+        second.spreadRadius = glaze.Prelude.px(-6.);
         return [first, second];
     }
 
@@ -655,7 +655,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         final props = this.props.clone();
         final buttonProps = buttonPropsValue.clone();
 
-        return new gpui.base.Dialog.DialogTrigger(trigger)
+        return new glaze.kit.base.Dialog.DialogTrigger(trigger)
             .onOpen((window, cx) -> {
                 window.openDialog(cx, (dialog, _, _) -> dialog
                     .refineStyle(style)
@@ -753,15 +753,15 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
             .borderColor(theme.border)
             .rounded(theme.radiusLg)
             .minH24()
-            .pt(gpui.Prelude.px(paddingTop))
-            .pb(gpui.Prelude.px(paddingBottom))
-            .gap(gpui.Prelude.px(Math.max(paddingTop, 8.)))
+            .pt(glaze.Prelude.px(paddingTop))
+            .pb(glaze.Prelude.px(paddingBottom))
+            .gap(glaze.Prelude.px(Math.max(paddingTop, 8.)))
             .refineStyle(dialogStyle)
             .px0()
             .occlude()
-            .w(gpui.Prelude.px(width))
+            .w(glaze.Prelude.px(width))
             .whenSome(props.maxWidth, (surface, w) -> surface.maxW(w))
-            .maxH(gpui.Prelude.px(maxHeight));
+            .maxH(glaze.Prelude.px(maxHeight));
 
         final body = vFlex()
             .flex1()
@@ -769,46 +769,46 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
             .gapY2();
         if (headerElement != null) {
             body.child(div()
-                .pl(gpui.Prelude.px(paddingLeft))
-                .pr(gpui.Prelude.px(paddingRight))
+                .pl(glaze.Prelude.px(paddingLeft))
+                .pr(glaze.Prelude.px(paddingRight))
                 .child(headerElement));
         }
         if (titleElement != null) {
             body.child(new DialogTitle()
-                .pl(gpui.Prelude.px(paddingLeft))
-                .pr(gpui.Prelude.px(paddingRight))
+                .pl(glaze.Prelude.px(paddingLeft))
+                .pr(glaze.Prelude.px(paddingRight))
                 .child(titleElement));
         }
         if (contentBuilder != null) {
             body.child(contentBuilder(new DialogContent()
-                .gap(gpui.Prelude.px(paddingBottom))
-                .pl(gpui.Prelude.px(paddingLeft))
-                .pr(gpui.Prelude.px(paddingRight)), window, cx));
+                .gap(glaze.Prelude.px(paddingBottom))
+                .pl(glaze.Prelude.px(paddingLeft))
+                .pr(glaze.Prelude.px(paddingRight)), window, cx));
         }
         if (childElements.length > 0) {
             // Body
             final scroller = vFlex()
                 .sizeFull()
                 .overflowYScrollbar()
-                .pl(gpui.Prelude.px(paddingLeft))
-                .pr(gpui.Prelude.px(paddingRight));
+                .pl(glaze.Prelude.px(paddingLeft))
+                .pr(glaze.Prelude.px(paddingRight));
             scroller.extend(childElements);
             body.child(div().flex1().overflowHidden().child(scroller));
         }
         surface.child(body);
         if (footerElement != null) {
             surface.child(div()
-                .pl(gpui.Prelude.px(paddingLeft))
-                .pr(gpui.Prelude.px(paddingRight))
+                .pl(glaze.Prelude.px(paddingLeft))
+                .pr(glaze.Prelude.px(paddingRight))
                 .child(footerElement));
         }
         if (props.closeButton) {
             final top = Math.max(paddingTop - 10., 8.);
             final right = Math.max(paddingRight - 10., 8.);
-            surface.child(new gpui.base.Dialog.DialogClose()
+            surface.child(new glaze.kit.base.Dialog.DialogClose()
                 .absolute()
-                .top(gpui.Prelude.px(top))
-                .right(gpui.Prelude.px(right))
+                .top(glaze.Prelude.px(top))
+                .right(glaze.Prelude.px(right))
                 .trigger(button -> new Button('close')
                     .withBase(button)
                     .small()
@@ -838,7 +838,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         surface
             .opacity(visibility)
             .shadow(dialogShadow(visibility));
-        final scopedSurface = gpui.base.TextSelection.textSelectionScope(selectionScope, surface);
+        final scopedSurface = glaze.kit.base.TextSelection.textSelectionScope(selectionScope, surface);
         var surfaceElement:AnyElement;
         if (entrance == FadeSlide) {
             final entranceSurface = new EntranceSurface(scopedSurface.intoAnyElement(), travel, windowPaddings.top + margin);
@@ -906,8 +906,8 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         // aimed at what is already usable again beneath it.
         if (!closing) dialog.occlude();
         dialog
-            .w(gpui.Prelude.px(viewWidth))
-            .h(gpui.Prelude.px(viewHeight));
+            .w(glaze.Prelude.px(viewWidth))
+            .h(glaze.Prelude.px(viewHeight));
         if (fadeOverlay) {
             dialog.child(div().absolute().inset0().bg(overlayColor(true, cx)));
         }

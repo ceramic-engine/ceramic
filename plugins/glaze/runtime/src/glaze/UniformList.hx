@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/elements/uniform_list.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A scrollable list of elements with uniform height, optimized for large lists.
@@ -65,7 +65,7 @@ class UniformList extends Element implements Styled {
     public function requestLayout(globalId:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         final maxItems = itemCount;
         final itemSize = measureItem(null, window, cx);
-        return interactivity.requestLayout(globalId, #if gpui_inspector inspectorId, #end window, cx, (style, window, cx) -> {
+        return interactivity.requestLayout(globalId, #if glaze_inspector inspectorId, #end window, cx, (style, window, cx) -> {
             return switch sizingBehavior {
                 case ListSizingBehavior.Infer:
                     window.withTextStyle(style.textStyle(), window -> {
@@ -125,7 +125,7 @@ class UniformList extends Element implements Styled {
             handle.deferredScrollToItem = null;
         }
 
-        hitbox = interactivity.prepaint(globalId, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx, (_style, scrollOffset, hitbox, window, cx) -> {
+        hitbox = interactivity.prepaint(globalId, #if glaze_inspector inspectorId, #end bounds, contentSize, window, cx, (_style, scrollOffset, hitbox, window, cx) -> {
             final yFlipped = scrollHandle != null ? scrollHandle.state.yFlipped : false;
 
             if (itemCount > 0) {
@@ -279,7 +279,7 @@ class UniformList extends Element implements Styled {
             final deferred = scrollState.deferredScrollToItem;
             window.viewDependencies.record(window, scrollState, () -> scrollState.deferredScrollToItem != deferred);
         }
-        interactivity.paint(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (_, window, cx) -> {
+        interactivity.paint(globalId, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx, (_, window, cx) -> {
             for (item in frameItems) {
                 item.paint(window, cx);
             }

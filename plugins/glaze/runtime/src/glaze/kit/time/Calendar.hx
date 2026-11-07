@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/time/calendar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.time;
+package glaze.kit.time;
 
-import gpui.App;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Calendar.CalendarItemKind;
-import gpui.base.Calendar.CalendarState;
-import gpui.base.chrono.Weekday;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Calendar.CalendarItemKind;
+import glaze.kit.base.Calendar.CalendarState;
+import glaze.kit.base.chrono.Weekday;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Styled facade for the complete behavior and structure in `gpui-base`.
  *
  * `CalendarEvent`, `CalendarState`, `CalendarDate` (Rust `Date`) and
- * `Matcher` are the Base ones (`gpui.base.Calendar`).
+ * `Matcher` are the Base ones (`glaze.kit.base.Calendar`).
  */
 class Calendar implements RenderOnce implements Styled implements Sizable {
 
@@ -43,7 +43,7 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
 
     var numberOfMonthsValue:Int = 1;
 
-    var firstDayOfWeekValue:Weekday = gpui.base.chrono.Weekday.Sun;
+    var firstDayOfWeekValue:Weekday = glaze.kit.base.chrono.Weekday.Sun;
 
     public function new(state:Entity<CalendarState>) {
         this.id = ElementId.NamedInteger('calendar', state.entityId());
@@ -101,7 +101,7 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
         final size = this.size;
         final monthCount = numberOfMonthsValue < 1 ? 1 : numberOfMonthsValue;
         final theme = Theme.global(cx);
-        final calendar = new gpui.base.Calendar(id, state)
+        final calendar = new glaze.kit.base.Calendar(id, state)
             .numberOfMonths(numberOfMonthsValue)
             .firstDayOfWeek(firstDayOfWeekValue)
             .label((kind, value) -> switch kind {
@@ -180,9 +180,9 @@ class Calendar implements RenderOnce implements Styled implements Sizable {
             .p3()
             .gap0p5();
         switch size {
-            case Small: calendar.w(gpui.Prelude.px(220. * monthCount));
-            case Large: calendar.w(gpui.Prelude.px(304. * monthCount));
-            case _: calendar.w(gpui.Prelude.px(248. * monthCount));
+            case Small: calendar.w(glaze.Prelude.px(220. * monthCount));
+            case Large: calendar.w(glaze.Prelude.px(304. * monthCount));
+            case _: calendar.w(glaze.Prelude.px(248. * monthCount));
         }
         return calendar.refineStyle(calendarStyle);
     }

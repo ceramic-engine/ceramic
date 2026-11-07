@@ -3,7 +3,7 @@
 // That file is a fork of the html5minify crate (https://github.com/martingallagher/html5minify),
 // by Martin Gallagher, licensed under MIT (html5minify 0.3.3 Cargo.toml).
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text.format.html5minify;
+package glaze.kit.base.text.format.html5minify;
 
 import haxe.io.Bytes;
 import haxe.io.BytesInput;
@@ -633,7 +633,7 @@ class Minifier {
         return true;
     }
 
-    @:allow(gpui.base.text.format.html5minify)
+    @:allow(glaze.kit.base.text.format.html5minify)
     static function isBlockElementName(name:String):Bool {
         return switch name {
             case 'address' | 'article' | 'aside' | 'blockquote' | 'body' | 'br' | 'details' | 'dialog' | 'dd' | 'div' | 'dl' | 'dt' | 'fieldset' |
@@ -646,7 +646,7 @@ class Minifier {
         }
     }
 
-    @:allow(gpui.base.text.format.html5minify)
+    @:allow(glaze.kit.base.text.format.html5minify)
     static function isBlockElement(node:Node):Bool {
         return switch node.data {
             case Element(name, _, _, _): isBlockElementName(name.local);
@@ -700,7 +700,7 @@ class Minifier {
         return buf == null ? s : buf.toString();
     }
 
-    @:allow(gpui.base.text.format.html5minify)
+    @:allow(glaze.kit.base.text.format.html5minify)
     static function preserveWhitespace(name:String):Bool {
         return name == 'pre' || name == 'textarea';
     }

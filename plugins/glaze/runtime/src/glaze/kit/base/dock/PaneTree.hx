@@ -3,16 +3,16 @@
 // crates/base/src/dock/state_convert.rs (`PaneTree::to_state`, `PaneTree::from_state`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Axis;
-import gpui.Pixels;
-import gpui.SpringMath;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.JsonValue;
-import gpui.base.dock.PaneNode;
+import glaze.Axis;
+import glaze.Pixels;
+import glaze.SpringMath;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.JsonValue;
+import glaze.kit.base.dock.PaneNode;
 
-using gpui.base.dock.PanelInfo.PanelInfoTools;
+using glaze.kit.base.dock.PanelInfo.PanelInfoTools;
 
 /**
  * Path from the root as a sequence of child indices (Rust `NodePath`).
@@ -86,7 +86,7 @@ class PaneTree {
         return rootKindValue;
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function allocateNodeId():NodeId {
         return nextNodeId();
     }
@@ -132,7 +132,7 @@ class PaneTree {
         return found;
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function pathOfNode(id:NodeId):Null<NodePath> {
         final path:NodePath = [];
         return search(rootValue, id, path) ? path : null;
@@ -145,14 +145,14 @@ class PaneTree {
                 for (ix in 0...children.length) {
                     path.push(ix);
                     if (search(children[ix], id, path)) return true;
-                    gpui.util.Stacks.drop(path);
+                    glaze.util.Stacks.drop(path);
                 }
             case Tabs(_, _):
         }
         return false;
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function nodeAt(path:NodePath):PaneNode {
         var node = rootValue;
         for (ix in path) {
@@ -183,7 +183,7 @@ class PaneTree {
      * Replace the whole tree with `node`, keeping `node`'s own id and
      * `rootKind` unchanged. Used by normalization's root-collapse rule.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function replaceRoot(node:PaneNode):Void {
         rootValue = node;
     }
@@ -281,7 +281,7 @@ class PaneTree {
      * Adopting the measured sizes first turns the question into arithmetic on
      * real pixels, and it matches what the person dragging sees.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function adoptMeasuredSizes(measured:Map<Int, Array<Pixels>>):Void {
         adoptWalk(rootValue, measured);
     }
@@ -463,7 +463,7 @@ class PaneTree {
     /**
      * `normalize`, reporting whether it changed anything.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function normalizeReporting():Bool {
         return runNormalizePasses().changed;
     }
@@ -509,7 +509,7 @@ class PaneTree {
     /**
      * Whether the tree satisfies every structural invariant.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     function isNormalized():Bool {
         var ok = true;
         final rootId = rootValue.id();
@@ -645,7 +645,7 @@ class PaneTree {
      * The `RootKind.Split` wrap mirrors the one in `fromState`: a center whose
      * described root is a tab group still has to serialize as a `StackPanel`.
      */
-    @:allow(gpui.base.dock, tests)
+    @:allow(glaze.kit.base.dock, tests)
     static function fromLayout(layout:DockLayout, rootKind:RootKind):{tree:PaneTree, panels:Array<{id:PanelId, view:PanelView}>} {
         final tree = new PaneTree(rootKind);
         final built = layout.build(tree);

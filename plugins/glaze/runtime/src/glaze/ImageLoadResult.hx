@@ -1,13 +1,13 @@
 // Ported from gpui-pre 0.3.10: src/elements/img.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Rust `Result<Arc<RenderImage>, ImageCacheError>`: the result of loading an
  * image. `null` (Rust `None`) means it is still loading.
  */
-@:using(gpui.ImageLoadResult.ImageLoadResultTools)
+@:using(glaze.ImageLoadResult.ImageLoadResultTools)
 enum ImageLoadResult {
 
     /** The image is loaded */

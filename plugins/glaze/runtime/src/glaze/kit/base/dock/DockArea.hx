@@ -1,39 +1,39 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/dock_area.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.SpringMath;
-import gpui.Subscription;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.PaneNode;
-import gpui.base.resizable.Resizable;
-import gpui.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
-import gpui.base.resizable.ResizableState;
-import gpui.base.resizable.ResizeHandle.ResizeHandleContext;
-import gpui.util.MathUtil;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.SpringMath;
+import glaze.Subscription;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.PaneNode;
+import glaze.kit.base.resizable.Resizable;
+import glaze.kit.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
+import glaze.kit.base.resizable.ResizableState;
+import glaze.kit.base.resizable.ResizeHandle.ResizeHandleContext;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Observe;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
 
 /**
  * The main area of the dock.
@@ -52,7 +52,7 @@ using gpui.base.Observe;
  * random; the port iterates docks in insertion order and departed panels by
  * id, which is one of the orders the original can take.
  */
-@:access(gpui.base.resizable.ResizableState)
+@:access(glaze.kit.base.resizable.ResizableState)
 class DockArea extends Model implements Render {
 
     /**
@@ -1147,7 +1147,7 @@ class DockArea extends Model implements Render {
                     .intoAnyElement();
             case Tabs(_, _):
                 final cached = groups.get(node.id().asU64());
-                cached != null ? (cached.entity : AnyView).intoAnyElement() : new gpui.Empty().intoAnyElement();
+                cached != null ? (cached.entity : AnyView).intoAnyElement() : new glaze.Empty().intoAnyElement();
         }
     }
 
@@ -1420,7 +1420,7 @@ private class DockRegion {
  * A cached tab group entity together with the subscription that carries its
  * intents back to the area.
  */
-@:allow(gpui.base.dock, tests)
+@:allow(glaze.kit.base.dock, tests)
 private class CachedGroup {
 
     public final entity:Entity<TabGroup>;
@@ -1441,7 +1441,7 @@ private class CachedGroup {
  * `null` un-pins the measurement the layout pass resolved it to, and the
  * split re-flexes although the edit never touched it.
  */
-@:allow(gpui.base.dock, tests)
+@:allow(glaze.kit.base.dock, tests)
 private class CachedSplit {
 
     public final entity:Entity<ResizableState>;
@@ -1540,7 +1540,7 @@ private class PlaceholderPanel extends PanelBase {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }

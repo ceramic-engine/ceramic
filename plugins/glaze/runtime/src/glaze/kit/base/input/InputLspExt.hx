@@ -2,21 +2,21 @@
 // lsp/hover.rs, lsp/definitions.rs, lsp/code_actions.rs (`impl InputBaseState<EditorMode>`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.HighlightStyle;
-import gpui.Hitbox;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Range;
-import gpui.UnderlineStyle;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.HighlightStyle;
+import glaze.Hitbox;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Range;
+import glaze.UnderlineStyle;
+import glaze.Window;
 
-import gpui.base.input.InputActions;
+import glaze.kit.base.input.InputActions;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * The LSP methods of an editor state, as static extensions (see
@@ -27,7 +27,7 @@ using gpui.base.input.RopeExt;
  * LSP state are ported: with no provider configured (every Input and Textarea,
  * and an editor nothing configured) they are all an editor ever runs.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class InputLspExt {
 
     static inline function extras(state:InputBaseState):EditorExtras {
@@ -66,7 +66,7 @@ class InputLspExt {
         // uses pre-edit coordinates, which preceding multi-cursor edits can
         // shift. The active caret ends immediately after the normalized input,
         // including selection replacements and IME commits.
-        final start = newOffset - gpui.util.Utf8.byteLength(newText);
+        final start = newOffset - glaze.util.Utf8.byteLength(newText);
         if (start < 0)
             return;
 
@@ -86,7 +86,7 @@ class InputLspExt {
         if (latched != null) {
             final l:Int = latched;
             if (!(l <= start
-                && start <= l + gpui.util.Utf8.byteLength(completion.query)
+                && start <= l + glaze.util.Utf8.byteLength(completion.query)
                 && self.text.isCharBoundary(l)
                 && self.text.isCharBoundary(start)
                 && StringTools.startsWith(completion.query, self.text.slice(l, start).toString())))
@@ -96,7 +96,7 @@ class InputLspExt {
         if (newOffset < startOffset)
             return;
 
-        final text = self.textForRange(self.rangeToUtf16(new Range(startOffset, newOffset)), new gpui.util.Ref(null), window, cx);
+        final text = self.textForRange(self.rangeToUtf16(new Range(startOffset, newOffset)), new glaze.util.Ref(null), window, cx);
         final query = text != null ? trimRust(text) : '';
         requestCompletions(self, provider, startOffset, query, new CompletionContext(2 /* CompletionTriggerKind::TRIGGER_CHARACTER */, query), window, cx);
     }
@@ -106,9 +106,9 @@ class InputLspExt {
         final chars = [for (c in new haxe.iterators.StringIteratorUnicode(s)) c];
         var start = 0;
         var end = chars.length;
-        while (start < end && gpui.util.Utf8.isWhitespace(chars[start]))
+        while (start < end && glaze.util.Utf8.isWhitespace(chars[start]))
             start++;
-        while (end > start && gpui.util.Utf8.isWhitespace(chars[end - 1]))
+        while (end > start && glaze.util.Utf8.isWhitespace(chars[end - 1]))
             end--;
         final buf = new StringBuf();
         for (i in start...end)
@@ -119,7 +119,7 @@ class InputLspExt {
     /** Rust `char::is_alphanumeric` (letters and numbers, Unicode). */
     static function isAlphanumeric(c:Int):Bool {
         if (c < 128)
-            return gpui.util.Utf8.isAsciiAlphanumeric(c);
+            return glaze.util.Utf8.isAsciiAlphanumeric(c);
         return unicode_segmentation.Tables.isAlphanumeric(c);
     }
 
@@ -144,7 +144,7 @@ class InputLspExt {
             final ch = chars.next();
             if (ch < 0 || !(isAlphanumeric(ch) || ch == '_'.code))
                 break;
-            wordLen += gpui.util.Utf8.codePointLength(ch);
+            wordLen += glaze.util.Utf8.codePointLength(ch);
         }
         final startOffset = offset - wordLen;
         final query = self.text.slice(startOffset, offset).toString();
@@ -163,7 +163,7 @@ class InputLspExt {
         final revision = self.documentRevision;
         final extras = extras(self);
         extras.contextMenuTask.cancel();
-        extras.contextMenuTask = gpui.Task.done();
+        extras.contextMenuTask = glaze.Task.done();
         extras.contextMenuContent.codeAction.open = false;
         extras.contextMenuContent.completion.triggerStartOffset = startOffset;
         extras.contextMenuContent.completion.query = query;
@@ -201,7 +201,7 @@ class InputLspExt {
         extras.contextMenuContent.completion.open = false;
         extras.contextMenuContent.codeAction.open = false;
         extras.contextMenuTask.cancel();
-        extras.contextMenuTask = gpui.Task.done();
+        extras.contextMenuTask = glaze.Task.done();
         cx.notify();
     }
 
@@ -210,7 +210,7 @@ class InputLspExt {
         return extras.contextMenuContent.completion.open || extras.contextMenuContent.codeAction.open;
     }
 
-    public static function handleActionForContextMenu(self:InputBaseState, action:gpui.Action, window:Window, cx:Context<InputBaseState>):Bool {
+    public static function handleActionForContextMenu(self:InputBaseState, action:glaze.Action, window:Window, cx:Context<InputBaseState>):Bool {
         final closesOverlay = Enter.isPrimary(action) || action.partialEq(new Escape());
         final extras = extras(self);
         final kind:Null<InputOverlayKind> = if (extras.contextMenuContent.completion.open) {
@@ -270,7 +270,7 @@ class InputLspExt {
                 });
 
                 if (task == null)
-                    return gpui.Task.ready(([] : Array<InlineCompletionItem>));
+                    return glaze.Task.ready(([] : Array<InlineCompletionItem>));
 
                 return task.map(response -> {
                     if (window.isDestroyed())
@@ -359,7 +359,7 @@ class InputLspExt {
         }
     }
 
-    public static function routeOverlayAction(self:InputBaseState, action:gpui.Action, window:Window, cx:Context<InputBaseState>):Bool {
+    public static function routeOverlayAction(self:InputBaseState, action:glaze.Action, window:Window, cx:Context<InputBaseState>):Bool {
         return handleActionForContextMenu(self, action, window, cx);
     }
 
@@ -444,7 +444,7 @@ class InputLspExt {
         // task, so positions the pointer merely passes over never reach it.
         extras(self).lsp._hoverTask.cancel();
         extras(self).lsp._hoverTask = cx.spawn((this_, acx) -> {
-            final delay:gpui.Task<gpui.Unit> = shouldDelay ? acx.backgroundExecutor().timer(0.15) : gpui.Task.done();
+            final delay:glaze.Task<glaze.Unit> = shouldDelay ? acx.backgroundExecutor().timer(0.15) : glaze.Task.done();
             return delay.andThen(_ -> {
                 if (window.isDestroyed())
                     return null;
@@ -497,7 +497,7 @@ class InputLspExt {
         extras.hoverDefinition.clear();
         extras.hoverPopover = null;
         extras.lsp._hoverTask.cancel();
-        extras.lsp._hoverTask = gpui.Task.done();
+        extras.lsp._hoverTask = glaze.Task.done();
         if (changed)
             cx.notify();
     }
@@ -551,7 +551,7 @@ class InputLspExt {
         final blurSubscription = cx.onBlur(self.focusHandle, window, (editor, _, _) -> {
             final lsp = InputLspExt.extras(editor).lsp;
             lsp._definitionTask.cancel();
-            lsp._definitionTask = gpui.Task.done();
+            lsp._definitionTask = glaze.Task.done();
         });
         extras(self).lsp._definitionTask.cancel();
         final task = cx.spawn((editor, acx) -> response.then(locations -> {
@@ -653,7 +653,7 @@ class InputLspExt {
         if (bounds == null)
             return null;
 
-        return window.insertHitbox(bounds, gpui.HitboxBehavior.Normal);
+        return window.insertHitbox(bounds, glaze.HitboxBehavior.Normal);
     }
 
 /// lsp/code_actions.rs
@@ -670,7 +670,7 @@ class InputLspExt {
         final state = cx.entity();
         extras(self).contextMenuTask.cancel();
         extras(self).contextMenuTask = cx.spawn((editor, acx) -> {
-            final providerResponses:Array<{id:String, task:gpui.Task<Array<LspCodeAction>>}> = [];
+            final providerResponses:Array<{id:String, task:glaze.Task<Array<LspCodeAction>>}> = [];
             if (!window.isDestroyed()) {
                 acx.update(cx -> {
                     for (provider in providers) {
@@ -682,7 +682,7 @@ class InputLspExt {
 
             final codeActions:Array<CodeActionItem> = [];
             // Await each provider in order, ignoring the failed ones.
-            var chain:gpui.Task<gpui.Unit> = gpui.Task.done();
+            var chain:glaze.Task<glaze.Unit> = glaze.Task.done();
             for (response in providerResponses) {
                 chain = chain.andThen(_ -> response.task.catchError(_ -> null).then(actions -> {
                     if (actions != null) {
@@ -737,7 +737,7 @@ class InputLspExt {
         final state = cx.entity();
         final task = provider.performCodeAction(state, item.action, true, window, cx.app);
 
-        cx.spawn((_, _) -> task.catchError(_ -> gpui.Unit.unit)).detach();
+        cx.spawn((_, _) -> task.catchError(_ -> glaze.Unit.unit)).detach();
     }
 
 }

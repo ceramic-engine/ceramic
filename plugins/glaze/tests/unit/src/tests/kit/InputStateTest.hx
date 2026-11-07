@@ -3,46 +3,46 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Range;
-import gpui.Window;
-import gpui.base.NumberStep;
-import gpui.base.StepAction;
-import gpui.base.input.EditorState;
-import gpui.base.input.EditedText;
-import gpui.base.input.FoldRange;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.InputEdit;
-import gpui.base.input.InputHighlighter.InputHighlighterBase;
-import gpui.base.input.InputBaseState.TextEdit;
-import gpui.base.input.LspHover;
-import gpui.base.input.LspPosition;
-import gpui.base.input.StyledRange;
-import gpui.base.input.TabSize;
-import gpui.base.input.TextDecoration;
-import gpui.base.input.TextElement;
-import gpui.base.input.WrappingIndent;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.base.NumberStep;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.EditedText;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.InputHighlighter.InputHighlighterBase;
+import glaze.kit.base.input.InputBaseState.TextEdit;
+import glaze.kit.base.input.LspHover;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.input.TabSize;
+import glaze.kit.base.input.TextDecoration;
+import glaze.kit.base.input.TextElement;
+import glaze.kit.base.input.WrappingIndent;
 import ropey.Rope;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputKeyBindings;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.base.input.TextareaState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputKeyBindings;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.base.input.TextareaState;
 import testing.InteractionScript.ScriptView;
 import testing.VisualTestContext;
 import tests.kit.InputStateTestCase.InputView;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputMovement;
-using gpui.base.input.InputDecorationsExt;
-using gpui.base.input.InputLspExt;
-using gpui.base.input.MaskPattern.MaskPatternTools;
-using gpui.base.NumberStep.NumberStepTools;
+using glaze.kit.base.input.InputMovement;
+using glaze.kit.base.input.InputDecorationsExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.base.input.MaskPattern.MaskPatternTools;
+using glaze.kit.base.NumberStep.NumberStepTools;
 
 /**
  * Tests of the input state (Rust `state.rs`).
@@ -440,7 +440,7 @@ class InputStateTest extends InputStateTestCase {
 
             // A double click takes the whole value, not one word.
             state.setValue("aaa bbb ccc", window, cx);
-            gpui.base.input.InputWordSelection.selectWord(state, 9, window, cx);
+            glaze.kit.base.input.InputWordSelection.selectWord(state, 9, window, cx);
             assertRange(0, 11, state.selectedRange());
 
             // Unmasked, the same delete only takes one word.
@@ -451,7 +451,7 @@ class InputStateTest extends InputStateTestCase {
             assertEquals("aaa bbb ", state.value());
 
             state.setValue("aaa bbb ccc", window, cx);
-            gpui.base.input.InputWordSelection.selectWord(state, 9, window, cx);
+            glaze.kit.base.input.InputWordSelection.selectWord(state, 9, window, cx);
             assertRange(8, 11, state.selectedRange());
         });
     }
@@ -659,8 +659,8 @@ class InputStateTest extends InputStateTestCase {
             state.replaceAll(value, window, cx);
             assertEquals(value, state.value());
             assertRange(len, len, state.selectedRange());
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(0, 0)));
-            assertTrue(state.deferredScrollOffset != null && state.deferredScrollOffset.equals(new gpui.Point(0, 0)));
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(0, 0)));
+            assertTrue(state.deferredScrollOffset != null && state.deferredScrollOffset.equals(new glaze.Point(0, 0)));
         });
 
         view.cx.runUntilParked();
@@ -701,7 +701,7 @@ class InputStateTest extends InputStateTestCase {
             state.replaceAll("baz\nqux", window, cx);
             assertEquals("baz\nqux", state.value());
             assertRange(0, 0, state.selectedRange());
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(0, 0)));
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(0, 0)));
             assertNull(state.deferredScrollOffset);
         });
     }
@@ -1186,7 +1186,7 @@ class InputStateTest extends InputStateTestCase {
         final view = buildEditor();
         view.update((state, window, cx) -> {
             state.setValue("select 1", window, cx);
-            final collection = state.createDecorationsCollection([new TextDecoration(range(0, 6), new gpui.HighlightStyle(null, gpui.FontWeight.BOLD))], cx);
+            final collection = state.createDecorationsCollection([new TextDecoration(range(0, 6), new glaze.HighlightStyle(null, glaze.FontWeight.BOLD))], cx);
             state.presentHover(range(0, 6), new LspHover("docs"), cx);
             assertNotNull(state.hoverPopover());
 
@@ -1214,7 +1214,7 @@ class InputStateTest extends InputStateTestCase {
 
 
     function testTextareaPrewrapPreparesContentRowsBeforeLayout() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         for (pair in [{value: "", rows: 1}, {value: "one\ntwo", rows: 2}]) {
             openWithState((window, cx) -> {
                 final font = window.textStyle().font();
@@ -1231,7 +1231,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testTextareaPrewrapRespectsSoftWrapBeforeLayout() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final value = "select id, name, email, phone from users where active\nlimit 10";
         for (softWrap in [true, false]) {
             openWithState((window, cx) -> {
@@ -1254,7 +1254,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testPrewrapCountsWrappedRowsBeforeTheFirstPaint() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final text = "select id, name, email, phone from users where active\nlimit 10";
         for (pair in [{softWrap: true, wraps: true}, {softWrap: false, wraps: false}]) {
             var input:Entity<InputBaseState> = null;
@@ -1276,7 +1276,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testPrewrapUsesTheConfiguredTabStops() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         openWithState((window, cx) -> {
             final font = window.textStyle().font();
             final fontSize = 14.;
@@ -1284,10 +1284,10 @@ class InputStateTest extends InputStateTestCase {
             final spaceWidth:Float = window.textSystem().layoutWidth(fontId, fontSize, ' '.code);
             cx.app.newEntity((cx:Context<InputBaseState>) -> {
                 final state = new EditorState(window, cx);
-                gpui.base.input.InputIndentExt.tabSize(state, new TabSize(4, true));
+                glaze.kit.base.input.InputIndentExt.tabSize(state, new TabSize(4, true));
                 state.defaultValue("\t\t");
                 for (pair in [{tab: 4, rows: 2}, {tab: 2, rows: 1}, {tab: 8, rows: 2}]) {
-                    gpui.base.input.InputIndentExt.setTabSize(state, new TabSize(pair.tab, true), cx);
+                    glaze.kit.base.input.InputIndentExt.setTabSize(state, new TabSize(pair.tab, true), cx);
                     state.prewrap(font, fontSize, spaceWidth * 5. + TextElement.RIGHT_MARGIN, cx);
                     assertEquals(pair.rows, state.displayMap.wrapRowCount());
                 }
@@ -1301,7 +1301,7 @@ class InputStateTest extends InputStateTestCase {
      * does: continuation rows indented as deep as their line take more rows.
      */
     function testPrewrapWrapsWithTheWrappingIndent() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final text = "            select id, name, email, phone from users where active";
         final rows = [];
         for (indent in [WrappingIndent.Same, WrappingIndent.None]) {
@@ -1335,7 +1335,7 @@ class InputStateTest extends InputStateTestCase {
     // Accessibility and text input configuration
 
     function testAccessibilityActionsRecheckLiveEditability() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = build(state -> state.defaultValue("initial"));
         var changes = 0;
         final subscription = app.update(cx -> cx.subscribe(view.input, InputEvent, (_, event, _) -> {
@@ -1385,19 +1385,19 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testAccessibilitySetValuePreservesExactEditorText() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor(state -> state.language("rust"));
         view.update((editor, window, cx) -> @:privateAccess editor.handleAccessibilitySetValue("(", window, cx));
         assertEquals("(", view.state().value());
     }
 
     function testRevealingAPasswordKeepsTextAssistanceDisabled() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         openWithState((window, cx) -> {
             final state:Entity<InputBaseState> = cx.app.newEntity((cx:Context<InputBaseState>) -> (new InputState(window, cx).withMasked(true) : InputBaseState));
             final hidden = state.read(cx.app).textInputConfiguration(null, null);
             assertTrue(!hidden.autocorrect && !hidden.suggestions);
-            assertEquals(gpui.TextInputConfiguration.Autocapitalize.None, hidden.autocapitalize);
+            assertEquals(glaze.TextInputConfiguration.Autocapitalize.None, hidden.autocapitalize);
 
             // The component's reveal button uses this same state transition.
             state.update(cx.app, (state, cx) -> state.toggleMasked(window, cx));
@@ -1408,7 +1408,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testTextInputConfigurationFollowsTheInput() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var states:Array<InputBaseState> = null;
         openWithState((window, cx) -> {
             states = [
@@ -1416,19 +1416,19 @@ class InputStateTest extends InputStateTestCase {
                 cx.app.newEntity((cx:Context<InputBaseState>) -> (new InputState(window, cx).withMasked(true) : InputBaseState)),
                 cx.app.newEntity((cx:Context<InputBaseState>) -> (new TextareaState(window, cx) : InputBaseState)),
                 cx.app.newEntity((cx:Context<InputBaseState>) -> (new InputState(window, cx)
-                    .withInputAction(gpui.TextInputConfiguration.TextInputAction.Search)
+                    .withInputAction(glaze.TextInputConfiguration.TextInputAction.Search)
                     .withAutocorrect(true)
-                    .withAutocapitalize(gpui.TextInputConfiguration.Autocapitalize.Words) : InputBaseState)),
+                    .withAutocapitalize(glaze.TextInputConfiguration.Autocapitalize.Words) : InputBaseState)),
             ];
         });
-        final done = gpui.TextInputConfiguration.defaultValue().with(null, null, null, gpui.TextInputConfiguration.TextInputAction.Done);
+        final done = glaze.TextInputConfiguration.defaultValue().with(null, null, null, glaze.TextInputConfiguration.TextInputAction.Done);
         assertTrue(states[0].textInputConfiguration(null, null).equals(done));
         assertTrue(states[1].textInputConfiguration(null, null).equals(done));
-        final enter = gpui.TextInputConfiguration.defaultValue().with(null, null, null, gpui.TextInputConfiguration.TextInputAction.Enter);
+        final enter = glaze.TextInputConfiguration.defaultValue().with(null, null, null, glaze.TextInputConfiguration.TextInputAction.Enter);
         assertTrue(states[2].textInputConfiguration(null, null).equals(enter));
         final search = states[3].textInputConfiguration(null, null);
-        assertEquals(gpui.TextInputConfiguration.TextInputAction.Search, search.inputAction);
-        assertEquals(gpui.TextInputConfiguration.Autocapitalize.Words, search.autocapitalize);
+        assertEquals(glaze.TextInputConfiguration.TextInputAction.Search, search.inputAction);
+        assertEquals(glaze.TextInputConfiguration.Autocapitalize.Words, search.autocapitalize);
         assertTrue(search.autocorrect);
         assertTrue(search.suggestions);
     }
@@ -1465,7 +1465,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testScrollBounceStaysPutUnderReducedMotion() {
-        app.update(cx -> gpui.base.ReduceMotion.applyPreference(true, cx));
+        app.update(cx -> glaze.kit.base.ReduceMotion.applyPreference(true, cx));
         final view = buildTextarea(state -> state.withScrollBounce(true).defaultValue(longText()));
         final result = swipePastTheEnd(view);
         assertTrue(result.end < 0., "the text still scrolls");
@@ -1476,7 +1476,7 @@ class InputStateTest extends InputStateTestCase {
         final view = buildTextarea(state -> state.defaultValue(longText()));
         final result = swipePastTheEnd(view);
         assertTrue(result.end < 0., "the text scrolls");
-        assertEquals(gpui.base.ScrollBounce.enabledByDefault(), result.stretch != 0., "the edge stretches where the platform's scroll views do");
+        assertEquals(glaze.kit.base.ScrollBounce.enabledByDefault(), result.stretch != 0., "the edge stretches where the platform's scroll views do");
     }
 
     function testScrollBounceLeavesTextThatFits() {
@@ -1501,7 +1501,7 @@ class InputStateTest extends InputStateTestCase {
         final view = buildTextarea(state -> state.withScrollBounce(true).defaultValue(longText()));
         final result = swipePastTheEnd(view);
         assertTrue(result.stretch < 0.);
-        view.update((state, window, cx) -> state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Pixels(new gpui.Point(1., 0.)), null, Ended), window, cx));
+        view.update((state, window, cx) -> state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(1., 0.)), null, Ended), window, cx));
         for (_ in 0...120) {
             view.cx.advanceClock(0.016);
             draw(view);
@@ -1513,7 +1513,7 @@ class InputStateTest extends InputStateTestCase {
         final view = buildTextarea(state -> state.withScrollBounce(true).defaultValue(longText()));
         draw(view);
         view.update((state, window, cx) -> {
-            state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Lines(new gpui.Point(0., -100000.)), null, Moved), window, cx);
+            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Lines(new glaze.Point(0., -100000.)), null, Moved), window, cx);
             assertTrue(state.scrollHandle.offset().y < 0.);
             assertEquals(0., state.overscroll.offset());
         });
@@ -1527,7 +1527,7 @@ class InputStateTest extends InputStateTestCase {
         view.cx.advanceClock(0.016);
         draw(view);
         view.update((state, window, cx) -> {
-            state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Lines(new gpui.Point(0., 2.)), null, Moved), window, cx);
+            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Lines(new glaze.Point(0., 2.)), null, Moved), window, cx);
             assertTrue(state.scrollHandle.offset().y > result.end);
             assertEquals(0., state.overscroll.offset());
         });
@@ -1543,12 +1543,12 @@ class InputStateTest extends InputStateTestCase {
 
     /** The frame is laid out by the application, which should not have to center a single line inside it. */
     function testSingleLineIsCenteredInATallerFrame() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
             input = cx.app.newEntity((cx:Context<InputState>) -> new InputState(window, cx).defaultValue("a"));
             final state = input;
-            return new ScriptView((_, _) -> new gpui.base.input.InputBase("frame").h(px(60.)).child(new gpui.base.input.Input(state)));
+            return new ScriptView((_, _) -> new glaze.kit.base.input.InputBase("frame").h(px(60.)).child(new glaze.kit.base.input.Input(state)));
         }, 400, 100);
         contexts.push(opened.cx);
         opened.cx.update((window, _) -> window.draw());
@@ -1557,36 +1557,36 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testNoopScrollNotifiesDiagnosticDismissal() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputBaseState> = null;
         openWithState((window, cx) -> {
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx) : InputBaseState));
         });
         input.update(app, (state, cx) -> {
-            state.inputBounds = new gpui.Bounds(new gpui.Point(0, 0), new gpui.Size(100., 20.));
-            state.scrollSize = new gpui.Size(100., 20.);
-            state.presentDiagnostic(new gpui.base.input.DiagnosticEntry(range(0, 0),
-                new gpui.base.input.Diagnostic(new LspPosition(0, 0), new LspPosition(0, 0), "")), cx);
+            state.inputBounds = new glaze.Bounds(new glaze.Point(0, 0), new glaze.Size(100., 20.));
+            state.scrollSize = new glaze.Size(100., 20.);
+            state.presentDiagnostic(new glaze.kit.base.input.DiagnosticEntry(range(0, 0),
+                new glaze.kit.base.input.Diagnostic(new LspPosition(0, 0), new LspPosition(0, 0), "")), cx);
         });
         var notifications = 0;
         final subscription = app.update(cx -> cx.observe(input, (_, _) -> notifications++));
 
         final window = contexts[contexts.length - 1].window;
         app.update(cx -> input.update(cx, (state, cx) -> {
-            state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Pixels(new gpui.Point(0., -40.))), window, cx);
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(0, 0)));
+            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(0., -40.))), window, cx);
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(0, 0)));
             assertNull(state.diagnosticPopover);
         }));
         assertEquals(1, notifications, "clearing a diagnostic must notify even when scrolling is clamped");
         app.update(cx -> input.update(cx, (state, cx) -> {
-            state.onScrollWheel(new gpui.ScrollEvent(new gpui.Point(0, 0), Pixels(new gpui.Point(0., -40.))), window, cx);
+            state.onScrollWheel(new glaze.ScrollEvent(new glaze.Point(0, 0), Pixels(new glaze.Point(0., -40.))), window, cx);
         }));
         assertEquals(1, notifications, "an unchanged input must stay quiet");
         subscription.dispose();
     }
 
     function testInputScrollOffsetNotifiesOnlyOnChange() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputBaseState> = null;
         openWithState((window, cx) -> {
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new InputState(window, cx) : InputBaseState));
@@ -1595,36 +1595,36 @@ class InputStateTest extends InputStateTestCase {
         final subscription = app.update(cx -> cx.observe(input, (_, _) -> notifications++));
 
         input.update(app, (state, _) -> {
-            state.inputBounds = new gpui.Bounds(new gpui.Point(0, 0), new gpui.Size(100., 20.));
-            state.scrollSize = new gpui.Size(300., 20.);
+            state.inputBounds = new glaze.Bounds(new glaze.Point(0, 0), new glaze.Size(100., 20.));
+            state.scrollSize = new glaze.Size(300., 20.);
         });
-        for (target in [null, new gpui.Point(0., 0.), new gpui.Point(20., 50.)]) {
+        for (target in [null, new glaze.Point(0., 0.), new glaze.Point(20., 50.)]) {
             input.update(app, (state, cx) -> state.updateScrollOffset(target, cx));
             assertEquals(0, notifications, "an unchanged clamped offset must stay quiet");
         }
         input.update(app, (state, cx) -> {
-            state.updateScrollOffset(new gpui.Point(-40., 0.), cx);
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(-40., 0.)));
+            state.updateScrollOffset(new glaze.Point(-40., 0.), cx);
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(-40., 0.)));
         });
         assertEquals(1, notifications, "a scroll must notify");
         input.update(app, (state, cx) -> {
-            state.updateScrollOffset(new gpui.Point(-400., 50.), cx);
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(-200., 0.)));
+            state.updateScrollOffset(new glaze.Point(-400., 50.), cx);
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(-200., 0.)));
         });
         assertEquals(2, notifications);
-        input.update(app, (state, cx) -> state.updateScrollOffset(new gpui.Point(-500., 0.), cx));
+        input.update(app, (state, cx) -> state.updateScrollOffset(new glaze.Point(-500., 0.), cx));
         assertEquals(2, notifications, "clamping to the current offset must stay quiet");
         input.update(app, (state, cx) -> {
-            state.scrollSize = new gpui.Size(110., state.scrollSize.height);
+            state.scrollSize = new glaze.Size(110., state.scrollSize.height);
             state.updateScrollOffset(null, cx);
-            assertTrue(state.scrollHandle.offset().equals(new gpui.Point(-10., 0.)));
+            assertTrue(state.scrollHandle.offset().equals(new glaze.Point(-10., 0.)));
         });
         assertEquals(3, notifications, "a smaller scroll range must clamp and notify");
         subscription.dispose();
     }
 
     function testSetLineNumberNotifiesOnlyOnChange() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputBaseState> = null;
         openWithState((window, cx) -> {
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx) : InputBaseState));
@@ -1644,7 +1644,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testSetValueOnUnfocusedInputStaysQuiet() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         var input:Entity<InputBaseState> = null;
         openWithState((window, cx) -> {
             input = cx.app.newEntity((cx:Context<InputBaseState>) -> (new InputState(window, cx) : InputBaseState));
@@ -1670,7 +1670,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testTextareaCursorTreatsCrlfAsOneNewline() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildTextarea();
         view.update((state, window, cx) -> {
             for (original in ["\r\nlast", "\u{feff}first\r\nlast\n", "first\nlast\r\n"]) {
@@ -1704,7 +1704,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testOnlyAMultiLineInputPaintsScrollbars() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
 
         // A single-line input keeps its caret in view by moving its own offset;
         // it has no viewport to drag.
@@ -1716,7 +1716,7 @@ class InputStateTest extends InputStateTestCase {
     }
 
     function testContextMenuHandlerIsDeferredAndRespectsDisabled() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         var calls = 0;
         var items = 0;
@@ -1728,7 +1728,7 @@ class InputStateTest extends InputStateTestCase {
                 items = menu.items.length;
                 menuFocus.focus(window, cx);
             });
-            state.handleRightClickMenu(new gpui.Point(0., 0.), 0, window, cx);
+            state.handleRightClickMenu(new glaze.Point(0., 0.), 0, window, cx);
         });
         assertEquals(1, calls);
         assertEquals(0, items);
@@ -1736,19 +1736,19 @@ class InputStateTest extends InputStateTestCase {
             "the menu callback must retain selection without reborrowing its input");
 
         // A custom handler may keep using the same, already-focused menu.
-        view.update((state, window, cx) -> state.handleRightClickMenu(new gpui.Point(0., 0.), 0, window, cx));
+        view.update((state, window, cx) -> state.handleRightClickMenu(new glaze.Point(0., 0.), 0, window, cx));
         assertEquals(2, calls);
         view.cx.update((window, cx) -> assertTrue(view.state().hasSelectionFocus(window, cx)));
 
         view.update((state, window, cx) -> {
             state.disabled = true;
-            state.handleRightClickMenu(new gpui.Point(0., 0.), 0, window, cx);
+            state.handleRightClickMenu(new glaze.Point(0., 0.), 0, window, cx);
         });
         assertEquals(2, calls);
     }
 
     function testContextMenuHandlerCanReadItsInput() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         var cursor:Null<Int> = null;
 
@@ -1759,7 +1759,7 @@ class InputStateTest extends InputStateTestCase {
                 final input = weak.upgrade();
                 cursor = input != null ? input.read(cx).cursor() : null;
             });
-            state.handleRightClickMenu(new gpui.Point(0., 0.), 2, window, cx);
+            state.handleRightClickMenu(new glaze.Point(0., 0.), 2, window, cx);
         });
         assertEquals(2, cursor);
     }
@@ -1772,7 +1772,7 @@ class InputStateTest extends InputStateTestCase {
         });
 
         assertFalse(view.state().isEditable());
-        assertFalse(gpui.base.input.InputSearchExt.isReplaceable(view.state()));
+        assertFalse(glaze.kit.base.input.InputSearchExt.isReplaceable(view.state()));
 
         // Typing (and IME) goes through the input handler, it must be rejected.
         view.update((state, window, cx) -> {
@@ -1815,7 +1815,7 @@ class InputStateTest extends InputStateTestCase {
 
         // The user scrolled back to the top to read the pasted text.
         view.update((state, _, cx) -> {
-            state.scrollHandle.setOffset(new gpui.Point(0., 0.));
+            state.scrollHandle.setOffset(new glaze.Point(0., 0.));
             cx.notify();
         });
         view.cx.runUntilParked();
@@ -1871,7 +1871,7 @@ class InputStateTest extends InputStateTestCase {
 
         view.update((state, _, cx) -> {
             final end = state.text.len();
-            state.moveTo(end, gpui.base.input.MoveDirection.Down, cx);
+            state.moveTo(end, glaze.kit.base.input.MoveDirection.Down, cx);
 
             final deferred = state.deferredScrollOffset;
             assertNotNull(deferred, "scroll_to should populate deferred_scroll_offset");
@@ -1888,7 +1888,7 @@ class InputStateTest extends InputStateTestCase {
         view.update((state, window, cx) -> {
             state.setCursorSurroundingLines(3, window, cx);
             state.setValue(text, window, cx);
-            gpui.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
+            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
             if (previous) {
                 state.searchSession.matcher.next();
                 state.searchSession.matcher.next();
@@ -1898,7 +1898,7 @@ class InputStateTest extends InputStateTestCase {
         view.update((state, _, cx) -> {
             final lineHeight:Float = state.lastLayout.lineHeight;
             final y = previous ? 0. : -lineHeight * 80.;
-            state.setScrollOffset(new gpui.Point(0., y), cx);
+            state.setScrollOffset(new glaze.Point(0., y), cx);
         });
         view.cx.runUntilParked();
         final visible = view.state().visibleRowRange();
@@ -1909,7 +1909,7 @@ class InputStateTest extends InputStateTestCase {
             assertTrue(visible.start > 60, "target must be above the viewport");
         }
         view.update((state, _, cx) -> {
-            final range = previous ? gpui.base.input.InputSearchExt.previousSearchMatch(state, cx) : gpui.base.input.InputSearchExt.nextSearchMatch(state, cx);
+            final range = previous ? glaze.kit.base.input.InputSearchExt.previousSearchMatch(state, cx) : glaze.kit.base.input.InputSearchExt.nextSearchMatch(state, cx);
             assertRange(start, start + 5, range);
             assertEquals("2/3", state.searchSession.matcher.label());
         });
@@ -1937,7 +1937,7 @@ class InputStateTest extends InputStateTestCase {
         var searchRequests = 0;
         var editor:Entity<InputBaseState> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<ScriptView>) -> {
-            gpui.base.theme.Theme.globalMut(cx.app);
+            glaze.kit.base.theme.Theme.globalMut(cx.app);
             InputKeyBindings.init(cx.app);
             editor = cx.app.newEntity((cx:Context<InputBaseState>) -> (new EditorState(window, cx).withSearchable(searchable) : InputBaseState));
             final child = editor;
@@ -1971,14 +1971,14 @@ class InputStateTest extends InputStateTestCase {
         final view = buildEditor(state -> state.withSearchable(false));
         view.update((state, window, cx) -> {
             state.setValue("foo bar foo", window, cx);
-            gpui.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
+            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
         });
         view.cx.runUntilParked();
         final session = view.state().searchSession;
         assertTrue(session.isActive());
         assertFalse(session.open);
         assertEquals(2, session.matcher.len());
-        view.update((state, _, cx) -> gpui.base.input.InputSearchExt.closeSearch(state, cx));
+        view.update((state, _, cx) -> glaze.kit.base.input.InputSearchExt.closeSearch(state, cx));
         assertFalse(view.state().searchSession.isActive());
     }
 
@@ -1990,14 +1990,14 @@ class InputStateTest extends InputStateTestCase {
         final view = buildEditor(state -> state.withSearchable(false));
         view.update((state, window, cx) -> {
             state.setValue("foo bar foo", window, cx);
-            gpui.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
-            gpui.base.input.InputSearchExt.closeSearch(state, cx);
+            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
+            glaze.kit.base.input.InputSearchExt.closeSearch(state, cx);
 
             state.setValue("bar foo", window, cx);
-            assertRange(4, 7, gpui.base.input.InputSearchExt.nextSearchMatch(state, cx));
+            assertRange(4, 7, glaze.kit.base.input.InputSearchExt.nextSearchMatch(state, cx));
 
             state.setValue("foo foo foo", window, cx);
-            gpui.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
+            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "foo", true, cx);
             assertEquals(3, state.searchSession.matcher.len());
         });
     }
@@ -2011,10 +2011,10 @@ class InputStateTest extends InputStateTestCase {
         view.update((state, window, cx) -> {
             state.setCursorSurroundingLines(3, window, cx);
             state.setValue(text, window, cx);
-            gpui.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
+            glaze.kit.base.input.InputSearchExt.setSearchQuery(state, "match", true, cx);
         });
         view.cx.runUntilParked();
-        view.update((state, _, cx) -> assertNotNull(gpui.base.input.InputSearchExt.nextSearchMatch(state, cx)));
+        view.update((state, _, cx) -> assertNotNull(glaze.kit.base.input.InputSearchExt.nextSearchMatch(state, cx)));
         view.cx.runUntilParked();
         final state = view.state();
         final range = state.searchSession.matcher.matchedRanges()[1];
@@ -2051,7 +2051,7 @@ private class RecordingHighlighter extends InputHighlighterBase {
     }
 
     public function styles(range:Range, resolver:HighlightStyleResolver):Array<StyledRange> {
-        return [new StyledRange(range, new gpui.HighlightStyle())];
+        return [new StyledRange(range, new glaze.HighlightStyle())];
     }
 
     public function foldRanges(text:Rope):Array<FoldRange> {

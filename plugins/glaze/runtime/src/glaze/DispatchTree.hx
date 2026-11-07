@@ -1,12 +1,12 @@
 // Ported from gpui-pre 0.3.10: src/key_dispatch.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Stacks;
-import gpui.keymap.DispatchResult;
-import gpui.keymap.KeyDispatch;
-import gpui.keymap.Replay;
+import glaze.util.Stacks;
+import glaze.keymap.DispatchResult;
+import glaze.keymap.KeyDispatch;
+import glaze.keymap.Replay;
 import haxe.ds.IntMap;
 
 /**
@@ -90,7 +90,7 @@ class DispatchNode {
  * the root to the focused element.
  *
  * `DispatchNodeId` is an `Int` (index of the node). The keystroke matching
- * itself is `gpui.keymap.KeyDispatch`, given the context stack of the path.
+ * itself is `glaze.keymap.KeyDispatch`, given the context stack of the path.
  * Nodes are pooled across frames.
  */
 class DispatchTree {

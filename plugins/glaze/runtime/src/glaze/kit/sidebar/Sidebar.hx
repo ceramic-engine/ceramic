@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sidebar/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.sidebar;
+package glaze.kit.sidebar;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListState;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Collapsible;
-import gpui.base.Geometry.Side;
-import gpui.base.ScrollBounce;
-import gpui.base.animation.Easings;
-import gpui.base.animation.EffectTransition;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListState;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Collapsible;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.base.animation.EffectTransition;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.StyledExt;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * The way a `Sidebar` behaves when it is collapsed.
@@ -72,7 +72,7 @@ enum SidebarWrapperLayout {
  * The layout a sidebar resolves from its collapse mode, collapsed state,
  * expanded width and side.
  */
-@:allow(gpui.component.sidebar, tests)
+@:allow(glaze.kit.sidebar, tests)
 class SidebarLayout {
 
     final iconCollapsed:Bool;
@@ -120,7 +120,7 @@ class SidebarLayout {
 /**
  * The width animation of a sidebar, kept in keyed state across renders.
  */
-@:allow(gpui.component.sidebar, tests)
+@:allow(glaze.kit.sidebar, tests)
 class SidebarAnimationState {
 
     var fromWidth:Pixels;
@@ -215,10 +215,10 @@ interface SidebarItem extends Collapsible {
  */
 class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
 
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     static inline final DEFAULT_WIDTH:Pixels = 255.;
 
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     static inline final COLLAPSED_WIDTH:Pixels = 48.;
 
     /** Seconds. */
@@ -308,7 +308,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * Add multiple children to the sidebar, the children must implement `Collapsible`
      */
     public function children(children:Iterable<E>):Sidebar<E> {
-        gpui.util.Iterables.appendNonNull(content, children);
+        glaze.util.Iterables.appendNonNull(content, children);
         return this;
     }
 
@@ -316,7 +316,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
         return sidebarStyle;
     }
 
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     static function sidebarExpandedWidth(style:StyleRefinement):Null<Pixels> {
         return switch style.sizeWidth {
             case Definite(Absolute(Pixels(px))): px;
@@ -329,12 +329,12 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
      * Rust packs both widths into a `NamedInteger`; the port names them,
      * which keeps them distinct the same way.
      */
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     static function sidebarAnimationId(id:ElementId, from:Pixels, to:Pixels):ElementId {
         return ElementId.NamedChild(ElementId.Name('${elementIdString(id)}-anim-w'), '$from:$to');
     }
 
-    static function sidebarWrapper(id:ElementIdArg, alignChildToEnd:Bool):gpui.Div {
+    static function sidebarWrapper(id:ElementIdArg, alignChildToEnd:Bool):glaze.Div {
         final wrapper = div()
             .id(id)
             .flex()
@@ -348,7 +348,7 @@ class Sidebar<E:SidebarItem> implements RenderOnce implements Styled {
     /**
      * Rust `format!("{}", id)` (`Display for ElementId`).
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function elementIdString(id:ElementId):String {
         return switch id {
             case View(entityId): 'view-$entityId';
@@ -564,7 +564,7 @@ class SidebarToggleButton implements RenderOnce {
         if (onClick != null) {
             btn.onClick((ev, window, cx) -> onClick(ev, window, cx));
         }
-        return btn.icon(new gpui.component.Icon(icon).size4());
+        return btn.icon(new glaze.kit.Icon(icon).size4());
     }
 
 }

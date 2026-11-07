@@ -1,53 +1,53 @@
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.IconName;
-import gpui.component.badge.Badge;
-import gpui.component.button.Button;
-import gpui.Entity;
-import gpui.ListSizingBehavior;
-import gpui.Size;
-import gpui.base.VirtualList;
-import gpui.component.theme.Theme;
-import gpui.scene.Quad;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputKeyBindings;
-import gpui.base.input.InputState;
-import gpui.component.I18n;
-import gpui.component.accordion.Accordion;
-import gpui.component.combobox.Combobox;
-import gpui.component.combobox.ComboboxState;
-import gpui.component.input.NumberInput;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.Bounds;
-import gpui.Point;
-import gpui.base.Calendar.CalendarDate;
-import gpui.base.Calendar.CalendarState;
-import gpui.base.chrono.Local;
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.NaiveDateTime;
-import gpui.base.chrono.NaiveTime;
-import gpui.component.Icon;
-import gpui.component.colorpicker.ColorPicker;
-import gpui.component.select.Select;
-import gpui.component.select.SelectState;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.tab.TabVariant;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.IconName;
+import glaze.kit.badge.Badge;
+import glaze.kit.button.Button;
+import glaze.Entity;
+import glaze.ListSizingBehavior;
+import glaze.Size;
+import glaze.kit.base.VirtualList;
+import glaze.kit.theme.Theme;
+import glaze.scene.Quad;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputKeyBindings;
+import glaze.kit.base.input.InputState;
+import glaze.kit.I18n;
+import glaze.kit.accordion.Accordion;
+import glaze.kit.combobox.Combobox;
+import glaze.kit.combobox.ComboboxState;
+import glaze.kit.input.NumberInput;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.Bounds;
+import glaze.Point;
+import glaze.kit.base.Calendar.CalendarDate;
+import glaze.kit.base.Calendar.CalendarState;
+import glaze.kit.base.chrono.Local;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.NaiveDateTime;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.Icon;
+import glaze.kit.colorpicker.ColorPicker;
+import glaze.kit.select.Select;
+import glaze.kit.select.SelectState;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.tab.TabVariant;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
 /**
  * Keeps the deliberate deviations of DEVIATIONS.md in place on the port, so a
@@ -92,7 +92,7 @@ class DeviationsTest extends TestCase {
         final scale = cx.window.scaleFactor();
         final theme = Theme.global(app);
         final quads:Array<Quad> = @:privateAccess cx.window.renderedFrame.scene.quads;
-        final isColor = (q:Quad, c:gpui.Hsla) -> Math.abs(q.backgroundSolidH - c.h) < 1e-4 && Math.abs(q.backgroundSolidS - c.s) < 1e-4
+        final isColor = (q:Quad, c:glaze.Hsla) -> Math.abs(q.backgroundSolidH - c.h) < 1e-4 && Math.abs(q.backgroundSolidS - c.s) < 1e-4
             && Math.abs(q.backgroundSolidL - c.l) < 1e-4 && q.backgroundSolidA == c.a;
         final ring = quads.filter(q -> isColor(q, theme.background) && q.boundsWidth == 16 * scale);
         final disc = quads.filter(q -> isColor(q, theme.red) && q.backgroundSolidA > 0);
@@ -387,11 +387,11 @@ class DeviationsTest extends TestCase {
      */
     function testDev011TriggerHexIsRounded() {
         final teal = hsla(0.5, 0.6, 0.4, 1.);
-        assertEquals("#28A3A3", gpui.component.theme.Colorize.toHex(teal));
+        assertEquals("#28A3A3", glaze.kit.theme.Colorize.toHex(teal));
         assertEquals("#29A3A3", @:privateAccess ColorPicker.displayHex(teal));
-        assertEquals(@:privateAccess gpui.base.ColorPicker.ColorPickerState.hexString(teal), @:privateAccess ColorPicker.displayHex(teal));
+        assertEquals(@:privateAccess glaze.kit.base.ColorPicker.ColorPickerState.hexString(teal), @:privateAccess ColorPicker.displayHex(teal));
         final translucent = hsla(0.9, 0.7, 0.6, 0.5);
-        assertEquals(@:privateAccess gpui.base.ColorPicker.ColorPickerState.hexString(translucent), @:privateAccess ColorPicker.displayHex(translucent));
+        assertEquals(@:privateAccess glaze.kit.base.ColorPicker.ColorPickerState.hexString(translucent), @:privateAccess ColorPicker.displayHex(translucent));
     }
 
     /**
@@ -497,9 +497,9 @@ class DeviationsTest extends TestCase {
             state.selectAll(window, cx);
             for (ch in ["n", "e", "w"]) state.replaceTextInRange(null, ch, window, cx);
             assertEquals("new", state.value());
-            state.undo(new gpui.base.input.InputActions.Undo(), window, cx);
+            state.undo(new glaze.kit.base.input.InputActions.Undo(), window, cx);
             assertEquals("one to", state.value());
-            state.undo(new gpui.base.input.InputActions.Undo(), window, cx);
+            state.undo(new glaze.kit.base.input.InputActions.Undo(), window, cx);
             assertEquals("", state.value());
         }));
     }

@@ -5,47 +5,47 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.OtpInput.OtpState;
-import gpui.base.Root;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.TextareaState;
-import gpui.component.Component;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button.Button;
-import gpui.component.input.AnyInputState;
-import gpui.component.input.Input;
-import gpui.component.input.InputGroup;
-import gpui.component.input.InputGroup.GroupAppearance;
-import gpui.component.input.InputGroup.InputGroupAddon;
-import gpui.component.input.InputGroup.InputGroupButton;
-import gpui.component.input.InputGroup.InputGroupText;
-import gpui.component.input.OtpInput;
-import gpui.component.input.Textarea;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.OtpInput.OtpState;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.Component;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button.Button;
+import glaze.kit.input.AnyInputState;
+import glaze.kit.input.Input;
+import glaze.kit.input.InputGroup;
+import glaze.kit.input.InputGroup.GroupAppearance;
+import glaze.kit.input.InputGroup.InputGroupAddon;
+import glaze.kit.input.InputGroup.InputGroupButton;
+import glaze.kit.input.InputGroup.InputGroupText;
+import glaze.kit.input.OtpInput;
+import glaze.kit.input.Textarea;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
-using gpui.component.Size.SizeTools;
+using glaze.kit.WindowExt;
+using glaze.kit.Size.SizeTools;
 
 /**
  * Behaviour tests of the styled inputs in a window: the focused input
@@ -113,7 +113,7 @@ class ComponentInputTest extends TestCase {
     }
 
     function click(position:Point, count:Int = 1):Void {
-        app.update(cx -> window.dispatchEvent(new gpui.MouseMoveEvent(position, null, Modifiers.none()), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.MouseMoveEvent(position, null, Modifiers.none()), cx));
         app.update(cx -> window.dispatchEvent(new MouseDownEvent(Left, position, Modifiers.none(), count, false), cx));
         app.update(cx -> window.dispatchEvent(new MouseUpEvent(Left, position, Modifiers.none(), count), cx));
         runUntilParked();
@@ -140,7 +140,7 @@ class ComponentInputTest extends TestCase {
     /** `window.press(key)` (key down then key up), then settle. */
     function press(key:String):Void {
         app.update(cx -> window.dispatchKeystroke(Keystroke.parse(key), cx));
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(Keystroke.parse(key)), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(Keystroke.parse(key)), cx));
         runUntilParked();
         draw();
     }
@@ -287,7 +287,7 @@ class ComponentInputTest extends TestCase {
             window = Window.open(cx, {width: 200, height: 100, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 state = cx.newEntity((c:Context<InputState>) -> new InputState(window, c).step(1.));
                 return cx.newEntity((_:Context<ProbeView>) -> new ProbeView((_, _) -> {
-                    final number = new gpui.base.NumberInput(state)
+                    final number = new glaze.kit.base.NumberInput(state)
                         .decrementButton(button -> button.w(px(20.)).hFull())
                         .input(div().sizeFull())
                         .incrementButton(button -> button.w(px(20.)).hFull());
@@ -306,7 +306,7 @@ class ComponentInputTest extends TestCase {
 
         // The decrement button sits at the left edge of the control.
         final position = new Point(10., 10.);
-        app.update(cx -> window.dispatchEvent(new gpui.MouseMoveEvent(position, Left, Modifiers.none()), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.MouseMoveEvent(position, Left, Modifiers.none()), cx));
         app.update(cx -> window.dispatchEvent(new MouseDownEvent(Left, position, Modifiers.none(), 1, false), cx));
         assertTrue(state.read(app).focusHandle.isFocused(window), 'pressing the step button pulled focus off the editor');
 

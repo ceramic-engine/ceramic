@@ -1,16 +1,16 @@
 // Ported from gpui-pre 0.3.10: src/elements/text.rs (InteractiveText, InteractiveTextState)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.Interactivity.ActiveTooltipCell;
-import gpui.util.Ref;
+import glaze.Interactivity.ActiveTooltipCell;
+import glaze.util.Ref;
 
 /**
  * A text element that can be interacted with: clicks on byte ranges,
  * hover of characters, and tooltips per character.
  */
-@:access(gpui.Interactivity)
+@:access(glaze.Interactivity)
 class InteractiveText extends Element {
 
     final id:ElementId;

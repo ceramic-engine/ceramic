@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/combobox.rs (ComboboxOptions, Combobox)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.combobox;
+package glaze.kit.combobox;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.DefiniteLength;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.IntoLength;
-import gpui.Length;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.FocusableExt;
-import gpui.component.Icon;
-import gpui.component.Icon.IntoIcon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.combobox.ComboboxState.ComboboxEvent;
-import gpui.component.combobox.ComboboxState.ComboboxTriggerContext;
-import gpui.component.searchablelist.SearchableListChange;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.DefiniteLength;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.IntoLength;
+import glaze.Length;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.FocusableExt;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IntoIcon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.combobox.ComboboxState.ComboboxEvent;
+import glaze.kit.combobox.ComboboxState.ComboboxTriggerContext;
+import glaze.kit.searchablelist.SearchableListChange;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Back-compat alias: new code should use `SearchableListChange` directly.
@@ -232,7 +232,7 @@ class Combobox<I> implements RenderOnce implements Styled implements Sizable imp
         final openState = state;
         final confirmState = state;
 
-        return new gpui.base.Combobox(id)
+        return new glaze.kit.base.Combobox(id)
             .open(isOpen)
             .disabled(disabled)
             .focusHandle(focusHandle)

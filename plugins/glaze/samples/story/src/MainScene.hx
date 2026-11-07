@@ -5,16 +5,16 @@ package;
 
 import ceramic.Platform;
 import ceramic.Scene;
-import gpui.App;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.IconName;
+import glaze.App;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.IconName;
 import story.Gallery;
 import story.Lib;
 
 /**
  * The gpui-kit story gallery (Rust `cargo run -- <story_name>`): start on a
- * story with `GPUI_STORY=<name>`.
+ * story with `GLAZE_STORY=<name>`.
  */
 class MainScene extends Scene {
 
@@ -26,13 +26,13 @@ class MainScene extends Scene {
     override function create() {
 
         final cx = App.current;
-        final name = Platform.getEnv('GPUI_STORY');
+        final name = Platform.getEnv('GLAZE_STORY');
 
         // On the web, the browser also draws the CJK text of the stories
         // (gpui-pre-web's `CanvasFontFallback::EmojiAndCjk`; GPUI's default
         // only draws emoji). No effect on native targets.
-        final platform:gpui.platform.CeramicTextSystem = cast cx.textSystem().platformTextSystem;
-        platform.canvasFontFallback = gpui.platform.CanvasFontFallback.EmojiAndCjk;
+        final platform:glaze.platform.CeramicTextSystem = cast cx.textSystem().platformTextSystem;
+        platform.canvasFontFallback = glaze.platform.CanvasFontFallback.EmojiAndCjk;
 
         // The icons are loaded before the first frame (needed on the web)
         final paths = [for (icon in IconName.ALL) icon.path()];
@@ -59,14 +59,14 @@ class MainScene extends Scene {
                 // shows them when running from the signed app bundle
                 cx.setAppIdentity('com.longbridge.gpui-component.story', 'GPUI Component');
             });
-            var gallery:Null<gpui.Entity<Gallery>> = null;
+            var gallery:Null<glaze.Entity<Gallery>> = null;
             window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
                 final view = Gallery.view(name != null && name != '' ? name : null, window, cx);
                 gallery = view;
                 return view;
             }, cx, width, height);
             add(window.renderable);
-            // Automated tour of every page (GPUI_STORY_TOUR, see StoryTour)
+            // Automated tour of every page (GLAZE_STORY_TOUR, see StoryTour)
             StoryTour.startIfRequested(gallery, window);
         });
 

@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Range;
-import gpui.Window;
-import gpui.base.input.Selection;
-import gpui.base.input.StyledRange;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.input.StyledRange;
 
 /** Highlights of a code block cached with the highlighter that made them. */
 class CachedCodeBlockHighlights {
@@ -40,7 +40,7 @@ class CodeBlock {
     var lang_:Null<String>;
     var meta_:Null<String> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var state:InlineState;
 
     var highlightCache:CodeBlockHighlightCache;
@@ -49,7 +49,7 @@ class CodeBlock {
      * Rendered UTF-8 byte spans of the code paired with their exact Markdown
      * source spans.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var sourceSegments_:Array<SourceSegment> = [];
 
     public var span:Null<Span>;
@@ -121,19 +121,19 @@ class CodeBlock {
         return state.text;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function sourceSegments(sourceSegments:Array<SourceSegment>):CodeBlock {
         this.sourceSegments_ = sourceSegments;
         return this;
     }
 
     /** Test helper of the original (`#[cfg(test)]`). */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function setSelection(selection:Range):Void {
         state.selection = Selection.fromRange(selection);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSourceRange():SourceRangeSelection {
         final selection = state.selection;
         if (selection == null) {
@@ -146,7 +146,7 @@ class CodeBlock {
         return range != null ? SourceRangeSelection.mapped(range) : SourceRangeSelection.unmapped();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function highlightedStyles(highlighter:(CodeBlock) -> Array<StyledRange>):Array<StyledRange> {
         final cache = highlightCache.value;
         if (cache != null && Reflect.compareMethods(cache.highlighter, highlighter)) {
@@ -162,7 +162,7 @@ class CodeBlock {
         return styles.copy();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedText():String {
         final selection = state.selection;
         if (selection != null) {
@@ -179,7 +179,7 @@ class CodeBlock {
      * instead of pasting as bare, unfenced text. A partial selection is
      * still emitted as a valid fenced block.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSource():String {
         final code = selectedText();
         if (code == '') {
@@ -192,12 +192,12 @@ class CodeBlock {
         return '```$lang\n$code\n```';
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function text():String {
         return state.text;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasSelection():Bool {
         return state.selection != null;
     }
@@ -205,12 +205,12 @@ class CodeBlock {
     /**
      * Synchronously clear the selection stored in the inline state.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function clearSelection():Void {
         state.selection = null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function render(options:NodeRenderOptions, nodeCx:NodeContext, window:Window, cx:App):AnyElement {
         return NodeRender.renderCodeBlock(this, options, nodeCx, window, cx);
     }

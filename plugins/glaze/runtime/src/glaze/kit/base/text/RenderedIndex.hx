@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.util.Utf8;
 
 /**
  * The rendered text of one parsed document, and where each text leaf sits in
  * it.
  */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class RenderedIndex {
 
     final text:String;
@@ -207,7 +207,7 @@ enum RevealTarget {
     Block(ix:Int);
 }
 
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class LeafSpan {
     /** Where the leaf's text sits in the rendered text. */
     final range:Range;
@@ -258,7 +258,7 @@ class LeafSpan {
  * Builds the rendered text the way `BlockNode.text` does, recording each
  * leaf, and where its text came from in the source, as it goes.
  */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class IndexBuilder {
 
     final text:StringBuf = new StringBuf();

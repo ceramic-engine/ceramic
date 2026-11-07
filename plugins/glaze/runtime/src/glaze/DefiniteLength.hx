@@ -2,14 +2,14 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * A non-auto length that can be defined in pixels, rems, or percent of parent.
  *
  * Methods are provided by `DefiniteLengthTools` (attached with `@:using`).
  */
-@:using(gpui.DefiniteLengthTools)
+@:using(glaze.DefiniteLengthTools)
 enum DefiniteLength {
 
     /**

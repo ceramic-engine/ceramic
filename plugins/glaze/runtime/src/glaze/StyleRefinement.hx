@@ -2,7 +2,7 @@
 // `#[derive(Refineable)]`, gpui-pre-derive-refineable 0.3.10)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A `Style` where every field is optional, built by the `Styled` methods and
@@ -267,8 +267,8 @@ class StyleRefinement {
     }
 
     /** The border style of this element */
-    public var borderStyle(default, set):gpui.scene.BorderStyle = Solid;
-    inline function set_borderStyle(value:gpui.scene.BorderStyle):gpui.scene.BorderStyle {
+    public var borderStyle(default, set):glaze.scene.BorderStyle = Solid;
+    inline function set_borderStyle(value:glaze.scene.BorderStyle):glaze.scene.BorderStyle {
         mask |= BORDER_STYLE;
         return borderStyle = value;
     }
@@ -302,7 +302,7 @@ class StyleRefinement {
     }
 
     public function new() {
-        #if gpui_count_allocations gpui.util.AllocationCounters.styleRefinements++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.styleRefinements++; #end
     }
 
     /**

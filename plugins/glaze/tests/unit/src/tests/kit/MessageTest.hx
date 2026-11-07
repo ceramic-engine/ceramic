@@ -3,15 +3,15 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ElementId;
-import gpui.StyleBuilder;
-import gpui.base.A11y.Role;
-import gpui.base.A11y.RoleOverride;
-import gpui.component.bubble.Bubble;
-import gpui.component.message.Message;
+import glaze.ElementId;
+import glaze.StyleBuilder;
+import glaze.kit.base.A11y.Role;
+import glaze.kit.base.A11y.RoleOverride;
+import glaze.kit.bubble.Bubble;
+import glaze.kit.message.Message;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `message` module.

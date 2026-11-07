@@ -1,41 +1,41 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/mod.rs, crates/component/src/dock/dock.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Element;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.MouseMoveEvent;
-import gpui.Render;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockAreaRendererBase;
-import gpui.base.dock.DockContext;
-import gpui.base.dock.DockEvent;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PanelRegistry;
-import gpui.base.dock.PanelState;
-import gpui.base.dock.TabGroupRenderer;
-import gpui.base.resizable.ResizeHandle.HandleEdge;
-import gpui.base.resizable.ResizeHandle.ResizeHandleContext;
-import gpui.component.resizable.Resizable;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Element;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.MouseMoveEvent;
+import glaze.Render;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockAreaRendererBase;
+import glaze.kit.base.dock.DockContext;
+import glaze.kit.base.dock.DockEvent;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PanelRegistry;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.base.dock.TabGroupRenderer;
+import glaze.kit.base.resizable.ResizeHandle.HandleEdge;
+import glaze.kit.base.resizable.ResizeHandle.ResizeHandleContext;
+import glaze.kit.resizable.Resizable;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The gpui-component appearance for a `DockArea`, and the handle its
@@ -43,7 +43,7 @@ import gpui.Prelude.*;
  *
  * The layout tree, the persisted schema, the drag geometry, the
  * active-panel state machine and the container entities all live in
- * `gpui.base.dock`. This is the skin over them: the outer frame, the split
+ * `glaze.kit.base.dock`. This is the skin over them: the outer frame, the split
  * frames, one dock's chrome (its resize handle) and, through `TabGroupSkin`,
  * every tab group's tab bar, toolbar, menu and drop placeholder.
  *
@@ -89,7 +89,7 @@ class DockSkin extends DockAreaRendererBase {
     }
 
     /**
-     * Rust `dock::init`, run by `gpui.component.Component.init`.
+     * Rust `dock::init`, run by `glaze.kit.Component.init`.
      *
      * `PanelRegistry.init` is base's own, but the global it installs is not:
      * `DockArea`'s constructor and `PanelRegistry.registerPanel` both create
@@ -102,7 +102,7 @@ class DockSkin extends DockAreaRendererBase {
         }
     }
 
-    @:allow(gpui.component.dock)
+    @:allow(glaze.kit.dock)
     function sharedState():SkinShared {
         return shared;
     }
@@ -147,7 +147,7 @@ class DockSkin extends DockAreaRendererBase {
      * Toggle a dock on the user's behalf and report it with
      * `DockToggleEvent`. A dock that refuses to close emits nothing.
      */
-    @:allow(gpui.component.dock, tests)
+    @:allow(glaze.kit.dock, tests)
     static function toggleDockByUser(area:DockArea, placement:DockPlacement, window:Window, cx:Context<DockArea>):Void {
         final wasOpen = area.isDockOpen(placement);
         area.toggleDock(placement, window, cx);
@@ -158,7 +158,7 @@ class DockSkin extends DockAreaRendererBase {
      * Emit `DockToggleEvent` if a user action moved the dock away from
      * `wasOpen`.
      */
-    @:allow(gpui.component.dock)
+    @:allow(glaze.kit.dock)
     static function reportUserToggle(area:DockArea, placement:DockPlacement, wasOpen:Bool, cx:Context<DockArea>):Void {
         final open = area.isDockOpen(placement);
         if (open != wasOpen) {
@@ -213,7 +213,7 @@ class DockSkin extends DockAreaRendererBase {
      * It answers `dump` with the state it was handed, so a layout written by
      * a build that knows the panel survives a load and save here.
      */
-    override public function buildPlaceholder(state:PanelState, window:Window, cx:App):Null<gpui.base.dock.PanelView> {
+    override public function buildPlaceholder(state:PanelState, window:Window, cx:App):Null<glaze.kit.base.dock.PanelView> {
         final state = state.clone();
         return PanelHandle.panelHandle(cx.newEntity((pcx:Context<InvalidPanel>) -> new InvalidPanel(state, pcx)));
     }
@@ -271,7 +271,7 @@ private class ResizePanel extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }
@@ -296,7 +296,7 @@ private class DockResizeTracker extends Element {
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), null, cx);
+        return window.requestLayout(@:privateAccess glaze.Style.sharedDefaultStyle(), null, cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {}

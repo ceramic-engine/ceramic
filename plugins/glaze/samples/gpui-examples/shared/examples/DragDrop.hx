@@ -3,19 +3,19 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package examples;
 
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The dragged value, also the view rendering it while it is dragged. Rust
@@ -43,7 +43,7 @@ class DragInfo extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        final size = gpui.Prelude.size(px(120.), px(50.));
+        final size = glaze.Prelude.size(px(120.), px(50.));
 
         return div()
             .pl(px(position.x) - px(size.width).half())

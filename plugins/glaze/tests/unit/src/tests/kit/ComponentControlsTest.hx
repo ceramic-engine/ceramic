@@ -5,58 +5,58 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Slider.SliderEvent;
-import gpui.base.Slider.SliderState;
-import gpui.base.Slider.SliderValue;
-import gpui.component.Component;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.button.ButtonGroup;
-import gpui.component.button.ButtonIcon;
-import gpui.component.button.Toggle;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.radio.Radio;
-import gpui.component.slider.Slider;
-import gpui.component.spinner.Spinner;
-import gpui.component.switch_.Switch;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeConfig;
-import gpui.component.toolbar.Toolbar;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Slider.SliderEvent;
+import glaze.kit.base.Slider.SliderState;
+import glaze.kit.base.Slider.SliderValue;
+import glaze.kit.Component;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.button.ButtonGroup;
+import glaze.kit.button.ButtonIcon;
+import glaze.kit.button.Toggle;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.radio.Radio;
+import glaze.kit.slider.Slider;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.switch_.Switch;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeConfig;
+import glaze.kit.toolbar.Toolbar;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.ElementExt;
-using gpui.base.Slider.SliderValueTools;
-using gpui.component.Size.SizeTools;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Slider.SliderValueTools;
+using glaze.kit.Size.SizeTools;
 
 /**
  * The `#[cfg(test)]` tests of the wave 3 styled controls, and the control
@@ -192,7 +192,7 @@ class ComponentControlsTest extends TestCase {
         final clicks = [0];
         final loading = [false];
         final cx = open((_, _) -> div().tabGroup().child(new Button('close')
-            .withBase(new gpui.base.Button('close').onClick((_, _, _) -> clicks[0]++))
+            .withBase(new glaze.kit.base.Button('close').onClick((_, _, _) -> clicks[0]++))
             .loading(loading[0])
             .size(px(100.))));
         click(cx);
@@ -370,7 +370,7 @@ class ComponentControlsTest extends TestCase {
             assertTrue(ButtonVariant.Danger.hovered(true, cx).bg.equals(tokens.dangerHover.background.opacity(0.2)));
             assertTrue(ButtonVariant.Danger.active(true, cx).bg.equals(tokens.dangerActive.background.opacity(0.4)));
             assertTrue(ButtonVariant.Primary.normal(false, cx).bg.equals(tokens.buttonPrimary.background));
-            assertTrue(ButtonVariant.Danger.normal(false, cx).bg.equals(gpui.component.theme.Color.tryParseBackground('linear-gradient(180deg, #FEF2F2, #FEE2E2)')));
+            assertTrue(ButtonVariant.Danger.normal(false, cx).bg.equals(glaze.kit.theme.Color.tryParseBackground('linear-gradient(180deg, #FEF2F2, #FEE2E2)')));
         });
     }
 
@@ -385,7 +385,7 @@ class ComponentControlsTest extends TestCase {
             final tokens = theme.tokens;
             assertTrue(ButtonVariant.Primary.disabled(true, cx).bg.equals(tokens.primary.background.opacity(0.1).opacity(0.5)));
             assertTrue(ButtonVariant.Danger.disabled(true, cx).bg.equals(tokens.danger.background.opacity(0.1).opacity(0.5)));
-            assertFalse(ButtonVariant.Danger.disabled(true, cx).bg.equals(gpui.Background.fromHsla(theme.inputBackground().opacity(0.5))));
+            assertFalse(ButtonVariant.Danger.disabled(true, cx).bg.equals(glaze.Background.fromHsla(theme.inputBackground().opacity(0.5))));
             assertFalse(ButtonVariant.Danger.disabled(true, cx).bg.equals(tokens.buttonDanger.background.opacity(0.15)));
         });
     }
@@ -394,15 +394,15 @@ class ComponentControlsTest extends TestCase {
 
     function testButtonIconBuilder() {
         final icon = (IconName.Plus:IntoButtonIcon);
-        final built = (icon:ButtonIcon).loading(true).loadingIcon(new gpui.component.Icon(IconName.Loader)).large();
+        final built = (icon:ButtonIcon).loading(true).loadingIcon(new glaze.kit.Icon(IconName.Loader)).large();
         assertTrue(built.loadingValue);
         assertNotNull(built.loadingIconValue);
         assertTrue(built.size.equals(Large));
     }
 
     function testButtonIconVariantTypes() {
-        assertFalse(ButtonIcon.isSpinner(ButtonIconVariant.Icon(new gpui.component.Icon(IconName.Plus))));
-        assertTrue(ButtonIcon.isSpinner(ButtonIconVariant.Spinner(new gpui.component.spinner.Spinner())));
+        assertFalse(ButtonIcon.isSpinner(ButtonIconVariant.Icon(new glaze.kit.Icon(IconName.Plus))));
+        assertTrue(ButtonIcon.isSpinner(ButtonIconVariant.Spinner(new glaze.kit.spinner.Spinner())));
     }
 
     /// ButtonGroup
@@ -667,7 +667,7 @@ class ComponentControlsTest extends TestCase {
         final asked:Array<String> = [];
         app.update(cx -> {
             cx.setReduceMotion(true);
-            gpui.component.Icon.setIconResolver(cx, (path, _) -> {
+            glaze.kit.Icon.setIconResolver(cx, (path, _) -> {
                 asked.push(path);
                 return null;
             });
@@ -780,7 +780,7 @@ class ComponentControlsTest extends TestCase {
 
     function testLargeSizeFallsBackToMedium() {
         assertTrue(new Toolbar('toolbar').large().sizeValue.equals(Medium));
-        assertTrue(new gpui.component.toolbar.Toolbar.ToolbarGroup('group').large().sizeValue.equals(Medium));
+        assertTrue(new glaze.kit.toolbar.Toolbar.ToolbarGroup('group').large().sizeValue.equals(Medium));
     }
 
     function testToolbarPreparesButtonsAsCompactGhostCommands() {
@@ -797,7 +797,7 @@ class ComponentControlsTest extends TestCase {
 
     function testToolbarGroupPropagatesItsSizeToItems() {
         final observed:Array<Null<Size>> = [null];
-        open((_, _) -> new gpui.component.toolbar.Toolbar.ToolbarGroup('group').child(new SizeProbe(observed, 0)).small());
+        open((_, _) -> new glaze.kit.toolbar.Toolbar.ToolbarGroup('group').child(new SizeProbe(observed, 0)).small());
         assertTrue(observed[0] != null && observed[0].equals(Small));
     }
 
@@ -829,11 +829,11 @@ class ComponentControlsTest extends TestCase {
      * controlled value once, on release.
      */
     function testCheckboxSpaceRepeatChangesControlledValueOnceOnRelease() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final controls = new Controls();
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<gpui.base.Root>) -> {
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
             final content = rootCx.newEntity((_:Context<ScriptView>) -> new ScriptView((_, cx) -> controls.render(cx)));
-            return new gpui.base.Root(content, window, rootCx);
+            return new glaze.kit.base.Root(content, window, rootCx);
         });
         final cx = opened.cx;
         contexts.push(cx);
@@ -951,9 +951,9 @@ class ComponentControlsTest extends TestCase {
     /** `touch_drag` (integration/disclosure.rs): a finger drag reaches elements as `TouchDragEvent`s. */
     static function touchDrag(cx:VisualTestContext, from:Point, to:Point):Void {
         cx.update((window, app) -> {
-            window.dispatchEvent(new gpui.TouchDragEvent(Started, from, from), app);
-            window.dispatchEvent(new gpui.TouchDragEvent(Moved, from, to), app);
-            window.dispatchEvent(new gpui.TouchDragEvent(Ended, from, to), app);
+            window.dispatchEvent(new glaze.TouchDragEvent(Started, from, from), app);
+            window.dispatchEvent(new glaze.TouchDragEvent(Moved, from, to), app);
+            window.dispatchEvent(new glaze.TouchDragEvent(Ended, from, to), app);
             window.refresh();
             window.draw();
         });
@@ -988,9 +988,9 @@ class ComponentControlsTest extends TestCase {
         final disabled = [false];
         final cx = open((_, _) -> div().p8().w(px(264.)).child(div().onPrepaint((b, _, _) -> track[0] = b).child(new Slider(state).disabled(disabled[0]))), 400, 240);
         final thumb = new Point(track[0].left() + track[0].size.width * 0.2, track[0].center().y);
-        function dispatch(phase:gpui.TouchPhase, from:Point, to:Point) {
+        function dispatch(phase:glaze.TouchPhase, from:Point, to:Point) {
             cx.update((window, app) -> {
-                window.dispatchEvent(new gpui.TouchDragEvent(phase, from, to), app);
+                window.dispatchEvent(new glaze.TouchDragEvent(phase, from, to), app);
                 window.refresh();
                 window.draw();
             });
@@ -1142,7 +1142,7 @@ private class DeliveryPreferences {
         for (group in 0...2) {
             final id = group == 0 ? 'shipping' : 'billing';
             final probe = (ix:Int) -> div().h(px(2.)).onPrepaint((b, _, _) -> bounds.set('$id-$ix', b));
-            column.child(gpui.component.radio.Radio.RadioGroup.vertical(id)
+            column.child(glaze.kit.radio.Radio.RadioGroup.vertical(id)
                 .selectedIndex(selected[group])
                 .disabled(group == 1 && billingDisabled)
                 .child(new Radio('standard').label('Standard').child(probe(0)))

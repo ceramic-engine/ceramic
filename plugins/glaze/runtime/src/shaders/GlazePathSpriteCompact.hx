@@ -6,7 +6,7 @@ package shaders;
 
 /**
  * GPUI path primitive: a coverage tile of the atlas (see
- * `gpui.PathRasterizer`) filled with the path's `Background` (solid color,
+ * `glaze.PathRasterizer`) filled with the path's `Background` (solid color,
  * linear gradient, slash pattern or checkerboard).
  *
  * GPUI's Metal renderer runs `path_rasterization_fragment` once per pixel
@@ -20,16 +20,16 @@ package shaders;
  * reproduces the storage and the resolve (`pathColor()`,
  * `pathCurveColor()`).
  *
- * The gradient math is the one of `GpuiQuad` (Metal's `fill_color`).
+ * The gradient math is the one of `GlazeQuad` (Metal's `fill_color`).
  *
- * Compact variant of `GpuiPathSprite`, used only when the GPU limits are
- * too low for it (see `gpui.platform.SceneRenderable.useCompactShaders`):
+ * Compact variant of `GlazePathSprite`, used only when the GPU limits are
+ * too low for it (see `glaze.platform.SceneRenderable.useCompactShaders`):
  * 8 vertex attributes. The first gradient stop replaces the solid color and
  * the stop percentages travel with the scene position.
  */
-class GpuiPathSpriteCompact extends Shader<GpuiPathSpriteCompact_Vert, GpuiPathSpriteCompact_Frag> {}
+class GlazePathSpriteCompact extends Shader<GlazePathSpriteCompact_Vert, GlazePathSpriteCompact_Frag> {}
 
-class GpuiPathSpriteCompact_Vert extends Vert {
+class GlazePathSpriteCompact_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -128,13 +128,13 @@ class GpuiPathSpriteCompact_Vert extends Vert {
  * one ulp from the one FXC folds). Measured with Metal kernels of both
  * compiled shaders on random inputs, then on the Unity golden.
  */
-class GpuiPathSpriteCompact_Frag extends Frag {
+class GlazePathSpriteCompact_Frag extends Frag {
 
     @param var mainTex:Sampler2D;
     /**
      * 1 for plain coverage tiles (the mask is the mean of 4 MSAA samples),
      * 2 for paths with Loop-Blinn curves (RGBA tiles, see
-     * `gpui.PathRasterizer.rasterizeCurves()`).
+     * `glaze.PathRasterizer.rasterizeCurves()`).
      */
     @param var pathCoverage:Float;
 
@@ -179,7 +179,7 @@ class GpuiPathSpriteCompact_Frag extends Frag {
         return vec4(linearToSrgb(lin), color.a);
     }
 
-    /** `fill_color()` of GPUI's Metal shader (same code as `GpuiQuad`) */
+    /** `fill_color()` of GPUI's Metal shader (same code as `GlazeQuad`) */
     function fillColor(position:Vec2):Vec4 {
 
         var tag:Float = params.x;
@@ -298,7 +298,7 @@ class GpuiPathSpriteCompact_Frag extends Frag {
 
     /**
      * Pixel with Loop-Blinn curve samples (see
-     * `gpui.PathRasterizer.rasterizeCurves()`): `plain` samples store
+     * `glaze.PathRasterizer.rasterizeCurves()`): `plain` samples store
      * `round(255 * premultiplied color)`, `curve` samples
      * `round(255 * premultiplied color * alpha)` (the alpha of the pixel
      * center), and the 4 samples are resolved (mean, rounded).

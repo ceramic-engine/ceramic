@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/window.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A handle which can be used to track and manipulate the focused element in a window.
@@ -32,7 +32,7 @@ class FocusHandle {
      */
     public var isTabStop(default, null):Bool = false;
 
-    @:allow(gpui)
+    @:allow(glaze)
     function new() {
         id = nextId++;
     }

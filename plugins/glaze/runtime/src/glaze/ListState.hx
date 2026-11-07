@@ -2,7 +2,7 @@
 // src/window.rs (`Window::transact`), crates/sum_tree (the cursor operations used by the list)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The list state that views must hold on behalf of the list element
@@ -26,7 +26,7 @@ class ListState {
 
     var lastPadding:Null<Edges> = null;
 
-    @:allow(gpui)
+    @:allow(glaze)
     var items:ListItemTree = ListItemTree.EMPTY;
 
     var scrollAnchor:Null<ListScrollAnchor> = null;
@@ -563,7 +563,7 @@ class ListState {
         return items.startCount(cursor) + 1;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function scroll(scrollTop:ListOffset, height:Float, delta:Point, currentView:Int, window:Window, cx:App):Void {
         // Drop scroll events after a reset, since we can't calculate
         // the new logical scroll top without the item heights
@@ -651,7 +651,7 @@ class ListState {
         scrollAnchor = new ListScrollAnchor(position, pending, false, false);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function layoutAllItems(availableWidth:Float, renderItem:(Int, Window, App) -> IntoElement, window:Window, cx:App):Void {
         switch measuringBehavior {
             case ListMeasuringBehavior.Visible:
@@ -682,7 +682,7 @@ class ListState {
         measuringBehavior = Measure(items.unrenderedCount == 0);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function layoutItems(availableWidth:Null<Float>, availableHeight:Float, padding:Edges, renderItem:(Int, Window, App) -> IntoElement, window:Window, cx:App):LayoutItemsResponse {
         final oldItems = items;
         final measuredItems:Array<ListItem> = [];
@@ -886,7 +886,7 @@ class ListState {
         return new LayoutItemsResponse(maxItemWidth, scrollTop, itemLayouts);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function prepaintItems(bounds:Bounds, padding:Edges, autoscroll:Bool, renderItem:(Int, Window, App) -> IntoElement, window:Window, cx:App):PrepaintItemsResult {
         return transact(window, () -> {
             switch measuringBehavior {
@@ -1024,30 +1024,30 @@ class ListState {
      * Port (default view caching): records that the view being drawn shows
      * this list as it is now (see `ViewDependencies`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function recordView(window:Window):Void {
         final anchor = scrollAnchor;
         final items = this.items;
         window.viewDependencies.record(window, this, () -> scrollAnchor != anchor || this.items != items || resetPending);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function getLastLayoutBounds():Null<Bounds> {
         return lastLayoutBounds;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function setLastLayout(bounds:Bounds, padding:Edges):Void {
         lastLayoutBounds = bounds;
         lastPadding = padding;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function getOverdraw():Float {
         return overdraw;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function clearReset():Void {
         resetPending = false;
     }
@@ -1055,7 +1055,7 @@ class ListState {
     /**
      * If the width of the list has changed, invalidate all cached item heights.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function invalidateIfWidthChanged(width:Float):Void {
         if (lastLayoutBounds == null || lastLayoutBounds.size.width != width) {
             final newItems = [for (item in items.items) ListItem.unmeasured(null, item.focusHandle)];
@@ -1065,7 +1065,7 @@ class ListState {
         }
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function applyAutoscrollRequest(request:ListOffset):Void {
         setScrollAnchor(request);
     }
@@ -1111,7 +1111,7 @@ class ListState {
     /**
      * Rust `DispatchTree::truncate`.
      */
-    @:access(gpui.DispatchTree)
+    @:access(glaze.DispatchTree)
     static function truncateDispatchTree(tree:DispatchTree, index:Int):Void {
         for (i in index...tree.nodeCount) {
             final node = tree.nodes[i];
@@ -1140,7 +1140,7 @@ private enum PendingScroll {
 }
 
 /**
- * Rust `ScrollAnchor` of `list.rs` (named to avoid `gpui.ScrollAnchor`).
+ * Rust `ScrollAnchor` of `list.rs` (named to avoid `glaze.ScrollAnchor`).
  */
 private class ListScrollAnchor {
 
@@ -1161,7 +1161,7 @@ private class ListScrollAnchor {
 
 }
 
-@:using(gpui.ListState.FollowStateTools)
+@:using(glaze.ListState.FollowStateTools)
 private enum FollowState {
     Normal;
     Tail(isFollowing:Bool);
@@ -1213,7 +1213,7 @@ private class FollowStateTools {
  * `ListItem::Measured { size, focus_handle }`. `sizeValue` holds the size
  * (measured) or the size hint (unmeasured).
  */
-@:allow(gpui)
+@:allow(glaze)
 private class ListItem {
 
     public final measured:Bool;
@@ -1258,7 +1258,7 @@ private class ListItem {
  * `prev()` from the first item; its start is 0), `count` is the end. A
  * cursor's `start()` is (`startCount(ix)`, `startHeight(ix)`).
  */
-@:allow(gpui)
+@:allow(glaze)
 private class ListItemTree {
 
     public static final EMPTY:ListItemTree = new ListItemTree([]);

@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/lib.rs (init)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.AppContext;
+import glaze.App;
+import glaze.AppContext;
 
 /**
  * Behavior and infrastructure foundations for GPUI applications (the
@@ -20,7 +20,7 @@ class Base {
      * globals and bindings here as they are ported.
      */
     public static function init(cx:AppContext):Void {
-        gpui.base.theme.Theme.globalMut(cx);
+        glaze.kit.base.theme.Theme.globalMut(cx);
         GlobalState.init(cx);
         Dialog.DialogKeys.init(cx);
         FocusTrap.init(cx);
@@ -32,9 +32,9 @@ class Base {
         Select.init(cx);
         NumberInput.init(cx);
         TimeField.TimeFieldState.init(cx);
-        gpui.base.input.InputKeyBindings.init(cx);
+        glaze.kit.base.input.InputKeyBindings.init(cx);
         Tree.TreeState.init(cx);
-        gpui.base.text.Text.init(cx);
+        glaze.kit.base.text.Text.init(cx);
         Root.init(cx);
     }
 

@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/dock_area.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Window;
+import glaze.App;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Window;
 
 /**
  * What a skin needs to draw one dock, and the callbacks it invokes rather
@@ -28,7 +28,7 @@ class DockContext {
 
     final onResizeEnd:(Window, App) -> Void;
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function new(placement:DockPlacement, size:Pixels, open:Bool, collapsible:Bool, onToggle:(Window, App) -> Void,
             onResize:(Point, Window, App) -> Void, onResizeEnd:(Window, App) -> Void) {
         this.placementValue = placement;

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/action.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Builds actions by name, typically from keymap entries. One per `App`
@@ -49,7 +49,7 @@ class ActionRegistry {
         if (actionClassesInitialized)
             return;
         actionClassesInitialized = true;
-        untyped __cs__('foreach (var t in typeof(global::gpui.Action).Assembly.GetTypes()) { if (!t.IsInterface && !t.IsAbstract && !t.ContainsGenericParameters && typeof(global::gpui.Action).IsAssignableFrom(t)) global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(t.TypeHandle); }');
+        untyped __cs__('foreach (var t in typeof(global::glaze.Action).Assembly.GetTypes()) { if (!t.IsInterface && !t.IsAbstract && !t.ContainsGenericParameters && typeof(global::glaze.Action).IsAssignableFrom(t)) global::System.Runtime.CompilerServices.RuntimeHelpers.RunClassConstructor(t.TypeHandle); }');
         #end
     }
 
@@ -72,7 +72,7 @@ class ActionRegistry {
     /**
      * Load all registered actions into the registry.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function loadActions():Void {
         initActionClasses();
         if (macroActions == null) return;

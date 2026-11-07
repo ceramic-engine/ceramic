@@ -1,11 +1,11 @@
 // Ported from gpui-pre 0.3.10: src/inspector.rs (`Inspector`, `InspectorElementRegistry`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-#if gpui_inspector
+#if glaze_inspector
 
-import gpui.util.Ref;
+import glaze.util.Ref;
 
 /**
  * Function set on `App` to render the inspector UI.
@@ -56,23 +56,23 @@ class Inspector extends Model implements Render {
 
     var activeElement:Null<InspectedElement> = null;
 
-    @:allow(gpui)
+    @:allow(glaze)
     var pickDepth:Null<Float> = 0.0;
 
     final renderers:Map<String, InspectorElementRenderer> = new Map();
 
-    @:allow(gpui)
+    @:allow(glaze)
     function new() {
         super();
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function select(id:InspectorElementId, window:Window):Void {
         setActiveElementId(id, window);
         pickDepth = null;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function hover(id:InspectorElementId, window:Window):Void {
         if (isPicking()) {
             final changed = setActiveElementId(id, window);
@@ -82,7 +82,7 @@ class Inspector extends Model implements Render {
         }
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function setActiveElementId(id:InspectorElementId, window:Window):Bool {
         final changed = !id.equals(activeElementId());
         if (changed) {
@@ -104,7 +104,7 @@ class Inspector extends Model implements Render {
      * box holds `null` when there is none, or no active element): a state
      * left in the box is stored back.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function withActiveElementState<T, R>(type:Class<T>, window:Window, f:(Ref<Null<T>>, Window) -> R):R {
         final active = activeElement;
         if (active == null) {
@@ -186,7 +186,7 @@ class Inspector extends Model implements Render {
  */
 class InspectorElementRegistry {
 
-    @:allow(gpui)
+    @:allow(glaze)
     final factoriesByTypeId:Map<String, (Window, App) -> InspectorElementRenderer> = new Map();
 
     public function new() {}

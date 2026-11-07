@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
 
 /**
- * What a panel draws, on top of the behavior `gpui.base.dock.Panel`
+ * What a panel draws, on top of the behavior `glaze.kit.base.dock.Panel`
  * defines.
  *
  * `gpui-base` owns panel behavior: the name, the id, closability, visibility
@@ -22,7 +22,7 @@ import gpui.component.menu.PopupMenu;
  * Every method has a default in `PanelBase`, so a panel that extends it gets
  * an unnamed title and no chrome.
  */
-interface Panel extends gpui.base.dock.Panel {
+interface Panel extends glaze.kit.base.dock.Panel {
 
     /**
      * The short name shown when a tab bar has no room for the full title.
@@ -67,7 +67,7 @@ interface Panel extends gpui.base.dock.Panel {
      * never refused: a panel that stops offering the control while zoomed
      * would otherwise strand the user with no way back.
      *
-     * `gpui.base.dock.Panel.zoomable` is the other half: it decides whether
+     * `glaze.kit.base.dock.Panel.zoomable` is the other half: it decides whether
      * zooming happens at all, and base refuses a zoom that fails it however
      * the zoom was asked for.
      */

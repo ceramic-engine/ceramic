@@ -6,35 +6,35 @@
 package tests.kit;
 
 #if !macro
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.Rgba;
-import gpui.base.input.DiagnosticSeverity;
-import gpui.base.input.FoldRange;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.InputEdit;
-import gpui.base.input.StyledRange;
-import gpui.base.text.CodeBlock;
-import gpui.component.highlighter.DiagnosticStyles;
-import gpui.component.highlighter.GrammarCatalog;
-import gpui.component.highlighter.HighlightTheme;
-import gpui.component.highlighter.HighlightTheme.HighlightThemeStyle;
-import gpui.component.highlighter.Highlighter;
-import gpui.component.highlighter.LanguageName;
-import gpui.component.highlighter.LanguageRegistry;
-import gpui.component.highlighter.LanguageRegistry.LanguageConfig;
-import gpui.component.highlighter.SyntaxColors;
-import gpui.component.highlighter.SyntaxHighlighter;
-import gpui.component.highlighter.TextMateBackend;
-import gpui.component.highlighter.TextMateBackend.Highlight;
-import gpui.component.highlighter.TextMateBackend.TextMateInputHighlighter;
-import gpui.component.highlighter.TextMateGrammars;
-import gpui.component.text.TextView;
-import gpui.component.theme.Theme;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.Rgba;
+import glaze.kit.base.input.DiagnosticSeverity;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.highlighter.DiagnosticStyles;
+import glaze.kit.highlighter.GrammarCatalog;
+import glaze.kit.highlighter.HighlightTheme;
+import glaze.kit.highlighter.HighlightTheme.HighlightThemeStyle;
+import glaze.kit.highlighter.Highlighter;
+import glaze.kit.highlighter.LanguageName;
+import glaze.kit.highlighter.LanguageRegistry;
+import glaze.kit.highlighter.LanguageRegistry.LanguageConfig;
+import glaze.kit.highlighter.SyntaxColors;
+import glaze.kit.highlighter.SyntaxHighlighter;
+import glaze.kit.highlighter.TextMateBackend;
+import glaze.kit.highlighter.TextMateBackend.Highlight;
+import glaze.kit.highlighter.TextMateBackend.TextMateInputHighlighter;
+import glaze.kit.highlighter.TextMateGrammars;
+import glaze.kit.text.TextView;
+import glaze.kit.theme.Theme;
 import ropey.Rope;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 private class Named implements HighlightStyleResolver {
     public function new() {}
@@ -46,7 +46,7 @@ private class Named implements HighlightStyleResolver {
 #end
 
 /**
- * Tests of the code highlighter (`gpui.component.highlighter`).
+ * Tests of the code highlighter (`glaze.kit.highlighter`).
  *
  * Ported from gpui-kit: the tests of the syntect backend (on the TextMate
  * grammars), of the registry stub and of the component code block
@@ -55,12 +55,12 @@ private class Named implements HighlightStyleResolver {
  *
  * Added for the port: the scope to highlight name rules, the theme types
  * (serde names, stub status colors), the token colors of 40 samples compared
- * with the real vscode-textmate (`test/unit/data/highlight/truth.json`, see
+ * with the real vscode-textmate (`tests/unit/data/highlight/truth.json`, see
  * `record.mjs` there), and the incremental editor highlighter compared with
  * a whole-document tokenization after edits.
  */
-@:access(gpui.component.highlighter)
-@:access(gpui.component.text.TextView)
+@:access(glaze.kit.highlighter)
+@:access(glaze.kit.text.TextView)
 class HighlighterTest #if !macro extends KitTestCase #end {
 
     #if !macro
@@ -92,7 +92,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         #if (js || cs)
         final files:haxe.DynamicAccess<String> = haxe.Json.parse(grammarFiles());
         for (name => content in files) {
-            gpui.App.defaultAssetSource().add(GrammarCatalog.FOLDER + '/' + name, haxe.io.Bytes.ofString(content));
+            glaze.App.defaultAssetSource().add(GrammarCatalog.FOLDER + '/' + name, haxe.io.Bytes.ofString(content));
         }
         #end
     }
@@ -161,7 +161,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         assertNull(light.style.syntax.get("comment.doc"));
         assertEquals('#007fffff', hex(light.highlightStyle("comment.doc").color));
         // Font styles and weights.
-        assertEquals(gpui.FontStyle.Italic, light.highlightStyle("emphasis").fontStyle);
+        assertEquals(glaze.FontStyle.Italic, light.highlightStyle("emphasis").fontStyle);
         assertEquals(700., (light.highlightStyle("emphasis.strong").fontWeight : Float));
         assertEquals(600., (HighlightTheme.defaultDark().highlightStyle("title").fontWeight : Float));
         // `styleForIndex` follows `HIGHLIGHT_NAMES`.
@@ -189,7 +189,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         final doc = style.syntax.style("comment.doc");
         assertEquals('#112233ff', hex(doc.color));
         // Underline has no font style; 650 is not a weight serde accepts.
-        assertEquals(gpui.FontStyle.Normal, doc.fontStyle);
+        assertEquals(glaze.FontStyle.Normal, doc.fontStyle);
         assertNull(doc.fontWeight);
         assertEquals(300., (style.syntax.style("type").fontWeight : Float));
         // The default themes keep their editor colors under dotted keys:
@@ -200,7 +200,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
 
     function testStatusColorsOfTheStubAreTransparent() {
         app.update(cx -> {
-            gpui.component.Component.init(cx);
+            glaze.kit.Component.init(cx);
             for (severity in [DiagnosticSeverity.Error, DiagnosticSeverity.Warning, DiagnosticSeverity.Info, DiagnosticSeverity.Hint]) {
                 assertTrue(DiagnosticStyles.diagnosticForeground(severity, cx).equals(new Hsla()));
                 assertTrue(DiagnosticStyles.diagnosticBackground(severity, cx).equals(new Hsla()));
@@ -212,7 +212,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
     function testThemeConfigsBuildTheirHighlightTheme() {
         final theme = new Theme();
         assertTrue(theme.highlightTheme == HighlightTheme.defaultLight());
-        final dark = gpui.component.theme.DefaultThemeColors.themes().filter(t -> t.mode.isDark())[0];
+        final dark = glaze.kit.theme.DefaultThemeColors.themes().filter(t -> t.mode.isDark())[0];
         theme.applyConfig(dark);
         assertEquals("Default Dark", theme.highlightTheme.name);
         assertTrue(theme.highlightTheme.equals(HighlightTheme.defaultDark()));
@@ -267,7 +267,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
             new Highlight(4, 6, "string"),
             new Highlight(8, 10, "number")
         ];
-        final origin = new gpui.base.input.RopePoint(0, 0);
+        final origin = new glaze.kit.base.input.RopePoint(0, 0);
         TextMateBackend.shift(highlights, new InputEdit(5, 5, 8, origin, origin, origin));
         assertEquals("(0..2, keyword),(11..13, number)", highlights.join(','));
     }
@@ -408,12 +408,12 @@ class HighlighterTest #if !macro extends KitTestCase #end {
 
     function testComponentInitializationInstallsCodeHighlightingWhenEnabled() {
         app.update(cx -> {
-            gpui.component.Component.init(cx);
-            assertFalse(gpui.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
+            glaze.kit.Component.init(cx);
+            assertFalse(glaze.kit.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
             Highlighter.enable(cx);
-            assertTrue(gpui.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
+            assertTrue(glaze.kit.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
             Highlighter.disable(cx);
-            assertFalse(gpui.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
+            assertFalse(glaze.kit.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
         });
     }
 
@@ -482,7 +482,7 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         keys.resize(total);
         for (run in runs) {
             final style = run.style;
-            final key = hex(style.color) + '/' + (style.fontStyle == gpui.FontStyle.Italic ? 1 : 0) + '/'
+            final key = hex(style.color) + '/' + (style.fontStyle == glaze.FontStyle.Italic ? 1 : 0) + '/'
                 + (style.fontWeight == null ? 'null' : Std.string(Std.int(style.fontWeight)));
             for (i in run.range.start...run.range.end)
                 keys[i] = key;
@@ -680,12 +680,10 @@ class HighlighterTest #if !macro extends KitTestCase #end {
     /** The bundled grammar files (JavaScript and C# builds only, see `addGrammars`). */
     static macro function grammarFiles():haxe.macro.Expr {
         final file = haxe.macro.Context.getPosInfos(haxe.macro.Context.currentPos()).file;
-        // The plugin root, as `test/unit/plugins/gpui.plugin` names it.
+        // The plugin root (tests/unit is two levels below it)
         final unit = haxe.io.Path.normalize(haxe.io.Path.directory(sys.FileSystem.absolutePath(file)) + '/../../..');
-        var pluginRoot = StringTools.trim(sys.io.File.getContent(unit + '/plugins/gpui.plugin'));
-        if (!haxe.io.Path.isAbsolute(pluginRoot))
-            pluginRoot = unit + '/' + pluginRoot;
-        final dir = haxe.io.Path.normalize(pluginRoot + '/assets/gpui/grammars');
+        final pluginRoot = unit + '/../..';
+        final dir = haxe.io.Path.normalize(pluginRoot + '/assets/glaze/grammars');
         final files:haxe.DynamicAccess<String> = {};
         for (name in sys.FileSystem.readDirectory(dir)) {
             if (!StringTools.endsWith(name, '.json'))
@@ -696,8 +694,8 @@ class HighlighterTest #if !macro extends KitTestCase #end {
         }
         if (haxe.macro.Context.defined('cs')) {
             // A string literal this large exceeds the C# limit of the user strings
-            haxe.macro.Context.addResource('gpui-test-grammars', haxe.io.Bytes.ofString(haxe.Json.stringify(files)));
-            return macro haxe.Resource.getString('gpui-test-grammars');
+            haxe.macro.Context.addResource('glaze-test-grammars', haxe.io.Bytes.ofString(haxe.Json.stringify(files)));
+            return macro haxe.Resource.getString('glaze-test-grammars');
         }
         return macro $v{haxe.Json.stringify(files)};
     }

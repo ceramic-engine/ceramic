@@ -1,37 +1,37 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/shimmer.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.shimmer;
+package glaze.kit.shimmer;
 
-import gpui.Animation;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.LayoutId;
-import gpui.LineLayout;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.StyledText;
-import gpui.TextAlign;
-import gpui.WrapBoundary;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.Animation;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.LayoutId;
+import glaze.LineLayout;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.StyledText;
+import glaze.TextAlign;
+import glaze.WrapBoundary;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AnimationExt;
-using gpui.base.StyledExt;
-using gpui.component.theme.Colorize;
+using glaze.AnimationExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.theme.Colorize;
 
 /**
  * The half width of a shimmer band: a fraction of the text width, or pixels.
@@ -112,7 +112,7 @@ class ShimmerStyle {
         return style;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function animation():Animation {
         return ShimmerText.loadingAnimation(durationValue, onceValue);
     }
@@ -207,10 +207,10 @@ class ShimmerText implements RenderOnce implements Styled {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
-    @:allow(gpui.component.shimmer, tests)
+    @:allow(glaze.kit.shimmer, tests)
     static function shimmerHighlightColor(text:Hsla, background:Hsla, foreground:Hsla, dark:Bool, overrideColor:Null<Hsla>):Hsla {
         var highlight = overrideColor;
         if (highlight == null) {
@@ -226,7 +226,7 @@ class ShimmerText implements RenderOnce implements Styled {
         return highlight.opacity(layerOpacity);
     }
 
-    @:allow(gpui.component.shimmer, tests)
+    @:allow(glaze.kit.shimmer, tests)
     static function shimmerBandBounds(bounds:Bounds, phase:Float, spread:ShimmerSpread, layer:Int):Null<Bounds> {
         final width = bounds.size.width;
         if (width <= 0. || bounds.size.height <= 0. || layer >= SHIMMER_LAYER_COUNT) {
@@ -241,10 +241,10 @@ class ShimmerText implements RenderOnce implements Styled {
         final radius = f32(halfWidth * f32(1. - f32(layer / SHIMMER_LAYER_COUNT)));
         final left = Math.max(f32(center - radius), 0.);
         final right = Math.min(f32(center + radius), width);
-        return right > left ? new Bounds(new Point(bounds.origin.x + left, bounds.origin.y), new gpui.Size(f32(right - left), bounds.size.height)) : null;
+        return right > left ? new Bounds(new Point(bounds.origin.x + left, bounds.origin.y), new glaze.Size(f32(right - left), bounds.size.height)) : null;
     }
 
-    @:allow(gpui.component.shimmer)
+    @:allow(glaze.kit.shimmer)
     static function shimmerAlignedOriginX(origin:Point, alignWidth:Float, previousGlyphX:Float, align:TextAlign, layout:LineLayout, nextWrap:Null<WrapBoundary>):Float {
         final lineEnd = nextWrap != null ? layout.runs[nextWrap.runIx].glyphs[nextWrap.glyphIx].position.x : layout.width;
         final lineWidth = lineEnd - previousGlyphX;

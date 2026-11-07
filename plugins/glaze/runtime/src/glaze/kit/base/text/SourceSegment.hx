@@ -1,19 +1,19 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * A rendered UTF-8 byte span paired with its exact Markdown source span.
  */
 class SourceSegment {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var rendered:Range;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var source:Range;
 
     /**
@@ -22,7 +22,7 @@ class SourceSegment {
      * A decoded entity or an escape maps only as a whole, even an entity
      * whose characters take as many bytes as its source, like `&acE;`.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var linear:Bool;
 
     public function new(rendered:Range, source:Range, linear:Bool) {
@@ -49,7 +49,7 @@ class SourceSegment {
      * The source range of the rendered `selection`, when every selected
      * byte maps to source (Rust free `source_range_for_segments`).
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function sourceRangeForSegments(segments:Array<SourceSegment>, selection:Range):Null<Range> {
         inline function satSub(a:Int, b:Int):Int {
             return a > b ? a - b : 0;

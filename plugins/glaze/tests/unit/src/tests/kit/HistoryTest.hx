@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.History;
+import glaze.kit.base.History;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.History` (Rust `history.rs`).
+ * Tests of `glaze.kit.base.History` (Rust `history.rs`).
  */
 class HistoryTest extends TestCase {
 

@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/element.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.Length;
-import gpui.LayoutId;
-import gpui.MouseMoveEvent;
-import gpui.Point;
-import gpui.SizeOf;
-import gpui.SpringMath;
-import gpui.Style;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.Length;
+import glaze.LayoutId;
+import glaze.MouseMoveEvent;
+import glaze.Point;
+import glaze.SizeOf;
+import glaze.SpringMath;
+import glaze.Style;
+import glaze.Window;
 
-import gpui.Prelude.relative;
+import glaze.Prelude.relative;
 
 /**
  * Paints a `Plot` filling its container, with appear tracking when the plot
@@ -145,7 +145,7 @@ class PlotElement extends Element {
             // A finger has no hover: only a long press opens the tooltip,
             // drags the crosshair, and closes it on lift.
             window.onMouseEvent(LongPress, (e, phase, window, cx) -> {
-                final e:gpui.LongPressEvent = cast e;
+                final e:glaze.LongPressEvent = cast e;
                 if (!phase.bubble()) {
                     return;
                 }

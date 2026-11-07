@@ -1,9 +1,9 @@
 package scenarios;
 
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
 
 /**
  * Scrolling the code editor of `EditorBench`: `step` dispatches a scroll

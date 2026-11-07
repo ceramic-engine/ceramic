@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/keymap.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A collection of key bindings for the user's application.
@@ -338,7 +338,7 @@ class Keymap {
      * Returns the deepest depth at which the binding matches, or null if it
      * doesn't match.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function bindingEnabled(binding:KeyBinding, contexts:Array<KeyContext>):Null<Int> {
         final predicate = binding.contextPredicate;
         if (predicate != null) {

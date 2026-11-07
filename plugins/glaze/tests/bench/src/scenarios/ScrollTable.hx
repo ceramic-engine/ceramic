@@ -1,21 +1,21 @@
 package scenarios;
 
 import Scenario;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.Window;
-import gpui.component.table.Column;
-import gpui.component.table.DataTable;
-import gpui.component.table.TableDelegate.TableDelegateBase;
-import gpui.component.table.TableState;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.Window;
+import glaze.kit.table.Column;
+import glaze.kit.table.DataTable;
+import glaze.kit.table.TableDelegate.TableDelegateBase;
+import glaze.kit.table.TableState;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A gpui-kit `DataTable` of 10 000 rows and 8 columns of deterministic data
@@ -35,7 +35,7 @@ class ScrollTable extends BaseScenario {
 
     public static inline final PADDING:Float = 12;
 
-    /** Elements created by a full draw (needs `gpui_count_allocations`). */
+    /** Elements created by a full draw (needs `glaze_count_allocations`). */
     public var elementCount:Int = 0;
 
     var app:App;

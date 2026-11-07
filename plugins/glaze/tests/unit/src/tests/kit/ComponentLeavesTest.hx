@@ -4,43 +4,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.OperatingSystem;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.PlatformUrl;
-import gpui.component.Size;
-import gpui.component.avatar.Avatar;
-import gpui.component.avatar.AvatarGroup;
-import gpui.component.descriptionlist.DescriptionList;
-import gpui.component.empty.Empty;
-import gpui.component.groupbox.GroupBox.GroupBoxVariant;
-import gpui.component.kbd.Kbd;
-import gpui.component.marker.Marker;
-import gpui.component.shimmer.ShimmerText;
-import gpui.component.spinner.Spinner;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.OperatingSystem;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.PlatformUrl;
+import glaze.kit.Size;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.avatar.AvatarGroup;
+import glaze.kit.descriptionlist.DescriptionList;
+import glaze.kit.empty.Empty;
+import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.marker.Marker;
+import glaze.kit.shimmer.ShimmerText;
+import glaze.kit.spinner.Spinner;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.component.Size.SizeTools;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.ElementExt;
+using glaze.kit.Size.SizeTools;
+using glaze.kit.theme.Colorize;
 
 /**
  * The `#[cfg(test)]` tests of the wave 2 leaf components.
@@ -167,7 +167,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testEmptyBuilder() {
-        final rootStyle = new gpui.StyleBuilder().p4().border1().style();
+        final rootStyle = new glaze.StyleBuilder().p4().border1().style();
         final empty = new Empty();
         empty.style().refine(rootStyle);
         empty.child('Before the named setters, still after the slots')
@@ -237,7 +237,7 @@ class ComponentLeavesTest extends TestCase {
     function legacyLink(disabled:Bool, ?bounds:Map<String, Bounds>):{clicks:Int} {
         app.update(cx -> Component.init(cx));
         final state = {clicks: 0};
-        open(() -> new gpui.component.link.Link('legacy-link')
+        open(() -> new glaze.kit.link.Link('legacy-link')
             .href('https://example.com')
             .disabled(disabled)
             .size(px(100.))
@@ -285,7 +285,7 @@ class ComponentLeavesTest extends TestCase {
             .size(px(100.))
             .onClick((_, _, _) -> state.parentClicks++)
             .child(
-                new gpui.base.Link('link')
+                new glaze.kit.base.Link('link')
                     .href('app://settings')
                     .disabled(disabled)
                     .sizeFull()
@@ -316,7 +316,7 @@ class ComponentLeavesTest extends TestCase {
 
     function testOpenStrategyRunsBeforeActivationCallback() {
         final order:Array<String> = [];
-        open(() -> new gpui.base.Link('ordered-link')
+        open(() -> new glaze.kit.base.Link('ordered-link')
             .href('app://ordered')
             .size(px(100.))
             .openWith((_, _, _, _) -> order.push('open'))
@@ -343,7 +343,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testHrefWithoutStrategyNeverOpensExternally() {
-        open(() -> new gpui.base.Link('target-only').href('https://example.com').size(px(100.)));
+        open(() -> new glaze.kit.base.Link('target-only').href('https://example.com').size(px(100.)));
         cx.simulateClick(point(10., 10.));
         assertNull(PlatformUrl.openedUrl);
     }
@@ -359,7 +359,7 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testVisualStateStylesRemainApplicationOwned() {
-        new gpui.base.Link('states')
+        new glaze.kit.base.Link('states')
             .styles(styles -> styles.disabled(style -> style.opacity(0.5)))
             .hover(style -> style.opacity(0.9))
             .active(style -> style.opacity(0.8))
@@ -368,22 +368,22 @@ class ComponentLeavesTest extends TestCase {
     }
 
     function testDisabledStyleAppliesOnlyWhileDisabledAndThenWins() {
-        final enabled = new gpui.base.Link('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
+        final enabled = new glaze.kit.base.Link('enabled').opacity(0.9).styles(styles -> styles.disabled(style -> style.opacity(0.5)));
         assertEquals(0.9, enabled.resolvedStyle().opacity);
-        final disabled = new gpui.base.Link('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
+        final disabled = new glaze.kit.base.Link('disabled').styles(styles -> styles.disabled(style -> style.opacity(0.5))).opacity(0.9).disabled(true);
         assertEquals(0.5, disabled.resolvedStyle().opacity);
-        final semanticOnly = new gpui.base.Link('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
+        final semanticOnly = new glaze.kit.base.Link('semantic-only').styles(styles -> styles.disabled(style -> style.opacity(0.5))).disabled(true);
         assertEquals(0.5, semanticOnly.resolvedStyle().opacity);
     }
 
     function testAccessibilityExposesLinkRoleLabelAndActionSurface() {
-        final enabled = new gpui.base.Link('enabled').href('app://settings').accessibilityLabel('Settings').openWith((_, _, _, _) -> {});
-        final disabled = new gpui.base.Link('disabled').disabled(true).accessibilityLabel('Settings').onActivate((_, _, _) -> {});
+        final enabled = new glaze.kit.base.Link('enabled').href('app://settings').accessibilityLabel('Settings').openWith((_, _, _, _) -> {});
+        final disabled = new glaze.kit.base.Link('disabled').disabled(true).accessibilityLabel('Settings').onActivate((_, _, _) -> {});
         open(() -> div().child(enabled).child(disabled));
-        assertTrue(enabled.a11y.role == gpui.base.A11y.Role.Link);
+        assertTrue(enabled.a11y.role == glaze.kit.base.A11y.Role.Link);
         assertEquals('Settings', enabled.a11y.label);
         assertTrue(enabled.a11y.clickable);
-        assertTrue(disabled.a11y.role == gpui.base.A11y.Role.Link);
+        assertTrue(disabled.a11y.role == glaze.kit.base.A11y.Role.Link);
         assertFalse(disabled.a11y.clickable);
         assertFalse(enabled.a11y.disabled);
         assertTrue(disabled.a11y.disabled);
@@ -419,8 +419,8 @@ class ComponentLeavesTest extends TestCase {
 
         assertTrue(new Marker().roleValue.match(Implicit));
         assertNull(new Marker().idValue);
-        final status = new Marker().id('sync-status').role(Explicit(gpui.base.A11y.Role.Status));
-        assertTrue(Type.enumEq(gpui.ElementId.Name('sync-status'), status.idValue));
+        final status = new Marker().id('sync-status').role(Explicit(glaze.kit.base.A11y.Role.Status));
+        assertTrue(Type.enumEq(glaze.ElementId.Name('sync-status'), status.idValue));
         assertTrue(status.roleValue.match(Explicit(Status)));
 
         final styled = new Marker().opacity(0.37).child('Status').child('Details');
@@ -461,7 +461,7 @@ class ComponentLeavesTest extends TestCase {
         assertFalse(text.shimmerStyle.reverseValue);
         assertFalse(text.shimmerStyle.onceValue);
         assertEquals(0.8, text.shimmerTextStyle.opacity);
-        assertTrue(Type.enumEq(gpui.ElementId.Name('thinking'), text.idValue));
+        assertTrue(Type.enumEq(glaze.ElementId.Name('thinking'), text.idValue));
 
         assertTrue(Type.enumEq(new ShimmerStyle().spread(Relative(0.)).spreadValue, Relative(0.05)));
         assertTrue(Type.enumEq(new ShimmerStyle().spread(Relative(2.)).spreadValue, Relative(1.)));
@@ -590,8 +590,8 @@ class ComponentLeavesTest extends TestCase {
     // progress/progress.rs and kit/tests/integration/components.rs
 
     function testStoresAnExplicitAccessibilityLabel() {
-        assertNull(new gpui.component.progress.Progress('upload').getAccessibilityLabel());
-        assertEquals('Upload progress', new gpui.component.progress.Progress('upload').accessibilityLabel('Upload progress').getAccessibilityLabel());
+        assertNull(new glaze.kit.progress.Progress('upload').getAccessibilityLabel());
+        assertEquals('Upload progress', new glaze.kit.progress.Progress('upload').accessibilityLabel('Upload progress').getAccessibilityLabel());
     }
 
 }

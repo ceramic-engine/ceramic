@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.input.TabSize;
+import glaze.kit.base.input.TabSize;
 import ropey.RopeSlice;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.TabSize` (Rust `indent.rs`).
+ * Tests of `glaze.kit.base.input.TabSize` (Rust `indent.rs`).
  */
 class InputIndentTest extends TestCase {
 

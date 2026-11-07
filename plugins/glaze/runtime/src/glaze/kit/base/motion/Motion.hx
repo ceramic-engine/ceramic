@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (transition, transition_with_status, animate_keyframes, spring)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.SpringMath.f32;
-import gpui.SpringState;
-import gpui.SpringTarget;
-import gpui.Window;
-import gpui.base.motion.Timing.MotionPhase;
-import gpui.util.MathUtil;
+import glaze.App;
+import glaze.AppContext;
+import glaze.SpringMath.f32;
+import glaze.SpringState;
+import glaze.SpringTarget;
+import glaze.Window;
+import glaze.kit.base.motion.Timing.MotionPhase;
+import glaze.util.MathUtil;
 
 /**
  * Keyed, render-time motion: CSS-like transitions, keyframe playback and
@@ -231,7 +231,7 @@ class Motion {
     /**
      * Rust's `Instant::saturating_duration_since`, in nanoseconds.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static inline function saturatingSince(now:Float, earlier:Float):Float {
         return now > earlier ? now - earlier : 0.0;
     }

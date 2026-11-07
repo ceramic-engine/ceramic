@@ -10,24 +10,24 @@
 // bar, TextSelectionLayer, theme activation), light palette. See NOTICE.md.
 package examples.showcase;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Rgba;
-import gpui.ScrollHandle;
-import gpui.Window;
-import gpui.base.Avatar;
-import gpui.base.Avatar.AvatarFallback;
-import gpui.base.Link;
-import gpui.base.Progress;
-import gpui.base.Progress.ProgressIndicator;
-import gpui.base.Progress.ProgressTrack;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Rgba;
+import glaze.ScrollHandle;
+import glaze.Window;
+import glaze.kit.base.Avatar;
+import glaze.kit.base.Avatar.AvatarFallback;
+import glaze.kit.base.Link;
+import glaze.kit.base.Progress;
+import glaze.kit.base.Progress.ProgressIndicator;
+import glaze.kit.base.Progress.ProgressTrack;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * `palette.rs`: the colors of the examples, light or dark.
@@ -340,7 +340,7 @@ class BaseShowcase extends Model implements Render {
      * `run`: `gpui_base::init`, then the window.
      */
     public static function setup(cx:App):Void {
-        gpui.base.Base.init(cx);
+        glaze.kit.base.Base.init(cx);
     }
 
     public static function open(component:String):(Window, App) -> Entity<BaseShowcase> {

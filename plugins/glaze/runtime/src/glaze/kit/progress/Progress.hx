@@ -1,34 +1,34 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/progress/progress.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.progress;
+package glaze.kit.progress;
 
-import gpui.Animation;
-import gpui.App;
-import gpui.Background;
-import gpui.Easing;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Progress.ProgressIndicator;
-import gpui.base.Progress.ProgressTrack;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.Animation;
+import glaze.App;
+import glaze.Background;
+import glaze.Easing;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Progress.ProgressIndicator;
+import glaze.kit.base.Progress.ProgressTrack;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-using gpui.AnimationExt;
-using gpui.base.StyledExt;
+using glaze.AnimationExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A progress bar: a pill track with the indicator filling `value` percent
@@ -93,7 +93,7 @@ class Progress implements RenderOnce implements Styled implements Sizable {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     public function render(window:Window, cx:App):IntoElement {
@@ -124,12 +124,12 @@ class Progress implements RenderOnce implements Styled implements Sizable {
         final animatedValue = Motion.transition(
             TransitionId.named(id, 'indicator'),
             value,
-            new Transition(0.18).easing(gpui.base.motion.Easing.cubicBezier(0.2, 0.0, 0.0, 1.0)),
+            new Transition(0.18).easing(glaze.kit.base.motion.Easing.cubicBezier(0.2, 0.0, 0.0, 1.0)),
             window,
             cx
         );
 
-        final progress = new gpui.base.Progress(id).value(value).indeterminate(loading);
+        final progress = new glaze.kit.base.Progress(id).value(value).indeterminate(loading);
         if (accessibilityLabelValue != null) {
             progress.accessibilityLabel(accessibilityLabelValue);
         }
@@ -154,18 +154,18 @@ class Progress implements RenderOnce implements Styled implements Sizable {
             .refineStyle(innerStyle);
         if (loading && !reduceMotion) {
             progress.child(indicator.intoDiv().withAnimation('progress-loading', new Animation(1.).repeat(), (element, delta) -> {
-                final start = gpui.Prelude.relative(Easing.easeInOut(Math.min(Math.max(f32(f32(delta - 0.5) / 0.5), 0.), 1.)));
-                final end = gpui.Prelude.relative(Easing.easeInOut(f32(1.0 - delta)));
+                final start = glaze.Prelude.relative(Easing.easeInOut(Math.min(Math.max(f32(f32(delta - 0.5) / 0.5), 0.), 1.)));
+                final end = glaze.Prelude.relative(Easing.easeInOut(f32(1.0 - delta)));
                 if (delta > 0.5) element.left(start);
                 return element.right(end);
             }));
         }
         else if (loading) {
-            progress.child(indicator.left(gpui.Prelude.relative(0.325)).right(gpui.Prelude.relative(0.325)));
+            progress.child(indicator.left(glaze.Prelude.relative(0.325)).right(glaze.Prelude.relative(0.325)));
         }
         else {
             final fraction = f32(animatedValue / 100.);
-            progress.child(indicator.w(gpui.Prelude.relative(fraction < 0. ? 0. : (fraction > 1. ? 1. : fraction))));
+            progress.child(indicator.w(glaze.Prelude.relative(fraction < 0. ? 0. : (fraction > 1. ? 1. : fraction))));
         }
         return progress;
     }

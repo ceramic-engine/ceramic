@@ -3,18 +3,18 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyView;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.NavStack;
-import gpui.base.NavStackState;
-import gpui.base.motion.Transition;
+import glaze.AnyView;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.NavStack;
+import glaze.kit.base.NavStackState;
+import glaze.kit.base.motion.Transition;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 class NavTestPage extends Model implements Render {
 
@@ -44,7 +44,7 @@ class NavTestHost extends Model implements Render {
 }
 
 /**
- * Tests of `gpui.base.NavStackState` and `NavStack` (Rust `nav_stack.rs`).
+ * Tests of `glaze.kit.base.NavStackState` and `NavStack` (Rust `nav_stack.rs`).
  */
 class NavStackTest extends KitTestCase {
 

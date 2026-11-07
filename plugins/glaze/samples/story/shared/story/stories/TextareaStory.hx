@@ -4,46 +4,46 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.ClickEvent;
-import gpui.ClipboardItem;
-import gpui.ElementId;
-import gpui.ImageFormat;
-import gpui.Subscription;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.TextareaState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.attachment.Attachment;
-import gpui.component.attachment.Attachment.AttachmentActions;
-import gpui.component.attachment.Attachment.AttachmentContent;
-import gpui.component.attachment.Attachment.AttachmentDescription;
-import gpui.component.attachment.Attachment.AttachmentGroup;
-import gpui.component.attachment.Attachment.AttachmentMedia;
-import gpui.component.attachment.Attachment.AttachmentTitle;
-import gpui.component.button.Button;
-import gpui.component.hovercard.HoverCard;
-import gpui.component.input.Textarea;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.ClickEvent;
+import glaze.ClipboardItem;
+import glaze.ElementId;
+import glaze.ImageFormat;
+import glaze.Subscription;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.attachment.Attachment;
+import glaze.kit.attachment.Attachment.AttachmentActions;
+import glaze.kit.attachment.Attachment.AttachmentContent;
+import glaze.kit.attachment.Attachment.AttachmentDescription;
+import glaze.kit.attachment.Attachment.AttachmentGroup;
+import glaze.kit.attachment.Attachment.AttachmentMedia;
+import glaze.kit.attachment.Attachment.AttachmentTitle;
+import glaze.kit.button.Button;
+import glaze.kit.hovercard.HoverCard;
+import glaze.kit.input.Textarea;
+import glaze.kit.theme.Theme;
 import story.stories.InputTokens.TokenExample;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 private class ComposerAttachment {
 
@@ -77,7 +77,7 @@ class TextareaStory extends Model implements Story {
 
     public static function init(_:App):Void {}
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -109,7 +109,7 @@ class TextareaStory extends Model implements Story {
      */
     var nextAttachmentId:Int = 0;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     final subscriptions:Array<Subscription>;
 
@@ -191,7 +191,7 @@ class TextareaStory extends Model implements Story {
     public function render(_:Window, cx:Context<Dynamic>):IntoElement {
         final theme = Theme.global(cx.app);
         final loc = textarea.read(cx.app).cursorPosition();
-        final view:gpui.WeakEntity<TextareaStory> = cast cx.weakEntity();
+        final view:glaze.WeakEntity<TextareaStory> = cast cx.weakEntity();
         final attachments = this.attachments;
         final composerColumn = vFlex().gap2().wFull();
         if (attachments.length > 0) {

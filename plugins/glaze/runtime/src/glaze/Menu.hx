@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/platform/app_menu.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A menu of the application, either a main menu or a submenu.
@@ -94,7 +94,7 @@ enum abstract SystemMenuType(Int) {
  * The different kinds of items that can be in a menu. Builders and methods
  * are in `MenuItemTools`.
  */
-@:using(gpui.Menu.MenuItemTools)
+@:using(glaze.Menu.MenuItemTools)
 enum MenuItem {
 
     /** A separator between items. */
@@ -107,7 +107,7 @@ enum MenuItem {
     SystemMenu(menu:OsMenu);
 
     /** An action that can be performed. */
-    Action(name:String, action:gpui.Action, osAction:Null<OsAction>, checked:Bool, disabled:Bool);
+    Action(name:String, action:glaze.Action, osAction:Null<OsAction>, checked:Bool, disabled:Bool);
 
 }
 
@@ -132,12 +132,12 @@ class MenuItemTools {
     }
 
     /** Creates a new menu item that invokes an action. */
-    public static function action(name:String, action:gpui.Action):MenuItem {
+    public static function action(name:String, action:glaze.Action):MenuItem {
         return MenuItem.Action(name, action, null, false, false);
     }
 
     /** Creates a new menu item that invokes an action and has an OS action. */
-    public static function osAction(name:String, action:gpui.Action, osAction:OsAction):MenuItem {
+    public static function osAction(name:String, action:glaze.Action, osAction:OsAction):MenuItem {
         return MenuItem.Action(name, action, osAction, false, false);
     }
 
@@ -240,7 +240,7 @@ class OwnedMenu {
 /**
  * The different kinds of items that can be in a menu (owned).
  */
-@:using(gpui.Menu.OwnedMenuItemTools)
+@:using(glaze.Menu.OwnedMenuItemTools)
 enum OwnedMenuItem {
 
     /** A separator between items. */
@@ -253,7 +253,7 @@ enum OwnedMenuItem {
     SystemMenu(menu:OwnedOsMenu);
 
     /** An action that can be performed. */
-    Action(name:String, action:gpui.Action, osAction:Null<OsAction>, checked:Bool, disabled:Bool);
+    Action(name:String, action:glaze.Action, osAction:Null<OsAction>, checked:Bool, disabled:Bool);
 
 }
 

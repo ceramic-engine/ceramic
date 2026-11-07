@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/focus_trap.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ParentElement;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ParentElement;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
 
 /**
  * Adds `focusTrap` to a `Div`, as a static extension:
- * `using gpui.base.FocusTrap;` (Rust `FocusTrapElement`).
+ * `using glaze.kit.base.FocusTrap;` (Rust `FocusTrapElement`).
  */
 class FocusTrap {
 
@@ -68,7 +68,7 @@ class FocusTrapManager {
 
     final order:Array<String> = [];
 
-    @:allow(gpui.base.FocusTrap)
+    @:allow(glaze.kit.base.FocusTrap)
     function new() {}
 
     static function global(cx:App):Null<FocusTrapManager> {
@@ -81,7 +81,7 @@ class FocusTrapManager {
     /**
      * Register a focus trap container.
      */
-    @:allow(gpui.base.FocusTrapContainer)
+    @:allow(glaze.kit.base.FocusTrapContainer)
     static function registerTrap(id:GlobalElementId, containerHandle:FocusHandle, cx:App):Void {
         var manager = global(cx);
         if (manager == null) {
@@ -131,7 +131,7 @@ class FocusTrapContainer extends Element implements Styled implements ParentElem
     /** The wrapped element. */
     public final base:Div;
 
-    @:allow(gpui.base.FocusTrap)
+    @:allow(glaze.kit.base.FocusTrap)
     function new(id:ElementIdArg, focusHandle:FocusHandle, child:Div) {
         this.id = id;
         this.base = child.trackFocus(focusHandle);

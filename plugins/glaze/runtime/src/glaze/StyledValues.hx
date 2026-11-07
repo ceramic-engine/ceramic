@@ -2,7 +2,7 @@
 // and gpui-pre 0.3.10: src/styled.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Shared values used by the `Styled` methods. The length constants
@@ -11,7 +11,7 @@ package gpui;
  * the scales of `gpui_macros`. Enum values are immutable, so sharing them
  * avoids allocating when styling elements.
  */
-@:build(gpui.StyledMacro.buildValues())
+@:build(glaze.StyledMacro.buildValues())
 class StyledValues {
 
     /** The ellipsis used by `textEllipsis()` and `truncate()` */

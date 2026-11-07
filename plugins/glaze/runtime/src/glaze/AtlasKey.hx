@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.AtlasTile;
+import glaze.AtlasTile;
 
 /**
  * Identifies an atlas entry.
@@ -12,7 +12,7 @@ import gpui.AtlasTile;
  * (the path or image id and the rendered size): `RenderSvgParams` and
  * `RenderImageParams` come with the SVG and image elements.
  */
-@:using(gpui.AtlasKey.AtlasKeyTools)
+@:using(glaze.AtlasKey.AtlasKeyTools)
 enum AtlasKey {
     Glyph(params:RenderGlyphParams);
     Svg(path:String, width:Int, height:Int);

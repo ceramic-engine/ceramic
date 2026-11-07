@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/select.rs (Caret)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.select;
+package glaze.kit.select;
 
-import gpui.App;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
+import glaze.App;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
 
 /**
  * The chevron of a select trigger, sized for its trigger. The rest of

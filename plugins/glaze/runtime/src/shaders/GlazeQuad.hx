@@ -10,7 +10,7 @@ package shaders;
  * slash pattern or checkerboard), clipped by a content mask.
  *
  * Each quad is drawn as 4 vertices carrying the same per-instance data in
- * custom attributes (see `gpui.ceramic.SceneRenderer` for the layout).
+ * custom attributes (see `glaze.ceramic.SceneRenderer` for the layout).
  * All geometry attributes are in scene units (scaled pixels), so the signed
  * distance field and antialiasing work in device pixels like in GPUI.
  *
@@ -20,9 +20,9 @@ package shaders;
  * The Metal shader mixes sRGB colors directly (like CSS) and is the one
  * used by the GPUI reference renders on macOS.
  */
-class GpuiQuad extends Shader<GpuiQuad_Vert, GpuiQuad_Frag> {}
+class GlazeQuad extends Shader<GlazeQuad_Vert, GlazeQuad_Frag> {}
 
-class GpuiQuad_Vert extends Vert {
+class GlazeQuad_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -141,7 +141,7 @@ class GpuiQuad_Vert extends Vert {
  * - the cosine of the slash pattern: the constant ANGLE's compiler folds,
  *   one ulp from the one FXC folds.
  */
-class GpuiQuad_Frag extends Frag {
+class GlazeQuad_Frag extends Frag {
 
     /**
      * Always 1 (set by `SceneRenderable`). The dash code multiplies some
@@ -333,14 +333,14 @@ class GpuiQuad_Frag extends Frag {
 
             if (params.y < 0.5) {
                 #if shade_unity
-                backgroundColor = GpuiQuadMad.mad(vec4(t), backgroundColor1, GpuiQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0));
+                backgroundColor = GlazeQuadMad.mad(vec4(t), backgroundColor1, GlazeQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0));
                 #else
                 backgroundColor = mix(backgroundColor0, backgroundColor1, t);
                 #end
             }
             else {
                 #if shade_unity
-                backgroundColor = oklabToSrgb(GpuiQuadMad.mad(vec4(t), backgroundColor1, GpuiQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0)));
+                backgroundColor = oklabToSrgb(GlazeQuadMad.mad(vec4(t), backgroundColor1, GlazeQuadMad.mad(vec4(-t), backgroundColor0, backgroundColor0)));
                 #else
                 backgroundColor = oklabToSrgb(mix(backgroundColor0, backgroundColor1, t));
                 #end
@@ -645,7 +645,7 @@ class GpuiQuad_Frag extends Frag {
             var blendedBorder:Vec4 = over(backgroundColor, borderColorValue);
             #if shade_unity
             var borderMix:Float = clamp(antialiasThreshold - innerSdf, 0.0, 1.0);
-            color = GpuiQuadMad.mad(vec4(borderMix), blendedBorder, GpuiQuadMad.mad(vec4(-borderMix), backgroundColor, backgroundColor));
+            color = GlazeQuadMad.mad(vec4(borderMix), blendedBorder, GlazeQuadMad.mad(vec4(-borderMix), backgroundColor, backgroundColor));
             #else
             color = mix(backgroundColor, blendedBorder, clamp(antialiasThreshold - innerSdf, 0.0, 1.0));
             #end
@@ -680,9 +680,9 @@ class GpuiQuad_Frag extends Frag {
  * HLSL `mad()`, written `fma()` in the MSL of Unity's Metal shaders: the
  * multiply-adds that Metal's fast math contracts in the GLSL of the web
  * build (ANGLE), spelled out for Unity, whose shaders are compiled with
- * `preserveInvariance` (see `GpuiQuad_Frag`).
+ * `preserveInvariance` (see `GlazeQuad_Frag`).
  */
-extern class GpuiQuadMad {
+extern class GlazeQuadMad {
     static function mad(a:Vec4, b:Vec4, c:Vec4):Vec4;
 }
 #end

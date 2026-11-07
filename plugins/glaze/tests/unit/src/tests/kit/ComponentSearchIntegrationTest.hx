@@ -3,36 +3,36 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.OperatingSystem;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.combobox.Combobox;
-import gpui.component.combobox.ComboboxState;
-import gpui.component.combobox.ComboboxState.ComboboxEvent;
-import gpui.component.command.Command;
-import gpui.component.command.CommandItem;
-import gpui.component.command.CommandItem.CommandGroup;
-import gpui.component.command.CommandState;
-import gpui.component.searchablelist.SearchableVec;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.OperatingSystem;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.combobox.Combobox;
+import glaze.kit.combobox.ComboboxState;
+import glaze.kit.combobox.ComboboxState.ComboboxEvent;
+import glaze.kit.command.Command;
+import glaze.kit.command.CommandItem;
+import glaze.kit.command.CommandItem.CommandGroup;
+import glaze.kit.command.CommandState;
+import glaze.kit.searchablelist.SearchableVec;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 @:action(namespace = search_test) class SearchSave implements Action {}
 
@@ -104,7 +104,7 @@ class ComponentSearchIntegrationTest extends TestCase {
 
     function click(x:Float, y:Float):Void {
         final position = new Point(x, y);
-        app.update(cx -> window.dispatchEvent(new gpui.MouseMoveEvent(position, null, Modifiers.none()), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.MouseMoveEvent(position, null, Modifiers.none()), cx));
         app.update(cx -> window.dispatchEvent(new MouseDownEvent(Left, position, Modifiers.none(), 1, false), cx));
         app.update(cx -> window.dispatchEvent(new MouseUpEvent(Left, position, Modifiers.none(), 1), cx));
         runUntilParked();
@@ -125,7 +125,7 @@ class ComponentSearchIntegrationTest extends TestCase {
     /** `window.press(key)` (key down then key up), then settle. */
     function press(key:String):Void {
         app.update(cx -> window.dispatchKeystroke(Keystroke.parse(key), cx));
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(Keystroke.parse(key)), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(Keystroke.parse(key)), cx));
         runUntilParked();
         draw();
     }
@@ -133,7 +133,7 @@ class ComponentSearchIntegrationTest extends TestCase {
     /** `window.press` with an already parsed keystroke. */
     function pressKeystroke(keystroke:Keystroke):Void {
         app.update(cx -> window.dispatchKeystroke(keystroke, cx));
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(keystroke), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(keystroke), cx));
         runUntilParked();
         draw();
     }

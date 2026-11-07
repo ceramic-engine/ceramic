@@ -2,9 +2,9 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-002 (background under an opaque border). See DEVIATIONS.md.
-package gpui;
+package glaze;
 
-import gpui.scene.BorderStyle;
+import glaze.scene.BorderStyle;
 
 /**
  * The CSS styling that can be applied to an element via the `Styled` methods.
@@ -100,7 +100,7 @@ class Style {
     public var flexShrink:Float = 1.0;
 
     /** The border style of this element */
-    public var borderStyle:gpui.scene.BorderStyle = Solid;
+    public var borderStyle:glaze.scene.BorderStyle = Solid;
 
     /** The mouse cursor style shown when the mouse pointer is over an element. (optional, see `isSome()`) */
     public var mouseCursor:CursorStyle = Arrow;
@@ -235,7 +235,7 @@ class Style {
      * `new Style()` and never change it (the layout only reads it): no
      * allocation per element and frame. Never change it either.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function sharedDefaultStyle():Style {
         var style = sharedDefault;
         if (style == null) {
@@ -246,7 +246,7 @@ class Style {
     }
 
     public function new() {
-        #if gpui_count_allocations gpui.util.AllocationCounters.styles++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.styles++; #end
     }
 
     /**
@@ -356,10 +356,10 @@ class Style {
     }
 
     /** The bounds of the last `computeOverflowMask()` that returned true */
-    @:allow(gpui) static var overflowMaskX:Float = 0;
-    @:allow(gpui) static var overflowMaskY:Float = 0;
-    @:allow(gpui) static var overflowMaskWidth:Float = 0;
-    @:allow(gpui) static var overflowMaskHeight:Float = 0;
+    @:allow(glaze) static var overflowMaskX:Float = 0;
+    @:allow(glaze) static var overflowMaskY:Float = 0;
+    @:allow(glaze) static var overflowMaskWidth:Float = 0;
+    @:allow(glaze) static var overflowMaskHeight:Float = 0;
 
     /**
      * The bounds of `overflowMask()` (the same operations, Rust's
@@ -367,7 +367,7 @@ class Style {
      * `overflowMaskWidth` and `overflowMaskHeight`, without allocating;
      * false when there is no mask.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function computeOverflowMask(bounds:Bounds, remSize:Pixels):Bool {
         final xVisible = overflowX == Overflow.Visible;
         final yVisible = overflowY == Overflow.Visible;

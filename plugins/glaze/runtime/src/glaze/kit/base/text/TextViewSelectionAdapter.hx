@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/selection_adapter.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Hitbox;
-import gpui.Hsla;
-import gpui.Point;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.TextSelectionContentKey;
-import gpui.base.TextSelectionCoverage;
-import gpui.base.TextSelectionEndpoint;
-import gpui.base.TextSelectionEvent;
-import gpui.base.TextSelectionHandle;
-import gpui.base.TextSelectionRegistration;
-import gpui.base.TextSelectionRun;
-import gpui.base.TextSelectionSnapshot;
-import gpui.base.TouchHandleLayout;
-import gpui.base.TextSelectionRegistration.BoundsPair;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Hitbox;
+import glaze.Hsla;
+import glaze.Point;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.TextSelectionContentKey;
+import glaze.kit.base.TextSelectionCoverage;
+import glaze.kit.base.TextSelectionEndpoint;
+import glaze.kit.base.TextSelectionEvent;
+import glaze.kit.base.TextSelectionHandle;
+import glaze.kit.base.TextSelectionRegistration;
+import glaze.kit.base.TextSelectionRun;
+import glaze.kit.base.TextSelectionSnapshot;
+import glaze.kit.base.TouchHandleLayout;
+import glaze.kit.base.TextSelectionRegistration.BoundsPair;
+import glaze.util.Utf8;
 
-using gpui.base.text.CopyProjection.CopyProjectionTools;
+using glaze.kit.base.text.CopyProjection.CopyProjectionTools;
 
 private class CachedBlockEndpoint {
     public final endpoint:TextSelectionEndpoint;
@@ -140,7 +140,7 @@ private class PaintedText {
  */
 class TextViewSelectionAdapter {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     final selection:TextSelectionHandle;
 
     /**
@@ -389,7 +389,7 @@ class TextViewSelectionAdapter {
      * with `text`, in the middle of its row (test helper).
      */
     public function textPosition(text:String, index:Int):Point {
-        var layout:Null<gpui.TextLayout> = null;
+        var layout:Null<glaze.TextLayout> = null;
         for (run in frame.textRuns) {
             if (run.text() == text) {
                 layout = run.layout();

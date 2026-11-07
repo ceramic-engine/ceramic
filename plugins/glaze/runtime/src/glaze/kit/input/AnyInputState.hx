@@ -1,19 +1,19 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Window;
-import gpui.base.OtpInput.OtpState;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.TextareaState;
-import gpui.component.WindowState;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Window;
+import glaze.kit.base.OtpInput.OtpState;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.WindowState;
 
 /**
  * Any input-like state, regardless of which input element renders it.
@@ -36,9 +36,9 @@ class AnyInputState {
 
     public final kind:AnyInputStateKind;
 
-    final model:gpui.Model;
+    final model:glaze.Model;
 
-    function new(kind:AnyInputStateKind, model:gpui.Model) {
+    function new(kind:AnyInputStateKind, model:glaze.Model) {
         this.kind = kind;
         this.model = model;
     }
@@ -81,13 +81,13 @@ class AnyInputState {
         return kind == OtpKind ? null : cast model;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function inputBounds(cx:App):Null<Bounds> {
         final state = base();
         return state != null ? state.inputBounds : null;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function setSelectionFocus(focus:Null<FocusHandle>, cx:App):Void {
         final state = base();
         if (state != null) {
@@ -140,7 +140,7 @@ class AnyInputState {
      * and unregisters it once focus moves elsewhere (Rust
      * `sync_focused_input_registry`).
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function syncFocusedInputRegistry(state:AnyInputState, window:Window, cx:App):Void {
         final focused = state.focusHandle(cx).isFocused(window);
         // Every input syncs as it renders; only one that gains or loses focus
@@ -211,7 +211,7 @@ class TextInputState {
         return state.entityId();
     }
 
-    public inline function presentation(cx:App):gpui.base.input.InputPresentation {
+    public inline function presentation(cx:App):glaze.kit.base.input.InputPresentation {
         return state.read(cx).presentation();
     }
 
@@ -232,7 +232,7 @@ class TextInputState {
         state.update(cx, (state, cx) -> state.toggleMasked(window, cx));
     }
 
-    public function setTextAlign(align:gpui.TextAlign, cx:App):Void {
+    public function setTextAlign(align:glaze.TextAlign, cx:App):Void {
         state.update(cx, (state, cx) -> state.setTextAlign(align, cx));
     }
 

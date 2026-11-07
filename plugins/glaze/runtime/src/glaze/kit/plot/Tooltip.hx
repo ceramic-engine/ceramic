@@ -1,36 +1,36 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/plot/tooltip.rs, crates/component/src/plot/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.plot;
+package glaze.kit.plot;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.base.plot.PlotHover;
-import gpui.component.theme.Colorize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.base.plot.PlotHover;
+import glaze.kit.theme.Colorize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.hFlex;
-import gpui.base.Prelude.vFlex;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.hFlex;
+import glaze.kit.base.Prelude.vFlex;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * Which lines a `CrossLine` draws.
@@ -64,7 +64,7 @@ enum abstract CrossLineAxis(Int) {
  */
 class CrossLine implements RenderOnce {
 
-    @:allow(gpui.component.plot)
+    @:allow(glaze.kit.plot)
     var point:Point;
 
     /**
@@ -89,7 +89,7 @@ class CrossLine implements RenderOnce {
     /** `true` (default) draws a dashed hairline; `false` a solid band of `thickness`. */
     var dashed:Bool = true;
 
-    @:allow(gpui.component.plot)
+    @:allow(glaze.kit.plot)
     var direction:CrossLineAxis = Vertical;
 
     public function new(point:Point) {
@@ -201,7 +201,7 @@ class CrossLine implements RenderOnce {
  */
 class Dot implements RenderOnce {
 
-    @:allow(gpui.component.plot)
+    @:allow(glaze.kit.plot)
     var point:Point;
 
     var sizeValue:Pixels = 6.;
@@ -211,7 +211,7 @@ class Dot implements RenderOnce {
     var fillValue:Hsla = transparentBlack();
 
     /** Diameter of the translucent ring behind the dot; null draws no ring. */
-    @:allow(gpui.component.plot)
+    @:allow(glaze.kit.plot)
     var haloValue:Null<Float> = null;
 
     public function new(point:Point) {
@@ -287,7 +287,7 @@ class Dot implements RenderOnce {
  * A single labelled row in a `Tooltip`: an optional colored swatch, a muted
  * label, and a value.
  */
-@:allow(gpui.component)
+@:allow(glaze.kit)
 @:allow(tests)
 class TooltipRow {
 
@@ -326,11 +326,11 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
 
     var appearanceValue:Bool = true;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     var titleValue:Null<String> = null;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     final rows:Array<TooltipRow> = [];
 
@@ -424,7 +424,7 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
 
     /** Set the dots of the tooltip. */
     public function dots(dots:Iterable<Dot>):Tooltip {
-        dotsValue = gpui.util.Iterables.toArray(dots);
+        dotsValue = glaze.util.Iterables.toArray(dots);
         return this;
     }
 
@@ -508,7 +508,7 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
             for (row in rows) {
                 final label = hFlex().itemsCenter().gap1p5();
                 if (swatched) {
-                    final swatch = div().size2().rounded(gpui.Prelude.px(SpringMath.f32(theme.radius / 2.)));
+                    final swatch = div().size2().rounded(glaze.Prelude.px(SpringMath.f32(theme.radius / 2.)));
                     if (row.color != null) swatch.bg(row.color);
                     label.child(swatch);
                 }
@@ -544,16 +544,16 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
             // Default min width only applies when the caller hasn't set one.
             final minWUnset = content.style().minSizeWidth == null;
             content = content.absolute().opacity(progress);
-            if (minWUnset) content = content.minW(gpui.Prelude.px(150.));
+            if (minWUnset) content = content.minW(glaze.Prelude.px(150.));
             content = content.popoverStyle(cx).p2();
             // The box hugs the cursor, flipping toward the center near each
             // edge so it never overflows the near side.
             content = cursor.x < SpringMath.f32(within.width * 0.5)
-                ? content.left(gpui.Prelude.px(SpringMath.f32(cursor.x + gapValue)))
-                : content.right(gpui.Prelude.px(SpringMath.f32(SpringMath.f32(within.width - cursor.x) + gapValue)));
+                ? content.left(glaze.Prelude.px(SpringMath.f32(cursor.x + gapValue)))
+                : content.right(glaze.Prelude.px(SpringMath.f32(SpringMath.f32(within.width - cursor.x) + gapValue)));
             content = cursor.y < SpringMath.f32(within.height * 0.5)
-                ? content.top(gpui.Prelude.px(SpringMath.f32(cursor.y + gapValue)))
-                : content.bottom(gpui.Prelude.px(SpringMath.f32(SpringMath.f32(within.height - cursor.y) + gapValue)));
+                ? content.top(glaze.Prelude.px(SpringMath.f32(cursor.y + gapValue)))
+                : content.bottom(glaze.Prelude.px(SpringMath.f32(SpringMath.f32(within.height - cursor.y) + gapValue)));
         }
         return result.child(deferred(content));
     }

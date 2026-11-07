@@ -1,67 +1,67 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Axis;
-import gpui.ClickEvent;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.Font;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.ListOffset;
-import gpui.MouseButton;
-import gpui.OperatingSystem;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.RenderOnce;
-import gpui.SpringMath;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.TextRun;
-import gpui.Window;
-import gpui.base.ScrollBounce;
-import gpui.base.ScrollableMask;
-import gpui.base.Scrollbar;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.input.InputActions.SelectAll;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.diff.DiffActions;
-import gpui.component.diff.DiffDecoration.Decorations;
-import gpui.component.diff.DiffDecoration.GutterMarkers;
-import gpui.component.diff.DiffState.DisplayRow;
-import gpui.component.diff.DiffState.FoldExpansion;
-import gpui.component.diff.DiffState.LayoutKey;
-import gpui.component.diff.DiffState.SelectedLines;
-import gpui.component.diff.DiffState.SelectedLinesTools;
-import gpui.component.diff.Presentation.DiffStyledRange;
-import gpui.component.diff.Presentation.FilePresentation;
-import gpui.component.diff.Selection.CodeText;
-import gpui.component.diff.Selection.SelectionGeometry;
-import gpui.component.diff.Selection.SelectionLayer;
-import gpui.component.highlighter.HighlightTheme.HighlightThemeResolver;
-import gpui.component.theme.ActiveTheme;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Axis;
+import glaze.ClickEvent;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.Font;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.ListOffset;
+import glaze.MouseButton;
+import glaze.OperatingSystem;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.RenderOnce;
+import glaze.SpringMath;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.TextRun;
+import glaze.Window;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.input.InputActions.SelectAll;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.diff.DiffActions;
+import glaze.kit.diff.DiffDecoration.Decorations;
+import glaze.kit.diff.DiffDecoration.GutterMarkers;
+import glaze.kit.diff.DiffState.DisplayRow;
+import glaze.kit.diff.DiffState.FoldExpansion;
+import glaze.kit.diff.DiffState.LayoutKey;
+import glaze.kit.diff.DiffState.SelectedLines;
+import glaze.kit.diff.DiffState.SelectedLinesTools;
+import glaze.kit.diff.Presentation.DiffStyledRange;
+import glaze.kit.diff.Presentation.FilePresentation;
+import glaze.kit.diff.Selection.CodeText;
+import glaze.kit.diff.Selection.SelectionGeometry;
+import glaze.kit.diff.Selection.SelectionLayer;
+import glaze.kit.highlighter.HighlightTheme.HighlightThemeResolver;
+import glaze.kit.theme.ActiveTheme;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.hFlex;
-import gpui.base.Prelude.vFlex;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.hFlex;
+import glaze.kit.base.Prelude.vFlex;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 typedef FileRenderer = (DiffFile, Window, App) -> IntoElement;
 
@@ -75,7 +75,7 @@ typedef ClickHandler = (DiffLinePosition, ClickEvent, Window, App) -> Void;
 
 typedef HoverHandler = (Null<DiffLinePosition>, Window, App) -> Void;
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class HeaderSlots {
 
     var content:Null<FileRenderer> = null;
@@ -87,7 +87,7 @@ private class HeaderSlots {
 
 }
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class Annotations {
 
     final items:Array<DiffAnnotation> = [];
@@ -204,7 +204,7 @@ class Diff implements RenderOnce implements Styled {
      */
     public function annotations(annotations:Iterable<DiffAnnotation>):Diff {
         final index = new Annotations();
-        gpui.util.Iterables.append(index.items, annotations);
+        glaze.util.Iterables.append(index.items, annotations);
         for (ix in 0...index.items.length) {
             final annotation = index.items[ix];
             final position = annotation.position();
@@ -597,7 +597,7 @@ class Diff implements RenderOnce implements Styled {
         var width = 0.;
         for (candidate in candidates) {
             final text = candidate.text;
-            final shaped = window.textSystem().shapeLine(text, fontSize, [new TextRun(gpui.util.Utf8.byteLength(text), font, foreground)]);
+            final shaped = window.textSystem().shapeLine(text, fontSize, [new TextRun(glaze.util.Utf8.byteLength(text), font, foreground)]);
             final w = shaped.width();
             if (w > width)
                 width = w;
@@ -1243,7 +1243,7 @@ class Diff implements RenderOnce implements Styled {
 /**
  * Everything a row needs to render, shared by the rows of one frame.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class CodePresentation {
 
     var files:Array<DiffFile>;
@@ -1277,7 +1277,7 @@ private class CodePresentation {
     var onAddAnnotation:Null<RangeHandler>;
     var onLineClick:Null<ClickHandler>;
     var onLineHover:Null<HoverHandler>;
-    var selection:gpui.base.TextSelectionHandle;
+    var selection:glaze.kit.base.TextSelectionHandle;
     var selectedLines:Null<DiffLineRange>;
     var selected:Null<SelectedLines>;
     var geometry:SelectionGeometry;

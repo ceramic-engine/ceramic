@@ -1,8 +1,8 @@
-package gpui;
+package glaze;
 
 #if plugin_http
 
-import gpui.HttpClient;
+import glaze.HttpClient;
 
 /**
  * The HTTP client of the Ceramic platform: requests go through Ceramic's

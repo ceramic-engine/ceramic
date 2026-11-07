@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/settings.rs (RenderOptions)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.Axis;
-import gpui.component.Size;
-import gpui.component.groupbox.GroupBox.GroupBoxVariant;
+import glaze.Axis;
+import glaze.kit.Size;
+import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
 
 /**
  * Options for rendering setting item.

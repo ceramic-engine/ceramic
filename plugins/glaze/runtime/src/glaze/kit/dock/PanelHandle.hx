@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Model;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelState;
-import gpui.base.dock.TabGroup;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Model;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.base.dock.TabGroup;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
 
 /**
  * The panel handle `gpui-base` holds on this crate's behalf.
  *
- * Concrete on purpose. Base stores it as a `gpui.base.dock.PanelView`, and
+ * Concrete on purpose. Base stores it as a `glaze.kit.base.dock.PanelView`, and
  * every renderer hook (the tab bar most of all) gets it back with `of`,
  * which answers it only for this one type: the presentation handle cannot be
  * reached through base's interface, but a concrete wrapper around it can be.
@@ -28,7 +28,7 @@ import gpui.component.menu.PopupMenu;
  * Rust's `Deref<Target = dyn PanelView>` becomes the presentation methods
  * below, which delegate to the wrapped handle.
  */
-class PanelHandle implements gpui.base.dock.PanelView {
+class PanelHandle implements glaze.kit.base.dock.PanelView {
 
     final inner:PanelView;
 
@@ -60,7 +60,7 @@ class PanelHandle implements gpui.base.dock.PanelView {
      * base's own `panelName` is the fallback with no obligations on the
      * panel author.
      */
-    public static function of(panel:Null<gpui.base.dock.PanelView>):Null<PanelHandle> {
+    public static function of(panel:Null<glaze.kit.base.dock.PanelView>):Null<PanelHandle> {
         if (panel == null) return null;
         final value:Dynamic = panel.asAny();
         return Std.isOfType(value, PanelHandle) ? (value : PanelHandle) : null;
@@ -88,7 +88,7 @@ class PanelHandle implements gpui.base.dock.PanelView {
      * presentation from one. Such a panel still docks, drags and persists; it
      * just draws its `panelName` where its title would be.
      */
-    public static function panelHandle<P:Model & Panel>(panel:Entity<P>):gpui.base.dock.PanelView {
+    public static function panelHandle<P:Model & Panel>(panel:Entity<P>):glaze.kit.base.dock.PanelView {
         return create(panel);
     }
 

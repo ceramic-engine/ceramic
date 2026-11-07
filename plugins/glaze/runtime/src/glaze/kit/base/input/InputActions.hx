@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/state.rs (the input actions)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Action;
+import glaze.Action;
 
 /**
  * The actions of the text inputs (namespace `input`), bound in the `Input`
  * key context by `InputKeyBindings.init`. Import this module
- * (`import gpui.base.input.InputActions;`) to use them.
+ * (`import glaze.kit.base.input.InputActions;`) to use them.
  *
  * The selection actions bound with them (`SelectUp`, `SelectDown`,
- * `SelectLeft`, `SelectRight`) are the shared ones of `gpui.base.Actions`.
+ * `SelectLeft`, `SelectRight`) are the shared ones of `glaze.kit.base.Actions`.
  */
 class InputActions {
 

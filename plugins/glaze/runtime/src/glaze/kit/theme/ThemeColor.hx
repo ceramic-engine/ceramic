@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/theme_color.rs, crates/component/src/theme/schema.rs (ThemeColor::apply_config)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.Background;
-import gpui.Hsla;
+import glaze.Background;
+import glaze.Hsla;
 
-using gpui.component.theme.Colorize;
+using glaze.kit.theme.Colorize;
 
 /**
  * Theme colors used throughout the UI components.
@@ -1221,7 +1221,7 @@ class ThemeColor {
      * Rust: `ThemeColor::apply_config` (renamed because `Theme`, which extends
      * this class, has its own `applyConfig`).
      */
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     function applyConfigColors(config:ThemeConfig, defaultTheme:ThemeColor):ThemeTokens {
 
         final colors = config.colors;

@@ -2,47 +2,47 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-004 (Infer sizing of horizontal lists). See DEVIATIONS.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Context;
-import gpui.UniformList.DeferredScrollToItem;
-import gpui.Div;
-import gpui.Edges;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ListSizingBehavior;
-import gpui.Point;
-import gpui.ScrollHandle;
-import gpui.ScrollStrategy;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Scrollbar.ScrollbarHandleImpl;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Context;
+import glaze.UniformList.DeferredScrollToItem;
+import glaze.Div;
+import glaze.Edges;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ListSizingBehavior;
+import glaze.Point;
+import glaze.ScrollHandle;
+import glaze.ScrollStrategy;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Scrollbar.ScrollbarHandleImpl;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
+using glaze.kit.base.InteractiveElementExt;
 
 /**
  * The state of a `VirtualListScrollHandle` (Rust `VirtualListScrollHandleState`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class VirtualListScrollHandleState {
 
     var axis:Axis = Vertical;
@@ -64,9 +64,9 @@ class VirtualListScrollHandleState {
  */
 class VirtualListScrollHandle implements ScrollbarHandleImpl {
 
-    @:allow(gpui.base) final state:VirtualListScrollHandleState = new VirtualListScrollHandleState();
+    @:allow(glaze.kit.base) final state:VirtualListScrollHandleState = new VirtualListScrollHandleState();
 
-    @:allow(gpui.base) var _baseHandle:ScrollHandle = new ScrollHandle();
+    @:allow(glaze.kit.base) var _baseHandle:ScrollHandle = new ScrollHandle();
 
     /** Create a new VirtualListScrollHandle. */
     public function new() {}
@@ -136,7 +136,7 @@ class VirtualListScrollHandle implements ScrollbarHandleImpl {
 /**
  * Per-item sizes along the list axis, gap included, and their prefix sums.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class ItemSizeLayout {
 
     var itemsSizes:Array<Size> = [];
@@ -214,7 +214,7 @@ class VirtualList extends Element implements Styled {
 
     var hitbox:Null<Hitbox> = null;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(id:ElementId, axis:Axis, base:Div, scrollHandle:VirtualListScrollHandle, itemSizes:Array<Size>, renderItems:(Int, Int, Window, App) -> Array<AnyElement>) {
         _id = id;
         this.axis = axis;
@@ -231,7 +231,7 @@ class VirtualList extends Element implements Styled {
      * The `itemSizes` is the size of each row. Only the `height` is used; `width` is inferred
      * by measuring the item selected with `withItemToMeasureIndex`, defaulting to the first item.
      */
-    public static inline function vVirtualList<V:gpui.Model>(view:Entity<V>, id:ElementIdArg, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
+    public static inline function vVirtualList<V:glaze.Model>(view:Entity<V>, id:ElementIdArg, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
         return virtualList(view, id, Vertical, itemSizes, f);
     }
 
@@ -241,11 +241,11 @@ class VirtualList extends Element implements Styled {
      * The `itemSizes` is the size of each column. Only the `width` is used; `height` is inferred
      * by measuring the item selected with `withItemToMeasureIndex`, defaulting to the first item.
      */
-    public static inline function hVirtualList<V:gpui.Model>(view:Entity<V>, id:ElementIdArg, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
+    public static inline function hVirtualList<V:glaze.Model>(view:Entity<V>, id:ElementIdArg, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
         return virtualList(view, id, Horizontal, itemSizes, f);
     }
 
-    public static function virtualList<V:gpui.Model>(view:Entity<V>, id:ElementIdArg, axis:Axis, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
+    public static function virtualList<V:glaze.Model>(view:Entity<V>, id:ElementIdArg, axis:Axis, itemSizes:Array<Size>, f:(V, Int, Int, Window, Context<V>) -> Array<IntoElement>):VirtualList {
         final id:ElementId = id;
         final scrollHandle = new VirtualListScrollHandle();
         final renderRange = (start:Int, end:Int, window:Window, cx:App) -> {
@@ -390,7 +390,7 @@ class VirtualList extends Element implements Styled {
 
         // `base.interactivity.requestLayout(.., (style, window, cx) -> ..)` without
         // the closure
-        final style = base.interactivity.requestLayoutStyle(globalId, #if gpui_inspector inspectorId, #end window, cx);
+        final style = base.interactivity.requestLayoutStyle(globalId, #if glaze_inspector inspectorId, #end window, cx);
         sizeLayout = window.withElementState(globalId, ItemSizeLayout, (box, _) -> {
             if (box.value == null) box.value = new ItemSizeLayout();
             final state = box.value;
@@ -497,7 +497,7 @@ class VirtualList extends Element implements Styled {
      *
      * Both edges are binary searches.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     /**
      * Item ends grow with the index, so the first item ending past `edge` is
      * a partition point over the indices (a static function: a local one
@@ -567,7 +567,7 @@ class VirtualList extends Element implements Styled {
             scrollHandle.setOffset(scrollOffset);
         }
 
-        hitbox = base.interactivity.prepaint(globalId, #if gpui_inspector inspectorId, #end bounds, layout.contentSize, window, cx, (_style, _, hitbox, window, cx) -> {
+        hitbox = base.interactivity.prepaint(globalId, #if glaze_inspector inspectorId, #end bounds, layout.contentSize, window, cx, (_style, _, hitbox, window, cx) -> {
             if (itemsCount > 0) {
                 final minScrollOffset = axis == Horizontal
                     ? contentBounds.size.width - layout.contentSize.width
@@ -625,7 +625,7 @@ class VirtualList extends Element implements Styled {
     public function paint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final hitbox = this.hitbox;
         this.hitbox = null;
-        base.interactivity.paint(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx, (_, window, cx) -> {
+        base.interactivity.paint(globalId, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx, (_, window, cx) -> {
             for (item in items) {
                 item.paint(window, cx);
             }

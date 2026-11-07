@@ -3,36 +3,36 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.StyleBuilder;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.accordion.Accordion;
-import gpui.component.button.Button;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.switch_.Switch;
-import gpui.component.tag.Tag;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.StyleBuilder;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.accordion.Accordion;
+import glaze.kit.button.Button;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.switch_.Switch;
+import glaze.kit.tag.Tag;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 enum ToggleOptionKind {
     Multiple;

@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.avatar.Avatar;
-import gpui.component.avatar.AvatarGroup;
-import gpui.component.dock.PanelControl;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.avatar.AvatarGroup;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class AvatarStory extends Model implements Story {
 

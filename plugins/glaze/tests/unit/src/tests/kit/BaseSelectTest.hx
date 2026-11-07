@@ -3,24 +3,24 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Actions.Confirm;
-import gpui.base.Base;
-import gpui.base.Select;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Base;
+import glaze.kit.base.Select;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's controlled `Select` root.
@@ -262,7 +262,7 @@ private class SelectHarness extends Model implements Render {
                 self.confirmations += 1;
             });
         if (searchInput != null) {
-            select.child(new gpui.base.input.Input(searchInput));
+            select.child(new glaze.kit.base.input.Input(searchInput));
         } else {
             select.child(div().trackFocus(contentFocusHandle).size(px(20.)));
         }

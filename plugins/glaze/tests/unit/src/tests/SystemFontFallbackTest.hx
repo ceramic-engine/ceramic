@@ -1,12 +1,12 @@
 package tests;
 
-import gpui.Font;
-import gpui.FontRun;
-import gpui.LineLayout;
-import gpui.RenderGlyphParams;
-import gpui.platform.CeramicTextSystem;
-import gpui.platform.SystemFontFallback;
-import gpui.util.Utf8;
+import glaze.Font;
+import glaze.FontRun;
+import glaze.LineLayout;
+import glaze.RenderGlyphParams;
+import glaze.platform.CeramicTextSystem;
+import glaze.platform.SystemFontFallback;
+import glaze.util.Utf8;
 import testing.TestCase;
 
 /**
@@ -49,7 +49,7 @@ class SystemFontFallbackTest extends TestCase {
     function assertSystemGlyphs(platform:CeramicTextSystem, text:String, ?pos:haxe.PosInfos) {
         final line = layout(platform, text);
         final interId = (platform.fontId(Font.of('Inter')):Int);
-        final d = new gpui.util.Utf8.Utf8Text(text);
+        final d = new glaze.util.Utf8.Utf8Text(text);
         for (k in 0...d.count) {
             final c = d.codePoints[k];
             final index = d.byteOffsets[k];
@@ -158,7 +158,7 @@ class SystemFontFallbackTest extends TestCase {
 
     /** Checks the glyph at `index` is a polychrome glyph of Apple Color Emoji with a colored BGRA tile */
     function assertColorEmoji(p:CeramicTextSystem, line:LineLayout, index:Int, requireColors:Bool = true, ?pos:haxe.PosInfos) {
-        var glyph:Null<gpui.ShapedGlyph> = null;
+        var glyph:Null<glaze.ShapedGlyph> = null;
         var fontId = -1;
         // The first glyph of the cluster (a variation selector after it is a
         // hidden glyph of the same cluster, like HarfBuzz's)

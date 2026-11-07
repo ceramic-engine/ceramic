@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/shape/bar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.App;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.IntoBackground;
-import gpui.PaintQuad;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
+import glaze.App;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.IntoBackground;
+import glaze.PaintQuad;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
 
-import gpui.Prelude.black;
+import glaze.Prelude.black;
 
 /**
  * Alignment of bars within a `Bar` shape, controlling both the orientation
@@ -90,7 +90,7 @@ class Bar<T> {
 
     /** Set the data of the Bar. */
     public function data(data:Iterable<T>):Bar<T> {
-        dataValues = gpui.util.Iterables.toArray(data);
+        dataValues = glaze.util.Iterables.toArray(data);
         return this;
     }
 
@@ -190,7 +190,7 @@ class Bar<T> {
             }
 
             final bg = fillFn(v, frame, alignmentValue);
-            final quad = gpui.Prelude.fill(fromCorners(p1, p2), bg);
+            final quad = glaze.Prelude.fill(fromCorners(p1, p2), bg);
             quad.cornerRadii = cornerRadiiValue;
             graph.push(quad);
 

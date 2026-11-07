@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/document.rs (`DiffSide`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
 /**
  * Which source version a position belongs to.
@@ -12,7 +12,7 @@ enum abstract DiffSide(Int) {
 
     var Modified = 1;
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function other():DiffSide {
         return (cast this : DiffSide) == Original ? Modified : Original;
     }

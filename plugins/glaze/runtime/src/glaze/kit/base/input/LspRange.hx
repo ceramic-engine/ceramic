@@ -1,11 +1,11 @@
 // Ported from lsp-types 0.97 (src/lib.rs, Range), as used by gpui-kit 0.8.1: crates/base/src/input/editor
 // Original code Copyright (c) 2016 Markus Westerlind (lsp-types), licensed under MIT.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * A range in a text document expressed as (zero-based) start and end
- * positions (lsp_types `Range`, renamed: it clashes with `gpui.Range`).
+ * positions (lsp_types `Range`, renamed: it clashes with `glaze.Range`).
  * Rust's `Range<Position>` of a `Diagnostic` is this type too.
  */
 class LspRange {

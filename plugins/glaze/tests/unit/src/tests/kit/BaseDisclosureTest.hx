@@ -3,22 +3,22 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Point;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Accordion.AccordionHeader;
-import gpui.base.Accordion.AccordionPanel;
-import gpui.base.Accordion.AccordionTrigger;
-import gpui.base.BaseCollapsible;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Point;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Accordion.AccordionHeader;
+import glaze.kit.base.Accordion.AccordionPanel;
+import glaze.kit.base.Accordion.AccordionTrigger;
+import glaze.kit.base.BaseCollapsible;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's `accordion.rs` and `collapsible.rs`.

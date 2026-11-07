@@ -3,41 +3,41 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.ElementInputHandler;
-import gpui.Entity;
-import gpui.EntityInputHandler;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyDownEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.TestClipboard;
-import gpui.TestDispatcher;
-import gpui.TextInputBridge;
-import gpui.UTF16Selection;
-import gpui.Window;
-import gpui.util.MathUtil;
-import gpui.util.Ref;
-import gpui.util.Utf8;
-import gpui.util.Utf8.Utf8Text;
-import testing.GpuiTruth;
+import glaze.Action;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.ElementInputHandler;
+import glaze.Entity;
+import glaze.EntityInputHandler;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyDownEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.TestClipboard;
+import glaze.TestDispatcher;
+import glaze.TextInputBridge;
+import glaze.UTF16Selection;
+import glaze.Window;
+import glaze.util.MathUtil;
+import glaze.util.Ref;
+import glaze.util.Utf8;
+import glaze.util.Utf8.Utf8Text;
+import testing.GlazeTruth;
 import testing.InteractionScript;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 import testing.InteractionScript.f;
 import testing.InteractionScript.keystroke;
 
@@ -67,7 +67,7 @@ import testing.InteractionScript.keystroke;
  * bindings, IME composition, selection replace, clipboard and mouse selection.
  *
  * Platform text input goes through the real Ceramic bridge
- * (`gpui.TextInputBridge`), fed with the events Ceramic would send: the key
+ * (`glaze.TextInputBridge`), fed with the events Ceramic would send: the key
  * down, then the key's character as a text commit (unless composing), and
  * compositions (an empty composition followed by a commit for an IME commit,
  * or by the end of the batch for a cancel). The Rust harness emulates the
@@ -311,7 +311,7 @@ class TextInputBehaviourTest extends TestCase {
         commit('w');
         s.key('e');
 
-        compare('text-input', GpuiTruth.load('text-input.json'), log);
+        compare('text-input', GlazeTruth.load('text-input.json'), log);
     }
 
 }

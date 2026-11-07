@@ -1,59 +1,59 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/input.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.DefiniteLength;
-import gpui.Edges;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.TextAlign;
-import gpui.TextStyleRefinement;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.ComponentTraits;
-import gpui.base.input.DiagnosticColors;
-import gpui.base.input.InlineTokenClickListener;
-import gpui.base.input.InlineTokenContext;
-import gpui.base.input.InlineTokenHoverListener;
-import gpui.base.input.InlineTokenRenderer;
-import gpui.base.input.InputAccessibility;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBase;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEditorStyle;
-import gpui.base.input.InputState;
-import gpui.base.input.NativeMenu;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.button.Button.Button;
-import gpui.component.spinner.Spinner;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
-import gpui.component.input.AnyInputState.TextInputState;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.DefiniteLength;
+import glaze.Edges;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.TextAlign;
+import glaze.TextStyleRefinement;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.input.DiagnosticColors;
+import glaze.kit.base.input.InlineTokenClickListener;
+import glaze.kit.base.input.InlineTokenContext;
+import glaze.kit.base.input.InlineTokenHoverListener;
+import glaze.kit.base.input.InlineTokenRenderer;
+import glaze.kit.base.input.InputAccessibility;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBase;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEditorStyle;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.NativeMenu;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.button.Button.Button;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
+import glaze.kit.input.AnyInputState.TextInputState;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.A11y.RoleOverrideTools;
-using gpui.base.StyledExt;
-using gpui.base.input.InputTokenPresentation;
-using gpui.base.input.InputTouch;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.A11y.RoleOverrideTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.base.input.InputTokenPresentation;
+using glaze.kit.base.input.InputTouch;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
+using glaze.kit.theme.Colorize;
 
 /**
  * A text input element bind to an `InputState`.
@@ -137,7 +137,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      * `Textarea` and `Editor` render through this. Application code uses
      * `new Input`, `Textarea`, or `Editor`.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function fromState(state:Entity<InputBaseState>):Input {
         // Not `new Input(cast state)`: a textarea state is not an
         // `InputState`, and hxcpp checks class casts (it would give null).
@@ -151,7 +151,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     /** Rust `std::mem::take(input.style())`: the style, replaced by an empty one. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function takeStyle():StyleRefinement {
         final style = inputStyle;
         inputStyle = new StyleRefinement();
@@ -231,12 +231,12 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      * The state this input renders; a compound control reads focus and
      * presentation from it.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     inline function getState():TextInputState {
         return state;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     inline function isDisabled():Bool {
         return disabledValue;
     }
@@ -264,12 +264,12 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     /** Set full height of the input (Multi-line only). */
     public function hFull():Input {
-        height = gpui.Prelude.relative(1.);
+        height = glaze.Prelude.relative(1.);
         return this;
     }
 
     /** Set height of the input (Multi-line only). */
-    public function h(height:gpui.IntoDefiniteLength):Input {
+    public function h(height:glaze.IntoDefiniteLength):Input {
         this.height = height;
         return this;
     }
@@ -400,7 +400,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     /** Returns `(background, foreground)` colors for input-like components (Rust `input_style`). */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function inputStyleColors(disabled:Bool, cx:App):InputStyleColors {
         final theme = Theme.global(cx);
         if (disabled) {
@@ -449,7 +449,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      */
     static function renderTouchSelection(state:TextInputState, window:Window, cx:App):Array<AnyElement> {
         final engine = state.state;
-        if (gpui.base.input.InputTouch.touchSelection(engine.read(cx)) == null) {
+        if (glaze.kit.base.input.InputTouch.touchSelection(engine.read(cx)) == null) {
             return [];
         }
         final capabilities = engine.read(cx).contextMenuCapabilities();
@@ -462,27 +462,27 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         final selectable = state.text(cx).len() > 0 && !state.isAllSelected(cx);
         final focusHandle = state.presentation(cx).focusHandle();
 
-        final dispatch = (action:gpui.Action, window:Window, cx:App) -> focusHandle.dispatchAction(action, window, cx);
-        final items:Array<gpui.component.touchselection.EditMenu.EditMenuItem> = [];
+        final dispatch = (action:glaze.Action, window:Window, cx:App) -> focusHandle.dispatchAction(action, window, cx);
+        final items:Array<glaze.kit.touchselection.EditMenu.EditMenuItem> = [];
         if (editable && copyable) {
-            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Cut"), (window, cx) -> dispatch(new Cut(), window, cx)));
+            items.push(new glaze.kit.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Cut"), (window, cx) -> dispatch(new Cut(), window, cx)));
         }
         if (copyable) {
-            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Copy"), (window, cx) -> {
+            items.push(new glaze.kit.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Copy"), (window, cx) -> {
                 dispatch(new Copy(), window, cx);
                 engine.update(cx, (state, cx) -> state.closeEditMenu(cx));
             }));
         }
         if (pasteable) {
-            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Paste"), (window, cx) -> dispatch(new Paste(), window, cx)));
+            items.push(new glaze.kit.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Paste"), (window, cx) -> dispatch(new Paste(), window, cx)));
         }
         if (selectable) {
-            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Select All"), (window, cx) -> {
+            items.push(new glaze.kit.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Select All"), (window, cx) -> {
                 engine.update(cx, (state, cx) -> state.selectAllFromEditMenu(window, cx));
             }));
         }
 
-        return new gpui.component.touchselection.TouchSelectionOverlay(NamedInteger('input-touch-selection', state.entityId()), (_, cx) -> gpui.base.input.InputTouch.touchSelection(engine.read(cx)))
+        return new glaze.kit.touchselection.TouchSelectionOverlay(NamedInteger('input-touch-selection', state.entityId()), (_, cx) -> glaze.kit.base.input.InputTouch.touchSelection(engine.read(cx)))
             .handles((edge, phase, position, _, cx) -> {
                 engine.update(cx, (state, cx) -> switch phase {
                     case Started: state.beginEdgeDrag(edge, position, cx);
@@ -508,7 +508,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         // Which kind of input this registers as follows from the state itself.
         @:privateAccess AnyInputState.syncFocusedInputRegistry(state.toAny(), window, cx);
 
-        state.state.update(cx, (s, _) -> s.ensureHighlighterFactory(gpui.component.highlighter.Highlighter.inputHighlighterFactory()));
+        state.state.update(cx, (s, _) -> s.ensureHighlighterFactory(glaze.kit.highlighter.Highlighter.inputHighlighterFactory()));
         final status = theme.highlightTheme.style.status;
         final editorStyle = new InputEditorStyle(
             theme.foreground,
@@ -526,8 +526,8 @@ class Input implements RenderOnce implements Styled implements Sizable implement
                 .ghost()
                 .icon(isFolded ? IconName.ChevronRight : IconName.ChevronDown)
                 .xsmall()
-                .rounded(gpui.component.button.Button.ButtonRounded.Small)
-                .size(gpui.Prelude.px(14.))
+                .rounded(glaze.kit.button.Button.ButtonRounded.Small)
+                .size(glaze.Prelude.px(14.))
                 .selected(isFolded) : IntoElement)
         );
         state.state.update(cx, (s, _) -> s.setEditorStyle(editorStyle));
@@ -654,7 +654,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
             frame.bg(bg).rounded(theme.radius);
             if (bordered) frame.border1().borderColor(theme.input);
         }
-        frame.itemsCenter().gap(gpui.Prelude.px(gapX)).refineStyle(inputStyle);
+        frame.itemsCenter().gap(glaze.Prelude.px(gapX)).refineStyle(inputStyle);
         if (focused && appearance && bordered && focusBordered) frame.focusRingStyle(window, cx);
         if (prefix != null) {
             final wrapper = div();
@@ -669,7 +669,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         }
         if (hasSuffix) {
             frame.pr(size.inputPx());
-            final suffixRow = hFlex().id("suffix").gap(gpui.Prelude.px(gapX)).itemsCenter().cursorDefault();
+            final suffixRow = hFlex().id("suffix").gap(glaze.Prelude.px(gapX)).itemsCenter().cursorDefault();
             if (presentation.isDisabled()) suffixRow.opacity(0.5);
             if (presentation.isLoading()) suffixRow.child(new Spinner().color(theme.mutedForeground));
             if (maskToggleValue) suffixRow.child(renderToggleMaskButton(state, cx));

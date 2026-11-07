@@ -11,28 +11,28 @@
 // sync_scrollbar_appearance) (Longbridge, Apache-2.0). See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.Window;
-import gpui.WindowAppearance;
-import gpui.base.theme.ScrollbarMode;
-import gpui.component.Component;
-import gpui.component.theme.Theme;
-import gpui.platform.CeramicPlatformOperations;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.Window;
+import glaze.WindowAppearance;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.Component;
+import glaze.kit.theme.Theme;
+import glaze.platform.CeramicPlatformOperations;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.Menu.MenuItemTools;
+using glaze.Menu.MenuItemTools;
 
 /**
  * The appearance of the windows follows Ceramic's system appearance (read
@@ -275,7 +275,7 @@ class PlatformAppearanceTest extends TestCase {
             assertEquals(ScrollbarMode.Always, Theme.global(app).scrollbarMode, 'auto hide $autoHide');
         }
         // Projected onto the Base scrollbar theme too
-        assertEquals(ScrollbarMode.Always, gpui.base.theme.Theme.global(app).scrollbar.mode());
+        assertEquals(ScrollbarMode.Always, glaze.kit.base.theme.Theme.global(app).scrollbar.mode());
     }
 
     function testSyncSystemAppearance() {
@@ -338,7 +338,7 @@ class PlatformAppearanceTest extends TestCase {
         app.onAction(NewWindow, (_, _) -> log.push('NewWindow'));
         app.onAction(OpenRecent, (_, _) -> log.push('OpenRecent'));
         app.setDockMenu([MenuItemTools.action('New Window', new NewWindow())]);
-        app.setMenus([new gpui.Menu('File').withItems([MenuItemTools.action('Open Recent', new OpenRecent())])]);
+        app.setMenus([new glaze.Menu('File').withItems([MenuItemTools.action('Open Recent', new OpenRecent())])]);
         final dockItem = ceramic.App.app.screen.dockMenu[0];
         final barItem = ceramic.App.app.screen.menuBar[0].items[0];
         @:privateAccess ceramic.App.app.backend.screen.emitMenuAction(dockItem.id);
@@ -424,7 +424,7 @@ class PlatformAppearanceTest extends TestCase {
 
 /// Helpers
 
-    function open():{view:gpui.Entity<AppearanceView>, cx:VisualTestContext} {
+    function open():{view:glaze.Entity<AppearanceView>, cx:VisualTestContext} {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<AppearanceView>) -> new AppearanceView(), 200, 100, 1);
         contexts.push(opened.cx);
         return opened;

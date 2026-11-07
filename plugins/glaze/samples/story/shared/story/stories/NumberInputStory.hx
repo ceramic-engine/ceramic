@@ -4,34 +4,34 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Subscription;
-import gpui.base.NumberInput.NumberInputEvent;
-import gpui.base.StepAction;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.input.NumberInput;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Subscription;
+import glaze.kit.base.NumberInput.NumberInputEvent;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.input.NumberInput;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class NumberInputStory extends Model implements Story {
 
@@ -49,7 +49,7 @@ class NumberInputStory extends Model implements Story {
 
     public static function init(_:App):Void {}
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 

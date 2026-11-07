@@ -1,7 +1,7 @@
 package;
 
-import gpui.App;
-import gpui.Window;
+import glaze.App;
+import glaze.Window;
 
 /**
  * Defaults for scenarios: both modes and a no-op teardown.

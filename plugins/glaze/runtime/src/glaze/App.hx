@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/app.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.Menu.OwnedMenu;
+import glaze.Menu.OwnedMenu;
 import haxe.ds.IntMap;
 import tracker.Autorun;
 
@@ -98,19 +98,19 @@ class App {
 
     var pendingReleases:Array<Model> = [];
 
-    @:allow(gpui)
+    @:allow(glaze)
     final observers:SubscriberSet<(App) -> Bool> = new SubscriberSet();
 
-    @:allow(gpui)
+    @:allow(glaze)
     final eventListeners:SubscriberSet<EventListener> = new SubscriberSet();
 
-    @:allow(gpui)
+    @:allow(glaze)
     final releaseListeners:SubscriberSet<(Model, App) -> Void> = new SubscriberSet();
 
-    @:allow(gpui)
+    @:allow(glaze)
     final globalObservers:SubscriberSet<(App) -> Bool> = new SubscriberSet();
 
-    @:allow(gpui)
+    @:allow(glaze)
     final newEntityObservers:SubscriberSet<(Model, App) -> Void> = new SubscriberSet();
 
     final globalsByType:IntMap<GlobalCell> = new IntMap();
@@ -136,28 +136,28 @@ class App {
 
     /**
      * The text system shared by apps that don't set their own: a
-     * `CeramicTextSystem` where `.SystemUIFont` is Inter. The gpui plugin
+     * `CeramicTextSystem` where `.SystemUIFont` is Inter. The glaze plugin
      * adds its bundled fonts (Inter and JetBrains Mono) to it once the
-     * default assets are loaded (unless `gpui_no_default_fonts` is defined).
+     * default assets are loaded (unless `glaze_no_default_fonts` is defined).
      * On native desktop targets, characters missing from every added font
      * are taken from the fonts of the operating system
-     * (`gpui.platform.SystemFontFallback`, loaded on first use; define
-     * `gpui_no_system_fonts` to skip). In browsers (clay web, Electron),
+     * (`glaze.platform.SystemFontFallback`, loaded on first use; define
+     * `glaze_no_system_fonts` to skip). In browsers (clay web, Electron),
      * graphemes missing from the added fonts are drawn by the browser like
      * gpui-pre-web's Canvas fallback, with GPUI's default policy
      * (`CanvasFontFallback.Emoji`; change it with
      * `CeramicTextSystem.canvasFontFallback`, define
-     * `gpui_no_canvas_fallback` to skip).
+     * `glaze_no_canvas_fallback` to skip).
      */
     public static function defaultTextSystem():TextSystem {
         if (_defaultTextSystem == null) {
-            final platform = new gpui.platform.CeramicTextSystem('Inter');
-            #if (sys && !gpui_no_system_fonts && !ios && !android && !tvos)
-            platform.systemFallback = new gpui.platform.SystemFontFallback();
+            final platform = new glaze.platform.CeramicTextSystem('Inter');
+            #if (sys && !glaze_no_system_fonts && !ios && !android && !tvos)
+            platform.systemFallback = new glaze.platform.SystemFontFallback();
             #end
-            #if (js && !gpui_no_canvas_fallback)
-            if (gpui.platform.CanvasText.BrowserCanvasText.available())
-                platform.canvasText = new gpui.platform.CanvasText.BrowserCanvasText();
+            #if (js && !glaze_no_canvas_fallback)
+            if (glaze.platform.CanvasText.BrowserCanvasText.available())
+                platform.canvasText = new glaze.platform.CanvasText.BrowserCanvasText();
             #end
             _defaultTextSystem = new TextSystem(platform);
         }
@@ -180,11 +180,11 @@ class App {
 
     var _svgRenderer:Null<SvgRenderer> = null;
 
-    #if gpui_inspector
-    @:allow(gpui)
+    #if glaze_inspector
+    @:allow(glaze)
     var inspectorRenderer:Null<Inspector.InspectorRenderer> = null;
 
-    @:allow(gpui)
+    @:allow(glaze)
     final inspectorElementRegistry:Inspector.InspectorElementRegistry = new Inspector.InspectorElementRegistry();
 
     /**
@@ -300,7 +300,7 @@ class App {
         _backgroundExecutor = new BackgroundExecutor(this.dispatcher);
         _foregroundExecutor = new ForegroundExecutor(this.dispatcher);
         syncedAnimationEpoch = _backgroundExecutor.now();
-        platformOperations = new gpui.platform.CeramicPlatformOperations();
+        platformOperations = new glaze.platform.CeramicPlatformOperations();
         _current = this;
     }
 
@@ -318,18 +318,18 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         finishUpdate();
         return result;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     inline function startUpdate():Void {
         pendingUpdates++;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function finishUpdate():Void {
         if (pendingUpdates == 1) {
             try {
@@ -337,7 +337,7 @@ class App {
             }
             catch (e:haxe.Exception) {
                 pendingUpdates--;
-                throw gpui.util.Exceptions.rethrow(e);
+                throw glaze.util.Exceptions.rethrow(e);
             }
         }
         pendingUpdates--;
@@ -350,7 +350,7 @@ class App {
         return pendingUpdates > 0;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function pushEffect(effect:Effect):Void {
         switch effect {
             case Notify(emitter):
@@ -435,7 +435,7 @@ class App {
                     }
                     catch (e:haxe.Exception) {
                         Autorun.reobserve();
-                        throw gpui.util.Exceptions.rethrow(e);
+                        throw glaze.util.Exceptions.rethrow(e);
                     }
                     Autorun.reobserve();
                 }
@@ -463,7 +463,7 @@ class App {
                 }
                 catch (e:haxe.Exception) {
                     Autorun.reobserve();
-                    throw gpui.util.Exceptions.rethrow(e);
+                    throw glaze.util.Exceptions.rethrow(e);
                 }
                 Autorun.reobserve();
                 return keep;
@@ -497,7 +497,7 @@ class App {
             }
             catch (e:haxe.Exception) {
                 Autorun.reobserve();
-                throw gpui.util.Exceptions.rethrow(e);
+                throw glaze.util.Exceptions.rethrow(e);
             }
             Autorun.reobserve();
             return true;
@@ -515,7 +515,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             Autorun.reobserve();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         Autorun.reobserve();
         return keep;
@@ -528,7 +528,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             Autorun.reobserve();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         Autorun.reobserve();
     }
@@ -615,7 +615,7 @@ class App {
         return newEntityIn(build, null);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function newEntityIn<T:Model>(build:(Context<T>) -> T, parent:Null<EntitySlot>):Entity<T> {
         startUpdate();
         final cx = new Context<T>(this, nextEntityId++);
@@ -627,7 +627,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         final typeId = typeIdOf(Type.getClass(entity));
         if (newEntityObservers.hasSubscribers(typeId)) {
@@ -640,7 +640,7 @@ class App {
     /**
      * Attaches a model constructed directly (without `newEntity`) to this app.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function attachEntity(model:Model):Void {
         if (model._slot != null)
             return;
@@ -676,13 +676,13 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         finishUpdate();
         return result;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function releaseEntity(entity:Model):Void {
         pendingReleases.push(entity);
         if (pendingUpdates == 0) {
@@ -704,14 +704,14 @@ class App {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function newObserver(key:Int, value:(App) -> Bool):Subscription {
         final subscriber = observers.insert(key, value);
         defer(_ -> subscriber.activate());
         return subscriber.subscription;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function observeInternal<W:Model>(entity:Entity<W>, onNotify:(Entity<W>, App) -> Bool):Subscription {
         final handle = entity.downgrade();
         return newObserver(entity.entityId(), cx -> {
@@ -734,14 +734,14 @@ class App {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function newSubscription(key:Int, value:EventListener):Subscription {
         final subscriber = eventListeners.insert(key, value);
         defer(_ -> subscriber.activate());
         return subscriber.subscription;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function subscribeInternal<T:Model, E>(entity:Entity<T>, eventType:EventType<E>, onEvent:(Entity<T>, E, App) -> Bool):Subscription {
         final handle = entity.downgrade();
         return newSubscription(entity.entityId(), new EventListener(cast eventType, (event, cx) -> {
@@ -966,7 +966,7 @@ class App {
         }
         catch (e:haxe.Exception) {
             pendingUpdates--;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         pushEffect(NotifyGlobalObservers(typeId));
         cell.invalidateValue();
@@ -992,7 +992,7 @@ class App {
      * The key bindings of the app (Rust: `Rc<RefCell<Keymap>>`), shared with
      * the windows' dispatch trees.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     final keymap:Keymap = new Keymap();
 
     var _actions:Null<ActionRegistry> = null;
@@ -1104,7 +1104,7 @@ class App {
     /**
      * Group hitboxes of the elements being painted (Rust global `GroupHitboxes`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     final groupHitboxes:Map<String, Array<Int>> = new Map();
 
     final globalActionListeners:Map<String, Array<(Action, DispatchPhase, App) -> Void>> = new Map();
@@ -1236,7 +1236,7 @@ class App {
      * Clears the pending keystrokes of every window of this app (Rust
      * `clear_pending_keystrokes`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function clearPendingKeystrokes():Void {
         for (window in Window.windows.copy()) {
             if (window.app == this && !window.isDestroyed()) {
@@ -1520,7 +1520,7 @@ class App {
         });
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function globalActionListenersFor(actionType:Class<Dynamic>):Null<Array<(Action, DispatchPhase, App) -> Void>> {
         final listeners = globalActionListeners.get(Type.getClassName(actionType));
         return listeners != null ? listeners.copy() : null;
@@ -1553,13 +1553,13 @@ class App {
         return subscriber.subscription;
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function dispatchKeystrokeObservers(keystroke:Keystroke, inputPreference:InputPreference, action:Null<Action>, contextStack:Array<KeyContext>, window:Window):Void {
         final event = new KeystrokeEvent(keystroke, inputPreference, action, contextStack);
         keystrokeObservers.retain(0, callback -> callback(event, window, this));
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function dispatchKeystrokeInterceptors(keystroke:Keystroke, inputPreference:InputPreference, contextStack:Array<KeyContext>, window:Window):Void {
         final event = new KeystrokeEvent(keystroke, inputPreference, null, contextStack);
         keystrokeInterceptors.retain(0, callback -> callback(event, window, this));

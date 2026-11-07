@@ -1,7 +1,7 @@
 // Ported from gpui-pre-web 0.3.10: src/events.rs (click counting, key names, wheel deltas, modifiers)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: rewritten in Haxe on top of Ceramic's input events. See NOTICE.md.
-package gpui;
+package glaze;
 
 import ceramic.Key;
 import ceramic.KeyCode;
@@ -52,9 +52,9 @@ import ceramic.KeyModifiers;
  *
  * Windows are bound when created with `bindInput: true` (the default).
  */
-class GpuiInput extends ceramic.Entity {
+class GlazeInput extends ceramic.Entity {
 
-    static var instance:Null<GpuiInput> = null;
+    static var instance:Null<GlazeInput> = null;
 
     static final boundWindows:Array<Window> = [];
 
@@ -69,7 +69,7 @@ class GpuiInput extends ceramic.Entity {
             window.textInputPlatform = new TextInputBridge(window);
         }
         if (instance == null || instance.destroyed) {
-            instance = new GpuiInput();
+            instance = new GlazeInput();
         }
         if (instance.activeWindow == null) {
             instance.activeWindow = window;

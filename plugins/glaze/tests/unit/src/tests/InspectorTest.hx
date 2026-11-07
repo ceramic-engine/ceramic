@@ -3,33 +3,33 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-#if gpui_inspector
+#if glaze_inspector
 
-import gpui.App;
-import gpui.Context;
-import gpui.DivInspectorState;
-import gpui.Entity;
-import gpui.InspectorElementId;
-import gpui.IntoElement;
-import gpui.Length;
-import gpui.LengthTools;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.StyleBuilder;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.DivInspectorState;
+import glaze.Entity;
+import glaze.InspectorElementId;
+import glaze.IntoElement;
+import glaze.Length;
+import glaze.LengthTools;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.StyleBuilder;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
- * GPUI's inspector (Rust feature `inspector`, define `gpui_inspector`):
+ * GPUI's inspector (Rust feature `inspector`, define `glaze_inspector`):
  * the test of `window.rs` (`inspector_only_tracks_its_open_window`), plus
  * checks of picking, hover depth and the inspector panel's layout.
  *
@@ -69,7 +69,7 @@ class InspectorTest extends TestCase {
     }
 
     static function pixelsLength(value:Float):Length {
-        return Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(value)));
+        return Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(value)));
     }
 
     function widths(root:InspectorTestRoot):String {
@@ -99,7 +99,7 @@ class InspectorTest extends TestCase {
             assertEquals('10,10,10', widths(root));
 
             final rendered = @:privateAccess window.renderedFrame;
-            var path:Null<gpui.InspectorElementId.InspectorElementPath> = null;
+            var path:Null<glaze.InspectorElementId.InspectorElementPath> = null;
             for (entry in rendered.nextInspectorInstanceIds) {
                 if (entry.count == 3) path = entry.path;
             }
@@ -138,7 +138,7 @@ class InspectorTest extends TestCase {
     }
 
     function testInspectorTakesThirtyRemsOnTheRight() {
-        var panel:Null<gpui.Bounds> = null;
+        var panel:Null<glaze.Bounds> = null;
         app.setInspectorRenderer((inspector, window, cx) -> {
             return div().sizeFull().child(canvas((bounds, _, _) -> {
                 panel = bounds;

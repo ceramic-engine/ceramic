@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * Shared flag (Rust `Arc<Mutex<bool>>`), kept by the clones of a node.
@@ -26,27 +26,27 @@ class SharedFlag {
 class InlineNode {
 
     /** The text content. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var text_:String;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var image:Null<ImageNode> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var custom:Null<MarkdownNode> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var customSelection:SharedFlag;
 
     /** The text styles, each the range of the text and the style. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var marks_:Array<RangedMark> = [];
 
     /** Rendered UTF-8 byte spans paired with their exact Markdown source spans. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var sourceSegments_:Array<SourceSegment> = [];
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var state:InlineState;
 
     /** A run of text with no marks. */
@@ -107,13 +107,13 @@ class InlineNode {
         return marks_;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function sourceSegments(sourceSegments:Array<SourceSegment>):InlineNode {
         this.sourceSegments_ = sourceSegments;
         return this;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSourceRange(selection:Range):Null<Range> {
         return SourceSegment.sourceRangeForSegments(sourceSegments_, selection);
     }

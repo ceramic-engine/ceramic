@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/text_system.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Utf8;
+import glaze.util.Utf8;
 
 /**
  * The GPUI text layout subsystem of a window: the shared `TextSystem`
@@ -108,7 +108,7 @@ class WindowTextSystem {
      * gets the decoration runs shared by the layouts of that run (the text
      * layouts of the port, which do not change them).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function shapeTextWith(text:String, fontSize:Pixels, runs:Array<TextRun>, wrapWidth:Null<Float>, lineClamp:Int, shareDecorations:Bool):Array<WrappedLine> {
         // Rust copies the runs with a length because their length is consumed
         // line by line: here the current run and what is left of it are kept

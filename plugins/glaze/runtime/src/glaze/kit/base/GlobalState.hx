@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/global_state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Point;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Point;
 
 /**
  * Holds the deferred interaction context open for as long as it is alive.
@@ -19,7 +19,7 @@ class DeferredPopover {
 
     public var alive(default, null):Bool = true;
 
-    @:allow(gpui.base.GlobalState)
+    @:allow(glaze.kit.base.GlobalState)
     function new() {}
 
     /**
@@ -40,7 +40,7 @@ class GlobalState {
 
     var deferredPopovers:Array<DeferredPopover> = [];
 
-    var appMenusValue:Array<gpui.Menu.OwnedMenu> = [];
+    var appMenusValue:Array<glaze.Menu.OwnedMenu> = [];
 
     var suppressTextSelectionFlag:Bool = false;
 
@@ -49,7 +49,7 @@ class GlobalState {
      * from what views read of this global: pushing and popping as they draw
      * is not a change of it.
      */
-    var textViewStateStack:Array<gpui.Entity<gpui.base.text.TextViewState>> = [];
+    var textViewStateStack:Array<glaze.Entity<glaze.kit.base.text.TextViewState>> = [];
 
     /** The table cells being prepainted or painted, innermost last. */
     var tableCellStack:Array<Bounds> = [];
@@ -122,11 +122,11 @@ class GlobalState {
     /**
      * The innermost text view being prepainted or painted, if any.
      */
-    public function textViewState():Null<gpui.Entity<gpui.base.text.TextViewState>> {
+    public function textViewState():Null<glaze.Entity<glaze.kit.base.text.TextViewState>> {
         return textViewStateStack.length > 0 ? textViewStateStack[textViewStateStack.length - 1] : null;
     }
 
-    public function pushTextViewState(state:gpui.Entity<gpui.base.text.TextViewState>):Void {
+    public function pushTextViewState(state:glaze.Entity<glaze.kit.base.text.TextViewState>):Void {
         textViewStateStack.push(state);
     }
 
@@ -160,14 +160,14 @@ class GlobalState {
     /**
      * Returns the application menus.
      */
-    public function appMenus():Array<gpui.Menu.OwnedMenu> {
+    public function appMenus():Array<glaze.Menu.OwnedMenu> {
         return appMenusValue;
     }
 
     /**
      * Replaces the application menus.
      */
-    public function setAppMenus(menus:Array<gpui.Menu.OwnedMenu>):Void {
+    public function setAppMenus(menus:Array<glaze.Menu.OwnedMenu>):Void {
         appMenusValue = menus;
     }
 

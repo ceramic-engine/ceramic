@@ -2,47 +2,47 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-003 (icon button with a dropdown caret). See DEVIATIONS.md.
-package gpui.component.button;
+package glaze.kit.button;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Background;
-import gpui.ClickEvent;
-import gpui.Corners;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.ComponentTraits;
-import gpui.base.GlobalState;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.ThemeStyled.FocusLine;
-import gpui.component.button.ButtonIcon;
-import gpui.component.select.Caret;
-import gpui.component.theme.Theme;
-import gpui.component.tooltip.Tooltip.ManagedTooltip;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Background;
+import glaze.ClickEvent;
+import glaze.Corners;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.GlobalState;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.ThemeStyled.FocusLine;
+import glaze.kit.button.ButtonIcon;
+import glaze.kit.select.Caret;
+import glaze.kit.theme.Theme;
+import glaze.kit.tooltip.Tooltip.ManagedTooltip;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.A11y.RoleOverrideTools;
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
-using gpui.component.theme.Colorize;
+using glaze.kit.base.A11y.RoleOverrideTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
+using glaze.kit.theme.Colorize;
 
 /**
  * The border radius of a Button (default `Medium`).
@@ -75,19 +75,19 @@ abstract IntoButtonRounded(ButtonRounded) from ButtonRounded to ButtonRounded {
  */
 class ButtonCustomVariant {
 
-    @:allow(gpui.component.button)
+    @:allow(glaze.kit.button)
     var colorValue:Hsla;
 
-    @:allow(gpui.component.button)
+    @:allow(glaze.kit.button)
     var foregroundValue:Hsla;
 
-    @:allow(gpui.component.button)
+    @:allow(glaze.kit.button)
     var shadowValue:Bool;
 
-    @:allow(gpui.component.button)
+    @:allow(glaze.kit.button)
     var hoverValue:Hsla;
 
-    @:allow(gpui.component.button)
+    @:allow(glaze.kit.button)
     var activeValue:Hsla;
 
     public function new(cx:App) {
@@ -145,7 +145,7 @@ class ButtonCustomVariant {
  * The variant of the Button (default `Default`). Methods are in
  * `ButtonVariantTools`.
  */
-@:using(gpui.component.button.Button.ButtonVariantTools)
+@:using(glaze.kit.button.Button.ButtonVariantTools)
 enum ButtonVariant {
     Default;
     Primary;
@@ -163,7 +163,7 @@ enum ButtonVariant {
 /**
  * The colors of one state of a button variant.
  */
-@:allow(gpui.component.button, tests)
+@:allow(glaze.kit.button, tests)
 class ButtonVariantStyle {
 
     public final bg:Background;
@@ -209,12 +209,12 @@ class ButtonVariantTools {
         return self.match(Ghost);
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static inline function noPadding(self:ButtonVariant):Bool {
         return isLink(self) || isText(self);
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static inline function isDefault(self:ButtonVariant):Bool {
         return self.match(Default);
     }
@@ -324,7 +324,7 @@ class ButtonVariantTools {
         }
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function normal(self:ButtonVariant, outline:Bool, cx:App):ButtonVariantStyle {
         final bg = bgColor(self, outline, cx);
         final border = borderColor(self, outline, cx);
@@ -332,7 +332,7 @@ class ButtonVariantTools {
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function hovered(self:ButtonVariant, outline:Bool, cx:App):ButtonVariantStyle {
         final theme = Theme.global(cx);
         final tokens = theme.tokens;
@@ -361,7 +361,7 @@ class ButtonVariantTools {
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function active(self:ButtonVariant, outline:Bool, cx:App):ButtonVariantStyle {
         final theme = Theme.global(cx);
         final tokens = theme.tokens;
@@ -387,7 +387,7 @@ class ButtonVariantTools {
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function selected(self:ButtonVariant, outline:Bool, cx:App):ButtonVariantStyle {
         if (outline) {
             final activeStyle = active(self, outline, cx);
@@ -418,7 +418,7 @@ class ButtonVariantTools {
         return new ButtonVariantStyle(bg, border, fg, underline(self, cx), shadow(self, outline, cx));
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function disabled(self:ButtonVariant, outline:Bool, cx:App):ButtonVariantStyle {
         final theme = Theme.global(cx);
         final tokens = theme.tokens;
@@ -468,12 +468,12 @@ class ButtonVariantTools {
  * button's style), interactive ones go to `base.base`.
  *
  * Tooltips (`tooltip`, `tooltipWithAction`, `tooltipPlacement`,
- * `tooltipShowDelay`) are managed tooltips (`gpui.component.tooltip`).
+ * `tooltipShowDelay`) are managed tooltips (`glaze.kit.tooltip`).
  */
 class Button implements RenderOnce implements Styled implements ParentElement implements Sizable implements Selectable implements Disableable implements FocusableExt {
 
     /** The mouse down listener of an enabled button (shared, it captures nothing) */
-    static final MOUSE_DOWN:(gpui.MouseDownEvent, Window, App) -> Void = (_, window, cx) -> {
+    static final MOUSE_DOWN:(glaze.MouseDownEvent, Window, App) -> Void = (_, window, cx) -> {
         // Avoid focus on mouse down.
         window.preventDefault();
 
@@ -482,7 +482,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     };
 
     /** The mouse down listener of a loading button */
-    static final LOADING_MOUSE_DOWN:(gpui.MouseDownEvent, Window, App) -> Void = (_, _, cx) -> cx.stopPropagation();
+    static final LOADING_MOUSE_DOWN:(glaze.MouseDownEvent, Window, App) -> Void = (_, _, cx) -> cx.stopPropagation();
 
     /** The click listener of a loading button */
     static final STOP_CLICK:(ClickEvent, Window, App) -> Void = (_, _, cx) -> cx.stopPropagation();
@@ -492,25 +492,25 @@ class Button implements RenderOnce implements Styled implements ParentElement im
 
     final id:ElementId;
 
-    @:allow(gpui.component, tests)
-    var base:gpui.base.Button;
+    @:allow(glaze.kit, tests)
+    var base:glaze.kit.base.Button;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var iconValue:Null<ButtonIcon> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var labelValue:Null<String> = null;
 
     /** The announced name, when the visible content is not it. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var accessibilityLabelValue:Null<String> = null;
 
     final childElements:Array<AnyElement> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectedValue:Bool = false;
 
     /**
@@ -520,18 +520,18 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      */
     var openValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var toggledValue:Null<Bool> = null;
 
     var roleValue:RoleOverride = Implicit;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var variantValue:ButtonVariant = Default;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var roundedValue:ButtonRounded = Medium;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var outlineValue:Bool = false;
 
     /** Replaced, never changed in place (`withBorderCorners`) */
@@ -543,76 +543,76 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /** Every corner or edge (shared by the buttons that keep them all) */
     static final ALL_SIDES:Array<Bool> = [true, true, true, true];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var dropdownCaretValue:Bool = false;
 
     var hoverGroupValue:Null<String> = null;
 
     var hoverGroupHeldValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var sizeValue:Size = Medium;
 
     var contentStyleValue:StyleRefinement = new StyleRefinement();
 
     var iconSize:Null<Size> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var compactValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var tooltipValue:Null<String> = null;
 
     /** The action whose key binding the tooltip shows (Rust: the second half of `tooltip`). */
-    var tooltipActionValue:Null<{action:gpui.Action, context:Null<String>}> = null;
+    var tooltipActionValue:Null<{action:glaze.Action, context:Null<String>}> = null;
 
-    var tooltipPlacementValue:Null<gpui.base.Geometry.Placement> = null;
+    var tooltipPlacementValue:Null<glaze.kit.base.Geometry.Placement> = null;
 
-    var tooltipBuilder:Null<(Window, App) -> gpui.AnyView> = null;
+    var tooltipBuilder:Null<(Window, App) -> glaze.AnyView> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var tooltipShowDelayValue:Null<Float> = null;
 
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
     var onHoverHandler:Null<(Bool, Window, App) -> Void> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var loadingValue:Bool = false;
 
     var loadingIconValue:Null<Icon> = null;
 
     var focusRingEnabled:Bool = true;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var focusHandleValue:Null<FocusHandle> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var tabIndexValue:Int = 0;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var tabStopValue:Bool = true;
 
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new gpui.base.Button(id);
+        this.base = new glaze.kit.base.Button(id);
     }
 
     /**
      * Uses a behavior primitive supplied by a compound Base control.
      */
-    @:allow(gpui.component, tests)
-    function withBase(base:gpui.base.Button):Button {
+    @:allow(glaze.kit, tests)
+    function withBase(base:glaze.kit.base.Button):Button {
         this.base = base;
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function variant():ButtonVariant {
         return variantValue;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function isCompact():Bool {
         return compactValue;
     }
@@ -621,24 +621,24 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Presentation supplied by a styled compound control. Standalone buttons
      * retain their normal size-derived content style.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function contentStyle(style:StyleRefinement, iconSize:Size):Button {
         contentStyleValue = style;
         this.iconSize = iconSize;
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function buttonSize():Size {
         return sizeValue;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function isDisabled():Bool {
         return disabledValue;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function isOutline():Bool {
         return outlineValue;
     }
@@ -646,7 +646,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /**
      * Whether the button shows only its icon.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function isIconOnly():Bool {
         return iconValue != null && labelValue == null && childElements.length == 0;
     }
@@ -694,7 +694,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Set the border corners side of the Button (top left, top right,
      * bottom right, bottom left).
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function withBorderCorners(topLeft:Bool, topRight:Bool, bottomRight:Bool, bottomLeft:Bool):Button {
         borderCorners = [topLeft, topRight, bottomRight, bottomLeft];
         return this;
@@ -703,7 +703,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /**
      * Set the border edges of the Button (top, right, bottom, left).
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function withBorderEdges(top:Bool, right:Bool, bottom:Bool, left:Bool):Button {
         borderEdges = [top, right, bottom, left];
         return this;
@@ -714,7 +714,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * its hover surface at half strength, so a composite such as a split
      * button reads as one control with the hovered part emphasized.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function hoverGroup(group:String):Button {
         hoverGroupValue = group;
         return this;
@@ -724,7 +724,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Keep the hover group's idle surface up without a pointer, for as long as
      * the group is held engaged, such as while a sibling's menu is open.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function hoverGroupHeld(held:Bool):Button {
         hoverGroupHeldValue = held;
         return this;
@@ -771,7 +771,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Applies to `tooltip` and `tooltipWithAction`. Omitting placement keeps
      * automatic positioning.
      */
-    public function tooltipPlacement(placement:gpui.base.Geometry.Placement):Button {
+    public function tooltipPlacement(placement:glaze.kit.base.Geometry.Placement):Button {
         tooltipPlacementValue = placement;
         return this;
     }
@@ -779,7 +779,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     /**
      * Set the tooltip of the button with action to show keybinding.
      */
-    public function tooltipWithAction(tooltip:String, action:gpui.Action, context:Null<String>):Button {
+    public function tooltipWithAction(tooltip:String, action:glaze.Action, context:Null<String>):Button {
         tooltipValue = tooltip;
         tooltipActionValue = {action: action, context: context};
         return this;
@@ -829,7 +829,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Add a mouse down listener (Rust `InteractiveElement::on_mouse_down`
      * on the Base button's interactivity).
      */
-    public function onMouseDown(button:gpui.MouseButton, listener:(gpui.MouseDownEvent, Window, App) -> Void):Button {
+    public function onMouseDown(button:glaze.MouseButton, listener:(glaze.MouseDownEvent, Window, App) -> Void):Button {
         base.onMouseDown(button, listener);
         return this;
     }
@@ -901,7 +901,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * Whether the button paints its selected styling, which is what both a
      * caller-set selection and an open popup look like today.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     inline function showsSelectedStyle():Bool {
         return selectedValue || openValue;
     }
@@ -912,12 +912,12 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      * A loading button is as inert as a disabled one, it just keeps looking
      * like itself instead of taking the disabled styling.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     inline function interactive():Bool {
         return !(disabledValue || loadingValue);
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     inline function hoverable():Bool {
         return interactive() && onHoverHandler != null;
     }
@@ -1102,7 +1102,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
             }
         }
         // One length for the four corners (lengths are immutable values)
-        final roundingLength:gpui.AbsoluteLength = gpui.AbsoluteLength.Pixels(rounding);
+        final roundingLength:glaze.AbsoluteLength = glaze.AbsoluteLength.Pixels(rounding);
         if (borderCorners[0]) root.roundedTl(roundingLength);
         if (borderCorners[1]) root.roundedTr(roundingLength);
         if (borderCorners[3]) root.roundedBl(roundingLength);
@@ -1138,7 +1138,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         root.base.setHoverRefinement(hoverStyle == null
             ? new StyleRefinement()
             : new StyleBuilder().bg(hoverStyle.bg).borderColor(hoverStyle.border).textColor(hoverStyle.fg).style());
-        root.lineHeight(gpui.Prelude.relative(1.25)).refineStyle(instanceStyle);
+        root.lineHeight(glaze.Prelude.relative(1.25)).refineStyle(instanceStyle);
 
         // The explicit name wins: it exists precisely for the cases where the
         // visible content is not what a listener needs to hear.
@@ -1230,7 +1230,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         }
         else if (tooltip != null) {
             ManagedTooltip.managedTooltipOn(root, root.base, tooltipPlacement, tooltipShowDelay, (window, cx) -> {
-                final view = new gpui.component.tooltip.Tooltip(tooltip);
+                final view = new glaze.kit.tooltip.Tooltip(tooltip);
                 if (tooltipAction != null) {
                     view.action(tooltipAction.action, tooltipAction.context);
                 }

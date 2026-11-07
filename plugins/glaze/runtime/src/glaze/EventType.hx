@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): replaces the `TypeId`
 // of events used by `EventEmitter<E>` in gpui-pre 0.3.10. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The type of the events a subscriber listens to, given explicitly since Haxe
@@ -36,7 +36,7 @@ abstract EventType<E>(EventTypeData) {
 
 }
 
-@:allow(gpui.EventType)
+@:allow(glaze.EventType)
 private class EventTypeData {
 
     final cls:Null<Class<Dynamic>>;

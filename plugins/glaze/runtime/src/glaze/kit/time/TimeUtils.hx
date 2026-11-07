@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/time/utils.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.time;
+package glaze.kit.time;
 
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.Weekday;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.Weekday;
 
 /**
  * Date helpers of the time components (Rust `utils.rs`: `NaiveDateExt` and
  * the five-week `days_in_month`). gpui-kit 0.8.1 keeps them crate-private
  * and only its tests call them; the calendar grids come from
- * `gpui.base.Calendar`.
+ * `glaze.kit.base.Calendar`.
  */
-@:allow(gpui.component)
+@:allow(glaze.kit)
 @:allow(tests)
 class TimeUtils {
 

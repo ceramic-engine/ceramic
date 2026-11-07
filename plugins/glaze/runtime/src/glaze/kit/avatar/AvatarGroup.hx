@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/avatar/avatar_group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.avatar;
+package glaze.kit.avatar;
 
-import gpui.App;
-import gpui.Div;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.avatar.Avatar.AvatarSizing;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Div;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.avatar.Avatar.AvatarSizing;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A row of overlapping avatars, at most `limit` (3 by default), with an
@@ -77,7 +77,7 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final itemMl:Float = -gpui.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.3);
+        final itemMl:Float = -glaze.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.3);
         final avatarsLen = avatars.length;
 
         base.hFlex().flexRowReverse().refineStyle(groupStyle);
@@ -96,7 +96,7 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
         while (ix >= 0) {
             final item = shown[ix].withSize(size);
             if (ix > 0) {
-                item.ml(gpui.Prelude.px(itemMl));
+                item.ml(glaze.Prelude.px(itemMl));
             }
             base.child(item);
             ix--;

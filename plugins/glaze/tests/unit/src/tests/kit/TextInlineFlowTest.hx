@@ -3,36 +3,36 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.HighlightStyle;
-import gpui.ImageSource;
-import gpui.Point;
-import gpui.Range;
-import gpui.Size;
-import gpui.StyleBuilder;
-import gpui.TextStyle;
-import gpui.Window;
-import gpui.base.text.InlineFlow;
-import gpui.base.text.InlineFlow.CodeBox;
-import gpui.base.text.InlineFlow.InlineFlowLayout;
-import gpui.base.text.InlineFlow.MeasureItem;
-import gpui.base.text.InlineFlow.PositionedFragment;
-import gpui.base.text.InlineHighlight;
-import gpui.base.text.RangedHighlight;
-import gpui.util.Utf8;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.HighlightStyle;
+import glaze.ImageSource;
+import glaze.Point;
+import glaze.Range;
+import glaze.Size;
+import glaze.StyleBuilder;
+import glaze.TextStyle;
+import glaze.Window;
+import glaze.kit.base.text.InlineFlow;
+import glaze.kit.base.text.InlineFlow.CodeBox;
+import glaze.kit.base.text.InlineFlow.InlineFlowLayout;
+import glaze.kit.base.text.InlineFlow.MeasureItem;
+import glaze.kit.base.text.InlineFlow.PositionedFragment;
+import glaze.kit.base.text.InlineHighlight;
+import glaze.kit.base.text.RangedHighlight;
+import glaze.util.Utf8;
 import tests.kit.TextInlineTest.TextTestDraw;
 import tests.kit.TextInlineTest.TextTestFonts;
 import testing.TestCase;
 
-using gpui.AbsoluteLengthTools;
+using glaze.AbsoluteLengthTools;
 
 /**
  * The tests of inline_flow.rs.
  */
-@:access(gpui.base.text.InlineFlow)
-@:access(gpui.base.text.InlineFlowLayout)
-@:access(gpui.base.text.MeasuredInlineObject)
+@:access(glaze.kit.base.text.InlineFlow)
+@:access(glaze.kit.base.text.InlineFlowLayout)
+@:access(glaze.kit.base.text.MeasuredInlineObject)
 class TextInlineFlowTest extends TestCase {
 
     static inline function f32(value:Float):Float {
@@ -51,7 +51,7 @@ class TextInlineFlowTest extends TestCase {
     }
 
     static function imageItem(uri:String):MeasureItem {
-        return MeasureItem.Image(ImageSource.Resource(gpui.Resource.Uri(uri)), null, null);
+        return MeasureItem.Image(ImageSource.Resource(glaze.Resource.Uri(uri)), null, null);
     }
 
     static function texts(layout:InlineFlowLayout):Array<{text:String, origin:Point, size:Size, fontSize:Float, codeBackground:Null<CodeBox>}> {
@@ -68,7 +68,7 @@ class TextInlineFlowTest extends TestCase {
 
     /** Opens an empty window and runs `f` in an update of it (Rust `window.update(|_, window, cx| ...)`). */
     static function withWindow<R>(app:App, f:(Window, App) -> R):R {
-        final window = TextTestDraw.openWindow(app, (_, _) -> new gpui.Empty());
+        final window = TextTestDraw.openWindow(app, (_, _) -> new glaze.Empty());
         final result = app.update(cx -> f(window, cx));
         window.destroy();
         return result;
@@ -251,7 +251,7 @@ class TextInlineFlowTest extends TestCase {
     function testInlineCodeLineIsAsTallAsAPlainLineWhenGlyphsOverflowIt() {
         final app = TextTestDraw.wideMonoApp();
         final style = bodyStyle(40.);
-        style.lineHeight = gpui.DefiniteLength.Absolute(AbsoluteLength.Pixels(30.));
+        style.lineHeight = glaze.DefiniteLength.Absolute(AbsoluteLength.Pixels(30.));
         final items = [textItem("a code z", [new RangedHighlight(new Range(2, 6), new InlineHighlight(null, TextTestFonts.MONO, 0.875))])];
         // The 40px glyphs are taller than the 30px line. A plain text line
         // keeps the line height and lets them overflow, so a line with
@@ -265,19 +265,19 @@ class TextInlineFlowTest extends TestCase {
 
     function testInlineCodeStyleKeepsEqualSizeProseSeparateAndMeasuresItsBox() {
         final app = TextTestDraw.wideMonoApp();
-        final window = TextTestDraw.openWindow(app, (_, _) -> new gpui.Empty());
+        final window = TextTestDraw.openWindow(app, (_, _) -> new glaze.Empty());
         for (remSize in [14., 28.]) {
             app.update(cx -> {
                 window.setRemSize(remSize);
                 final textStyle = bodyStyle(remSize);
-                final codeStyle = StyleBuilder.build(s -> s.textSize(gpui.Prelude.rems(1.))
-                    .px(gpui.Prelude.rems(0.25))
-                    .py(gpui.Prelude.rems(0.125))
-                    .bg(gpui.Prelude.red())
+                final codeStyle = StyleBuilder.build(s -> s.textSize(glaze.Prelude.rems(1.))
+                    .px(glaze.Prelude.rems(0.25))
+                    .py(glaze.Prelude.rems(0.125))
+                    .bg(glaze.Prelude.red())
                     .border1()
-                    .borderColor(gpui.Prelude.blue())
-                    .rounded(gpui.Prelude.rems(0.25)));
-                final highlight = new InlineHighlight(new HighlightStyle(null, null, null, gpui.Prelude.green()), TextTestFonts.MONO, 0.875, codeStyle.clone());
+                    .borderColor(glaze.Prelude.blue())
+                    .rounded(glaze.Prelude.rems(0.25)));
+                final highlight = new InlineHighlight(new HighlightStyle(null, null, null, glaze.Prelude.green()), TextTestFonts.MONO, 0.875, codeStyle.clone());
                 final items = [textItem("before code after", [new RangedHighlight(new Range(7, 11), highlight)])];
                 final layout = InlineFlow.layoutFlow(items, [null], textStyle, null, window, cx);
                 assertEquals(3, layout.fragments.length);
@@ -287,9 +287,9 @@ class TextInlineFlowTest extends TestCase {
                         final code = t.codeBackground;
                         assertTrue(code != null, "code box");
                         assertTrue(code.style.background.equals(codeStyle.background));
-                        assertTrue(code.style.borderColor.equals(gpui.Prelude.blue()));
-                        assertTrue(gpui.RefinementEq.absolute(code.style.cornerRadiusTopLeft, codeStyle.cornerRadiusTopLeft)
-                            && gpui.RefinementEq.absolute(code.style.cornerRadiusBottomRight, codeStyle.cornerRadiusBottomRight));
+                        assertTrue(code.style.borderColor.equals(glaze.Prelude.blue()));
+                        assertTrue(glaze.RefinementEq.absolute(code.style.cornerRadiusTopLeft, codeStyle.cornerRadiusTopLeft)
+                            && glaze.RefinementEq.absolute(code.style.cornerRadiusBottomRight, codeStyle.cornerRadiusBottomRight));
                         assertEquals(t.size.width, code.bounds.size.width);
                         assertEquals(f32(f32(TextTestFonts.widthOf("code", TextTestFonts.MONO, remSize) + f32(remSize * 0.5)) + 2.), t.size.width);
                     }
@@ -315,7 +315,7 @@ class TextInlineFlowTest extends TestCase {
 
     function testInlineCodeSizeIsRelativeAndUsesTheNativeBodyBaseline() {
         final app = TextTestDraw.wideMonoApp();
-        final window = TextTestDraw.openWindow(app, (_, _) -> new gpui.Empty());
+        final window = TextTestDraw.openWindow(app, (_, _) -> new glaze.Empty());
         // These are the 16px body size and the example-markdown preview's
         // 1.25x/1.5x inherited text-size zooms.
         for (bodySize in [16., 20., 24.]) {

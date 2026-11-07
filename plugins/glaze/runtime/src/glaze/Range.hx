@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI: Rust's `std::ops::Range<usize>`, as used
 // by the text input APIs of gpui-pre 0.3.10 (src/platform.rs, src/input.rs,
 // Zed Industries, Apache-2.0). See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A half open range of offsets, `start..end` (Rust `Range<usize>`).

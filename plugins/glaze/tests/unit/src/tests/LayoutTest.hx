@@ -1,18 +1,18 @@
 package tests;
 
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Edges;
-import gpui.LayoutId;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.TaffyLayoutEngine;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Edges;
+import glaze.LayoutId;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.TaffyLayoutEngine;
+import glaze.TestDispatcher;
+import glaze.Window;
 import taffy.style.LengthPercentage;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests for the taffy glue (GPUI's `taffy.rs`): style conversion, pixel
@@ -62,14 +62,14 @@ class LayoutTest extends TestCase {
         assertTrue(isNegativeZero(TaffyLayoutEngine.roundHalfTowardZero(negativeZero)));
         assertTrue(isNegativeZero(TaffyLayoutEngine.roundHalfTowardZero(-0.3)));
         assertTrue(isNegativeZero(TaffyLayoutEngine.roundHalfTowardZero(-0.5)));
-        assertTrue(isPositiveZero(gpui.TextPainter.roundHalfTowardZero(0.0)));
-        assertTrue(isNegativeZero(gpui.TextPainter.roundHalfTowardZero(-0.3)));
+        assertTrue(isPositiveZero(glaze.TextPainter.roundHalfTowardZero(0.0)));
+        assertTrue(isNegativeZero(glaze.TextPainter.roundHalfTowardZero(-0.3)));
     }
 
     /** `Pixels`, `Point` and `Size` order like `f32::total_cmp` in GPUI: `-0.0 < 0.0`. */
     function testPixelsOrderingTreatsNegativeZeroAsLess() {
-        final pos:gpui.Pixels = 0.0;
-        final neg:gpui.Pixels = -0.0;
+        final pos:glaze.Pixels = 0.0;
+        final neg:glaze.Pixels = -0.0;
         assertTrue(isPositiveZero(pos.max(neg)));
         assertTrue(isPositiveZero(neg.max(pos)));
         assertTrue(isNegativeZero(pos.min(neg)));

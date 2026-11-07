@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/inline_tokens.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Range;
-import gpui.Window;
-import gpui.util.Utf8;
+import glaze.Context;
+import glaze.Range;
+import glaze.Window;
+import glaze.util.Utf8;
 
 /**
  * Document annotations for atomic inline objects: the `impl InputBaseState`
  * blocks of inline_tokens.rs, as static extensions
- * (`using gpui.base.input.InputTokens;`). Coordinates are always source
+ * (`using glaze.kit.base.input.InputTokens;`). Coordinates are always source
  * bytes.
  *
  * The public token API (Rust `token_api!`, on `InputState` and

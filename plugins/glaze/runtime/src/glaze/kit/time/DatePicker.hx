@@ -1,62 +1,62 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/time/date_picker.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.time;
+package glaze.kit.time;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Calendar.CalendarDate;
-import gpui.base.Calendar.CalendarEvent;
-import gpui.base.Calendar.CalendarState;
-import gpui.base.Calendar.Matcher;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.base.ComponentTraits.FocusableExt;
-import gpui.base.TimeField.HourCycle;
-import gpui.base.TimeField.TimeFieldEvent;
-import gpui.base.TimeField.TimeFieldState;
-import gpui.base.TimeField.TimePrecision;
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.NaiveDateTime;
-import gpui.base.chrono.NaiveTime;
-import gpui.base.chrono.Weekday;
-import gpui.base.input.InputActions.Delete;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.input.ClearButton;
-import gpui.component.input.Input;
-import gpui.component.popover.Popover;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Calendar.CalendarDate;
+import glaze.kit.base.Calendar.CalendarEvent;
+import glaze.kit.base.Calendar.CalendarState;
+import glaze.kit.base.Calendar.Matcher;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.base.ComponentTraits.FocusableExt;
+import glaze.kit.base.TimeField.HourCycle;
+import glaze.kit.base.TimeField.TimeFieldEvent;
+import glaze.kit.base.TimeField.TimeFieldState;
+import glaze.kit.base.TimeField.TimePrecision;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.NaiveDateTime;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.base.chrono.Weekday;
+import glaze.kit.base.input.InputActions.Delete;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.input.ClearButton;
+import glaze.kit.input.Input;
+import glaze.kit.popover.Popover;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Calendar.CalendarDateTools;
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.Calendar.CalendarDateTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * Events emitted by the DatePicker.
@@ -76,7 +76,7 @@ enum DatePickerEvent {
  * When the picker has no time precision, every time is the picker's
  * `DatePickerState.defaultTime`, `00:00` unless configured.
  */
-@:using(gpui.component.time.DatePicker.DateTimeTools)
+@:using(glaze.kit.time.DatePicker.DateTimeTools)
 enum DateTime {
     Single(value:Null<NaiveDateTime>);
     Range(start:Null<NaiveDateTime>, end:Null<NaiveDateTime>);
@@ -155,10 +155,10 @@ enum DateRangePresetValue {
  */
 class DateRangePreset {
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     final label:String;
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     final value:DateRangePresetValue;
 
     function new(label:String, value:DateRangePresetValue) {
@@ -209,7 +209,7 @@ class DatePickerState extends Model implements Render {
 
     @observe var open:Bool = false;
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     final calendar:Entity<CalendarState>;
 
     @observe var dateFormatValue:Null<String> = null;
@@ -233,7 +233,7 @@ class DatePickerState extends Model implements Render {
      */
     @observe var endTime:NaiveTime = NaiveTime.MIN;
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     final timeField:Entity<TimeFieldState>;
 
     var timeFieldPushed:Bool = false;
@@ -241,10 +241,10 @@ class DatePickerState extends Model implements Render {
     final _subscriptions:Array<Subscription>;
 
     /** The first day of the week. Defaults to Sunday. */
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     var firstDayOfWeekValue:Weekday = Weekday.Sun;
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     var bounds:Bounds = new Bounds();
 
 
@@ -396,7 +396,7 @@ class DatePickerState extends Model implements Render {
     }
 
     /** The precision the popup edits times at, or `null` when it edits dates only. */
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function editedTimePrecision():Null<TimePrecision> {
         return _date.isSingle() ? timePrecisionValue : null;
     }
@@ -467,7 +467,7 @@ class DatePickerState extends Model implements Render {
     }
 
     /** Sync the builder configuration into the child states before they render. */
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function syncChildren(window:Window, cx:Context<DatePickerState>):Void {
         final matcher = disabledMatcherValue;
         calendar.update(cx, (state, _) -> {
@@ -479,7 +479,7 @@ class DatePickerState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function setOpen(open:Bool, window:Window, cx:Context<DatePickerState>):Void {
         if (!open) {
             focusBackIfNeed(window, cx);
@@ -493,7 +493,7 @@ class DatePickerState extends Model implements Render {
         return open;
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function onEscape(_:Cancel, window:Window, cx:Context<DatePickerState>):Void {
         if (!open) {
             cx.propagate();
@@ -501,7 +501,7 @@ class DatePickerState extends Model implements Render {
         setOpen(false, window, cx);
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function onDelete(_:Delete, window:Window, cx:Context<DatePickerState>):Void {
         clean(null, window, cx);
     }
@@ -526,7 +526,7 @@ class DatePickerState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function clean(_:Null<ClickEvent>, window:Window, cx:Context<DatePickerState>):Void {
         cx.stopPropagation();
         final defaultTime = defaultTimeValue;
@@ -539,13 +539,13 @@ class DatePickerState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function toggleCalendar(_:ClickEvent, window:Window, cx:Context<DatePickerState>):Void {
         final open = !this.open;
         setOpen(open, window, cx);
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function selectPreset(preset:DateRangePreset, window:Window, cx:Context<DatePickerState>):Void {
         switch preset.value {
             case Single(single):
@@ -559,7 +559,7 @@ class DatePickerState extends Model implements Render {
         focusHandle.focus(window, cx.app);
     }
 
-    @:allow(gpui.component.time)
+    @:allow(glaze.kit.time)
     function displayFormat():String {
         if (dateFormatValue != null) {
             return dateFormatValue;
@@ -717,7 +717,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
 
         final colors = @:privateAccess Input.inputStyleColors(disabledValue, cx);
 
-        final picker = new gpui.base.DatePicker(id, state.focusHandle).open(state.isOpen());
+        final picker = new glaze.kit.base.DatePicker(id, state.focusHandle).open(state.isOpen());
         if (state.date().isSome()) picker.ariaValue(displayTitle);
         picker.disabled(disabledValue)
             .onOpenChange((open, window, cx) -> {
@@ -813,9 +813,9 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 .roundedNone()
                 .p0();
             switch size {
-                case Small: calendar.w(gpui.Prelude.px(196. * monthCount));
-                case Large: calendar.w(gpui.Prelude.px(280. * monthCount));
-                case _: calendar.w(gpui.Prelude.px(224. * monthCount));
+                case Small: calendar.w(glaze.Prelude.px(196. * monthCount));
+                case Large: calendar.w(glaze.Prelude.px(280. * monthCount));
+                case _: calendar.w(glaze.Prelude.px(224. * monthCount));
             }
             calendar.withSize(size);
             final column = vFlex().child(calendar);
@@ -836,7 +836,7 @@ class DatePicker implements RenderOnce implements Styled implements Sizable impl
                 state.bounds,
                 surface,
                 cx
-            )).withPriority(gpui.base.Popup.POPUP_PRIORITY));
+            )).withPriority(glaze.kit.base.Popup.POPUP_PRIORITY));
         }
         return picker;
     }

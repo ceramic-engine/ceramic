@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/taffy.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Stacks;
+import glaze.util.Stacks;
 import haxe.ds.IntMap;
 import taffy.compute.Leaf;
 import taffy.geometry.LineOf;
@@ -34,13 +34,13 @@ typedef MeasureFn = (knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<
 @:noCompletion
 class MeasuredNode {
     /** The arguments of the last call to `measureNode`, null before the first one */
-    @:allow(gpui) var measuredKnown:Null<SizeOf<Null<Float>>> = null;
-    @:allow(gpui) var measuredAvailable:Null<SizeOf<AvailableSpace>> = null;
+    @:allow(glaze) var measuredKnown:Null<SizeOf<Null<Float>>> = null;
+    @:allow(glaze) var measuredAvailable:Null<SizeOf<AvailableSpace>> = null;
 
     function new() {}
 
     /** The size of the node (what a `MeasureFn` returns) */
-    @:allow(gpui)
+    @:allow(glaze)
     function measureNode(knownDimensions:SizeOf<Null<Float>>, availableSpace:SizeOf<AvailableSpace>, window:Window, cx:App):Size {
         throw 'abstract';
     }
@@ -222,7 +222,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     }
 
     inline function created(id:NodeId):LayoutId {
-        #if gpui_count_allocations gpui.util.AllocationCounters.layoutNodes++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.layoutNodes++; #end
         nodeFrames[id] = frame;
         liveNodes.push(id);
         if (viewNodesStack.length > 0) {
@@ -730,7 +730,7 @@ class TaffyLayoutEngine implements taffy.tree.LayoutMeasurer<NodeContext> implem
     public static inline function roundHalfTowardZero(value:Float):Float {
         // Rust: `(value.abs() - 0.5).ceil().copysign(value)`; the ceil of
         // a small magnitude is -0.0, so the sign must come from `value`
-        return gpui.util.MathUtil.copysign(Math.fceil(Math.abs(value) - 0.5), value);
+        return glaze.util.MathUtil.copysign(Math.fceil(Math.abs(value) - 0.5), value);
     }
 
     public static inline function roundToDevicePixel(logical:Float, scaleFactor:Float):Float {

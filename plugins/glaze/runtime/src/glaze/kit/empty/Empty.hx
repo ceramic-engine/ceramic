@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/empty.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.empty;
+package glaze.kit.empty;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An empty state: an optional header (media, title, description), an
@@ -23,7 +23,7 @@ using gpui.base.StyledExt;
  * (give it a border width to show the border). The slots always render in
  * that order, whatever order they are set in.
  *
- * Not to be confused with `gpui.Empty` (the element that renders nothing).
+ * Not to be confused with `glaze.Empty` (the element that renders nothing).
  */
 class Empty implements RenderOnce implements Styled implements ParentElement {
 
@@ -71,7 +71,7 @@ class Empty implements RenderOnce implements Styled implements ParentElement {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .minW0()
             .flex1()
@@ -132,7 +132,7 @@ class EmptyHeader implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .maxW(rems(24.))
             .minW0()
@@ -193,7 +193,7 @@ class EmptyMedia implements RenderOnce implements Styled implements ParentElemen
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         // A column preserves the intrinsic width of nested rows such as AvatarGroup.
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .flexShrink0()
             .itemsCenter()
             .justifyCenter()
@@ -289,7 +289,7 @@ class EmptyDescription implements RenderOnce implements Styled implements Parent
             .wFull()
             .minW0()
             .textSm()
-            .lineHeight(gpui.Prelude.relative(1.625))
+            .lineHeight(glaze.Prelude.relative(1.625))
             .textColor(Theme.global(cx).mutedForeground)
             .whitespaceNormal()
             .refineStyle(descriptionStyle);
@@ -331,7 +331,7 @@ class EmptyContent implements RenderOnce implements Styled implements ParentElem
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .maxW(rems(24.))
             .minW0()

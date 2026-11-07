@@ -3,43 +3,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DragMoveEvent;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.resizable.Resizable;
-import gpui.base.resizable.ResizableState;
-import gpui.base.resizable.PixelsRange;
-import gpui.base.resizable.ResizeHandle;
-import gpui.base.resizable.ResizeHandle.HandleEdge;
-import gpui.base.resizable.ResizeHandle.ResizeHandleState;
-import gpui.base.resizable.ResizeHandle.SharedHandleState;
-import gpui.base.resizable.ResizableState.ResizablePanelState;
-import gpui.base.theme.ResizableTheme;
-import gpui.base.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DragMoveEvent;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.resizable.Resizable;
+import glaze.kit.base.resizable.ResizableState;
+import glaze.kit.base.resizable.PixelsRange;
+import glaze.kit.base.resizable.ResizeHandle;
+import glaze.kit.base.resizable.ResizeHandle.HandleEdge;
+import glaze.kit.base.resizable.ResizeHandle.ResizeHandleState;
+import glaze.kit.base.resizable.ResizeHandle.SharedHandleState;
+import glaze.kit.base.resizable.ResizableState.ResizablePanelState;
+import glaze.kit.base.theme.ResizableTheme;
+import glaze.kit.base.theme.Theme;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.InteractiveElementExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.InteractiveElementExt;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's `resizable` module (the group,
@@ -838,7 +838,7 @@ private class ResizeView extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }

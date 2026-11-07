@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/dropdown_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.menu;
+package glaze.kit.menu;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.base.Popover.PopoverState;
-import gpui.component.button.Button;
-import gpui.component.menu.ContextMenu.MenuBuilder;
-import gpui.component.popover.Popover;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.base.Popover.PopoverState;
+import glaze.kit.button.Button;
+import glaze.kit.menu.ContextMenu.MenuBuilder;
+import glaze.kit.popover.Popover;
 
 /**
  * A dropdown menu for buttons, as a static extension:
- * `using gpui.component.menu.DropdownMenu;` (Rust: the `DropdownMenu`
+ * `using glaze.kit.menu.DropdownMenu;` (Rust: the `DropdownMenu`
  * trait, implemented for `Button`).
  */
 class DropdownMenu {
@@ -59,14 +59,14 @@ class DropdownMenuPopover implements RenderOnce {
 
     var anchorValue:Anchor;
 
-    final trigger:gpui.base.ComponentTraits.Selectable;
+    final trigger:glaze.kit.base.ComponentTraits.Selectable;
 
     final builder:MenuBuilder;
 
     var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
 
-    @:allow(gpui.component.menu)
-    function new(id:ElementId, anchor:Anchor, trigger:gpui.base.ComponentTraits.Selectable, builder:MenuBuilder) {
+    @:allow(glaze.kit.menu)
+    function new(id:ElementId, anchor:Anchor, trigger:glaze.kit.base.ComponentTraits.Selectable, builder:MenuBuilder) {
         this.id = ElementId.Name('dropdown-menu:' + ContextMenu.debugElementId(id));
         this.anchorValue = anchor;
         this.trigger = trigger;
@@ -162,7 +162,7 @@ class DropdownMenuPopover implements RenderOnce {
  * The menu a dropdown keeps while it is open (not observable: it is written
  * while the popover renders).
  */
-private class DropdownMenuState implements gpui.Droppable {
+private class DropdownMenuState implements glaze.Droppable {
 
     public var menu:Null<Entity<PopupMenu>> = null;
 

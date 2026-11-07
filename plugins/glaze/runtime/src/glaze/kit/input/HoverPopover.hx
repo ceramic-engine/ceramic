@@ -1,41 +1,41 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/popovers/hover_popover.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Popup;
-import gpui.base.input.EditorState;
-import gpui.base.input.LspHover;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Popup;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.LspHover;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputLspExt;
-using gpui.component.ThemeStyled;
-using gpui.base.StyledExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.base.StyledExt;
 
 /**
  * The hover popover of the code editor: the provider's hover content,
@@ -46,10 +46,10 @@ class HoverPopover extends Model implements Render {
     final editor:Entity<EditorState>;
 
     /** The symbol range byte of the hover trigger. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     final symbolRange:Range;
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     final hover:LspHover;
 
     public static function create(editor:Entity<EditorState>, symbolRange:Range, hover:LspHover, cx:App):Entity<HoverPopover> {
@@ -125,13 +125,13 @@ class Popover extends Element implements Styled {
         if (triggerBounds == null) {
             layoutBounds = new Bounds(new Point(0, 0), new Size(0, 0));
             popoverElement = null;
-            return gpui.Prelude.div().intoAnyElement().requestLayout(window, cx);
+            return glaze.Prelude.div().intoAnyElement().requestLayout(window, cx);
         }
 
         final maxWidth:Float = Math.max(Math.min((widthLimit.end : Float), window.viewportSize().width - SNAP_TO_EDGE * 2), 200.);
         final maxHeight:Float = Math.min(window.viewportSize().height - SNAP_TO_EDGE * 2, 320.);
 
-        final popover = gpui.Prelude.deferred(gpui.Prelude.div()
+        final popover = glaze.Prelude.deferred(glaze.Prelude.div()
             .id("hover-popover-content")
             .flexNone()
             .occlude()
@@ -139,8 +139,8 @@ class Popover extends Element implements Styled {
             .textXs()
             .popoverStyle(cx)
             .shadowMd()
-            .maxW(gpui.Prelude.px(maxWidth))
-            .maxH(gpui.Prelude.px(maxHeight))
+            .maxW(glaze.Prelude.px(maxWidth))
+            .maxH(glaze.Prelude.px(maxHeight))
             .overflowYScroll()
             .refineStyle(popoverStyle)
             .child(contentBuilder(window, cx)))
@@ -160,7 +160,7 @@ class Popover extends Element implements Styled {
             posX = triggerBounds.right() - popoverSize.width;
         }
 
-        final empty = gpui.Prelude.div().intoAnyElement();
+        final empty = glaze.Prelude.div().intoAnyElement();
         final layoutId = empty.requestLayout(window, cx);
         layoutBounds = new Bounds(new Point(posX, posY), popoverSize);
         popoverElement = popover;

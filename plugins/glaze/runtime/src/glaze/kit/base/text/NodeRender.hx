@@ -1,60 +1,60 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.DefiniteLength;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.GlobalElementId;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Image;
-import gpui.ImageFormat;
-import gpui.LayoutId;
-import gpui.ObjectFit;
-import gpui.Overflow;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Rems;
-import gpui.ScrollHandle;
-import gpui.StrikethroughStyle;
-import gpui.StyleRefinement;
-import gpui.TextStyleRefinement;
-import gpui.UnderlineStyle;
-import gpui.WhiteSpace;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.ScrollableMask;
-import gpui.base.Scrollbar;
-import gpui.base.text.InlineFlow.InlineFlowItem;
-import gpui.base.text.Paragraph.ParagraphRender;
-import gpui.base.text.Table.TableColumnWidths;
-import gpui.base.text.Table.TableTextStyles;
-import gpui.base.theme.Theme;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.DefiniteLength;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.GlobalElementId;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Image;
+import glaze.ImageFormat;
+import glaze.LayoutId;
+import glaze.ObjectFit;
+import glaze.Overflow;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Rems;
+import glaze.ScrollHandle;
+import glaze.StrikethroughStyle;
+import glaze.StyleRefinement;
+import glaze.TextStyleRefinement;
+import glaze.UnderlineStyle;
+import glaze.WhiteSpace;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.text.InlineFlow.InlineFlowItem;
+import glaze.kit.base.text.Paragraph.ParagraphRender;
+import glaze.kit.base.text.Table.TableColumnWidths;
+import glaze.kit.base.text.Table.TableTextStyles;
+import glaze.kit.base.theme.Theme;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.ParentElementTools;
-using gpui.base.StyledExt;
+using glaze.AbsoluteLengthTools;
+using glaze.ParentElementTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * The render half of node.rs: `BlockNode::render_block`, the paragraph,
  * code block, list and table renders, their helpers, and the
  * `TableCellElement` and `CustomBlockElement` elements.
  */
-@:allow(gpui.base.text)
-@:access(gpui.base.ScrollableMask)
+@:allow(glaze.kit.base.text)
+@:access(glaze.kit.base.ScrollableMask)
 class NodeRender {
 
     static final CHECK_SVG_LIGHT = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none"><path d="m3.25 8.25 3 3 6.5-7" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -73,26 +73,26 @@ class NodeRender {
 
     /** gpui-base `TextSelection::end`, called before a link click is handled. */
     public static inline function endTextSelection(window:Window, cx:App):Void {
-        gpui.base.TextSelection.end(window, cx);
+        glaze.kit.base.TextSelection.end(window, cx);
     }
 
     /**
      * Rust `handle_link_click` (text_view.rs, Worker B), called through
      * `TextView.handleLinkClick`.
      */
-    static inline function handleLinkClick(handler:Null<(url:String, event:gpui.ClickEvent, window:Window, cx:App) -> Void>, url:String,
-            event:gpui.ClickEvent, window:Window, cx:App):Void {
+    static inline function handleLinkClick(handler:Null<(url:String, event:glaze.ClickEvent, window:Window, cx:App) -> Void>, url:String,
+            event:glaze.ClickEvent, window:Window, cx:App):Void {
         TextView.handleLinkClick(handler, url, event, window, cx);
     }
 
     // Helpers
 
-    static function intoElements(elements:Array<AnyElement>):Array<gpui.IntoElement> {
-        return [for (element in elements) (element : gpui.IntoElement)];
+    static function intoElements(elements:Array<AnyElement>):Array<glaze.IntoElement> {
+        return [for (element in elements) (element : glaze.IntoElement)];
     }
 
     /** The text view being prepainted or painted (`GlobalState::text_view_state`). */
-    static inline function textViewState(cx:App):Null<gpui.Entity<TextViewState>> {
+    static inline function textViewState(cx:App):Null<glaze.Entity<TextViewState>> {
         return GlobalState.global(cx).textViewState();
     }
 
@@ -716,7 +716,7 @@ class NodeRender {
 
     static function renderListItemRow(content:AnyElement, ix:Int, options:NodeRenderOptions, checked:Null<Bool>, style:TextViewStyle,
             lineHeight:Pixels, indent:Pixels):Div {
-        final row = gpui.base.Prelude.hFlex().wFull().minW0().relative().itemsStart().contentStart();
+        final row = glaze.kit.base.Prelude.hFlex().wFull().minW0().relative().itemsStart().contentStart();
         if (!options.todo && checked == null) {
             // The marker hangs in an indent column, right-aligned against
             // the text like an outside list marker, and steps back in color
@@ -741,7 +741,7 @@ class NodeRender {
                 .border(px(1.5))
                 .borderColor(listText != null && listText.color != null ? listText.color : style.mutedForeground());
             if (checked) {
-                box.bg(style.link()).borderColor(style.link()).child(img(gpui.Image.fromBytes(ImageFormat.Svg, Bytes.ofString(checkSvg))).size(rems(0.75)));
+                box.bg(style.link()).borderColor(style.link()).child(img(glaze.Image.fromBytes(ImageFormat.Svg, Bytes.ofString(checkSvg))).size(rems(0.75)));
             }
             row.child(div().flex().mr2().h(lineHeight).flexNone().itemsCenter().justifyCenter().child(box));
         }
@@ -1009,7 +1009,7 @@ class NodeRender {
             final floor = if (scroll && nowrap) {
                 w;
             } else if (scroll) {
-                Math.min(gpui.util.MathUtil.clamp(f32(w / CELL_WRAP_MAX_LINES), CELL_WRAP_MIN_PX, CELL_WRAP_MAX_PX), w);
+                Math.min(glaze.util.MathUtil.clamp(f32(w / CELL_WRAP_MAX_LINES), CELL_WRAP_MIN_PX, CELL_WRAP_MAX_PX), w);
             } else {
                 Math.min(w, wrapMinPx);
             }
@@ -1020,7 +1020,7 @@ class NodeRender {
 
         final rows = renderTableRows(table, columns, nodeCx, window, cx);
         final theme = Theme.global(cx);
-        final frameBuilder = new gpui.StyleBuilder();
+        final frameBuilder = new glaze.StyleBuilder();
         frameBuilder.textSize(textSize)
             .bg(style.tableBackground() != null ? style.tableBackground() : theme.tokens.colors.surface)
             .border1()
@@ -1070,7 +1070,7 @@ class NodeRender {
      */
     static function tableRowCornerRadii(style:TextViewStyle, window:Window):Array<Null<Float>> {
         final remSize = window.remSize();
-        inline function inset(radius:Null<gpui.AbsoluteLength>):Null<Float> {
+        inline function inset(radius:Null<glaze.AbsoluteLength>):Null<Float> {
             return radius != null ? Math.max(f32(radius.toPixels(remSize) - 1.), 0.) : null;
         }
         final radii = style.table();
@@ -1316,7 +1316,7 @@ class NodeRender {
                 // row below keeps the body size.
                 final textSize:Pixels = f32(bodyFontSize(nodeCx, window) * f32(14. / 15.));
                 final refinement = new TextStyleRefinement();
-                refinement.fontSize = gpui.AbsoluteLength.Pixels(textSize);
+                refinement.fontSize = glaze.AbsoluteLength.Pixels(textSize);
                 return window.withTextStyle(refinement, window -> renderTable(block, options, nodeCx, textSize, window, cx));
             case HorizontalRule(_):
                 // A section break: a hairline with more room around it than a
@@ -1423,7 +1423,7 @@ class CustomBlockElement extends Element {
         content.prepaint(window, cx);
     }
 
-    @:access(gpui.base.text.BlockState)
+    @:access(glaze.kit.base.text.BlockState)
     public function paint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         final view = NodeRender.textViewState(cx);
         var selection:Null<BlockState.BlockSelection> = null;

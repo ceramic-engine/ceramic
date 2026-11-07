@@ -1,42 +1,42 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/time/time_field.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.time;
+package glaze.kit.time;
 
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FontFeatures;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.base.TimeField.TimeFieldState;
-import gpui.base.TimeField.TimeSegment;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.input.Input;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FontFeatures;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.base.TimeField.TimeFieldState;
+import glaze.kit.base.TimeField.TimeSegment;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.input.Input;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A segmented time editor, e.g. `09:30`, `09:30:15` or `09:30 PM`.
  *
- * The value lives in `TimeFieldState` (`gpui.base.TimeField`, with
+ * The value lives in `TimeFieldState` (`glaze.kit.base.TimeField`, with
  * `HourCycle`, `TimeFieldEvent`, `TimePrecision` and `TimeSegment`); see it
  * for the keyboard model.
  */
 class TimeField implements RenderOnce implements Styled implements Sizable implements Disableable {
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     var id:ElementIdArg;
 
@@ -62,13 +62,13 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
      * Digits of equal width (OpenType `tnum`), so a value that changes while it
      * is edited keeps its width instead of shifting with each digit.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function tabularFigures():FontFeatures {
         return new FontFeatures(['tnum'], [1]);
     }
 
     /** Rust `font_features(...)`, set on the element's text style. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function fontFeatures<T:Styled>(element:T, features:FontFeatures):T {
         element.style().textStyle().fontFeatures = features;
         return element;
@@ -87,7 +87,7 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
         return div().grid().gridCols(1).child(label('AM', !pm)).child(label('PM', pm));
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     function withId(id:ElementIdArg):TimeField {
         this.id = id;
@@ -142,7 +142,7 @@ class TimeField implements RenderOnce implements Styled implements Sizable imple
         if (disabledValue) frame.opacity(0.5);
         if (focused && !disabledValue) frame.focusRingStyle(window, cx);
         if (invalidValue) frame.borderColor(theme.danger);
-        frame.child(new gpui.base.TimeField(id, state)
+        frame.child(new glaze.kit.base.TimeField(id, state)
             .disabled(disabledValue)
             // The base field fills the frame, so a press anywhere inside it lands on the
             // field rather than on the frame around it.

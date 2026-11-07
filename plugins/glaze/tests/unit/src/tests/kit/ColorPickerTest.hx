@@ -4,35 +4,35 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.ColorPicker.ColorPickerEvent;
-import gpui.base.ColorPicker.ColorPickerState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.component.Component;
-import gpui.component.colorpicker.ColorPicker;
-import gpui.component.colorpicker.ColorPicker.ColorSelect;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.ColorPicker.ColorPickerEvent;
+import glaze.kit.base.ColorPicker.ColorPickerState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.Component;
+import glaze.kit.colorpicker.ColorPicker;
+import glaze.kit.colorpicker.ColorPicker.ColorSelect;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Slider.SliderValueTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Slider.SliderValueTools;
 
 /**
  * The `#[cfg(test)]` tests of the color picker (Base and Component) and of
@@ -206,7 +206,7 @@ class ColorPickerTest extends TestCase {
         final cx = open_((window, cx) -> {
             if (focusHandle == null) focusHandle = cx.focusHandle();
             final view = cx.entityId();
-            return new gpui.base.ColorPicker('picker')
+            return new glaze.kit.base.ColorPicker('picker')
                 .open(open)
                 .trackFocus(focusHandle)
                 .size(px(20.))
@@ -301,7 +301,7 @@ class ColorPickerTest extends TestCase {
     function testPointerActivationAndDisabledGatingMatchTabs() {
         for (disabled in [false, true]) {
             final clicks = [0];
-            final cx = open((_, _) -> new gpui.base.Tabs.BaseTab('tab').disabled(disabled).size(px(100.)).onClick((_, _, _) -> clicks[0]++));
+            final cx = open((_, _) -> new glaze.kit.base.Tabs.BaseTab('tab').disabled(disabled).size(px(100.)).onClick((_, _, _) -> clicks[0]++));
             cx.simulateClick(new Point(10., 10.));
             assertEquals(disabled ? 0 : 1, clicks[0]);
         }
@@ -310,7 +310,7 @@ class ColorPickerTest extends TestCase {
     function testFixedHeightTabCentersOrdinaryChildGeometry() {
         var root:Null<Bounds> = null;
         var child:Null<Bounds> = null;
-        open((_, _) -> new gpui.base.Tabs.BaseTab('alignment-tab')
+        open((_, _) -> new glaze.kit.base.Tabs.BaseTab('alignment-tab')
             .w(px(120.))
             .h(px(40.))
             .child(div().w(px(48.)).h(px(12.)).onPrepaint((bounds, _, _) -> child = bounds))
@@ -319,8 +319,8 @@ class ColorPickerTest extends TestCase {
     }
 
     function testExposesTabAccessibilityState() {
-        final selected = new gpui.base.Tabs.BaseTab('selected').selected(true).accessibilityLabel('Account').onClick((_, _, _) -> {});
-        final disabled = new gpui.base.Tabs.BaseTab('disabled').disabled(true).onClick((_, _, _) -> {});
+        final selected = new glaze.kit.base.Tabs.BaseTab('selected').selected(true).accessibilityLabel('Account').onClick((_, _, _) -> {});
+        final disabled = new glaze.kit.base.Tabs.BaseTab('disabled').disabled(true).onClick((_, _, _) -> {});
         open((_, _) -> div().child(selected).child(disabled));
         assertEquals(Role.Tab, selected.a11y.role);
         assertEquals('Account', selected.a11y.label);
@@ -331,7 +331,7 @@ class ColorPickerTest extends TestCase {
 
     function testSemanticStylesPreserveTheLegacyStatePriority() {
         final expected = hsla(0.3, 0.4, 0.5, 1.0);
-        final tab = new gpui.base.Tabs.BaseTab('tab')
+        final tab = new glaze.kit.base.Tabs.BaseTab('tab')
             .selected(true)
             .disabled(true)
             .styles(styles -> styles
@@ -340,11 +340,11 @@ class ColorPickerTest extends TestCase {
             .opacity(0.9);
         assertEquals(0.5, @:privateAccess tab.resolvedStyle().opacity);
         tab.bg(expected);
-        assertTrue(Std.string(@:privateAccess tab.resolvedStyle().background) == Std.string(gpui.Background.fromHsla(expected)));
+        assertTrue(Std.string(@:privateAccess tab.resolvedStyle().background) == Std.string(glaze.Background.fromHsla(expected)));
     }
 
     function testTabsExposesTabListRole() {
-        assertEquals(Role.TabList, new gpui.base.Tabs('tabs').a11y.role);
+        assertEquals(Role.TabList, new glaze.kit.base.Tabs('tabs').a11y.role);
     }
 
 }

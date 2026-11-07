@@ -9,11 +9,11 @@
 // Developers, licensed under MIT OR Apache-2.0 (used here under MIT).
 // Modified: translated from Rust to Haxe for Ceramic, reduced to what GPUI's
 // PathBuilder uses (gpui-pre 0.3.10: src/path_builder.rs). See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.Path.LineCap;
-import gpui.Path.LineJoin;
-import gpui.Path.StrokeOptions;
+import glaze.Path.LineCap;
+import glaze.Path.LineJoin;
+import glaze.Path.StrokeOptions;
 
 /**
  * lyon's geometry, as used by GPUI's `PathBuilder`, with exact `f32`
@@ -122,7 +122,7 @@ class PathTessellator {
      * (a callback would allocate a closure and box its three Floats per
      * point on hxcpp).
      */
-    @:allow(gpui) static final flattenBuffer:Array<Float> = [];
+    @:allow(glaze) static final flattenBuffer:Array<Float> = [];
 
     /**
      * lyon `QuadraticBezierSegment::for_each_flattened_with_t`: appends
@@ -1779,7 +1779,7 @@ private class StrokeBuilder {
         final l = f(Math.log(numSegments) / Math.log(2));
         if (Math.isNaN(l) || l < 0)
             return 0;
-        final r = gpui.util.MathUtil.round(l);
+        final r = glaze.util.MathUtil.round(l);
         return Std.int(Math.min(r, 16));
     }
 

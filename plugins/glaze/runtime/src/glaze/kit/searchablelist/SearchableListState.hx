@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/searchable_list/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Length;
-import gpui.Model;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.GlobalState.DeferredPopover;
-import gpui.base.IndexPath;
-import gpui.component.Size;
-import gpui.component.list.ListState;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Length;
+import glaze.Model;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.GlobalState.DeferredPopover;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Size;
+import glaze.kit.list.ListState;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Shared infrastructure for all searchable-list-based components (`SelectState`, `ComboboxState`).
@@ -37,13 +37,13 @@ class SearchableListState<I> extends ceramic.Entity implements tracker.Observabl
 
     public final focusHandle:FocusHandle;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final list:Entity<ListState<SearchableListAdapter<I>>>;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     @observe var selection:Array<SelectedItem<I>> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     @observe var open:Bool = false;
 
     /**
@@ -51,48 +51,48 @@ class SearchableListState<I> extends ceramic.Entity implements tracker.Observabl
      * closing it first takes its registration with it (release it in place
      * of the Rust drop).
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var deferredContext:Null<DeferredPopover> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var bounds:Bounds = new Bounds();
 
     // Shared options
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Size = Medium;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var style:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var cleanable:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var placeholder:Null<String> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var searchPlaceholder:Null<String> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menuWidth:Length = Length.Auto;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menuMaxH:Length = Length.Definite(DefiniteLength.Absolute(AbsoluteLength.Rems(20.)));
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var scrollBounce:Null<Bool> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabled:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var appearance:Bool = true;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var empty:Null<(Window, App) -> AnyElement> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final _subscriptions:Array<Subscription>;
 
     /**
@@ -171,7 +171,7 @@ class SearchableListState<I> extends ceramic.Entity implements tracker.Observabl
      * displayed. Projecting an authoritative value in from outside is not a
      * position in that view: the value's item may be filtered out.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function clearQuery(window:Window, cx:App):Void {
         list.update(cx, (list, cx) -> {
             if (list.queryInput.read(cx).value().length != 0) {
@@ -183,14 +183,14 @@ class SearchableListState<I> extends ceramic.Entity implements tracker.Observabl
     // MARK: Mutation (no cx: callers emit events and notify)
 
     /** Add an index+item pair to the selection; no-op if already present. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function addByItem(index:IndexPath, item:I):Void {
         for (entry in selection) if (entry.index.equals(index)) return;
         selection = selection.concat([new SelectedItem(index, item)]);
     }
 
     /** Remove an index from the selection by index path. */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function removeByIndex(index:IndexPath):Bool {
         for (pos in 0...selection.length) {
             if (selection[pos].index.equals(index)) {
@@ -239,7 +239,7 @@ class SearchableListState<I> extends ceramic.Entity implements tracker.Observabl
      * Push the current selection into the adapter's snapshot so the next render pass sees
      * up-to-date check state. Call after every mutation that changes `selection`.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function syncSnapshot(cx:App):Void {
         final snapshot = selection.copy();
         list.update(cx, (l, _) -> l.delegateMut().updateSelectionSnapshot(snapshot));

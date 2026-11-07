@@ -1,40 +1,40 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/search.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.Action;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.input.SearchSession;
-import gpui.component.I18n;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.label.Label;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.SearchSession;
+import glaze.kit.I18n;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.label.Label;
+import glaze.kit.theme.Theme;
 import ropey.Rope;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.input.InputSearchExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.input.InputSearchExt;
 
 @:action(namespace = input) class Tab implements Action {}
 
@@ -58,18 +58,18 @@ class SearchPanel extends Model implements Render {
 
     final _subscriptions:Array<Subscription>;
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function replaceMode():Bool {
         return session.replaceMode;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function syncSession(session:SearchSession):Void {
         this.session = session.clone();
     }
 
     /** The query the panel's search input currently holds. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function query(cx:App):String {
         return searchInput.read(cx).value();
     }
@@ -89,7 +89,7 @@ class SearchPanel extends Model implements Render {
         return replaceInput;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function create(editor:Entity<InputBaseState>, window:Window, cx:App):Entity<SearchPanel> {
         final searchInput = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
         final replaceInput = cx.newEntity((c:Context<InputState>) -> new InputState(window, c));
@@ -115,7 +115,7 @@ class SearchPanel extends Model implements Render {
         this.replaceInput = replaceInput;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function showWithFocus(selectedText:Rope, replaceMode:Bool, visibleRangeOffset:Null<Range>, focus:Bool, window:Window, cx:Context<SearchPanel>):Void {
         session.open = true;
         session.replaceMode = replaceMode;
@@ -171,12 +171,12 @@ class SearchPanel extends Model implements Render {
         return state != null ? state.read(cx).isReplaceable() : false;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function hide(window:Window, cx:Context<SearchPanel>):Void {
         hideWithFocus(true, window, cx);
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function hideWithFocus(focusEditor:Bool, window:Window, cx:Context<SearchPanel>):Void {
         session.open = false;
         editor.tryUpdate(cx, (state, cx) -> {
@@ -434,18 +434,18 @@ class SearchPanel extends Model implements Render {
 @:allow(tests)
 class SearchScroll {
 
-    static function nextScrollDirection(previousMatchIx:Int, currentMatchIx:Int):Null<gpui.base.input.MoveDirection> {
+    static function nextScrollDirection(previousMatchIx:Int, currentMatchIx:Int):Null<glaze.kit.base.input.MoveDirection> {
         if (currentMatchIx <= previousMatchIx) {
             return null;
         }
-        return gpui.base.input.MoveDirection.Down;
+        return glaze.kit.base.input.MoveDirection.Down;
     }
 
-    static function prevScrollDirection(previousMatchIx:Int, currentMatchIx:Int):Null<gpui.base.input.MoveDirection> {
+    static function prevScrollDirection(previousMatchIx:Int, currentMatchIx:Int):Null<glaze.kit.base.input.MoveDirection> {
         if (currentMatchIx >= previousMatchIx) {
             return null;
         }
-        return gpui.base.input.MoveDirection.Up;
+        return glaze.kit.base.input.MoveDirection.Up;
     }
 
 }

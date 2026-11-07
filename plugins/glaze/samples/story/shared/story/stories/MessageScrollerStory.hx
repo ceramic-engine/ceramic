@@ -4,43 +4,43 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.WeakEntity;
-import gpui.base.input.InputState;
-import gpui.component.IconName;
-import gpui.component.bubble.Bubble;
-import gpui.component.bubble.Bubble.BubbleVariant;
-import gpui.component.button.Button;
-import gpui.component.input.Input;
-import gpui.component.marker.Marker;
-import gpui.component.marker.Marker.MarkerContent;
-import gpui.component.marker.Marker.MarkerVariant;
-import gpui.component.message.Message;
-import gpui.component.message.Message.MessageAlignment;
-import gpui.component.message.Message.MessageContent;
-import gpui.component.messagescroller.MessageScroller;
-import gpui.component.messagescroller.MessageScroller.MessageScrollerState;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.WeakEntity;
+import glaze.kit.base.input.InputState;
+import glaze.kit.IconName;
+import glaze.kit.bubble.Bubble;
+import glaze.kit.bubble.Bubble.BubbleVariant;
+import glaze.kit.button.Button;
+import glaze.kit.input.Input;
+import glaze.kit.marker.Marker;
+import glaze.kit.marker.Marker.MarkerContent;
+import glaze.kit.marker.Marker.MarkerVariant;
+import glaze.kit.message.Message;
+import glaze.kit.message.Message.MessageAlignment;
+import glaze.kit.message.Message.MessageContent;
+import glaze.kit.messagescroller.MessageScroller;
+import glaze.kit.messagescroller.MessageScroller.MessageScrollerState;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 private class DemoMessage {
 
@@ -74,7 +74,7 @@ class MessageScrollerStory extends Model implements Story {
         return 'A virtualized message list with tail following, unread navigation, and anchor preservation.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -375,7 +375,7 @@ class MessageScrollerStory extends Model implements Story {
         final status = 'Following tail: ${state.isFollowingTail()} · Scrolled up: ${state.isScrolledUp()}';
         final entity:Entity<MessageScrollerStory> = cast cx.entity();
         // Rust `cx.listener(...)`
-        final listener = (f:(MessageScrollerStory, Context<MessageScrollerStory>) -> Void) -> (_:gpui.ClickEvent, _:Window, cx:App) -> entity.update(cx, (this_, cx) -> f(this_, cx));
+        final listener = (f:(MessageScrollerStory, Context<MessageScrollerStory>) -> Void) -> (_:glaze.ClickEvent, _:Window, cx:App) -> entity.update(cx, (this_, cx) -> f(this_, cx));
         return vFlex()
             .gap4()
             .child(section('Conversation')

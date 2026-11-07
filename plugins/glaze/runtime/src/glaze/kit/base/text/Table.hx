@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.DefiniteLength;
-import gpui.HighlightStyle;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.TextStyle;
-import gpui.TextStyleRefinement;
+import glaze.DefiniteLength;
+import glaze.HighlightStyle;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.TextStyle;
+import glaze.TextStyleRefinement;
 
-using gpui.DefiniteLengthTools;
+using glaze.DefiniteLengthTools;
 
 /** A row of a table. */
 class TableRow {
@@ -66,7 +66,7 @@ class TableCell {
  */
 class TableColumnWidths {
 
-    public var textSystem:Null<gpui.WindowTextSystem>;
+    public var textSystem:Null<glaze.WindowTextSystem>;
 
     /** The styles the header row and the body rows render with. */
     public var textStyles:TableTextStyles;
@@ -81,7 +81,7 @@ class TableColumnWidths {
     /** `(row, column)` of the cells holding custom inline nodes. */
     public var customCells:Array<Array<Int>>;
 
-    public function new(textSystem:Null<gpui.WindowTextSystem>, textStyles:TableTextStyles, remSize:Pixels, monoFamily:String,
+    public function new(textSystem:Null<glaze.WindowTextSystem>, textStyles:TableTextStyles, remSize:Pixels, monoFamily:String,
             inlineCode:HighlightStyle, widths:Array<Float>, customCells:Array<Array<Int>>) {
         this.textSystem = textSystem;
         this.textStyles = textStyles;
@@ -113,8 +113,8 @@ class TableTextStyles {
         this.bodyRefinement = bodyRefinement;
     }
 
-    public static function of(style:TextViewStyle, window:gpui.Window):TableTextStyles {
-        inline function textOf(refinement:gpui.StyleRefinement):TextStyleRefinement {
+    public static function of(style:TextViewStyle, window:glaze.Window):TableTextStyles {
+        inline function textOf(refinement:glaze.StyleRefinement):TextStyleRefinement {
             return refinement.text != null ? refinement.text : new TextStyleRefinement();
         }
         final bodyRefinement = textOf(style.table()).clone();
@@ -149,13 +149,13 @@ class TableTextStyles {
  */
 class Table {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var children:Array<TableRow> = [];
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var columnAligns_:Array<ColumnumnAlign> = [];
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var span:Null<Span> = null;
 
     /**
@@ -163,10 +163,10 @@ class Table {
      * frames; see `cachedTableData`. Derived state, invisible to equality;
      * a clone carries what was cached so far.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var tableDataCache:Null<TableData> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var columnWidthsCache:Null<TableColumnWidths> = null;
 
     /** `Table::default()`. */
@@ -215,7 +215,7 @@ class Table {
         return columnAligns_;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function columnAlign(index:Int):ColumnumnAlign {
         return index < columnAligns_.length ? columnAligns_[index] : None;
     }
@@ -233,7 +233,7 @@ class Table {
      * preserving column alignments. Cell newlines collapse to spaces and `|`
      * is escaped so rows stay intact.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function toMarkdown():String {
         final lines:Array<String> = [];
 
@@ -257,7 +257,7 @@ class Table {
     }
 
     /** Snapshot of this table for the `TextView.tableActions` hook. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function tableData():TableData {
         function rowText(row:TableRow):Array<String> {
             return [for (cell in row.children) TextUtils.trim(cell.children.text())];
@@ -276,7 +276,7 @@ class Table {
      * parsed table does not change after parsing (a reparse builds a new
      * one).
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function cachedTableData():TableData {
         if (tableDataCache != null) {
             return tableDataCache;
@@ -297,7 +297,7 @@ class Table {
      * alone. Returns an empty string when no cell is selected. Rust free
      * `table_selected_source`.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function tableSelectedSource(table:Table):String {
         function cellSource(cell:TableCell):String {
             return StringTools.replace(cell.children.selectedSource(), '\n', ' ');

@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tab/tab.rs (TabVariant, FolderTabMetrics, TabStyle)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.tab;
+package glaze.kit.tab;
 
-import gpui.App;
-import gpui.Background;
-import gpui.IntoBackground;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Background;
+import glaze.IntoBackground;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tab variants.
@@ -37,7 +37,7 @@ enum abstract TabVariant(Int) {
         return Tab;
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function height(size:Size):Pixels {
         final self:TabVariant = cast this;
         return switch size {
@@ -48,7 +48,7 @@ enum abstract TabVariant(Int) {
         }
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function innerHeight(size:Size):Pixels {
         final self:TabVariant = cast this;
         return switch size {
@@ -77,7 +77,7 @@ enum abstract TabVariant(Int) {
     }
 
     /** Default px(12) to match a dock tab bar's px_3 */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function innerPaddings(size:Size):Edges {
         final self:TabVariant = cast this;
         var paddingX:Float = switch size {
@@ -93,7 +93,7 @@ enum abstract TabVariant(Int) {
         return new Edges(0., paddingX, 0., paddingX);
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function innerMargins(size:Size):Edges {
         final self:TabVariant = cast this;
         if (self != Underline) return new Edges(0., 0., 0., 0.);
@@ -105,7 +105,7 @@ enum abstract TabVariant(Int) {
         }
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function normal(cx:App):TabStyle {
         final theme = Theme.global(cx);
         final self:TabVariant = cast this;
@@ -140,7 +140,7 @@ enum abstract TabVariant(Int) {
         return style;
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function hovered(selected:Bool, cx:App):TabStyle {
         final theme = Theme.global(cx);
         final self:TabVariant = cast this;
@@ -177,7 +177,7 @@ enum abstract TabVariant(Int) {
         return style;
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function selected(cx:App):TabStyle {
         final theme = Theme.global(cx);
         final self:TabVariant = cast this;
@@ -214,7 +214,7 @@ enum abstract TabVariant(Int) {
         return style;
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function disabled(selected:Bool, cx:App):TabStyle {
         final theme = Theme.global(cx);
         final self:TabVariant = cast this;
@@ -249,7 +249,7 @@ enum abstract TabVariant(Int) {
         return style;
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function tabBarRadius(size:Size, cx:App):Pixels {
         final self:TabVariant = cast this;
         if (self != Segmented) {
@@ -263,7 +263,7 @@ enum abstract TabVariant(Int) {
         }
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function radius(size:Size, cx:App):Pixels {
         final self:TabVariant = cast this;
         final theme = Theme.global(cx);
@@ -278,7 +278,7 @@ enum abstract TabVariant(Int) {
         }
     }
 
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function innerRadius(size:Size, cx:App):Pixels {
         final self:TabVariant = cast this;
         return switch self {
@@ -294,7 +294,7 @@ enum abstract TabVariant(Int) {
     }
 
     /** How far a tab's painting reaches past its bounds on either side. */
-    @:allow(gpui.component.tab)
+    @:allow(glaze.kit.tab)
     function overhang(size:Size, cx:App):Pixels {
         final self:TabVariant = cast this;
         return switch self {
@@ -304,13 +304,13 @@ enum abstract TabVariant(Int) {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
 
 /** Room between two `TabVariant.Folder` tabs, holding their separator. */
-@:allow(gpui.component.tab)
+@:allow(glaze.kit.tab)
 class FolderTabConstants {
     static inline final FOLDER_TAB_GAP:Float = 4.;
 }
@@ -318,7 +318,7 @@ class FolderTabConstants {
 /**
  * Geometry of `TabVariant.Folder`.
  */
-@:allow(gpui.component.tab)
+@:allow(glaze.kit.tab)
 class FolderTabMetrics {
 
     /**
@@ -348,7 +348,7 @@ class FolderTabMetrics {
         topPadding = values.top;
         // Past a third of the height a curve reaches under its neighbor's
         // hover fill.
-        radius = Math.min(values.radius, gpui.SpringMath.f32(TabVariant.Folder.height(size) / 3.));
+        radius = Math.min(values.radius, glaze.SpringMath.f32(TabVariant.Folder.height(size) / 3.));
         paddingX = values.padding;
         separatorHeight = values.separator;
     }
@@ -356,7 +356,7 @@ class FolderTabMetrics {
 }
 
 /** The colors and borders of a tab in one state. */
-@:allow(gpui.component.tab)
+@:allow(glaze.kit.tab)
 class TabStyle {
 
     var borders:Edges = new Edges(0., 0., 0., 0.);

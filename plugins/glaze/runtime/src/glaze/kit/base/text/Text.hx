@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.App;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
+import glaze.App;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
 
 /** The two forms of `Text` (Rust enum `Text`). */
 enum TextKind {
     String(text:std.String);
-    TextView(view:gpui.base.text.TextView);
+    TextView(view:glaze.kit.base.text.TextView);
 }
 
 /**
@@ -36,15 +36,15 @@ class Text implements RenderOnce {
     }
 
     /** Create a new markdown text view with code location as id. */
-    public static function markdown(source:String, ?pos:haxe.PosInfos):gpui.base.text.TextView {
+    public static function markdown(source:String, ?pos:haxe.PosInfos):glaze.kit.base.text.TextView {
         final id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
-        return gpui.base.text.TextView.markdown(id, source);
+        return glaze.kit.base.text.TextView.markdown(id, source);
     }
 
     /** Create a new html text view with code location as id. */
-    public static function html(source:String, ?pos:haxe.PosInfos):gpui.base.text.TextView {
+    public static function html(source:String, ?pos:haxe.PosInfos):glaze.kit.base.text.TextView {
         final id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
-        return gpui.base.text.TextView.html(id, source);
+        return glaze.kit.base.text.TextView.html(id, source);
     }
 
     /** Rust `impl From<SharedString / &str / String> for Text`. */
@@ -53,7 +53,7 @@ class Text implements RenderOnce {
     }
 
     /** Rust `impl From<TextView> for Text`. */
-    public static function ofTextView(view:gpui.base.text.TextView):Text {
+    public static function ofTextView(view:glaze.kit.base.text.TextView):Text {
         return new Text(TextView(view));
     }
 

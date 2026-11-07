@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/movement.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Point;
-import gpui.Window;
-import gpui.base.input.InputActions;
+import glaze.Context;
+import glaze.Point;
+import glaze.Window;
+import glaze.kit.base.input.InputActions;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * A cursor target and the line-end affinity the caret carries there (Rust
@@ -49,7 +49,7 @@ class CursorMove {
 
 /**
  * Cursor movement of the input engine: the `impl InputBaseState` block of
- * movement.rs, as static extensions (`using gpui.base.input.InputMovement;`).
+ * movement.rs, as static extensions (`using glaze.kit.base.input.InputMovement;`).
  */
 class InputMovement {
 

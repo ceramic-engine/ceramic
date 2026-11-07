@@ -1,10 +1,10 @@
 package tests;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.Model;
-import gpui.TestDispatcher;
-import gpui.ViewTracker;
+import glaze.App;
+import glaze.Entity;
+import glaze.Model;
+import glaze.TestDispatcher;
+import glaze.ViewTracker;
 import testing.TestCase;
 import tracker.Autorun;
 
@@ -214,7 +214,7 @@ class ReactivityTest extends TestCase {
         app.spawn(cx -> {
             reads++;
             model.read(app).flag;
-            return gpui.Task.done();
+            return glaze.Task.done();
         });
 
         tracker.capture(() -> {

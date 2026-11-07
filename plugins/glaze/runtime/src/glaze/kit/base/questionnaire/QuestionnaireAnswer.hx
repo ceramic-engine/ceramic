@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/types.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
 using StringTools;
 
@@ -13,10 +13,10 @@ using StringTools;
  */
 class QuestionnaireAnswer {
 
-    @:allow(gpui.base.questionnaire)
+    @:allow(glaze.kit.base.questionnaire)
     var choiceValues:Array<String> = [];
 
-    @:allow(gpui.base.questionnaire)
+    @:allow(glaze.kit.base.questionnaire)
     var freeformValue:Null<String> = null;
 
     public function new() {}
@@ -72,7 +72,7 @@ class QuestionnaireAnswer {
     /**
      * Rust `str::trim().is_empty()`: only whitespace (Unicode White_Space).
      */
-    @:allow(gpui.base.questionnaire)
+    @:allow(glaze.kit.base.questionnaire)
     static function isBlank(value:String):Bool {
         return isWhitespaceOnly(value);
     }

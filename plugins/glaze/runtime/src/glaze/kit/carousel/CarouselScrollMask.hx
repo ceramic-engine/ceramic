@@ -1,36 +1,36 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/carousel/scroll_mask.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.carousel;
+package glaze.kit.carousel;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.DefiniteLength;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.LayoutId;
-import gpui.Length;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.OngoingScroll;
-import gpui.Point;
-import gpui.ScrollEvent;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.TextSelection;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.DefiniteLength;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.LayoutId;
+import glaze.Length;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.OngoingScroll;
+import glaze.Point;
+import glaze.ScrollEvent;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.TextSelection;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ScrollDelta.ScrollDeltaTools;
+using glaze.ScrollDelta.ScrollDeltaTools;
 
 /**
  * The pointer and wheel event surface used by `CarouselContent`: a
@@ -44,7 +44,7 @@ using gpui.ScrollDelta.ScrollDeltaTools;
  * nested in a list can lock its own axis while allowing cross-axis gestures
  * to continue to an ancestor.
  */
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 class CarouselScrollMask extends Element {
 
     final axis:Axis;

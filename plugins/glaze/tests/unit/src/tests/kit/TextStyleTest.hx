@@ -3,20 +3,20 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.FontWeight;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Prelude.*;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.WhiteSpace;
-import gpui.base.text.TextViewStyle;
-import gpui.base.theme.ColorTokens;
-import gpui.base.theme.Theme;
+import glaze.FontWeight;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Prelude.*;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.WhiteSpace;
+import glaze.kit.base.text.TextViewStyle;
+import glaze.kit.base.theme.ColorTokens;
+import glaze.kit.base.theme.Theme;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.text.TextViewStyle` (Rust `text/style.rs`).
+ * Tests of `glaze.kit.base.text.TextViewStyle` (Rust `text/style.rs`).
  *
  * `TextViewStyle.equals` stands for Rust's `PartialEq` (`==`/`!=`), and
  * `Hsla.equals` / `StyleRefinement.equals` for Rust's `assert_eq!` on those
@@ -24,7 +24,7 @@ import testing.TestCase;
  *
  * `tableBackground`, `inlineCodeHighlight`, `onTextColor`, `isInvertedBy`
  * and `fromColors` are `pub(crate)`/private in Rust; `TextViewStyle.hx`
- * exposes them to this package too (`@:allow(gpui.base.text, tests)`, the
+ * exposes them to this package too (`@:allow(glaze.kit.base.text, tests)`, the
  * same pattern used elsewhere in this port for `@:allow(..., tests)`) so
  * these tests can reach them.
  */

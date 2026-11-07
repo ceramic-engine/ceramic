@@ -4,55 +4,55 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.Hsla;
-import gpui.ListAlignment;
-import gpui.ListState;
-import gpui.SpringMath;
-import gpui.base.IndexPath;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.clipboard.Clipboard;
-import gpui.component.input.Input;
-import gpui.component.menu.PopupMenu;
-import gpui.component.searchablelist.SearchableListItem.SearchableListItemBase;
-import gpui.component.searchablelist.SearchableVec.VecDelegate;
-import gpui.component.select.Select;
-import gpui.component.select.SelectState;
-import gpui.component.select.SelectState.SelectEvent;
-import gpui.component.sidebar.Sidebar;
-import gpui.component.sidebar.SidebarMenu;
-import gpui.component.sidebar.SidebarMenu.SidebarMenuItem;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeColor;
-import gpui.component.theme.ThemeConfig;
-import gpui.component.theme.ThemeRegistry;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.Hsla;
+import glaze.ListAlignment;
+import glaze.ListState;
+import glaze.SpringMath;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.clipboard.Clipboard;
+import glaze.kit.input.Input;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.searchablelist.SearchableListItem.SearchableListItemBase;
+import glaze.kit.searchablelist.SearchableVec.VecDelegate;
+import glaze.kit.select.Select;
+import glaze.kit.select.SelectState;
+import glaze.kit.select.SelectState.SelectEvent;
+import glaze.kit.sidebar.Sidebar;
+import glaze.kit.sidebar.SidebarMenu;
+import glaze.kit.sidebar.SidebarMenu.SidebarMenuItem;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeColor;
+import glaze.kit.theme.ThemeConfig;
+import glaze.kit.theme.ThemeRegistry;
 import story.stories.themestory.Checkerboard;
 import story.stories.themestory.Mapper;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
-using gpui.component.WindowExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.WindowExt;
+using glaze.kit.scroll.Scrollable;
 
 /** Rust `ThemeOption::ShowInherited`. */
 @:action(namespace = theme_colors_story, name = ShowInherited, noJson) private class ThemeOptionShowInherited implements Action {}
@@ -122,7 +122,7 @@ private class ThemeItem extends SearchableListItemBase {
                 .flexShrink0()
                 .when(isActive, this_ -> {
                     final icon = new Icon(IconName.Check);
-                    new gpui.StyleBuilder(icon.style()).size(rems(1.0));
+                    new glaze.StyleBuilder(icon.style()).size(rems(1.0));
                     this_.child(icon.textColor(Theme.global(cx).primary));
                 }))
             .child(name);
@@ -142,7 +142,7 @@ class ThemeColorsStory extends Model implements Story {
         return 'A color theme viewer to explore colors organized by categories.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -317,12 +317,12 @@ class ThemeColorsStory extends Model implements Story {
         final categories = this.categories;
         final isFiltering = filterByValue != null;
         final entityRef:Entity<ThemeColorsStory> = cast cx.entity();
-        final expandAll = (_:gpui.ClickEvent, _:Window, cx:App) -> entityRef.update(cx, (this_, cx) -> {
+        final expandAll = (_:glaze.ClickEvent, _:Window, cx:App) -> entityRef.update(cx, (this_, cx) -> {
             this_.sidebarRenderKey += 1;
             this_.forceOpenState = true;
             cx.notify();
         });
-        final collapseAll = (_:gpui.ClickEvent, _:Window, cx:App) -> entityRef.update(cx, (this_, cx) -> {
+        final collapseAll = (_:glaze.ClickEvent, _:Window, cx:App) -> entityRef.update(cx, (this_, cx) -> {
             this_.sidebarRenderKey += 1;
             this_.forceOpenState = false;
             cx.notify();
@@ -525,7 +525,7 @@ class ThemeColorsStory extends Model implements Story {
         var r:Float;
         var g:Float;
         var b:Float;
-        switch gpui.util.MathUtil.toI32(Math.ffloor(h6)) {
+        switch glaze.util.MathUtil.toI32(Math.ffloor(h6)) {
             case 0 | 6:
                 r = cm; g = xm; b = m;
             case 1:
@@ -550,7 +550,7 @@ class ThemeColorsStory extends Model implements Story {
     static function serdeRoundtrip(color:Hsla):Hsla {
         final f = SpringMath.f32;
         final rgb = toRgbF32(color);
-        final channel = (v:Float) -> f(gpui.util.MathUtil.toU8(gpui.util.MathUtil.round(f(v * 255.0))) / 255.0);
+        final channel = (v:Float) -> f(glaze.util.MathUtil.toU8(glaze.util.MathUtil.round(f(v * 255.0))) / 255.0);
         final r = channel(rgb.r);
         final g = channel(rgb.g);
         final b = channel(rgb.b);
@@ -593,8 +593,8 @@ class ThemeColorsStory extends Model implements Story {
     static function colorsEqualU8(c1:Hsla, c2:Hsla):Bool {
         final rgb1 = toRgbF32(c1);
         final rgb2 = toRgbF32(c2);
-        final eq = (a:Float, b:Float) -> gpui.util.MathUtil.toU8(gpui.util.MathUtil.round(SpringMath.f32(a * 255.0)))
-            == gpui.util.MathUtil.toU8(gpui.util.MathUtil.round(SpringMath.f32(b * 255.0)));
+        final eq = (a:Float, b:Float) -> glaze.util.MathUtil.toU8(glaze.util.MathUtil.round(SpringMath.f32(a * 255.0)))
+            == glaze.util.MathUtil.toU8(glaze.util.MathUtil.round(SpringMath.f32(b * 255.0)));
         return eq(rgb1.r, rgb2.r) && eq(rgb1.g, rgb2.g) && eq(rgb1.b, rgb2.b) && eq(c1.a, c2.a);
     }
 

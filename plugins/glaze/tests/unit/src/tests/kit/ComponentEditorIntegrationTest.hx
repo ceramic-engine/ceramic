@@ -3,40 +3,40 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.OperatingSystem;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestClipboard;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.EditorState;
-import gpui.base.input.FoldRange;
-import gpui.base.input.InputBaseState;
-import gpui.component.Component;
-import gpui.component.input.Editor;
-import gpui.component.input.InputOverlays;
-import gpui.component.input.SearchPanel;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.OperatingSystem;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestClipboard;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.Component;
+import glaze.kit.input.Editor;
+import glaze.kit.input.InputOverlays;
+import glaze.kit.input.SearchPanel;
+import glaze.kit.theme.Theme;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputSearchExt;
+using glaze.kit.base.input.InputSearchExt;
 
 /**
  * Styled editor workflows driven through the window and native events
@@ -53,8 +53,8 @@ using gpui.base.input.InputSearchExt;
  * Not ported: `visual_end_does_not_scroll_a_fully_visible_wrapped_editor_row`
  * (it resizes the test platform window).
  */
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.component.input)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.input)
 class ComponentEditorIntegrationTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -163,7 +163,7 @@ class ComponentEditorIntegrationTest extends TestCase {
         renderFrame();
         if (keystroke.key == "enter" || keystroke.key == "tab") {
             final k = keystroke;
-            app.update(cx -> window.dispatchEvent(new gpui.KeyDownEvent(k, false, false), cx));
+            app.update(cx -> window.dispatchEvent(new glaze.KeyDownEvent(k, false, false), cx));
         }
         else {
             keystroke = keystroke.withSimulatedIme();
@@ -171,7 +171,7 @@ class ComponentEditorIntegrationTest extends TestCase {
             app.update(cx -> window.dispatchKeystroke(k, cx));
         }
         final k = keystroke;
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(k), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(k), cx));
         renderFrame();
     }
 
@@ -208,7 +208,7 @@ class ComponentEditorIntegrationTest extends TestCase {
             case "replace-all": panel.replaceAll(window, cx);
             case "replace-mode": panel.toggleReplaceMode(window, cx);
             case "case-insensitive": panel.toggleCaseInsensitive(cx);
-            case "close": panel.onActionEscape(new gpui.base.input.InputActions.Escape(), window, cx);
+            case "close": panel.onActionEscape(new glaze.kit.base.input.InputActions.Escape(), window, cx);
             case _: throw 'unknown button $id';
         }));
         renderFrame();
@@ -406,7 +406,7 @@ class ComponentEditorIntegrationTest extends TestCase {
                 press("secondary-a");
                 press(key);
                 assertEquals(text, value(state), 'read-only $key');
-                assertEquals('0..${gpui.util.Utf8.byteLength(text)}', sel(state));
+                assertEquals('0..${glaze.util.Utf8.byteLength(text)}', sel(state));
             }
             click(state);
             press("secondary-a");

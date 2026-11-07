@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.Window;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.questionnaire.QuestionnaireSubmission;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.Window;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.questionnaire.QuestionnaireSubmission;
 
 /**
  * The per item state the questionnaire keeps next to each definition.
  */
-@:allow(gpui.base.questionnaire)
+@:allow(glaze.kit.base.questionnaire)
 class ItemRuntime {
 
     var disabled:Bool;

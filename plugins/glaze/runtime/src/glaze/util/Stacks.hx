@@ -1,4 +1,4 @@
-package gpui.util;
+package glaze.util;
 
 /**
  * Stack and queue operations on arrays of Int, Float or Bool that do not

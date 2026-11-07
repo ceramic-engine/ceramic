@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/table/data_table.rs, crates/component/src/table/mod.rs (`init`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.table;
+package glaze.kit.table;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.EdgesOf;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectFirst;
-import gpui.base.Actions.SelectLast;
-import gpui.base.Actions.SelectNextColumn;
-import gpui.base.Actions.SelectPageDown;
-import gpui.base.Actions.SelectPageUp;
-import gpui.base.Actions.SelectPrevColumn;
-import gpui.base.Actions.SelectUp;
-import gpui.base.ComponentTraits.FocusableExt;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.AppContext;
+import glaze.EdgesOf;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectFirst;
+import glaze.kit.base.Actions.SelectLast;
+import glaze.kit.base.Actions.SelectNextColumn;
+import glaze.kit.base.Actions.SelectPageDown;
+import glaze.kit.base.Actions.SelectPageUp;
+import glaze.kit.base.Actions.SelectPrevColumn;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.ComponentTraits.FocusableExt;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.Observe;
+using glaze.kit.ThemeStyled;
 
 /** The options a `DataTable` element hands to its state. */
-@:allow(gpui.component.table, tests)
+@:allow(glaze.kit.table, tests)
 class TableOptions {
 
     public var scrollBounce:Null<Bool> = null;

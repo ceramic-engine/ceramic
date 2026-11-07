@@ -8,9 +8,9 @@ package shaders;
  * GPUI underline primitive (also used for strikethrough): a straight line,
  * or a wavy line evaluated as a distance field.
  */
-class GpuiUnderline extends Shader<GpuiUnderline_Vert, GpuiUnderline_Frag> {}
+class GlazeUnderline extends Shader<GlazeUnderline_Vert, GlazeUnderline_Frag> {}
 
-class GpuiUnderline_Vert extends Vert {
+class GlazeUnderline_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -53,7 +53,7 @@ class GpuiUnderline_Vert extends Vert {
 
 }
 
-class GpuiUnderline_Frag extends Frag {
+class GlazeUnderline_Frag extends Frag {
 
     @in var scenePosition:Vec2;
     @in var clipDistances:Vec4;

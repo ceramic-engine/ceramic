@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion/sequence.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Window;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Window;
 
 /**
  * One target of a `Sequence` and the transition that reaches it.
@@ -150,7 +150,7 @@ class Sequence<T> {
      * Appends steps built elsewhere, in order.
      */
     public function withSteps(steps:Iterable<SequenceStep<T>>):Sequence<T> {
-        gpui.util.Iterables.append(stepList, steps);
+        glaze.util.Iterables.append(stepList, steps);
         return this;
     }
 

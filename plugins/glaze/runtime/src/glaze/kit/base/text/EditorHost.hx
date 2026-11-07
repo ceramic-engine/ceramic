@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/editor_host.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.ImageSource;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.TextLayout;
-import gpui.Window;
-import gpui.WrappedLineLayout;
-import gpui.base.text.EditorSeam.EditorSink;
-import gpui.base.theme.Theme;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.ImageSource;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.TextLayout;
+import glaze.Window;
+import glaze.WrappedLineLayout;
+import glaze.kit.base.text.EditorSeam.EditorSink;
+import glaze.kit.base.theme.Theme;
+import glaze.util.Utf8;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 using unicode_segmentation.UnicodeSegmentation;
 
@@ -41,7 +41,7 @@ using unicode_segmentation.UnicodeSegmentation;
  * native input integration.
  *
  * Rust's `impl BlockNode { render_with_id, render }` are `renderWithId` and
- * `render` here (static, use with `using gpui.base.text.EditorHost;`).
+ * `render` here (static, use with `using glaze.kit.base.text.EditorHost;`).
  */
 class EditorHost {
 
@@ -52,7 +52,7 @@ class EditorHost {
     public static function parseMarkdown(source:String, extensions:MarkdownExtensions):Array<BlockNode> {
         final cx = new NodeContext();
         cx.markdownExtensions = extensions;
-        final parsed = gpui.base.text.format.MarkdownFormat.parse(source, cx);
+        final parsed = glaze.kit.base.text.format.MarkdownFormat.parse(source, cx);
         return parsed.blocks;
     }
 
@@ -107,7 +107,7 @@ class EditorHost {
     }
 
     /** The closest index in a whole-leaf layout for a window point. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function wholeIndexAt(layout:LayoutSnapshot, at:Point):Int {
         final bounds = layout.bounds;
         final lineHeight = layout.lineHeight;
@@ -138,9 +138,9 @@ class EditorHost {
         return value < min ? min : (value > max ? max : value);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -151,7 +151,7 @@ class EditorHost {
  */
 class RenderContext {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     final node:NodeContext;
 
     function new(node:NodeContext) {
@@ -202,7 +202,7 @@ class RenderContext {
      */
     public static function fromApp(cx:App):RenderContext {
         final theme = Theme.global(cx);
-        final defaults = cx.tryGlobal(gpui.base.text.TextView.TextViewDefaults);
+        final defaults = cx.tryGlobal(glaze.kit.base.text.TextView.TextViewDefaults);
         final style = defaults != null && defaults.style() != null ? defaults.style() : TextViewStyle.fromTheme(theme);
         final node = new NodeContext();
         node.style = style;
@@ -250,9 +250,9 @@ class RenderContext {
  */
 class FlowPosition {
 
-    @:allow(gpui.base.text) final isFirst:Bool;
-    @:allow(gpui.base.text) final isLast:Bool;
-    @:allow(gpui.base.text) final prev:PrevBlock;
+    @:allow(glaze.kit.base.text) final isFirst:Bool;
+    @:allow(glaze.kit.base.text) final isLast:Bool;
+    @:allow(glaze.kit.base.text) final prev:PrevBlock;
 
     function new(isFirst:Bool, isLast:Bool, prev:PrevBlock) {
         this.isFirst = isFirst;
@@ -283,7 +283,7 @@ class FlowPosition {
 }
 
 /** Copy mutable frame state, sharing only immutable shaped lines. */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class LayoutSnapshot {
 
     final bounds:Bounds;
@@ -406,7 +406,7 @@ class LeafGeometry {
 
     final pieces:Array<Piece>;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(pieces:Array<Piece>) {
         this.pieces = pieces;
     }

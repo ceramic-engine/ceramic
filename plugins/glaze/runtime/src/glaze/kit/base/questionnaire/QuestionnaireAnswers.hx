@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/types.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
 /**
  * The effective answers of the enabled items, in schema order.
@@ -12,7 +12,7 @@ class QuestionnaireAnswers {
 
     final values:Array<QuestionnaireAnswer>;
 
-    @:allow(gpui.base.questionnaire)
+    @:allow(glaze.kit.base.questionnaire)
     function new(names:Array<String>, values:Array<QuestionnaireAnswer>) {
         this.names = names;
         this.values = values;

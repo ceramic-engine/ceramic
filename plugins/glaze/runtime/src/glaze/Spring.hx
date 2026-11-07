@@ -2,10 +2,10 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
-import gpui.SpringMath.*;
-import gpui.util.MathUtil;
+import glaze.SpringMath.*;
+import glaze.util.MathUtil;
 
 /**
  * Free functions and constants of GPUI's spring module.
@@ -64,7 +64,7 @@ class Spring {
 
     }
 
-    @:allow(gpui.SpringConfig)
+    @:allow(glaze.SpringConfig)
     static function envelopeDecayStart(constant:Float, linear:Float, decay:Float):Float {
 
         if (linear == 0.0) {
@@ -76,7 +76,7 @@ class Spring {
 
     }
 
-    @:allow(gpui.SpringConfig)
+    @:allow(glaze.SpringConfig)
     static inline function envelopeBelow(position:Float, velocity:Float, positionThreshold:Float, velocityThreshold:Float):Bool {
 
         return position <= positionThreshold && velocity <= velocityThreshold;
@@ -88,7 +88,7 @@ class Spring {
      * velocity thresholds is done by `isBelowThreshold` (built by the caller with
      * `envelopeBelow`), which avoids returning a tuple per evaluation.
      */
-    @:allow(gpui.SpringConfig)
+    @:allow(glaze.SpringConfig)
     static function findSettleTime(decayStart:Float, naturalFrequency:Float, isBelowThreshold:(Float) -> Bool):Float {
 
         if (isBelowThreshold(decayStart)) {

@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/display_map/text_wrapper/measurements.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * Bounded exact substring widths survive width-only reflows, including
@@ -50,7 +50,7 @@ class WidthMeasurements {
      * The width measured earlier for `text`, or NaN (`measure()` without a
      * function value, whose Float result is boxed on hxcpp).
      */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function cachedWidth(text:String):Float {
         // The width in an object: a `Map<String, Float>` boxes the value it
         // returns on hxcpp (one allocation per hit)
@@ -59,7 +59,7 @@ class WidthMeasurements {
     }
 
     /** Records `width`, just measured for `text` (the rest of `measure()`), and returns it */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function remember(text:String, textLen:Int, width:Float):Float {
         if (textLen > MAX_TEXT_BYTES)
             return width;

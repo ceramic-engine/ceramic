@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.text.Selection;
-import gpui.util.Utf8;
+import glaze.kit.base.text.Selection;
+import glaze.util.Utf8;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.text.Selection` (Rust `text/selection.rs`).
+ * Tests of `glaze.kit.base.text.Selection` (Rust `text/selection.rs`).
  */
 class TextSelectionTest extends TestCase {
 

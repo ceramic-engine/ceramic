@@ -1,22 +1,22 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/list/list.rs (`List`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.list;
+package glaze.kit.list;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.list.ListState.ListOptions;
+import glaze.App;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.list.ListState.ListOptions;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The List element.

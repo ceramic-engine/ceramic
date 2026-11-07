@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ImageFormat;
-import gpui.base.text.TextUtils;
+import glaze.ImageFormat;
+import glaze.kit.base.text.TextUtils;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.text.TextUtils` (Rust `text/utils.rs`).
+ * Tests of `glaze.kit.base.text.TextUtils` (Rust `text/utils.rs`).
  */
 class TextUtilsTest extends TestCase {
 

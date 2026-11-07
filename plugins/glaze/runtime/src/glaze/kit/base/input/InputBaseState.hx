@@ -4,67 +4,67 @@
 // Also modified: deliberate deviation DEV-009 (no Change event when the value did not change). See DEVIATIONS.md.
 // Also modified: deliberate deviation DEV-015 (typing over a selection undoes in one step). See DEVIATIONS.md.
 // Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Div;
-import gpui.Edges;
-import gpui.Entity;
-import gpui.EntityInputHandler;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.Subscription;
-import gpui.TextAlign;
-import gpui.TextInputConfiguration;
-import gpui.TouchPhase;
-import gpui.UTF16Selection;
-import gpui.Window;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.Actions.SelectUp;
-import gpui.base.AutoScroll;
-import gpui.base.GlobalState;
-import gpui.base.NumberStep;
-import gpui.base.Overscroll;
-import gpui.base.ScrollBounce;
-import gpui.base.input.InputActions;
-import gpui.base.theme.Theme as BaseTheme;
-import gpui.util.Ref;
-import gpui.util.Utf8;
+import glaze.Action;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Div;
+import glaze.Edges;
+import glaze.Entity;
+import glaze.EntityInputHandler;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.Subscription;
+import glaze.TextAlign;
+import glaze.TextInputConfiguration;
+import glaze.TouchPhase;
+import glaze.UTF16Selection;
+import glaze.Window;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.AutoScroll;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.NumberStep;
+import glaze.kit.base.Overscroll;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.theme.Theme as BaseTheme;
+import glaze.util.Ref;
+import glaze.util.Utf8;
 import ropey.Rope;
 import ropey.RopeSlice;
 import unicode_segmentation.UnicodeSegmentation;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputMovement;
-using gpui.base.input.InputSearchExt;
-using gpui.base.input.InputIndentExt;
-using gpui.base.input.InputTokens;
-using gpui.base.input.InputTokenPresentation;
-using gpui.base.input.InputTouch;
-using gpui.base.input.InputWordSelection;
-using gpui.base.input.MaskPattern.MaskPatternTools;
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.InputMovement;
+using glaze.kit.base.input.InputSearchExt;
+using glaze.kit.base.input.InputIndentExt;
+using glaze.kit.base.input.InputTokens;
+using glaze.kit.base.input.InputTokenPresentation;
+using glaze.kit.base.input.InputTouch;
+using glaze.kit.base.input.InputWordSelection;
+using glaze.kit.base.input.MaskPattern.MaskPatternTools;
+using glaze.kit.base.input.RopeExt;
 
 /** The result of `lineAndPositionForOffset` (Rust `(usize, usize, Option<Point<Pixels>>)`). */
 typedef LinePosition = {final line:Int; final localRow:Int; final position:Null<Point>;};
@@ -85,7 +85,7 @@ typedef PressedToken = {final start:Int; final revision:Int; final position:Poin
 typedef PendingContextMenu = {final position:Point; final offset:Int;};
 
 /** One edit of a batch (Rust `(Range<usize>, String)`): `InputIndentExt.RangeEdit`. */
-typedef TextEdit = gpui.base.input.InputIndentExt.RangeEdit;
+typedef TextEdit = glaze.kit.base.input.InputIndentExt.RangeEdit;
 
 /** The handler of the right-click menu (Rust `Rc<dyn Fn(NativeMenu, InputContextMenuCapabilities, Point<Pixels>, &mut Window, &mut App)>`). */
 typedef ContextMenuHandler = (NativeMenu, InputContextMenuCapabilities, Point, Window, App) -> Void;
@@ -183,7 +183,7 @@ private class PasteTarget {
  * `prepaintCaretGeometry()`) are the fields themselves. The `Paste` action
  * handler is `pasteAction` (`paste` is the `EntityInputHandler` method).
  */
-@:access(gpui.base.input.LayoutMode)
+@:access(glaze.kit.base.input.LayoutMode)
 class InputBaseState extends Model implements Render implements EntityInputHandler {
 
     /** The listeners of `render()`, made on the first render */
@@ -224,7 +224,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
     public var tokenPresentation:InlineTokenPresentation;
 
-    public var tokenLayoutCache:Null<gpui.base.input.InlineTokenPresentation.TokenLayoutCache> = null;
+    public var tokenLayoutCache:Null<glaze.kit.base.input.InlineTokenPresentation.TokenLayoutCache> = null;
 
     /**
      * Real per-frame bounds of the placed token elements, keyed by token
@@ -372,7 +372,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     public var editorScrollbarSnapshot:Null<EditorScrollbarSnapshot> = null;
 
     /** The widest measured unwrapped line width and what it was measured for. */
-    public var longestLineWidth:Null<gpui.base.input.LongestLineKey.LongestLineWidth> = null;
+    public var longestLineWidth:Null<glaze.kit.base.input.LongestLineKey.LongestLineWidth> = null;
 
     public var editorPaddings:Edges;
 
@@ -393,7 +393,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
     var accessibility:Null<InputAccessibility> = null;
 
     /** What paints in place of Base's editor scrollbar, when a consumer supplies its own. */
-    public var scrollbarRenderer:Null<gpui.base.input.EditorScrollbarContext.EditorScrollbarRenderer> = null;
+    public var scrollbarRenderer:Null<glaze.kit.base.input.EditorScrollbarContext.EditorScrollbarRenderer> = null;
 
     /** The mask pattern for formatting the input text. */
     public var maskPattern:MaskPattern = MaskPattern.None;
@@ -528,7 +528,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * width of the input's text area. Once the input has been laid out this
      * does nothing, and layout keeps the wrap up to date.
      */
-    public function prewrap(font:gpui.Font, fontSize:Pixels, width:Pixels, cx:Context<InputBaseState>):Void {
+    public function prewrap(font:glaze.Font, fontSize:Pixels, width:Pixels, cx:Context<InputBaseState>):Void {
         if (lastLayout != null) {
             return;
         }
@@ -728,7 +728,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * `null` to keep Base's. Like `setEditorStyle`, this does not notify, so
      * it can be called while rendering.
      */
-    public function setScrollbarRenderer(renderer:Null<gpui.base.input.EditorScrollbarContext.EditorScrollbarRenderer>):Void {
+    public function setScrollbarRenderer(renderer:Null<glaze.kit.base.input.EditorScrollbarContext.EditorScrollbarRenderer>):Void {
         scrollbarRenderer = renderer;
     }
 
@@ -790,7 +790,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
      * the view is scrolled back to the start. Multi-line inputs reset the
      * selection to `0..0`.
      */
-    public function setValue(value:gpui.base.input.InputContent.IntoInputContent, window:Window, cx:Context<InputBaseState>):Void {
+    public function setValue(value:glaze.kit.base.input.InputContent.IntoInputContent, window:Window, cx:Context<InputBaseState>):Void {
         final content:InputContent = value;
         inlineTokens = null;
         undoManager.setIgnoring(true);
@@ -1687,7 +1687,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         deleteSelections(true, EditIntent.Atomic, (s, offset) -> new Range(offset, s.nextEndOfWordAt(offset)), window, cx);
     }
 
-    public function enter(action:gpui.base.input.InputActions.Enter, window:Window, cx:Context<InputBaseState>):Void {
+    public function enter(action:glaze.kit.base.input.InputActions.Enter, window:Window, cx:Context<InputBaseState>):Void {
         if (modeKind.handleContextMenuAction(this, action, window, cx)) {
             return;
         }
@@ -1803,7 +1803,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         scrollTo(0, null, cx);
     }
 
-    public function escape(action:gpui.base.input.InputActions.Escape, window:Window, cx:Context<InputBaseState>):Void {
+    public function escape(action:glaze.kit.base.input.InputActions.Escape, window:Window, cx:Context<InputBaseState>):Void {
         if (modeKind.handleContextMenuAction(this, action, window, cx)) {
             return;
         }
@@ -2101,7 +2101,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
 
         // Multi-cursor placement, multi-line only.
         if (isMultiLine() && event.button == MouseButton.Left) {
-            if (event.modifiers.alt && (event.modifiers.shift || (gpui.OperatingSystem.current == Linux && event.modifiers.control))) {
+            if (event.modifiers.alt && (event.modifiers.shift || (glaze.OperatingSystem.current == Linux && event.modifiers.control))) {
                 // Alt+Shift starts a block; Linux also accepts Ghostty's Ctrl+Alt.
                 // Mark selecting so the drag handler extends the block.
                 columnSelectStart = new ColumnarPoint(offset, columnsPastLineEnd);
@@ -3473,7 +3473,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
                 }
             }
             else {
-                mode.updateHighlighter(new gpui.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
+                mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
 
                 updateFoldCandidatesIncremental(range, newText);
             }
@@ -3826,7 +3826,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         displayMap.adjustFoldsForEdit(oldText, range, newText);
         displayMap.onTextChanged(text, range, Rope.fromStr(newText), cx.app);
 
-        mode.updateHighlighter(new gpui.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
+        mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
 
         updateFoldCandidatesIncremental(range, newText);
         modeKind.refreshLanguageFeatures(this, window, cx);
@@ -3923,7 +3923,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         displayMap.adjustFoldsForEdit(oldText, range, newText);
         displayMap.onTextChanged(text, range, Rope.fromStr(newText), cx.app);
 
-        mode.updateHighlighter(new gpui.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
+        mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(range, oldText, text, newText, true), modeKind, window, cx);
 
         updateFoldCandidatesIncremental(range, newText);
         modeKind.refreshLanguageFeatures(this, window, cx);
@@ -4044,7 +4044,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         editorStyle = projectedEditorStyle.resolved(BaseTheme.global(cx.app).tokens);
         final entity:Entity<InputBaseState> = cx.entity();
         if (_pendingUpdate) {
-            mode.updateHighlighter(new gpui.base.input.LayoutMode.HighlighterUpdate(new Range(0, 0), text, text, "", false), modeKind, window, cx);
+            mode.updateHighlighter(new glaze.kit.base.input.LayoutMode.HighlighterUpdate(new Range(0, 0), text, text, "", false), modeKind, window, cx);
 
             updateFoldCandidates();
             modeKind.refreshLanguageFeatures(this, window, cx);
@@ -4060,7 +4060,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
 
         // Accessibility (`InputAccessibility`, `aria_*`, `on_a11y_action`) is
-        // not exported: the GPUI port has no accessibility tree.
+        // not exported: Glaze has no accessibility tree.
         var element = div().id(EDITOR_ELEMENT_ID).keyContext(CONTEXT);
         if (isEditable()) {
             element.onActionEntry(listeners.backspaceEntry)
@@ -4153,7 +4153,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         }
 
         // Actions only one mode handles are registered by that mode.
-        return gpui.base.Observe.testSupport(modeKind.registerActions(element, entity, window)).trackFocus(focusHandle);
+        return glaze.kit.base.Observe.testSupport(modeKind.registerActions(element, entity, window)).trackFocus(focusHandle);
     }
 
     // Helpers
@@ -4275,7 +4275,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
  * The listeners of `InputBaseState.render()`: they only call the state, so
  * one set per state serves every frame (no closures per render)
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 private class InputRenderListeners {
 
     public final backspace:(Dynamic, Window, App) -> Void;
@@ -4328,55 +4328,55 @@ private class InputRenderListeners {
     public final onMouseMove:(Dynamic, Window, App) -> Void;
     public final onScrollWheel:(Dynamic, Window, App) -> Void;
     public final activateToken:(ActivateToken, Window, App) -> Void;
-    public final modifiersChanged:(gpui.ModifiersChangedEvent, Window, App) -> Void;
+    public final modifiersChanged:(glaze.ModifiersChangedEvent, Window, App) -> Void;
 
     /** The action entries of the listeners (immutable, added to the element each frame) */
-    public final backspaceEntry:gpui.Interactivity.TypedActionListener;
-    public final deleteEntry:gpui.Interactivity.TypedActionListener;
-    public final deleteToBeginningOfLineEntry:gpui.Interactivity.TypedActionListener;
-    public final deleteToEndOfLineEntry:gpui.Interactivity.TypedActionListener;
-    public final deletePreviousWordEntry:gpui.Interactivity.TypedActionListener;
-    public final deleteNextWordEntry:gpui.Interactivity.TypedActionListener;
-    public final enterEntry:gpui.Interactivity.TypedActionListener;
-    public final escapeEntry:gpui.Interactivity.TypedActionListener;
-    public final pasteActionEntry:gpui.Interactivity.TypedActionListener;
-    public final cutEntry:gpui.Interactivity.TypedActionListener;
-    public final undoEntry:gpui.Interactivity.TypedActionListener;
-    public final redoEntry:gpui.Interactivity.TypedActionListener;
-    public final indentInlineEntry:gpui.Interactivity.TypedActionListener;
-    public final outdentInlineEntry:gpui.Interactivity.TypedActionListener;
-    public final indentBlockEntry:gpui.Interactivity.TypedActionListener;
-    public final outdentBlockEntry:gpui.Interactivity.TypedActionListener;
-    public final leftEntry:gpui.Interactivity.TypedActionListener;
-    public final rightEntry:gpui.Interactivity.TypedActionListener;
-    public final selectLeftEntry:gpui.Interactivity.TypedActionListener;
-    public final selectRightEntry:gpui.Interactivity.TypedActionListener;
-    public final upEntry:gpui.Interactivity.TypedActionListener;
-    public final downEntry:gpui.Interactivity.TypedActionListener;
-    public final selectUpEntry:gpui.Interactivity.TypedActionListener;
-    public final selectDownEntry:gpui.Interactivity.TypedActionListener;
-    public final pageUpEntry:gpui.Interactivity.TypedActionListener;
-    public final pageDownEntry:gpui.Interactivity.TypedActionListener;
-    public final addCursorAboveEntry:gpui.Interactivity.TypedActionListener;
-    public final addCursorBelowEntry:gpui.Interactivity.TypedActionListener;
-    public final onActionSelectAllEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToStartOfLineEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToEndOfLineEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToPreviousWordEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToNextWordEntry:gpui.Interactivity.TypedActionListener;
-    public final homeEntry:gpui.Interactivity.TypedActionListener;
-    public final endEntry:gpui.Interactivity.TypedActionListener;
-    public final moveToStartEntry:gpui.Interactivity.TypedActionListener;
-    public final moveToEndEntry:gpui.Interactivity.TypedActionListener;
-    public final moveToPreviousWordEntry:gpui.Interactivity.TypedActionListener;
-    public final moveToNextWordEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToStartEntry:gpui.Interactivity.TypedActionListener;
-    public final selectToEndEntry:gpui.Interactivity.TypedActionListener;
-    public final showCharacterPaletteEntry:gpui.Interactivity.TypedActionListener;
-    public final activateTokenEntry:gpui.Interactivity.TypedActionListener;
-    public final copyEntry:gpui.Interactivity.TypedActionListener;
-    public final onActionSearchEntry:gpui.Interactivity.TypedActionListener;
-    public final onActionReplaceEntry:gpui.Interactivity.TypedActionListener;
+    public final backspaceEntry:glaze.Interactivity.TypedActionListener;
+    public final deleteEntry:glaze.Interactivity.TypedActionListener;
+    public final deleteToBeginningOfLineEntry:glaze.Interactivity.TypedActionListener;
+    public final deleteToEndOfLineEntry:glaze.Interactivity.TypedActionListener;
+    public final deletePreviousWordEntry:glaze.Interactivity.TypedActionListener;
+    public final deleteNextWordEntry:glaze.Interactivity.TypedActionListener;
+    public final enterEntry:glaze.Interactivity.TypedActionListener;
+    public final escapeEntry:glaze.Interactivity.TypedActionListener;
+    public final pasteActionEntry:glaze.Interactivity.TypedActionListener;
+    public final cutEntry:glaze.Interactivity.TypedActionListener;
+    public final undoEntry:glaze.Interactivity.TypedActionListener;
+    public final redoEntry:glaze.Interactivity.TypedActionListener;
+    public final indentInlineEntry:glaze.Interactivity.TypedActionListener;
+    public final outdentInlineEntry:glaze.Interactivity.TypedActionListener;
+    public final indentBlockEntry:glaze.Interactivity.TypedActionListener;
+    public final outdentBlockEntry:glaze.Interactivity.TypedActionListener;
+    public final leftEntry:glaze.Interactivity.TypedActionListener;
+    public final rightEntry:glaze.Interactivity.TypedActionListener;
+    public final selectLeftEntry:glaze.Interactivity.TypedActionListener;
+    public final selectRightEntry:glaze.Interactivity.TypedActionListener;
+    public final upEntry:glaze.Interactivity.TypedActionListener;
+    public final downEntry:glaze.Interactivity.TypedActionListener;
+    public final selectUpEntry:glaze.Interactivity.TypedActionListener;
+    public final selectDownEntry:glaze.Interactivity.TypedActionListener;
+    public final pageUpEntry:glaze.Interactivity.TypedActionListener;
+    public final pageDownEntry:glaze.Interactivity.TypedActionListener;
+    public final addCursorAboveEntry:glaze.Interactivity.TypedActionListener;
+    public final addCursorBelowEntry:glaze.Interactivity.TypedActionListener;
+    public final onActionSelectAllEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToStartOfLineEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToEndOfLineEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToPreviousWordEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToNextWordEntry:glaze.Interactivity.TypedActionListener;
+    public final homeEntry:glaze.Interactivity.TypedActionListener;
+    public final endEntry:glaze.Interactivity.TypedActionListener;
+    public final moveToStartEntry:glaze.Interactivity.TypedActionListener;
+    public final moveToEndEntry:glaze.Interactivity.TypedActionListener;
+    public final moveToPreviousWordEntry:glaze.Interactivity.TypedActionListener;
+    public final moveToNextWordEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToStartEntry:glaze.Interactivity.TypedActionListener;
+    public final selectToEndEntry:glaze.Interactivity.TypedActionListener;
+    public final showCharacterPaletteEntry:glaze.Interactivity.TypedActionListener;
+    public final activateTokenEntry:glaze.Interactivity.TypedActionListener;
+    public final copyEntry:glaze.Interactivity.TypedActionListener;
+    public final onActionSearchEntry:glaze.Interactivity.TypedActionListener;
+    public final onActionReplaceEntry:glaze.Interactivity.TypedActionListener;
 
     public function new(entity:Entity<InputBaseState>) {
         backspace = (event, window, cx) -> entity.update(cx, (state, cx) -> state.backspace(event, window, cx));
@@ -4436,7 +4436,7 @@ private class InputRenderListeners {
                 if (span.range().equals(selected)) {
                     final bounds = state.rangeToBounds(span.range());
                     if (bounds != null) {
-                        activation = state.tokenActivation(span.range().start, bounds, ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(gpui.KeyboardButton.Enter, bounds)));
+                        activation = state.tokenActivation(span.range().start, bounds, ClickEvent.Keyboard(new glaze.ClickEvent.KeyboardClickEvent(glaze.KeyboardButton.Enter, bounds)));
                     }
                     break;
                 }
@@ -4446,51 +4446,51 @@ private class InputRenderListeners {
             }
         };
         modifiersChanged = (_, _, cx) -> entity.update(cx, (_, cx) -> cx.notify());
-        backspaceEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Backspace, backspace);
-        deleteEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Delete, delete);
-        deleteToBeginningOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToBeginningOfLine, deleteToBeginningOfLine);
-        deleteToEndOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToEndOfLine, deleteToEndOfLine);
-        deletePreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToPreviousWordStart, deletePreviousWord);
-        deleteNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(DeleteToNextWordEnd, deleteNextWord);
-        enterEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Enter, enter);
-        escapeEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Escape, escape);
-        pasteActionEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Paste, pasteAction);
-        cutEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Cut, cut);
-        undoEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Undo, undo);
-        redoEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Redo, redo);
-        indentInlineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(IndentInline, indentInline);
-        outdentInlineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(OutdentInline, outdentInline);
-        indentBlockEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Indent, indentBlock);
-        outdentBlockEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Outdent, outdentBlock);
-        leftEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveLeft, left);
-        rightEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveRight, right);
-        selectLeftEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectLeft, selectLeft);
-        selectRightEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectRight, selectRight);
-        upEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveUp, up);
-        downEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveDown, down);
-        selectUpEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectUp, selectUp);
-        selectDownEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectDown, selectDown);
-        pageUpEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MovePageUp, pageUp);
-        pageDownEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MovePageDown, pageDown);
-        addCursorAboveEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(AddCursorAbove, addCursorAbove);
-        addCursorBelowEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(AddCursorBelow, addCursorBelow);
-        onActionSelectAllEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectAll, onActionSelectAll);
-        selectToStartOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToStartOfLine, selectToStartOfLine);
-        selectToEndOfLineEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToEndOfLine, selectToEndOfLine);
-        selectToPreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToPreviousWordStart, selectToPreviousWord);
-        selectToNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToNextWordEnd, selectToNextWord);
-        homeEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveHome, home);
-        endEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveEnd, end);
-        moveToStartEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToStart, moveToStart);
-        moveToEndEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToEnd, moveToEnd);
-        moveToPreviousWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToPreviousWord, moveToPreviousWord);
-        moveToNextWordEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(MoveToNextWord, moveToNextWord);
-        selectToStartEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToStart, selectToStart);
-        selectToEndEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(SelectToEnd, selectToEnd);
-        showCharacterPaletteEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(ShowCharacterPalette, showCharacterPalette);
-        activateTokenEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(ActivateToken, activateToken);
-        copyEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Copy, copy);
-        onActionSearchEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(gpui.base.input.InputActions.Search, onActionSearch);
-        onActionReplaceEntry = @:privateAccess gpui.Interactivity.bubbleActionEntry(Replace, onActionReplace);
+        backspaceEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Backspace, backspace);
+        deleteEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Delete, delete);
+        deleteToBeginningOfLineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(DeleteToBeginningOfLine, deleteToBeginningOfLine);
+        deleteToEndOfLineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(DeleteToEndOfLine, deleteToEndOfLine);
+        deletePreviousWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(DeleteToPreviousWordStart, deletePreviousWord);
+        deleteNextWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(DeleteToNextWordEnd, deleteNextWord);
+        enterEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(glaze.kit.base.input.InputActions.Enter, enter);
+        escapeEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(glaze.kit.base.input.InputActions.Escape, escape);
+        pasteActionEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Paste, pasteAction);
+        cutEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Cut, cut);
+        undoEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Undo, undo);
+        redoEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Redo, redo);
+        indentInlineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(IndentInline, indentInline);
+        outdentInlineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(OutdentInline, outdentInline);
+        indentBlockEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(glaze.kit.base.input.InputActions.Indent, indentBlock);
+        outdentBlockEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(glaze.kit.base.input.InputActions.Outdent, outdentBlock);
+        leftEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveLeft, left);
+        rightEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveRight, right);
+        selectLeftEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectLeft, selectLeft);
+        selectRightEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectRight, selectRight);
+        upEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveUp, up);
+        downEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveDown, down);
+        selectUpEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectUp, selectUp);
+        selectDownEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectDown, selectDown);
+        pageUpEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MovePageUp, pageUp);
+        pageDownEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MovePageDown, pageDown);
+        addCursorAboveEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(AddCursorAbove, addCursorAbove);
+        addCursorBelowEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(AddCursorBelow, addCursorBelow);
+        onActionSelectAllEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectAll, onActionSelectAll);
+        selectToStartOfLineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToStartOfLine, selectToStartOfLine);
+        selectToEndOfLineEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToEndOfLine, selectToEndOfLine);
+        selectToPreviousWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToPreviousWordStart, selectToPreviousWord);
+        selectToNextWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToNextWordEnd, selectToNextWord);
+        homeEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveHome, home);
+        endEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveEnd, end);
+        moveToStartEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveToStart, moveToStart);
+        moveToEndEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveToEnd, moveToEnd);
+        moveToPreviousWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveToPreviousWord, moveToPreviousWord);
+        moveToNextWordEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(MoveToNextWord, moveToNextWord);
+        selectToStartEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToStart, selectToStart);
+        selectToEndEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(SelectToEnd, selectToEnd);
+        showCharacterPaletteEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(ShowCharacterPalette, showCharacterPalette);
+        activateTokenEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(ActivateToken, activateToken);
+        copyEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Copy, copy);
+        onActionSearchEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(glaze.kit.base.input.InputActions.Search, onActionSearch);
+        onActionReplaceEntry = @:privateAccess glaze.Interactivity.bubbleActionEntry(Replace, onActionReplace);
     }
 }

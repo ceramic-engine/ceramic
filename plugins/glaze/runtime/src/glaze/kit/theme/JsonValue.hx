@@ -1,13 +1,13 @@
 // New code for the Haxe port of gpui-kit (no gpui-kit origin): typed reads of
 // parsed JSON values with serde's strictness, used by the theme file readers.
 // See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
 /**
  * Reads fields of a value parsed by `haxe.Json.parse`, failing on a wrong
  * type like serde does (absent and `null` both mean `None`).
  */
-@:allow(gpui.component)
+@:allow(glaze.kit)
 class JsonValue {
 
     public static function isObject(value:Dynamic):Bool {

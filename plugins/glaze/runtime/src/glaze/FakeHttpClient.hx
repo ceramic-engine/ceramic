@@ -1,9 +1,9 @@
 // Ported from gpui-pre-http-client 0.3.10: src/http_client.rs (FakeHttpClient)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.HttpClient;
+import glaze.HttpClient;
 
 /**
  * An HTTP client for tests: every request is answered by a handler
@@ -42,7 +42,7 @@ class FakeHttpClient implements HttpClient {
     }
 
     public function userAgent():Null<String> {
-        return 'gpui.FakeHttpClient';
+        return 'glaze.FakeHttpClient';
     }
 
     public function proxy():Null<String> {

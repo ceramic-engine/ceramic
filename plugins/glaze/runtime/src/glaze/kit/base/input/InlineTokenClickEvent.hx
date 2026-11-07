@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/token_presentation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Range;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Range;
 
 /**
  * Current token snapshot delivered after releasing the editor's update
@@ -17,7 +17,7 @@ class InlineTokenClickEvent {
     final _bounds:Bounds;
     final event:ClickEvent;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function new(span:InlineTokenSpan, bounds:Bounds, event:ClickEvent) {
         this.span = span;
         this._bounds = bounds;

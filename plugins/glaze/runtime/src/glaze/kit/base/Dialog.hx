@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyboardButton;
-import gpui.MouseButton;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyboardButton;
+import glaze.MouseButton;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.FocusTrap;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.FocusTrap;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 private typedef Decision = (ClickEvent, Window, App) -> Bool;
 private typedef Closed = (ClickEvent, Window, App) -> Void;
@@ -66,7 +66,7 @@ class DialogHandle {
 
     var openValue:Bool;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var onOpenChange:Null<OpenChange> = null;
 
     public function new(open:Bool) {
@@ -85,7 +85,7 @@ class DialogHandle {
         setOpen(false, Imperative, window, cx);
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function setOpen(open:Bool, reason:DialogChangeReason, window:Window, cx:App):Void {
         final previous = openValue;
         openValue = open;
@@ -107,23 +107,23 @@ class DialogHandle {
  */
 class DialogKeys {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static inline final CONTEXT = 'Dialog';
 
     public static function init(cx:AppContext):Void {
         (cx:App).bindKeys([
-            new KeyBinding('escape', new gpui.base.Actions.Cancel(), CONTEXT),
-            new KeyBinding('enter', new gpui.base.Actions.Confirm(false), CONTEXT)
+            new KeyBinding('escape', new glaze.kit.base.Actions.Cancel(), CONTEXT),
+            new KeyBinding('enter', new glaze.kit.base.Actions.Confirm(false), CONTEXT)
         ]);
     }
 
     /** Rust `ClickEvent::default()`: a keyboard click (Enter) with empty bounds. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function defaultClickEvent():ClickEvent {
-        return ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(KeyboardButton.Enter, new Bounds()));
+        return ClickEvent.Keyboard(new glaze.ClickEvent.KeyboardClickEvent(KeyboardButton.Enter, new Bounds()));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function requestOpenChange(handle:Null<DialogHandle>, callback:Null<OpenChange>, open:Bool, reason:DialogChangeReason, window:Window, cx:App):Void {
         if (handle != null) {
             handle.setOpen(open, reason, window, cx);
@@ -265,7 +265,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function role(role:Role):Dialog {
         roleValue = role;
         return this;
@@ -316,8 +316,8 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
             .absolute()
             .top0()
             .left0()
-            .w(gpui.Prelude.px(viewport.width))
-            .h(gpui.Prelude.px(viewport.height))
+            .w(glaze.Prelude.px(viewport.width))
+            .h(glaze.Prelude.px(viewport.height))
             // A popup in normal flow lands centered; `refineStyle`
             // below lets the caller lay the host out differently.
             .flex()
@@ -334,14 +334,14 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         final requestCancel = requestClose;
         final requestConfirm = requestClose;
         final closedCancel = closed;
-        trapped.onAction(gpui.base.Actions.Cancel, (_, window, cx) -> {
+        trapped.onAction(glaze.kit.base.Actions.Cancel, (_, window, cx) -> {
             final event = DialogKeys.defaultClickEvent();
             if (cancel(event, window, cx)) {
                 DialogKeys.requestOpenChange(escapeHandle, escapeChange, false, DialogChangeReason.Cancel, window, cx);
                 requestCancel(false, window, cx);
                 closedCancel(event, window, cx);
             }
-        }).onAction(gpui.base.Actions.Confirm, (_, window, cx) -> {
+        }).onAction(glaze.kit.base.Actions.Confirm, (_, window, cx) -> {
             final event = DialogKeys.defaultClickEvent();
             if (confirm(event, window, cx)) {
                 DialogKeys.requestOpenChange(confirmHandle, confirmChange, false, DialogChangeReason.Confirm, window, cx);
@@ -379,7 +379,7 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         trapped.extend(childElements);
         trapped.refineStyle(dialogStyle);
 
-        return deferred(anchored().position(point(gpui.Prelude.px(0.), gpui.Prelude.px(0.))).child(container))
+        return deferred(anchored().position(point(glaze.Prelude.px(0.), glaze.Prelude.px(0.))).child(container))
             .withPriority(10 + layerValue);
     }
 
@@ -430,7 +430,7 @@ class DialogTrigger implements RenderOnce {
  * The unstyled dialog parts (Rust `dialog_part!`): a `Div` with an id,
  * optionally occluding, with the part's children and style.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 abstract class DialogPart implements RenderOnce implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
@@ -579,9 +579,9 @@ class DialogClose implements RenderOnce implements Styled implements ParentEleme
      * activation. The builder only needs to supply presentation.
      * The wrapper does not also handle clicks when a trigger is supplied.
      */
-    public function trigger(build:(gpui.base.Button) -> IntoElement):DialogClose {
+    public function trigger(build:(glaze.kit.base.Button) -> IntoElement):DialogClose {
         final anchor = this.anchor;
-        final button = new gpui.base.Button('close')
+        final button = new glaze.kit.base.Button('close')
             .accessibilityLabel('Close')
             .onClick((_, window, cx) -> activate(anchor, window, cx));
         this.triggerElement = build(button);
@@ -595,10 +595,10 @@ class DialogClose implements RenderOnce implements Styled implements ParentEleme
     static function activate(cell:AnchorCell, window:Window, cx:App):Void {
         final anchor = cell.handle;
         if (anchor != null) {
-            anchor.dispatchAction(new gpui.base.Actions.Cancel(), window, cx);
+            anchor.dispatchAction(new glaze.kit.base.Actions.Cancel(), window, cx);
         }
         else {
-            window.dispatchAction(new gpui.base.Actions.Cancel(), cx);
+            window.dispatchAction(new glaze.kit.base.Actions.Cancel(), cx);
         }
     }
 

@@ -1,40 +1,40 @@
 package tests.kit;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.PlatformInput;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.StyleBuilder;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.component.Component;
-import gpui.component.input.Editor;
-import gpui.component.input.Input;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.PlatformInput;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.StyleBuilder;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Component;
+import glaze.kit.input.Editor;
+import glaze.kit.input.Input;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Frames drawn and views rendered per frame, compared with the real GPUI.
@@ -48,7 +48,7 @@ import gpui.Prelude.*;
  * (GPUI's test mode). The expected logs are those of the real GPUI (the
  * reference harness logging every render).
  */
-@:access(gpui.App)
+@:access(glaze.App)
 class FrameScheduleTest extends TestCase {
 
     static final FULL = ['P render', 'S render', 'F1 render', 'F2 render', 'F3 render'];

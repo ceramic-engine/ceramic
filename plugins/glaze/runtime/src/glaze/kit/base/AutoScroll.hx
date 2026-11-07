@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/auto_scroll.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Point;
-import gpui.Task;
-import gpui.Unit;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Point;
+import glaze.Task;
+import glaze.Unit;
 
 /**
  * Manages timer-based auto-scrolling during drag interactions.
@@ -70,7 +70,7 @@ class AutoScroll {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /**
@@ -79,7 +79,7 @@ class AutoScroll {
      * `tick` is called each frame (~60 fps) with the current delta.
      * It should perform the actual scroll action for this entity.
      */
-    public function set<T:gpui.Model>(delta:Null<Float>, cx:Context<T>, tick:(Float, T, Context<T>) -> Void):Void {
+    public function set<T:glaze.Model>(delta:Null<Float>, cx:Context<T>, tick:(Float, T, Context<T>) -> Void):Void {
         final wasIdle = task == null;
         shared = delta;
 
@@ -93,7 +93,7 @@ class AutoScroll {
         }
     }
 
-    function loop<T:gpui.Model>(weak:gpui.WeakEntity<T>, cx:gpui.AsyncApp, tick:(Float, T, Context<T>) -> Void):Task<Unit> {
+    function loop<T:glaze.Model>(weak:glaze.WeakEntity<T>, cx:glaze.AsyncApp, tick:(Float, T, Context<T>) -> Void):Task<Unit> {
         final done = new Task<Unit>();
         final generation = this.generation;
         function next():Void {

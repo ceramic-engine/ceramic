@@ -4,42 +4,42 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.SystemNotificationResponse;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.Window;
-import gpui.App;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.WindowState;
-import gpui.component.dialog.AlertDialog;
-import gpui.component.dialog.Dialog;
-import gpui.component.dialog.Dialog.DialogButtonProps;
-import gpui.component.dialog.DialogEntrance.EntranceSurface;
-import gpui.component.notification.Notification;
-import gpui.component.notification.Notification.NotificationDelivery;
-import gpui.component.notification.Notification.NotificationId;
-import gpui.component.notification.Notification.NotificationIdTools;
-import gpui.component.notification.Notification.NotificationList;
-import gpui.FocusHandle;
-import gpui.base.Positioner;
-import gpui.component.dialog.DialogEntrance;
-import gpui.component.theme.Theme;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.SystemNotificationResponse;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.Window;
+import glaze.App;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.WindowState;
+import glaze.kit.dialog.AlertDialog;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.dialog.Dialog.DialogButtonProps;
+import glaze.kit.dialog.DialogEntrance.EntranceSurface;
+import glaze.kit.notification.Notification;
+import glaze.kit.notification.Notification.NotificationDelivery;
+import glaze.kit.notification.Notification.NotificationId;
+import glaze.kit.notification.Notification.NotificationIdTools;
+import glaze.kit.notification.Notification.NotificationList;
+import glaze.FocusHandle;
+import glaze.kit.base.Positioner;
+import glaze.kit.dialog.DialogEntrance;
+import glaze.kit.theme.Theme;
 import tests.kit.BaseModalsTest.BoundsProbe;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 /**
  * The tests of gpui-component's `dialog` module (`dialog.rs`,
@@ -529,7 +529,7 @@ class ComponentModalsTest extends TestCase {
                 })
                 .buttonProps(new DialogButtonProps().okText('Delete'));
 
-            assertTrue(alert.base.buttonPropsValue.okHandler()(@:privateAccess gpui.base.Dialog.DialogKeys.defaultClickEvent(), window, cx));
+            assertTrue(alert.base.buttonPropsValue.okHandler()(@:privateAccess glaze.kit.base.Dialog.DialogKeys.defaultClickEvent(), window, cx));
         });
 
         assertEquals(1, confirmed.value);
@@ -709,8 +709,8 @@ class ComponentModalsTest extends TestCase {
         assertEquals(NotificationIdTools.systemTag(byType), NotificationIdTools.systemTag(NotificationId.Id(typeId(FooKind))));
         assertTrue(StringTools.startsWith(NotificationIdTools.systemTag(byType), 'gpui-component/notification/'));
 
-        final key1 = NotificationId.IdAndElementId(typeId(FooKind), gpui.ElementId.Integer(1));
-        final key2 = NotificationId.IdAndElementId(typeId(FooKind), gpui.ElementId.Integer(2));
+        final key1 = NotificationId.IdAndElementId(typeId(FooKind), glaze.ElementId.Integer(1));
+        final key2 = NotificationId.IdAndElementId(typeId(FooKind), glaze.ElementId.Integer(2));
         assertTrue(NotificationIdTools.systemTag(key1) != NotificationIdTools.systemTag(key2));
         assertTrue(NotificationIdTools.systemTag(byType) != NotificationIdTools.systemTag(key1));
 
@@ -809,13 +809,13 @@ class ComponentModalsTest extends TestCase {
         cx.update((window, _) -> window.draw());
 
         final anchors = () -> cx.update((_, app) -> [for (entry in list.read(app).stacks) Std.string(entry.anchor)].join(','));
-        assertEquals([Std.string(gpui.Anchor.TopRight), Std.string(gpui.Anchor.BottomLeft)].join(','), anchors());
+        assertEquals([Std.string(glaze.Anchor.TopRight), Std.string(glaze.Anchor.BottomLeft)].join(','), anchors());
 
         // Dismissing the overridden notification prunes its stack.
         updateList(cx, list, (list, window, cx) -> list.close(Id(typeId(BarKind)), window, cx));
         flushDismiss(cx);
         cx.update((window, _) -> window.draw());
-        assertEquals(Std.string(gpui.Anchor.TopRight), anchors());
+        assertEquals(Std.string(glaze.Anchor.TopRight), anchors());
     }
 
     function testClosingToastStaysMountedUntilItsTransitionFinishes() {
@@ -915,11 +915,11 @@ class ComponentModalsTest extends TestCase {
         advance(cx, NotificationList.NOTIFICATION_TRANSITION_DURATION);
         cx.runUntilParked();
         final note = cx.update((_, app) -> list.read(app).notificationsManager.get(Id(typeId(FooKind))));
-        assertEquals(gpui.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
+        assertEquals(glaze.kit.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
 
         advance(cx, 5. + 0.05);
         cx.runUntilParked();
-        assertEquals(gpui.base.Toast.ToastTransitionStatus.Ending, cx.update((_, app) -> note.read(app).transitionStatus));
+        assertEquals(glaze.kit.base.Toast.ToastTransitionStatus.Ending, cx.update((_, app) -> note.read(app).transitionStatus));
     }
 
     function testFocusPausesAutohideAndPresentPhaseIsProjected() {
@@ -931,7 +931,7 @@ class ComponentModalsTest extends TestCase {
         advance(cx, NotificationList.NOTIFICATION_TRANSITION_DURATION);
         cx.runUntilParked();
         final note = cx.update((_, app) -> list.read(app).notificationsManager.get(Id(typeId(FooKind))));
-        assertEquals(gpui.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
+        assertEquals(glaze.kit.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
 
         final listFocus = cx.update((_, app) -> list.read(app).focusHandle);
         cx.update((window, app) -> {
@@ -940,7 +940,7 @@ class ComponentModalsTest extends TestCase {
         });
         advance(cx, 5.);
         cx.runUntilParked();
-        assertEquals(gpui.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
+        assertEquals(glaze.kit.base.Toast.ToastTransitionStatus.Present, cx.update((_, app) -> note.read(app).transitionStatus));
 
         final otherFocus = cx.update((_, app) -> opened.root.read(app).otherFocus);
         cx.update((window, app) -> {
@@ -950,7 +950,7 @@ class ComponentModalsTest extends TestCase {
         assertTrue(!cx.update((_, app) -> list.read(app).isExpanded()));
         advance(cx, 5. + 0.05);
         cx.runUntilParked();
-        assertEquals(gpui.base.Toast.ToastTransitionStatus.Ending, cx.update((_, app) -> note.read(app).transitionStatus));
+        assertEquals(glaze.kit.base.Toast.ToastTransitionStatus.Ending, cx.update((_, app) -> note.read(app).transitionStatus));
     }
 
     function testCloseByTypeRemovesIdAndAllId1OfSameType() {
@@ -984,12 +984,12 @@ class ComponentModalsTest extends TestCase {
             list.push(Notification.info('plain').withId(FooKind).autohide(false), window, cx);
         });
 
-        updateList(cx, list, (list, window, cx) -> list.close(IdAndElementId(typeId(FooKind), gpui.ElementId.Integer(1)), window, cx));
+        updateList(cx, list, (list, window, cx) -> list.close(IdAndElementId(typeId(FooKind), glaze.ElementId.Integer(1)), window, cx));
         flushDismiss(cx);
 
         final remaining = ids(list, cx);
         assertEquals(2, remaining.length);
-        assertTrue(Lambda.exists(remaining, id -> Type.enumEq(id, NotificationId.IdAndElementId(typeId(FooKind), gpui.ElementId.Integer(2)))));
+        assertTrue(Lambda.exists(remaining, id -> Type.enumEq(id, NotificationId.IdAndElementId(typeId(FooKind), glaze.ElementId.Integer(2)))));
         assertTrue(Lambda.exists(remaining, id -> Type.enumEq(id, NotificationId.Id(typeId(FooKind)))));
     }
 
@@ -1210,7 +1210,7 @@ class ComponentModalsTest extends TestCase {
         app.update(cx -> {
             Component.init(cx);
             for (shortcut in ['cmd-q', 'cmd-w', 'alt-f4']) {
-                assertEquals(0, cx.allBindingsForInput([gpui.Keystroke.parse(shortcut)]).length, '$shortcut must remain an application-owned binding');
+                assertEquals(0, cx.allBindingsForInput([glaze.Keystroke.parse(shortcut)]).length, '$shortcut must remain an application-owned binding');
             }
         });
     }
@@ -1515,7 +1515,7 @@ private class CachedContentHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return div().sizeFull().child(content.cached(new gpui.StyleBuilder().sizeFull().style()));
+        return div().sizeFull().child(content.cached(new glaze.StyleBuilder().sizeFull().style()));
     }
 
 }
@@ -1543,25 +1543,25 @@ private class Workspace extends Model implements Render {
             .flexCol()
             .gap4()
             .child(div().id('name').h(px(30.)).trackFocus(name))
-            .child(new BoundsProbe('edit', new gpui.component.button.Button('edit')
+            .child(new BoundsProbe('edit', new glaze.kit.button.Button('edit')
                 .label('Edit')
                 .onClick((_, window, cx) -> window.openDialog(cx, (dialog, _, _) -> dialog
                     .title('Edit profile')
                     .child('body')))))
-            .child(new BoundsProbe('inspect', new gpui.component.button.Button('inspect')
+            .child(new BoundsProbe('inspect', new glaze.kit.button.Button('inspect')
                 .label('Inspect')
                 .onClick((_, window, cx) -> window.openSheet(cx, (sheet, _, _) -> sheet.title('Inspector').child('Details')))))
-            .child(new BoundsProbe('notify', new gpui.component.button.Button('notify')
+            .child(new BoundsProbe('notify', new glaze.kit.button.Button('notify')
                 .label('Notify')
                 .onClick((_, window, cx) -> window.pushNotification(new Notification().message('Updated').autohide(true), cx))))
-            .child(new BoundsProbe('open', new gpui.component.button.Button('open')
+            .child(new BoundsProbe('open', new glaze.kit.button.Button('open')
                 .label('Open')
                 .onClick((_, window, cx) -> window.openDialog(cx, (dialog, _, _) -> dialog
                     .title('Stolen focus')
-                    .footer(new gpui.component.dialog.DialogFooter()
-                        .child(new BoundsProbe('footer-close', new gpui.component.dialog.DialogFooter.DialogClose().trigger(button -> button.label('Cancel'))))
-                        .child(new BoundsProbe('ok', new gpui.component.dialog.DialogFooter.DialogAction().child(new gpui.component.button.Button('ok').label('OK')))))))))
-            .child(new BoundsProbe('open-alert', new gpui.component.button.Button('open-alert')
+                    .footer(new glaze.kit.dialog.DialogFooter()
+                        .child(new BoundsProbe('footer-close', new glaze.kit.dialog.DialogFooter.DialogClose().trigger(button -> button.label('Cancel'))))
+                        .child(new BoundsProbe('ok', new glaze.kit.dialog.DialogFooter.DialogAction().child(new glaze.kit.button.Button('ok').label('OK')))))))))
+            .child(new BoundsProbe('open-alert', new glaze.kit.button.Button('open-alert')
                 .label('Alert')
                 .onClick((_, window, cx) -> window.openAlertDialog(cx, (dialog, _, _) -> dialog.title('Stolen focus').confirm()))));
     }

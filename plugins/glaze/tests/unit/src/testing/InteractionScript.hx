@@ -1,26 +1,26 @@
 package testing;
 
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.PlatformInput;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.PlatformInput;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.Window;
 
 /**
  * Replays the scripts of the interaction behaviours of the reference harness
@@ -33,7 +33,7 @@ import gpui.Window;
  *    dispatcher until parked, refresh and draw, run until parked, then run the
  *    state hook.
  *
- * Like GPUI's `GpuiMode::Test`, the app draws every dirty window when its
+ * Like GPUI's `GlazeMode::Test`, the app draws every dirty window when its
  * effect queue is flushed (`App.onEffectsFlushed`).
  */
 class InteractionScript {

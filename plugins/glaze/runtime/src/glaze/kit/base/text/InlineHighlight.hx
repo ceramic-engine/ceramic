@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Edges;
-import gpui.FontFeatures;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.StyleRefinement;
-import gpui.TextRun;
-import gpui.TextStyle;
+import glaze.Edges;
+import glaze.FontFeatures;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.StyleRefinement;
+import glaze.TextRun;
+import glaze.TextStyle;
 
-using gpui.AbsoluteLengthTools;
-using gpui.DefiniteLengthTools;
+using glaze.AbsoluteLengthTools;
+using glaze.DefiniteLengthTools;
 
 /**
  * The style applied to one range of inline text.
@@ -29,17 +29,17 @@ using gpui.DefiniteLengthTools;
  */
 class InlineHighlight {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var style:HighlightStyle;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var fontFamily:Null<String> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var fontSizeScale:Null<Float> = null;
 
     /** Typography and box refinements for an inline code span. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var codeStyle:Null<StyleRefinement> = null;
 
     public function new(?style:HighlightStyle, ?fontFamily:String, ?fontSizeScale:Float, ?codeStyle:StyleRefinement) {
@@ -68,7 +68,7 @@ class InlineHighlight {
             && (codeStyle == null ? other.codeStyle == null : codeStyle.equals(other.codeStyle));
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function fontSize(body:Pixels, remSize:Pixels):Pixels {
         if (codeStyle != null && codeStyle.text != null && codeStyle.text.fontSize != null) {
             final size:Float = codeStyle.text.fontSize.toPixels(remSize);
@@ -79,7 +79,7 @@ class InlineHighlight {
     }
 
     /** Insets used by shaping, wrapping, painting, and table measurement alike. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function codeInsets(fontSize:Pixels, remSize:Pixels):Edges {
         if (fontSizeScale == null) {
             return new Edges();
@@ -90,9 +90,9 @@ class InlineHighlight {
         var right:Float = InlineFlow.INLINE_CODE_PADDING;
         final style = codeStyle;
         if (style != null) {
-            inline function inset(current:Float, padding:Null<gpui.DefiniteLength>, border:Null<gpui.AbsoluteLength>):Float {
+            inline function inset(current:Float, padding:Null<glaze.DefiniteLength>, border:Null<glaze.AbsoluteLength>):Float {
                 if (padding != null) {
-                    current = Math.max(padding.toPixels(gpui.AbsoluteLength.Pixels(fontSize), remSize), 0);
+                    current = Math.max(padding.toPixels(glaze.AbsoluteLength.Pixels(fontSize), remSize), 0);
                 }
                 if (border != null) {
                     current += Math.max(border.toPixels(remSize), 0);
@@ -108,7 +108,7 @@ class InlineHighlight {
     }
 
     /** Layers `other` over this one, the way `HighlightStyle.highlight` does. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function highlight(other:InlineHighlight):InlineHighlight {
         final result = new InlineHighlight(style.highlight(other.style), fontFamily, fontSizeScale, codeStyle);
         if (other.fontFamily != null) {

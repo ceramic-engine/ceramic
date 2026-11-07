@@ -7,11 +7,11 @@
 // licensed under MIT OR Apache-2.0 (used here under MIT). euclid: Copyright
 // (c) 2013 The Servo Project Developers, licensed under MIT OR Apache-2.0
 // (used here under MIT).
-package gpui;
+package glaze;
 
-import gpui.Path.FillOptions;
-import gpui.Path.StrokeOptions;
-import gpui.PathTessellator.LyonPath;
+import glaze.Path.FillOptions;
+import glaze.Path.StrokeOptions;
+import glaze.PathTessellator.LyonPath;
 
 /**
  * Style of a path built by `PathBuilder`.

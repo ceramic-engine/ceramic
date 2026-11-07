@@ -2,9 +2,9 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
-import gpui.util.MathUtil;
+import glaze.util.MathUtil;
 
 /**
  * Methods of `AbsoluteLength`.
@@ -36,7 +36,7 @@ class AbsoluteLengthTools {
      * Converts to `Pixels` based on a given `remSize`.
      */
     @:noDebug
-    public static function toPixels(self:AbsoluteLength, remSize:gpui.Pixels):gpui.Pixels {
+    public static function toPixels(self:AbsoluteLength, remSize:glaze.Pixels):glaze.Pixels {
 
         return switch self {
             case Pixels(pixels): pixels;
@@ -48,7 +48,7 @@ class AbsoluteLengthTools {
     /**
      * Converts to `Rems` based on a given `remSize`.
      */
-    public static function toRems(self:AbsoluteLength, remSize:gpui.Pixels):gpui.Rems {
+    public static function toRems(self:AbsoluteLength, remSize:glaze.Pixels):glaze.Rems {
 
         return switch self {
             case Pixels(pixels): (pixels:Float) / (remSize:Float);
@@ -131,9 +131,9 @@ class AbsoluteLengthTools {
      */
     public static function tryParse(value:String):Null<AbsoluteLength> {
 
-        final pixels = gpui.Pixels.tryParse(value);
+        final pixels = glaze.Pixels.tryParse(value);
         if (pixels != null) return AbsoluteLength.Pixels(pixels);
-        final rems = gpui.Rems.tryParse(value);
+        final rems = glaze.Rems.tryParse(value);
         if (rems != null) return AbsoluteLength.Rems(rems);
         return null;
 

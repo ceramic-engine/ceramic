@@ -2,18 +2,18 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-022 (a panel laid out at PANEL_MIN_SIZE does not notify every frame). See DEVIATIONS.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
-import gpui.util.MathUtil;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * State for a `ResizablePanel`.
@@ -29,25 +29,25 @@ class ResizableState extends Model {
     /**
      * The `axis` will sync to actual axis of the ResizablePanelGroup in use.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     var axis:Axis = Horizontal;
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     var panels:Array<ResizablePanelState> = [];
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     var sizesValue:Array<Float> = [];
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     var resizingPanelIx:Null<Int> = null;
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     var bounds:Bounds = new Bounds();
 
     /**
      * Bumped by every change, read by the group that renders the state.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     @observe var changes:Int = 0;
 
     public function new() {
@@ -58,7 +58,7 @@ class ResizableState extends Model {
      * Rust `cx.notify()` on the state: notifies its observers and the views
      * that rendered it.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function notifyChanged(cx:Context<ResizableState>):Void {
         changes = changes + 1;
         cx.notify();
@@ -140,7 +140,7 @@ class ResizableState extends Model {
      * decided how the space divides. Slots the caller left unconstrained keep
      * whatever they had.
      */
-    @:allow(gpui.base, gpui.component, tests)
+    @:allow(glaze.kit.base, glaze.kit, tests)
     function adoptSizes(sizes:Array<Null<Pixels>>, cx:Context<ResizableState>):Void {
         var changed = false;
         for (ix in 0...sizes.length) {
@@ -173,14 +173,14 @@ class ResizableState extends Model {
      * `Pixels` arithmetic is `f32` in GPUI: every result is rounded like one.
      */
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static inline function sameOptionalSize(a:Null<Pixels>, b:Null<Pixels>):Bool {
         return a == null ? b == null : (b != null && (a : Float) == (b : Float));
     }
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function syncPanelsCount(axis:Axis, panelsCount:Int, cx:Context<ResizableState>):Void {
         var changed = this.axis != axis;
         this.axis = axis;
@@ -212,7 +212,7 @@ class ResizableState extends Model {
      * updating the state for the same bounds would mark it, and every view
      * that reads it, changed on every frame.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function panelSizeChanges(panelIx:Int, bounds:Bounds, sizeRange:PixelsRange, fixed:Bool):Bool {
         if (panelIx >= panels.length) {
             return true;
@@ -230,7 +230,7 @@ class ResizableState extends Model {
             || panel.fixed != fixed;
     }
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function updatePanelSize(panelIx:Int, bounds:Bounds, sizeRange:PixelsRange, fixed:Bool, cx:Context<ResizableState>):Void {
         panels[panelIx].fixed = fixed;
         final size:Float = bounds.size.along(axis);
@@ -286,7 +286,7 @@ class ResizableState extends Model {
         return bounds.size.along(axis);
     }
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function doneResizing(cx:Context<ResizableState>):Void {
         resizingPanelIx = null;
         cx.emit(ResizablePanelEvent.Resized);
@@ -313,7 +313,7 @@ class ResizableState extends Model {
      * This is the worker behind drag interactions and the public
      * `resizePanel` API.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function resizePanelAtHandle(ix:Int, size:Pixels, window:Window, cx:Context<ResizableState>):Void {
         final oldSizes = sizesValue.copy();
         final size:Float = size;
@@ -393,7 +393,7 @@ class ResizableState extends Model {
      *
      * When the container size changes, the panels should take up the same percentage as they did before.
      */
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function adjustToContainerSize(cx:Context<ResizableState>):Void {
         if ((containerSize() : Float) == 0.) {
             return;
@@ -445,7 +445,7 @@ class ResizableState extends Model {
 /**
  * The state of one panel of a `ResizableState`.
  */
-@:allow(gpui.base.resizable, tests)
+@:allow(glaze.kit.base.resizable, tests)
 class ResizablePanelState {
 
     public var size:Null<Pixels> = null;

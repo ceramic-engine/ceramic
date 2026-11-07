@@ -5,46 +5,46 @@
 // inspector (crates/component/src/inspector.rs) reads and writes them with serde_json.
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.inspector;
+package glaze.kit.inspector;
 
-import gpui.AbsoluteLength;
-import gpui.AlignContent;
-import gpui.AlignItems;
-import gpui.Background;
-import gpui.BackgroundTag;
-import gpui.BoxShadow;
-import gpui.ColorSpace;
-import gpui.CursorStyle;
-import gpui.DefiniteLength;
-import gpui.Display;
-import gpui.FlexDirection;
-import gpui.FlexWrap;
-import gpui.FontFallbacks;
-import gpui.FontFeatures;
-import gpui.FontStyle;
-import gpui.GridLocation;
-import gpui.GridPlacement;
-import gpui.GridTemplate;
-import gpui.GridTemplateMinSize;
-import gpui.Hsla;
-import gpui.Length;
-import gpui.LinearColorStop;
-import gpui.Overflow;
-import gpui.Point;
-import gpui.Position;
-import gpui.SpringMath;
-import gpui.StrikethroughStyle;
-import gpui.StyleRefinement;
-import gpui.TextAlign;
-import gpui.TextOverflow;
-import gpui.TextStyleRefinement;
-import gpui.UnderlineStyle;
-import gpui.Visibility;
-import gpui.WhiteSpace;
-import gpui.base.dock.JsonValue;
-import gpui.component.inspector.SerdeJson;
+import glaze.AbsoluteLength;
+import glaze.AlignContent;
+import glaze.AlignItems;
+import glaze.Background;
+import glaze.BackgroundTag;
+import glaze.BoxShadow;
+import glaze.ColorSpace;
+import glaze.CursorStyle;
+import glaze.DefiniteLength;
+import glaze.Display;
+import glaze.FlexDirection;
+import glaze.FlexWrap;
+import glaze.FontFallbacks;
+import glaze.FontFeatures;
+import glaze.FontStyle;
+import glaze.GridLocation;
+import glaze.GridPlacement;
+import glaze.GridTemplate;
+import glaze.GridTemplateMinSize;
+import glaze.Hsla;
+import glaze.Length;
+import glaze.LinearColorStop;
+import glaze.Overflow;
+import glaze.Point;
+import glaze.Position;
+import glaze.SpringMath;
+import glaze.StrikethroughStyle;
+import glaze.StyleRefinement;
+import glaze.TextAlign;
+import glaze.TextOverflow;
+import glaze.TextStyleRefinement;
+import glaze.UnderlineStyle;
+import glaze.Visibility;
+import glaze.WhiteSpace;
+import glaze.kit.base.dock.JsonValue;
+import glaze.kit.inspector.SerdeJson;
 
-using gpui.base.dock.JsonValue.JsonValueTools;
+using glaze.kit.base.dock.JsonValue.JsonValueTools;
 
 /**
  * `serde_json::to_string_pretty(&StyleRefinement)` and
@@ -141,7 +141,7 @@ class StyleJson {
         if (style.has(StyleRefinement.FLEX_SHRINK)) e.push({key: 'flex_shrink', value: JFloat32(style.flexShrink)});
         if (style.background != null) e.push({key: 'background', value: obj([{key: 'Color', value: backgroundValue(style.background)}])});
         if (style.borderColor != null) e.push({key: 'border_color', value: hslaJson(style.borderColor)});
-        if (style.has(StyleRefinement.BORDER_STYLE)) e.push({key: 'border_style', value: JString(style.borderStyle == gpui.scene.BorderStyle.Dashed ? 'Dashed' : 'Solid')});
+        if (style.has(StyleRefinement.BORDER_STYLE)) e.push({key: 'border_style', value: JString(style.borderStyle == glaze.scene.BorderStyle.Dashed ? 'Dashed' : 'Solid')});
         final corners = [];
         if (style.cornerRadiusTopLeft != null) corners.push({key: 'top_left', value: absoluteJson(style.cornerRadiusTopLeft)});
         if (style.cornerRadiusTopRight != null) corners.push({key: 'top_right', value: absoluteJson(style.cornerRadiusTopRight)});
@@ -726,7 +726,7 @@ class StyleJson {
         r.eatChar();
         var err:Null<SerdeError> = null;
         try {
-            final first = new gpui.util.Ref(true);
+            final first = new glaze.util.Ref(true);
             while (true) {
                 final key = nextKey(r, first);
                 if (key == null) break;
@@ -784,7 +784,7 @@ class StyleJson {
      * `has_next_key` and the key string of serde_json's `MapAccess`, or
      * `null` at the end of the map.
      */
-    static function nextKey(r:SerdeReader, first:gpui.util.Ref<Bool>):Null<String> {
+    static function nextKey(r:SerdeReader, first:glaze.util.Ref<Bool>):Null<String> {
         final peek = r.parseWhitespace();
         if (peek == -1) {
             throw r.peekError(SerdeReader.EOF_WHILE_PARSING_OBJECT);
@@ -815,7 +815,7 @@ class StyleJson {
     }
 
     /** `has_next_element` of serde_json's `SeqAccess` */
-    static function hasNextElement(r:SerdeReader, first:gpui.util.Ref<Bool>):Bool {
+    static function hasNextElement(r:SerdeReader, first:glaze.util.Ref<Bool>):Bool {
         final peek = r.parseWhitespace();
         if (peek == -1) {
             throw r.peekError(SerdeReader.EOF_WHILE_PARSING_LIST);
@@ -855,7 +855,7 @@ class StyleJson {
         if (peek == '['.code) {
             r.eatChar();
             try {
-                final first = new gpui.util.Ref(true);
+                final first = new glaze.util.Ref(true);
                 for (i in 0...fields.length) {
                     if (hasNextElement(r, first)) {
                         onField(fields[i]);
@@ -879,7 +879,7 @@ class StyleJson {
             r.eatChar();
             try {
                 final seen:Array<String> = [];
-                final first = new gpui.util.Ref(true);
+                final first = new glaze.util.Ref(true);
                 while (true) {
                     final key = nextKey(r, first);
                     if (key == null) break;
@@ -945,7 +945,7 @@ class StyleJson {
         final result:Array<T> = [];
         var err:Null<SerdeError> = null;
         try {
-            final first = new gpui.util.Ref(true);
+            final first = new glaze.util.Ref(true);
             while (hasNextElement(r, first)) {
                 result.push(element());
             }
@@ -976,7 +976,7 @@ class StyleJson {
         final result:Array<T> = [];
         var err:Null<SerdeError> = null;
         try {
-            final first = new gpui.util.Ref(true);
+            final first = new glaze.util.Ref(true);
             for (i in 0...2) {
                 if (!hasNextElement(r, first)) {
                     throw SerdeError.invalidLength(i, 'an array of length 2');

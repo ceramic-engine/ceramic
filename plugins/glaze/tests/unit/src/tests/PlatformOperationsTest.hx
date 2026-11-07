@@ -5,28 +5,28 @@
 // Industries, Apache-2.0). See NOTICE.md.
 package tests;
 
-import gpui.AnyTask;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.GpuiInput;
-import gpui.IntoElement;
-import gpui.Menu;
-import gpui.Model;
-import gpui.PathPromptOptions;
-import gpui.Render;
-import gpui.Task;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.Unit;
-import gpui.Window;
-import gpui.platform.CeramicPlatformOperations;
+import glaze.AnyTask;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.GlazeInput;
+import glaze.IntoElement;
+import glaze.Menu;
+import glaze.Model;
+import glaze.PathPromptOptions;
+import glaze.Render;
+import glaze.Task;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.Unit;
+import glaze.Window;
+import glaze.platform.CeramicPlatformOperations;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.Menu.MenuItemTools;
+using glaze.Menu.MenuItemTools;
 
 /**
  * `App.quit` / `onAppQuit` / `shutdown`, `App.activate`, the path prompts,
@@ -55,7 +55,7 @@ class PlatformOperationsTest extends TestCase {
         ceramic.Dialogs.handler = null;
         #end
         for (cx in contexts) {
-            GpuiInput.unbind(cx.window);
+            GlazeInput.unbind(cx.window);
             cx.destroy();
         }
         contexts.resize(0);
@@ -272,7 +272,7 @@ class PlatformOperationsTest extends TestCase {
     function testActivateWindowMovesTheKeyboardToIt() {
         final first = open();
         final second = open();
-        GpuiInput.activateWindow(first);
+        GlazeInput.activateWindow(first);
         assertTrue(first.isWindowActive());
 
         final activations:Array<String> = [];
@@ -285,7 +285,7 @@ class PlatformOperationsTest extends TestCase {
         assertTrue(second.isWindowActive());
         assertFalse(first.isWindowActive());
         assertEquals('first false', activations.join(';'));
-        assertEquals(second, @:privateAccess GpuiInput.instance.activeWindow);
+        assertEquals(second, @:privateAccess GlazeInput.instance.activeWindow);
     }
 
     function testSystemFocusDeactivatesAndReactivatesTheWindows() {
@@ -322,7 +322,7 @@ class PlatformOperationsTest extends TestCase {
     function open():Window {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<Blank>) -> new Blank(), 200, 100, 1);
         contexts.push(opened.cx);
-        GpuiInput.bind(opened.cx.window);
+        GlazeInput.bind(opened.cx.window);
         return opened.cx.window;
     }
 

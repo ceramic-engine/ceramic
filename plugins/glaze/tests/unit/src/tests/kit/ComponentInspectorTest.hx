@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AbsoluteLength;
-import gpui.DefiniteLength;
-import gpui.Length;
-import gpui.StyleRefinement;
-import gpui.component.inspector.Inspector;
-import gpui.component.inspector.InspectorStyleMethods;
+import glaze.AbsoluteLength;
+import glaze.DefiniteLength;
+import glaze.Length;
+import glaze.StyleRefinement;
+import glaze.kit.inspector.Inspector;
+import glaze.kit.inspector.InspectorStyleMethods;
 import testing.TestCase;
 
 /**

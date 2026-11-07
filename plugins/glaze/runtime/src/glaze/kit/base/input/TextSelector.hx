@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
+import glaze.Range;
 import ropey.Rope;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * Word and line ranges of a rope, for double and triple clicks.
@@ -37,7 +37,7 @@ class TextSelector {
             return null;
         }
 
-        final end = offset + gpui.util.Utf8.codePointLength(char);
+        final end = offset + glaze.util.Utf8.codePointLength(char);
         final prevChars = text.charsAt(offset).reversed();
         final nextChars = text.charsAt(end);
         return TextBoundary.wordRangeFromChars(offset, char, () -> prevChars.next(), () -> nextChars.next());

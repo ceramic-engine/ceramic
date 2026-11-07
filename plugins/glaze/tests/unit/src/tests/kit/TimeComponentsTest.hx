@@ -5,49 +5,49 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Calendar;
-import gpui.base.Calendar.CalendarDate;
-import gpui.base.Calendar.CalendarEvent;
-import gpui.base.Calendar.CalendarItemKind;
-import gpui.base.Calendar.CalendarState;
-import gpui.base.Calendar.CalendarView;
-import gpui.base.Calendar.Matcher;
-import gpui.base.TimeField.HourCycle;
-import gpui.base.TimeField.SegmentEditor;
-import gpui.base.TimeField.TimeFieldState;
-import gpui.base.TimeField.TimePrecision;
-import gpui.base.TimeField.TimeSegment;
-import gpui.base.chrono.Local;
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.NaiveDateTime;
-import gpui.base.chrono.NaiveTime;
-import gpui.base.chrono.Weekday;
-import gpui.component.Component;
-import gpui.component.time.DatePicker.DatePickerEvent;
-import gpui.component.time.DatePicker.DatePickerState;
-import gpui.component.time.DatePicker.DateRangePreset;
-import gpui.component.time.DatePicker.DateTime;
-import gpui.component.time.TimeField;
-import gpui.component.time.TimeUtils;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Calendar;
+import glaze.kit.base.Calendar.CalendarDate;
+import glaze.kit.base.Calendar.CalendarEvent;
+import glaze.kit.base.Calendar.CalendarItemKind;
+import glaze.kit.base.Calendar.CalendarState;
+import glaze.kit.base.Calendar.CalendarView;
+import glaze.kit.base.Calendar.Matcher;
+import glaze.kit.base.TimeField.HourCycle;
+import glaze.kit.base.TimeField.SegmentEditor;
+import glaze.kit.base.TimeField.TimeFieldState;
+import glaze.kit.base.TimeField.TimePrecision;
+import glaze.kit.base.TimeField.TimeSegment;
+import glaze.kit.base.chrono.Local;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.NaiveDateTime;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.base.chrono.Weekday;
+import glaze.kit.Component;
+import glaze.kit.time.DatePicker.DatePickerEvent;
+import glaze.kit.time.DatePicker.DatePickerState;
+import glaze.kit.time.DatePicker.DateRangePreset;
+import glaze.kit.time.DatePicker.DateTime;
+import glaze.kit.time.TimeField;
+import glaze.kit.time.TimeUtils;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Calendar.CalendarDateTools;
-using gpui.base.Calendar.MatcherTools;
-using gpui.component.time.DatePicker.DateTimeTools;
+using glaze.kit.base.Calendar.CalendarDateTools;
+using glaze.kit.base.Calendar.MatcherTools;
+using glaze.kit.time.DatePicker.DateTimeTools;
 
 /**
  * The `#[cfg(test)]` tests of the time components (calendar, time field,
@@ -56,7 +56,7 @@ using gpui.component.time.DatePicker.DateTimeTools;
  * has no UI queries by element id; the clicks themselves are replayed by
  * the `kit-date-picker-*` golden scripts against the original).
  *
- * The calendar's "today" comes from `gpui.base.chrono.Local`, fixed at
+ * The calendar's "today" comes from `glaze.kit.base.chrono.Local`, fixed at
  * 2026-10-30 12:00 for every test.
  *
  * Not ported: `calendar_items_expose_names_in_every_view` checks accesskit
@@ -120,12 +120,12 @@ class TimeComponentsTest extends TestCase {
     function testNaiveDateArithmeticAndFormat() {
         final d = ymd(2024, 2, 29);
         assertEquals('2024-02-29', d.toString());
-        assertEquals(gpui.base.chrono.Weekday.Thu, d.weekday());
+        assertEquals(glaze.kit.base.chrono.Weekday.Thu, d.weekday());
         assertEquals('2024-03-01', d.addDays(1).toString());
         assertEquals(366, ymd(2025, 1, 1).numDaysSince(ymd(2024, 1, 1)));
         assertNull(NaiveDate.fromYmdOpt(2023, 2, 29));
         assertEquals('1970-01-01', NaiveDate.fromDaysSinceEpoch(0).toString());
-        assertEquals(gpui.base.chrono.Weekday.Wed, ymd(1969, 12, 31).weekday());
+        assertEquals(glaze.kit.base.chrono.Weekday.Wed, ymd(1969, 12, 31).weekday());
         assertEquals('2026/09/15', ymd(2026, 9, 15).format('%Y/%m/%d'));
         assertEquals('Tue Sep 15 2026, day 258', ymd(2026, 9, 15).format('%a %b %d %Y, day %j'));
         assertTrue(ymd(2026, 9, 15) == NaiveDate.parse('2026-09-15'));
@@ -305,9 +305,9 @@ class TimeComponentsTest extends TestCase {
     }
 
     function testOnlyMonthOptionsUseCompactText() {
-        assertTrue(@:privateAccess gpui.component.time.Calendar.usesCompactText(CalendarItemKind.Month));
-        assertFalse(@:privateAccess gpui.component.time.Calendar.usesCompactText(CalendarItemKind.MonthToggle));
-        assertFalse(@:privateAccess gpui.component.time.Calendar.usesCompactText(CalendarItemKind.Day));
+        assertTrue(@:privateAccess glaze.kit.time.Calendar.usesCompactText(CalendarItemKind.Month));
+        assertFalse(@:privateAccess glaze.kit.time.Calendar.usesCompactText(CalendarItemKind.MonthToggle));
+        assertFalse(@:privateAccess glaze.kit.time.Calendar.usesCompactText(CalendarItemKind.Day));
     }
 
     /// component time utils
@@ -333,28 +333,28 @@ class TimeComponentsTest extends TestCase {
             assertEquals(expected.join('\n'), out.join('\n'), null, pos);
         }
 
-        assertCase(ymd(2024, 8, 1), gpui.base.chrono.Weekday.Sun, [
+        assertCase(ymd(2024, 8, 1), glaze.kit.base.chrono.Weekday.Sun, [
             "7-28|7-29|7-30|7-31| 1| 2| 3",
             " 4| 5| 6| 7| 8| 9|10",
             "11|12|13|14|15|16|17",
             "18|19|20|21|22|23|24",
             "25|26|27|28|29|30|31",
         ]);
-        assertCase(ymd(2025, 1, 1), gpui.base.chrono.Weekday.Sun, [
+        assertCase(ymd(2025, 1, 1), glaze.kit.base.chrono.Weekday.Sun, [
             "2024-12-29|2024-12-30|2024-12-31| 1| 2| 3| 4",
             " 5| 6| 7| 8| 9|10|11",
             "12|13|14|15|16|17|18",
             "19|20|21|22|23|24|25",
             "26|27|28|29|30|31|2-1",
         ]);
-        assertCase(ymd(2024, 2, 1), gpui.base.chrono.Weekday.Sun, [
+        assertCase(ymd(2024, 2, 1), glaze.kit.base.chrono.Weekday.Sun, [
             "1-28|1-29|1-30|1-31| 1| 2| 3",
             " 4| 5| 6| 7| 8| 9|10",
             "11|12|13|14|15|16|17",
             "18|19|20|21|22|23|24",
             "25|26|27|28|29|3-1|3-2",
         ]);
-        assertCase(ymd(2023, 2, 20), gpui.base.chrono.Weekday.Sun, [
+        assertCase(ymd(2023, 2, 20), glaze.kit.base.chrono.Weekday.Sun, [
             "1-29|1-30|1-31| 1| 2| 3| 4",
             " 5| 6| 7| 8| 9|10|11",
             "12|13|14|15|16|17|18",
@@ -363,7 +363,7 @@ class TimeComponentsTest extends TestCase {
         ]);
         // Monday-first week: Feb 2023 starts on a Wednesday, so the grid
         // shifts to start on Monday (column 0 = Mon 30 Jan).
-        assertCase(ymd(2023, 2, 1), gpui.base.chrono.Weekday.Mon, [
+        assertCase(ymd(2023, 2, 1), glaze.kit.base.chrono.Weekday.Mon, [
             "1-30|1-31| 1| 2| 3| 4| 5",
             " 6| 7| 8| 9|10|11|12",
             "13|14|15|16|17|18|19",
@@ -508,7 +508,7 @@ class TimeComponentsTest extends TestCase {
             return div();
         });
         final field = @:privateAccess new TimeField(state).withId('start').large().disabled(true).invalid(true).w(px(120.));
-        assertTrue(Type.enumEq((field.id : gpui.ElementId), gpui.ElementId.Name('start')));
+        assertTrue(Type.enumEq((field.id : glaze.ElementId), glaze.ElementId.Name('start')));
         assertTrue(field.size.match(Large));
         assertTrue(field.disabledValue);
         assertTrue(field.invalidValue);
@@ -516,7 +516,7 @@ class TimeComponentsTest extends TestCase {
 
     function testPressingOutsideTheSegmentsFocusesTheFirstSegment() {
         var state:Entity<TimeFieldState> = null;
-        final segments:Array<gpui.Bounds> = [];
+        final segments:Array<glaze.Bounds> = [];
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<TimeFieldState>) -> new TimeFieldState(window, c));
             return div().child(new TimeField(state).withId('time').w(px(200.)));
@@ -549,7 +549,7 @@ class TimeComponentsTest extends TestCase {
                     case Change(value): changes.push(value);
                 });
             }
-            return div().sizeFull().p4().child(new gpui.component.time.DatePicker(state).numberOfMonths(2));
+            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state).numberOfMonths(2));
         }, 800, 600);
         return state;
     }
@@ -640,7 +640,7 @@ class TimeComponentsTest extends TestCase {
         var state:Entity<DatePickerState> = null;
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<DatePickerState>) -> new DatePickerState(window, c));
-            return div().sizeFull().p4().child(new gpui.component.time.DatePicker(state)
+            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state)
                 .cleanable(true)
                 .disabled(true)
                 .presets([DateRangePreset.single('Release day', NaiveDate.parse('2026-09-15'))]));
@@ -656,7 +656,7 @@ class TimeComponentsTest extends TestCase {
         var state:Entity<DatePickerState> = null;
         final cx = open((window, cx) -> {
             if (state == null) state = cx.newEntity((c:Context<DatePickerState>) -> new DatePickerState(window, c));
-            return div().sizeFull().p4().child(new gpui.component.time.DatePicker(state).cleanable(true));
+            return div().sizeFull().p4().child(new glaze.kit.time.DatePicker(state).cleanable(true));
         }, 640, 600);
         cx.simulateClick(new Point(100., 32.));
         assertTrue(state.read(app).isOpen());

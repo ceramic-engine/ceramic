@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/text_system/font_features.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The OpenType features that can be configured for a given font.
@@ -85,7 +85,7 @@ class FontFeatures {
         if (tag.length != 4)
             return false;
         for (i in 0...4) {
-            if (!gpui.util.Utf8.isAsciiAlphanumeric(StringTools.fastCodeAt(tag, i)))
+            if (!glaze.util.Utf8.isAsciiAlphanumeric(StringTools.fastCodeAt(tag, i)))
                 return false;
         }
         return true;

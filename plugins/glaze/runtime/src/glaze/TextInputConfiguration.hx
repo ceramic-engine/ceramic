@@ -2,7 +2,7 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
-package gpui;
+package glaze;
 
 /**
  * Platform text-assistance preferences for the focused text region.

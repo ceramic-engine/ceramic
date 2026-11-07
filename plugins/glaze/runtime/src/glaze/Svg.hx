@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/elements/svg.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
@@ -35,14 +35,14 @@ class Svg extends Element implements Styled {
 
     static final externalFiles:Map<String, Bytes> = new Map();
 
-    public function new(#if gpui_inspector ?pos:haxe.PosInfos #end) {
-        #if gpui_count_allocations gpui.util.AllocationCounters.svgs++; #end
-        #if gpui_inspector
+    public function new(#if glaze_inspector ?pos:haxe.PosInfos #end) {
+        #if glaze_count_allocations glaze.util.AllocationCounters.svgs++; #end
+        #if glaze_inspector
         interactivity.sourceLocation = pos;
         #end
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     override function sourceLocation():Null<haxe.PosInfos> {
         return interactivity.sourceLocation;
     }
@@ -166,13 +166,13 @@ class Svg extends Element implements Styled {
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         // `interactivity.requestLayout(..., (style, window, cx) -> window.requestLayout(style, null, cx))`
         // without the closure (whose Int result is boxed on hxcpp)
-        final style = interactivity.requestLayoutStyle(id, #if gpui_inspector inspectorId, #end window, cx);
+        final style = interactivity.requestLayoutStyle(id, #if glaze_inspector inspectorId, #end window, cx);
         return window.requestLayout(style, null, cx);
     }
 
     public function prepaint(id:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {
         // `interactivity.prepaint(.., (_, _, hitbox, _, _) -> hitbox)` without the closure
-        interactivity.prepaintBegin(id, #if gpui_inspector inspectorId, #end bounds, bounds.size, window, cx);
+        interactivity.prepaintBegin(id, #if glaze_inspector inspectorId, #end bounds, bounds.size, window, cx);
         hitbox = interactivity.prepaintHitbox;
         interactivity.prepaintEnd(window);
     }
@@ -181,7 +181,7 @@ class Svg extends Element implements Styled {
         final hitbox = this.hitbox;
         this.hitbox = null;
         // `interactivity.paint(.., (style, window, cx) -> ..)` without the closure
-        final style = interactivity.paintBegin(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+        final style = interactivity.paintBegin(id, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx);
         if (style == null)
             return;
         paintContent(style, bounds, window, cx);

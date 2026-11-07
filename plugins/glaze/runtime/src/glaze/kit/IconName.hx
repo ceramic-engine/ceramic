@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/icon.rs (IconName), crates/assets/src/icon.rs (IconNamed, RenderOnce for IconName)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
+import glaze.App;
+import glaze.AppContext;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
 
 /**
  * Default component icon names: the 106 icons of gpui-kit's
@@ -26,7 +26,7 @@ import gpui.Window;
  * On targets without synchronous file access (the web), call
  * `IconName.preload(done)` before rendering icons.
  */
-@:build(gpui.component.IconNameMacro.build())
+@:build(glaze.kit.IconNameMacro.build())
 enum abstract IconName(String) to String {
 
     /**
@@ -39,7 +39,7 @@ enum abstract IconName(String) to String {
     /**
      * Rust `IconName::view`: the icon as an `Entity<Icon>`.
      */
-    public function view(cx:AppContext):gpui.Entity<Icon.IconView> {
+    public function view(cx:AppContext):glaze.Entity<Icon.IconView> {
         return Icon.build(this).view(cx);
     }
 

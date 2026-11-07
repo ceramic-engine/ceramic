@@ -2,14 +2,14 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * A length that can be defined in pixels, rems, percent of parent, or auto.
  *
  * Methods are provided by `LengthTools` (attached with `@:using`).
  */
-@:using(gpui.LengthTools)
+@:using(glaze.LengthTools)
 enum Length {
 
     /**

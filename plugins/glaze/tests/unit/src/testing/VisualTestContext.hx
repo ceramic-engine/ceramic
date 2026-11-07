@@ -3,26 +3,26 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package testing;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.ModifiersChangedEvent;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.PlatformInput;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.ModifiersChangedEvent;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.PlatformInput;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
 
 /**
  * A window driven like GPUI's `VisualTestContext`: the app draws every dirty
- * window when its effects are flushed (`GpuiMode::Test`), simulated events go
+ * window when its effects are flushed (`GlazeMode::Test`), simulated events go
  * through `Window.dispatchEvent` and run the dispatcher until parked.
  *
  * The default window matches the test platform: 1920x1080 at scale factor 2.

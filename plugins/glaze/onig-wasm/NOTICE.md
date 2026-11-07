@@ -9,7 +9,7 @@ vscode-oniguruma is MIT licensed (LICENSE.txt, Copyright (c) Microsoft Corporati
 Oniguruma code compiled into `onig.wasm` is BSD-2-Clause (NOTICES.txt, Copyright (c) K.Kosako).
 
 These files are not Ceramic assets. They are only used by web builds of projects that set
-the `gpui_onig_wasm` define: the `ceramic gpui setup onig-wasm` task (a `begin build` hook of
+the `glaze_onig_wasm` define: the `ceramic glaze setup onig-wasm` task (a `begin build` hook of
 the plugin's ceramic.yml) copies `onig.wasm` and `vscode-oniguruma.js` into `project/web`, and
 the code highlighter loads them at startup instead of using the pure Haxe Oniguruma engine.
 Without the define, the task removes them from `project/web` and nothing of them is compiled

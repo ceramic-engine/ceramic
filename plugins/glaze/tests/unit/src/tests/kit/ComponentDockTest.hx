@@ -3,44 +3,44 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockAreaRendererBase;
-import gpui.base.dock.DockLayout;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.PanelRegistry;
-import gpui.base.dock.TabGroupContext;
-import gpui.base.dock.TabGroupRenderer;
-import gpui.base.dock.TabGroupRendererBase;
-import gpui.base.resizable.Resizable as BaseResizable;
-import gpui.component.Component;
-import gpui.component.dock.ClosePanel;
-import gpui.component.dock.DockDebugBounds;
-import gpui.component.dock.DockSkin;
-import gpui.component.dock.DockToggleEvent;
-import gpui.component.dock.PanelBase;
-import gpui.component.dock.PanelControl;
-import gpui.component.dock.PanelHandle;
-import gpui.component.dock.TabGroupSkin;
-import gpui.component.dock.ToggleZoom;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockAreaRendererBase;
+import glaze.kit.base.dock.DockLayout;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.PanelRegistry;
+import glaze.kit.base.dock.TabGroupContext;
+import glaze.kit.base.dock.TabGroupRenderer;
+import glaze.kit.base.dock.TabGroupRendererBase;
+import glaze.kit.base.resizable.Resizable as BaseResizable;
+import glaze.kit.Component;
+import glaze.kit.dock.ClosePanel;
+import glaze.kit.dock.DockDebugBounds;
+import glaze.kit.dock.DockSkin;
+import glaze.kit.dock.DockToggleEvent;
+import glaze.kit.dock.PanelBase;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.dock.PanelHandle;
+import glaze.kit.dock.TabGroupSkin;
+import glaze.kit.dock.ToggleZoom;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
+using glaze.kit.base.ElementExt;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's dock skin (`dock/mod.rs`,
@@ -53,8 +53,8 @@ using gpui.base.ElementExt;
  * exactly what it drew. `simulate_resize` is the window size given at
  * creation.
  */
-@:access(gpui.component.dock.TabGroupSkin)
-@:access(gpui.component.dock.DockSkin)
+@:access(glaze.kit.dock.TabGroupSkin)
+@:access(glaze.kit.dock.DockSkin)
 class ComponentDockTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -122,7 +122,7 @@ class ComponentDockTest extends TestCase {
      *
      * Reads both Rust export lists like the original, plus the names the
      * Haxe component package re-exports (its `typedef X =
-     * gpui.base.dock.X` modules), embedded at compile time.
+     * glaze.kit.base.dock.X` modules), embedded at compile time.
      */
     function testEveryBaseDockExportIsReachableFromHere() {
         final base = exportedNames(ComponentDockExports.baseModRs(), 'pub use ');
@@ -178,7 +178,7 @@ class ComponentDockTest extends TestCase {
 /// panel.rs
 
     function seamArea(recovered:Recovered):{area:Entity<DockArea>, cx:VisualTestContext} {
-        app.update(cx -> gpui.base.theme.Theme.globalMut(cx));
+        app.update(cx -> glaze.kit.base.theme.Theme.globalMut(cx));
         return open((window, cx) -> new DockArea('seam', null, window, cx).withRenderer(new SeamSkin(recovered)));
     }
 
@@ -418,7 +418,7 @@ class ComponentDockTest extends TestCase {
      * Draw one panel through the real `DockSkin` and report whether its tab
      * bar offered a zoom control.
      */
-    function drewZoomControl(panel:(App) -> gpui.base.dock.PanelView):Bool {
+    function drewZoomControl(panel:(App) -> glaze.kit.base.dock.PanelView):Bool {
         init();
         final s = skinned();
         s.cx.update((window, cx) -> {
@@ -560,7 +560,7 @@ class ComponentDockTest extends TestCase {
         return s.cx.update((_, cx) -> s.area.read(cx).isZoomed());
     }
 
-    static function dispatch(cx:VisualTestContext, action:gpui.Action):Void {
+    static function dispatch(cx:VisualTestContext, action:glaze.Action):Void {
         cx.update((window, cx) -> window.dispatchAction(action, cx));
         cx.runUntilParked();
     }
@@ -1006,7 +1006,7 @@ class SkinProbe extends PanelBase {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        if (heightCell == null && sizeCell == null) return new gpui.Empty();
+        if (heightCell == null && sizeCell == null) return new glaze.Empty();
         final height = heightCell;
         final size = sizeCell;
         return div().sizeFull().onPrepaint((bounds, _, _) -> {
@@ -1114,7 +1114,7 @@ private class ChromelessTabs extends TabGroupRendererBase {
     // The one hook with no default. Drawn as nothing, so the height it
     // leaves the content is the whole group.
     public function renderTabBar(group:TabGroupContext, window:Window, cx:App):AnyElement {
-        return new gpui.Empty().intoAnyElement();
+        return new glaze.Empty().intoAnyElement();
     }
 
 }
@@ -1142,7 +1142,7 @@ private class RecorderSkin extends DockAreaRendererBase {
 
 }
 
-@:access(gpui.component.dock.TabGroupSkin)
+@:access(glaze.kit.dock.TabGroupSkin)
 private class RecorderTabs extends TabGroupRendererBase {
 
     final log:Array<Bool>;
@@ -1154,7 +1154,7 @@ private class RecorderTabs extends TabGroupRendererBase {
 
     public function renderTabBar(group:TabGroupContext, window:Window, cx:App):AnyElement {
         for (ix in 0...group.panels().length) log.push(TabGroupSkin.tabDrag(group, ix, cx) != null);
-        return new gpui.Empty().intoAnyElement();
+        return new glaze.Empty().intoAnyElement();
     }
 
 }

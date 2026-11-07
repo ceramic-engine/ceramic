@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/stream_fade.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
-import gpui.base.motion.Timing;
-import gpui.base.text.StreamFadeFrame.LeafFades;
-import gpui.base.text.TextLeaf.KeyedTextLeaf;
-import gpui.base.text.TextLeaf.TextLeafTools;
+import glaze.Range;
+import glaze.kit.base.motion.Timing;
+import glaze.kit.base.text.StreamFadeFrame.LeafFades;
+import glaze.kit.base.text.TextLeaf.KeyedTextLeaf;
+import glaze.kit.base.text.TextLeaf.TextLeafTools;
 
 private class FadeSegment {
     public var range:Range;

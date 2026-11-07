@@ -3,22 +3,22 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Animation;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.SpringAnimation;
-import gpui.SpringConfig;
-import gpui.SpringPlayback;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.Animation;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.SpringAnimation;
+import glaze.SpringConfig;
+import glaze.SpringPlayback;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.InteractionScript;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 class SpringAnimationTestView extends Model implements Render {
 

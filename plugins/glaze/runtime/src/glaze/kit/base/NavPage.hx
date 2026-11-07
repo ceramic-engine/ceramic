@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/nav_stack.rs (NavPage)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Div;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.NavStackState.NavOperation;
-import gpui.base.motion.Presence.PresencePhase;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Div;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.NavStackState.NavOperation;
+import glaze.kit.base.motion.Presence.PresencePhase;
 
-import gpui.Prelude.div;
+import glaze.Prelude.div;
 
 /**
  * One mounted view of a `NavStack`, handed to the item renderer.
@@ -41,7 +41,7 @@ class NavPage implements RenderOnce implements Styled {
 
     final pageProgress:Float;
 
-    @:allow(gpui.base.NavStack)
+    @:allow(glaze.kit.base.NavStack)
     function new(view:AnyView, index:Int, phase:PresencePhase, operation:Null<NavOperation>, progress:Float) {
         this.base = div();
         this.pageView = view;

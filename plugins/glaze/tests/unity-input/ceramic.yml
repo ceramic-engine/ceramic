@@ -14,8 +14,7 @@ app:
     #   one log line per scroll event, the same on clay native and on Unity.
 
     plugins:
-        - gpui
-
+        - glaze
     libs:
 
     defines:

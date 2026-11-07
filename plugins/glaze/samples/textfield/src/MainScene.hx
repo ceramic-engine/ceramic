@@ -4,21 +4,21 @@
 package;
 
 import ceramic.Scene;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseUpEvent;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseUpEvent;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
 import textfield.TextInput;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * GPUI's input example: a text field (`textfield.TextInput`, built only on
@@ -162,7 +162,7 @@ class InputExample extends Model implements Render {
     }
 
     static function describe(keystroke:Keystroke):String {
-        return keystroke.unparse(gpui.OperatingSystem.current) + (keystroke.keyChar != null ? ' -> "' + keystroke.keyChar + '"' : '');
+        return keystroke.unparse(glaze.OperatingSystem.current) + (keystroke.keyChar != null ? ' -> "' + keystroke.keyChar + '"' : '');
     }
 
 }

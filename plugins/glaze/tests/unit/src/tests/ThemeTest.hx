@@ -1,31 +1,31 @@
 package tests;
 
-import gpui.App;
-import gpui.Background;
-import gpui.Hsla;
-import gpui.OperatingSystem;
-import gpui.Prelude.*;
-import gpui.TestDispatcher;
-import gpui.ViewTracker;
-import gpui.base.theme.ColorTokens;
-import gpui.base.theme.ScrollbarMode;
-import gpui.base.theme.ThemeAppearance;
-import gpui.component.theme.Color.*;
-import gpui.component.theme.DefaultThemeColors;
-import gpui.component.theme.SemanticThemeConfig;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeColor;
-import gpui.component.theme.ThemeConfig;
-import gpui.component.theme.ThemeMode;
-import gpui.component.theme.ThemeRegistry;
-import gpui.component.theme.ThemeSet;
-import gpui.component.theme.ThemeToken;
-import gpui.component.theme.ThemeTokens;
+import glaze.App;
+import glaze.Background;
+import glaze.Hsla;
+import glaze.OperatingSystem;
+import glaze.Prelude.*;
+import glaze.TestDispatcher;
+import glaze.ViewTracker;
+import glaze.kit.base.theme.ColorTokens;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.base.theme.ThemeAppearance;
+import glaze.kit.theme.Color.*;
+import glaze.kit.theme.DefaultThemeColors;
+import glaze.kit.theme.SemanticThemeConfig;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeColor;
+import glaze.kit.theme.ThemeConfig;
+import glaze.kit.theme.ThemeMode;
+import glaze.kit.theme.ThemeRegistry;
+import glaze.kit.theme.ThemeSet;
+import glaze.kit.theme.ThemeToken;
+import glaze.kit.theme.ThemeTokens;
 import testing.TestCase;
 import tests.ColorHelpersTest.ColorReport;
 
-using gpui.component.theme.ActiveTheme;
-using gpui.component.theme.Colorize;
+using glaze.kit.theme.ActiveTheme;
+using glaze.kit.theme.Colorize;
 
 /**
  * Tests of gpui-kit's theme system (crates/component/src/theme/,
@@ -148,14 +148,14 @@ class ThemeTest extends TestCase {
         compareValue(semantic.typography.mono, resolved.typography.mono, '$name semantic.typography.mono');
         for (field in ['xs', 'sm', 'md', 'lg', 'xl', 'mono_md']) {
             final e:Dynamic = Reflect.field(semantic.typography, field);
-            final a:gpui.base.theme.TextStyleToken = Reflect.field(resolved.typography, camel(field));
+            final a:glaze.kit.base.theme.TextStyleToken = Reflect.field(resolved.typography, camel(field));
             compareNumber(e.size, a.size, '$name semantic.typography.$field.size');
             compareNumber(e.line_height, a.lineHeight, '$name semantic.typography.$field.lineHeight');
             compareNumber(e.weight, a.weight, '$name semantic.typography.$field.weight');
         }
         for (field in ['sm', 'md', 'lg']) {
             final e:Array<Dynamic> = Reflect.field(semantic.shadow, field);
-            final a:Array<gpui.BoxShadow> = Reflect.field(resolved.shadow, field);
+            final a:Array<glaze.BoxShadow> = Reflect.field(resolved.shadow, field);
             compareValue(e.length, a.length, '$name semantic.shadow.$field.length');
             for (i in 0...Std.int(Math.min(e.length, a.length))) {
                 compareColor(e[i].color, a[i].color, '$name semantic.shadow.$field[$i].color');
@@ -317,8 +317,8 @@ class ThemeTest extends TestCase {
         assertTrue(theme.tokens.sidebar.color.equals(sidebar));
         assertTrue(theme.tokens.sidebar.background.equals(Background.fromHsla(sidebar)));
         assertTrue(theme.tokens.primary.color.equals(primary));
-        assertTrue(gpui.base.theme.Theme.global(app).tokens.colors.primary.equals(primary));
-        assertTrue(gpui.base.theme.Theme.global(app).tokens.radius.md == 0.);
+        assertTrue(glaze.kit.base.theme.Theme.global(app).tokens.colors.primary.equals(primary));
+        assertTrue(glaze.kit.base.theme.Theme.global(app).tokens.radius.md == 0.);
     }
 
     function testReplacingThePaletteRewritesEveryToken() {
@@ -372,8 +372,8 @@ class ThemeTest extends TestCase {
         assertTrue(theme.isDark());
         assertFalse(theme.background.equals(lightBackground));
         assertTrue(theme.tokens.background.color.equals(theme.background));
-        assertEquals(ThemeAppearance.Dark, gpui.base.theme.Theme.global(app).appearance);
-        assertTrue(gpui.base.theme.Theme.global(app).tokens.colors.background.equals(theme.background));
+        assertEquals(ThemeAppearance.Dark, glaze.kit.base.theme.Theme.global(app).appearance);
+        assertTrue(glaze.kit.base.theme.Theme.global(app).tokens.colors.background.equals(theme.background));
     }
 
     function testApplyingAConfigKeepsItsGradients() {
@@ -421,7 +421,7 @@ class ThemeTest extends TestCase {
         assertEquals(0., (theme.radius:Float), 'the file\'s radius must not reload');
         assertTrue(theme.primary.equals(red));
         assertTrue(theme.tokens.primary.equals(ThemeToken.fromHsla(red)));
-        assertTrue(gpui.base.theme.Theme.global(app).tokens.colors.primary.equals(red));
+        assertTrue(glaze.kit.base.theme.Theme.global(app).tokens.colors.primary.equals(red));
     }
 
     function testUpdateReturnsTheClosureResult() {
@@ -438,7 +438,7 @@ class ThemeTest extends TestCase {
 
     function assertStyledProjection() {
         final theme = Theme.global(app);
-        final base = gpui.base.theme.Theme.global(app);
+        final base = glaze.kit.base.theme.Theme.global(app);
 
         assertTrue(base.tokens.equals(theme.semanticTokens()));
         assertEquals(theme.scrollbarMode, base.scrollbar.mode());
@@ -455,7 +455,7 @@ class ThemeTest extends TestCase {
 
         Theme.setScrollbarMode(Always, app);
         assertEquals(ScrollbarMode.Always, Theme.global(app).scrollbarMode);
-        assertEquals(ScrollbarMode.Always, gpui.base.theme.Theme.global(app).scrollbar.mode());
+        assertEquals(ScrollbarMode.Always, glaze.kit.base.theme.Theme.global(app).scrollbar.mode());
         assertStyledProjection();
     }
 
@@ -544,7 +544,7 @@ class ThemeTest extends TestCase {
         theme.applyConfig(config);
         assertTrue(theme.primary.equals(tryParseColor('#7c3aed')));
         assertEquals(7., (theme.radius:Float));
-        assertTrue(theme.semanticTokens().spacing.equals(new gpui.base.theme.SpacingTokens()));
+        assertTrue(theme.semanticTokens().spacing.equals(new glaze.kit.base.theme.SpacingTokens()));
     }
 
     function testApplyConfigReadsTheChartColors() {
@@ -742,4 +742,4 @@ class ThemeTest extends TestCase {
 
 }
 
-class ThemeTestModel extends gpui.Model {}
+class ThemeTestModel extends glaze.Model {}

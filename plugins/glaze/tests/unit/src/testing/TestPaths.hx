@@ -11,7 +11,7 @@ import haxe.macro.Expr;
 class TestPaths {
 
     /**
-     * `test/unit/out` (the build output folder of the unit tests), absolute:
+     * `tests/unit/out` (the build output folder of the unit tests), absolute:
      * tests that write files put them there.
      */
     macro public static function unitOutDir():Expr {

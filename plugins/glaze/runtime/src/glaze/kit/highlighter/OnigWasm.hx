@@ -1,16 +1,16 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-#if (js && gpui_onig_wasm)
+#if (js && glaze_onig_wasm)
 import ceramic.Shortcuts.*;
 
 /**
- * Loads vscode-oniguruma on the web, for builds with the `gpui_onig_wasm`
+ * Loads vscode-oniguruma on the web, for builds with the `glaze_onig_wasm`
  * define, and makes it the regex engine of the code highlighter
  * (`Highlighter.enableWasm`).
  *
- * The plugin's `begin build` hook (`ceramic gpui setup onig-wasm`) copies
+ * The plugin's `begin build` hook (`ceramic glaze setup onig-wasm`) copies
  * `vscode-oniguruma.js` (the binding, vscode-oniguruma's `release/main.js`)
  * and `onig.wasm` next to `index.html`. They are loaded with the default
  * assets (`OnigWasmAsset`), so the engine is chosen before the application
@@ -71,7 +71,7 @@ class OnigWasm {
             log.info('Code highlighter: regex engine is onig.wasm (vscode-oniguruma, WasmOnigLib)');
         }
         else {
-            log.warning('Code highlighter: cannot use onig.wasm ($error), keeping the pure Haxe engine. Rebuild, or run: ceramic gpui setup onig-wasm');
+            log.warning('Code highlighter: cannot use onig.wasm ($error), keeping the pure Haxe engine. Rebuild, or run: ceramic glaze setup onig-wasm');
         }
         final ok = module != null;
         final pending = callbacks.copy();
@@ -132,7 +132,7 @@ class OnigWasm {
 class OnigWasmAsset extends ceramic.Asset {
 
     public function new() {
-        super('gpui-onig-wasm', 'gpui-onig-wasm');
+        super('glaze-onig-wasm', 'glaze-onig-wasm');
     }
 
     override public function load():Void {

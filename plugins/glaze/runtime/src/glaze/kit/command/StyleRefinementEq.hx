@@ -3,11 +3,11 @@
 // crates/component/src/command/state.rs and crates/component/src/icon.rs (`same_layout`)
 // Original code Copyright 2022-2025 Zed Industries, Inc. and 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.command;
+package glaze.kit.command;
 
-import gpui.StyleRefinement;
-import gpui.TextStyleRefinement;
-import gpui.component.Icon;
+import glaze.StyleRefinement;
+import glaze.TextStyleRefinement;
+import glaze.kit.Icon;
 
 /**
  * Structural equality of style refinements (Rust `PartialEq`), for the

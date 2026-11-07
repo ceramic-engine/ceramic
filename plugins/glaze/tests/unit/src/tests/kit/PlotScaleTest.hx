@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.plot.scale.ScaleBand;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.scale.ScaleOrdinal;
-import gpui.base.plot.scale.ScalePoint;
+import glaze.kit.base.plot.scale.ScaleBand;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.scale.ScaleOrdinal;
+import glaze.kit.base.plot.scale.ScalePoint;
 import testing.TestCase;
 
 /**

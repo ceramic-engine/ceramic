@@ -2,7 +2,7 @@
 // `#[derive(Refineable)]`, gpui-pre-derive-refineable 0.3.10)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A `TextStyle` where every field is optional: applied on top of a text

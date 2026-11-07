@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/hover_card.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * An unstyled popup with delayed hover behavior on desktop.
@@ -46,7 +46,7 @@ class HoverCard implements RenderOnce implements Styled {
     var anchorValue:Anchor = Anchor.TopCenter;
 
     @:allow(tests)
-    var tapToOpen:Bool = gpui.base.Prelude.isMobile();
+    var tapToOpen:Bool = glaze.kit.base.Prelude.isMobile();
 
     var triggerElement:Null<AnyElement> = null;
 
@@ -183,7 +183,7 @@ class HoverCardState extends Model implements Render {
 
     var isHoveringContent:Bool = false;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(openDelay:Float, closeDelay:Float) {
         super();
         this.openDelay = openDelay;
@@ -194,7 +194,7 @@ class HoverCardState extends Model implements Render {
         return open;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function sync(openDelay:Float, closeDelay:Float, onOpenChange:Null<(Bool, Window, App) -> Void>):Void {
         this.openDelay = openDelay;
         this.closeDelay = closeDelay;
@@ -229,7 +229,7 @@ class HoverCardState extends Model implements Render {
         }));
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function cancelTasks():Void {
         epoch += 1;
         // Rust drops the tasks, which cancels them.
@@ -244,7 +244,7 @@ class HoverCardState extends Model implements Render {
         return epoch;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function setOpen(open:Bool, window:Window, cx:Context<HoverCardState>):Void {
         if (this.open == open) {
             return;
@@ -260,7 +260,7 @@ class HoverCardState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function onTriggerHover(hovering:Bool, window:Window, cx:Context<HoverCardState>):Void {
         isHoveringTrigger = hovering;
         if (hovering) {
@@ -271,7 +271,7 @@ class HoverCardState extends Model implements Render {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function onContentHover(hovering:Bool, window:Window, cx:Context<HoverCardState>):Void {
         isHoveringContent = hovering;
         if (hovering) {

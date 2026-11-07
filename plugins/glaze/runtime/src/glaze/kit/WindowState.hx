@@ -1,42 +1,42 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/root.rs (WindowState, the component layer's root plugin)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.DefiniteLength;
-import gpui.DispatchPhase;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.MouseMoveEvent;
-import gpui.Div;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.Root;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionScopeId;
-import gpui.base.Tooltip.TooltipOverlay;
-import gpui.base.motion.Presence;
-import gpui.base.motion.TransitionId;
-import gpui.component.dialog.Dialog;
-import gpui.component.notification.Notification;
-import gpui.component.sheet.Sheet;
-import gpui.component.tooltip.Tooltip.TooltipLifetime;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.DefiniteLength;
+import glaze.DispatchPhase;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.MouseMoveEvent;
+import glaze.Div;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.Root;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionScopeId;
+import glaze.kit.base.Tooltip.TooltipOverlay;
+import glaze.kit.base.motion.Presence;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.notification.Notification;
+import glaze.kit.sheet.Sheet;
+import glaze.kit.tooltip.Tooltip.TooltipLifetime;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
+using glaze.kit.base.ElementExt;
 
 /**
  * Component-owned window state and presentation; Base owns the actual root.
@@ -56,7 +56,7 @@ using gpui.base.ElementExt;
  * The dialog and sheet state is not observable: like Rust, every change to it
  * notifies the window state.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class WindowState extends RootPlugin {
 
     var activeSheet:Null<ActiveSheet> = null;
@@ -64,18 +64,18 @@ class WindowState extends RootPlugin {
     var activeDialogs:Array<ActiveDialog> = [];
 
     /** The input that holds the focus, as registered by the inputs while they render. */
-    @:allow(gpui.component)
-    var focusedInput:Null<gpui.component.input.AnyInputState> = null;
+    @:allow(glaze.kit)
+    var focusedInput:Null<glaze.kit.input.AnyInputState> = null;
 
     public final notification:Entity<NotificationList>;
 
 
     /** Rust field `tooltip_overlay`: the per-window tooltip provider (Base `TooltipOverlay`, rendered with `Tooltip.renderTooltip`). */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     final tooltipOverlayEntity:Entity<TooltipOverlay>;
 
-    final touchSelectionOverlay:Entity<gpui.component.touchselection.WindowTouchSelectionOverlay>;
+    final touchSelectionOverlay:Entity<glaze.kit.touchselection.WindowTouchSelectionOverlay>;
 
     var tooltipHoveredTrigger:Null<GlobalElementId> = null;
 
@@ -101,11 +101,11 @@ class WindowState extends RootPlugin {
     public function new(window:Window, cx:Context<WindowState>) {
         super();
         notification = cx.newEntity((notificationCx:Context<NotificationList>) -> new NotificationList(window, notificationCx));
-        tooltipOverlayEntity = cx.newEntity((_:Context<TooltipOverlay>) -> new TooltipOverlay().renderWith(gpui.component.tooltip.Tooltip.renderTooltip));
-        touchSelectionOverlay = cx.newEntity((cx:Context<gpui.component.touchselection.WindowTouchSelectionOverlay>) -> new gpui.component.touchselection.WindowTouchSelectionOverlay(window, cx));
+        tooltipOverlayEntity = cx.newEntity((_:Context<TooltipOverlay>) -> new TooltipOverlay().renderWith(glaze.kit.tooltip.Tooltip.renderTooltip));
+        touchSelectionOverlay = cx.newEntity((cx:Context<glaze.kit.touchselection.WindowTouchSelectionOverlay>) -> new glaze.kit.touchselection.WindowTouchSelectionOverlay(window, cx));
     }
 
-    static inline final ROOT_MISSING = 'component window state is missing; call gpui.component.Component.init before opening the window';
+    static inline final ROOT_MISSING = 'component window state is missing; call glaze.kit.Component.init before opening the window';
 
     /**
      * The component state of `window`, or null when its root has none.
@@ -142,7 +142,7 @@ class WindowState extends RootPlugin {
      * The scope of the topmost open dialog, else of the sheet, else the
      * default scope.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function activeTextSelectionScope():TextSelectionScopeId {
         var ix = activeDialogs.length - 1;
         while (ix >= 0) {
@@ -546,7 +546,7 @@ class WindowState extends RootPlugin {
     /**
      * Get the tooltip overlay entity for this window.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     @:allow(tests)
     static function tooltipOverlay(window:Window, cx:App):Null<Entity<TooltipOverlay>> {
         final state = tryRead(window);
@@ -557,7 +557,7 @@ class WindowState extends RootPlugin {
      * Only the current trigger may request a hide. Hover listeners run in
      * reverse paint order, so a new trigger can enter before the old one leaves.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function tooltipOverlayForTrigger(trigger:GlobalElementId, lifetime:Null<TooltipLifetime>, hovered:Bool, window:Window, cx:App):Null<Entity<TooltipOverlay>> {
         final state = tryRead(window);
         if (state == null) {
@@ -602,7 +602,7 @@ class WindowState extends RootPlugin {
      * Keeps the tooltip of the trigger at `bounds` dismissed until the
      * pointer moves outside them.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function pressTooltipTrigger(bounds:Bounds, window:Window, cx:App):Void {
         final state = tryRead(window);
         if (state != null) {
@@ -611,7 +611,7 @@ class WindowState extends RootPlugin {
         }
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function isTooltipTriggerPressed(bounds:Bounds, window:Window, cx:App):Bool {
         final state = tryRead(window);
         if (state == null) {
@@ -685,7 +685,7 @@ class WindowState extends RootPlugin {
 
 }
 
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class ActiveSheet {
 
     final focusHandle:FocusHandle;
@@ -709,7 +709,7 @@ class ActiveSheet {
 
 }
 
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class ActiveDialog {
 
     /** Stable for the dialog's lifetime, independently of its stack position. */

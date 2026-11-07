@@ -4,45 +4,45 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.component.Component;
-import gpui.component.button.Button;
-import gpui.component.carousel.Carousel;
-import gpui.component.carousel.CarouselContent;
-import gpui.component.carousel.CarouselItem;
-import gpui.component.carousel.CarouselNext;
-import gpui.component.carousel.CarouselPaginationItem;
-import gpui.component.carousel.CarouselPrevious;
-import gpui.component.carousel.CarouselState;
-import gpui.component.carousel.CarouselState.CarouselEvent;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.Component;
+import glaze.kit.button.Button;
+import glaze.kit.carousel.Carousel;
+import glaze.kit.carousel.CarouselContent;
+import glaze.kit.carousel.CarouselItem;
+import glaze.kit.carousel.CarouselNext;
+import glaze.kit.carousel.CarouselPaginationItem;
+import glaze.kit.carousel.CarouselPrevious;
+import glaze.kit.carousel.CarouselState;
+import glaze.kit.carousel.CarouselState.CarouselEvent;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's carousel (`state.rs`,
@@ -499,11 +499,11 @@ class ComponentCarouselTest extends TestCase {
 
     function testCarouselControlsAcceptSemanticSizes() {
         final state = newState(() -> new CarouselState(2));
-        assertEquals(gpui.component.Size.Medium, new CarouselPrevious(state).size);
-        assertEquals(gpui.component.Size.Medium, new CarouselNext(state).size);
-        assertEquals(gpui.component.Size.Large, new CarouselPrevious(state).large().size);
-        assertEquals(gpui.component.Size.XSmall, new CarouselNext(state).xsmall().size);
-        assertEquals(gpui.component.Size.Small, new CarouselPaginationItem('pagination', 0, state).small().size);
+        assertEquals(glaze.kit.Size.Medium, new CarouselPrevious(state).size);
+        assertEquals(glaze.kit.Size.Medium, new CarouselNext(state).size);
+        assertEquals(glaze.kit.Size.Large, new CarouselPrevious(state).large().size);
+        assertEquals(glaze.kit.Size.XSmall, new CarouselNext(state).xsmall().size);
+        assertEquals(glaze.kit.Size.Small, new CarouselPaginationItem('pagination', 0, state).small().size);
     }
 
     function testCarouselFocusRingIsConfigurable() {

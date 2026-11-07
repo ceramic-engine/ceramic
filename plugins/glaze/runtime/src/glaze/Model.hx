@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI: base class of entities, replacing the
 // entity storage of gpui-pre 0.3.10 (src/app/entity_map.rs, Zed Industries,
 // Apache-2.0). See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Base class of GPUI entities (the `T` of `Entity<T>`).
@@ -21,7 +21,7 @@ package gpui;
  */
 class Model extends ceramic.Entity implements tracker.Observable {
 
-    @:allow(gpui)
+    @:allow(glaze)
     var _slot:Null<EntitySlot> = null;
 
     /**
@@ -36,7 +36,7 @@ class Model extends ceramic.Entity implements tracker.Observable {
         super();
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function slot():EntitySlot {
         if (_slot == null) {
             App.current.attachEntity(this);

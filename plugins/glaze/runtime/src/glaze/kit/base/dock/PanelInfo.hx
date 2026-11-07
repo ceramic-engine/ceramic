@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Axis;
-import gpui.Pixels;
-import gpui.base.dock.JsonValue;
+import glaze.Axis;
+import glaze.Pixels;
+import glaze.kit.base.dock.JsonValue;
 
-using gpui.base.dock.JsonValue.JsonValueTools;
+using glaze.kit.base.dock.JsonValue.JsonValueTools;
 
 /**
  * What a persisted node is: a split (`stack`), a tab group (`tabs`) or a
@@ -15,7 +15,7 @@ using gpui.base.dock.JsonValue.JsonValueTools;
  * serde: `{"stack": {"sizes": [..], "axis": 0}}`, `{"tabs": {"active_index":
  * 0}}`, `{"panel": <value>}`.
  */
-@:using(gpui.base.dock.PanelInfo.PanelInfoTools)
+@:using(glaze.kit.base.dock.PanelInfo.PanelInfoTools)
 enum PanelInfo {
     /**
      * `axis`: 0 for horizontal, 1 for vertical.

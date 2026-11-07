@@ -3,24 +3,24 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.DefiniteLength;
-import gpui.base.text.BlockNode;
-import gpui.base.text.ImageNode;
-import gpui.base.text.InlineNode;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.format.HtmlFormat;
+import glaze.DefiniteLength;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.ImageNode;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.format.HtmlFormat;
 import testing.TestCase;
 
-import gpui.Prelude.px;
-import gpui.Prelude.relative;
+import glaze.Prelude.px;
+import glaze.Prelude.relative;
 
 /**
- * Tests of `gpui.base.text.format.HtmlFormat` (Rust `text/format/html.rs`).
+ * Tests of `glaze.kit.base.text.format.HtmlFormat` (Rust `text/format/html.rs`).
  */
-@:access(gpui.base.text)
-@:access(gpui.base.text.format.HtmlFormat)
+@:access(glaze.kit.base.text)
+@:access(glaze.kit.base.text.format.HtmlFormat)
 class TextFormatHtmlTest extends TestCase {
 
     static function blocksString(document:ParsedDocument):String {
@@ -260,7 +260,7 @@ class TextFormatHtmlTest extends TestCase {
                 for (node in paragraph.children_) {
                     var inside = true;
                     for (m in node.marks_) {
-                        if (!(m.range.start < m.range.end && m.range.end <= gpui.base.text.TextUtils.len(node.text_)))
+                        if (!(m.range.start < m.range.end && m.range.end <= glaze.kit.base.text.TextUtils.len(node.text_)))
                             inside = false;
                     }
                     assertTrue(inside, 'mark outside text: $html');

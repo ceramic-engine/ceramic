@@ -4,27 +4,27 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.radio.Radio;
-import gpui.component.radio.Radio.RadioGroup;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.radio.Radio;
+import glaze.kit.radio.Radio.RadioGroup;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class RadioStory extends Model implements Story {
 
@@ -36,7 +36,7 @@ class RadioStory extends Model implements Story {
         return 'Choose one option from a set.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -50,7 +50,7 @@ class RadioStory extends Model implements Story {
 
     @observe var billing:Null<Int> = 1;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(_:Window, cx:Context<RadioStory>) {
         super();

@@ -1,14 +1,14 @@
 package tests;
 
-import gpui.Background;
-import gpui.Hsla;
-import gpui.Prelude.*;
-import gpui.component.theme.Color;
-import gpui.component.theme.Color.*;
-import gpui.component.theme.ColorName;
+import glaze.Background;
+import glaze.Hsla;
+import glaze.Prelude.*;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Color.*;
+import glaze.kit.theme.ColorName;
 import testing.TestCase;
 
-using gpui.component.theme.Colorize;
+using glaze.kit.theme.Colorize;
 
 /**
  * Tests of gpui-kit's color helpers (crates/component/src/theme/color.rs): the
@@ -351,7 +351,7 @@ class ColorHelpersTest extends TestCase {
         maxError = 0;
         check(palette.black, black(), 'black');
         check(palette.white, white(), 'white');
-        for (name in gpui.component.theme.ShadcnColors.NAMES) {
+        for (name in glaze.kit.theme.ShadcnColors.NAMES) {
             final expected:Array<Array<Dynamic>> = Reflect.field(palette, name);
             for (i in 0...scales.length) {
                 check(expected[i], @:privateAccess Color.paletteColor(name, scales[i]), '$name(${scales[i]})');

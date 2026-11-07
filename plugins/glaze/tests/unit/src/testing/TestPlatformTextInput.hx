@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package testing;
 
-import gpui.Bounds;
-import gpui.PlatformTextInput;
-import gpui.TextInputConfiguration;
-import gpui.TextInputStateChange;
+import glaze.Bounds;
+import glaze.PlatformTextInput;
+import glaze.TextInputConfiguration;
+import glaze.TextInputStateChange;
 
 /**
  * Records what a window tells its platform about text input, like GPUI's

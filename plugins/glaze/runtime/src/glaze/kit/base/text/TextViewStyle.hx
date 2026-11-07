@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/style.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AbsoluteLength;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Rems;
-import gpui.StyleRefinement;
-import gpui.base.theme.ColorTokens;
-import gpui.base.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Rems;
+import glaze.StyleRefinement;
+import glaze.kit.base.theme.ColorTokens;
+import glaze.kit.base.theme.Theme;
 
-using gpui.AbsoluteLengthTools;
+using glaze.AbsoluteLengthTools;
 
 /**
  * TextViewStyle used to customize the style for `TextView`.
@@ -81,7 +81,7 @@ class TextViewStyle {
      * (a code background, a link color), so they are mapped here once instead
      * of at every call site.
      */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     static function fromColors(colors:ColorTokens, isDark:Bool):TextViewStyle {
         final style = new TextViewStyle();
         style.foreground_ = colors.foreground;
@@ -439,7 +439,7 @@ class TextViewStyle {
     }
 
     /** The table body background, when it is not the theme surface. */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     function tableBackground():Null<Hsla> {
         return tableBackground_;
     }
@@ -448,7 +448,7 @@ class TextViewStyle {
      * Returns the `HighlightStyle` to use for inline code, falling back to
      * the code background when no custom background was supplied.
      */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     function inlineCodeHighlight():HighlightStyle {
         final style = copyHighlight(inlineCode_);
         if (style.backgroundColor == null) {
@@ -467,7 +467,7 @@ class TextViewStyle {
      * code, border and selection colors would vanish on it, so they are all
      * derived from `color`, and `isDark` flips.
      */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     function onTextColor(color:Hsla):TextViewStyle {
         final style = withForeground(color);
         if (!isInvertedBy(color)) {
@@ -476,7 +476,7 @@ class TextViewStyle {
 
         final codeBackground = color.opacity(0.12);
         final tableHead = tableHead_.clone();
-        tableHead.background = gpui.Background.fromHsla(codeBackground);
+        tableHead.background = glaze.Background.fromHsla(codeBackground);
         tableHead.textStyle().color = color;
         final inlineCode = copyHighlight(inlineCode_);
         inlineCode.backgroundColor = codeBackground;
@@ -499,7 +499,7 @@ class TextViewStyle {
      * Mid-tone text such as a destructive red reads on either kind of
      * surface, so only a lightness gap wider than that counts as inverted.
      */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     function isInvertedBy(color:Hsla):Bool {
         final INVERTED_LIGHTNESS_GAP = 0.6;
         return Math.abs(f32(oklabLightness(color) - oklabLightness(foreground_))) > INVERTED_LIGHTNESS_GAP;
@@ -535,7 +535,7 @@ class TextViewStyle {
      * Drop an invalid font size before it can replace an inherited value or
      * make retained style equality fail every frame (NaN is never equal).
      */
-    @:allow(gpui.base.text, tests)
+    @:allow(glaze.kit.base.text, tests)
     static function normalizeInlineCodeStyle(style:StyleRefinement):StyleRefinement {
         if (style.text != null && style.text.fontSize != null) {
             final size:Float = style.text.fontSize.toPixels(1.);

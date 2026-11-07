@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/fields/dropdown.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.menu.PopupMenu.PopupMenuItem;
-import gpui.component.setting.SettingField.AnySettingField;
-import gpui.component.setting.SettingField.DropdownOption;
-import gpui.component.setting.SettingField.SettingFieldRender;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.menu.PopupMenu.PopupMenuItem;
+import glaze.kit.setting.SettingField.AnySettingField;
+import glaze.kit.setting.SettingField.DropdownOption;
+import glaze.kit.setting.SettingField.SettingFieldRender;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * Renders a dropdown field: an outline button showing the selected option,
  * opening a menu of the options.
  */
-@:allow(gpui.component.setting)
+@:allow(glaze.kit.setting)
 class DropdownField implements SettingFieldRender {
 
     final options:Array<DropdownOption>;

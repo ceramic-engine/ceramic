@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic; the browser calls are
 // behind `CanvasTextBackend` so the rest runs (and is tested) on every target.
 // See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
 import haxe.io.Bytes;
 

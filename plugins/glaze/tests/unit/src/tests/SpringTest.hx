@@ -1,16 +1,16 @@
 package tests;
 
-import gpui.AnimationPhase;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Rgba;
-import gpui.Spring;
-import gpui.SpringConfig;
-import gpui.SpringPhaseTarget;
-import gpui.SpringMath.f32;
-import gpui.SpringPropagator;
-import gpui.SpringState;
-import gpui.SpringValueTarget;
+import glaze.AnimationPhase;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Rgba;
+import glaze.Spring;
+import glaze.SpringConfig;
+import glaze.SpringPhaseTarget;
+import glaze.SpringMath.f32;
+import glaze.SpringPropagator;
+import glaze.SpringState;
+import glaze.SpringValueTarget;
 import testing.TestCase;
 
 /**
@@ -18,7 +18,7 @@ import testing.TestCase;
  * tests, then a comparison of every public computation with the values dumped
  * from the original GPUI by `reference/examples/animation_dump.rs`.
  *
- * The port emulates GPUI's f32 arithmetic (see `gpui.SpringMath`), so most
+ * The port emulates GPUI's f32 arithmetic (see `glaze.SpringMath`), so most
  * values are bit for bit identical. The exceptions come from the platform
  * `libm`: macOS `expf` is not always correctly rounded (`expf(-0.05)` is 1 ulp
  * below the exact rounding), and formulas that cancel large terms (`target +
@@ -35,7 +35,7 @@ class SpringTest extends TestCase {
 
     /**
      * Largest absolute difference with GPUI per computation, filled by the
-     * comparison tests (printed when the define `gpui_animation_errors` is set).
+     * comparison tests (printed when the define `glaze_animation_errors` is set).
      */
     public static final maxErrors:Map<String, Float> = new Map();
 
@@ -406,7 +406,7 @@ class SpringTest extends TestCase {
 
     function printErrors():Void {
 
-        #if gpui_animation_errors
+        #if glaze_animation_errors
         final names = [for (name in maxErrors.keys()) name];
         names.sort((a, b) -> a < b ? -1 : 1);
         for (name in names) trace('spring $name: max abs error ${maxErrors.get(name)}');

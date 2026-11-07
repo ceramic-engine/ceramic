@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.UndoHistory;
+import glaze.kit.base.UndoHistory;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.UndoHistory` (Rust `undo_history.rs`). Transactions are
+ * Tests of `glaze.kit.base.UndoHistory` (Rust `undo_history.rs`). Transactions are
  * compared as joined strings, `null` standing for Rust's `None`.
  */
 class UndoHistoryTest extends TestCase {

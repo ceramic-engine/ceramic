@@ -1,18 +1,18 @@
 package tests;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.SvgRenderer;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.SvgRenderer;
+import glaze.TestDispatcher;
+import glaze.Window;
 import haxe.io.Bytes;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `svg()` / `SvgRenderer` (svg_renderer.rs, svg.rs) and of paths
@@ -29,7 +29,7 @@ class SvgPathTest extends TestCase {
     override function setup() {
         app = new App(new TestDispatcher());
         app.setTextSystem(TextFixtures.textSystem());
-        final assets = new gpui.CeramicAssetSource();
+        final assets = new glaze.CeramicAssetSource();
         assets.add('icons/heart.svg', Bytes.ofString(HEART));
         app.setAssetSource(assets);
         ceramic.App.app.flushImmediate();
@@ -68,7 +68,7 @@ class SvgPathTest extends TestCase {
     }
 
     function testAlphaMaskIsRenderedAtTwiceTheSize() {
-        final source = app.svgRenderer().renderAlphaMask(new gpui.RenderSvgParams('icons/heart.svg', 48, 48), null);
+        final source = app.svgRenderer().renderAlphaMask(new glaze.RenderSvgParams('icons/heart.svg', 48, 48), null);
         assertEquals(48, source.width);
         assertEquals(48, source.height);
         var covered = 0;
@@ -76,7 +76,7 @@ class SvgPathTest extends TestCase {
             if (source.bytes.get(i) > 0) covered++;
         assertTrue(covered > 100 && covered < 48 * 48 / 2, 'covered $covered');
         // Missing asset
-        assertEquals(null, app.svgRenderer().renderAlphaMask(new gpui.RenderSvgParams('icons/missing.svg', 48, 48), null));
+        assertEquals(null, app.svgRenderer().renderAlphaMask(new glaze.RenderSvgParams('icons/missing.svg', 48, 48), null));
     }
 
     /**
@@ -88,7 +88,7 @@ class SvgPathTest extends TestCase {
      * the assets change, and each icon is rasterized once.
      */
     function testMissingIconIsResolvedOnceAndIconsAreRasterizedOnce() {
-        final assets = new gpui.CeramicAssetSource();
+        final assets = new glaze.CeramicAssetSource();
         assets.add('icons/heart.svg', Bytes.ofString(HEART));
         final counting = new CountingAssetSource(assets);
         app.setAssetSource(counting);
@@ -135,7 +135,7 @@ class SvgPathTest extends TestCase {
 
     function testSvgTextUsesTheFontsOfTheTextSystem() {
         final renderer = app.svgRenderer();
-        final source = renderer.renderAlphaMask(new gpui.RenderSvgParams('text', 100, 30), Bytes.ofString('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="30"><text x="2" y="20" font-family="Inter" font-size="16">Hello</text></svg>'));
+        final source = renderer.renderAlphaMask(new glaze.RenderSvgParams('text', 100, 30), Bytes.ofString('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="30"><text x="2" y="20" font-family="Inter" font-size="16">Hello</text></svg>'));
         var covered = 0;
         for (i in 0...source.bytes.length)
             if (source.bytes.get(i) > 0) covered++;
@@ -160,7 +160,7 @@ class SvgPathTest extends TestCase {
 
     function testSvgTransformationRotatesAroundItsCenter() {
         open((window, cx) -> div().p(px(10)).child(svg().path('icons/heart.svg').size(px(20)).textColor(red())
-            .withTransformation(gpui.Svg.Transformation.rotated(Math.PI / 2))));
+            .withTransformation(glaze.Svg.Transformation.rotated(Math.PI / 2))));
         window.draw();
         final sprite = window.renderedScene().monochromeSprites[0];
         assertTrue(sprite.hasTransformation());
@@ -253,11 +253,11 @@ class SvgPathTest extends TestCase {
      * a file system, from the Unity resources on Unity (no file there).
      */
     function testDefaultAssetSourceReadsBundledAssetsSynchronously() {
-        final assets = new gpui.CeramicAssetSource();
+        final assets = new glaze.CeramicAssetSource();
         final icon = assets.load('icons/check.svg');
         assertNotNull(icon);
         assertEquals('<svg', icon.getString(0, 4));
-        final grammar = assets.load('gpui/grammars/c.json');
+        final grammar = assets.load('glaze/grammars/c.json');
         assertNotNull(grammar);
         assertEquals('{', StringTools.trim(grammar.toString()).charAt(0));
         assertEquals(null, assets.load('icons/missing-icon.svg'));
@@ -267,13 +267,13 @@ class SvgPathTest extends TestCase {
 }
 
 /** Counts the loads of each path, delegating to another asset source */
-private class CountingAssetSource implements gpui.AssetSource {
+private class CountingAssetSource implements glaze.AssetSource {
 
-    final inner:gpui.AssetSource;
+    final inner:glaze.AssetSource;
 
     final counts:Map<String, Int> = new Map();
 
-    public function new(inner:gpui.AssetSource) {
+    public function new(inner:glaze.AssetSource) {
         this.inner = inner;
     }
 

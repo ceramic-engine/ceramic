@@ -2,65 +2,65 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-011 (the trigger and tooltip hex is rounded). See DEVIATIONS.md.
-package gpui.component.colorpicker;
+package glaze.kit.colorpicker;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.ColorPicker.ColorPickerState;
-import gpui.base.ColorPicker.ColorSwatch;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.input.Input;
-import gpui.component.popover.Popover;
-import gpui.component.select.Caret;
-import gpui.component.separator.Separator;
-import gpui.component.slider.Slider;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
-import gpui.component.tooltip.Tooltip;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.ColorPicker.ColorPickerState;
+import glaze.kit.base.ColorPicker.ColorSwatch;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.input.Input;
+import glaze.kit.popover.Popover;
+import glaze.kit.select.Caret;
+import glaze.kit.separator.Separator;
+import glaze.kit.slider.Slider;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
+import glaze.kit.tooltip.Tooltip;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
-using gpui.component.theme.Colorize;
-using gpui.component.tooltip.Tooltip.ManagedTooltip;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
+using glaze.kit.theme.Colorize;
+using glaze.kit.tooltip.Tooltip.ManagedTooltip;
 
 /**
  * A color picker element.
  *
  * `ColorPickerState` and `ColorPickerEvent` are the Base ones
- * (`gpui.base.ColorPicker`).
+ * (`glaze.kit.base.ColorPicker`).
  */
 class ColorPicker implements RenderOnce implements Styled implements Sizable {
 
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     var id:ElementId;
 
     final pickerStyle:StyleRefinement = new StyleRefinement();
 
     final state:Entity<ColorPickerState>;
 
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var featuredColorsValue:Null<Array<Hsla>> = null;
 
@@ -73,18 +73,18 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
 
     var iconValue:Null<Icon> = null;
 
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var size:Size = Medium;
 
     var anchorValue:Anchor = Anchor.TopLeft;
 
     /** Draws the trigger as a framed field, see `ColorSelect`. */
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var field:Bool = false;
 
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     var placeholderValue:Null<String> = null;
 
@@ -99,7 +99,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
      * like the hex field (gpui-base `hex_string`), so the same color reads the
      * same everywhere. `Colorize.toHex` truncates the channels.
      */
-    @:allow(gpui.component.colorpicker)
+    @:allow(glaze.kit.colorpicker)
     @:allow(tests)
     static function displayHex(color:Hsla):String {
         return ColorPickerState.hexString(color);
@@ -289,7 +289,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
     /** Rust `format!("{:.0}", value)` of an `f32`: rounded half to even. */
     @:allow(tests)
     static function formatInteger(value:Float):String {
-        final v = gpui.SpringMath.f32(value);
+        final v = glaze.SpringMath.f32(value);
         var n = Math.ffloor(v);
         final frac = v - n;
         if (frac > 0.5 || (frac == 0.5 && n % 2 != 0)) n += 1;
@@ -300,7 +300,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     function sliderRow(label:String, track:IntoElement, slider:Slider, valueText:String, cx:App):IntoElement {
@@ -379,7 +379,7 @@ class ColorPicker implements RenderOnce implements Styled implements Sizable {
         final openState = state;
         final popoverState = state;
 
-        final picker = new gpui.base.ColorPicker(id);
+        final picker = new glaze.kit.base.ColorPicker(id);
         if (field) picker.wFull();
         picker.refineStyle(pickerStyle)
             .open(open)

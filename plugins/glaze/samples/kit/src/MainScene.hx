@@ -1,72 +1,72 @@
 package;
 
 import ceramic.Scene;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.alert.Alert;
-import gpui.component.avatar.Avatar;
-import gpui.component.avatar.AvatarGroup;
-import gpui.component.badge.Badge;
-import gpui.base.Slider.SliderState;
-import gpui.component.breadcrumb.Breadcrumb;
-import gpui.component.button.Button;
-import gpui.component.button.ButtonGroup;
-import gpui.component.button.Toggle;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.radio.Radio;
-import gpui.component.slider.Slider;
-import gpui.component.switch_.Switch;
-import gpui.component.toolbar.Toolbar;
-import gpui.component.descriptionlist.DescriptionList;
-import gpui.component.empty.Empty;
-import gpui.component.groupbox.GroupBox;
-import gpui.component.kbd.Kbd;
-import gpui.component.label.Label;
-import gpui.component.link.Link;
-import gpui.component.marker.Marker;
-import gpui.component.progress.Progress;
-import gpui.component.rating.Rating;
-import gpui.component.separator.Separator;
-import gpui.component.shimmer.ShimmerText;
-import gpui.component.skeleton.Skeleton;
-import gpui.component.spinner.Spinner;
-import gpui.component.statusbar.StatusBar;
-import gpui.component.tag.Tag;
-import gpui.component.theme.ColorName;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
-import gpui.component.VirtualList;
-import gpui.component.VirtualList.VirtualListScrollHandle;
-import gpui.component.scroll.Scrollbar;
-import gpui.Action;
-import gpui.Anchor;
-import gpui.base.Geometry.Placement;
-import gpui.component.button.DropdownButton;
-import gpui.component.dialog.DialogFooter;
-import gpui.component.dialog.DialogFooter.DialogAction;
-import gpui.component.dialog.DialogFooter.DialogClose;
-import gpui.component.hovercard.HoverCard;
-import gpui.component.menu.PopupMenu;
-import gpui.component.notification.Notification;
-import gpui.component.popover.Popover;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.alert.Alert;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.avatar.AvatarGroup;
+import glaze.kit.badge.Badge;
+import glaze.kit.base.Slider.SliderState;
+import glaze.kit.breadcrumb.Breadcrumb;
+import glaze.kit.button.Button;
+import glaze.kit.button.ButtonGroup;
+import glaze.kit.button.Toggle;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.radio.Radio;
+import glaze.kit.slider.Slider;
+import glaze.kit.switch_.Switch;
+import glaze.kit.toolbar.Toolbar;
+import glaze.kit.descriptionlist.DescriptionList;
+import glaze.kit.empty.Empty;
+import glaze.kit.groupbox.GroupBox;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.label.Label;
+import glaze.kit.link.Link;
+import glaze.kit.marker.Marker;
+import glaze.kit.progress.Progress;
+import glaze.kit.rating.Rating;
+import glaze.kit.separator.Separator;
+import glaze.kit.shimmer.ShimmerText;
+import glaze.kit.skeleton.Skeleton;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.statusbar.StatusBar;
+import glaze.kit.tag.Tag;
+import glaze.kit.theme.ColorName;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
+import glaze.kit.VirtualList;
+import glaze.kit.VirtualList.VirtualListScrollHandle;
+import glaze.kit.scroll.Scrollbar;
+import glaze.Action;
+import glaze.Anchor;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.button.DropdownButton;
+import glaze.kit.dialog.DialogFooter;
+import glaze.kit.dialog.DialogFooter.DialogAction;
+import glaze.kit.dialog.DialogFooter.DialogClose;
+import glaze.kit.hovercard.HoverCard;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.notification.Notification;
+import glaze.kit.popover.Popover;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.scroll.Scrollable;
-using gpui.component.WindowExt;
-using gpui.component.menu.ContextMenu.ContextMenuExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.scroll.Scrollable;
+using glaze.kit.WindowExt;
+using glaze.kit.menu.ContextMenu.ContextMenuExt;
+using glaze.kit.menu.DropdownMenu;
 
 /** Menu actions of the gallery (they only count in `Gallery.menuAction`). */
 @:action(namespace = kit) class GalleryCopy implements Action {}
@@ -147,13 +147,13 @@ class Gallery extends Model implements Render {
 
     @observe var menuAction:String = 'none';
 
-    var slider:Null<gpui.Entity<SliderState>> = null;
+    var slider:Null<glaze.Entity<SliderState>> = null;
 
-    var range:Null<gpui.Entity<SliderState>> = null;
+    var range:Null<glaze.Entity<SliderState>> = null;
 
     final virtualHandle = new VirtualListScrollHandle();
 
-    static final ROW_HEIGHTS = [for (ix in 0...500) new gpui.Size(200., 20. + (ix * 7) % 24)];
+    static final ROW_HEIGHTS = [for (ix in 0...500) new glaze.Size(200., 20. + (ix * 7) % 24)];
 
     public function new() {
         super();
@@ -198,7 +198,7 @@ class Gallery extends Model implements Render {
             .child(new Toolbar('toolbar').border1()
                 .child(new Button('tb-new').icon(IconName.Plus))
                 .child(new Button('tb-search').icon(IconName.Search))
-                .content(gpui.component.separator.Separator.vertical().h4())
+                .content(glaze.kit.separator.Separator.vertical().h4())
                 .child(new Toggle('tb-bell').icon(IconName.Bell).checked(true))
                 .content(div().flex1())
                 .child(new Button('tb-publish').primary().label('Publish')));
@@ -207,7 +207,7 @@ class Gallery extends Model implements Render {
     /** `overflowYScrollbar`, `overflowXScrollbar`, and a virtual list with a scrollbar. */
     function scrolling(cx:Context<Dynamic>):IntoElement {
         final theme = Theme.global(cx.app);
-        final entity:gpui.Entity<Gallery> = cast cx.entity();
+        final entity:glaze.Entity<Gallery> = cast cx.entity();
         return hFlex().gap4().itemsStart()
             .child(vFlex().w(px(220.)).h(px(160.)).border1().borderColor(theme.border)
                 .overflowYScrollbar()
@@ -334,7 +334,7 @@ class Gallery extends Model implements Render {
                         .child(Alert.warning('warning', 'Waves 6 and later are not ported yet.').onClose((_, _, _) -> {}))))
                     .child(section('Separator, Breadcrumb, StatusBar', vFlex().gap3()
                         .child(new Breadcrumb().child('Home').child('Components').child('Gallery'))
-                        .child(gpui.component.separator.Separator.horizontal().label('Or'))
+                        .child(glaze.kit.separator.Separator.horizontal().label('Or'))
                         .child(new StatusBar().left(div().child('main')).child('Ready').right(div().child('UTF-8')))))
                     .child(section('Empty, DescriptionList, GroupBox, Marker', vFlex().gap3()
                         .child(new Empty().border1().header(new EmptyHeader()

@@ -3,13 +3,13 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Hsla;
-import gpui.base.input.InputEditorStyle;
-import gpui.base.theme.SemanticThemeTokens;
+import glaze.Hsla;
+import glaze.kit.base.input.InputEditorStyle;
+import glaze.kit.base.theme.SemanticThemeTokens;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.InputEditorStyle` (Rust `highlighting.rs`).
+ * Tests of `glaze.kit.base.input.InputEditorStyle` (Rust `highlighting.rs`).
  */
 class InputHighlightingTest extends TestCase {
 

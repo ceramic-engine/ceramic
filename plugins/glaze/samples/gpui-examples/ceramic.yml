@@ -1,14 +1,13 @@
 app:
-    package: gpui.examples
+    package: glaze.examples
     name: gpuiexamples
     displayName: GPUI examples
     author: gpui
     version: '1.0'
 
     plugins:
-        # GPUI port (linked through plugins/gpui.plugin)
-        - gpui
-
+        # Glaze, the GPUI port (built-in plugin)
+        - glaze
     # The ported examples (shared with test/golden)
     paths:
         - shared

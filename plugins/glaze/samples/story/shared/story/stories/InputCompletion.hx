@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InputActions.Escape;
-import gpui.base.input.InputActions.IndentInline;
-import gpui.base.input.InputActions.MoveDown;
-import gpui.base.input.InputActions.MoveUp;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.input.Input;
-import gpui.component.list.ListItem;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InputActions.Escape;
+import glaze.kit.base.input.InputActions.IndentInline;
+import glaze.kit.base.input.InputActions.MoveDown;
+import glaze.kit.base.input.InputActions.MoveUp;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.input.Input;
+import glaze.kit.list.ListItem;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * An application-owned completion menu around a single-line `Input`.
@@ -314,7 +314,7 @@ class CompletionExample extends Model implements Render {
         }
 
         input.update(cx, (input, cx) -> {
-            input.setSelectedRange(new gpui.Range(menu.tokenStart, cursor), cast cx);
+            input.setSelectedRange(new glaze.Range(menu.tokenStart, cursor), cast cx);
             input.replace('$$' + name + ' ', window, cast cx);
             input.focus(window, cast cx);
         });

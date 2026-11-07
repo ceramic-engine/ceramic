@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/alert_dialog.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.button.Button.ButtonVariant;
-import gpui.component.dialog.Dialog.DialogButtonProps;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.button.Button.ButtonVariant;
+import glaze.kit.dialog.Dialog.DialogButtonProps;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 /**
  * AlertDialog is a modal dialog that interrupts the user with important content
@@ -33,7 +33,7 @@ using gpui.component.WindowExt;
  * - Supports both imperative (`window.openAlertDialog`) and declarative
  *   (`trigger` and `content`) API styles
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class AlertDialog implements RenderOnce implements Styled implements ParentElement {
 
     var base:Dialog;
@@ -55,7 +55,7 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
      */
     public function new(cx:App) {
         base = new Dialog(cx)
-            .withBaseAlertDialog(new gpui.base.AlertDialog(cx))
+            .withBaseAlertDialog(new glaze.kit.base.AlertDialog(cx))
             .closeButton(false);
     }
 
@@ -308,11 +308,11 @@ class AlertDialog implements RenderOnce implements Styled implements ParentEleme
         final props = base.props.clone();
         final buttonProps = base.buttonPropsValue.clone();
 
-        return new gpui.base.AlertDialog.AlertDialogTrigger(trigger)
+        return new glaze.kit.base.AlertDialog.AlertDialogTrigger(trigger)
             .onOpen((window, cx) -> {
                 window.openDialog(cx, (dialog, _, cx) -> {
                     final dialog = dialog
-                        .withBaseAlertDialog(new gpui.base.AlertDialog(cx))
+                        .withBaseAlertDialog(new glaze.kit.base.AlertDialog(cx))
                         .refineStyle(style)
                         .buttonProps(buttonProps.clone())
                         .withProps(props.clone());

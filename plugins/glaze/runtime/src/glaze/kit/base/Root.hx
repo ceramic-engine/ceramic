@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/root.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /** Move the focus to the next tab stop, inside the active focus trap if any. */
 @:action(namespace = root) class Tab implements Action {}
@@ -110,7 +110,7 @@ class Root extends Model implements Render implements Styled {
         (cx:App).bindKeys([
             new KeyBinding('tab', new Tab(), CONTEXT),
             new KeyBinding('shift-tab', new TabPrev(), CONTEXT),
-            new KeyBinding(gpui.OperatingSystem.current == Mac ? 'cmd-c' : 'ctrl-c', new gpui.base.input.InputActions.Copy(), CONTEXT)
+            new KeyBinding(glaze.OperatingSystem.current == Mac ? 'cmd-c' : 'ctrl-c', new glaze.kit.base.input.InputActions.Copy(), CONTEXT)
         ]);
     }
 
@@ -216,13 +216,13 @@ class Root extends Model implements Render implements Styled {
         advanceFocus(window, cx, (window, cx) -> window.focusPrev(cx));
     }
 
-    function onActionCopy(_:gpui.base.input.InputActions.Copy, window:Window, cx:App):Void {
+    function onActionCopy(_:glaze.kit.base.input.InputActions.Copy, window:Window, cx:App):Void {
         final text = StringTools.trim(TextSelection.selectedText(window, cx));
         if (text.length == 0) {
             cx.propagate();
             return;
         }
-        cx.writeToClipboard(gpui.ClipboardItem.newString(text));
+        cx.writeToClipboard(glaze.ClipboardItem.newString(text));
     }
 
     /**
@@ -264,7 +264,7 @@ class Root extends Model implements Render implements Styled {
             .keyContext(CONTEXT)
             .onAction(Tab, (action, window, cx) -> onActionTab(action, window, cx))
             .onAction(TabPrev, (action, window, cx) -> onActionTabPrev(action, window, cx))
-            .onAction(gpui.base.input.InputActions.Copy, (action, window, cx) -> onActionCopy(action, window, cx))
+            .onAction(glaze.kit.base.input.InputActions.Copy, (action, window, cx) -> onActionCopy(action, window, cx))
             .relative()
             .sizeFull()
             .child(new TextSelectionLayer())

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/elements/div.rs (`Div`, `InteractiveElement`, `StatefulInteractiveElement`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A `Div` element, the all-in-one element for building complex UIs in GPUI.
@@ -43,9 +43,9 @@ class Div extends Element implements Styled implements ParentElement {
 
     var hitbox:Null<Hitbox> = null;
 
-    public function new(#if gpui_inspector ?pos:haxe.PosInfos #end) {
-        #if gpui_count_allocations gpui.util.AllocationCounters.divs++; #end
-        #if gpui_inspector
+    public function new(#if glaze_inspector ?pos:haxe.PosInfos #end) {
+        #if glaze_count_allocations glaze.util.AllocationCounters.divs++; #end
+        #if glaze_inspector
         interactivity.sourceLocation = pos;
         #end
     }
@@ -58,7 +58,7 @@ class Div extends Element implements Styled implements ParentElement {
         return interactivity.elementId;
     }
 
-    #if gpui_inspector
+    #if glaze_inspector
     override function sourceLocation():Null<haxe.PosInfos> {
         return interactivity.sourceLocation;
     }
@@ -347,7 +347,7 @@ class Div extends Element implements Styled implements ParentElement {
     }
 
     /** `onAction()` with an entry made once (`Interactivity.bubbleActionEntry`). Internal. */
-    @:allow(gpui)
+    @:allow(glaze)
     function onActionEntry(entry:Interactivity.TypedActionListener):Div {
         interactivity.addActionEntry(entry);
         return this;
@@ -561,13 +561,13 @@ class Div extends Element implements Styled implements ParentElement {
     }
 
     /** `hover(f)` with the refinement `f` would build (no closure). Internal. */
-    @:allow(gpui)
+    @:allow(glaze)
     function setHoverRefinement(refinement:StyleRefinement):Void {
         interactivity.hoverStyle = refinement;
     }
 
     /** `active(f)` with the refinement `f` would build (no closure). Internal. */
-    @:allow(gpui)
+    @:allow(glaze)
     function setActiveRefinement(refinement:StyleRefinement):Void {
         interactivity.activeStyle = refinement;
     }
@@ -677,7 +677,7 @@ class Div extends Element implements Styled implements ParentElement {
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         // Rust `self.interactivity.request_layout(.., |style, window, cx| ..)`,
         // without a closure
-        final style = interactivity.requestLayoutStyle(id, #if gpui_inspector inspectorId, #end window, cx);
+        final style = interactivity.requestLayoutStyle(id, #if glaze_inspector inspectorId, #end window, cx);
         final textStyle = style.textStyle();
         if (textStyle != null) window.pushTextStyle(textStyle);
         final count = childElements.length;
@@ -748,7 +748,7 @@ class Div extends Element implements Styled implements ParentElement {
 
         // Rust `self.interactivity.prepaint(.., |style, scroll_offset, hitbox, window, cx| ..)`,
         // without a closure
-        final style = interactivity.prepaintBegin(id, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx);
+        final style = interactivity.prepaintBegin(id, #if glaze_inspector inspectorId, #end bounds, contentSize, window, cx);
         // skip children
         if (style.display != Display.None) {
             // Rust `window.with_element_offset(scroll_offset, ..)`
@@ -776,7 +776,7 @@ class Div extends Element implements Styled implements ParentElement {
         final hitbox = this.hitbox;
         this.hitbox = null;
         // Rust `self.interactivity.paint(.., |style, window, cx| ..)`, without a closure
-        final style = interactivity.paintBegin(id, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+        final style = interactivity.paintBegin(id, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx);
         if (style == null) {
             return;
         }

@@ -1,13 +1,13 @@
 package;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The original view caching benchmark (step 13 of the plan): 70 cards with
@@ -22,7 +22,7 @@ class CardsScenario extends BaseScenario {
 
     var app:App;
 
-    var cards:Array<gpui.Entity<BenchCard>> = [];
+    var cards:Array<glaze.Entity<BenchCard>> = [];
 
     public function new() {
         super('cards');
@@ -57,7 +57,7 @@ class CardsScenario extends BaseScenario {
         ));
     }
 
-    function renderCard(card:gpui.Entity<BenchCard>, badge:gpui.Entity<BenchView>, cx:App):IntoElement {
+    function renderCard(card:glaze.Entity<BenchCard>, badge:glaze.Entity<BenchView>, cx:App):IntoElement {
         final model = card.read(cx);
         final value = model.value;
         return div().id('card').w(px(150)).h(px(118)).flex().flexCol().gap1().p2()

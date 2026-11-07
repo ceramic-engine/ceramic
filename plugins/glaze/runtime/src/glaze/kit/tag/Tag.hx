@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tag.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.tag;
+package glaze.kit.tag;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Hsla;
-import gpui.IntoAbsoluteLength;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.ColorName;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Hsla;
+import glaze.IntoAbsoluteLength;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.ColorName;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A small labelled chip, in a color variant, filled or outlined.
@@ -136,7 +136,7 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
             .flex()
             .itemsCenter()
             .border1()
-            .lineHeight(gpui.Prelude.relative(1.25));
+            .lineHeight(glaze.Prelude.relative(1.25));
         switch size {
             case XSmall | Small: element.textSize(rems(0.625));
             case Large: element.textSm();

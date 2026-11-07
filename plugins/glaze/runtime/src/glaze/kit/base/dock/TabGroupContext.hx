@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/tab_group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
+import glaze.App;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
 
 /**
  * What a skin needs to draw a tab group, and the callbacks it invokes rather
@@ -43,7 +43,7 @@ class TabGroupContext {
 
     final onDropItem:(AnyDrag, Null<Placement>, Window, App) -> Void;
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function new(node:NodeId, panels:Array<PanelView>, activePanel:Null<PanelView>, activeIx:Int, zoomed:Bool,
             constraints:TabGroupConstraints, draggable:Bool, droppable:Bool, activePanelClosable:Bool,
             dropIndicator:Null<DropIndicator>, onSelectTab:(Int, Window, App) -> Void, onClose:(PanelId, Window, App) -> Void,

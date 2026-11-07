@@ -5,41 +5,41 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Edges;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.Size;
-import gpui.component.table.Column;
-import gpui.component.table.DataTable;
-import gpui.component.table.Table;
-import gpui.component.table.TableDelegate;
-import gpui.component.table.TableState;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Edges;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.Size;
+import glaze.kit.table.Column;
+import glaze.kit.table.DataTable;
+import glaze.kit.table.Table;
+import glaze.kit.table.TableDelegate;
+import glaze.kit.table.TableState;
+import glaze.kit.theme.Theme;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.table.TableState.TableSelectionTools;
+using glaze.kit.table.TableState.TableSelectionTools;
 
 /**
  * The tests of gpui-component's `table` module (`table.rs`,
@@ -279,7 +279,7 @@ class ComponentTableTest extends TestCase {
     static inline final FIXED = 2;
     static inline final CAP:Float = 120.;
     /** Fractional on purpose, so the padding is rounded up as the content is. */
-    static final PADDING:Float = gpui.SpringMath.f32(8.3);
+    static final PADDING:Float = glaze.SpringMath.f32(8.3);
 
     function fitTable():{state:Entity<TableState<FitDelegate>>, delegate:FitDelegate, cx:VisualTestContext, events:Array<Array<Pixels>>} {
         final delegate = new FitDelegate();
@@ -295,7 +295,7 @@ class ComponentTableTest extends TestCase {
 
     function fit(t:{state:Entity<TableState<FitDelegate>>, delegate:FitDelegate, cx:VisualTestContext, events:Array<Array<Pixels>>}, colIx:Int, content:Null<Float>):{width:Float, scale:Float} {
         return t.cx.update((window, app) -> t.state.update(app, (table, cx) -> {
-            table.delegateMut().content = content != null ? gpui.SpringMath.f32(content) : null;
+            table.delegateMut().content = content != null ? glaze.SpringMath.f32(content) : null;
             table.fitCol(colIx, window, cx);
             return {width: (table.colWidth(colIx) : Float), scale: window.scaleFactor()};
         }));
@@ -310,11 +310,11 @@ class ComponentTableTest extends TestCase {
 
             // One content width per tenth of a pixel, so every rounding case is hit.
             for (tenth in 0...10) {
-                final content = gpui.SpringMath.f32(100. + gpui.SpringMath.f32(tenth / 10.));
+                final content = glaze.SpringMath.f32(100. + glaze.SpringMath.f32(tenth / 10.));
                 final r = fit(t, FREE, content);
-                final devicePixels = gpui.SpringMath.f32(r.width * r.scale);
+                final devicePixels = glaze.SpringMath.f32(r.width * r.scale);
 
-                assertTrue(r.width >= gpui.SpringMath.f32(content + 2. * PADDING), '$content px of content got a ${r.width} column at ${r.scale}x');
+                assertTrue(r.width >= glaze.SpringMath.f32(content + 2. * PADDING), '$content px of content got a ${r.width} column at ${r.scale}x');
                 assertTrue(Math.abs(devicePixels - Math.fround(devicePixels)) < 1e-3, '${r.width} is not a whole number of device pixels at ${r.scale}x');
                 assertTrue(devicePixels < (content + 2. * PADDING) * r.scale + 4., '$content px of content got ${r.width} at ${r.scale}x, more than rounding needs');
             }
@@ -781,7 +781,7 @@ private class FitDelegate extends TableDelegateBase {
     }
 
     public function column(colIx:Int, _:App):Column {
-        final padding = gpui.SpringMath.f32(8.3);
+        final padding = glaze.SpringMath.f32(8.3);
         final column = new Column('column-' + colIx, 'Column ' + colIx)
             .withWidth(80.)
             .withPaddings(new Edges(0., padding, 0., padding));

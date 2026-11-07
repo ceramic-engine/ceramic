@@ -2,24 +2,24 @@
 // (`measured_wrap`, `measured_wrap_boundaries`, `TextWrapper`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Font;
-import gpui.Hsla;
-import gpui.LineWrapper.Boundary;
-import gpui.LineWrapper.IndentAdjustment;
-import gpui.LineWrapper.LineFragment;
-import gpui.Range;
-import gpui.TextRun;
-import gpui.WindowTextSystem;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Font;
+import glaze.Hsla;
+import glaze.LineWrapper.Boundary;
+import glaze.LineWrapper.IndentAdjustment;
+import glaze.LineWrapper.LineFragment;
+import glaze.Range;
+import glaze.TextRun;
+import glaze.WindowTextSystem;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import ropey.Rope;
 import unicode_linebreak.UnicodeLinebreak;
 import unicode_segmentation.UnicodeSegmentation;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * Used to prepare the text with soft wrap to be get lines to displayed in the Editor.
@@ -731,10 +731,10 @@ private class FunctionTextWidths implements TextWidths {
  * The native line wrapping of `TextWrapper.updateWrapped`: inline element
  * metrics, then the measured wrap with the cached native widths.
  */
-@:access(gpui.base.input.TextWrapper)
+@:access(glaze.kit.base.input.TextWrapper)
 private class NativeLineWrapping implements LineWrapping implements TextWidths {
 
-    final lineWrapper:gpui.LineWrapper;
+    final lineWrapper:glaze.LineWrapper;
 
     final metrics:Array<InlineMetric>;
 
@@ -750,7 +750,7 @@ private class NativeLineWrapping implements LineWrapping implements TextWidths {
 
     final tabStop:Float;
 
-    public function new(lineWrapper:gpui.LineWrapper, metrics:Array<InlineMetric>, measurements:WidthMeasurements, textSystem:WindowTextSystem, font:Font, fontSize:Float, wrappingIndent:WrappingIndent, tabStop:Float) {
+    public function new(lineWrapper:glaze.LineWrapper, metrics:Array<InlineMetric>, measurements:WidthMeasurements, textSystem:WindowTextSystem, font:Font, fontSize:Float, wrappingIndent:WrappingIndent, tabStop:Float) {
         this.lineWrapper = lineWrapper;
         this.metrics = metrics;
         this.measurements = measurements;

@@ -2,41 +2,41 @@
 // and the selection keys of crates/component/src/diff/state.rs (`encode_key`, `decode_key`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.HighlightStyle;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.IndexResult;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ListState;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.Point;
-import gpui.Range;
-import gpui.ScrollHandle;
-import gpui.StyledText;
-import gpui.TextLayout;
-import gpui.Window;
-import gpui.base.Scrollbar.ScrollbarHandle;
-import gpui.base.TextSelectionHandle;
-import gpui.base.TextSelectionRegistration;
-import gpui.base.TextSelectionRun;
-import gpui.component.diff.Presentation.DiffStyledRange;
-import gpui.component.theme.ActiveTheme;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.HighlightStyle;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.IndexResult;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ListState;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.Point;
+import glaze.Range;
+import glaze.ScrollHandle;
+import glaze.StyledText;
+import glaze.TextLayout;
+import glaze.Window;
+import glaze.kit.base.Scrollbar.ScrollbarHandle;
+import glaze.kit.base.TextSelectionHandle;
+import glaze.kit.base.TextSelectionRegistration;
+import glaze.kit.base.TextSelectionRun;
+import glaze.kit.diff.Presentation.DiffStyledRange;
+import glaze.kit.theme.ActiveTheme;
+import glaze.util.Utf8;
 
 /**
  * A painted chunk of a source line.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class CodeRun {
 
     final file:Int;
@@ -63,10 +63,10 @@ class CodeRun {
  * The painted code runs of the frame, shared by the code texts and the
  * selection layer (Rust `Rc<RefCell<SelectionGeometry>>`).
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class SelectionGeometry {
 
-    var bounds:Bounds = new Bounds(new Point(0, 0), new gpui.Size(0, 0));
+    var bounds:Bounds = new Bounds(new Point(0, 0), new glaze.Size(0, 0));
 
     var scrollOffset:Point = new Point(0, 0);
 
@@ -182,7 +182,7 @@ class SelectionGeometry {
  * Content keys are exact source offsets, so copying does not depend on which
  * rows are still painted when the gesture ends.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class Selection {
 
     // Rust packs `(file, side, offset)` into a `u64` (file << 41, side bit 40).
@@ -409,7 +409,7 @@ class Selection {
  * One chunk of a source line: a `StyledText` that records its layout for
  * the selection layer.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class CodeText extends Element {
 
     final id:ElementId;
@@ -461,7 +461,7 @@ class CodeText extends Element {
         }
         final text = line.chunkText(range);
         final merged = Selection.mergeHighlights(range.len(), clipped);
-        styledText = new StyledText(text).withHighlights([for (h in merged) new gpui.HighlightStyle.TextHighlight(h.range.start, h.range.end, h.style)]);
+        styledText = new StyledText(text).withHighlights([for (h in merged) new glaze.HighlightStyle.TextHighlight(h.range.start, h.range.end, h.style)]);
         return styledText.requestLayout(id, window, cx);
     }
 
@@ -481,7 +481,7 @@ class CodeText extends Element {
  * The selection participant of the code surface: registers the painted
  * runs with Base's window text selection.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class SelectionLayer extends Element {
 
     final child:AnyElement;

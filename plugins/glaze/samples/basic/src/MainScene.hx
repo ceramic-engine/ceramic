@@ -1,20 +1,20 @@
 package;
 
 import ceramic.Scene;
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Render;
-import gpui.ScrollHandle;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Render;
+import glaze.ScrollHandle;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 @:action(namespace = sample) class FocusNext implements Action {}
 @:action(namespace = sample) class FocusPrev implements Action {}
@@ -140,7 +140,7 @@ class SampleView extends Model implements Render {
         cards = [for (_ in 0...4) cx.focusHandle().tabStop(true)];
     }
 
-    static inline function bg():gpui.Hsla {
+    static inline function bg():glaze.Hsla {
         return hsla(0.61, 0.20, 0.13, 1.0);
     }
 
@@ -169,7 +169,7 @@ class SampleView extends Model implements Render {
             .child(
                 div().flex().itemsCenter().gap2()
                     .child(svg().path(ICONS[index]).size(px(16)).textColor(color))
-                    .child(div().textSm().fontWeight(gpui.FontWeight.SEMIBOLD).textColor(hsla(0.0, 0.0, 0.2, 1.0)).child(CARD_TITLES[index]))
+                    .child(div().textSm().fontWeight(glaze.FontWeight.SEMIBOLD).textColor(hsla(0.0, 0.0, 0.2, 1.0)).child(CARD_TITLES[index]))
             )
             .child(div().h2().wFull().roundedFull().bg(color))
             .child(div().textXs().textColor(hsla(0.0, 0.0, 0.45, 1.0)).truncate().child('Click, or tab then enter'));
@@ -289,7 +289,7 @@ class SampleView extends Model implements Render {
                             .child(
                                 div().flex().itemsCenter().gap2()
                                     // Decoded asynchronously from the asset bytes, shown when ready
-                                    .child(img('ceramic.png').size(px(32)).roundedMd().objectFit(gpui.ObjectFit.Cover))
+                                    .child(img('ceramic.png').size(px(32)).roundedMd().objectFit(glaze.ObjectFit.Cover))
                                     .child(div().textSm().child('10000 rows (uniform_list)'))
                             )
                             .child(
@@ -340,8 +340,8 @@ class TooltipView extends Model implements Render {
 
 class ElementIdArgs {
 
-    public static inline function named(name:String, index:Int):gpui.ElementIdArg {
-        return gpui.ElementId.NamedInteger(name, index);
+    public static inline function named(name:String, index:Int):glaze.ElementIdArg {
+        return glaze.ElementId.NamedInteger(name, index);
     }
 
 }

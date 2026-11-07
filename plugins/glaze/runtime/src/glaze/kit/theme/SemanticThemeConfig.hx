@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/schema.rs (SemanticThemeConfig and its sections, SemanticThemeConfigFile)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.BoxShadow;
-import gpui.FontWeight;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Rgba;
-import gpui.base.theme.SemanticThemeTokens;
-import gpui.base.theme.TextStyleToken;
+import glaze.BoxShadow;
+import glaze.FontWeight;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Rgba;
+import glaze.kit.base.theme.SemanticThemeTokens;
+import glaze.kit.base.theme.TextStyleToken;
 
 /**
  * A standalone semantic theme configuration: every value is optional and
@@ -106,7 +106,7 @@ class SemanticThemeConfig {
     /**
      * Applies this configuration over `tokens`, in place.
      */
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     function applyTo(tokens:SemanticThemeTokens):Void {
 
         for (key in SemanticColorConfig.KEYS) {
@@ -194,7 +194,7 @@ class SemanticThemeConfigFile {
 @:keep
 class SemanticColorConfig {
 
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     static final KEYS:Array<String> = [
         'background', 'foreground', 'surface', 'surface_foreground', 'primary', 'primary_foreground',
         'secondary', 'secondary_foreground', 'muted', 'muted_foreground', 'accent', 'accent_foreground',
@@ -226,7 +226,7 @@ class SemanticColorConfig {
 @:keep
 class SemanticRadiusConfig {
 
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     static final KEYS:Array<String> = ['none', 'sm', 'md', 'lg', 'xl', 'full'];
 
     public var none:Null<Float> = null;
@@ -243,7 +243,7 @@ class SemanticRadiusConfig {
 @:keep
 class SemanticSpacingConfig {
 
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     static final KEYS:Array<String> = ['xxs', 'xs', 'sm', 'md', 'lg', 'xl', 'xxl'];
 
     public var xxs:Null<Float> = null;

@@ -1,5 +1,5 @@
 // New code for the Haxe port of GPUI (no GPUI origin). See NOTICE.md.
-package gpui.util;
+package glaze.util;
 
 /**
  * A shared mutable value, standing for Rust's `Rc<RefCell<T>>` / `Rc<Cell<T>>`

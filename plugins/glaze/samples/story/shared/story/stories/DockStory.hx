@@ -3,28 +3,28 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockLayout;
-import gpui.base.dock.DockPlacement;
-import gpui.component.button.Button;
-import gpui.component.dock.DockSkin;
-import gpui.component.dock.PanelBase;
-import gpui.component.dock.PanelHandle;
-import gpui.component.menu.PopupMenu;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockLayout;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.button.Button;
+import glaze.kit.dock.DockSkin;
+import glaze.kit.dock.PanelBase;
+import glaze.kit.dock.PanelHandle;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
 /** A plain panel of the dock story. */

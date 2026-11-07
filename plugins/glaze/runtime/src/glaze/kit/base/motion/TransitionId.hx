@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (TransitionId)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.ElementId;
-import gpui.GlobalElementId;
-import gpui.Window;
-import gpui.Window.ElementStateBox;
+import glaze.ElementId;
+import glaze.GlobalElementId;
+import glaze.Window;
+import glaze.Window.ElementStateBox;
 
 /**
  * Identifies one independently transitioning value.
@@ -84,7 +84,7 @@ abstract TransitionId(Array<ElementId>) {
      * motion functions write their state without notifying, so a plain state
      * box is enough). `box.value` is `null` the first time.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function stateBox<S>(window:Window, type:Class<S>):ElementStateBox<S> {
         final last = this.length - 1;
         for (i in 0...last) {

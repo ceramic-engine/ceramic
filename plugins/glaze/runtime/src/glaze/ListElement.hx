@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/elements/list.rs (`List`, `list`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.ListState.LayoutItemsResponse;
+import glaze.ListState.LayoutItemsResponse;
 
 /**
  * A list element that can be used to render a large number of differently sized elements
@@ -155,7 +155,7 @@ class ListElement extends Element implements Styled {
     /**
      * Rust `style.padding.to_pixels(size.into(), rem_size)`.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function paddingToPixels(style:Style, parentSize:Size, remSize:Pixels):Edges {
         return new Edges(
             style.paddingTop.toPixelsOf(parentSize.height, remSize),

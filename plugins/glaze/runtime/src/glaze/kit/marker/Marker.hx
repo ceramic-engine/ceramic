@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/marker.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.marker;
+package glaze.kit.marker;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.StyledText;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.component.shimmer.ShimmerText;
-import gpui.component.spinner.Spinner;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.StyledText;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.shimmer.ShimmerText;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AnimationExt;
-using gpui.base.StyledExt;
+using glaze.AnimationExt;
+using glaze.kit.base.StyledExt;
 
 enum abstract MarkerVariant(Int) {
     var Plain;
@@ -69,7 +69,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
 
     @:allow(tests) var loadingStyle:MarkerLoadingStyle = Spinner;
 
-    var shimmerStyle:gpui.component.shimmer.ShimmerText.ShimmerStyle = new gpui.component.shimmer.ShimmerText.ShimmerStyle();
+    var shimmerStyle:glaze.kit.shimmer.ShimmerText.ShimmerStyle = new glaze.kit.shimmer.ShimmerText.ShimmerStyle();
 
     @:allow(tests) var roleValue:RoleOverride = Implicit;
 
@@ -117,7 +117,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function withShimmerStyle(shimmerStyle:gpui.component.shimmer.ShimmerText.ShimmerStyle):Marker {
+    public function withShimmerStyle(shimmerStyle:glaze.kit.shimmer.ShimmerText.ShimmerStyle):Marker {
         this.shimmerStyle = shimmerStyle;
         return this;
     }
@@ -157,12 +157,12 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
         var hasIcon = false;
         for (child in markerChildren) if (child.match(MIcon(_))) hasIcon = true;
 
-        final row = gpui.base.Prelude.hFlex()
+        final row = glaze.kit.base.Prelude.hFlex()
             .wFull()
             .minH(rems(1.))
             .gap2()
             .textSm()
-            .lineHeight(gpui.Prelude.relative(1.5))
+            .lineHeight(glaze.Prelude.relative(1.5))
             .textColor(tokens.colors.mutedForeground);
         switch alignment {
             case Start: row.justifyStart().textLeft();
@@ -173,10 +173,10 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
             row.borderB1().borderColor(tokens.colors.border).pb2();
         }
         if (variant == Separator && alignment != Start) {
-            row.child(div().flex1().minW0().h(gpui.Prelude.px(1.)).mr1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
+            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).mr1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
         }
         if (loading && loadingStyle == Spinner && !hasIcon) {
-            row.child(new MarkerIcon().child(new gpui.component.spinner.Spinner().xsmall()));
+            row.child(new MarkerIcon().child(new glaze.kit.spinner.Spinner().xsmall()));
         }
         for (child in markerChildren) {
             switch child {
@@ -191,7 +191,7 @@ class Marker implements RenderOnce implements Styled implements ParentElement {
             }
         }
         if (variant == Separator && alignment != End) {
-            row.child(div().flex1().minW0().h(gpui.Prelude.px(1.)).ml1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
+            row.child(div().flex1().minW0().h(glaze.Prelude.px(1.)).ml1().bg(tokens.colors.border).refineStyle(separatorStyleValue));
         }
         row.refineStyle(markerStyle);
 
@@ -234,7 +234,7 @@ class MarkerIcon implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final element = gpui.base.Prelude.hFlex().size4().flexNone().itemsCenter().justifyCenter().refineStyle(iconStyle);
+        final element = glaze.kit.base.Prelude.hFlex().size4().flexNone().itemsCenter().justifyCenter().refineStyle(iconStyle);
         element.extend(childElements);
         return element;
     }
@@ -254,13 +254,13 @@ class MarkerContent implements RenderOnce implements Styled implements ParentEle
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.marker) var shimmer:Bool = false;
+    @:allow(glaze.kit.marker) var shimmer:Bool = false;
 
-    @:allow(gpui.component.marker) var shimmerStyle:gpui.component.shimmer.ShimmerText.ShimmerStyle = new gpui.component.shimmer.ShimmerText.ShimmerStyle();
+    @:allow(glaze.kit.marker) var shimmerStyle:glaze.kit.shimmer.ShimmerText.ShimmerStyle = new glaze.kit.shimmer.ShimmerText.ShimmerStyle();
 
-    @:allow(gpui.component.marker) var separator:Bool = false;
+    @:allow(glaze.kit.marker) var separator:Bool = false;
 
-    @:allow(gpui.component.marker) var alignment:MarkerAlignment = Start;
+    @:allow(glaze.kit.marker) var alignment:MarkerAlignment = Start;
 
     @:allow(tests) final contentChildren:Array<MarkerContentChild> = [];
 

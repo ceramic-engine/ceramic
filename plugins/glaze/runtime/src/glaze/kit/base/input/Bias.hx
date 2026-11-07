@@ -1,7 +1,7 @@
 // Ported from gpui-pre-sum-tree 0.3.10: src/sum_tree.rs (Bias only, the only part of sum_tree gpui-kit uses)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * Which side of a position to attach to when it falls inside something

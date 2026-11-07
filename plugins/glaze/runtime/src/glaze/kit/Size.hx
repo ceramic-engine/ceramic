@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sizing.rs (Size)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.Edges;
-import gpui.Pixels;
+import glaze.Edges;
+import glaze.Pixels;
 
 /**
  * A size for elements (default `Medium`).
  *
- * Not to be confused with `gpui.Size` (width and height): import it as
- * `gpui.component.Size` where both are needed. Methods are in `SizeTools`.
+ * Not to be confused with `glaze.Size` (width and height): import it as
+ * `glaze.kit.Size` where both are needed. Methods are in `SizeTools`.
  */
-@:using(gpui.component.Size.SizeTools)
+@:using(glaze.kit.Size.SizeTools)
 enum Size {
     Size(size:Pixels);
     XSmall;
@@ -218,7 +218,7 @@ class SizeTools {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }

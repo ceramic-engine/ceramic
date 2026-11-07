@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/table/column.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.table;
+package glaze.kit.table;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Edges;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Edges;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Represents a column in a table, used for initializing table columns.
@@ -279,7 +279,7 @@ enum abstract ColumnSort(Int) {
 /**
  * Used to sort the column runtime info in Table internal.
  */
-@:allow(gpui.component.table)
+@:allow(glaze.kit.table)
 class ColGroup {
 
     public var column:Column;
@@ -385,7 +385,7 @@ class ResizeColumnView extends Model implements Render {
     }
 
     public function render(_:Window, _:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }

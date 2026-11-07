@@ -1,16 +1,16 @@
 package tests;
 
-import gpui.Action;
-import gpui.ActionBuildError;
-import gpui.ActionRegistry;
-import gpui.App;
-import gpui.KeyBinding;
-import gpui.KeyContext;
-import gpui.Keystroke;
-import gpui.MacroActionData;
-import gpui.NoAction;
-import gpui.TestDispatcher;
-import gpui.Unbind;
+import glaze.Action;
+import glaze.ActionBuildError;
+import glaze.ActionRegistry;
+import glaze.App;
+import glaze.KeyBinding;
+import glaze.KeyContext;
+import glaze.Keystroke;
+import glaze.MacroActionData;
+import glaze.NoAction;
+import glaze.TestDispatcher;
+import glaze.Unbind;
 import testing.TestCase;
 
 /**

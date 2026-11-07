@@ -1,10 +1,10 @@
 // Ported from gpui-pre 0.3.10: src/elements/text.rs (TextLayout, TextLayoutInner)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.LineWrapper;
-import gpui.util.Utf8;
+import glaze.LineWrapper;
+import glaze.util.Utf8;
 
 /**
  * The Layout for a text element. This can be used to map indices to pixels and vice versa.
@@ -92,7 +92,7 @@ class TextLayout extends TaffyLayoutEngine.MeasuredNode {
         pendingStyle = textStyle;
         pendingFontSize = fontSize;
         pendingLineHeight = lineHeight;
-        return @:privateAccess window.requestMeasuredNode(@:privateAccess gpui.Style.sharedDefaultStyle(), this);
+        return @:privateAccess window.requestMeasuredNode(@:privateAccess glaze.Style.sharedDefaultStyle(), this);
     }
 
     var pendingText:String = '';

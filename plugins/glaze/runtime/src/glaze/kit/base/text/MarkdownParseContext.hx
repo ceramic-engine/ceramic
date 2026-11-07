@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/markdown_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
 import markdown.mdast.Node;
 
@@ -15,7 +15,7 @@ class MarkdownParseContext {
     final source_:String;
     final offset_:Int;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(source:String, offset:Int) {
         this.source_ = source;
         this.offset_ = offset;

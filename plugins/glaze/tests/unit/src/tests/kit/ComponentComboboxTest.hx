@@ -4,34 +4,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseDownEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Component;
-import gpui.component.combobox.Combobox;
-import gpui.component.combobox.ComboboxState;
-import gpui.component.searchablelist.SearchableListChange;
-import gpui.component.searchablelist.SearchableListDelegate;
-import gpui.component.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.component.searchablelist.SearchableVec.SearchableGroup;
-import gpui.component.searchablelist.SelectedItem;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Component;
+import glaze.kit.combobox.Combobox;
+import glaze.kit.combobox.ComboboxState;
+import glaze.kit.searchablelist.SearchableListChange;
+import glaze.kit.searchablelist.SearchableListDelegate;
+import glaze.kit.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.searchablelist.SearchableVec.SearchableGroup;
+import glaze.kit.searchablelist.SelectedItem;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-component's `SearchableVec` (`searchable_list/vec.rs`),
@@ -459,7 +459,7 @@ class ComponentComboboxTest extends TestCase {
         });
 
         app.update(cx -> state.update(cx, (state, cx) -> {
-            state.state.bounds = new Bounds(new Point(10., 10.), new gpui.Size(200., 32.));
+            state.state.bounds = new Bounds(new Point(10., 10.), new glaze.Size(200., 32.));
             state.setOpen(true, cx);
             state.dismiss(leftPress(new Point(20., 20.)), window, cx);
         }));
@@ -501,7 +501,7 @@ private class Harness extends Model implements Render {
         final state:Entity<Harness> = cast cx.entity();
         final events = this.events;
 
-        return new gpui.base.Combobox("combobox")
+        return new glaze.kit.base.Combobox("combobox")
             .open(open)
             .focusHandle(triggerFocus)
             .contentFocusHandle(contentFocus)

@@ -1,17 +1,17 @@
 package scenarios;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Keystroke;
-import gpui.PlatformInput;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
-import gpui.util.AllocationCounters;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Keystroke;
+import glaze.PlatformInput;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
+import glaze.util.AllocationCounters;
 import story.Lib;
 
 /**
@@ -97,7 +97,7 @@ class KitBench {
 
     /**
      * The number of elements (divs, texts, svgs, view elements) created by a
-     * full draw of `window`. Needs the `gpui_count_allocations` define, 0
+     * full draw of `window`. Needs the `glaze_count_allocations` define, 0
      * without it.
      */
     public static function countElements(window:Window):Int {

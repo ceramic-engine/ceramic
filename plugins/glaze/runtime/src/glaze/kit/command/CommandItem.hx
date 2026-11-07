@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/command/item.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.command;
+package glaze.kit.command;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.component.Icon;
-import gpui.component.Icon.IntoIcon;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.Icon;
+import glaze.kit.Icon.IntoIcon;
 
 /**
  * The lazily built content of a command item (Rust `CommandItemContent`).
@@ -26,18 +26,18 @@ class CommandItem implements Disableable {
 
     var keywordsValue:Array<String> = [];
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     var iconValue:Null<Icon> = null;
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     var actionValue:Null<Action> = null;
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     var checkedValue:Bool = false;
 
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     var content:Null<CommandItemContent> = null;
 
     /**
@@ -129,7 +129,7 @@ class CommandItem implements Disableable {
     }
 
     /** Whether this item is non-interactive. */
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     function isDisabled():Bool {
         return disabledValue;
     }
@@ -139,7 +139,7 @@ class CommandItem implements Disableable {
      *
      * An empty query matches everything.
      */
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     function matches(query:String):Bool {
         if (query.length == 0) return true;
 
@@ -152,7 +152,7 @@ class CommandItem implements Disableable {
         return false;
     }
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     function labelText():Null<String> {
         return labelValue;
     }
@@ -166,7 +166,7 @@ class CommandItem implements Disableable {
      * a clone sharing the same closure: the child can read state outside the
      * item, so only laying it out again tells whether its height changed.
      */
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     function sameLayout(other:CommandItem):Bool {
         if (content != null || other.content != null) return false;
         if (labelValue != other.labelValue) return false;
@@ -198,7 +198,7 @@ class CommandGroup {
 
     var headingValue:Null<String> = null;
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     var items:Array<CommandItem> = [];
 
     /**
@@ -244,7 +244,7 @@ class CommandGroup {
         return headingValue;
     }
 
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     function sameLayout(other:CommandGroup):Bool {
         if (headingValue != other.headingValue || items.length != other.items.length) return false;
         for (i in 0...items.length) {
@@ -258,7 +258,7 @@ class CommandGroup {
 /**
  * A top-level entry in a `Command`.
  */
-@:using(gpui.component.command.CommandItem.CommandEntryTools)
+@:using(glaze.kit.command.CommandItem.CommandEntryTools)
 enum CommandEntry {
     /** A single ungrouped item. */
     Item(item:CommandItem);
@@ -279,7 +279,7 @@ class CommandEntryTools {
      * Whether `other` produces the same rows and row sizes as this entry for
      * any query. See `CommandItem.sameLayout`.
      */
-    @:allow(gpui.component.command, tests)
+    @:allow(glaze.kit.command, tests)
     static function sameLayout(self:CommandEntry, other:CommandEntry):Bool {
         return switch [self, other] {
             case [Item(item), Item(other)]: item.sameLayout(other);

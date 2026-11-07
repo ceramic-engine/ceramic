@@ -1,16 +1,16 @@
 package;
 
 import ceramic.Scene;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.SystemNotification;
-import gpui.SystemNotificationAction;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.SystemNotification;
+import glaze.SystemNotificationAction;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Click zones of a GPUI window posting and dismissing system notifications

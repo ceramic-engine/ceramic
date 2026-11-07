@@ -4,48 +4,48 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Hsla;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.base.Geometry.Side;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.badge.Badge;
-import gpui.component.breadcrumb.Breadcrumb;
-import gpui.component.breadcrumb.Breadcrumb.BreadcrumbItem;
-import gpui.component.button.Button;
-import gpui.component.separator.Separator;
-import gpui.component.sidebar.Sidebar;
-import gpui.component.sidebar.Sidebar.SidebarCollapsible;
-import gpui.component.sidebar.Sidebar.SidebarToggleButton;
-import gpui.component.sidebar.SidebarFooter;
-import gpui.component.sidebar.SidebarGroup;
-import gpui.component.sidebar.SidebarHeader;
-import gpui.component.sidebar.SidebarMenu;
-import gpui.component.sidebar.SidebarMenu.SidebarMenuItem;
-import gpui.component.switch_.Switch;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Hsla;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.badge.Badge;
+import glaze.kit.breadcrumb.Breadcrumb;
+import glaze.kit.breadcrumb.Breadcrumb.BreadcrumbItem;
+import glaze.kit.button.Button;
+import glaze.kit.separator.Separator;
+import glaze.kit.sidebar.Sidebar;
+import glaze.kit.sidebar.Sidebar.SidebarCollapsible;
+import glaze.kit.sidebar.Sidebar.SidebarToggleButton;
+import glaze.kit.sidebar.SidebarFooter;
+import glaze.kit.sidebar.SidebarGroup;
+import glaze.kit.sidebar.SidebarHeader;
+import glaze.kit.sidebar.SidebarMenu;
+import glaze.kit.sidebar.SidebarMenu.SidebarMenuItem;
+import glaze.kit.switch_.Switch;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
-using gpui.component.sidebar.SidebarDropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.sidebar.SidebarDropdownMenu;
 
 @:action(namespace = sidebar_story, noJson) class SelectCompany implements Action {
     public final value:String;
@@ -171,7 +171,7 @@ class SidebarStory extends Model implements Story {
         return 'A composable, themeable and customizable sidebar component.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 

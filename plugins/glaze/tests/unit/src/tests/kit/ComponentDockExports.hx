@@ -11,22 +11,22 @@ import haxe.macro.Expr;
 /**
  * gpui-kit's two dock `mod.rs` files, like the Rust test's `include_str!`,
  * and the names the Haxe component dock re-exports from base (its
- * `typedef X = gpui.base.dock...` modules), sorted.
+ * `typedef X = glaze.kit.base.dock...` modules), sorted.
  */
 class ComponentDockExports {
 
     public static macro function baseModRs():Expr {
-        return macro $v{read('gpui-kit/crates/base/src/dock/mod.rs')};
+        return macro $v{read('data/gpui-kit/crates/base/src/dock/mod.rs')};
     }
 
     public static macro function componentModRs():Expr {
-        return macro $v{read('gpui-kit/crates/component/src/dock/mod.rs')};
+        return macro $v{read('data/gpui-kit/crates/component/src/dock/mod.rs')};
     }
 
     public static macro function haxeReexports():Expr {
-        final dir = root() + '/runtime/src/gpui/component/dock';
+        final dir = unit() + '/../../runtime/src/glaze/kit/dock';
         final names:Array<String> = [];
-        final pattern = ~/^typedef ([A-Za-z]+) = gpui\.base\.dock\./m;
+        final pattern = ~/^typedef ([A-Za-z]+) = glaze\.kit\.base\.dock\./m;
         for (file in sys.FileSystem.readDirectory(dir)) {
             if (!StringTools.endsWith(file, '.hx')) continue;
             final path = dir + '/' + file;
@@ -38,18 +38,14 @@ class ComponentDockExports {
     }
 
     #if macro
-    static function root():String {
+    /** The tests/unit folder (the gpui-kit sources are copied in its data/gpui-kit). */
+    static function unit():String {
         final file = Context.getPosInfos(Context.currentPos()).file;
-        // A scratch copy of test/unit has no repository around it: fall back
-        // to the gpui plugin path it records.
-        final local = haxe.io.Path.normalize(haxe.io.Path.directory(sys.FileSystem.absolutePath(file)) + '/../../../../..');
-        if (sys.FileSystem.exists(local + '/gpui-kit')) return local;
-        final plugin = haxe.io.Path.normalize(haxe.io.Path.directory(sys.FileSystem.absolutePath(file)) + '/../../../plugins/gpui.plugin');
-        return StringTools.trim(sys.io.File.getContent(plugin));
+        return haxe.io.Path.normalize(haxe.io.Path.directory(sys.FileSystem.absolutePath(file)) + '/../../..');
     }
 
     static function read(relative:String):String {
-        final path = root() + '/' + relative;
+        final path = unit() + '/' + relative;
         Context.registerModuleDependency('tests.kit.ComponentDockExports', path);
         return sys.io.File.getContent(path);
     }

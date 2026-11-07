@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/lsp/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Window;
+import glaze.App;
+import glaze.Window;
 
 /**
  * Host hook to show a document when following an LSP location

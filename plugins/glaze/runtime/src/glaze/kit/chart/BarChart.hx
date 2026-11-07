@@ -1,49 +1,49 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/chart/bar_chart.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.LinearColorStop;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.motion.TransitionId;
-import gpui.base.plot.Grid;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotAxis;
-import gpui.base.plot.PlotAxis.AxisLabelPlacement;
-import gpui.base.plot.PlotAxis.AxisLabelSide;
-import gpui.base.plot.PlotAxis.AxisText;
-import gpui.base.plot.PlotHover;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.scale.ScaleBand;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.shape.Bar;
-import gpui.base.plot.shape.Bar.BarAlignment;
-import gpui.component.chart.Chart.ChartAppear;
-import gpui.component.chart.Chart.TooltipContent;
-import gpui.component.plot.Tooltip;
-import gpui.component.plot.Tooltip.CrossLine;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.LinearColorStop;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.base.plot.Grid;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotAxis;
+import glaze.kit.base.plot.PlotAxis.AxisLabelPlacement;
+import glaze.kit.base.plot.PlotAxis.AxisLabelSide;
+import glaze.kit.base.plot.PlotAxis.AxisText;
+import glaze.kit.base.plot.PlotHover;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.scale.ScaleBand;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.shape.Bar;
+import glaze.kit.base.plot.shape.Bar.BarAlignment;
+import glaze.kit.chart.Chart.ChartAppear;
+import glaze.kit.chart.Chart.TooltipContent;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.plot.Tooltip.CrossLine;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.linearGradient;
+import glaze.Prelude.linearGradient;
 
 /**
  * The hover a bar chart paints, sampled once per frame in `updateHover`.
@@ -148,7 +148,7 @@ class BarChart<T> extends Plot {
 
     public function new(data:Iterable<T>, ?pos:haxe.PosInfos) {
         super();
-        this.data = gpui.util.Iterables.toArray(data);
+        this.data = glaze.util.Iterables.toArray(data);
         idValue = Chart.callerId(pos);
     }
 

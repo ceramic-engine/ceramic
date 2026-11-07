@@ -2,30 +2,30 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/line
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.Background;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.IntoHsla;
-import gpui.PaintQuad;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.Curve;
-import gpui.base.plot.PathCache;
-import gpui.base.plot.PathCache.ShapeKey;
-import gpui.base.plot.Plot;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.IntoHsla;
+import glaze.PaintQuad;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.Curve;
+import glaze.kit.base.plot.PathCache;
+import glaze.kit.base.plot.PathCache.ShapeKey;
+import glaze.kit.base.plot.Plot;
 
-import gpui.Prelude.quad;
-import gpui.Prelude.transparentBlack;
+import glaze.Prelude.quad;
+import glaze.Prelude.transparentBlack;
 
 /**
  * A line through data points (positions in pixels relative to the plot
@@ -57,7 +57,7 @@ class Line<T> {
 
     /** Set the data of the Line. */
     public function data(data:Iterable<T>):Line<T> {
-        dataValues = gpui.util.Iterables.toArray(data);
+        dataValues = glaze.util.Iterables.toArray(data);
         return this;
     }
 
@@ -174,7 +174,7 @@ class Line<T> {
      * Draw `points` with `curve` into `builder` (shared with `Area`, which
      * draws the same curve into two builders).
      */
-    @:allow(gpui.base.plot.shape)
+    @:allow(glaze.kit.base.plot.shape)
     static function curvePath(builder:PathBuilder, points:Array<Point>, curve:Curve):Void {
         builder.moveTo(points[0]);
         switch curve {

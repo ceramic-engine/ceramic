@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/mode.rs, crates/base/src/input/editor/indent.rs (the `impl LayoutMode` block)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Range;
-import gpui.Window;
+import glaze.Context;
+import glaze.Range;
+import glaze.Window;
 import ropey.Rope;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * The variants of `LayoutMode`.
@@ -373,7 +373,7 @@ class LayoutMode {
     public static function replacementInputEdit(oldText:Rope, newText:Rope, selectedRange:Range, changeText:String):InputEdit {
         final startByte = minInt(selectedRange.start, oldText.len());
         final oldEndByte = maxInt(minInt(selectedRange.end, oldText.len()), startByte);
-        final newEndByte = minInt(startByte + gpui.util.Utf8.byteLength(changeText), newText.len());
+        final newEndByte = minInt(startByte + glaze.util.Utf8.byteLength(changeText), newText.len());
 
         return new InputEdit(startByte, oldEndByte, newEndByte, oldText.offsetToPoint(startByte), oldText.offsetToPoint(oldEndByte),
             newText.offsetToPoint(newEndByte));

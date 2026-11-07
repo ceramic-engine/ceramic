@@ -3,19 +3,19 @@
 // crates/base/src/input/base/inline_tokens.rs (`token_api!(InputMode)`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Range;
-import gpui.TextInputConfiguration.Autocapitalize;
-import gpui.TextInputConfiguration.TextInputAction;
-import gpui.Window;
-import gpui.base.NumberStep;
-import gpui.base.StepAction;
-import gpui.base.input.InputBaseState.IntoMaskPattern;
+import glaze.App;
+import glaze.Context;
+import glaze.Range;
+import glaze.TextInputConfiguration.Autocapitalize;
+import glaze.TextInputConfiguration.TextInputAction;
+import glaze.Window;
+import glaze.kit.base.NumberStep;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.InputBaseState.IntoMaskPattern;
 
-using gpui.base.input.InputTokens;
+using glaze.kit.base.input.InputTokens;
 
 /**
  * State for a single-line text input.

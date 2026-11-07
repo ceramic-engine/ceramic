@@ -1,7 +1,7 @@
 // New code for the Haxe port of gpui-kit (no gpui-kit origin): stands for
 // `unicode_width::UnicodeWidthStr::width` (unicode-width 0.2.2) in the diff.
 // See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
 /**
  * The display width of a string in terminal cells, as the diff uses it to

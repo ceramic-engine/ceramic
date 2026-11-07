@@ -4,45 +4,45 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.ElementId;
-import gpui.Task;
-import gpui.Unit;
-import gpui.WeakEntity;
-import gpui.base.Geometry.Placement;
-import gpui.base.IndexPath;
-import gpui.base.input.InputState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.button.Button.ButtonVariant;
-import gpui.component.input.Input;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate;
-import gpui.component.list.ListItem;
-import gpui.component.list.ListState;
-import gpui.component.theme.Theme;
-import gpui.component.time.DatePicker;
-import gpui.component.time.DatePicker.DatePickerState;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.ElementId;
+import glaze.Task;
+import glaze.Unit;
+import glaze.WeakEntity;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.button.Button.ButtonVariant;
+import glaze.kit.input.Input;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate;
+import glaze.kit.list.ListItem;
+import glaze.kit.list.ListState;
+import glaze.kit.theme.Theme;
+import glaze.kit.time.DatePicker;
+import glaze.kit.time.DatePicker.DatePickerState;
 import story.StoryActions.TestAction;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 /** Rust `ToggleSheetOption::Overlay`. */
 @:action(namespace = sheet_story, name = Overlay, noJson) private class ToggleSheetOverlay implements Action {}
@@ -115,7 +115,7 @@ class ListItemDeletegate extends ListDelegateBase {
         final theme = Theme.global(cx.app);
         // Rust `Icon::size(px(50.))` is the Styled `size` (the Icon field of the same name hides it here).
         final icon = new Icon(IconName.Inbox);
-        new gpui.StyleBuilder(icon.style()).size(px(50.));
+        new glaze.StyleBuilder(icon.style()).size(px(50.));
         return vFlex()
             .sizeFull()
             .child(icon.textColor(theme.mutedForeground))
@@ -160,7 +160,7 @@ class SheetStory extends Model implements Story {
         return 'Sheet for open a popup in the edge of the window';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 

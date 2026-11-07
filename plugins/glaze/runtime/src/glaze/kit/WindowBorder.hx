@@ -2,27 +2,27 @@
 // (itself from Zed's crates/gpui/examples/window_shadow.rs)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.BoxShadow;
-import gpui.CursorStyle;
-import gpui.Decorations;
-import gpui.Edges;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.OperatingSystem;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.ResizeEdge;
-import gpui.Size;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.BoxShadow;
+import glaze.CursorStyle;
+import glaze.Decorations;
+import glaze.Edges;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.OperatingSystem;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.ResizeEdge;
+import glaze.Size;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Renders a custom window border and shadow on Linux.

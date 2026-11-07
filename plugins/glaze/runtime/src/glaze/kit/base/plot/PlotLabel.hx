@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/label.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.FontWeight;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.ShapedLine;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.TextRun;
-import gpui.Window;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.FontWeight;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.ShapedLine;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.TextRun;
+import glaze.Window;
+import glaze.util.Utf8;
 
 /**
  * Labels a plot draws (Rust `PlotLabel` and the free functions and

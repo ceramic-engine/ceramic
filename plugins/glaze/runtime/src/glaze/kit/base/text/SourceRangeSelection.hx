@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * Where a selection maps to in the source (Rust `SourceRangeSelection`).
@@ -12,10 +12,10 @@ import gpui.Range;
 class SourceRangeSelection {
 
     /** 0: unselected, 1: mapped (`range`), 2: unmapped. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var kind:Int;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var range:Null<Range>;
 
     function new(kind:Int, ?range:Range) {

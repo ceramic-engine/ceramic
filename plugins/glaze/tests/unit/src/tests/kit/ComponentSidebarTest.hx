@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ElementId;
-import gpui.Pixels;
-import gpui.base.Geometry.Side;
-import gpui.component.sidebar.Sidebar;
-import gpui.component.sidebar.SidebarMenu;
+import glaze.ElementId;
+import glaze.Pixels;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.sidebar.Sidebar;
+import glaze.kit.sidebar.SidebarMenu;
 import testing.TestCase;
 
 /**
@@ -177,14 +177,14 @@ class ComponentSidebarTest extends TestCase {
 
     function testCollapsedIconItemUsesLabelAsTooltip() {
         final item = new SidebarMenuItem('Projects')
-            .icon(gpui.component.Icon.empty())
+            .icon(glaze.kit.Icon.empty())
             .collapsed(true);
 
         assertEquals('Projects', item.collapsedTooltip());
     }
 
     function testExpandedOrIconlessItemHasNoCollapsedTooltip() {
-        final expanded = new SidebarMenuItem('Projects').icon(gpui.component.Icon.empty());
+        final expanded = new SidebarMenuItem('Projects').icon(glaze.kit.Icon.empty());
         final iconless = new SidebarMenuItem('Projects').collapsed(true);
 
         assertEquals(null, expanded.collapsedTooltip());

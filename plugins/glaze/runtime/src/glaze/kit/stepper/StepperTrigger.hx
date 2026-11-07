@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/stepper/trigger.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.stepper;
+package glaze.kit.stepper;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * The trigger part of a stepper item.
  */
-@:allow(gpui.component.stepper)
+@:allow(glaze.kit.stepper)
 class StepperTrigger implements RenderOnce implements Styled implements ParentElement {
 
     var stepValue:Int = 0;

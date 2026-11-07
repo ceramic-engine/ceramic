@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/searchable_list/adapter.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.list.ListDelegate;
-import gpui.component.list.ListDelegate.ListDelegateItem;
-import gpui.component.list.ListState;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.list.ListDelegate;
+import glaze.kit.list.ListDelegate.ListDelegateItem;
+import glaze.kit.list.ListState;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.StyleSized;
+using glaze.kit.StyleSized;
 
 /**
  * Bridges a `SearchableListDelegate` into the `ListDelegate` protocol.
@@ -42,7 +42,7 @@ class SearchableListAdapter<I> extends ListDelegateBase {
      * Snapshot of the parent's committed selection, kept in sync by the parent state after every
      * selection change. `renderItem` reads this directly so it never touches the parent entity.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectionSnapshot:Array<SelectedItem<I>> = [];
 
     /** Called when the user confirms an item (click or Enter). */
@@ -54,14 +54,14 @@ class SearchableListAdapter<I> extends ListDelegateBase {
     /** Renders the empty-state placeholder. */
     final onRenderEmpty:(Window, App) -> AnyElement;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Size = Medium;
 
     /** Override the trailing check icon; defaults to `IconName.Check`. */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var checkIcon:Null<Icon> = null;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function new(delegate:SearchableListDelegate<I>, onConfirm:(Null<IndexPath>, Bool, Window, Context<ListState<Dynamic>>) -> Void,
             onCancel:(Null<IndexPath>, Window, Context<ListState<Dynamic>>) -> Void, onRenderEmpty:(Window, App) -> AnyElement) {
         this.delegate = delegate;
@@ -74,7 +74,7 @@ class SearchableListAdapter<I> extends ListDelegateBase {
      * Replace the selection snapshot. Call this after every selection mutation so that
      * `renderItem` sees up-to-date check state without touching any external entity.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function updateSelectionSnapshot(snapshot:Array<SelectedItem<I>>):Void {
         selectionSnapshot = snapshot;
     }

@@ -2,19 +2,19 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/arc
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.Bounds;
-import gpui.IntoBackground;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.Window;
-import gpui.base.plot.PathCache;
-import gpui.base.plot.PathCache.ShapeKey;
-import gpui.base.plot.Plot;
-import gpui.util.MathUtil;
+import glaze.Bounds;
+import glaze.IntoBackground;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.Window;
+import glaze.kit.base.plot.PathCache;
+import glaze.kit.base.plot.PathCache.ShapeKey;
+import glaze.kit.base.plot.Plot;
+import glaze.util.MathUtil;
 
 /**
  * One slice of a `Pie`: its datum and the angles it spans, in radians with

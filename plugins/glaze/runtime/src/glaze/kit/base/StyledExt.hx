@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/styled.rs (StyledExt, RoleOverride)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.FocusHandle;
-import gpui.FontWeight;
-import gpui.Hsla;
-import gpui.IntoDefiniteLength;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
+import glaze.App;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.FocusHandle;
+import glaze.FontWeight;
+import glaze.Hsla;
+import glaze.IntoDefiniteLength;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
 
 /**
  * Neutral style helpers on any `Styled` element, as a static extension:
- * `using gpui.base.StyledExt;` then `div().hFlex().fontMedium()`.
+ * `using glaze.kit.base.StyledExt;` then `div().hFlex().fontMedium()`.
  *
  * Rust provides them as default methods of a trait implemented for every
  * `Styled`. Haxe extensions only see `style()`, so each helper edits the
@@ -25,7 +25,7 @@ import gpui.Window;
  * `Styled` method is reused) and returns the element itself.
  *
  * The free functions `hFlex()`, `vFlex()` and `boxShadow()` are in
- * `gpui.base.Prelude`.
+ * `glaze.kit.base.Prelude`.
  */
 class StyledExt {
 
@@ -49,9 +49,9 @@ class StyledExt {
      */
     public static function hFlex<T:Styled>(self:T):T {
         final style = self.style();
-        style.display = gpui.Display.Flex;
-        style.flexDirection = gpui.FlexDirection.Row;
-        style.alignItems = gpui.AlignItems.Center;
+        style.display = glaze.Display.Flex;
+        style.flexDirection = glaze.FlexDirection.Row;
+        style.alignItems = glaze.AlignItems.Center;
         return self;
     }
 
@@ -63,8 +63,8 @@ class StyledExt {
      */
     public static function vFlex<T:Styled>(self:T):T {
         final style = self.style();
-        style.display = gpui.Display.Flex;
-        style.flexDirection = gpui.FlexDirection.Column;
+        style.display = glaze.Display.Flex;
+        style.flexDirection = glaze.FlexDirection.Column;
         return self;
     }
 
@@ -80,14 +80,14 @@ class StyledExt {
      * Sets the four paddings from pixel edges.
      */
     public static function paddingsEdges<T:Styled>(self:T, edges:Edges):T {
-        new StyleBuilder(self.style()).pt(gpui.Prelude.px(edges.top)).pb(gpui.Prelude.px(edges.bottom)).pl(gpui.Prelude.px(edges.left)).pr(gpui.Prelude.px(edges.right));
+        new StyleBuilder(self.style()).pt(glaze.Prelude.px(edges.top)).pb(glaze.Prelude.px(edges.bottom)).pl(glaze.Prelude.px(edges.left)).pr(glaze.Prelude.px(edges.right));
         return self;
     }
 
     /**
      * Sets the four margins (Rust `margins(impl Into<Edges<L>>)`).
      */
-    public static function margins<T:Styled>(self:T, top:gpui.IntoLength, right:gpui.IntoLength, bottom:gpui.IntoLength, left:gpui.IntoLength):T {
+    public static function margins<T:Styled>(self:T, top:glaze.IntoLength, right:glaze.IntoLength, bottom:glaze.IntoLength, left:glaze.IntoLength):T {
         new StyleBuilder(self.style()).mt(top).mb(bottom).ml(left).mr(right);
         return self;
     }
@@ -156,15 +156,15 @@ class StyledExt {
      */
     public static function cornerRadii<T:Styled>(self:T, radius:Corners):T {
         new StyleBuilder(self.style())
-            .roundedTl(gpui.Prelude.px(radius.topLeft))
-            .roundedTr(gpui.Prelude.px(radius.topRight))
-            .roundedBl(gpui.Prelude.px(radius.bottomLeft))
-            .roundedBr(gpui.Prelude.px(radius.bottomRight));
+            .roundedTl(glaze.Prelude.px(radius.topLeft))
+            .roundedTr(glaze.Prelude.px(radius.topRight))
+            .roundedBl(glaze.Prelude.px(radius.bottomLeft))
+            .roundedBr(glaze.Prelude.px(radius.bottomRight));
         return self;
     }
 
     static function hsl(hue:Float, saturation:Float, lightness:Float):Hsla {
-        return gpui.Prelude.hsla(hue / 360., saturation / 100., lightness / 100., 1.);
+        return glaze.Prelude.hsla(hue / 360., saturation / 100., lightness / 100., 1.);
     }
 
 }

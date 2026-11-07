@@ -3,34 +3,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.SpringMath.f32;
-import gpui.Window;
-import gpui.base.motion.Discrete;
-import gpui.base.motion.Easing;
-import gpui.base.motion.Interpolators;
-import gpui.base.motion.Keyframes;
-import gpui.base.motion.Motion;
-import gpui.base.motion.MotionStatus;
-import gpui.base.motion.MotionTransform;
-import gpui.base.motion.MotionValue;
-import gpui.base.motion.Presence;
-import gpui.base.motion.Sequence;
-import gpui.base.motion.SignedDuration;
-import gpui.base.motion.Spring;
-import gpui.base.motion.Stagger;
-import gpui.base.motion.Timing;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.SpringMath.f32;
+import glaze.Window;
+import glaze.kit.base.motion.Discrete;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.motion.Interpolators;
+import glaze.kit.base.motion.Keyframes;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.MotionStatus;
+import glaze.kit.base.motion.MotionTransform;
+import glaze.kit.base.motion.MotionValue;
+import glaze.kit.base.motion.Presence;
+import glaze.kit.base.motion.Sequence;
+import glaze.kit.base.motion.SignedDuration;
+import glaze.kit.base.motion.Spring;
+import glaze.kit.base.motion.Stagger;
+import glaze.kit.base.motion.Timing;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.motion.SignedDuration.SignedDurationTools;
+using glaze.kit.base.motion.SignedDuration.SignedDurationTools;
 
 class MotionStatusView extends Model implements Render {
 
@@ -197,7 +197,7 @@ class MotionSpringView extends Model implements Render {
 }
 
 /**
- * Tests of `gpui.base.motion` (Rust `motion.rs`: `css_timing_tests`,
+ * Tests of `glaze.kit.base.motion` (Rust `motion.rs`: `css_timing_tests`,
  * `motion_track_tests` and `tests`).
  *
  * Durations are seconds. Motion computes in `f32` like Rust, so the values
@@ -371,7 +371,7 @@ class MotionTest extends KitTestCase {
         return openWindow(_ -> new MotionStatusView(policy));
     }
 
-    function renderStatus(opened:{window:Window, view:gpui.Entity<MotionStatusView>}, target:Float):MotionValue<Float> {
+    function renderStatus(opened:{window:Window, view:glaze.Entity<MotionStatusView>}, target:Float):MotionValue<Float> {
         (opened.view : MotionStatusView).target = target;
         refresh(opened.window);
         final samples = (opened.view : MotionStatusView).samples;
@@ -432,13 +432,13 @@ class MotionTest extends KitTestCase {
         return openWindow(_ -> new MotionPresenceView(initiallyPresent));
     }
 
-    function renderPresence(opened:{window:Window, view:gpui.Entity<MotionPresenceView>}, present:Bool):PresenceSample {
+    function renderPresence(opened:{window:Window, view:glaze.Entity<MotionPresenceView>}, present:Bool):PresenceSample {
         (opened.view : MotionPresenceView).present = present;
         refresh(opened.window);
         return lastPresence(opened);
     }
 
-    function lastPresence(opened:{window:Window, view:gpui.Entity<MotionPresenceView>}):PresenceSample {
+    function lastPresence(opened:{window:Window, view:glaze.Entity<MotionPresenceView>}):PresenceSample {
         final samples = (opened.view : MotionPresenceView).samples;
         return samples[samples.length - 1];
     }
@@ -497,17 +497,17 @@ class MotionTest extends KitTestCase {
         return openWindow(_ -> new MotionSequenceView(steps));
     }
 
-    function lastSequence(opened:{window:Window, view:gpui.Entity<MotionSequenceView>}):SequenceSample<Float> {
+    function lastSequence(opened:{window:Window, view:glaze.Entity<MotionSequenceView>}):SequenceSample<Float> {
         final samples = (opened.view : MotionSequenceView).samples;
         return samples[samples.length - 1];
     }
 
-    function renderSequence(opened:{window:Window, view:gpui.Entity<MotionSequenceView>}):SequenceSample<Float> {
+    function renderSequence(opened:{window:Window, view:glaze.Entity<MotionSequenceView>}):SequenceSample<Float> {
         refresh(opened.window);
         return lastSequence(opened);
     }
 
-    function advanceSequence(opened:{window:Window, view:gpui.Entity<MotionSequenceView>}, millis:Float):SequenceSample<Float> {
+    function advanceSequence(opened:{window:Window, view:glaze.Entity<MotionSequenceView>}, millis:Float):SequenceSample<Float> {
         advanceClock(millis);
         return renderSequence(opened);
     }
@@ -656,7 +656,7 @@ class MotionTest extends KitTestCase {
         return openWindow(_ -> new MotionTestView(duration));
     }
 
-    function renderTransition(opened:{window:Window, view:gpui.Entity<MotionTestView>}, target:Float):Float {
+    function renderTransition(opened:{window:Window, view:glaze.Entity<MotionTestView>}, target:Float):Float {
         (opened.view : MotionTestView).target = target;
         refresh(opened.window);
         return lastFloat((opened.view : MotionTestView).samples);
@@ -742,13 +742,13 @@ class MotionTest extends KitTestCase {
         return openWindow(_ -> new MotionSpringView(policy));
     }
 
-    function renderSpring(opened:{window:Window, view:gpui.Entity<MotionSpringView>}, target:Float):Float {
+    function renderSpring(opened:{window:Window, view:glaze.Entity<MotionSpringView>}, target:Float):Float {
         (opened.view : MotionSpringView).target = target;
         refresh(opened.window);
         return lastFloat((opened.view : MotionSpringView).samples);
     }
 
-    function advanceSpring(opened:{window:Window, view:gpui.Entity<MotionSpringView>}, millis:Float, target:Float):Float {
+    function advanceSpring(opened:{window:Window, view:glaze.Entity<MotionSpringView>}, millis:Float, target:Float):Float {
         advanceClock(millis);
         return renderSpring(opened, target);
     }

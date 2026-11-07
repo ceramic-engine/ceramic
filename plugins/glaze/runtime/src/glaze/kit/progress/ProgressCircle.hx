@@ -1,40 +1,40 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/progress/progress_circle.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.progress;
+package glaze.kit.progress;
 
-import gpui.AnyElement;
-import gpui.Animation;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Easing;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.SpringMath;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
-import gpui.base.plot.shape.Arc;
-import gpui.base.plot.shape.Arc.ArcData;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.Animation;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Easing;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.SpringMath;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.base.plot.shape.Arc;
+import glaze.kit.base.plot.shape.Arc.ArcData;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.canvas;
-import gpui.Prelude.px;
-import gpui.Prelude.relative;
+import glaze.Prelude.canvas;
+import glaze.Prelude.px;
+import glaze.Prelude.relative;
 
-using gpui.AnimationExt;
-using gpui.base.StyledExt;
+using glaze.AnimationExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * What the arc canvas computes in prepaint.
@@ -174,17 +174,17 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
 
         final color:Hsla = colorValue != null ? colorValue : theme.progressBar;
 
-        final progress = new gpui.base.Progress(id).value(value).indeterminate(loading);
+        final progress = new glaze.kit.base.Progress(id).value(value).indeterminate(loading);
         if (accessibilityLabelValue != null) {
             progress.accessibilityLabel(accessibilityLabelValue);
         }
-        progress.flex().itemsCenter().justifyCenter().lineHeight(gpui.Prelude.relative(1.));
+        progress.flex().itemsCenter().justifyCenter().lineHeight(glaze.Prelude.relative(1.));
         switch size {
             case XSmall: progress.size2();
             case Small: progress.size3();
             case Medium: progress.size4();
             case Large: progress.size5();
-            case Size(s): progress.size(gpui.Prelude.px(f(s * f(0.75))));
+            case Size(s): progress.size(glaze.Prelude.px(f(s * f(0.75))));
         }
         progress.refineStyle(circleStyle);
         progress.extend(childElements);

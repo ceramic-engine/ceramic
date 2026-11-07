@@ -4,28 +4,28 @@
 // DEV-022 (reference/deviations/DEV-022-proof.rs). See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.StyleBuilder;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.resizable.PixelsRange;
-import gpui.base.resizable.Resizable;
-import gpui.base.resizable.ResizableState;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.StyleBuilder;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.resizable.PixelsRange;
+import glaze.kit.base.resizable.Resizable;
+import glaze.kit.base.resizable.ResizableState;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A panel at exactly `PANEL_MIN_SIZE` (100 px) reported a size change to its

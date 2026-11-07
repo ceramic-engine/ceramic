@@ -1,61 +1,61 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/command/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.command;
+package glaze.kit.command;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.AvailableSpace;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.FontFallbacks;
-import gpui.FontFeatures;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Keystroke;
-import gpui.ListSizingBehavior;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.ScrollStrategy;
-import gpui.SizeOf;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.TextOverflow;
-import gpui.WhiteSpace;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.IndexPath;
-import gpui.base.ScrollBounce;
-import gpui.base.VirtualList;
-import gpui.base.VirtualList.VirtualListScrollHandle;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.command.Command.CommandOptions;
-import gpui.component.command.CommandItem.CommandEntry;
-import gpui.component.input.Input;
-import gpui.component.kbd.Kbd;
-import gpui.component.scroll.Scrollbar;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.AvailableSpace;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.FontFallbacks;
+import glaze.FontFeatures;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Keystroke;
+import glaze.ListSizingBehavior;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.ScrollStrategy;
+import glaze.SizeOf;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.TextOverflow;
+import glaze.WhiteSpace;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.VirtualList;
+import glaze.kit.base.VirtualList.VirtualListScrollHandle;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.command.Command.CommandOptions;
+import glaze.kit.command.CommandItem.CommandEntry;
+import glaze.kit.input.Input;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.scroll.Scrollbar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
 
 typedef OnQuery = (String, Window, App) -> Void;
 
@@ -66,7 +66,7 @@ typedef OnCancel = (Window, App) -> Void;
 /**
  * The entries and callbacks of the latest `Command` render.
  */
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 class CommandModel {
 
     public var entries:Array<CommandEntry> = [];
@@ -94,7 +94,7 @@ enum CommandRow {
     Separator;
 }
 
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 private class TextShapeKey {
 
     final fontFamily:String;
@@ -134,7 +134,7 @@ private class TextShapeKey {
 
 }
 
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 private class ListMeasurementKey {
 
     final contentWidth:Pixels;
@@ -162,7 +162,7 @@ private class ListMeasurementKey {
 /**
  * An item that survived the current query, and where it landed.
  */
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 private class MatchedItem {
 
     final entryIx:Int;
@@ -185,7 +185,7 @@ private class MatchedItem {
  * The interaction state of a `Command` palette: its query, focus, scrolling,
  * and highlighted command.
  */
-@:allow(gpui.component.command, tests)
+@:allow(glaze.kit.command, tests)
 class CommandState extends Model implements Render {
 
     public static inline final CONTEXT:String = "Command";
@@ -219,7 +219,7 @@ class CommandState extends Model implements Render {
 
     @observe var rows:Array<CommandRow> = [];
 
-    var rowSizes:Array<gpui.Size> = [];
+    var rowSizes:Array<glaze.Size> = [];
 
     var listMeasurementKey:Null<ListMeasurementKey> = null;
 
@@ -729,11 +729,11 @@ class CommandState extends Model implements Render {
         textStyle.text = options.style.text != null ? options.style.text.clone() : null;
         final bindings:Array<Null<Keystroke>> = [for (_ in 0...matched.length) null];
 
-        final rowSizes:Array<gpui.Size> = [];
+        final rowSizes:Array<glaze.Size> = [];
         for (rowIx in 0...rows.length) {
             final row:AnyElement = switch rows[rowIx] {
                 case Separator:
-                    rowSizes.push(new gpui.Size(0., SEPARATOR_ROW_HEIGHT));
+                    rowSizes.push(new glaze.Size(0., SEPARATOR_ROW_HEIGHT));
                     continue;
                 case Heading(_):
                     renderRow(rowIx, window, cx);
@@ -747,7 +747,7 @@ class CommandState extends Model implements Render {
                 .child(row)
                 .intoAnyElement();
             final rowSize = element.layoutAsRoot(available, window, cx.app);
-            rowSizes.push(new gpui.Size(0., rowSize.height));
+            rowSizes.push(new glaze.Size(0., rowSize.height));
         }
 
         this.rowSizes = rowSizes;
@@ -786,7 +786,7 @@ class CommandState extends Model implements Render {
         } else {
             return theme.radius;
         }
-        return gpui.util.MathUtil.max(outer - (remSize:Float) * 0.25 - border, 0.);
+        return glaze.util.MathUtil.max(outer - (remSize:Float) * 0.25 - border, 0.);
     }
 
     /**
@@ -1034,7 +1034,7 @@ class CommandState extends Model implements Render {
                 // style participate in the row-size cache key.
                 final textStyle = window.textStyle();
                 state.setListMeasurementKey(new ListMeasurementKey(
-                    gpui.util.MathUtil.max((bounds.size.width:Float) - (window.remSize():Float) * 0.5, 0.),
+                    glaze.util.MathUtil.max((bounds.size.width:Float) - (window.remSize():Float) * 0.5, 0.),
                     window.remSize(),
                     window.lineHeight(),
                     new TextShapeKey(

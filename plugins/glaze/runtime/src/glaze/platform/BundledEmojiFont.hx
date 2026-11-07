@@ -1,17 +1,17 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.platform;
+package glaze.platform;
 
 import haxe.io.Bytes;
 
 /**
- * The emoji font bundled with the gpui plugin: Noto Color Emoji (`CBDT` /
+ * The emoji font bundled with the glaze plugin: Noto Color Emoji (`CBDT` /
  * `CBLC` bitmaps, `GSUB` sequences), shipped only when the define
- * `gpui_bundled_emoji` is set (the plugin's `emoji-font/assets` folder, see
+ * `glaze_bundled_emoji` is set (the plugin's `emoji-font/assets` folder, see
  * `emoji-font/README.md` for its origin and licenses).
  *
- * With the define, the plugin adds it to `gpui.App.defaultTextSystem()` once
- * the default assets are loaded (see `ceramic.GpuiPlugin`), after the
+ * With the define, the plugin adds it to `glaze.App.defaultTextSystem()` once
+ * the default assets are loaded (see `ceramic.GlazePlugin`), after the
  * bundled text fonts:
  *
  * - on native targets (and Node.js), the file is read piece by piece
@@ -30,14 +30,14 @@ import haxe.io.Bytes;
 class BundledEmojiFont {
 
     /** Asset path of the font file (in the plugin's `emoji-font/assets`) */
-    public static final ASSET_PATH:String = 'gpui/emoji/NotoColorEmoji.ttf.bin';
+    public static final ASSET_PATH:String = 'glaze/emoji/NotoColorEmoji.ttf.bin';
 
     /** PostScript name of the bundled face */
     public static final POSTSCRIPT_NAME:String = 'NotoColorEmoji';
 
-    /** Whether this build ships the font (define `gpui_bundled_emoji`) */
+    /** Whether this build ships the font (define `glaze_bundled_emoji`) */
     public static inline function enabled():Bool {
-        #if gpui_bundled_emoji
+        #if glaze_bundled_emoji
         return true;
         #else
         return false;
@@ -122,7 +122,7 @@ class BundledEmojiFont {
      * `CeramicTextSystem.addBundledEmojiFace()`). Returns false when the
      * text system is not a `CeramicTextSystem` or already has it.
      */
-    public static function addTo(platform:gpui.PlatformTextSystem, face:ttf.Font):Bool {
+    public static function addTo(platform:glaze.PlatformTextSystem, face:ttf.Font):Bool {
         if (!(platform is CeramicTextSystem))
             return false;
         final ceramicTextSystem:CeramicTextSystem = cast platform;

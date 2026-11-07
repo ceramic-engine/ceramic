@@ -3,37 +3,37 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.combobox.Combobox;
-import gpui.component.combobox.ComboboxState;
-import gpui.component.searchablelist.SearchableListChange;
-import gpui.component.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
-import gpui.component.searchablelist.SearchableListItem.SearchableListItemBase;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.component.searchablelist.SearchableVec.SearchableGroup;
-import gpui.component.searchablelist.SelectedItem;
-import gpui.component.select.Caret;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.combobox.Combobox;
+import glaze.kit.combobox.ComboboxState;
+import glaze.kit.searchablelist.SearchableListChange;
+import glaze.kit.searchablelist.SearchableListDelegate.SearchableListDelegateBase;
+import glaze.kit.searchablelist.SearchableListItem.SearchableListItemBase;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.searchablelist.SearchableVec.SearchableGroup;
+import glaze.kit.searchablelist.SelectedItem;
+import glaze.kit.select.Caret;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 // MARK: Data
 
@@ -785,7 +785,7 @@ class ComboboxStory extends Model implements Story {
     }
 
     static inline function SearchableListItems_title(item:Any):String {
-        return gpui.component.searchablelist.SearchableListItems.title(item);
+        return glaze.kit.searchablelist.SearchableListItems.title(item);
     }
 
 }

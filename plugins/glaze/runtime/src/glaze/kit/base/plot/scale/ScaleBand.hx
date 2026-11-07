@@ -2,10 +2,10 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-scale/band
-package gpui.base.plot.scale;
+package glaze.kit.base.plot.scale;
 
-import gpui.SpringMath;
-import gpui.util.MathUtil;
+import glaze.SpringMath;
+import glaze.util.MathUtil;
 
 /**
  * Lays the distinct values of a domain out as bands across a range.
@@ -36,7 +36,7 @@ class ScaleBand<T> implements Scale<T> {
      * its lower end in domain order.
      */
     public function new(domain:Iterable<T>, range:Array<Float>) {
-        for (value in gpui.util.Iterables.asArray(domain)) {
+        for (value in glaze.util.Iterables.asArray(domain)) {
             if (indices.indexOf(value) < 0) {
                 indices.push(value);
             }

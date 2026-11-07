@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/markdown_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Window;
 import markdown.ParseOptions;
 import markdown.mdast.Node;
 
@@ -137,7 +137,7 @@ class MarkdownExtensions {
         }
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function revision():Int {
         return revision_;
     }
@@ -150,7 +150,7 @@ class MarkdownExtensions {
      * stable; render handles may be refreshed without reparsing the
      * document.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function hasSameParserConfiguration(other:MarkdownExtensions):Bool {
         if (!(parserRevision_ == other.parserRevision_ && enableMdx == other.enableMdx && enableFrontmatter == other.enableFrontmatter
             && blockParsers.length == other.blockParsers.length && mapCount(blockRenderers) == mapCount(other.blockRenderers)
@@ -174,19 +174,19 @@ class MarkdownExtensions {
         return count;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function pushBlockParser(parser:MarkdownBlockParserFn):Void {
         blockParsers.push(parser);
         bumpRevision();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function pushBlockRenderer(name:String, renderer:(node:MarkdownNode, window:Window, cx:App) -> IntoElement):Void {
         blockRenderers.set(name, (node, window, cx) -> renderer(node, window, cx).intoAnyElement());
         bumpRevision();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function parseOptions():ParseOptions {
         final options = ParseOptions.gfm();
         options.constructs.frontmatter = enableFrontmatter;
@@ -206,7 +206,7 @@ class MarkdownExtensions {
         return options;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function parseBlock(node:Node, cx:MarkdownParseContext):Null<MarkdownNode> {
         for (parser in blockParsers) {
             final result = parser(node, cx);
@@ -216,7 +216,7 @@ class MarkdownExtensions {
         return null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function parseInline(node:Node, cx:MarkdownParseContext):Null<MarkdownNode> {
         for (parser in inlineParsers) {
             final result = parser(node, cx);
@@ -226,13 +226,13 @@ class MarkdownExtensions {
         return null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function renderInline(node:MarkdownNode, context:InlineRenderContext, window:Window, cx:App):Null<InlineElement> {
         final render = inlineRenderers.get(node.name());
         return render != null ? render(node, context, window, cx) : null;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function renderBlock(node:MarkdownNode, window:Window, cx:App):Null<AnyElement> {
         final render = blockRenderers.get(node.name());
         return render != null ? render(node, window, cx) : null;

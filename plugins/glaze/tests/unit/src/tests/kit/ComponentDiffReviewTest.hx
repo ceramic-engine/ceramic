@@ -3,29 +3,29 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ListOffset;
-import gpui.Model;
-import gpui.Range;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.component.diff.DiffConflictResolution;
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffFileStatus;
-import gpui.component.diff.DiffInlineUnit;
-import gpui.component.diff.DiffLinePosition;
-import gpui.component.diff.DiffLineRange;
-import gpui.component.diff.DiffMode;
-import gpui.component.diff.DiffSide;
-import gpui.component.diff.DiffState;
-import gpui.component.diff.DiffState.DiffEvent;
-import gpui.component.diff.DiffState.DisplayRow;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ListOffset;
+import glaze.Model;
+import glaze.Range;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.diff.DiffConflictResolution;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffFileStatus;
+import glaze.kit.diff.DiffInlineUnit;
+import glaze.kit.diff.DiffLinePosition;
+import glaze.kit.diff.DiffLineRange;
+import glaze.kit.diff.DiffMode;
+import glaze.kit.diff.DiffSide;
+import glaze.kit.diff.DiffState;
+import glaze.kit.diff.DiffState.DiffEvent;
+import glaze.kit.diff.DiffState.DisplayRow;
 import tests.kit.ComponentDiffFixture as Fixture;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The review tests of gpui-kit's diff (`review_tests.rs`).

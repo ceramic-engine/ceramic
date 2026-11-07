@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Model;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TouchPhase;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.SelectableTextState;
-import gpui.base.TextSelectionRegistration.BoundsPair;
-import gpui.base.input.EdgeDrag;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TouchSelectionSnapshot;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Model;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TouchPhase;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.SelectableTextState;
+import glaze.kit.base.TextSelectionRegistration.BoundsPair;
+import glaze.kit.base.input.EdgeDrag;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TouchSelectionSnapshot;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /** Rust `ParticipantRegistration`. */
 class ParticipantRegistration {
@@ -280,7 +280,7 @@ class TextSelectionScopeStacks {
 /**
  * Window-local generic text-selection state.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class WindowSelectionState extends Model {
 
     /**
@@ -993,7 +993,7 @@ class WindowSelectionState extends Model {
             return;
         }
         final start = first._layout.positionForIndex(0);
-        final end = last._layout.positionForIndex(gpui.util.Utf8.byteLength(last._text));
+        final end = last._layout.positionForIndex(glaze.util.Utf8.byteLength(last._text));
         if (start == null || end == null) {
             return;
         }
@@ -1210,7 +1210,7 @@ class WindowSelectionState extends Model {
             }
         }
         if (run == null) return null;
-        if (gpui.util.Utf8.byteLength(run._text) != run._layout.len()) {
+        if (glaze.util.Utf8.byteLength(run._text) != run._layout.len()) {
             return null;
         }
         // Past the end of a row, the pointer takes the character closest to it.
@@ -1304,7 +1304,7 @@ class WindowSelectionState extends Model {
             final geometry = registration.registration;
             final hovered = window == null ? geometry._bounds.contains(position) : geometry._hitbox.isHovered(window);
             if (hovered) {
-                final area = gpui.SpringMath.f32(geometry._bounds.size.width * geometry._bounds.size.height);
+                final area = glaze.SpringMath.f32(geometry._bounds.size.width * geometry._bounds.size.height);
                 if (hit == null || area < hitArea || (area == hitArea && registration.documentOrder < hit.documentOrder)) {
                     hit = registration;
                     hitArea = area;

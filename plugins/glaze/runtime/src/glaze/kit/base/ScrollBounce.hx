@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scroll_bounce.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.DispatchPhase;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.OngoingScroll;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.Scrollbar.ScrollbarHandle;
-import gpui.base.motion.MotionTime;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.DispatchPhase;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.OngoingScroll;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.Scrollbar.ScrollbarHandle;
+import glaze.kit.base.motion.MotionTime;
 
 /**
  * Motion tokens for `ScrollBounce`: how far a drag stretches the viewport
@@ -131,7 +131,7 @@ class ScrollBounceMotion {
     }
 
     /** Undamped angular frequency of the return, or `null` when it snaps. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function omega():Null<Float> {
         final seconds = MotionTime.asSecsF32(MotionTime.nanos(_response));
         return seconds > 0. ? f32(f32(Math.PI * 2) / seconds) : null;
@@ -142,7 +142,7 @@ class ScrollBounceMotion {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -151,7 +151,7 @@ class ScrollBounceMotion {
  * The stretch past an edge and its return, shared with the input's own
  * scrolling. `f32` math like the original.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class Physics {
 
     var position:Float = 0.;
@@ -169,11 +169,11 @@ class Physics {
     public function new() {}
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static inline function signum(value:Float):Float {
-        return gpui.util.MathUtil.signum(value);
+        return glaze.util.MathUtil.signum(value);
     }
 
     public function setMotion(motion:ScrollBounceMotion):Void {
@@ -357,7 +357,7 @@ class Physics {
 /**
  * The state of a `ScrollBounce` kept across frames (Rust `State`).
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class ScrollBounceState {
 
     var physics:Physics = new Physics();
@@ -401,7 +401,7 @@ class ScrollBounceState {
      */
     function release(fromRest:Bool):Void {
         physics.release();
-        suppressedDirection = fromRest && physics.suppressMomentum ? gpui.util.MathUtil.signum(physics.offset()) : null;
+        suppressedDirection = fromRest && physics.suppressMomentum ? glaze.util.MathUtil.signum(physics.offset()) : null;
     }
 
 }
@@ -547,7 +547,7 @@ class ScrollBounce extends Element {
      * Call it in the capture phase, from a listener registered before the
      * children paint, whenever the area would scroll for the event.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function claimScroll(hitbox:Int, cx:App):Void {
         cx.defaultGlobal(ScrollOwner).hitbox = hitbox;
     }
@@ -572,7 +572,7 @@ class ScrollBounce extends Element {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     public function requestLayout(id:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
@@ -701,7 +701,7 @@ class ScrollBounce extends Element {
                     final paused = lastWheel != null && (now > lastWheel ? now - lastWheel : 0.) >= MotionTime.nanos(MOMENTUM_GAP);
                     final reversed = state.suppressedDirection != null
                         && delta.y != 0.
-                        && gpui.util.MathUtil.signum(delta.y) != state.suppressedDirection;
+                        && glaze.util.MathUtil.signum(delta.y) != state.suppressedDirection;
                     if (paused || reversed) {
                         state.physics.suppressMomentum = false;
                     }
@@ -846,7 +846,7 @@ class ScrollBounce extends Element {
      * where `Instant` panics; the port reads the executor clock on every
      * target, so the lock applies everywhere.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function lockAxis(ongoingScroll:OngoingScroll, delta:Point, touchPhase:TouchPhase, cx:App):Point {
         return ongoingScroll.filter(delta, touchPhase, cx.backgroundExecutor().now());
     }

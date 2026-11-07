@@ -2,9 +2,9 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-scale/linear
-package gpui.base.plot.scale;
+package glaze.kit.base.plot.scale;
 
-import gpui.SpringMath;
+import glaze.SpringMath;
 
 /**
  * Maps a continuous domain onto a pixel range.
@@ -33,7 +33,7 @@ class ScaleLinear implements Scale<Float> {
     public function new(domain:Iterable<Float>, range:Array<Float>, f32Values:Bool = false) {
         var start:Null<Float> = null;
         var end:Null<Float> = null;
-        for (value in gpui.util.Iterables.asArray(domain)) {
+        for (value in glaze.util.Iterables.asArray(domain)) {
             final v = f32Values ? f(value) : value;
             if (start == null) {
                 start = v;

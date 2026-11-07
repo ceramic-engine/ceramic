@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/rope_ext.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
+import glaze.Range;
 import ropey.LineType;
 import ropey.Rope;
 import ropey.RopeSlice;
@@ -11,7 +11,7 @@ import unicode_segmentation.Tables;
 
 /**
  * Extra utility methods for `Rope` (Rust trait `RopeExt`), used with
- * `using gpui.base.input.RopeExt;`.
+ * `using glaze.kit.base.input.RopeExt;`.
  *
  * Offsets are UTF-8 byte offsets, rows are 0-based.
  */

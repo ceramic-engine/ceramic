@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/searchable_list/change.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.base.IndexPath;
+import glaze.kit.base.IndexPath;
 
 /**
  * A single, atomic selection change proposed by the mode-strategy for a user interaction.

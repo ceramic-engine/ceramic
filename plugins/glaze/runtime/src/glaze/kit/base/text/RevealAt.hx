@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Bounds;
-import gpui.base.text.PendingReveal.RevealReport;
-import gpui.base.text.PendingReveal.RevealReportCell;
+import glaze.Bounds;
+import glaze.kit.base.text.PendingReveal.RevealReport;
+import glaze.kit.base.text.PendingReveal.RevealReportCell;
 
 /** The start of a pending reveal, in the byte space of one run of text. */
 class RevealAt {
@@ -13,7 +13,7 @@ class RevealAt {
     final _offset:Int;
     final reportCell:RevealReportCell;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(offset:Int, report:RevealReportCell) {
         _offset = offset;
         this.reportCell = report;

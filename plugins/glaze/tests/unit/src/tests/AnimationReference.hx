@@ -7,9 +7,9 @@ import haxe.macro.Expr;
 
 /**
  * Embeds the values dumped from the original GPUI by
- * `reference/examples/animation_dump.rs` (test/unit/data/gpui-animation-reference.json).
+ * `reference/examples/animation_dump.rs` (tests/unit/data/gpui-animation-reference.json).
  * Regenerate with, from `reference/`:
- * `cargo run --release --example animation_dump -- ../test/unit/data/gpui-animation-reference.json`
+ * `cargo run --release --example animation_dump -- ../../ceramic/plugins/glaze/tests/unit/data/gpui-animation-reference.json`
  */
 class AnimationReference {
 

@@ -2,17 +2,17 @@
 // crates/component/src/input/syntax_context.rs, crates/component/src/input/mod.rs (init)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.base.input.AutoClosingPair;
-import gpui.base.input.BracketPair;
-import gpui.base.input.EditorLanguage.Languages;
-import gpui.base.input.IndentationRules;
-import gpui.base.input.LanguageConfig;
-import gpui.base.input.LanguageProvider;
-import gpui.base.input.SyntaxContext;
-import gpui.base.input.SyntaxContextProvider;
+import glaze.App;
+import glaze.kit.base.input.AutoClosingPair;
+import glaze.kit.base.input.BracketPair;
+import glaze.kit.base.input.EditorLanguage.Languages;
+import glaze.kit.base.input.IndentationRules;
+import glaze.kit.base.input.LanguageConfig;
+import glaze.kit.base.input.LanguageProvider;
+import glaze.kit.base.input.SyntaxContext;
+import glaze.kit.base.input.SyntaxContextProvider;
 
 /**
  * Language editing configuration of the styled components (Rust module
@@ -30,7 +30,7 @@ class ComponentLanguages implements LanguageProvider {
     }
 
     public function languageName(name:String):String {
-        return @:privateAccess gpui.component.highlighter.LanguageRegistry.singleton().editingLanguageName(name);
+        return @:privateAccess glaze.kit.highlighter.LanguageRegistry.singleton().editingLanguageName(name);
     }
 
     public function config(name:String):LanguageConfig {
@@ -43,8 +43,8 @@ class ComponentLanguages implements LanguageProvider {
     }
 
     /** Rust `input::init`: installs the language service of the components. */
-    @:allow(gpui.component)
-    static function init(cx:gpui.AppContext):Void {
+    @:allow(glaze.kit)
+    static function init(cx:glaze.AppContext):Void {
         final defaults = new Map<String, LanguageConfig>();
         for (name in ["text", "json", "python"]) {
             defaults.set(name, defaultLanguageConfig(name));
@@ -60,7 +60,7 @@ class ComponentLanguages implements LanguageProvider {
      * feature); the port does not use tree-sitter, like gpui-kit built without
      * that feature: no provider, the engine falls back to its heuristics.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function syntaxContextProviderFor(_language:String):Null<SyntaxContextProvider> {
         return null;
     }
@@ -72,7 +72,7 @@ class ComponentLanguages implements LanguageProvider {
      * Unknown languages use structural bracket indentation; only Python treats a colon
      * as a block opener. Plain text has no structural or automatic pairs.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function defaultLanguageConfig(language:String):LanguageConfig {
         if (pythonIndent == null) {
             pythonIndent = new IndentationRules(new EReg("[\\{\\(\\[:]\\s*$", ""), new EReg("^\\s*[\\}\\)\\]]", ""));

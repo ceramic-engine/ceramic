@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/text/frontmatter.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.text;
+package glaze.kit.text;
 
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.MarkdownParseContext;
-import gpui.base.text.MarkdownPlugin;
-import gpui.component.descriptionlist.DescriptionList;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.MarkdownParseContext;
+import glaze.kit.base.text.MarkdownPlugin;
+import glaze.kit.descriptionlist.DescriptionList;
 import markdown.mdast.Node;
 
 /**
@@ -59,7 +59,7 @@ class FrontmatterPlugin extends MarkdownPlugin {
         }
 
         return DescriptionList.horizontal()
-            .labelWidth(gpui.Prelude.rems(12.))
+            .labelWidth(glaze.Prelude.rems(12.))
             .columns(1)
             .children([
                 for (entry in frontmatter.entries) DescriptionItem.create(entry.key).value(entry.value)
@@ -247,7 +247,7 @@ class FrontmatterPlugin extends MarkdownPlugin {
 
 }
 
-@:allow(gpui.component.text, tests)
+@:allow(glaze.kit.text, tests)
 class FrontmatterEntry {
 
     public final key:String;
@@ -261,7 +261,7 @@ class FrontmatterEntry {
 
 }
 
-@:allow(gpui.component.text, tests)
+@:allow(glaze.kit.text, tests)
 class Frontmatter {
 
     public final entries:Array<FrontmatterEntry>;

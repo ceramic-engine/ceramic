@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/color.rs (ShadcnColors, ShadcnColor, from_hsl_channel)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.Hsla;
-import gpui.util.MathUtil;
+import glaze.Hsla;
+import glaze.util.MathUtil;
 
 /**
  * The shadcn palette of `default-colors.json`: black, white, and the scales
  * (50 to 950) of every named color.
  */
-@:allow(gpui.component.theme)
+@:allow(glaze.kit.theme)
 class ShadcnColors {
 
     /**

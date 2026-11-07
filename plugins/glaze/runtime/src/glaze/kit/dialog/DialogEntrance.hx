@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/entrance.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.LayoutId;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.SpringMath.f32;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.LayoutId;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.SpringMath.f32;
+import glaze.Window;
 
 /**
  * The entrance presentation shared by Dialog and AlertDialog.
@@ -50,7 +50,7 @@ enum abstract DialogEntrance(Int) {
  * Applies presentation travel after Positioner has resolved the resting bounds.
  * Paint, hit testing, and accessibility follow the same offset.
  */
-@:allow(gpui.component.dialog, tests)
+@:allow(glaze.kit.dialog, tests)
 class EntranceSurface extends Element {
 
     final child:AnyElement;

@@ -3,13 +3,13 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Window;
-import gpui.base.text.InlineElement;
-import gpui.base.text.InlineRenderContext;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.MarkdownParseContext;
-import gpui.base.text.MarkdownPlugin;
+import glaze.App;
+import glaze.Window;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.InlineRenderContext;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.MarkdownParseContext;
+import glaze.kit.base.text.MarkdownPlugin;
 import markdown.mdast.Node;
 
 /**

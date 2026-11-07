@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/language.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.base.input.LanguageProvider.LanguageProviderBase;
+import glaze.App;
+import glaze.kit.base.input.LanguageProvider.LanguageProviderBase;
 import ropey.Rope;
 
 /**
@@ -45,7 +45,7 @@ class Languages {
     public var provider:LanguageProvider = new DefaultLanguages();
 
     /** Registration order preserves precedence when a replacement service resolves aliases. */
-    @:allow(gpui.base.input) final configs:Array<RegisteredConfig> = [];
+    @:allow(glaze.kit.base.input) final configs:Array<RegisteredConfig> = [];
 
     public function new() {}
 

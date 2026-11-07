@@ -3,22 +3,22 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package examples;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Render;
-import gpui.StyleBuilder;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Render;
+import glaze.StyleBuilder;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 // actions!(example, [Tab, TabPrev]);
 @:action(namespace = example) class Tab implements Action {}

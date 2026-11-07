@@ -2,10 +2,10 @@
 // paint_strikethrough, paint_layer, underline_bounds, snapping helpers), src/util.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.AtlasTile;
-import gpui.scene.Scene;
+import glaze.AtlasTile;
+import glaze.scene.Scene;
 
 /**
  * Emits text primitives (glyph sprites, underlines, strikethroughs, run
@@ -78,7 +78,7 @@ class TextPainter {
     public static inline function roundHalfTowardZero(value:Float):Float {
         // Rust: `(value.abs() - 0.5).ceil().copysign(value)`; the ceil of
         // a small magnitude is -0.0, so the sign must come from `value`
-        return gpui.util.MathUtil.copysign(Math.fceil(Math.abs(value) - 0.5), value);
+        return glaze.util.MathUtil.copysign(Math.fceil(Math.abs(value) - 0.5), value);
     }
 
     public static inline function roundToDevicePixel(logical:Float, scaleFactor:Float):Float {
@@ -211,8 +211,8 @@ class TextPainter {
         final quantizedX = roundHalfTowardZero(glyphOriginX * TextSystem.SUBPIXEL_VARIANTS_X) / TextSystem.SUBPIXEL_VARIANTS_X;
         final quantizedY = roundHalfTowardZero(glyphOriginY * TextSystem.SUBPIXEL_VARIANTS_Y) / TextSystem.SUBPIXEL_VARIANTS_Y;
         // `(fract * variants) as u8` saturates negative fractions to 0
-        final variantX = gpui.util.MathUtil.toU8((quantizedX - trunc(quantizedX)) * TextSystem.SUBPIXEL_VARIANTS_X);
-        final variantY = gpui.util.MathUtil.toU8((quantizedY - trunc(quantizedY)) * TextSystem.SUBPIXEL_VARIANTS_Y);
+        final variantX = glaze.util.MathUtil.toU8((quantizedX - trunc(quantizedX)) * TextSystem.SUBPIXEL_VARIANTS_X);
+        final variantY = glaze.util.MathUtil.toU8((quantizedY - trunc(quantizedY)) * TextSystem.SUBPIXEL_VARIANTS_Y);
         final integerX = trunc(quantizedX);
         final integerY = trunc(quantizedY);
 
@@ -240,7 +240,7 @@ class TextPainter {
         final sprite = scene.nextMonochromeSprite();
         sprite.setBounds(integerX + rasterBounds.origin.x, integerY + rasterBounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
         sprite.setContentMask(maskX, maskY, maskW, maskH);
-        sprite.setColor(color.h, color.s, color.l, color.a * gpui.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
+        sprite.setColor(color.h, color.s, color.l, color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
         sprite.setTile(tile.textureId.index, tile.bounds.origin.x, tile.bounds.origin.y, tile.bounds.size.width, tile.bounds.size.height);
         scene.commitMonochromeSprite(sprite);
         return true;
@@ -315,7 +315,7 @@ class TextPainter {
         underline.setContentMask(maskX, maskY, maskW, maskH);
         final color = style.color;
         if (color != null) {
-            underline.setColor(color.h, color.s, color.l, color.a * gpui.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
+            underline.setColor(color.h, color.s, color.l, color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
         }
         underline.thickness = thickness;
         underline.wavy = style.wavy;
@@ -338,7 +338,7 @@ class TextPainter {
         underline.setContentMask(maskX, maskY, maskW, maskH);
         final color = style.color;
         if (color != null) {
-            underline.setColor(color.h, color.s, color.l, color.a * gpui.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
+            underline.setColor(color.h, color.s, color.l, color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0));
         }
         underline.thickness = thickness;
         underline.wavy = false;
@@ -356,7 +356,7 @@ class TextPainter {
             quadPainter(quad);
             return;
         }
-        final alpha = color.a * gpui.util.MathUtil.clamp(elementOpacity, 0.0, 1.0);
+        final alpha = color.a * glaze.util.MathUtil.clamp(elementOpacity, 0.0, 1.0);
         if (alpha == 0.0)
             return;
         snapContentMask();

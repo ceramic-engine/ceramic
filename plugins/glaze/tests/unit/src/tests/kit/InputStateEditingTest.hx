@@ -3,62 +3,62 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.input.BlinkCursor;
-import gpui.base.input.CursorSelection;
-import gpui.base.input.EditorLanguage.Languages;
-import gpui.base.input.InputBaseState.ColumnarPoint;
-import gpui.base.input.AutoClosingPair;
-import gpui.base.input.BracketPair;
-import gpui.base.input.IndentationRules;
-import gpui.base.input.LanguageConfig;
-import gpui.base.input.LanguageProvider;
-import gpui.base.input.SyntaxContext;
-import gpui.base.input.SyntaxContextProvider;
-import gpui.Entity;
-import gpui.Range;
-import gpui.Window;
-import gpui.base.NumberStep;
-import gpui.base.StepAction;
-import gpui.base.input.EditorState;
-import gpui.base.input.EditedText;
-import gpui.base.input.FoldRange;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.InputEdit;
-import gpui.base.input.InputHighlighter.InputHighlighterBase;
-import gpui.base.input.InputBaseState.TextEdit;
-import gpui.base.input.LspHover;
-import gpui.base.input.LspPosition;
-import gpui.base.input.StyledRange;
-import gpui.base.input.TabSize;
-import gpui.base.input.TextDecoration;
-import gpui.base.input.TextElement;
-import gpui.base.input.WrappingIndent;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.input.BlinkCursor;
+import glaze.kit.base.input.CursorSelection;
+import glaze.kit.base.input.EditorLanguage.Languages;
+import glaze.kit.base.input.InputBaseState.ColumnarPoint;
+import glaze.kit.base.input.AutoClosingPair;
+import glaze.kit.base.input.BracketPair;
+import glaze.kit.base.input.IndentationRules;
+import glaze.kit.base.input.LanguageConfig;
+import glaze.kit.base.input.LanguageProvider;
+import glaze.kit.base.input.SyntaxContext;
+import glaze.kit.base.input.SyntaxContextProvider;
+import glaze.Entity;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.base.NumberStep;
+import glaze.kit.base.StepAction;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.EditedText;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.InputEdit;
+import glaze.kit.base.input.InputHighlighter.InputHighlighterBase;
+import glaze.kit.base.input.InputBaseState.TextEdit;
+import glaze.kit.base.input.LspHover;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.input.TabSize;
+import glaze.kit.base.input.TextDecoration;
+import glaze.kit.base.input.TextElement;
+import glaze.kit.base.input.WrappingIndent;
 import ropey.Rope;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputKeyBindings;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.base.input.TextareaState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputKeyBindings;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.base.input.TextareaState;
 import testing.InteractionScript.ScriptView;
 import testing.VisualTestContext;
 import tests.kit.InputStateTestCase.InputView;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputMovement;
-using gpui.base.input.InputIndentExt;
-using gpui.base.input.InputDecorationsExt;
-using gpui.base.input.InputLspExt;
-using gpui.base.input.MaskPattern.MaskPatternTools;
-using gpui.base.NumberStep.NumberStepTools;
+using glaze.kit.base.input.InputMovement;
+using glaze.kit.base.input.InputIndentExt;
+using glaze.kit.base.input.InputDecorationsExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.base.input.MaskPattern.MaskPatternTools;
+using glaze.kit.base.NumberStep.NumberStepTools;
 
 /**
  * Tests of the input state (Rust `state.rs`): cursors, multi-cursor editing,
@@ -80,16 +80,16 @@ class InputStateEditingTest extends InputStateTestCase {
             var text = "";
             for (ch in new haxe.iterators.StringIteratorUnicode(lines[lineIdx])) {
                 if (ch == '|'.code) {
-                    positions.push(gpui.util.Utf8.byteLength(text));
+                    positions.push(glaze.util.Utf8.byteLength(text));
                 }
                 else {
-                    text += gpui.util.Utf8.fromCodePoint(ch);
+                    text += glaze.util.Utf8.fromCodePoint(ch);
                 }
             }
             if (lineIdx > 0) {
                 fullText += "\n";
             }
-            final lineStart = gpui.util.Utf8.byteLength(fullText);
+            final lineStart = glaze.util.Utf8.byteLength(fullText);
             for (pos in positions) {
                 cursorOffsets.push(lineStart + pos);
             }
@@ -133,7 +133,7 @@ class InputStateEditingTest extends InputStateTestCase {
         return [for (sel in state.selections.iter()) sel.start + ".." + sel.end].join(",");
     }
 
-    function setTestSyntaxProvider(provider:SyntaxContextProvider, cx:gpui.App):Void {
+    function setTestSyntaxProvider(provider:SyntaxContextProvider, cx:glaze.App):Void {
         Languages.setLanguageProvider(new TestLanguages(provider), cx);
     }
 
@@ -146,7 +146,7 @@ class InputStateEditingTest extends InputStateTestCase {
     }
 
     function testAltDragSelectsABlockAndReplacesEachRow() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         for (modifiers in [Modifiers.of(false, true), Modifiers.of(false, true, true)]) {
             setupCursors(view, "|abcd\nabcd\nabcd");
@@ -169,7 +169,7 @@ class InputStateEditingTest extends InputStateTestCase {
     }
 
     function testAltDragExtendsUpwardFromAnExistingCursor() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         setupCursors(view, "abcd\nabcd\na|bcd");
         view.update((state, window, cx) -> state.focus(window, cx));
@@ -188,7 +188,7 @@ class InputStateEditingTest extends InputStateTestCase {
     }
 
     function testAltDragOverAShortRowKeepsTheBlockWidth() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         setupCursors(view, "abcdef\nab\nabcdef");
         view.update((state, window, cx) -> state.focus(window, cx));
@@ -211,13 +211,13 @@ class InputStateEditingTest extends InputStateTestCase {
         // counted in space widths, so the span depends on the font. With the
         // port's font the pointer reaches the column computed the same way.
         final pastEnd:Float = ((end.x : Float) - (origin.x : Float) - (layout.lineNumberWidth : Float)) - (layout.lines[1].wrappedLines[0].width : Float);
-        final column = 2 + Std.int(gpui.util.MathUtil.round(pastEnd / (layout.spaceWidth : Float)));
+        final column = 2 + Std.int(glaze.util.MathUtil.round(pastEnd / (layout.spaceWidth : Float)));
         final blockEnd = column < 6 ? column : 6;
         assertEquals('1..$blockEnd,8..9', rangesOf(view.state()));
     }
 
     function testAltMouseReleaseOutsideEditorEndsColumnSelection() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         setupCursors(view, "|abcd\nabcd");
         view.cx.runUntilParked();
@@ -253,7 +253,7 @@ class InputStateEditingTest extends InputStateTestCase {
     }
 
     function testMouseDownShowsCursorLikeACursorMove() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         setupCursors(view, "abcd|efgh");
         view.cx.runUntilParked();
@@ -341,7 +341,7 @@ class InputStateEditingTest extends InputStateTestCase {
     }
 
     function testMultiCursorAltClickDispatch() {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final view = buildEditor();
         setupCursors(view, "a|b\nab\nab");
         view.update((state, window, cx) -> state.focus(window, cx));
@@ -480,7 +480,7 @@ class InputStateEditingTest extends InputStateTestCase {
         final view = buildEditor();
         view.update((state, window, cx) -> {
             state.setValue("abc def", window, cx);
-            state.createDecorationsCollection([new TextDecoration(range(4, 7), new gpui.HighlightStyle())], cx);
+            state.createDecorationsCollection([new TextDecoration(range(4, 7), new glaze.HighlightStyle())], cx);
             state.setSelectedRange(range(0, 0), cx);
             state.replaceTextInRange(null, "X", window, cx);
             final layers = state.extras.decorationLayers();
@@ -974,7 +974,7 @@ class InputStateEditingTest extends InputStateTestCase {
     function testMultiCursorReplaceSelection() {
         final view = multiLine();
         setupCursors(view, "|a\n|b\n|c");
-        view.update((state, window, cx) -> state.selectRight(new gpui.base.Actions.SelectRight(), window, cx));
+        view.update((state, window, cx) -> state.selectRight(new glaze.kit.base.Actions.SelectRight(), window, cx));
         assertEquals("0..1,2..3,4..5", rangesOf(view.state()));
 
         view.update((state, window, cx) -> state.replaceTextInRange(null, "x", window, cx));
@@ -1028,7 +1028,7 @@ class InputStateEditingTest extends InputStateTestCase {
             bytes.set(1, 'P'.code);
             bytes.set(2, 'N'.code);
             bytes.set(3, 'G'.code);
-            cx.writeToClipboard(ClipboardItem.newImage(gpui.Image.fromBytes(Png, bytes)));
+            cx.writeToClipboard(ClipboardItem.newImage(glaze.Image.fromBytes(Png, bytes)));
 
             // An image-only clipboard must not replace the selection with nothing.
             state.pasteAction(new Paste(), window, cx);
@@ -1074,7 +1074,7 @@ class InputStateEditingTest extends InputStateTestCase {
         view.cx.update((window, _) -> window.draw());
 
         view.update((state, window, cx) -> {
-            final bounds = state.textBounds() != null ? state.textBounds() : new gpui.Bounds();
+            final bounds = state.textBounds() != null ? state.textBounds() : new glaze.Bounds();
             final before = state.selectedTextRange(false, window, cx).range;
             final previous = state.boundsForRange(range(before.end, before.end), bounds, window, cx);
 

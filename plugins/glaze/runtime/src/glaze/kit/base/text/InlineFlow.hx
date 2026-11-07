@@ -1,53 +1,53 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline_flow.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Corners;
-import gpui.DefiniteLength;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.ImageSource;
-import gpui.LayoutId;
-import gpui.LineWrapper;
-import gpui.LineWrapper.IndentAdjustment;
-import gpui.LineWrapper.LineFragment;
-import gpui.ObjectFit;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.ShapedLine;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.StyleRefinement;
-import gpui.TextRun;
-import gpui.TextStyle;
-import gpui.TextStyleRefinement;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.TextSelection;
-import gpui.base.text.Inline.EditorPiece;
-import gpui.base.theme.Theme;
-import gpui.base.text.InlineNode.SharedFlag;
-import gpui.base.text.InlineObject.MeasuredInlineObject;
-import gpui.util.Utf8;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Corners;
+import glaze.DefiniteLength;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.ImageSource;
+import glaze.LayoutId;
+import glaze.LineWrapper;
+import glaze.LineWrapper.IndentAdjustment;
+import glaze.LineWrapper.LineFragment;
+import glaze.ObjectFit;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.ShapedLine;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.StyleRefinement;
+import glaze.TextRun;
+import glaze.TextStyle;
+import glaze.TextStyleRefinement;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.text.Inline.EditorPiece;
+import glaze.kit.base.theme.Theme;
+import glaze.kit.base.text.InlineNode.SharedFlag;
+import glaze.kit.base.text.InlineObject.MeasuredInlineObject;
+import glaze.util.Utf8;
 import unicode_segmentation.UnicodeSegmentation;
 
-using gpui.AbsoluteLengthTools;
-using gpui.DefiniteLengthTools;
+using glaze.AbsoluteLengthTools;
+using glaze.DefiniteLengthTools;
 
 /** Rust `LinkClickHandlerFn` (text_view.rs): `(url, event, window, cx)`. */
-private typedef LinkClickHandler = (url:String, event:gpui.ClickEvent, window:gpui.Window, cx:gpui.App) -> Void;
+private typedef LinkClickHandler = (url:String, event:glaze.ClickEvent, window:glaze.Window, cx:glaze.App) -> Void;
 
 /** Renders an inline element for a custom inline node, or `null` for its text. */
 typedef InlineRenderer = (context:InlineRenderContext, window:Window, cx:App) -> Null<InlineElement>;
@@ -79,7 +79,7 @@ enum InlineFlowItem {
  * Differences with gpui-kit: Rust's `InlineFlowLayoutState` and prepaint
  * state are fields of the element.
  */
-class InlineFlow extends gpui.Element {
+class InlineFlow extends glaze.Element {
 
     static final IMAGE_LEN:Int = 1;
 
@@ -132,7 +132,7 @@ class InlineFlow extends gpui.Element {
     }
 
     static function imageElement(ix:Int, source:ImageSource, link:Null<LinkMark>, title:String, size:Size, linkClickHandler:Null<LinkClickHandler>):AnyElement {
-        var image = gpui.Prelude.img(source).id(ix).objectFit(ObjectFit.Contain).maxW(gpui.Prelude.relative(1.)).w(gpui.Prelude.px(size.width)).h(gpui.Prelude.px(size.height));
+        var image = glaze.Prelude.img(source).id(ix).objectFit(ObjectFit.Contain).maxW(glaze.Prelude.relative(1.)).w(glaze.Prelude.px(size.width)).h(glaze.Prelude.px(size.height));
         if (link != null) {
             final auxLink = link.clone();
             final auxLinkClickHandler = linkClickHandler;
@@ -181,7 +181,7 @@ class InlineFlow extends gpui.Element {
         final layoutState = new InlineFlowLayoutState(typography, frameState);
         this.layoutState = layoutState;
 
-        return window.requestMeasuredLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
+        return window.requestMeasuredLayout(@:privateAccess glaze.Style.sharedDefaultStyle(), (knownDimensions, availableSpace, window, cx) -> {
             final wrapWidth:Null<Float> = if (typography.textStyle.whiteSpace == Normal) {
                 knownDimensions.width != null ? knownDimensions.width : switch availableSpace.width {
                     case Definite(width): width;
@@ -414,7 +414,7 @@ class InlineFlow extends gpui.Element {
             }
             item.element.paint(window, cx);
             for (overlay in item.overlays) {
-                window.paintQuad(gpui.Prelude.fill(overlay.bounds, overlay.color));
+                window.paintQuad(glaze.Prelude.fill(overlay.bounds, overlay.color));
             }
         }
     }
@@ -657,7 +657,7 @@ class InlineFlow extends gpui.Element {
             style = new StyleRefinement();
         }
         if (style.background == null && color != null) {
-            style.background = gpui.Background.fromHsla(color);
+            style.background = glaze.Background.fromHsla(color);
         }
         for (h in highlights) {
             h.highlight.style.backgroundColor = null;
@@ -693,7 +693,7 @@ class InlineFlow extends gpui.Element {
             switch item {
                 case Text(text, _, _):
                     // `match_indices('\n')`: a newline is one byte, the same in UTF-8 and here.
-                    final decoded = new gpui.util.Utf8.Utf8Text(text);
+                    final decoded = new glaze.util.Utf8.Utf8Text(text);
                     for (k in 0...decoded.count) {
                         if (decoded.codePoints[k] == '\n'.code) {
                             final newline = itemStart + decoded.byteOffsets[k];
@@ -976,7 +976,7 @@ class InlineFlow extends gpui.Element {
 
     static function intrinsicImageSize(ix:Int, source:ImageSource, width:Null<DefiniteLength>, height:Null<DefiniteLength>, window:Window,
             cx:App):Null<Size> {
-        var image = gpui.Prelude.img(source).id(ix).objectFit(ObjectFit.Contain).maxW(gpui.Prelude.relative(1.));
+        var image = glaze.Prelude.img(source).id(ix).objectFit(ObjectFit.Contain).maxW(glaze.Prelude.relative(1.));
         if (width != null) {
             image = image.w(width);
         }
@@ -1094,7 +1094,7 @@ private class InlineFlowLayoutState {
  * What a flow keeps from one frame to the next, as GPUI element state under
  * the flow's id.
  */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 @:allow(tests)
 class InlineFlowFrameState {
 
@@ -1239,7 +1239,7 @@ class EmptyLine {
 
 }
 
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 @:allow(tests)
 class InlineFlowLayout {
 

@@ -1,4 +1,4 @@
-package gpui.util;
+package glaze.util;
 
 /**
  * Rethrowing a caught exception without losing where it was thrown.

@@ -3,13 +3,13 @@
 // Modified: translated from Rust to Haxe for Ceramic, as the web part of
 // `CeramicTextSystem` (which plays `CosmicTextSystem`); the browser calls go
 // through `CanvasTextBackend`. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
-import gpui.platform.CanvasText.CanvasTextBackend;
-import gpui.platform.CanvasText.CanvasTextMetrics;
-import gpui.platform.CanvasGlyphCache.CanvasGlyph;
-import gpui.platform.RunReplacements.Replacement;
-import gpui.util.Utf8;
+import glaze.platform.CanvasText.CanvasTextBackend;
+import glaze.platform.CanvasText.CanvasTextMetrics;
+import glaze.platform.CanvasGlyphCache.CanvasGlyph;
+import glaze.platform.RunReplacements.Replacement;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import ttf.shape.Shaper;
 

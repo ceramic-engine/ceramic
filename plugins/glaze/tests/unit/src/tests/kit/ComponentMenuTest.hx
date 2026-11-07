@@ -4,45 +4,45 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Action;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.component.Component;
-import gpui.component.button.Button;
-import gpui.component.button.Button.ButtonVariant;
-import gpui.component.button.DropdownButton;
-import gpui.component.Size;
-import gpui.component.menu.AppMenuBar;
-import gpui.component.menu.MenuItemElement;
-import gpui.component.menu.PopupMenu;
+import glaze.Action;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.Component;
+import glaze.kit.button.Button;
+import glaze.kit.button.Button.ButtonVariant;
+import glaze.kit.button.DropdownButton;
+import glaze.kit.Size;
+import glaze.kit.menu.AppMenuBar;
+import glaze.kit.menu.MenuItemElement;
+import glaze.kit.menu.PopupMenu;
 import tests.kit.ComponentScrollTest.Probe;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.menu.ContextMenu.ContextMenuExt;
-using gpui.component.menu.DropdownMenu;
-using gpui.component.button.Button.ButtonVariantTools;
+using glaze.kit.menu.ContextMenu.ContextMenuExt;
+using glaze.kit.menu.DropdownMenu;
+using glaze.kit.button.Button.ButtonVariantTools;
 
 /**
  * The `#[cfg(test)]` tests of gpui-component's `menu` module, and the menu
@@ -481,7 +481,7 @@ class ComponentMenuTest extends TestCase {
         assertFalse(dropdown.disabledValue);
         assertFalse(dropdown.selectedValue);
         assertTrue(dropdown.menu != null);
-        assertEquals(gpui.Anchor.BottomLeft, dropdown.anchor);
+        assertEquals(glaze.Anchor.BottomLeft, dropdown.anchor);
     }
 
     /**
@@ -529,7 +529,7 @@ class ComponentMenuTest extends TestCase {
             .dropdownMenu((menu, _, _) -> menu);
         assertEquals('More save options', @:privateAccess save.menuAccessibilityLabelValue);
         assertEquals(null, @:privateAccess plain.menuAccessibilityLabelValue);
-        assertEquals('More options', gpui.component.I18n.t('DropdownButton.more_options'), 'the caret-only trigger needs a name without a caller-provided label');
+        assertEquals('More options', glaze.kit.I18n.t('DropdownButton.more_options'), 'the caret-only trigger needs a name without a caller-provided label');
         final opened = open((_, _) -> new ScriptView((_, _) -> div()
             .child(new DropdownButton('save')
                 .button(new Button('save-action').label('Save'))
@@ -548,9 +548,9 @@ class ComponentMenuTest extends TestCase {
      */
     function openRoot<V:Model & Render>(build:(Window, Context<V>) -> V, width:Float, height:Float):{content:Entity<V>, cx:VisualTestContext} {
         var content:Entity<V> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<gpui.base.Root>) -> {
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
             content = rootCx.newEntity((cx:Context<V>) -> build(window, cx));
-            return new gpui.base.Root(content, window, rootCx);
+            return new glaze.kit.base.Root(content, window, rootCx);
         }, width, height);
         contexts.push(opened.cx);
         return {content: content, cx: opened.cx};
@@ -563,7 +563,7 @@ class ComponentMenuTest extends TestCase {
     }
 
     static function movePointer(window:Window, cx:App, position:Point):Void {
-        window.dispatchEvent(new gpui.MouseMoveEvent(position, null, Modifiers.none()), cx);
+        window.dispatchEvent(new glaze.MouseMoveEvent(position, null, Modifiers.none()), cx);
         renderFrame(window);
     }
 
@@ -788,7 +788,7 @@ class ComponentMenuTest extends TestCase {
         waitFor(cx, () -> isShown(cx, commands.more));
         cx.update((window, app) -> {
             final submenu = menuOf(commands.more).bounds;
-            final viewport = new gpui.Bounds(new Point(0., 0.), window.viewportSize());
+            final viewport = new glaze.Bounds(new Point(0., 0.), window.viewportSize());
             assertTrue(viewport.contains(submenu.origin) && viewport.contains(submenu.bottomRight()), 'submenu is outside the window');
             assertEquals('Save copy', menuOf(commands.more).menuItems[0].labelValue);
             clickAt(window, app, itemCenter(commands.more, 0));
@@ -799,8 +799,8 @@ class ComponentMenuTest extends TestCase {
 
     /** `long_press`: a recognized long press, started and ended, a frame after each. */
     static function longPress(window:Window, cx:App, position:Point):Void {
-        for (phase in [gpui.TouchPhase.Started, gpui.TouchPhase.Ended]) {
-            window.dispatchEvent(new gpui.LongPressEvent(phase, position, position), cx);
+        for (phase in [glaze.TouchPhase.Started, glaze.TouchPhase.Ended]) {
+            window.dispatchEvent(new glaze.LongPressEvent(phase, position, position), cx);
             renderFrame(window);
         }
     }
@@ -855,8 +855,8 @@ class ComponentMenuTest extends TestCase {
         cx.runUntilParked();
         draw(cx);
         cx.update((window, app) -> {
-            assertEquals('quick', StringTools.trim(gpui.base.TextSelection.selectedText(window, app)));
-            assertNotNull(gpui.base.TextSelection.touchSelection(window, app));
+            assertEquals('quick', StringTools.trim(glaze.kit.base.TextSelection.selectedText(window, app)));
+            assertNotNull(glaze.kit.base.TextSelection.touchSelection(window, app));
         });
         assertEquals(0, opened.rowMenu.length);
     }
@@ -872,7 +872,7 @@ class ComponentMenuTest extends TestCase {
         });
         cx.runUntilParked();
         draw(cx);
-        cx.update((window, app) -> assertEquals('', gpui.base.TextSelection.selectedText(window, app)));
+        cx.update((window, app) -> assertEquals('', glaze.kit.base.TextSelection.selectedText(window, app)));
         assertTrue(opened.rowMenu.length > 0 && isShown(cx, opened.rowMenu[opened.rowMenu.length - 1]));
     }
 
@@ -988,7 +988,7 @@ class ComponentMenuTest extends TestCase {
         ceramic.App.app.flushImmediate();
 
         assertTrue(menu.upgrade() == null, 'the PopupMenu must be released with the window');
-        assertFalse(gpui.base.GlobalState.isInDeferredContext(app), 'the popover\'s deferred registration must be released with the window');
+        assertFalse(glaze.kit.base.GlobalState.isInDeferredContext(app), 'the popover\'s deferred registration must be released with the window');
     }
 
     /**
@@ -1172,21 +1172,21 @@ private class ScrollableCommands extends Model implements Render {
 
 private class LongPressMenus extends Model implements Render {
 
-    public final input:Entity<gpui.base.input.InputState>;
+    public final input:Entity<glaze.kit.base.input.InputState>;
 
-    public final text:Entity<gpui.base.text.TextViewState>;
+    public final text:Entity<glaze.kit.base.text.TextViewState>;
 
     final menus:Array<WeakEntity<PopupMenu>>;
 
     public function new(window:Window, cx:Context<LongPressMenus>, menus:Array<WeakEntity<PopupMenu>>) {
         super();
         this.menus = menus;
-        input = cx.newEntity((c:Context<gpui.base.input.InputState>) -> {
-            final state = new gpui.base.input.InputState(window, c);
+        input = cx.newEntity((c:Context<glaze.kit.base.input.InputState>) -> {
+            final state = new glaze.kit.base.input.InputState(window, c);
             state.defaultValue("quick select");
             return state;
         });
-        text = cx.newEntity((c:Context<gpui.base.text.TextViewState>) -> gpui.base.text.TextViewState.markdown("quick select", c));
+        text = cx.newEntity((c:Context<glaze.kit.base.text.TextViewState>) -> glaze.kit.base.text.TextViewState.markdown("quick select", c));
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
@@ -1204,23 +1204,23 @@ private class LongPressMenus extends Model implements Render {
                 .child('Long press me')
                 .contextMenu((menu, _, cx) -> {
                     menus.push(cx.weakEntity());
-                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
+                    return menu.menu('Copy', new glaze.kit.base.input.InputActions.Copy());
                 })))
             .child(div()
                 .w(px(320.))
-                .child(new Probe('row-input', new gpui.component.input.Input(input).id('row-input')))
+                .child(new Probe('row-input', new glaze.kit.input.Input(input).id('row-input')))
                 .contextMenu((menu, _, cx) -> {
                     menus.push(cx.weakEntity());
-                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
+                    return menu.menu('Copy', new glaze.kit.base.input.InputActions.Copy());
                 }))
             .child(new Probe('text-row', div()
                 .id('text-row')
                 .w(px(320.))
                 .h(px(80.))
-                .child(gpui.component.text.TextView.create(text).selectable(true))
+                .child(glaze.kit.text.TextView.create(text).selectable(true))
                 .contextMenu((menu, _, cx) -> {
                     menus.push(cx.weakEntity());
-                    return menu.menu('Copy', new gpui.base.input.InputActions.Copy());
+                    return menu.menu('Copy', new glaze.kit.base.input.InputActions.Copy());
                 })));
     }
 

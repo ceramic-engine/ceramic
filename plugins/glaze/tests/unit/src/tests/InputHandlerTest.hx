@@ -3,34 +3,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClipboardEntry;
-import gpui.ClipboardItem;
-import gpui.ClipboardString;
-import gpui.Context;
-import gpui.ElementInputHandler;
-import gpui.EntityInputHandler;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.PlatformInputHandler;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.TestClipboard;
-import gpui.TestDispatcher;
-import gpui.TextInputConfiguration;
-import gpui.TextInputStateChange;
-import gpui.UTF16Selection;
-import gpui.Window;
-import gpui.util.Ref;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClipboardEntry;
+import glaze.ClipboardItem;
+import glaze.ClipboardString;
+import glaze.Context;
+import glaze.ElementInputHandler;
+import glaze.EntityInputHandler;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.PlatformInputHandler;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.TestClipboard;
+import glaze.TestDispatcher;
+import glaze.TextInputConfiguration;
+import glaze.TextInputStateChange;
+import glaze.UTF16Selection;
+import glaze.Window;
+import glaze.util.Ref;
 import testing.TestCase;
 import testing.TestPlatformTextInput;
 import testing.VisualTestContext;
 import textfield.TextInput;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Text input handlers: the tests of `input.rs` (configuration and text input
@@ -183,7 +183,7 @@ class InputHandlerTest extends TestCase {
 
 /// examples/input.rs
 
-    function openInput(content:String):gpui.Entity<TextInput> {
+    function openInput(content:String):glaze.Entity<TextInput> {
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<TextInput>) -> new TextInput(cx.focusHandle(), content, ''));
         cx = opened.cx;
         return opened.view;

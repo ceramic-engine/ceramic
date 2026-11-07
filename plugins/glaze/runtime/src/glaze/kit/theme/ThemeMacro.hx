@@ -1,7 +1,7 @@
 // New code for the Haxe port of gpui-kit (no gpui-kit origin): compile time
 // embedding of the theme files that gpui-kit includes with `include_str!`.
 // See NOTICE.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
 #if macro
 import haxe.macro.Context;
@@ -21,7 +21,7 @@ class ThemeMacro {
         final file = Context.getPosInfos(Context.currentPos()).file;
         final dir = haxe.io.Path.directory(sys.FileSystem.absolutePath(file));
         final path = haxe.io.Path.join([dir, name]);
-        Context.registerModuleDependency('gpui.component.theme.ThemeMacro', path);
+        Context.registerModuleDependency('glaze.kit.theme.ThemeMacro', path);
         return sys.io.File.getContent(path);
 
     }

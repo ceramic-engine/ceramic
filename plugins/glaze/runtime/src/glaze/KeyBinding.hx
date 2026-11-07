@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/keymap/binding.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * A keybinding and its associated metadata, from the keymap.
@@ -73,10 +73,10 @@ class KeyBinding {
         var pos = 0;
         final len = source.length;
         while (pos < len) {
-            pos = gpui.KeyContext.ContextScanner.skipWhitespace(source, pos);
+            pos = glaze.KeyContext.ContextScanner.skipWhitespace(source, pos);
             if (pos >= len) break;
             final start = pos;
-            while (pos < len && !gpui.KeyContext.ContextScanner.isWhitespace(StringTools.fastCodeAt(source, pos))) {
+            while (pos < len && !glaze.KeyContext.ContextScanner.isWhitespace(StringTools.fastCodeAt(source, pos))) {
                 pos++;
             }
             final part = source.substring(start, pos);
@@ -147,7 +147,7 @@ class KeyBinding {
         return keystrokesArrayEqual(keystrokes, other.keystrokes);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     static function keystrokesArrayEqual(a:Array<KeybindingKeystroke>, b:Array<KeybindingKeystroke>):Bool {
         if (a.length != b.length) return false;
         for (i in 0...a.length) {

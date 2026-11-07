@@ -4,64 +4,64 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Keystroke;
-import gpui.OperatingSystem;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.base.input.InputState;
-import gpui.base.questionnaire.QuestionnaireAnswer;
-import gpui.base.questionnaire.QuestionnaireChoiceDefinition;
-import gpui.base.questionnaire.QuestionnaireEvent;
-import gpui.base.questionnaire.QuestionnaireInputDefinition;
-import gpui.base.questionnaire.QuestionnaireItemDefinition;
-import gpui.base.questionnaire.QuestionnaireShortcutMode;
-import gpui.base.questionnaire.QuestionnaireState;
-import gpui.base.questionnaire.QuestionnaireSubmission;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.dialog.Dialog;
-import gpui.component.dialog.DialogDescription;
-import gpui.component.dialog.DialogFooter;
-import gpui.component.dialog.DialogFooter.DialogClose;
-import gpui.component.dialog.DialogHeader;
-import gpui.component.dialog.DialogTitle;
-import gpui.component.groupbox.GroupBox;
-import gpui.component.kbd.Kbd;
-import gpui.component.questionnaire.Questionnaire;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireActions;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireChoice;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireChoiceDescription;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireChoices;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireDescription;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireError;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireInput;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireItem;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireNext;
-import gpui.component.questionnaire.Questionnaire.QuestionnairePrevious;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireProgress;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireSkip;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireSubmit;
-import gpui.component.questionnaire.Questionnaire.QuestionnaireTitle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Keystroke;
+import glaze.OperatingSystem;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.questionnaire.QuestionnaireAnswer;
+import glaze.kit.base.questionnaire.QuestionnaireChoiceDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireEvent;
+import glaze.kit.base.questionnaire.QuestionnaireInputDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireItemDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireShortcutMode;
+import glaze.kit.base.questionnaire.QuestionnaireState;
+import glaze.kit.base.questionnaire.QuestionnaireSubmission;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.dialog.DialogDescription;
+import glaze.kit.dialog.DialogFooter;
+import glaze.kit.dialog.DialogFooter.DialogClose;
+import glaze.kit.dialog.DialogHeader;
+import glaze.kit.dialog.DialogTitle;
+import glaze.kit.groupbox.GroupBox;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.questionnaire.Questionnaire;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireActions;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireChoice;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireChoiceDescription;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireChoices;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireDescription;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireError;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireInput;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireItem;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireNext;
+import glaze.kit.questionnaire.Questionnaire.QuestionnairePrevious;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireProgress;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireSkip;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireSubmit;
+import glaze.kit.questionnaire.Questionnaire.QuestionnaireTitle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 class QuestionnaireStory extends Model implements Story {
 
@@ -73,7 +73,7 @@ class QuestionnaireStory extends Model implements Story {
         return 'Composable multi-step questions with answers, validation, progress, and navigation.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -83,7 +83,7 @@ class QuestionnaireStory extends Model implements Story {
 
     final focusHandle_:FocusHandle;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     final state:Entity<QuestionnaireState>;
 
@@ -511,7 +511,7 @@ class QuestionnaireStory extends Model implements Story {
                     .child(new DialogTitle().child('Workspace setup'))
                     .child(new DialogDescription().child('Questionnaire validates the answer; the Dialog host owns close and cancel.')))
                 .child(new Questionnaire(dialogContentState)
-                    .withSize(gpui.component.Size.Small)
+                    .withSize(glaze.kit.Size.Small)
                     .child(new QuestionnaireProgress(dialogContentState))
                     .child(itemView(dialogContentState, 'dialog', ['first', 'second']))
                     .child(itemView(dialogContentState, 'dialog_verification', ['targeted', 'full']))

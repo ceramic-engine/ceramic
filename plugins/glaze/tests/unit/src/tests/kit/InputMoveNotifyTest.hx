@@ -1,43 +1,43 @@
 package tests.kit;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.StyleBuilder;
-import gpui.Task;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.CompletionContext;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.LspHover;
-import gpui.component.Component;
-import gpui.component.input.Editor;
-import gpui.component.input.Input;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
-import gpui.scene.SceneDump;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.StyleBuilder;
+import glaze.Task;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.CompletionContext;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.LspHover;
+import glaze.kit.Component;
+import glaze.kit.input.Editor;
+import glaze.kit.input.Input;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
+import glaze.scene.SceneDump;
 import ropey.Rope;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputLspExt;
+using glaze.kit.base.input.InputLspExt;
 
 /**
  * Deliberate deviation DEV-016 (see DEVIATIONS.md): gpui-kit's input element
@@ -53,7 +53,7 @@ using gpui.base.input.InputLspExt;
  * one update; the app draws the dirty windows when its effects are flushed,
  * like the golden scenes. After every step both frames must be identical.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class InputMoveNotifyTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -497,7 +497,7 @@ private class MovePage extends Model implements Render {
 }
 
 /** Completion words for C. */
-private class MoveWords extends gpui.base.input.CompletionProvider.CompletionProviderBase {
+private class MoveWords extends glaze.kit.base.input.CompletionProvider.CompletionProviderBase {
 
     static final WORDS:Array<Array<String>> = [["format", "fn"], ["for_each", "method"], ["fold", "method"]];
 

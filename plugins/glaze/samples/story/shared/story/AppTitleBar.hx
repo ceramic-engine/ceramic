@@ -3,32 +3,32 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.FontWeight;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.Geometry.Side;
-import gpui.base.theme.ScrollbarMode;
-import gpui.component.IconName;
-import gpui.component.TitleBar;
-import gpui.component.badge.Badge;
-import gpui.component.button.Button;
-import gpui.component.menu.AppMenuBar;
-import gpui.component.theme.Theme;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.FontWeight;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.Geometry.Side;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.IconName;
+import glaze.kit.TitleBar;
+import glaze.kit.badge.Badge;
+import glaze.kit.button.Button;
+import glaze.kit.menu.AppMenuBar;
+import glaze.kit.theme.Theme;
 import story.StoryActions;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.WindowExt;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * The title bar of the gallery windows: the app menus (or the window

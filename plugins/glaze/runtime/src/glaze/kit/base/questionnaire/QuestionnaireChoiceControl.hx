@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/control.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
-import gpui.App;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.KeyDownEvent;
-import gpui.Window;
-import gpui.base.Checkbox;
-import gpui.base.Radio;
+import glaze.App;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.KeyDownEvent;
+import glaze.Window;
+import glaze.kit.base.Checkbox;
+import glaze.kit.base.Radio;
 
 /**
  * The answer control for one choice, wired to the questionnaire's behavior.
@@ -26,8 +26,8 @@ import gpui.base.Radio;
  * description and position to its `a11y` record.
  */
 enum QuestionnaireChoiceControl {
-    Checkbox(checkbox:gpui.base.Checkbox);
-    Radio(radio:gpui.base.Radio);
+    Checkbox(checkbox:glaze.kit.base.Checkbox);
+    Radio(radio:glaze.kit.base.Radio);
 }
 
 class QuestionnaireChoiceControlTools {
@@ -67,7 +67,7 @@ class QuestionnaireChoiceControlTools {
         };
 
         if (multiple) {
-            final checkbox = new gpui.base.Checkbox(id)
+            final checkbox = new glaze.kit.base.Checkbox(id)
                 .state(selected ? CheckboxState.Checked : CheckboxState.Unchecked)
                 .disabled(disabled)
                 .accessibilityLabel(label);
@@ -84,7 +84,7 @@ class QuestionnaireChoiceControlTools {
             return QuestionnaireChoiceControl.Checkbox(checkbox);
         }
         else {
-            final radio = new gpui.base.Radio(id)
+            final radio = new glaze.kit.base.Radio(id)
                 .checked(selected)
                 .disabled(disabled)
                 .accessibilityLabel(label);

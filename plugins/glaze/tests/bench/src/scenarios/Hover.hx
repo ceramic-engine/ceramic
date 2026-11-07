@@ -1,15 +1,15 @@
 package scenarios;
 
 import Scenario;
-import gpui.App;
-import gpui.Context;
-import gpui.Modifiers;
-import gpui.MouseMoveEvent;
-import gpui.Point;
-import gpui.Window;
-import gpui.component.button.Button;
+import glaze.App;
+import glaze.Context;
+import glaze.Modifiers;
+import glaze.MouseMoveEvent;
+import glaze.Point;
+import glaze.Window;
+import glaze.kit.button.Button;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A column of 200 gpui-kit buttons (the variants have hover styles), no gap
@@ -31,7 +31,7 @@ class Hover extends BaseScenario {
     /** The x of the mouse beside the buttons (the widest label ends well before). */
     static inline final OUTSIDE_X:Float = 600;
 
-    /** Elements created by a full draw (needs `gpui_count_allocations`). */
+    /** Elements created by a full draw (needs `glaze_count_allocations`). */
     public var elementCount:Int = 0;
 
     var app:App;
@@ -56,7 +56,7 @@ class Hover extends BaseScenario {
     }
 
     static function button(i:Int):Button {
-        final button = new Button('button-$i').label('Button $i').withSize(gpui.component.Size.Small);
+        final button = new Button('button-$i').label('Button $i').withSize(glaze.kit.Size.Small);
         return switch (i % 4) {
             case 0: button.primary();
             case 1: button.outline();

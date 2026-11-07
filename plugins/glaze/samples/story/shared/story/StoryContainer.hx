@@ -3,32 +3,32 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Entity;
-import gpui.EventType;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.dock.PanelInfo;
-import gpui.base.dock.PanelState;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.dock.PanelBase;
-import gpui.component.dock.PanelControl;
-import gpui.component.dock.TitleStyle;
-import gpui.component.menu.PopupMenu;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Entity;
+import glaze.EventType;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.dock.PanelInfo;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.dock.PanelBase;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.dock.TitleStyle;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.theme.Theme;
 import story.StoryActions;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.WindowExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.WindowExt;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * Rust `enum ContainerEvent`.

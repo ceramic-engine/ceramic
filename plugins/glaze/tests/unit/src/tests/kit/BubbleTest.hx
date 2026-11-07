@@ -3,9 +3,9 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.component.bubble.Bubble;
-import gpui.component.button.Button;
-import gpui.component.message.Message.MessageAlignment;
+import glaze.kit.bubble.Bubble;
+import glaze.kit.button.Button;
+import glaze.kit.message.Message.MessageAlignment;
 import testing.TestCase;
 
 /**

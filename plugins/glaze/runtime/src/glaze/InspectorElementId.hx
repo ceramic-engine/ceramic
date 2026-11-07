@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/inspector.rs (`InspectorElementId`, `InspectorElementPath`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-#if gpui_inspector
+#if glaze_inspector
 
 /**
  * `GlobalElementId` qualified by source location of element construction.

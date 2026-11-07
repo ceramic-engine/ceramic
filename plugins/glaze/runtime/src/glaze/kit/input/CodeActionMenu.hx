@@ -1,48 +1,48 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/popovers/code_action_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.HighlightStyle.TextHighlight;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.StyledText;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.IndexPath;
-import gpui.base.Popup;
-import gpui.base.input.CodeActionItem;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputActions;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate;
-import gpui.component.list.ListState;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.HighlightStyle.TextHighlight;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.StyledText;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.Popup;
+import glaze.kit.base.input.CodeActionItem;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate;
+import glaze.kit.list.ListState;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.input.InputLspExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.input.InputLspExt;
 
 /**
  * A context menu for code completions and code actions.
  */
-@:access(gpui.component.list.ListState)
+@:access(glaze.kit.list.ListState)
 class CodeActionMenu extends Model implements Render {
 
     static inline final MAX_MENU_WIDTH:Pixels = 320.;
@@ -64,7 +64,7 @@ class CodeActionMenu extends Model implements Render {
      *
      * NOTE: This element should not call from EditorState::new, unless that will stack overflow.
      */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     static function create(state:Entity<EditorState>, window:Window, cx:App):Entity<CodeActionMenu> {
         return cx.newEntity((c:Context<CodeActionMenu>) -> new CodeActionMenu(state, window, c));
     }
@@ -89,13 +89,13 @@ class CodeActionMenu extends Model implements Render {
         this.state = state.downgrade();
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function selectItem(item:CodeActionItem, window:Window, cx:Context<CodeActionMenu>):Void {
         final state = this.state;
 
         cx.spawn((_, acx) -> {
             if (window.isDestroyed())
-                throw new gpui.EntityReleasedError(0);
+                throw new glaze.EntityReleasedError(0);
             state.update(acx, (state:EditorState, cx:Context<EditorState>) -> {
                 InputLspExt.performCodeAction(state, item, window, cast cx);
             });
@@ -105,7 +105,7 @@ class CodeActionMenu extends Model implements Render {
         hide(cx);
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function handleAction(action:Action, window:Window, cx:Context<CodeActionMenu>):Bool {
         if (!open)
             return false;
@@ -150,7 +150,7 @@ class CodeActionMenu extends Model implements Render {
     }
 
     /** Hide the completion menu and reset the trigger start offset. */
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function hide(cx:Context<CodeActionMenu>):Void {
         open = false;
         final state = this.state;
@@ -161,7 +161,7 @@ class CodeActionMenu extends Model implements Render {
         cx.notify();
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function show(offset:Int, items:Array<CodeActionItem>, window:Window, cx:Context<CodeActionMenu>):Void {
         this.offset = offset;
         open = true;
@@ -222,7 +222,7 @@ class MenuDelegate extends ListDelegateBase {
 
     final menu:WeakEntity<CodeActionMenu>;
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     var items:Array<CodeActionItem> = [];
 
     var selectedIx:Int = 0;
@@ -231,13 +231,13 @@ class MenuDelegate extends ListDelegateBase {
         this.menu = menu;
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function setItems(items:Array<CodeActionItem>):Void {
         this.items = items.copy();
         selectedIx = 0;
     }
 
-    @:allow(gpui.component.input, tests)
+    @:allow(glaze.kit.input, tests)
     function selectedItem():Null<CodeActionItem> {
         return selectedIx >= 0 && selectedIx < items.length ? items[selectedIx] : null;
     }

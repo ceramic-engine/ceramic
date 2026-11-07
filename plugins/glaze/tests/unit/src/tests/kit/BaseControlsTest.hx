@@ -4,43 +4,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.StyleRefinement;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Base;
-import gpui.base.Button;
-import gpui.base.Checkbox;
-import gpui.base.Radio;
-import gpui.base.Root;
-import gpui.base.Slider;
-import gpui.base.Switch;
-import gpui.base.Toggle;
-import gpui.base.Toolbar;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.StyleRefinement;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Base;
+import glaze.kit.base.Button;
+import glaze.kit.base.Checkbox;
+import glaze.kit.base.Radio;
+import glaze.kit.base.Root;
+import glaze.kit.base.Slider;
+import glaze.kit.base.Switch;
+import glaze.kit.base.Toggle;
+import glaze.kit.base.Toolbar;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.ElementExt;
-using gpui.base.Slider.SliderValueTools;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Slider.SliderValueTools;
 
 /**
  * The tests of gpui-base's controls: `button.rs`, `toggle.rs`,

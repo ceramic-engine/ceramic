@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/fields/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.setting.ElementField.SettingFieldElement;
-import gpui.component.setting.ElementField.FnSettingFieldElement;
-import gpui.component.setting.NumberField.NumberFieldOptions;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.setting.ElementField.SettingFieldElement;
+import glaze.kit.setting.ElementField.FnSettingFieldElement;
+import glaze.kit.setting.NumberField.NumberFieldOptions;
 
 /**
  * Custom reset behavior for a setting field or item.
@@ -148,25 +148,25 @@ interface AnySettingField {
  */
 class SettingField<T> implements AnySettingField implements Styled {
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     final fieldTypeValue:SettingFieldType;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     final fieldStyle:StyleRefinement = new StyleRefinement();
 
     /**
      * Function to get the value for this field.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     final value:(App) -> T;
 
     /**
      * Function to set the value for this field.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     final setValue:(T, App) -> Void;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var defaultValueValue:Null<T> = null;
 
     var hasDefaultValue:Bool = false;
@@ -177,7 +177,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      * mechanism. When set, it takes precedence over the `defaultValue` based
      * reset.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var resetHandler:Null<ResetHandler> = null;
 
     final kind:SettingValueKind;
@@ -236,7 +236,7 @@ class SettingField<T> implements AnySettingField implements Styled {
      *
      * See also `element` for building with a custom field for more complex scenarios.
      */
-    public static function render(elementRender:(RenderOptions, Window, App) -> gpui.IntoElement):SettingField<String> {
+    public static function render(elementRender:(RenderOptions, Window, App) -> glaze.IntoElement):SettingField<String> {
         return element(new FnSettingFieldElement((options, window, cx) -> elementRender(options, window, cx).intoAnyElement()));
     }
 

@@ -3,14 +3,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.input.Change;
-import gpui.base.input.Selection;
-import gpui.base.input.UndoManager;
-import gpui.util.Utf8;
+import glaze.kit.base.input.Change;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.input.UndoManager;
+import glaze.util.Utf8;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.UndoManager` (Rust `undo_manager.rs`).
+ * Tests of `glaze.kit.base.input.UndoManager` (Rust `undo_manager.rs`).
  */
 class InputUndoManagerTest extends TestCase {
 

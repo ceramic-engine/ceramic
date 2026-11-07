@@ -1,28 +1,28 @@
 package tests.kit;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseMoveEvent;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.component.text.TextView;
-import gpui.scene.SceneDump;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseMoveEvent;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.text.TextView;
+import glaze.scene.SceneDump;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Scrolling redraws the scrolled content with default view caching.
  *
  * A scroll event changes a scroll offset and notifies a view; the window
- * draws its next frame from that (`drawIfDirty`, like the `GpuiSystem`),
+ * draws its next frame from that (`drawIfDirty`, like the `GlazeSystem`),
  * never from an explicit `draw()`. Each frame of a window caching views
  * must equal the frame of a window rendering every view, as in GPUI where
  * views are not cached unless embedded with `.cached(style)`.
@@ -65,7 +65,7 @@ class ScrollRedrawTest extends TestCase {
         return app.newEntity((_:Context<ScrollRedrawView>) -> new ScrollRedrawView(render));
     }
 
-    /** Draws the dirty windows, like the GpuiSystem does every frame. */
+    /** Draws the dirty windows, like the GlazeSystem does every frame. */
     function frame():Void {
         flushImmediate();
         for (window in windows) {
@@ -191,9 +191,9 @@ class ScrollRedrawTest extends TestCase {
      * the new positions, like GPUI rendering every view.
      */
     function testHandlesScrolledFromAnotherView() {
-        final handle = new gpui.ScrollHandle();
-        final listState = new gpui.ListState(40, gpui.ListAlignment.Top, 0);
-        final uniformHandle = new gpui.UniformListScrollHandle();
+        final handle = new glaze.ScrollHandle();
+        final listState = new glaze.ListState(40, glaze.ListAlignment.Top, 0);
+        final uniformHandle = new glaze.UniformListScrollHandle();
         final row = (i:Int) -> div().h(px(24)).bg(hsla(i / 40, 0.5, 0.8, 1)).child('Row $i');
         final divPage = view((_, _) -> div().id('div-page').w(px(100)).h(px(200)).overflowYScroll().trackScroll(handle).flex().flexCol()
             .children([for (i in 0...40) row(i)]));
@@ -208,8 +208,8 @@ class ScrollRedrawTest extends TestCase {
         assertEquals(dump(reference), dump(cached));
         final moves:Array<{name:String, move:() -> Void}> = [
             {name: 'div', move: () -> handle.setOffset(point(px(0), px(-50)))},
-            {name: 'list', move: () -> listState.scrollTo(new gpui.ListOffset(5, 0))},
-            {name: 'uniform list', move: () -> uniformHandle.scrollToItem(20, gpui.ScrollStrategy.Top)}
+            {name: 'list', move: () -> listState.scrollTo(new glaze.ListOffset(5, 0))},
+            {name: 'uniform list', move: () -> uniformHandle.scrollToItem(20, glaze.ScrollStrategy.Top)}
         ];
         for (step in moves) {
             final before = dump(cached);
@@ -227,10 +227,10 @@ class ScrollRedrawTest extends TestCase {
      * reused while it is not notified, even if a handle it shows moved.
      */
     function testCachedWithStyleKeepsGpuiBehaviour() {
-        final handle = new gpui.ScrollHandle();
+        final handle = new glaze.ScrollHandle();
         final page = view((_, _) -> div().id('page').sizeFull().overflowYScroll().trackScroll(handle).flex().flexCol()
             .children([for (i in 0...40) div().h(px(24)).bg(hsla(i / 40, 0.5, 0.8, 1)).child('Row $i')]));
-        final root = view((_, _) -> div().w(px(320)).h(px(240)).child(page.cached(gpui.StyleBuilder.build(s -> s.sizeFull()))));
+        final root = view((_, _) -> div().w(px(320)).h(px(240)).child(page.cached(glaze.StyleBuilder.build(s -> s.sizeFull()))));
         final cached = openWindow(root, true);
         frame();
         final before = dump(cached);

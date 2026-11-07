@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/element.rs (`EditorScrollbarSnapshot`, `EditorScrollbarLayout`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Edges;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
+import glaze.Bounds;
+import glaze.Edges;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
 
 /**
  * What the editor scrollbar needs from the last prepaint of the text: its

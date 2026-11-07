@@ -4,43 +4,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.Window;
-import gpui.base.motion.Transition;
-import gpui.base.plot.Grid;
-import gpui.base.plot.PathCache;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAppear;
-import gpui.base.plot.PlotAxis;
-import gpui.base.plot.PlotHover;
-import gpui.base.plot.PlotLabel;
-import gpui.base.plot.PlotLabel.Text as PlotText;
-import gpui.base.plot.PlotAxis.AxisText;
-import gpui.base.plot.PathCache.ShapeKey;
-import gpui.base.plot.shape.Arc.ArcData;
-import gpui.base.plot.PlotAppear.PlotAppearScope;
-import gpui.base.plot.PlotMotion;
-import gpui.base.plot.TooltipState;
-import gpui.base.plot.shape.Arc;
-import gpui.base.plot.shape.Line;
-import gpui.base.plot.shape.Pie;
-import gpui.base.plot.shape.RadialLine;
-import gpui.base.plot.shape.Stack;
-import gpui.base.theme.PlotTheme;
-import gpui.base.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.Window;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.plot.Grid;
+import glaze.kit.base.plot.PathCache;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAppear;
+import glaze.kit.base.plot.PlotAxis;
+import glaze.kit.base.plot.PlotHover;
+import glaze.kit.base.plot.PlotLabel;
+import glaze.kit.base.plot.PlotLabel.Text as PlotText;
+import glaze.kit.base.plot.PlotAxis.AxisText;
+import glaze.kit.base.plot.PathCache.ShapeKey;
+import glaze.kit.base.plot.shape.Arc.ArcData;
+import glaze.kit.base.plot.PlotAppear.PlotAppearScope;
+import glaze.kit.base.plot.PlotMotion;
+import glaze.kit.base.plot.TooltipState;
+import glaze.kit.base.plot.shape.Arc;
+import glaze.kit.base.plot.shape.Line;
+import glaze.kit.base.plot.shape.Pie;
+import glaze.kit.base.plot.shape.RadialLine;
+import glaze.kit.base.plot.shape.Stack;
+import glaze.kit.base.theme.PlotTheme;
+import glaze.kit.base.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /** A plot that records the appear progress it is handed each frame (Rust `Recorder`). */
 class AppearRecorder extends Plot {
@@ -255,7 +255,7 @@ class PlotBaseTest extends KitTestCase {
     }
 
     static function at(time:Float):PlotAppear {
-        return @:privateAccess new PlotAppear(time, gpui.base.motion.Easing.Linear);
+        return @:privateAccess new PlotAppear(time, glaze.kit.base.motion.Easing.Linear);
     }
 
     function testCompleteAppear() {
@@ -278,7 +278,7 @@ class PlotBaseTest extends KitTestCase {
     }
 
     function testStaggeredWithoutSpreadMovesTogether() {
-        final t = gpui.SpringMath.f32(0.4);
+        final t = glaze.SpringMath.f32(0.4);
         assertEquals(t, at(t).staggered(0, 3, 0.));
         assertEquals(t, at(t).staggered(2, 3, 0.));
         // A lone mark ignores the spread.
@@ -462,7 +462,7 @@ class PlotBaseTest extends KitTestCase {
         final arc = new Arc().innerRadius(10.).outerRadius(20.);
         final arcData = new ArcData(0, 0, 1., 0., Arc.PI);
         final centroid = arc.centroid(arcData);
-        final f = gpui.SpringMath.f32;
+        final f = glaze.SpringMath.f32;
         final expectedRadius = 15.;
         final expectedAngle = f(f(f(0. + Arc.PI) - f(2. * Arc.HALF_PI)) / 2.);
         assertEquals(f(expectedRadius * f(Math.cos(expectedAngle))), centroid.x);

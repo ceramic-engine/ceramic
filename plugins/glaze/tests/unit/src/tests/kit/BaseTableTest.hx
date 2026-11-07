@@ -3,23 +3,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Point;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Table;
-import gpui.base.Table.TableBody;
-import gpui.base.Table.TableCell;
-import gpui.base.Table.TableHead;
-import gpui.base.Table.TableRow;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Point;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Table;
+import glaze.kit.base.Table.TableBody;
+import glaze.kit.base.Table.TableCell;
+import glaze.kit.base.Table.TableHead;
+import glaze.kit.base.Table.TableRow;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-base's `table.rs`.

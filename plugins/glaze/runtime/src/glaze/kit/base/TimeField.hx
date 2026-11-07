@@ -1,43 +1,43 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/time_field.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.Empty;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyDownEvent;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.ParentElement;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectNextColumn;
-import gpui.base.Actions.SelectPrevColumn;
-import gpui.base.Actions.SelectRight;
-import gpui.base.NumberInput.Decrement;
-import gpui.base.NumberInput.Increment;
-import gpui.base.chrono.NaiveTime;
-import gpui.base.input.InputActions.Delete;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.Empty;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyDownEvent;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.ParentElement;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectNextColumn;
+import glaze.kit.base.Actions.SelectPrevColumn;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.NumberInput.Decrement;
+import glaze.kit.base.NumberInput.Increment;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.base.input.InputActions.Delete;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The smallest unit a `TimeField` edits.
@@ -105,7 +105,7 @@ enum abstract TimeSegment(Int) {
     /** AM or PM, present with `HourCycle.H12`. */
     var Period;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function name():String {
         return switch (cast this : TimeSegment) {
             case Hour: 'hour';
@@ -139,7 +139,7 @@ enum TimeFieldEvent {
  * The pure editing rules of a `TimeFieldState`, kept apart from focus so
  * they can be tested without a window.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 @:allow(tests)
 class SegmentEditor {
 
@@ -360,7 +360,7 @@ class SegmentEditor {
  */
 class TimeFieldState extends Model implements Render {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static inline final CONTEXT:String = "TimeField";
 
     public static function init(cx:AppContext):Void {
@@ -529,7 +529,7 @@ class TimeFieldState extends Model implements Render {
         cx.notify();
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function editorSnapshot():SegmentEditor {
         return editor;
     }
@@ -550,7 +550,7 @@ class TimeFieldSegmentState {
     final selectedValue:Bool;
     final disabledValue:Bool;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(segment:TimeSegment, value:Int, selected:Bool, disabled:Bool) {
         segmentValue = segment;
         valueValue = value;
@@ -598,7 +598,7 @@ class TimeFieldSegment implements RenderOnce implements Styled implements Parent
 
     final childElements:Array<AnyElement> = [];
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(base:Div) {
         this.base = base;
     }

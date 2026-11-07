@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/view.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The cache state of a view element, kept across frames as element state
@@ -171,7 +171,7 @@ class ViewElement extends Element {
     var layoutNodes:Null<Array<Int>> = null;
 
     function new() {
-        #if gpui_count_allocations gpui.util.AllocationCounters.viewElements++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.viewElements++; #end
     }
 
     /**
@@ -271,7 +271,7 @@ class ViewElement extends Element {
             }
             catch (e:haxe.Exception) {
                 @:privateAccess cx.pendingUpdates--;
-                throw gpui.util.Exceptions.rethrow(e);
+                throw glaze.util.Exceptions.rethrow(e);
             }
             @:privateAccess cx.finishUpdate();
             return element;
@@ -284,7 +284,7 @@ class ViewElement extends Element {
     }
 
     inline function defaultCaching(window:Window):Bool {
-        #if gpui_inspector
+        #if glaze_inspector
         // Rust disables view caching while the inspector is picking
         return window.viewCaching && !uncachedView && !window.viewCachingDisabled && !window.isInspectorPicking(window.app);
         #else
@@ -307,7 +307,7 @@ class ViewElement extends Element {
         catch (e:haxe.Exception) {
             layoutNodes = window.endViewLayoutNodes();
             window.endRenderedView();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         layoutNodes = window.endViewLayoutNodes();
         window.endRenderedView();
@@ -325,7 +325,7 @@ class ViewElement extends Element {
         }
 
         // Stateful path: create a reactive boundary.
-        #if gpui_inspector
+        #if glaze_inspector
         if (cachedStyle != null && !window.viewCachingDisabled && !window.isInspectorPicking(cx)) {
         #else
         if (cachedStyle != null && !window.viewCachingDisabled) {
@@ -409,7 +409,7 @@ class ViewElement extends Element {
                     }
                     catch (e:haxe.Exception) {
                         window.endRenderedView();
-                        throw gpui.util.Exceptions.rethrow(e);
+                        throw glaze.util.Exceptions.rethrow(e);
                     }
                     window.endRenderedView();
                 }
@@ -427,7 +427,7 @@ class ViewElement extends Element {
         }
         catch (e:haxe.Exception) {
             window.endRenderedView();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         window.endRenderedView();
         window.prepaintIndexInto(state.prepaintEnd);
@@ -552,7 +552,7 @@ class ViewElement extends Element {
             window.viewDependencies.cachedStyleDepth--;
             window.endRenderedView();
             window.refreshing = refreshing;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         window.viewDependencies.cachedStyleDepth--;
         window.endRenderedView();
@@ -588,7 +588,7 @@ class ViewElement extends Element {
                 catch (e:haxe.Exception) {
                     window.viewDependencies.cachedStyleDepth--;
                     window.refreshing = refreshing;
-                    throw gpui.util.Exceptions.rethrow(e);
+                    throw glaze.util.Exceptions.rethrow(e);
                 }
                 window.viewDependencies.cachedStyleDepth--;
                 window.refreshing = refreshing;
@@ -626,7 +626,7 @@ class ViewElement extends Element {
         }
         catch (e:haxe.Exception) {
             window.endRenderedView();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         window.endRenderedView();
     }

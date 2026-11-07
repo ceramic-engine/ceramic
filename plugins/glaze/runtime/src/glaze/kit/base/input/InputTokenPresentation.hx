@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/token_presentation.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Pixels;
-import gpui.Range;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Pixels;
+import glaze.Range;
 
-using gpui.base.input.InputTokens;
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.InputTokens;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * A listener with the event to hand it (Rust `(Listener, Event)`).
@@ -46,7 +46,7 @@ class TokenHoverActivation {
 /**
  * Token presentation of the input engine: the `impl InputBaseState` block
  * of token_presentation.rs, as static extensions
- * (`using gpui.base.input.InputTokenPresentation;`). None of this enters
+ * (`using glaze.kit.base.input.InputTokenPresentation;`). None of this enters
  * document history.
  */
 class InputTokenPresentation {

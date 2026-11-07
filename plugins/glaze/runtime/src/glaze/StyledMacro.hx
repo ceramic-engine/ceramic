@@ -2,7 +2,7 @@
 // style helper methods) and gpui-pre 0.3.10: src/styled.rs (hand written methods)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust procedural macros to a Haxe build macro for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 #if macro
 import haxe.macro.Context;
@@ -231,7 +231,7 @@ class StyledMacro {
      */
     static function valueSource(kind:String, value:String, negate:Bool):String {
         if (value == 'auto') {
-            return 'gpui.Length.Auto';
+            return 'glaze.Length.Auto';
         }
         final colon = value.indexOf(':');
         final unit = value.substr(0, colon);
@@ -239,23 +239,23 @@ class StyledMacro {
         if (number.indexOf('.') == -1 && number.indexOf('e') == -1) number += '.0';
         final n = negate ? '-' + number : number;
         final absolute = switch unit {
-            case 'px': 'gpui.AbsoluteLength.Pixels($n)';
-            case 'rems': 'gpui.AbsoluteLength.Rems($n)';
+            case 'px': 'glaze.AbsoluteLength.Pixels($n)';
+            case 'rems': 'glaze.AbsoluteLength.Rems($n)';
             case _: null;
         }
-        final definite = absolute != null ? 'gpui.DefiniteLength.Absolute($absolute)' : 'gpui.DefiniteLength.Fraction($n)';
+        final definite = absolute != null ? 'glaze.DefiniteLength.Absolute($absolute)' : 'glaze.DefiniteLength.Fraction($n)';
         return switch kind {
             case 'ABSOLUTE': absolute;
             case 'DEFINITE': definite;
-            case _: 'gpui.Length.Definite($definite)';
+            case _: 'glaze.Length.Definite($definite)';
         }
     }
 
     static function typeOfKind(kind:String):ComplexType {
         return switch kind {
-            case 'ABSOLUTE': macro :gpui.AbsoluteLength;
-            case 'DEFINITE': macro :gpui.DefiniteLength;
-            case _: macro :gpui.Length;
+            case 'ABSOLUTE': macro :glaze.AbsoluteLength;
+            case 'DEFINITE': macro :glaze.DefiniteLength;
+            case _: macro :glaze.Length;
         }
     }
 
@@ -333,7 +333,7 @@ class StyledMacro {
             if (existing.exists(name))
                 return;
             existing.set(name, true);
-            final expr = Context.parseInlineString('{ final style:gpui.StyleRefinement = this.style(); ' + body + ' return this; }', pos);
+            final expr = Context.parseInlineString('{ final style:glaze.StyleRefinement = this.style(); ' + body + ' return this; }', pos);
             fields.push({
                 name: name,
                 doc: doc,
@@ -353,14 +353,14 @@ class StyledMacro {
             for (prefix in prefixes) {
                 final kind = customType == 'auto' ? (prefix.autoAllowed ? LENGTH : DEFINITE) : customType;
                 final intoType = switch kind {
-                    case 'ABSOLUTE': macro :gpui.IntoAbsoluteLength;
-                    case 'DEFINITE': macro :gpui.IntoDefiniteLength;
-                    case _: macro :gpui.IntoLength;
+                    case 'ABSOLUTE': macro :glaze.IntoAbsoluteLength;
+                    case 'DEFINITE': macro :glaze.IntoDefiniteLength;
+                    case _: macro :glaze.IntoLength;
                 }
                 final fieldType = switch kind {
-                    case 'ABSOLUTE': 'gpui.AbsoluteLength';
-                    case 'DEFINITE': 'gpui.DefiniteLength';
-                    case _: 'gpui.Length';
+                    case 'ABSOLUTE': 'glaze.AbsoluteLength';
+                    case 'DEFINITE': 'glaze.DefiniteLength';
+                    case _: 'glaze.Length';
                 }
                 // Custom value setter
                 var body = 'final value:$fieldType = length; ';
@@ -371,12 +371,12 @@ class StyledMacro {
                     final isAuto = suffix.value == 'auto';
                     if (!isAuto || prefix.autoAllowed) {
                         var body = '';
-                        for (field in prefix.fields) body += 'style.$field = gpui.StyledValues.${constantName(kind, scale, suffix.suffix, false)}; ';
+                        for (field in prefix.fields) body += 'style.$field = glaze.StyledValues.${constantName(kind, scale, suffix.suffix, false)}; ';
                         addMethod(camelCase(prefix.prefix + '_' + suffix.suffix), [], body, 'Sets ${prefix.fields.join(", ")} to `${suffix.value}`.');
                     }
                     if (!isAuto && scale == 'BOX') {
                         var body = '';
-                        for (field in prefix.fields) body += 'style.$field = gpui.StyledValues.${constantName(kind, scale, suffix.suffix, true)}; ';
+                        for (field in prefix.fields) body += 'style.$field = glaze.StyledValues.${constantName(kind, scale, suffix.suffix, true)}; ';
                         addMethod(camelCase(prefix.prefix + '_neg_' + suffix.suffix), [], body, 'Sets ${prefix.fields.join(", ")} to `-${suffix.value}`.');
                     }
                 }
@@ -391,20 +391,20 @@ class StyledMacro {
         boxMethods(borderPrefixes(), borderSuffixes(), 'BORDER', ABSOLUTE);
 
         // visibility_style_methods!
-        addMethod('visible', [], 'style.visibility = gpui.Visibility.Visible;', 'Sets the visibility of the element to `visible`.');
-        addMethod('invisible', [], 'style.visibility = gpui.Visibility.Hidden;', 'Sets the visibility of the element to `hidden`.');
+        addMethod('visible', [], 'style.visibility = glaze.Visibility.Visible;', 'Sets the visibility of the element to `visible`.');
+        addMethod('invisible', [], 'style.visibility = glaze.Visibility.Hidden;', 'Sets the visibility of the element to `hidden`.');
 
         // position_style_methods!
-        addMethod('relative', [], 'style.position = gpui.Position.Relative;', 'Sets the position of the element to `relative`.');
-        addMethod('absolute', [], 'style.position = gpui.Position.Absolute;', 'Sets the position of the element to `absolute`.');
+        addMethod('relative', [], 'style.position = glaze.Position.Relative;', 'Sets the position of the element to `relative`.');
+        addMethod('absolute', [], 'style.position = glaze.Position.Absolute;', 'Sets the position of the element to `absolute`.');
 
         // overflow_style_methods!
-        addMethod('overflowHidden', [], 'style.overflowX = gpui.Overflow.Hidden; style.overflowY = gpui.Overflow.Hidden;', 'Sets the behavior of content that overflows the container to be hidden.');
-        addMethod('overflowXHidden', [], 'style.overflowX = gpui.Overflow.Hidden;', 'Sets the behavior of content that overflows the container on the X axis to be hidden.');
-        addMethod('overflowYHidden', [], 'style.overflowY = gpui.Overflow.Hidden;', 'Sets the behavior of content that overflows the container on the Y axis to be hidden.');
+        addMethod('overflowHidden', [], 'style.overflowX = glaze.Overflow.Hidden; style.overflowY = glaze.Overflow.Hidden;', 'Sets the behavior of content that overflows the container to be hidden.');
+        addMethod('overflowXHidden', [], 'style.overflowX = glaze.Overflow.Hidden;', 'Sets the behavior of content that overflows the container on the X axis to be hidden.');
+        addMethod('overflowYHidden', [], 'style.overflowY = glaze.Overflow.Hidden;', 'Sets the behavior of content that overflows the container on the Y axis to be hidden.');
 
         // cursor_style_methods!
-        addMethod('cursor', [arg('cursor', macro :gpui.CursorStyle)], 'style.mouseCursor = cursor;', 'Set the cursor style when hovering over this element');
+        addMethod('cursor', [arg('cursor', macro :glaze.CursorStyle)], 'style.mouseCursor = cursor;', 'Set the cursor style when hovering over this element');
         for (entry in [
             ['default', 'Arrow'], ['pointer', 'PointingHand'], ['text', 'IBeam'], ['move', 'ClosedHand'],
             ['not_allowed', 'OperationNotAllowed'], ['context_menu', 'ContextualMenu'], ['crosshair', 'Crosshair'],
@@ -414,103 +414,103 @@ class StyledMacro {
             ['nwse_resize', 'ResizeUpLeftDownRight'], ['col_resize', 'ResizeColumn'], ['row_resize', 'ResizeRow'],
             ['n_resize', 'ResizeUp'], ['e_resize', 'ResizeRight'], ['s_resize', 'ResizeDown'], ['w_resize', 'ResizeLeft']
         ]) {
-            addMethod(camelCase('cursor_' + entry[0]), [], 'style.mouseCursor = gpui.CursorStyle.${entry[1]};', 'Sets the cursor style when hovering an element to `${entry[0]}`.');
+            addMethod(camelCase('cursor_' + entry[0]), [], 'style.mouseCursor = glaze.CursorStyle.${entry[1]};', 'Sets the cursor style when hovering an element to `${entry[0]}`.');
         }
 
         // border_style_methods!
-        addMethod('borderColor', [arg('borderColor', macro :gpui.IntoHsla)], 'style.borderColor = borderColor;', 'Sets the border color of the element.');
+        addMethod('borderColor', [arg('borderColor', macro :glaze.IntoHsla)], 'style.borderColor = borderColor;', 'Sets the border color of the element.');
 
         // box_shadow_style_methods!
-        addMethod('shadow', [arg('shadows', macro :Array<gpui.BoxShadow>)], 'style.boxShadow = shadows;', 'Sets the box shadow of the element.');
+        addMethod('shadow', [arg('shadows', macro :Array<glaze.BoxShadow>)], 'style.boxShadow = shadows;', 'Sets the box shadow of the element.');
         addMethod('shadowNone', [], 'style.boxShadow = [];', 'Clears the box shadow of the element.');
         // Preset values are in `StyledValues.SHADOW_PRESETS`
         for (preset in ['2xs', 'xs', 'sm', 'md', 'lg', 'xl', '2xl']) {
-            addMethod(camelCase('shadow_' + preset), [], 'style.boxShadow = gpui.StyledValues.shadowPreset("$preset");', 'Sets the box shadow of the element (`shadow-$preset`).');
+            addMethod(camelCase('shadow_' + preset), [], 'style.boxShadow = glaze.StyledValues.shadowPreset("$preset");', 'Sets the box shadow of the element (`shadow-$preset`).');
         }
 
         // styled.rs
         final hand:Array<Array<String>> = [
-            ['block', '', 'style.display = gpui.Display.Block;'],
-            ['flex', '', 'style.display = gpui.Display.Flex;'],
-            ['grid', '', 'style.display = gpui.Display.Grid;'],
-            ['hidden', '', 'style.display = gpui.Display.None;'],
-            ['whitespaceNormal', '', 'style.textStyle().whiteSpace = gpui.WhiteSpace.Normal;'],
-            ['whitespaceNowrap', '', 'style.textStyle().whiteSpace = gpui.WhiteSpace.Nowrap;'],
-            ['textEllipsis', '', 'style.textStyle().textOverflow = gpui.TextOverflow.Truncate(gpui.StyledValues.ELLIPSIS);'],
-            ['textEllipsisStart', '', 'style.textStyle().textOverflow = gpui.TextOverflow.TruncateStart(gpui.StyledValues.ELLIPSIS);'],
-            ['textEllipsisMiddle', '', 'style.textStyle().textOverflow = gpui.TextOverflow.TruncateMiddle(gpui.StyledValues.ELLIPSIS);'],
-            ['textLeft', '', 'style.textStyle().textAlign = gpui.TextAlign.Left;'],
-            ['textCenter', '', 'style.textStyle().textAlign = gpui.TextAlign.Center;'],
-            ['textRight', '', 'style.textStyle().textAlign = gpui.TextAlign.Right;'],
-            ['truncate', '', 'style.overflowX = gpui.Overflow.Hidden; style.overflowY = gpui.Overflow.Hidden; style.textStyle().whiteSpace = gpui.WhiteSpace.Nowrap; style.textStyle().textOverflow = gpui.TextOverflow.Truncate(gpui.StyledValues.ELLIPSIS);'],
-            ['flexCol', '', 'style.flexDirection = gpui.FlexDirection.Column;'],
-            ['flexColReverse', '', 'style.flexDirection = gpui.FlexDirection.ColumnReverse;'],
-            ['flexRow', '', 'style.flexDirection = gpui.FlexDirection.Row;'],
-            ['flexRowReverse', '', 'style.flexDirection = gpui.FlexDirection.RowReverse;'],
-            ['flex1', '', 'style.flexGrow = 1.0; style.flexShrink = 1.0; style.flexBasis = gpui.StyledValues.LENGTH_RELATIVE_ZERO;'],
-            ['flexAuto', '', 'style.flexGrow = 1.0; style.flexShrink = 1.0; style.flexBasis = gpui.Length.Auto;'],
-            ['flexInitial', '', 'style.flexGrow = 0.0; style.flexShrink = 1.0; style.flexBasis = gpui.Length.Auto;'],
-            ['flexNone', '', 'style.flexGrow = 0.0; style.flexShrink = 0.0; style.flexBasis = gpui.Length.Auto;'],
+            ['block', '', 'style.display = glaze.Display.Block;'],
+            ['flex', '', 'style.display = glaze.Display.Flex;'],
+            ['grid', '', 'style.display = glaze.Display.Grid;'],
+            ['hidden', '', 'style.display = glaze.Display.None;'],
+            ['whitespaceNormal', '', 'style.textStyle().whiteSpace = glaze.WhiteSpace.Normal;'],
+            ['whitespaceNowrap', '', 'style.textStyle().whiteSpace = glaze.WhiteSpace.Nowrap;'],
+            ['textEllipsis', '', 'style.textStyle().textOverflow = glaze.TextOverflow.Truncate(glaze.StyledValues.ELLIPSIS);'],
+            ['textEllipsisStart', '', 'style.textStyle().textOverflow = glaze.TextOverflow.TruncateStart(glaze.StyledValues.ELLIPSIS);'],
+            ['textEllipsisMiddle', '', 'style.textStyle().textOverflow = glaze.TextOverflow.TruncateMiddle(glaze.StyledValues.ELLIPSIS);'],
+            ['textLeft', '', 'style.textStyle().textAlign = glaze.TextAlign.Left;'],
+            ['textCenter', '', 'style.textStyle().textAlign = glaze.TextAlign.Center;'],
+            ['textRight', '', 'style.textStyle().textAlign = glaze.TextAlign.Right;'],
+            ['truncate', '', 'style.overflowX = glaze.Overflow.Hidden; style.overflowY = glaze.Overflow.Hidden; style.textStyle().whiteSpace = glaze.WhiteSpace.Nowrap; style.textStyle().textOverflow = glaze.TextOverflow.Truncate(glaze.StyledValues.ELLIPSIS);'],
+            ['flexCol', '', 'style.flexDirection = glaze.FlexDirection.Column;'],
+            ['flexColReverse', '', 'style.flexDirection = glaze.FlexDirection.ColumnReverse;'],
+            ['flexRow', '', 'style.flexDirection = glaze.FlexDirection.Row;'],
+            ['flexRowReverse', '', 'style.flexDirection = glaze.FlexDirection.RowReverse;'],
+            ['flex1', '', 'style.flexGrow = 1.0; style.flexShrink = 1.0; style.flexBasis = glaze.StyledValues.LENGTH_RELATIVE_ZERO;'],
+            ['flexAuto', '', 'style.flexGrow = 1.0; style.flexShrink = 1.0; style.flexBasis = glaze.Length.Auto;'],
+            ['flexInitial', '', 'style.flexGrow = 0.0; style.flexShrink = 1.0; style.flexBasis = glaze.Length.Auto;'],
+            ['flexNone', '', 'style.flexGrow = 0.0; style.flexShrink = 0.0; style.flexBasis = glaze.Length.Auto;'],
             ['flexGrow0', '', 'style.flexGrow = 0.0;'],
             ['flexGrow1', '', 'style.flexGrow = 1.0;'],
             ['flexShrink0', '', 'style.flexShrink = 0.0;'],
             ['flexShrink1', '', 'style.flexShrink = 1.0;'],
-            ['flexWrap', '', 'style.flexWrap = gpui.FlexWrap.Wrap;'],
-            ['flexWrapReverse', '', 'style.flexWrap = gpui.FlexWrap.WrapReverse;'],
-            ['flexNowrap', '', 'style.flexWrap = gpui.FlexWrap.NoWrap;'],
-            ['itemsStart', '', 'style.alignItems = gpui.AlignItems.FlexStart;'],
-            ['itemsEnd', '', 'style.alignItems = gpui.AlignItems.FlexEnd;'],
-            ['itemsCenter', '', 'style.alignItems = gpui.AlignItems.Center;'],
-            ['itemsBaseline', '', 'style.alignItems = gpui.AlignItems.Baseline;'],
-            ['itemsStretch', '', 'style.alignItems = gpui.AlignItems.Stretch;'],
-            ['selfStart', '', 'style.alignSelf = gpui.AlignItems.Start;'],
-            ['selfEnd', '', 'style.alignSelf = gpui.AlignItems.End;'],
-            ['selfFlexStart', '', 'style.alignSelf = gpui.AlignItems.FlexStart;'],
-            ['selfFlexEnd', '', 'style.alignSelf = gpui.AlignItems.FlexEnd;'],
-            ['selfCenter', '', 'style.alignSelf = gpui.AlignItems.Center;'],
-            ['selfBaseline', '', 'style.alignSelf = gpui.AlignItems.Baseline;'],
-            ['selfStretch', '', 'style.alignSelf = gpui.AlignItems.Stretch;'],
-            ['justifyStart', '', 'style.justifyContent = gpui.AlignContent.Start;'],
-            ['justifyEnd', '', 'style.justifyContent = gpui.AlignContent.End;'],
-            ['justifyCenter', '', 'style.justifyContent = gpui.AlignContent.Center;'],
-            ['justifyBetween', '', 'style.justifyContent = gpui.AlignContent.SpaceBetween;'],
-            ['justifyAround', '', 'style.justifyContent = gpui.AlignContent.SpaceAround;'],
-            ['justifyEvenly', '', 'style.justifyContent = gpui.AlignContent.SpaceEvenly;'],
-            ['contentNormal', '', 'style.unset(gpui.StyleRefinement.ALIGN_CONTENT);'],
-            ['contentCenter', '', 'style.alignContent = gpui.AlignContent.Center;'],
-            ['contentStart', '', 'style.alignContent = gpui.AlignContent.FlexStart;'],
-            ['contentEnd', '', 'style.alignContent = gpui.AlignContent.FlexEnd;'],
-            ['contentBetween', '', 'style.alignContent = gpui.AlignContent.SpaceBetween;'],
-            ['contentAround', '', 'style.alignContent = gpui.AlignContent.SpaceAround;'],
-            ['contentEvenly', '', 'style.alignContent = gpui.AlignContent.SpaceEvenly;'],
-            ['contentStretch', '', 'style.alignContent = gpui.AlignContent.Stretch;'],
+            ['flexWrap', '', 'style.flexWrap = glaze.FlexWrap.Wrap;'],
+            ['flexWrapReverse', '', 'style.flexWrap = glaze.FlexWrap.WrapReverse;'],
+            ['flexNowrap', '', 'style.flexWrap = glaze.FlexWrap.NoWrap;'],
+            ['itemsStart', '', 'style.alignItems = glaze.AlignItems.FlexStart;'],
+            ['itemsEnd', '', 'style.alignItems = glaze.AlignItems.FlexEnd;'],
+            ['itemsCenter', '', 'style.alignItems = glaze.AlignItems.Center;'],
+            ['itemsBaseline', '', 'style.alignItems = glaze.AlignItems.Baseline;'],
+            ['itemsStretch', '', 'style.alignItems = glaze.AlignItems.Stretch;'],
+            ['selfStart', '', 'style.alignSelf = glaze.AlignItems.Start;'],
+            ['selfEnd', '', 'style.alignSelf = glaze.AlignItems.End;'],
+            ['selfFlexStart', '', 'style.alignSelf = glaze.AlignItems.FlexStart;'],
+            ['selfFlexEnd', '', 'style.alignSelf = glaze.AlignItems.FlexEnd;'],
+            ['selfCenter', '', 'style.alignSelf = glaze.AlignItems.Center;'],
+            ['selfBaseline', '', 'style.alignSelf = glaze.AlignItems.Baseline;'],
+            ['selfStretch', '', 'style.alignSelf = glaze.AlignItems.Stretch;'],
+            ['justifyStart', '', 'style.justifyContent = glaze.AlignContent.Start;'],
+            ['justifyEnd', '', 'style.justifyContent = glaze.AlignContent.End;'],
+            ['justifyCenter', '', 'style.justifyContent = glaze.AlignContent.Center;'],
+            ['justifyBetween', '', 'style.justifyContent = glaze.AlignContent.SpaceBetween;'],
+            ['justifyAround', '', 'style.justifyContent = glaze.AlignContent.SpaceAround;'],
+            ['justifyEvenly', '', 'style.justifyContent = glaze.AlignContent.SpaceEvenly;'],
+            ['contentNormal', '', 'style.unset(glaze.StyleRefinement.ALIGN_CONTENT);'],
+            ['contentCenter', '', 'style.alignContent = glaze.AlignContent.Center;'],
+            ['contentStart', '', 'style.alignContent = glaze.AlignContent.FlexStart;'],
+            ['contentEnd', '', 'style.alignContent = glaze.AlignContent.FlexEnd;'],
+            ['contentBetween', '', 'style.alignContent = glaze.AlignContent.SpaceBetween;'],
+            ['contentAround', '', 'style.alignContent = glaze.AlignContent.SpaceAround;'],
+            ['contentEvenly', '', 'style.alignContent = glaze.AlignContent.SpaceEvenly;'],
+            ['contentStretch', '', 'style.alignContent = glaze.AlignContent.Stretch;'],
             ['aspectSquare', '', 'style.aspectRatio = 1.0;'],
-            ['borderDashed', '', 'style.borderStyle = gpui.scene.BorderStyle.Dashed;'],
-            ['textXs', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_XS;'],
-            ['textSm', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_SM;'],
-            ['textBase', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_BASE;'],
-            ['textLg', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_LG;'],
-            ['textXl', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_XL;'],
-            ['text2xl', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_2XL;'],
-            ['text3xl', '', 'style.textStyle().fontSize = gpui.StyledValues.TEXT_3XL;'],
-            ['italic', '', 'style.textStyle().fontStyle = gpui.FontStyle.Italic;'],
-            ['notItalic', '', 'style.textStyle().fontStyle = gpui.FontStyle.Normal;'],
-            ['underline', '', 'style.textStyle().underline = new gpui.UnderlineStyle(1.0);'],
-            ['lineThrough', '', 'style.textStyle().strikethrough = new gpui.StrikethroughStyle(1.0);'],
+            ['borderDashed', '', 'style.borderStyle = glaze.scene.BorderStyle.Dashed;'],
+            ['textXs', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_XS;'],
+            ['textSm', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_SM;'],
+            ['textBase', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_BASE;'],
+            ['textLg', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_LG;'],
+            ['textXl', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_XL;'],
+            ['text2xl', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_2XL;'],
+            ['text3xl', '', 'style.textStyle().fontSize = glaze.StyledValues.TEXT_3XL;'],
+            ['italic', '', 'style.textStyle().fontStyle = glaze.FontStyle.Italic;'],
+            ['notItalic', '', 'style.textStyle().fontStyle = glaze.FontStyle.Normal;'],
+            ['underline', '', 'style.textStyle().underline = new glaze.UnderlineStyle(1.0);'],
+            ['lineThrough', '', 'style.textStyle().strikethrough = new glaze.StrikethroughStyle(1.0);'],
             ['textDecorationNone', '', 'style.textStyle().underline = null;'],
-            ['textDecorationSolid', '', 'gpui.StyledValues.underlineOf(style).wavy = false;'],
-            ['textDecorationWavy', '', 'gpui.StyledValues.underlineOf(style).wavy = true;'],
-            ['textDecoration0', '', 'gpui.StyledValues.underlineOf(style).thickness = 0.0;'],
-            ['textDecoration1', '', 'gpui.StyledValues.underlineOf(style).thickness = 1.0;'],
-            ['textDecoration2', '', 'gpui.StyledValues.underlineOf(style).thickness = 2.0;'],
-            ['textDecoration4', '', 'gpui.StyledValues.underlineOf(style).thickness = 4.0;'],
-            ['textDecoration8', '', 'gpui.StyledValues.underlineOf(style).thickness = 8.0;'],
-            ['colStartAuto', '', 'style.gridLocationMut().columnStart = gpui.GridPlacement.Auto;'],
-            ['colEndAuto', '', 'style.gridLocationMut().columnEnd = gpui.GridPlacement.Auto;'],
-            ['colSpanFull', '', 'final location = style.gridLocationMut(); location.columnStart = gpui.GridPlacement.Line(1); location.columnEnd = gpui.GridPlacement.Line(-1);'],
-            ['rowStartAuto', '', 'style.gridLocationMut().rowStart = gpui.GridPlacement.Auto;'],
-            ['rowEndAuto', '', 'style.gridLocationMut().rowEnd = gpui.GridPlacement.Auto;'],
-            ['rowSpanFull', '', 'final location = style.gridLocationMut(); location.rowStart = gpui.GridPlacement.Line(1); location.rowEnd = gpui.GridPlacement.Line(-1);'],
+            ['textDecorationSolid', '', 'glaze.StyledValues.underlineOf(style).wavy = false;'],
+            ['textDecorationWavy', '', 'glaze.StyledValues.underlineOf(style).wavy = true;'],
+            ['textDecoration0', '', 'glaze.StyledValues.underlineOf(style).thickness = 0.0;'],
+            ['textDecoration1', '', 'glaze.StyledValues.underlineOf(style).thickness = 1.0;'],
+            ['textDecoration2', '', 'glaze.StyledValues.underlineOf(style).thickness = 2.0;'],
+            ['textDecoration4', '', 'glaze.StyledValues.underlineOf(style).thickness = 4.0;'],
+            ['textDecoration8', '', 'glaze.StyledValues.underlineOf(style).thickness = 8.0;'],
+            ['colStartAuto', '', 'style.gridLocationMut().columnStart = glaze.GridPlacement.Auto;'],
+            ['colEndAuto', '', 'style.gridLocationMut().columnEnd = glaze.GridPlacement.Auto;'],
+            ['colSpanFull', '', 'final location = style.gridLocationMut(); location.columnStart = glaze.GridPlacement.Line(1); location.columnEnd = glaze.GridPlacement.Line(-1);'],
+            ['rowStartAuto', '', 'style.gridLocationMut().rowStart = glaze.GridPlacement.Auto;'],
+            ['rowEndAuto', '', 'style.gridLocationMut().rowEnd = glaze.GridPlacement.Auto;'],
+            ['rowSpanFull', '', 'final location = style.gridLocationMut(); location.rowStart = glaze.GridPlacement.Line(1); location.rowEnd = glaze.GridPlacement.Line(-1);'],
             ['debug', '', 'style.debug = true;'],
             ['debugBelow', '', 'style.debugBelow = true;']
         ];
@@ -519,35 +519,35 @@ class StyledMacro {
         }
 
         final handWithArgs:Array<{name:String, args:Array<FunctionArg>, body:String}> = [
-            {name: 'scrollbarWidth', args: [arg('width', macro :gpui.IntoAbsoluteLength)], body: 'style.scrollbarWidth = width;'},
-            {name: 'textOverflow', args: [arg('overflow', macro :gpui.TextOverflow)], body: 'style.textStyle().textOverflow = overflow;'},
-            {name: 'textAlign', args: [arg('align', macro :gpui.TextAlign)], body: 'style.textStyle().textAlign = align;'},
-            {name: 'lineClamp', args: [arg('lines', macro :Int)], body: 'style.textStyle().lineClamp = lines; style.overflowX = gpui.Overflow.Hidden; style.overflowY = gpui.Overflow.Hidden;'},
-            {name: 'flexBasis', args: [arg('basis', macro :gpui.IntoLength)], body: 'style.flexBasis = basis;'},
+            {name: 'scrollbarWidth', args: [arg('width', macro :glaze.IntoAbsoluteLength)], body: 'style.scrollbarWidth = width;'},
+            {name: 'textOverflow', args: [arg('overflow', macro :glaze.TextOverflow)], body: 'style.textStyle().textOverflow = overflow;'},
+            {name: 'textAlign', args: [arg('align', macro :glaze.TextAlign)], body: 'style.textStyle().textAlign = align;'},
+            {name: 'lineClamp', args: [arg('lines', macro :Int)], body: 'style.textStyle().lineClamp = lines; style.overflowX = glaze.Overflow.Hidden; style.overflowY = glaze.Overflow.Hidden;'},
+            {name: 'flexBasis', args: [arg('basis', macro :glaze.IntoLength)], body: 'style.flexBasis = basis;'},
             {name: 'flexGrow', args: [arg('grow', macro :Float)], body: 'style.flexGrow = grow;'},
             {name: 'flexShrink', args: [arg('shrink', macro :Float)], body: 'style.flexShrink = shrink;'},
             {name: 'aspectRatio', args: [arg('ratio', macro :Float)], body: 'style.aspectRatio = ratio;'},
-            {name: 'bg', args: [arg('fill', macro :gpui.IntoBackground)], body: 'style.background = fill;'},
-            {name: 'textColor', args: [arg('color', macro :gpui.IntoHsla)], body: 'style.textStyle().color = color;'},
-            {name: 'fontWeight', args: [arg('weight', macro :gpui.FontWeight)], body: 'style.textStyle().fontWeight = weight;'},
-            {name: 'textBg', args: [arg('bg', macro :gpui.IntoHsla)], body: 'style.textStyle().backgroundColor = bg;'},
-            {name: 'textSize', args: [arg('size', macro :gpui.IntoAbsoluteLength)], body: 'style.textStyle().fontSize = size;'},
-            {name: 'textDecorationColor', args: [arg('color', macro :gpui.IntoHsla)], body: 'gpui.StyledValues.underlineOf(style).color = color;'},
+            {name: 'bg', args: [arg('fill', macro :glaze.IntoBackground)], body: 'style.background = fill;'},
+            {name: 'textColor', args: [arg('color', macro :glaze.IntoHsla)], body: 'style.textStyle().color = color;'},
+            {name: 'fontWeight', args: [arg('weight', macro :glaze.FontWeight)], body: 'style.textStyle().fontWeight = weight;'},
+            {name: 'textBg', args: [arg('bg', macro :glaze.IntoHsla)], body: 'style.textStyle().backgroundColor = bg;'},
+            {name: 'textSize', args: [arg('size', macro :glaze.IntoAbsoluteLength)], body: 'style.textStyle().fontSize = size;'},
+            {name: 'textDecorationColor', args: [arg('color', macro :glaze.IntoHsla)], body: 'glaze.StyledValues.underlineOf(style).color = color;'},
             {name: 'fontFamily', args: [arg('familyName', macro :String)], body: 'style.textStyle().fontFamily = familyName;'},
-            {name: 'lineHeight', args: [arg('lineHeight', macro :gpui.IntoDefiniteLength)], body: 'style.textStyle().lineHeight = lineHeight;'},
+            {name: 'lineHeight', args: [arg('lineHeight', macro :glaze.IntoDefiniteLength)], body: 'style.textStyle().lineHeight = lineHeight;'},
             {name: 'opacity', args: [arg('opacity', macro :Float)], body: 'style.opacity = opacity;'},
-            {name: 'gridCols', args: [arg('cols', macro :Int)], body: 'style.gridCols = new gpui.GridTemplate(cols, gpui.GridTemplateMinSize.Zero);'},
-            {name: 'gridColsMinContent', args: [arg('cols', macro :Int)], body: 'style.gridCols = new gpui.GridTemplate(cols, gpui.GridTemplateMinSize.MinContent);'},
-            {name: 'gridColsMaxContent', args: [arg('cols', macro :Int)], body: 'style.gridCols = new gpui.GridTemplate(cols, gpui.GridTemplateMinSize.MaxContent);'},
-            {name: 'gridRows', args: [arg('rows', macro :Int)], body: 'style.gridRows = new gpui.GridTemplate(rows, gpui.GridTemplateMinSize.Zero);'},
-            {name: 'gridRowsMinContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new gpui.GridTemplate(rows, gpui.GridTemplateMinSize.MinContent);'},
-            {name: 'gridRowsMaxContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new gpui.GridTemplate(rows, gpui.GridTemplateMinSize.MaxContent);'},
-            {name: 'colStart', args: [arg('start', macro :Int)], body: 'style.gridLocationMut().columnStart = gpui.GridPlacement.Line(start);'},
-            {name: 'colEnd', args: [arg('end', macro :Int)], body: 'style.gridLocationMut().columnEnd = gpui.GridPlacement.Line(end);'},
-            {name: 'colSpan', args: [arg('span', macro :Int)], body: 'final location = style.gridLocationMut(); location.columnStart = gpui.GridPlacement.Span(span); location.columnEnd = gpui.GridPlacement.Span(span);'},
-            {name: 'rowStart', args: [arg('start', macro :Int)], body: 'style.gridLocationMut().rowStart = gpui.GridPlacement.Line(start);'},
-            {name: 'rowEnd', args: [arg('end', macro :Int)], body: 'style.gridLocationMut().rowEnd = gpui.GridPlacement.Line(end);'},
-            {name: 'rowSpan', args: [arg('span', macro :Int)], body: 'final location = style.gridLocationMut(); location.rowStart = gpui.GridPlacement.Span(span); location.rowEnd = gpui.GridPlacement.Span(span);'}
+            {name: 'gridCols', args: [arg('cols', macro :Int)], body: 'style.gridCols = new glaze.GridTemplate(cols, glaze.GridTemplateMinSize.Zero);'},
+            {name: 'gridColsMinContent', args: [arg('cols', macro :Int)], body: 'style.gridCols = new glaze.GridTemplate(cols, glaze.GridTemplateMinSize.MinContent);'},
+            {name: 'gridColsMaxContent', args: [arg('cols', macro :Int)], body: 'style.gridCols = new glaze.GridTemplate(cols, glaze.GridTemplateMinSize.MaxContent);'},
+            {name: 'gridRows', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.Zero);'},
+            {name: 'gridRowsMinContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.MinContent);'},
+            {name: 'gridRowsMaxContent', args: [arg('rows', macro :Int)], body: 'style.gridRows = new glaze.GridTemplate(rows, glaze.GridTemplateMinSize.MaxContent);'},
+            {name: 'colStart', args: [arg('start', macro :Int)], body: 'style.gridLocationMut().columnStart = glaze.GridPlacement.Line(start);'},
+            {name: 'colEnd', args: [arg('end', macro :Int)], body: 'style.gridLocationMut().columnEnd = glaze.GridPlacement.Line(end);'},
+            {name: 'colSpan', args: [arg('span', macro :Int)], body: 'final location = style.gridLocationMut(); location.columnStart = glaze.GridPlacement.Span(span); location.columnEnd = glaze.GridPlacement.Span(span);'},
+            {name: 'rowStart', args: [arg('start', macro :Int)], body: 'style.gridLocationMut().rowStart = glaze.GridPlacement.Line(start);'},
+            {name: 'rowEnd', args: [arg('end', macro :Int)], body: 'style.gridLocationMut().rowEnd = glaze.GridPlacement.Line(end);'},
+            {name: 'rowSpan', args: [arg('span', macro :Int)], body: 'final location = style.gridLocationMut(); location.rowStart = glaze.GridPlacement.Span(span); location.rowEnd = glaze.GridPlacement.Span(span);'}
         ];
         for (entry in handWithArgs) {
             addMethod(entry.name, entry.args, entry.body);
@@ -559,7 +559,7 @@ class StyledMacro {
                 name: 'textStyle',
                 doc: 'Returns the text style refinement of this element, created on first use.',
                 access: [APublic, AExtern, AInline],
-                kind: FFun({args: [], ret: macro :gpui.TextStyleRefinement, expr: macro return this.style().textStyle()}),
+                kind: FFun({args: [], ret: macro :glaze.TextStyleRefinement, expr: macro return this.style().textStyle()}),
                 pos: pos
             });
         }
@@ -570,7 +570,7 @@ class StyledMacro {
     static function implementsStyled(cls:ClassType):Bool {
         for (iface in cls.interfaces) {
             final ifaceType = iface.t.get();
-            if (ifaceType.pack.join('.') == 'gpui' && ifaceType.name == 'Styled')
+            if (ifaceType.pack.join('.') == 'glaze' && ifaceType.name == 'Styled')
                 return true;
         }
         return false;

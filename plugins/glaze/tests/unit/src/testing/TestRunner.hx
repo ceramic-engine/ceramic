@@ -13,7 +13,7 @@ using StringTools;
  * other, after the synchronous tests, while the Ceramic app loop runs (they
  * fail if `done` is not called within `ASYNC_TIMEOUT` seconds).
  *
- * An optional filter can be given with the `GPUI_TEST_FILTER` environment
+ * An optional filter can be given with the `GLAZE_TEST_FILTER` environment
  * variable (matched against `ClassName.methodName`).
  */
 class TestRunner {
@@ -54,7 +54,7 @@ class TestRunner {
     }
 
     function asyncTests():Array<{testCase:TestCase, method:String, fullName:String}> {
-        final filter = env('GPUI_TEST_FILTER');
+        final filter = env('GLAZE_TEST_FILTER');
         final result = [];
         for (testCase in cases) {
             final className = Type.getClassName(Type.getClass(testCase));
@@ -125,7 +125,7 @@ class TestRunner {
 
     function runSync():Bool {
 
-        final filter = env('GPUI_TEST_FILTER');
+        final filter = env('GLAZE_TEST_FILTER');
 
         for (testCase in cases) {
             final className = Type.getClassName(Type.getClass(testCase));

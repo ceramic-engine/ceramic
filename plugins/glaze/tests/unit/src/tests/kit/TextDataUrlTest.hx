@@ -4,13 +4,13 @@
 package tests.kit;
 
 import haxe.io.Bytes;
-import gpui.base.text.DataUrl;
-import gpui.base.text.DataUrl.Mime;
-import gpui.base.text.DataUrl.ForgivingBase64;
+import glaze.kit.base.text.DataUrl;
+import glaze.kit.base.text.DataUrl.Mime;
+import glaze.kit.base.text.DataUrl.ForgivingBase64;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.text.DataUrl` (ported crate `data-url` 0.3.2:
+ * Tests of `glaze.kit.base.text.DataUrl` (ported crate `data-url` 0.3.2:
  * `src/lib.rs`, `src/mime.rs`, `src/forgiving_base64.rs`).
  *
  * `testBasicMime` is `mime.rs`'s only `#[test]`. The others replay the

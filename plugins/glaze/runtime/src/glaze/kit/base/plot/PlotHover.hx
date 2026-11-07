@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/hover.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.App;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Window;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Spring;
-import gpui.base.motion.TransitionId;
-import gpui.base.theme.Theme;
+import glaze.App;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Window;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Spring;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.base.theme.Theme;
 
 /**
  * The datum a plot has under the pointer this frame, handed to
@@ -32,7 +32,7 @@ class PlotHover {
 
     final hovered:Bool;
 
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     @:allow(tests)
     function new(state:TooltipState, progress:Float, hovered:Bool) {
         this.stateValue = state;
@@ -97,7 +97,7 @@ class PlotHover {
      * scope; the returned cursor is the live one, or the last one while the
      * state lingers.
      */
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     static function trackHover(live:Null<TooltipState>, cursor:Null<Point>, window:Window, cx:App):Null<{hover:PlotHover, cursor:Point}> {
         final hovered = live != null;
         final memory = memoryState(window, cx);
@@ -126,7 +126,7 @@ class PlotHover {
     }
 
     static function memoryState(window:Window, cx:App):HoverMemory {
-        final state:gpui.Window.StateModel<HoverMemory> = window.useKeyedState(HOVER_MEMORY, cx, _ -> new HoverMemory());
+        final state:glaze.Window.StateModel<HoverMemory> = window.useKeyedState(HOVER_MEMORY, cx, _ -> new HoverMemory());
         return state.value;
     }
 

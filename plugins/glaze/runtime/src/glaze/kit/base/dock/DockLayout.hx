@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/layout/builder.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Entity;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.base.dock.PaneNode;
+import glaze.App;
+import glaze.Axis;
+import glaze.Entity;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.kit.base.dock.PaneNode;
 
 /**
  * Describes a layout without constructing any entity.
@@ -114,7 +114,7 @@ class DockLayout {
      * Lower into a tree plus the panel views the area must register, paired
      * with the ids the tree was built from.
      */
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function build(tree:PaneTree):{node:PaneNode, panels:Array<{id:PanelId, view:PanelView}>} {
         final panels:Array<{id:PanelId, view:PanelView}> = [];
         final node = buildNode(tree, panels);

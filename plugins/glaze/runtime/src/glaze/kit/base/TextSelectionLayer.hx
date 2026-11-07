@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.LayoutId;
-import gpui.Style;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.LayoutId;
+import glaze.Style;
+import glaze.Window;
 
 /**
  * A zero-sized root layer which enables text selection for a window.
@@ -31,7 +31,7 @@ class TextSelectionLayer extends Element {
     }
 
     public function requestLayout(_:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
-        return window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), [], cx);
+        return window.requestLayout(@:privateAccess glaze.Style.sharedDefaultStyle(), [], cx);
     }
 
     public function prepaint(globalId:Null<GlobalElementId>, _:Bounds, window:Window, cx:App):Void {

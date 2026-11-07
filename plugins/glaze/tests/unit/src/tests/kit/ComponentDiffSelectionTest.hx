@@ -4,25 +4,25 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Bounds;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Point;
-import gpui.Range;
-import gpui.Size;
-import gpui.component.diff.Diff;
-import gpui.component.diff.DiffDecoration;
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffLinePosition;
-import gpui.component.diff.DiffLineRange;
-import gpui.component.diff.DiffSide;
-import gpui.component.diff.Presentation.DiffStyledRange;
-import gpui.component.diff.Selection;
-import gpui.util.Utf8;
+import glaze.Bounds;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Point;
+import glaze.Range;
+import glaze.Size;
+import glaze.kit.diff.Diff;
+import glaze.kit.diff.DiffDecoration;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffLinePosition;
+import glaze.kit.diff.DiffLineRange;
+import glaze.kit.diff.DiffSide;
+import glaze.kit.diff.Presentation.DiffStyledRange;
+import glaze.kit.diff.Selection;
+import glaze.util.Utf8;
 import testing.TestCase;
 import tests.kit.ComponentDiffFixture as Fixture;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The selection, copy, line ending and decoration unit tests of gpui-kit's diff.
@@ -219,7 +219,7 @@ class ComponentDiffSelectionTest extends TestCase {
     function testDecorationsCoverTheirRangeAndTheLastSuppliedWins() {
         final red = Hsla.red();
         final blue = Hsla.blue();
-        final decorations = @:privateAccess new gpui.component.diff.DiffDecoration.Decorations([
+        final decorations = @:privateAccess new glaze.kit.diff.DiffDecoration.Decorations([
             new DiffDecoration(new DiffLineRange('file.txt', Modified, 2, 4)).withBackground(red),
             new DiffDecoration(new DiffLineRange('file.txt', Modified, 4, 4)).withBackground(blue),
             new DiffDecoration(new DiffLineRange('cross.txt', Original, 8, 3).withEndSide(Modified)),

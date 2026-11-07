@@ -3,15 +3,15 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.base.input.FoldMap;
-import gpui.base.input.FoldRange;
+import glaze.Range;
+import glaze.kit.base.input.FoldMap;
+import glaze.kit.base.input.FoldRange;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.input.FoldMap` (Rust `fold_map.rs`).
+ * Tests of `glaze.kit.base.input.FoldMap` (Rust `fold_map.rs`).
  */
-@:access(gpui.base.input.FoldMap)
+@:access(glaze.kit.base.input.FoldMap)
 class InputFoldMapTest extends TestCase {
 
     /**

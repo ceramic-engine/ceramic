@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/table/delegate.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.table;
+package glaze.kit.table;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.menu.PopupMenu;
-import gpui.component.table.Column;
-import gpui.component.table.Loading;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.table.Column;
+import glaze.kit.table.Loading;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
 /**
  * A delegate trait for providing data and rendering for a table.

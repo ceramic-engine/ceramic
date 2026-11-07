@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/scroll/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.scroll;
+package glaze.kit.scroll;
 
 /** `gpui_component::scroll::AutoScroll` is the Base one. */
-typedef AutoScroll = gpui.base.AutoScroll;
+typedef AutoScroll = glaze.kit.base.AutoScroll;

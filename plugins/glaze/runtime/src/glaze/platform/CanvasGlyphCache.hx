@@ -1,7 +1,7 @@
 // Ported from gpui-pre-web 0.3.10: src/glyph_cache.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
 /**
  * A grapheme drawn by the browser (Rust `CanvasGlyph`): its glyph id is its

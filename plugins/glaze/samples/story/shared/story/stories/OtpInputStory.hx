@@ -4,30 +4,30 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Subscription;
-import gpui.base.OtpInput.OtpEvent;
-import gpui.base.OtpInput.OtpState;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.input.OtpInput;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Subscription;
+import glaze.kit.base.OtpInput.OtpEvent;
+import glaze.kit.base.OtpInput.OtpState;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.input.OtpInput;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 @:action(namespace = otp_input_story, noJson) private class ToggleMasked implements Action {}
 
@@ -47,7 +47,7 @@ class OtpInputStory extends Model implements Story {
 
     public static function init(_:App):Void {}
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -69,7 +69,7 @@ class OtpInputStory extends Model implements Story {
 
     final otpStateDisabled:Entity<OtpState>;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     final subscriptions:Array<Subscription>;
 

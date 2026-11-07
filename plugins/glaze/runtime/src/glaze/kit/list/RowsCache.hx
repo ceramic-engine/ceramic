@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/list/cache.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.list;
+package glaze.kit.list;
 
-import gpui.App;
-import gpui.Size;
-import gpui.base.IndexPath;
+import glaze.App;
+import glaze.Size;
+import glaze.kit.base.IndexPath;
 
 /**
  * A flattened row of a list: an item, or the header or footer of a section
@@ -85,7 +85,7 @@ class MeasuredEntrySize {
  * vectors through `Rc`; here they are replaced, never mutated, so a copy of
  * the cache shares them the same way.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class RowsCache {
 
     /** Only have section's that have rows. */

@@ -1,8 +1,8 @@
 package examples;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Window;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Window;
 import examples.showcase.BaseShowcase;
 
 /**

@@ -2,12 +2,12 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-018 (a comma is a decimal separator in a number mask). See DEVIATIONS.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /**
  * One slot of a mask pattern. Chars are code points.
  */
-@:using(gpui.base.input.MaskPattern.MaskTokenTools)
+@:using(glaze.kit.base.input.MaskPattern.MaskTokenTools)
 enum MaskToken {
     /** Digit, equivalent to `[0-9]` */
     Digit;
@@ -99,7 +99,7 @@ class MaskTokenTools {
  * `MaskPattern::new`, or `From<&str>`), a number with
  * `MaskPatternTools.number(','.code)`.
  */
-@:using(gpui.base.input.MaskPattern.MaskPatternTools)
+@:using(glaze.kit.base.input.MaskPattern.MaskPatternTools)
 enum MaskPattern {
     None;
     Pattern(pattern:String, tokens:Array<MaskToken>);
@@ -486,7 +486,7 @@ class MaskPatternTools {
     }
 
     /** The code points of a string (Rust `str::chars`). */
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     static function chars(s:String):Array<Int> {
         return [for (c in new haxe.iterators.StringIteratorUnicode(s)) c];
     }

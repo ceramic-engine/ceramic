@@ -6,38 +6,38 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.Hsla;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.plot.Plot;
-import gpui.base.plot.PlotAxis.AxisLabelPlacement;
-import gpui.base.plot.scale.ScaleLinear;
-import gpui.base.plot.scale.ScalePoint;
-import gpui.base.plot.shape.Bar.BarAlignment;
-import gpui.base.plot.shape.Sankey;
-import gpui.component.button.ButtonIcon;
-import gpui.component.chart.AreaChart;
-import gpui.component.chart.BarChart;
-import gpui.component.chart.Chart;
-import gpui.component.chart.Chart.PointAxes;
-import gpui.component.chart.Chart.TooltipContent;
-import gpui.component.chart.ChartFormat;
-import gpui.component.chart.LineChart;
-import gpui.component.chart.PieChart;
-import gpui.component.chart.RadarChart;
-import gpui.component.chart.SankeyChart;
-import gpui.component.chart.SankeyChart.SankeyLabel;
-import gpui.component.plot.Tooltip;
-import gpui.component.progress.ProgressCircle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.Hsla;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.plot.Plot;
+import glaze.kit.base.plot.PlotAxis.AxisLabelPlacement;
+import glaze.kit.base.plot.scale.ScaleLinear;
+import glaze.kit.base.plot.scale.ScalePoint;
+import glaze.kit.base.plot.shape.Bar.BarAlignment;
+import glaze.kit.base.plot.shape.Sankey;
+import glaze.kit.button.ButtonIcon;
+import glaze.kit.chart.AreaChart;
+import glaze.kit.chart.BarChart;
+import glaze.kit.chart.Chart;
+import glaze.kit.chart.Chart.PointAxes;
+import glaze.kit.chart.Chart.TooltipContent;
+import glaze.kit.chart.ChartFormat;
+import glaze.kit.chart.LineChart;
+import glaze.kit.chart.PieChart;
+import glaze.kit.chart.RadarChart;
+import glaze.kit.chart.SankeyChart;
+import glaze.kit.chart.SankeyChart.SankeyLabel;
+import glaze.kit.plot.Tooltip;
+import glaze.kit.progress.ProgressCircle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /** A hand-written plot through `Plot` (the exports test's `DerivedPlot`). */
 class DerivedPlot extends Plot {
@@ -53,7 +53,7 @@ class ComponentChartTest extends KitTestCase {
 
     override function setup() {
         super.setup();
-        app.update(cx -> gpui.component.Component.init(cx));
+        app.update(cx -> glaze.kit.Component.init(cx));
     }
 
 /// chart/mod.rs
@@ -433,7 +433,7 @@ class ComponentChartTest extends KitTestCase {
     }
 
     function testRadarLabelFromText() {
-        final label:gpui.component.chart.RadarChart.RadarLabel = 'Sales';
+        final label:glaze.kit.chart.RadarChart.RadarLabel = 'Sales';
         switch label.kind() {
             case Text(text): assertEquals('Sales', text);
             case _: assertTrue(false);
@@ -604,13 +604,13 @@ class ComponentChartTest extends KitTestCase {
         final progress = Progress(new ProgressCircle(75));
         assertFalse(@:privateAccess ButtonIcon.isSpinner(progress));
         assertTrue(@:privateAccess ButtonIcon.isProgress(progress));
-        assertFalse(@:privateAccess ButtonIcon.isProgress(Icon(new gpui.component.Icon(gpui.component.IconName.Plus))));
+        assertFalse(@:privateAccess ButtonIcon.isProgress(Icon(new glaze.kit.Icon(glaze.kit.IconName.Plus))));
     }
 
 /// kit/tests/integration/exports.rs
 
     function testAHandWrittenPlotIsAnElement() {
-        final element:gpui.IntoElement = new DerivedPlot();
+        final element:glaze.IntoElement = new DerivedPlot();
         assertTrue(element != null);
     }
 
@@ -631,13 +631,13 @@ class ComponentChartTest extends KitTestCase {
 
 }
 
-class ChartTestView extends gpui.Model implements gpui.Render {
+class ChartTestView extends glaze.Model implements glaze.Render {
 
     public function new() {
         super();
     }
 
-    public function render(window:Window, cx:gpui.Context<Dynamic>):gpui.IntoElement {
+    public function render(window:Window, cx:glaze.Context<Dynamic>):glaze.IntoElement {
         return div();
     }
 

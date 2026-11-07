@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/layout/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Axis;
-import gpui.Pixels;
+import glaze.Axis;
+import glaze.Pixels;
 
 /**
  * The shape of one container. Package private in spirit (Rust
@@ -33,10 +33,10 @@ class PaneNode {
 
     final nodeId:NodeId;
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     var kindValue:NodeKind;
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     function new(id:NodeId, kind:NodeKind) {
         this.nodeId = id;
         this.kindValue = kind;
@@ -53,7 +53,7 @@ class PaneNode {
         }
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     inline function kindRef():NodeKind {
         return kindValue;
     }
@@ -96,7 +96,7 @@ class PaneNode {
         }
     }
 
-    @:allow(gpui.base.dock)
+    @:allow(glaze.kit.base.dock)
     static function sameSizes(a:Array<Null<Pixels>>, b:Array<Null<Pixels>>):Bool {
         if (a.length != b.length) return false;
         for (i in 0...a.length) {

@@ -1,4 +1,4 @@
-package gpui.util;
+package glaze.util;
 
 /**
  * UTF-8 helpers for the text system.

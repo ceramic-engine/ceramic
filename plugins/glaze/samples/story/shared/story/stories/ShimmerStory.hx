@@ -4,35 +4,35 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.ElementId;
-import gpui.component.attachment.Attachment;
-import gpui.component.button.Button;
-import gpui.component.marker.Marker;
-import gpui.component.marker.Marker.MarkerAlignment;
-import gpui.component.marker.Marker.MarkerContent;
-import gpui.component.marker.Marker.MarkerIcon;
-import gpui.component.marker.Marker.MarkerLoadingStyle;
-import gpui.component.marker.Marker.MarkerVariant;
-import gpui.component.shimmer.ShimmerText;
-import gpui.component.shimmer.ShimmerText.ShimmerStyle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.ElementId;
+import glaze.kit.attachment.Attachment;
+import glaze.kit.button.Button;
+import glaze.kit.marker.Marker;
+import glaze.kit.marker.Marker.MarkerAlignment;
+import glaze.kit.marker.Marker.MarkerContent;
+import glaze.kit.marker.Marker.MarkerIcon;
+import glaze.kit.marker.Marker.MarkerLoadingStyle;
+import glaze.kit.marker.Marker.MarkerVariant;
+import glaze.kit.shimmer.ShimmerText;
+import glaze.kit.shimmer.ShimmerText.ShimmerStyle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class ShimmerStory extends Model implements Story {
 
@@ -44,7 +44,7 @@ class ShimmerStory extends Model implements Story {
         return 'Reusable, theme-aware text loading effects with composable timing and appearance.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/style.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The properties that can be used to style text in GPUI.
@@ -81,7 +81,7 @@ class TextStyle {
      * Creates the default text style (Rust `TextStyle::default()`).
      */
     public function new() {
-        #if gpui_count_allocations gpui.util.AllocationCounters.textStyles++; #end
+        #if glaze_count_allocations glaze.util.AllocationCounters.textStyles++; #end
         // The default values are immutable: shared by every style
         color = DEFAULT_COLOR;
         fontFamily = '.SystemUIFont';
@@ -202,7 +202,7 @@ class TextStyle {
      * Returns the rounded line height in pixels.
      */
     public function lineHeightInPixels(remSize:Pixels):Pixels {
-        return gpui.util.MathUtil.round(lineHeight.toPixels(fontSize, remSize));
+        return glaze.util.MathUtil.round(lineHeight.toPixels(fontSize, remSize));
     }
 
     /**

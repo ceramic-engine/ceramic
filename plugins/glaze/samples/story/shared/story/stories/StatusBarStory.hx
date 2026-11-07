@@ -4,33 +4,33 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.dock.PanelControl;
-import gpui.component.progress.ProgressCircle;
-import gpui.component.separator.Separator;
-import gpui.component.statusbar.StatusBar;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.progress.ProgressCircle;
+import glaze.kit.separator.Separator;
+import glaze.kit.statusbar.StatusBar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 class StatusBarStory extends Model implements Story {
 
@@ -46,7 +46,7 @@ class StatusBarStory extends Model implements Story {
         return null;
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 

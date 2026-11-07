@@ -2,9 +2,9 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
-import gpui.util.MathUtil;
+import glaze.util.MathUtil;
 
 /**
  * A length in logical pixels, the base unit of measurement in GPUI.

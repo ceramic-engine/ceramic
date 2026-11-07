@@ -2,26 +2,26 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-020 (scrollbars shown on hover by default). See DEVIATIONS.md.
-package gpui.component.theme;
+package glaze.kit.theme;
 
-import gpui.AppContext;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.theme.ColorTokens;
-import gpui.base.theme.RadiusTokens;
-import gpui.base.theme.ScrollbarMode;
-import gpui.base.theme.ScrollbarTheme;
-import gpui.base.Scrollbar.ScrollbarEntrance;
-import gpui.base.Scrollbar.ScrollbarMotion;
-import gpui.base.Scrollbar.ScrollbarStyles;
-import gpui.base.theme.SemanticThemeTokens;
-import gpui.base.theme.ShadowTokens;
-import gpui.base.theme.SpacingTokens;
-import gpui.base.theme.TypographyTokens;
-import gpui.component.theme.SemanticThemeConfig;
+import glaze.AppContext;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.theme.ColorTokens;
+import glaze.kit.base.theme.RadiusTokens;
+import glaze.kit.base.theme.ScrollbarMode;
+import glaze.kit.base.theme.ScrollbarTheme;
+import glaze.kit.base.Scrollbar.ScrollbarEntrance;
+import glaze.kit.base.Scrollbar.ScrollbarMotion;
+import glaze.kit.base.Scrollbar.ScrollbarStyles;
+import glaze.kit.base.theme.SemanticThemeTokens;
+import glaze.kit.base.theme.ShadowTokens;
+import glaze.kit.base.theme.SpacingTokens;
+import glaze.kit.base.theme.TypographyTokens;
+import glaze.kit.theme.SemanticThemeConfig;
 
-using gpui.component.theme.Colorize;
+using glaze.kit.theme.Colorize;
 
 /**
  * The global theme configuration.
@@ -99,9 +99,9 @@ class Theme extends ThemeColor {
      * `easeOutQuart`, in `f32` like the original.
      */
     static function plotAppearEasing(t:Float):Float {
-        final b = gpui.SpringMath.f32(1. - t);
-        final b2 = gpui.SpringMath.f32(b * b);
-        return gpui.SpringMath.f32(1. - gpui.SpringMath.f32(b2 * b2));
+        final b = glaze.SpringMath.f32(1. - t);
+        final b2 = glaze.SpringMath.f32(b * b);
+        return glaze.SpringMath.f32(1. - glaze.SpringMath.f32(b2 * b2));
     }
 
     /**
@@ -110,12 +110,12 @@ class Theme extends ThemeColor {
      * sub-pixel tolerance, the hover fades on the same tier, and the data
      * draws in over `PLOT_APPEAR` on `plotAppearEasing`.
      */
-    static function plotMotion(motion:MotionTokens):gpui.base.plot.PlotMotion {
-        return new gpui.base.plot.PlotMotion()
-            .withPointer(new gpui.base.motion.Spring(motion.durationFast).withEpsilon(0.1))
-            .withEnter(new gpui.base.motion.Transition(motion.durationFast).easing(motion.easingEnter))
-            .withExit(new gpui.base.motion.Transition(motion.durationFast).easing(motion.easingExit))
-            .withAppear(new gpui.base.motion.Transition(PLOT_APPEAR).ease(plotAppearEasing));
+    static function plotMotion(motion:MotionTokens):glaze.kit.base.plot.PlotMotion {
+        return new glaze.kit.base.plot.PlotMotion()
+            .withPointer(new glaze.kit.base.motion.Spring(motion.durationFast).withEpsilon(0.1))
+            .withEnter(new glaze.kit.base.motion.Transition(motion.durationFast).easing(motion.easingEnter))
+            .withExit(new glaze.kit.base.motion.Transition(motion.durationFast).easing(motion.easingExit))
+            .withAppear(new glaze.kit.base.motion.Transition(PLOT_APPEAR).ease(plotAppearEasing));
     }
 
     /**
@@ -166,7 +166,7 @@ class Theme extends ThemeColor {
      * The highlight theme: editor colors, status colors and syntax styles
      * (Rust `highlight_theme`). Default: `HighlightTheme.defaultLight()`.
      */
-    public var highlightTheme:gpui.component.highlighter.HighlightTheme = gpui.component.highlighter.HighlightTheme.defaultLight();
+    public var highlightTheme:glaze.kit.highlighter.HighlightTheme = glaze.kit.highlighter.HighlightTheme.defaultLight();
 
     public var lightTheme:ThemeConfig = new ThemeConfig();
 
@@ -227,18 +227,18 @@ class Theme extends ThemeColor {
     /**
      * The notification settings.
      */
-    public var notification:gpui.component.notification.Notification.NotificationSettings = new gpui.component.notification.Notification.NotificationSettings();
+    public var notification:glaze.kit.notification.Notification.NotificationSettings = new glaze.kit.notification.Notification.NotificationSettings();
 
     /**
      * The list settings (Rust `Theme::list`; renamed: `list` is the
      * inherited list color of `ThemeColor`).
      */
-    public var listSettings:gpui.base.ListSettings = new gpui.base.ListSettings();
+    public var listSettings:glaze.kit.base.ListSettings = new glaze.kit.base.ListSettings();
 
     /**
      * The sheet settings.
      */
-    public var sheet:gpui.component.sheet.Sheet.SheetSettings = new gpui.component.sheet.Sheet.SheetSettings();
+    public var sheet:glaze.kit.sheet.Sheet.SheetSettings = new glaze.kit.sheet.Sheet.SheetSettings();
 
     /**
      * A theme with the given colors (Rust: `From<&ThemeColor> for Theme`);
@@ -383,7 +383,7 @@ class Theme extends ThemeColor {
      * `reloadMode` loads the current mode's registered theme even when the
      * mode did not change, which is what `change` promises.
      */
-    @:allow(gpui.component.theme)
+    @:allow(glaze.kit.theme)
     static function edit<R>(cx:AppContext, reloadMode:Bool, edit:(Theme) -> R):R {
 
         tracker.Autorun.unobserve();
@@ -478,15 +478,15 @@ class Theme extends ThemeColor {
      * Only the parts of the Base theme that are ported are projected: the
      * plot motion and the caret blink come with their modules.
      */
-    @:allow(gpui.component.theme)
-    function baseTheme():gpui.base.theme.Theme {
+    @:allow(glaze.kit.theme)
+    function baseTheme():glaze.kit.base.theme.Theme {
 
-        final theme = new gpui.base.theme.Theme();
+        final theme = new glaze.kit.base.theme.Theme();
         theme.appearance = mode.isDark() ? Dark : Light;
         theme.tokens = semanticTokens();
         final thumb = tokens.scrollbarThumb.background;
         final thumbHover = tokens.scrollbarThumbHover.background;
-        final isMobile = gpui.base.Prelude.isMobile();
+        final isMobile = glaze.kit.base.Prelude.isMobile();
         theme.scrollbar = new ScrollbarTheme()
             .withMode(scrollbarMode)
             .withMotion(scrollbarMotion(scrollbarMode))
@@ -517,7 +517,7 @@ class Theme extends ThemeColor {
             );
         theme.resizable.handle = border;
         theme.resizable.activeHandle = dragBorder;
-        theme.plot = new gpui.base.theme.PlotTheme().withMotion(plotMotion(motion));
+        theme.plot = new glaze.kit.base.theme.PlotTheme().withMotion(plotMotion(motion));
         return theme;
 
     }
@@ -533,8 +533,8 @@ class Theme extends ThemeColor {
         tracker.Autorun.unobserve();
         final theme = cx.global(Theme);
         tracker.Autorun.reobserve();
-        cx.setGlobal(theme.baseTheme(), gpui.base.theme.Theme);
-        gpui.component.text.TextView.installTextViewDefaults(theme, cx);
+        cx.setGlobal(theme.baseTheme(), glaze.kit.base.theme.Theme);
+        glaze.kit.text.TextView.installTextViewDefaults(theme, cx);
 
     }
 
@@ -762,8 +762,8 @@ class Theme extends ThemeColor {
         }
         if (config.highlight != null) {
             highlight = config.highlight;
-            highlightTheme = new gpui.component.highlighter.HighlightTheme(config.name, config.mode,
-                gpui.component.highlighter.HighlightTheme.HighlightThemeStyle.fromJson(config.highlight));
+            highlightTheme = new glaze.kit.highlighter.HighlightTheme(config.name, config.mode,
+                glaze.kit.highlighter.HighlightTheme.HighlightThemeStyle.fromJson(config.highlight));
         }
 
         final defaultColors = config.mode.isDark() ? ThemeColor.dark() : ThemeColor.light();

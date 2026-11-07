@@ -1,29 +1,29 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/touch_selection/handle.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.touchselection;
+package glaze.kit.touchselection;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.TouchDragEvent;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.Popup;
-import gpui.base.input.SelectionEdge;
-import gpui.base.input.TouchHandle;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.TouchDragEvent;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.Popup;
+import glaze.kit.base.input.SelectionEdge;
+import glaze.kit.base.input.TouchHandle;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /** Reads the touch selection as laid out by the time the handles paint. */
 typedef SnapshotSource = (Window, App) -> Null<TouchSelectionSnapshot>;

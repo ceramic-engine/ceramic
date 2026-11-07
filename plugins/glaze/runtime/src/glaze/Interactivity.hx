@@ -1,12 +1,12 @@
 // Ported from gpui-pre 0.3.10: src/elements/div.rs (`Interactivity`, `InteractiveElementState`, tooltips, `GroupHitboxes`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Stacks;
-import gpui.ClickEvent.KeyboardClickEvent;
-import gpui.ClickEvent.MouseClickEvent;
-import gpui.util.Ref;
+import glaze.util.Stacks;
+import glaze.ClickEvent.KeyboardClickEvent;
+import glaze.ClickEvent.MouseClickEvent;
+import glaze.util.Ref;
 
 /**
  * A mouse listener of an element: called with the event, the phase and the
@@ -381,7 +381,7 @@ class Interactivity {
     public var group:Null<String> = null;
 
     /** The base style of the element, before any modifications are applied by focus, active, etc. */
-    #if gpui_inspector
+    #if glaze_inspector
     public var baseStyle:StyleRefinement = new StyleRefinement();
     #else
     public final baseStyle:StyleRefinement = new StyleRefinement();
@@ -453,7 +453,7 @@ class Interactivity {
 
     public var tabStop:Bool = true;
 
-    #if gpui_inspector
+    #if glaze_inspector
     /** Where the element was built (Rust `source_location`, captured by `div()`, `img()` and `svg()`) */
     public var sourceLocation:Null<haxe.PosInfos> = null;
     #end
@@ -643,13 +643,13 @@ class Interactivity {
      * that keeps its listeners can make it once and add it each frame
      * (`addActionEntry`). Internal.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function bubbleActionEntry<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):TypedActionListener {
         return new BubbleActionListener(type, cast listener);
     }
 
     /** Adds an entry made by `bubbleActionEntry` (`onAction` without a new entry). Internal. */
-    @:allow(gpui)
+    @:allow(glaze)
     function addActionEntry(entry:TypedActionListener):Void {
         if (actionListeners == null) actionListeners = [];
         actionListeners.push(entry);
@@ -809,8 +809,8 @@ class Interactivity {
     /**
      * Layout this element according to this interactivity state's configured styles.
      */
-    public function requestLayout(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App, f:(Style, Window, App) -> LayoutId):LayoutId {
-        final style = requestLayoutStyle(globalId, #if gpui_inspector inspectorId, #end window, cx);
+    public function requestLayout(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App, f:(Style, Window, App) -> LayoutId):LayoutId {
+        final style = requestLayoutStyle(globalId, #if glaze_inspector inspectorId, #end window, cx);
         return f(style, window, cx);
     }
 
@@ -836,8 +836,8 @@ class Interactivity {
      * The first half of `requestLayout()`: updates the element state and
      * returns the style to request the layout with (no closure for `Div`).
      */
-    public function requestLayoutStyle(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App):Style {
-        #if gpui_inspector
+    public function requestLayoutStyle(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end window:Window, cx:App):Style {
+        #if glaze_inspector
         window.withInspectorState(inspectorId, DivInspectorState, cx, (inspectorState, _window) -> {
             if (inspectorState.value != null) {
                 baseStyle = inspectorState.value.baseStyle.clone();
@@ -902,8 +902,8 @@ class Interactivity {
      * Commit the bounds of this element according to this interactivity state's configured styles.
      * `f` gets the style, the scroll offset to apply to the children and the hitbox.
      */
-    public function prepaint<R>(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App, f:(Style, Point, Null<Hitbox>, Window, App) -> R):R {
-        final style = prepaintBegin(globalId, #if gpui_inspector inspectorId, #end bounds, contentSize, window, cx);
+    public function prepaint<R>(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App, f:(Style, Point, Null<Hitbox>, Window, App) -> R):R {
+        final style = prepaintBegin(globalId, #if glaze_inspector inspectorId, #end bounds, contentSize, window, cx);
         final result = f(style, prepaintScrollOffset, prepaintHitbox, window, cx);
         prepaintEnd(window);
         return result;
@@ -925,10 +925,10 @@ class Interactivity {
      * style and sets `prepaintScrollOffset` and `prepaintHitbox`. The
      * children are prepainted between it and `prepaintEnd()`.
      */
-    public function prepaintBegin(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App):Style {
+    public function prepaintBegin(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, contentSize:Size, window:Window, cx:App):Style {
         this.contentSize = contentSize;
 
-        #if gpui_inspector
+        #if glaze_inspector
         window.withInspectorState(inspectorId, DivInspectorState, cx, (inspectorState, _window) -> {
             if (inspectorState.value != null) {
                 inspectorState.value.bounds = bounds;
@@ -1015,7 +1015,7 @@ class Interactivity {
     }
 
     function shouldInsertHitbox(style:Style, window:Window, cx:App):Bool {
-        #if gpui_inspector
+        #if glaze_inspector
         // Rust ends the condition with `|| window.is_inspector_picking(cx)`
         if (window.isInspectorPicking(cx)) return true;
         #end
@@ -1043,7 +1043,7 @@ class Interactivity {
 
     function clampScrollPosition(bounds:Bounds, style:Style, window:Window, cx:App):Point {
         inline function roundToTwoDecimals(pixels:Float):Float {
-            return gpui.util.MathUtil.round(pixels * 100.0) / 100.0;
+            return glaze.util.MathUtil.round(pixels * 100.0) / 100.0;
         }
 
         if (scrollOffset == null) {
@@ -1089,7 +1089,7 @@ class Interactivity {
 
     static inline function clamp(value:Float, min:Float, max:Float):Float {
         // Rust `Ord::clamp` on `Pixels`, ordered with `f32::total_cmp` (-0 < +0)
-        return gpui.util.MathUtil.totalLess(value, min) ? min : (gpui.util.MathUtil.totalLess(max, value) ? max : value);
+        return glaze.util.MathUtil.totalLess(value, min) ? min : (glaze.util.MathUtil.totalLess(max, value) ? max : value);
     }
 
     /**
@@ -1099,8 +1099,8 @@ class Interactivity {
      * `paintContent` paints the content of the element (children) between the
      * background and the border, inside its content mask.
      */
-    public function paint(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App, paintContent:(Style, Window, App) -> Void):Void {
-        final style = paintBegin(globalId, #if gpui_inspector inspectorId, #end bounds, hitbox, window, cx);
+    public function paint(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App, paintContent:(Style, Window, App) -> Void):Void {
+        final style = paintBegin(globalId, #if glaze_inspector inspectorId, #end bounds, hitbox, window, cx);
         if (style == null) {
             return;
         }
@@ -1116,7 +1116,7 @@ class Interactivity {
     var paintTabGroup:Bool = false;
     var paintHasOpacity:Bool = false;
     var paintPreviousOpacity:Float = 0.0;
-    #if gpui_inspector
+    #if glaze_inspector
     var paintInspectorId:Null<InspectorElementId> = null;
     #end
 
@@ -1126,7 +1126,7 @@ class Interactivity {
      * when the element is hidden (nothing else to paint, no `paintEnd()`).
      * The content is painted between it and `paintEnd()`.
      */
-    public function paintBegin(globalId:Null<GlobalElementId>, #if gpui_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App):Null<Style> {
+    public function paintBegin(globalId:Null<GlobalElementId>, #if glaze_inspector inspectorId:Null<InspectorElementId>, #end bounds:Bounds, hitbox:Null<Hitbox>, window:Window, cx:App):Null<Style> {
         hovered = hitbox != null ? hitbox.isHovered(window) : null;
         // Port: an element scrolled from another view draws again (default view caching)
         if (trackedScrollHandle != null) {
@@ -1198,7 +1198,7 @@ class Interactivity {
         paintHitbox = hitbox;
         paintTextStyle = textStyle;
         paintMask = mask;
-        #if gpui_inspector
+        #if glaze_inspector
         paintInspectorId = inspectorId;
         #end
         return style;
@@ -1213,7 +1213,7 @@ class Interactivity {
         paintStyle = null;
         paintHitbox = null;
 
-        #if gpui_inspector
+        #if glaze_inspector
         if (hitbox != null) {
             window.insertInspectorHitbox(hitbox.id, paintInspectorId, cx);
         }
@@ -1650,7 +1650,7 @@ class Interactivity {
      * the style it was given (`Img` sizes itself from its image) calls it,
      * so the next phase computes a fresh one like GPUI does.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     inline function forgetComputedStyle():Void {
         computedStyle = null;
     }
@@ -2069,7 +2069,7 @@ private class ClickListenerState {
  * The mouse down listener of a focusable element: transfers the focus when
  * the element is hit (`Interactivity.paintMouseListeners`)
  */
-private class FocusMouseDownEntry extends gpui.Window.MouseListenerEntry {
+private class FocusMouseDownEntry extends glaze.Window.MouseListenerEntry {
 
     final focusHandle:FocusHandle;
 
@@ -2091,7 +2091,7 @@ private class FocusMouseDownEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** The mouse up listener of an element's active state (`Interactivity.paintMouseListeners`) */
-private class ActiveMouseUpEntry extends gpui.Window.MouseListenerEntry {
+private class ActiveMouseUpEntry extends glaze.Window.MouseListenerEntry {
 
     final activeState:ElementClickedState;
 
@@ -2110,7 +2110,7 @@ private class ActiveMouseUpEntry extends gpui.Window.MouseListenerEntry {
 }
 
 /** The mouse down listener of an element's active state (`Interactivity.paintMouseListeners`) */
-private class ActiveMouseDownEntry extends gpui.Window.MouseListenerEntry {
+private class ActiveMouseDownEntry extends glaze.Window.MouseListenerEntry {
 
     final activeState:ElementClickedState;
 
@@ -2136,7 +2136,7 @@ private class ActiveMouseDownEntry extends gpui.Window.MouseListenerEntry {
 
 }
 
-private class ClickMouseDownEntry extends gpui.Window.MouseListenerEntry {
+private class ClickMouseDownEntry extends glaze.Window.MouseListenerEntry {
 
     final state:ClickListenerState;
 
@@ -2155,7 +2155,7 @@ private class ClickMouseDownEntry extends gpui.Window.MouseListenerEntry {
 
 }
 
-private class ClickMouseMoveEntry extends gpui.Window.MouseListenerEntry {
+private class ClickMouseMoveEntry extends glaze.Window.MouseListenerEntry {
 
     final state:ClickListenerState;
 
@@ -2191,7 +2191,7 @@ private class ClickMouseMoveEntry extends gpui.Window.MouseListenerEntry {
 
 }
 
-private class ClickMouseUpEntry extends gpui.Window.MouseListenerEntry {
+private class ClickMouseUpEntry extends glaze.Window.MouseListenerEntry {
 
     final state:ClickListenerState;
 

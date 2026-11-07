@@ -3,54 +3,54 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.Canvas;
-import gpui.Context;
-import gpui.FontId;
-import gpui.FontMetrics;
-import gpui.FontRun;
-import gpui.FontWeight;
-import gpui.GlyphId;
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.LineLayout;
-import gpui.Model;
-import gpui.PlatformTextSystem;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.RenderGlyphParams;
-import gpui.ShapedGlyph;
-import gpui.ShapedRun;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.StrikethroughStyle;
-import gpui.StyleBuilder;
-import gpui.StyledText;
-import gpui.TestDispatcher;
-import gpui.TextAlign;
-import gpui.TextLayout;
-import gpui.TextRenderingMode;
-import gpui.TextStyle;
-import gpui.TextSystem;
-import gpui.UnderlineStyle;
-import gpui.Window;
-import gpui.base.TextSelection;
-import gpui.base.text.Inline;
-import gpui.base.text.Inline.GlyphBox;
-import gpui.base.text.Inline.PaintedSelectionLayout;
-import gpui.base.text.InlineHighlight;
-import gpui.base.text.RangedFade;
-import gpui.base.text.RangedHighlight;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.Canvas;
+import glaze.Context;
+import glaze.FontId;
+import glaze.FontMetrics;
+import glaze.FontRun;
+import glaze.FontWeight;
+import glaze.GlyphId;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.LineLayout;
+import glaze.Model;
+import glaze.PlatformTextSystem;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.RenderGlyphParams;
+import glaze.ShapedGlyph;
+import glaze.ShapedRun;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.StrikethroughStyle;
+import glaze.StyleBuilder;
+import glaze.StyledText;
+import glaze.TestDispatcher;
+import glaze.TextAlign;
+import glaze.TextLayout;
+import glaze.TextRenderingMode;
+import glaze.TextStyle;
+import glaze.TextSystem;
+import glaze.UnderlineStyle;
+import glaze.Window;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.text.Inline;
+import glaze.kit.base.text.Inline.GlyphBox;
+import glaze.kit.base.text.Inline.PaintedSelectionLayout;
+import glaze.kit.base.text.InlineHighlight;
+import glaze.kit.base.text.RangedFade;
+import glaze.kit.base.text.RangedHighlight;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import testing.InteractionScript;
 import testing.TestCase;
 
-using gpui.AbsoluteLengthTools;
+using glaze.AbsoluteLengthTools;
 
 /**
  * The tests of inline.rs: `fade_highlights_tests`, `line_bounds_tests`,
@@ -65,18 +65,18 @@ using gpui.AbsoluteLengthTools;
  * `InlineState`, none of which exist in the single threaded port (the
  * retained layout is a slot of its `InlineState`, released with it).
  */
-@:access(gpui.base.text.Inline)
-@:access(gpui.base.text.InlineHighlight)
+@:access(glaze.kit.base.text.Inline)
+@:access(glaze.kit.base.text.InlineHighlight)
 class TextInlineTest extends TestCase {
 
     static function bodyStyle(fontSize:Float):TextStyle {
         final style = new TextStyle();
         style.fontFamily = TextTestFonts.BODY;
-        style.fontSize = gpui.AbsoluteLength.Pixels(fontSize);
+        style.fontSize = glaze.AbsoluteLength.Pixels(fontSize);
         return style;
     }
 
-    static function highlight(?style:HighlightStyle, ?fontFamily:String, ?fontSizeScale:Float, ?codeStyle:gpui.StyleRefinement):InlineHighlight {
+    static function highlight(?style:HighlightStyle, ?fontFamily:String, ?fontSizeScale:Float, ?codeStyle:glaze.StyleRefinement):InlineHighlight {
         return new InlineHighlight(style, fontFamily, fontSizeScale, codeStyle);
     }
 
@@ -98,7 +98,7 @@ class TextInlineTest extends TestCase {
 /// fade_highlights_tests
 
     function testFadesTextAndBackgroundOnlyInsideTheRange() {
-        final code = InlineHighlight.fromStyle(new HighlightStyle(null, null, null, gpui.Prelude.red()));
+        final code = InlineHighlight.fromStyle(new HighlightStyle(null, null, null, glaze.Prelude.red()));
         final combined = InlineHighlight.fadeHighlights([new RangedHighlight(new Range(0, 4), code)], [new RangedFade(new Range(2, 6), 0.5)]);
 
         assertEquals('0..2, 2..4, 4..6', ranges(combined));
@@ -117,8 +117,8 @@ class TextInlineTest extends TestCase {
     }
 
     function testFadesExplicitDecorationColorsWithTheText() {
-        final link = InlineHighlight.fromStyle(new HighlightStyle(null, null, null, null, new UnderlineStyle(0, gpui.Prelude.blue()),
-            new StrikethroughStyle(0, gpui.Prelude.red())));
+        final link = InlineHighlight.fromStyle(new HighlightStyle(null, null, null, null, new UnderlineStyle(0, glaze.Prelude.blue()),
+            new StrikethroughStyle(0, glaze.Prelude.red())));
         final combined = InlineHighlight.fadeHighlights([new RangedHighlight(new Range(0, 4), link)], [new RangedFade(new Range(0, 4), 0.75)]);
 
         final faded = combined[0].highlight;
@@ -127,8 +127,8 @@ class TextInlineTest extends TestCase {
     }
 
     function testFadesInlineCodeStyleBackgroundAndBorder() {
-        final code = highlight(new HighlightStyle(null, null, null, gpui.Prelude.red()), null, null,
-            StyleBuilder.build(s -> s.bg(gpui.Prelude.red()).borderColor(gpui.Prelude.blue())));
+        final code = highlight(new HighlightStyle(null, null, null, glaze.Prelude.red()), null, null,
+            StyleBuilder.build(s -> s.bg(glaze.Prelude.red()).borderColor(glaze.Prelude.blue())));
         final combined = InlineHighlight.fadeHighlights([new RangedHighlight(new Range(0, 4), code)], [new RangedFade(new Range(0, 4), 0.75)]);
 
         final faded = combined[0].highlight;
@@ -155,7 +155,7 @@ class TextInlineTest extends TestCase {
         final lineBounds:Array<Bounds> = [];
         var currentLineY:Null<Float> = null;
         var currentBounds:Null<Bounds> = null;
-        final decoded = new gpui.util.Utf8.Utf8Text(text);
+        final decoded = new glaze.util.Utf8.Utf8Text(text);
         for (k in 0...decoded.count) {
             final offset = decoded.byteOffsets[k];
             final nextOffset = offset + Utf8.codePointLength(decoded.codePoints[k]);
@@ -286,9 +286,9 @@ class TextInlineTest extends TestCase {
                     // Taller than the layout's rows, as a window line height
                     // may be.
                     final lineHeight = TextTestFonts.f32(layout.lineHeight() + 3.);
-                    var top = gpui.Pixels.MAX;
-                    var bottom = gpui.Pixels.MIN;
-                    final decoded = new gpui.util.Utf8.Utf8Text(text);
+                    var top = glaze.Pixels.MAX;
+                    var bottom = glaze.Pixels.MIN;
+                    final decoded = new glaze.util.Utf8.Utf8Text(text);
                     for (k in 0...decoded.count) {
                         final position = layout.positionForIndex(decoded.byteOffsets[k]);
                         if (position != null) {
@@ -520,14 +520,14 @@ class TextInlineTest extends TestCase {
 /// retained_layout_tests
 
     /** Opens a window whose view shows `copies` text views of a Markdown state, 300px wide. */
-    static function openTextViews(source:String, copies:Int):{cx:testing.VisualTestContext, view:gpui.Entity<TextViewHost>} {
+    static function openTextViews(source:String, copies:Int):{cx:testing.VisualTestContext, view:glaze.Entity<TextViewHost>} {
         final dispatcher = new TestDispatcher();
         final app = InteractionScript.testApp(dispatcher);
         // `TestAppContext` runs on the test platform's `NoopTextSystem`.
-        app.setTextSystem(new TextSystem(new gpui.NoopTextSystem()));
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.setTextSystem(new TextSystem(new glaze.NoopTextSystem()));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         final opened = testing.VisualTestContext.addWindowView(app, dispatcher, (window, cx) -> {
-            final state = cx.newEntity(cx -> gpui.base.text.TextViewState.markdown(source, cx));
+            final state = cx.newEntity(cx -> glaze.kit.base.text.TextViewState.markdown(source, cx));
             return new TextViewHost(state, 300., copies);
         });
         opened.cx.runUntilParked();
@@ -603,7 +603,7 @@ class TextTestDraw {
     /** Rust `TestApp::new()`: the test platform's text system. */
     public static function testApp():App {
         final app = InteractionScript.testApp(new TestDispatcher());
-        app.setTextSystem(new TextSystem(new gpui.NoopTextSystem()));
+        app.setTextSystem(new TextSystem(new glaze.NoopTextSystem()));
         return app;
     }
 
@@ -627,13 +627,13 @@ class TextTestDraw {
         final window = openWindow(app, (_, _) -> {
             final run = body;
             body = null;
-            return gpui.Prelude.canvas((_, window, cx) -> {
+            return glaze.Prelude.canvas((_, window, cx) -> {
                 if (run != null) {
                     slot = run(window, cx);
                     ran = true;
                 }
                 return null;
-            }, (_, _, _, _) -> {}).w(gpui.Prelude.px(1000.)).h(gpui.Prelude.px(1000.));
+            }, (_, _, _, _) -> {}).w(glaze.Prelude.px(1000.)).h(glaze.Prelude.px(1000.));
         });
         app.update(_ -> window.draw());
         window.destroy();
@@ -663,7 +663,7 @@ class TextTestFonts {
     /** Width of `text` shaped entirely in `family` at `fontSize`. */
     public static function widthOf(text:String, family:String, fontSize:Float):Float {
         final fontId = family == MONO ? WideMonoTextSystem.MONO_ID : WideMonoTextSystem.BODY_ID;
-        return f32(f32(fontSize * f32(WideMonoTextSystem.advanceUnits(fontId) / WideMonoTextSystem.UNITS_PER_EM)) * new gpui.util.Utf8.Utf8Text(text).count);
+        return f32(f32(fontSize * f32(WideMonoTextSystem.advanceUnits(fontId) / WideMonoTextSystem.UNITS_PER_EM)) * new glaze.util.Utf8.Utf8Text(text).count);
     }
 
     /** Text submitted to `layoutLine` while recording (Rust `record_shaped_lines`). */
@@ -712,7 +712,7 @@ class WideMonoTextSystem implements PlatformTextSystem {
         return [TextTestFonts.BODY, TextTestFonts.MONO];
     }
 
-    public function fontId(descriptor:gpui.Font):FontId {
+    public function fontId(descriptor:glaze.Font):FontId {
         final mono = descriptor.family == TextTestFonts.MONO;
         final bold = descriptor.weight == FontWeight.BOLD;
         return mono ? (bold ? BOLD_MONO_ID : MONO_ID) : (bold ? BOLD_BODY_ID : BODY_ID);
@@ -742,7 +742,7 @@ class WideMonoTextSystem implements PlatformTextSystem {
         return Bytes.alloc(0);
     }
 
-    public function layoutLine(text:String, fontSize:gpui.Pixels, runs:Array<FontRun>):LineLayout {
+    public function layoutLine(text:String, fontSize:glaze.Pixels, runs:Array<FontRun>):LineLayout {
         if (TextTestFonts.shapedLineRecorder != null) {
             TextTestFonts.shapedLineRecorder.push(text);
         }
@@ -750,7 +750,7 @@ class WideMonoTextSystem implements PlatformTextSystem {
         var position:Float = 0.;
         final shapedRuns:Array<ShapedRun> = [];
         var runStart = 0;
-        final decoded = new gpui.util.Utf8.Utf8Text(text);
+        final decoded = new glaze.util.Utf8.Utf8Text(text);
         var k = 0;
         for (run in runs) {
             final advance = TextTestFonts.f32(fontSize * TextTestFonts.f32(advanceUnits(run.fontId) / UNITS_PER_EM));
@@ -769,7 +769,7 @@ class WideMonoTextSystem implements PlatformTextSystem {
             TextTestFonts.f32(fontSize * TextTestFonts.f32(-metrics.descent / UNITS_PER_EM)), shapedRuns, Utf8.byteLength(text));
     }
 
-    public function recommendedRenderingMode(fontId:FontId, fontSize:gpui.Pixels):TextRenderingMode {
+    public function recommendedRenderingMode(fontId:FontId, fontSize:glaze.Pixels):TextRenderingMode {
         return Grayscale;
     }
 
@@ -782,13 +782,13 @@ class WideMonoTextSystem implements PlatformTextSystem {
 /** The test views of `retained_layout_tests` and of the inline flow `frames` tests. */
 class TextViewHost extends Model implements Render {
 
-    public var state:gpui.Entity<gpui.base.text.TextViewState>;
+    public var state:glaze.Entity<glaze.kit.base.text.TextViewState>;
 
     public var width:Float;
 
     final copies:Int;
 
-    public function new(state:gpui.Entity<gpui.base.text.TextViewState>, width:Float, copies:Int) {
+    public function new(state:glaze.Entity<glaze.kit.base.text.TextViewState>, width:Float, copies:Int) {
         super();
         this.state = state;
         this.width = width;
@@ -796,9 +796,9 @@ class TextViewHost extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final root = gpui.Prelude.div().w(gpui.Prelude.px(width));
+        final root = glaze.Prelude.div().w(glaze.Prelude.px(width));
         for (_ in 0...copies) {
-            root.child(gpui.base.text.TextView.create(state));
+            root.child(glaze.kit.base.text.TextView.create(state));
         }
         return root;
     }

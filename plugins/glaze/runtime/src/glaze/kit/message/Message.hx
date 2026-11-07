@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/message.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.message;
+package glaze.kit.message;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y.RoleOverride;
-import gpui.component.bubble.Bubble;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y.RoleOverride;
+import glaze.kit.bubble.Bubble;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Horizontal alignment for a message and message-owned chat surfaces.
@@ -66,7 +66,7 @@ class MessageGroup implements RenderOnce implements Styled implements ParentElem
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .minW0()
             .gap2()
             .refineStyle(groupStyle);
@@ -192,7 +192,7 @@ class Message implements RenderOnce implements Styled {
 
         // No text size or line height here: the header and footer set their
         // own, and content typography belongs to the bubble or the caller.
-        final row = gpui.base.Prelude.vFlex()
+        final row = glaze.kit.base.Prelude.vFlex()
             .relative()
             .wFull()
             .minW0()
@@ -206,14 +206,14 @@ class Message implements RenderOnce implements Styled {
         // The footer lives outside this row so the bottom-anchored avatar
         // always sits flush with the content's bottom edge, whatever the
         // footer contains.
-        final line = gpui.base.Prelude.hFlex()
+        final line = glaze.kit.base.Prelude.hFlex()
             .wFull()
             .minW0()
             .itemsEnd()
             .gap2();
         if (alignment == End) line.flexRowReverse();
         if (avatarValue != null) line.child(avatarValue);
-        final stack = gpui.base.Prelude.vFlex()
+        final stack = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .minW0()
             .gap(rems(0.625));
@@ -283,7 +283,7 @@ class MessageAvatar implements RenderOnce implements Styled implements ParentEle
         final theme = Theme.global(cx);
         final tokens = theme.semanticTokens();
 
-        final element = gpui.base.Prelude.hFlex()
+        final element = glaze.kit.base.Prelude.hFlex()
             .relative()
             .minW8()
             .flexNone()
@@ -322,7 +322,7 @@ class MessageHeader implements RenderOnce implements Styled implements ParentEle
         return this;
     }
 
-    @:allow(gpui.component.message, tests)
+    @:allow(glaze.kit.message, tests)
     function withInheritedContentInset(contentInset:Bool):MessageHeader {
         if (contentInsetValue == null) contentInsetValue = contentInset;
         return this;
@@ -349,12 +349,12 @@ class MessageHeader implements RenderOnce implements Styled implements ParentEle
     public function render(_:Window, cx:App):IntoElement {
         final tokens = Theme.global(cx).semanticTokens();
 
-        final element = gpui.base.Prelude.hFlex()
+        final element = glaze.kit.base.Prelude.hFlex()
             .maxWFull()
             .minW0()
             .gap1()
             .textXs()
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .fontMedium()
             .textColor(tokens.colors.mutedForeground);
         if (contentInsetValue == null || contentInsetValue) element.px3();
@@ -375,7 +375,7 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
     @:allow(tests)
     var alignment:MessageAlignment = Start;
 
-    @:allow(gpui.component.message, tests)
+    @:allow(glaze.kit.message, tests)
     var hasGhostBubble:Bool = false;
 
     @:allow(tests)
@@ -397,7 +397,7 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
         return this;
     }
 
-    @:allow(gpui.component.message, tests)
+    @:allow(glaze.kit.message, tests)
     function aligned(alignment:MessageAlignment):MessageContent {
         this.alignment = alignment;
         return this;
@@ -422,7 +422,7 @@ class MessageContent implements RenderOnce implements Styled implements ParentEl
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .wFull()
             .maxWFull()
             .minW0()
@@ -460,7 +460,7 @@ class MessageFooter implements RenderOnce implements Styled implements ParentEle
         return this;
     }
 
-    @:allow(gpui.component.message, tests)
+    @:allow(glaze.kit.message, tests)
     function withInheritedContentInset(contentInset:Bool):MessageFooter {
         if (contentInsetValue == null) contentInsetValue = contentInset;
         return this;
@@ -487,12 +487,12 @@ class MessageFooter implements RenderOnce implements Styled implements ParentEle
     public function render(_:Window, cx:App):IntoElement {
         final tokens = Theme.global(cx).semanticTokens();
 
-        final element = gpui.base.Prelude.hFlex()
+        final element = glaze.kit.base.Prelude.hFlex()
             .maxWFull()
             .minW0()
             .gap1()
             .textXs()
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .fontMedium()
             .textColor(tokens.colors.mutedForeground);
         if (contentInsetValue == null || contentInsetValue) element.px3();

@@ -3,57 +3,57 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.OperatingSystem;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.CodeActionProvider;
-import gpui.base.input.CompletionContext;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.CompletionProvider.CompletionProviderBase;
-import gpui.base.input.CompletionTextEdit;
-import gpui.base.input.DefinitionProvider;
-import gpui.base.input.EditorState;
-import gpui.base.input.InlineCompletionContext;
-import gpui.base.input.InlineCompletionItem;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.input.LspCodeAction;
-import gpui.base.input.LspLocationLink;
-import gpui.base.input.LspPosition;
-import gpui.base.input.LspRange;
-import gpui.base.input.LspShowDocumentParams;
-import gpui.base.input.LspTextEdit;
-import gpui.component.Component;
-import gpui.component.input.CaretAnchoredPopup;
-import gpui.component.input.Editor;
-import gpui.component.input.Input;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.OperatingSystem;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.CodeActionProvider;
+import glaze.kit.base.input.CompletionContext;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.CompletionProvider.CompletionProviderBase;
+import glaze.kit.base.input.CompletionTextEdit;
+import glaze.kit.base.input.DefinitionProvider;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InlineCompletionContext;
+import glaze.kit.base.input.InlineCompletionItem;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.LspCodeAction;
+import glaze.kit.base.input.LspLocationLink;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.LspRange;
+import glaze.kit.base.input.LspShowDocumentParams;
+import glaze.kit.base.input.LspTextEdit;
+import glaze.kit.Component;
+import glaze.kit.input.CaretAnchoredPopup;
+import glaze.kit.input.Editor;
+import glaze.kit.input.Input;
+import glaze.kit.theme.Theme;
 import ropey.Rope;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputLspExt;
+using glaze.kit.base.input.InputLspExt;
 
 /**
  * Completion, code action, inline completion and definition workflows
@@ -72,8 +72,8 @@ using gpui.base.input.InputLspExt;
  * by the golden scenes), `closing_window_disposes_editor_with_completion_in_flight`
  * (GPUI's test platform window retention).
  */
-@:access(gpui.base.input.InputBaseState)
-@:access(gpui.component.input)
+@:access(glaze.kit.base.input.InputBaseState)
+@:access(glaze.kit.input)
 class ComponentEditorCompletionsTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -209,7 +209,7 @@ class ComponentEditorCompletionsTest extends TestCase {
         renderFrame();
         if (keystroke.key == "enter" || keystroke.key == "tab") {
             final k = keystroke;
-            app.update(cx -> window.dispatchEvent(new gpui.KeyDownEvent(k, false, false), cx));
+            app.update(cx -> window.dispatchEvent(new glaze.KeyDownEvent(k, false, false), cx));
         }
         else {
             keystroke = keystroke.withSimulatedIme();
@@ -217,7 +217,7 @@ class ComponentEditorCompletionsTest extends TestCase {
             app.update(cx -> window.dispatchKeystroke(k, cx));
         }
         final k = keystroke;
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(k), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(k), cx));
         renderFrame();
     }
 
@@ -369,7 +369,7 @@ class ComponentEditorCompletionsTest extends TestCase {
     function testManualCompletionDoesNotRequestDuringImePreedit() {
         final f = fixture();
         app.update(cx -> {
-            final handler = new gpui.ElementInputHandler(f.state.read(cx).inputBounds, (cast f.state : Entity<InputBaseState>));
+            final handler = new glaze.ElementInputHandler(f.state.read(cx).inputBounds, (cast f.state : Entity<InputBaseState>));
             handler.replaceAndMarkTextInRange(null, "中", new Range(1, 1), window, cx);
             final marked = handler.markedTextRange(window, cx);
             assertTrue(marked != null && marked.equals(new Range(0, 1)));
@@ -378,7 +378,7 @@ class ComponentEditorCompletionsTest extends TestCase {
         f.showCompletions();
         assertEquals(0, f.provider.requests.length);
         app.update(cx -> {
-            final handler = new gpui.ElementInputHandler(f.state.read(cx).inputBounds, (cast f.state : Entity<InputBaseState>));
+            final handler = new glaze.ElementInputHandler(f.state.read(cx).inputBounds, (cast f.state : Entity<InputBaseState>));
             handler.replaceTextInRange(null, "中", window, cx);
             assertNull(handler.markedTextRange(window, cx));
         });
@@ -1228,7 +1228,7 @@ private class Actions implements CodeActionProvider {
         return Task.ready([new LspCodeAction(idValue)]);
     }
 
-    public function performCodeAction(_:Entity<InputBaseState>, action:LspCodeAction, pushToHistory:Bool, _:Window, _:App):Task<gpui.Unit> {
+    public function performCodeAction(_:Entity<InputBaseState>, action:LspCodeAction, pushToHistory:Bool, _:Window, _:App):Task<glaze.Unit> {
         performed.push('${action.title} $pushToHistory');
         return Task.done();
     }
@@ -1250,7 +1250,7 @@ private class RangeActions implements CodeActionProvider {
         return Task.ready([new LspCodeAction('${range.start}..${range.end}')]);
     }
 
-    public function performCodeAction(_:Entity<InputBaseState>, action:LspCodeAction, _:Bool, _:Window, _:App):Task<gpui.Unit> {
+    public function performCodeAction(_:Entity<InputBaseState>, action:LspCodeAction, _:Bool, _:Window, _:App):Task<glaze.Unit> {
         performed.push(action.title);
         return Task.done();
     }
@@ -1272,7 +1272,7 @@ private class Definitions implements DefinitionProvider {
 
     public var deferred:Bool = false;
 
-    final pending:Array<{gate:Task<gpui.Unit>}> = [];
+    final pending:Array<{gate:Task<glaze.Unit>}> = [];
 
     final app:App;
 
@@ -1283,7 +1283,7 @@ private class Definitions implements DefinitionProvider {
 
     public function release(index:Int):Void {
         final gate = pending[index].gate;
-        app.update(_ -> gate.resolve(gpui.Unit.unit));
+        app.update(_ -> gate.resolve(glaze.Unit.unit));
     }
 
     public function definitions(text:Rope, offset:Int, _:Window, _:App):Task<Array<LspLocationLink>> {
@@ -1299,7 +1299,7 @@ private class Definitions implements DefinitionProvider {
         };
         if (!deferred)
             return result;
-        final gate = new Task<gpui.Unit>();
+        final gate = new Task<glaze.Unit>();
         pending.push({gate: gate});
         return gate.andThen(_ -> result);
     }
@@ -1307,7 +1307,7 @@ private class Definitions implements DefinitionProvider {
 }
 
 /** The fixture of a test: the window's view, the editor and its provider. */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 private class Fixture {
 
     final test:ComponentEditorCompletionsTest;

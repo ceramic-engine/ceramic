@@ -3,39 +3,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Axis;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.carousel.Carousel;
-import gpui.component.carousel.CarouselContent;
-import gpui.component.carousel.CarouselItem;
-import gpui.component.carousel.CarouselNext;
-import gpui.component.carousel.CarouselPagination;
-import gpui.component.carousel.CarouselPaginationItem;
-import gpui.component.carousel.CarouselPrevious;
-import gpui.component.carousel.CarouselState;
-import gpui.component.carousel.CarouselState.CarouselEvent;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Axis;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.carousel.Carousel;
+import glaze.kit.carousel.CarouselContent;
+import glaze.kit.carousel.CarouselItem;
+import glaze.kit.carousel.CarouselNext;
+import glaze.kit.carousel.CarouselPagination;
+import glaze.kit.carousel.CarouselPaginationItem;
+import glaze.kit.carousel.CarouselPrevious;
+import glaze.kit.carousel.CarouselState;
+import glaze.kit.carousel.CarouselState.CarouselEvent;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 private enum SlideTypography {
     Large;
@@ -91,7 +91,7 @@ class CarouselStory extends Model implements Story {
 
         focusHandleValue = cx.focusHandle();
         controlledIndex = 1;
-        size = gpui.component.Size.Medium;
+        size = glaze.kit.Size.Medium;
         subscriptions = [subscription];
     }
 

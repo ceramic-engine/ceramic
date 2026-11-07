@@ -1,4 +1,4 @@
-package gpui.util;
+package glaze.util;
 
 /**
  * Float helpers that reproduce the semantics of Rust's `f32` methods

@@ -1,26 +1,26 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/button/button_icon.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.button;
+package glaze.kit.button;
 
-import gpui.App;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.spinner.Spinner;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.spinner.Spinner;
 
 /**
  * Button icon which can be an Icon, a Spinner or a ProgressCircle, used by
  * the `icon` method of Button.
  */
 enum ButtonIconVariant {
-    Icon(icon:gpui.component.Icon);
-    Spinner(spinner:gpui.component.spinner.Spinner);
-    Progress(progress:gpui.component.progress.ProgressCircle);
+    Icon(icon:glaze.kit.Icon);
+    Spinner(spinner:glaze.kit.spinner.Spinner);
+    Progress(progress:glaze.kit.progress.ProgressCircle);
 }
 
 /**
@@ -29,19 +29,19 @@ enum ButtonIconVariant {
  */
 abstract IntoButtonIcon(ButtonIcon) from ButtonIcon to ButtonIcon {
 
-    @:from static inline function fromIcon(icon:gpui.component.Icon):IntoButtonIcon {
+    @:from static inline function fromIcon(icon:glaze.kit.Icon):IntoButtonIcon {
         return new ButtonIcon(Icon(icon));
     }
 
-    @:from static inline function fromIconName(name:gpui.component.IconName):IntoButtonIcon {
-        return new ButtonIcon(Icon(new gpui.component.Icon(name)));
+    @:from static inline function fromIconName(name:glaze.kit.IconName):IntoButtonIcon {
+        return new ButtonIcon(Icon(new glaze.kit.Icon(name)));
     }
 
-    @:from static inline function fromSpinner(spinner:gpui.component.spinner.Spinner):IntoButtonIcon {
+    @:from static inline function fromSpinner(spinner:glaze.kit.spinner.Spinner):IntoButtonIcon {
         return new ButtonIcon(Spinner(spinner));
     }
 
-    @:from static inline function fromProgressCircle(progress:gpui.component.progress.ProgressCircle):IntoButtonIcon {
+    @:from static inline function fromProgressCircle(progress:glaze.kit.progress.ProgressCircle):IntoButtonIcon {
         return new ButtonIcon(Progress(progress));
     }
 
@@ -52,16 +52,16 @@ abstract IntoButtonIcon(ButtonIcon) from ButtonIcon to ButtonIcon {
  */
 class ButtonIcon implements RenderOnce implements Sizable {
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     final icon:ButtonIconVariant;
 
-    @:allow(gpui.component, tests)
-    var loadingIconValue:Null<gpui.component.Icon> = null;
+    @:allow(glaze.kit, tests)
+    var loadingIconValue:Null<glaze.kit.Icon> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var loadingValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var size:Size = Medium;
 
     /**
@@ -71,13 +71,13 @@ class ButtonIcon implements RenderOnce implements Sizable {
         this.icon = icon;
     }
 
-    @:allow(gpui.component, tests)
-    function loadingIcon(icon:Null<gpui.component.Icon>):ButtonIcon {
+    @:allow(glaze.kit, tests)
+    function loadingIcon(icon:Null<glaze.kit.Icon>):ButtonIcon {
         loadingIconValue = icon;
         return this;
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function loading(loading:Bool):ButtonIcon {
         loadingValue = loading;
         return this;
@@ -91,7 +91,7 @@ class ButtonIcon implements RenderOnce implements Sizable {
     /**
      * Returns true if the icon is a spinner.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function isSpinner(icon:ButtonIconVariant):Bool {
         return icon.match(Spinner(_));
     }
@@ -99,7 +99,7 @@ class ButtonIcon implements RenderOnce implements Sizable {
     /**
      * Returns true if the icon is a progress circle.
      */
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     static function isProgress(icon:ButtonIconVariant):Bool {
         return icon.match(Progress(_));
     }
@@ -117,7 +117,7 @@ class ButtonIcon implements RenderOnce implements Sizable {
             if (isSpinner(icon) || isProgress(icon)) {
                 return sized(icon, size);
             } else {
-                final spinner = new gpui.component.spinner.Spinner();
+                final spinner = new glaze.kit.spinner.Spinner();
                 if (loadingIconValue != null) spinner.icon(loadingIconValue);
                 return spinner.withSize(size);
             }

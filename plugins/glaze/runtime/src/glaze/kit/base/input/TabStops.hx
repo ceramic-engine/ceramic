@@ -1,16 +1,16 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/tab_stops.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Font;
-import gpui.LineLayout;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.ShapedGlyph;
-import gpui.ShapedLine;
-import gpui.ShapedRun;
-import gpui.WindowTextSystem;
+import glaze.Font;
+import glaze.LineLayout;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.ShapedGlyph;
+import glaze.ShapedLine;
+import glaze.ShapedRun;
+import glaze.WindowTextSystem;
 
 /**
  * Tab stops for shaped lines.
@@ -119,7 +119,7 @@ class TabStops {
 
     /** Rust `f32` arithmetic on Pixels. */
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }

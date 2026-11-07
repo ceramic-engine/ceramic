@@ -10,7 +10,7 @@ package shaders;
  * slash pattern or checkerboard), clipped by a content mask.
  *
  * Each quad is drawn as 4 vertices carrying the same per-instance data in
- * custom attributes (see `gpui.ceramic.SceneRenderer` for the layout).
+ * custom attributes (see `glaze.ceramic.SceneRenderer` for the layout).
  * All geometry attributes are in scene units (scaled pixels), so the signed
  * distance field and antialiasing work in device pixels like in GPUI.
  *
@@ -20,18 +20,18 @@ package shaders;
  * The Metal shader mixes sRGB colors directly (like CSS) and is the one
  * used by the GPUI reference renders on macOS.
  *
- * Compact variant of `GpuiQuad`, used only when the GPU limits are too low
- * for it (see `gpui.platform.SceneRenderable.useCompactShaders`): at most 8
+ * Compact variant of `GlazeQuad`, used only when the GPU limits are too low
+ * for it (see `glaze.platform.SceneRenderable.useCompactShaders`): at most 8
  * vertex attributes and 8 varying rows (GLSL ES 1.0 appendix A packing),
  * the minimum some WebGL configurations give (Firefox with fingerprinting
- * resistance or `webgl.min_capability_mode`). Same math as `GpuiQuad`:
+ * resistance or `webgl.min_capability_mode`). Same math as `GlazeQuad`:
  * the unit vertex and flags travel in `vertexTCoord`, the first gradient
  * stop replaces the solid color, and the second stop and the stop
  * percentages are uniforms (one gradient value per draw call).
  */
-class GpuiQuadCompact extends Shader<GpuiQuadCompact_Vert, GpuiQuadCompact_Frag> {}
+class GlazeQuadCompact extends Shader<GlazeQuadCompact_Vert, GlazeQuadCompact_Frag> {}
 
-class GpuiQuadCompact_Vert extends Vert {
+class GlazeQuadCompact_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -158,7 +158,7 @@ class GpuiQuadCompact_Vert extends Vert {
  * - the cosine of the slash pattern: the constant ANGLE's compiler folds,
  *   one ulp from the one FXC folds.
  */
-class GpuiQuadCompact_Frag extends Frag {
+class GlazeQuadCompact_Frag extends Frag {
 
     /**
      * Always 1 (set by `SceneRenderable`). The dash code multiplies some
@@ -170,7 +170,7 @@ class GpuiQuadCompact_Frag extends Frag {
     @param var dashOne:Float;
     /**
      * First and second gradient stop percentages of the linear gradient
-     * quad of the current draw call (see `GpuiQuadCompact_Vert.gradientColor1`)
+     * quad of the current draw call (see `GlazeQuadCompact_Vert.gradientColor1`)
      */
     @param var gradientStops:Vec2;
 
@@ -360,14 +360,14 @@ class GpuiQuadCompact_Frag extends Frag {
 
             if (colorSpace < 0.5) {
                 #if shade_unity
-                backgroundColor = GpuiQuadCompactMad.mad(vec4(t), backgroundColor1, GpuiQuadCompactMad.mad(vec4(-t), backgroundColor0, backgroundColor0));
+                backgroundColor = GlazeQuadCompactMad.mad(vec4(t), backgroundColor1, GlazeQuadCompactMad.mad(vec4(-t), backgroundColor0, backgroundColor0));
                 #else
                 backgroundColor = mix(backgroundColor0, backgroundColor1, t);
                 #end
             }
             else {
                 #if shade_unity
-                backgroundColor = oklabToSrgb(GpuiQuadCompactMad.mad(vec4(t), backgroundColor1, GpuiQuadCompactMad.mad(vec4(-t), backgroundColor0, backgroundColor0)));
+                backgroundColor = oklabToSrgb(GlazeQuadCompactMad.mad(vec4(t), backgroundColor1, GlazeQuadCompactMad.mad(vec4(-t), backgroundColor0, backgroundColor0)));
                 #else
                 backgroundColor = oklabToSrgb(mix(backgroundColor0, backgroundColor1, t));
                 #end
@@ -672,7 +672,7 @@ class GpuiQuadCompact_Frag extends Frag {
             var blendedBorder:Vec4 = over(backgroundColor, borderColorValue);
             #if shade_unity
             var borderMix:Float = clamp(antialiasThreshold - innerSdf, 0.0, 1.0);
-            color = GpuiQuadCompactMad.mad(vec4(borderMix), blendedBorder, GpuiQuadCompactMad.mad(vec4(-borderMix), backgroundColor, backgroundColor));
+            color = GlazeQuadCompactMad.mad(vec4(borderMix), blendedBorder, GlazeQuadCompactMad.mad(vec4(-borderMix), backgroundColor, backgroundColor));
             #else
             color = mix(backgroundColor, blendedBorder, clamp(antialiasThreshold - innerSdf, 0.0, 1.0));
             #end
@@ -707,9 +707,9 @@ class GpuiQuadCompact_Frag extends Frag {
  * HLSL `mad()`, written `fma()` in the MSL of Unity's Metal shaders: the
  * multiply-adds that Metal's fast math contracts in the GLSL of the web
  * build (ANGLE), spelled out for Unity, whose shaders are compiled with
- * `preserveInvariance` (see `GpuiQuadCompact_Frag`).
+ * `preserveInvariance` (see `GlazeQuadCompact_Frag`).
  */
-extern class GpuiQuadCompactMad {
+extern class GlazeQuadCompactMad {
     static function mad(a:Vec4, b:Vec4, c:Vec4):Vec4;
 }
 #end

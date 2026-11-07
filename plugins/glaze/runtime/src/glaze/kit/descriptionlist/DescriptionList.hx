@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/description_list.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.descriptionlist;
+package glaze.kit.descriptionlist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.DefiniteLength;
-import gpui.IntoDefiniteLength;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.DefiniteLength;
+import glaze.IntoDefiniteLength;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The label or value of a description item: a string, rich `Text` or any
@@ -41,8 +41,8 @@ abstract DescriptionText(AnyElement) to AnyElement {
         return text != null ? new DescriptionText(div().child(text).intoAnyElement()) : null;
     }
 
-    @:from static function fromText(text:gpui.component.text.Text):DescriptionText {
-        return text != null ? new DescriptionText(gpui.component.text.Text.TextTools.intoAnyElement(text)) : null;
+    @:from static function fromText(text:glaze.kit.text.Text):DescriptionText {
+        return text != null ? new DescriptionText(glaze.kit.text.Text.TextTools.intoAnyElement(text)) : null;
     }
 
     @:from static inline function fromIntoElement(element:IntoElement):DescriptionText {
@@ -50,7 +50,7 @@ abstract DescriptionText(AnyElement) to AnyElement {
     }
 
     /** `text`, or the empty text (Rust `"".into()`) when it is null. */
-    @:allow(gpui.component.descriptionlist)
+    @:allow(glaze.kit.descriptionlist)
     static function orEmpty(text:Null<DescriptionText>):DescriptionText {
         return text != null ? text : fromString('');
     }
@@ -103,7 +103,7 @@ class DescriptionItem {
     }
 
     /** The span of an item, null for a separator. */
-    @:allow(gpui.component.descriptionlist)
+    @:allow(glaze.kit.descriptionlist)
     function itemSpan():Null<Int> {
         return isSeparator ? null : spanValue;
     }
@@ -123,7 +123,7 @@ class DescriptionList implements RenderOnce implements Sizable {
 
     var layoutValue:Axis = Horizontal;
 
-    var labelWidthValue:DefiniteLength = DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(120.));
+    var labelWidthValue:DefiniteLength = DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(120.));
 
     var borderedValue:Bool = true;
 
@@ -205,7 +205,7 @@ class DescriptionList implements RenderOnce implements Sizable {
         }
         // Remove last empty rows if it exists
         while (rows.length > 0 && rows[rows.length - 1].length == 0) {
-            gpui.util.Stacks.drop(rows);
+            glaze.util.Stacks.drop(rows);
         }
         return rows;
     }
@@ -240,13 +240,13 @@ class DescriptionList implements RenderOnce implements Sizable {
         final rows = groupItemRows(items, columns);
         final rowsLen = rows.length;
 
-        final list = gpui.base.Prelude.vFlex().gap(px(gap)).overflowHidden();
+        final list = glaze.kit.base.Prelude.vFlex().gap(px(gap)).overflowHidden();
         if (bordered) {
             list.rounded(theme.radius).border1().borderColor(theme.border);
         }
         for (ix in 0...rows.length) {
             final isLast = ix == rowsLen - 1;
-            final row = gpui.base.Prelude.hFlex();
+            final row = glaze.kit.base.Prelude.hFlex();
             if (bordered && !isLast) {
                 row.borderB1().borderColor(theme.border);
             }
@@ -255,7 +255,7 @@ class DescriptionList implements RenderOnce implements Sizable {
                 final item = rowItems[itemIx];
                 final isFirstCol = itemIx == 0;
                 if (!item.isSeparator) {
-                    final el = horizontal ? div().flex().flexRow().hFull() : gpui.base.Prelude.vFlex();
+                    final el = horizontal ? div().flex().flexRow().hFull() : glaze.kit.base.Prelude.vFlex();
                     final label = div();
                     if (horizontal) label.hFull();
                     label.textColor(theme.descriptionListLabelForeground)
@@ -278,7 +278,7 @@ class DescriptionList implements RenderOnce implements Sizable {
                     label.child((item.label : AnyElement));
                     row.child(
                         el.flex1()
-                            .flexBasis(relative(gpui.SpringMath.f32(gpui.SpringMath.f32(item.spanValue) / gpui.SpringMath.f32(columns))))
+                            .flexBasis(relative(glaze.SpringMath.f32(glaze.SpringMath.f32(item.spanValue) / glaze.SpringMath.f32(columns))))
                             .overflowXHidden()
                             .child(label)
                             .child(div().flex1().px(paddingX).py(paddingY).overflowHidden().child((item.valueText : AnyElement)))

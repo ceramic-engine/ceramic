@@ -1,31 +1,31 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/touch_selection/edit_menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.touchselection;
+package glaze.kit.touchselection;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.Popup;
-import gpui.base.Positioner;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.button.Button.ButtonCustomVariant;
-import gpui.component.separator.Separator;
-import gpui.component.theme.Theme;
-import gpui.component.touchselection.SelectionHandles.SurfaceHandler;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.Popup;
+import glaze.kit.base.Positioner;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.button.Button.ButtonCustomVariant;
+import glaze.kit.separator.Separator;
+import glaze.kit.theme.Theme;
+import glaze.kit.touchselection.SelectionHandles.SurfaceHandler;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * One command in the edit menu.
@@ -110,7 +110,7 @@ class EditMenu implements RenderOnce {
                 .custom(itemStyle)
                 // This is a finger's menu wherever it shows: body text in a
                 // 32px row.
-                .withSize(gpui.component.Size.Large)
+                .withSize(glaze.kit.Size.Large)
                 .h(px(ROW_HEIGHT))
                 .px3()
                 .rounded(radius)

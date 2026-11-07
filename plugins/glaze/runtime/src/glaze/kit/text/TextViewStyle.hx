@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/text/style.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.text;
+package glaze.kit.text;
 
-import gpui.HighlightStyle;
-import gpui.Pixels;
-import gpui.Rems;
-import gpui.StyleRefinement;
+import glaze.HighlightStyle;
+import glaze.Pixels;
+import glaze.Rems;
+import glaze.StyleRefinement;
 
 /**
  * TextViewStyle used to customize the style for the component `TextView`.
@@ -39,9 +39,9 @@ class TextViewStyle {
     /**
      * Highlight theme for code blocks. Default: `HighlightTheme.defaultLight()`
      * (only used when the highlighter is on, see
-     * `gpui.component.highlighter.Highlighter`).
+     * `glaze.kit.highlighter.Highlighter`).
      */
-    public var highlightTheme:gpui.component.highlighter.HighlightTheme = gpui.component.highlighter.HighlightTheme.defaultLight();
+    public var highlightTheme:glaze.kit.highlighter.HighlightTheme = glaze.kit.highlighter.HighlightTheme.defaultLight();
 
     /**
      * The style refinement for code blocks.

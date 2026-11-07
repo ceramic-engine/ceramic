@@ -3,7 +3,7 @@
 // as used by gpui-kit 0.8.1 (crates/component/src/lib.rs: `i18n!("locales", fallback = "en")`, locale, set_locale).
 // Original code: rust-i18n Copyright (c) 2021 Longbridge, licensed under MIT; gpui-kit Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
 /**
  * Translations of gpui-kit's components (`t!()` in Rust).

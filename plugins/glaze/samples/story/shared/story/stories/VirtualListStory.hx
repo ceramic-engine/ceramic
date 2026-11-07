@@ -4,33 +4,33 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Div;
-import gpui.ScrollStrategy;
-import gpui.base.Scrollbar.ScrollbarAxis;
-import gpui.component.VirtualList;
-import gpui.component.VirtualList.VirtualListScrollHandle;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Div;
+import glaze.ScrollStrategy;
+import glaze.kit.base.Scrollbar.ScrollbarAxis;
+import glaze.kit.VirtualList;
+import glaze.kit.VirtualList.VirtualListScrollHandle;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.StyledExt;
+using glaze.kit.scroll.Scrollable;
 
 /** Rust `VirtualListAction::Dataset(usize)`. */
 @:action(namespace = virtual_list_story, name = Dataset, noJson) private class VirtualListDataset implements Action {
@@ -52,7 +52,7 @@ using gpui.component.scroll.Scrollable;
 
 class VirtualListStory extends Model implements Story {
 
-    static final ITEM_SIZE = new gpui.Size(100., 30.);
+    static final ITEM_SIZE = new glaze.Size(100., 30.);
 
     static final DATASETS = ['Standard', 'Wide', 'Stress', 'Short'];
 
@@ -64,7 +64,7 @@ class VirtualListStory extends Model implements Story {
         return 'Add vertical or horizontal, or both scrollbars to a container, and use `virtual_list` to render a large number of items.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -78,7 +78,7 @@ class VirtualListStory extends Model implements Story {
 
     @observe var items:Array<String>;
 
-    @observe var itemSizes:Array<gpui.Size>;
+    @observe var itemSizes:Array<glaze.Size>;
 
     @observe var columnsCount:Int = 100;
 

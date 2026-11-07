@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tag.rs (TagVariant)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.tag;
+package glaze.kit.tag;
 
-import gpui.App;
-import gpui.Hsla;
-import gpui.component.theme.ColorName;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Hsla;
+import glaze.kit.theme.ColorName;
+import glaze.kit.theme.Theme;
 
 /**
  * The color scheme of a `Tag` (default `Secondary`).
  */
-@:using(gpui.component.tag.TagVariant.TagVariantTools)
+@:using(glaze.kit.tag.TagVariant.TagVariantTools)
 enum TagVariant {
     Primary;
     Secondary;

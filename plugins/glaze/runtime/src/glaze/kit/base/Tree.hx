@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/tree.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Range;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.ScrollStrategy;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.UniformListScrollHandle;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Actions.Confirm;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.Actions.SelectUp;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Range;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.ScrollStrategy;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.UniformListScrollHandle;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.Actions.SelectUp;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 /** The shared expansion and disabled state of a tree item (and its clones). */
 class TreeItemState {
@@ -61,7 +61,7 @@ class TreeItem {
 
     public var children:Array<TreeItem>;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var state:TreeItemState;
 
     public function new(id:String, label:String) {
@@ -124,7 +124,7 @@ class TreeItem {
      * Like `ancestors`, but borrows the ancestors instead of deep-cloning
      * each one's subtree.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function ancestorRefs(targetId:String):Null<Array<TreeItem>> {
         if (id == targetId) {
             return [];
@@ -221,7 +221,7 @@ class TreeEntryState {
 typedef TreeRenderItem = (Int, TreeEntry, TreeEntryState, Window, App) -> AnyElement;
 
 /** Behavior and interaction state for a virtualized tree. */
-@:allow(gpui.base, gpui.component, tests)
+@:allow(glaze.kit.base, glaze.kit, tests)
 class TreeState extends Model implements Render {
 
     static inline final CONTEXT:String = "Tree";

@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (MotionStatus)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
 /**
  * Where a keyed motion is in its course.

@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/list_settings.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
 /**
  * Global settings for list presentation behavior.

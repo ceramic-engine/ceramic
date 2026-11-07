@@ -2,15 +2,15 @@ package tests;
 
 #if plugin_http
 
-import gpui.App;
-import gpui.CeramicDispatcher;
-import gpui.CeramicHttpClient;
-import gpui.HttpClient;
-import gpui.ImageAssetLoader;
-import gpui.ImageAssets;
-import gpui.ImageCacheError;
-import gpui.ImageLoadResult;
-import gpui.Resource;
+import glaze.App;
+import glaze.CeramicDispatcher;
+import glaze.CeramicHttpClient;
+import glaze.HttpClient;
+import glaze.ImageAssetLoader;
+import glaze.ImageAssets;
+import glaze.ImageCacheError;
+import glaze.ImageLoadResult;
+import glaze.Resource;
 import haxe.io.Bytes;
 import testing.LocalHttpServer;
 import testing.TestCase;
@@ -107,7 +107,7 @@ class CeramicHttpClientTest extends TestCase {
     function asyncTestDefaultClientIsCeramic(done:() -> Void) {
         assertTrue(Std.isOfType(app.httpClient(), CeramicHttpClient));
         // A test dispatcher keeps GPUI's NullHttpClient
-        final testApp = new App(new gpui.TestDispatcher());
+        final testApp = new App(new glaze.TestDispatcher());
         assertTrue(Std.isOfType(testApp.httpClient(), NullHttpClient));
         done();
     }
@@ -190,12 +190,12 @@ class CeramicHttpClientTest extends TestCase {
     }
 
     /**
-     * Opt-in (`GPUI_TEST_NETWORK=1`), never part of the gate: loads the
+     * Opt-in (`GLAZE_TEST_NETWORK=1`), never part of the gate: loads the
      * remote images of the story (README badges and logo, image story) and
      * prints what each gives. Nothing is asserted.
      */
     function asyncTestRemoteStoryImages(done:() -> Void) {
-        if (Sys.getEnv('GPUI_TEST_NETWORK') != '1') {
+        if (Sys.getEnv('GLAZE_TEST_NETWORK') != '1') {
             done();
             return;
         }

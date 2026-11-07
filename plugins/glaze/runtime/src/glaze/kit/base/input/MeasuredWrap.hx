@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/display_map/text_wrapper/wrap_width.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.LineWrapper.Boundary;
+import glaze.LineWrapper.Boundary;
 
 /**
  * The exact upstream break sequence plus the range over which its measured decisions hold.

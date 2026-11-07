@@ -3,23 +3,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Axis;
-import gpui.GestureTuning;
-import gpui.OngoingScroll;
-import gpui.Point;
-import gpui.ScrollEvent;
-import gpui.ScrollPhysics;
-import gpui.ScrollPhysics.FrictionSplineModel;
-import gpui.ScrollSource;
-import gpui.TouchEvent;
-import gpui.TouchGestureRecognizer;
-import gpui.TouchGestureRecognizer.RecognizedTouchGesture;
-import gpui.TouchGestureRecognizer.VelocityTracker;
-import gpui.TouchId;
-import gpui.TouchPhase;
+import glaze.Axis;
+import glaze.GestureTuning;
+import glaze.OngoingScroll;
+import glaze.Point;
+import glaze.ScrollEvent;
+import glaze.ScrollPhysics;
+import glaze.ScrollPhysics.FrictionSplineModel;
+import glaze.ScrollSource;
+import glaze.TouchEvent;
+import glaze.TouchGestureRecognizer;
+import glaze.TouchGestureRecognizer.RecognizedTouchGesture;
+import glaze.TouchGestureRecognizer.VelocityTracker;
+import glaze.TouchId;
+import glaze.TouchPhase;
 import testing.TestCase;
 
-using gpui.ScrollPhysics.ScrollPhysicsTools;
+using glaze.ScrollPhysics.ScrollPhysicsTools;
 
 /**
  * Tests of `gestures.rs`: the dominant axis lock of `OngoingScroll`, the
@@ -29,8 +29,8 @@ using gpui.ScrollPhysics.ScrollPhysicsTools;
  * Times are seconds from 0 (Rust `Instant::now()` plus durations), passed to
  * the `*_at` variants as in the originals.
  */
-@:access(gpui.OngoingScroll)
-@:access(gpui.TouchGestureRecognizer)
+@:access(glaze.OngoingScroll)
+@:access(glaze.TouchGestureRecognizer)
 class TouchGestureTest extends TestCase {
 
     static inline function ms(value:Float):Float {

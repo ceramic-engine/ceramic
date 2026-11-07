@@ -3,33 +3,33 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.command.Command;
-import gpui.component.command.CommandItem;
-import gpui.component.command.CommandState;
-import gpui.component.kbd.Kbd;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.command.Command;
+import glaze.kit.command.CommandItem;
+import glaze.kit.command.CommandState;
+import glaze.kit.kbd.Kbd;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.component.WindowExt;
+using glaze.kit.WindowExt;
 
 @:action(namespace = command_story) class OpenProfile implements Action {}
 @:action(namespace = command_story) class OpenBilling implements Action {}

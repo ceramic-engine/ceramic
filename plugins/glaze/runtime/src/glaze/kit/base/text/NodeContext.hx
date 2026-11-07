@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ImageSource;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.base.input.StyledRange;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ImageSource;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.base.input.StyledRange;
 
 /**
  * A context for rendering nodes, contains link references.
@@ -82,12 +82,12 @@ class NodeContext {
         return cx;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function imageSourceFor(image:ImageNode):ImageSource {
         return imageSource != null ? imageSource(image.url) : image.source();
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function addRef(identifier:String, link:LinkMark):Void {
         linkRefs.set(identifier, link);
     }
@@ -96,7 +96,7 @@ class NodeContext {
     static final NO_BACKGROUNDS:Array<RangedColor> = [];
 
     /** The fade ranges of the text leaf `key`, in its rendered byte space. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function streamFades(key:Null<TextLeafKey>):Array<RangedFade> {
         if (streamFade != null && key != null) {
             final fades = streamFade.fades(key);
@@ -109,7 +109,7 @@ class NodeContext {
      * The range highlight backgrounds of the text leaf `key`, in its
      * rendered byte space.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function rangeBackgrounds(key:Null<TextLeafKey>):Array<RangedColor> {
         if (rangeHighlights != null && key != null) {
             return rangeHighlights.backgrounds(key);
@@ -121,7 +121,7 @@ class NodeContext {
      * The pending reveal, when it starts in the text leaf `key` between
      * `start` and `end`, rebased to `start`.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function revealAt(key:Null<TextLeafKey>, start:Int, end:Int):Null<RevealAt> {
         return reveal != null ? reveal.at(key, start, end) : null;
     }

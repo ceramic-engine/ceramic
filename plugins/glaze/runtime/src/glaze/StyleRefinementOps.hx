@@ -3,7 +3,7 @@
 // gpui-pre 0.3.10's src/style.rs) and gpui-pre-refineable 0.3.10 (the trait)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * `Refineable::is_superset_of` and `Refineable::subtract` of
@@ -15,7 +15,7 @@ package gpui;
  * - `a.subtract(b)`: `a` without the fields equal in `b` (a field set in `a`
  *   and unset in `b` stays; nested refinements recursively).
  *
- * Use with `using gpui.StyleRefinementOps;`. The port's `debug` and
+ * Use with `using glaze.StyleRefinementOps;`. The port's `debug` and
  * `debugBelow` fields only exist in Rust debug builds and are ignored.
  */
 class StyleRefinementOps {

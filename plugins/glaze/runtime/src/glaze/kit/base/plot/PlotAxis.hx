@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/axis.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.App;
-import gpui.Background;
-import gpui.Bounds;
-import gpui.FontWeight;
-import gpui.Hsla;
-import gpui.IntoBackground;
-import gpui.PathBuilder;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.SpringMath;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.plot.PlotLabel.Text;
+import glaze.App;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.FontWeight;
+import glaze.Hsla;
+import glaze.IntoBackground;
+import glaze.PathBuilder;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.SpringMath;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.plot.PlotLabel.Text;
 
 /**
  * Which side of an axis line the tick labels render on.
@@ -141,7 +141,7 @@ class PlotAxis {
 
     /** Set the tick labels of the x-axis. */
     public function xLabel(labels:Iterable<AxisText>):PlotAxis {
-        xLabels = gpui.util.Iterables.toArray(labels);
+        xLabels = glaze.util.Iterables.toArray(labels);
         return this;
     }
 
@@ -168,7 +168,7 @@ class PlotAxis {
 
     /** Set the tick labels of the y-axis. */
     public function yLabel(labels:Iterable<AxisText>):PlotAxis {
-        yLabels = gpui.util.Iterables.toArray(labels);
+        yLabels = glaze.util.Iterables.toArray(labels);
         return this;
     }
 

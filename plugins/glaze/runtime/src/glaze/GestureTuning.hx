@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/gestures.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Feel constants consumed by gesture recognizers. Provided on a best-effort
@@ -44,7 +44,7 @@ class GestureTuning {
         this.multiTapInterval = multiTapInterval;
         this.multiTapSlop = multiTapSlop;
         this.longPressDuration = longPressDuration;
-        this.scrollPhysics = scrollPhysics != null ? scrollPhysics : gpui.ScrollPhysics.ScrollPhysicsTools.ios();
+        this.scrollPhysics = scrollPhysics != null ? scrollPhysics : glaze.ScrollPhysics.ScrollPhysicsTools.ios();
         this.minFlingVelocity = minFlingVelocity;
     }
 

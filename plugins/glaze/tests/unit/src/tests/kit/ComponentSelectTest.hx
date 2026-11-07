@@ -3,25 +3,25 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.component.Component;
-import gpui.component.I18n;
-import gpui.component.searchablelist.SearchableListItem;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.component.select.Select;
-import gpui.component.select.SelectState;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Component;
+import glaze.kit.I18n;
+import glaze.kit.searchablelist.SearchableListItem;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.select.Select;
+import glaze.kit.select.SelectState;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The tests of gpui-component's `Select` and `SelectState`.
@@ -69,7 +69,7 @@ class ComponentSelectTest extends TestCase {
         dispatcher.runUntilParked();
     }
 
-    static function newState<I>(cx:App, delegate:gpui.component.searchablelist.SearchableListDelegate<I>, selected:Null<IndexPath>, window:Window, searchable:Bool = false):Entity<SelectState<I>> {
+    static function newState<I>(cx:App, delegate:glaze.kit.searchablelist.SearchableListDelegate<I>, selected:Null<IndexPath>, window:Window, searchable:Bool = false):Entity<SelectState<I>> {
         return cx.newEntity((c:Context<SelectState<I>>) -> new SelectState(delegate, selected, window, c).searchable(searchable));
     }
 
@@ -259,7 +259,7 @@ class ComponentSelectTest extends TestCase {
         app.update(cx -> {
             window = Window.open(cx, {width: width, height: height, scaleFactor: 2, autoDraw: false, bindInput: false}, (window, cx) -> {
                 view = cx.newEntity((viewCx:Context<Form>) -> build(window, viewCx));
-                return cx.newEntity((rootCx:Context<gpui.base.Root>) -> new gpui.base.Root(view, window, rootCx));
+                return cx.newEntity((rootCx:Context<glaze.kit.base.Root>) -> new glaze.kit.base.Root(view, window, rootCx));
             });
         });
         dispatcher.runUntilParked();
@@ -275,10 +275,10 @@ class ComponentSelectTest extends TestCase {
         dispatcher.runUntilParked();
     }
 
-    function clickAt(position:gpui.Point):Void {
-        app.update(cx -> window.dispatchEvent(new gpui.MouseMoveEvent(position, null, gpui.Modifiers.none()), cx));
-        app.update(cx -> window.dispatchEvent(new gpui.MouseDownEvent(Left, position, gpui.Modifiers.none(), 1, false), cx));
-        app.update(cx -> window.dispatchEvent(new gpui.MouseUpEvent(Left, position, gpui.Modifiers.none(), 1), cx));
+    function clickAt(position:glaze.Point):Void {
+        app.update(cx -> window.dispatchEvent(new glaze.MouseMoveEvent(position, null, glaze.Modifiers.none()), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.MouseDownEvent(Left, position, glaze.Modifiers.none(), 1, false), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.MouseUpEvent(Left, position, glaze.Modifiers.none(), 1), cx));
         dispatcher.runUntilParked();
         renderFrame();
     }
@@ -290,13 +290,13 @@ class ComponentSelectTest extends TestCase {
      */
     function clickTrigger<I>(state:Entity<SelectState<I>>):Void {
         final bounds = state.read(app).state.bounds;
-        clickAt(new gpui.Point(bounds.origin.x + Math.min(bounds.size.width, 240.) / 2, bounds.origin.y + bounds.size.height / 2));
+        clickAt(new glaze.Point(bounds.origin.x + Math.min(bounds.size.width, 240.) / 2, bounds.origin.y + bounds.size.height / 2));
     }
 
     /** `window.press(key)`. */
     function press(key:String):Void {
-        app.update(cx -> window.dispatchKeystroke(gpui.Keystroke.parse(key), cx));
-        app.update(cx -> window.dispatchEvent(new gpui.KeyUpEvent(gpui.Keystroke.parse(key)), cx));
+        app.update(cx -> window.dispatchKeystroke(glaze.Keystroke.parse(key), cx));
+        app.update(cx -> window.dispatchEvent(new glaze.KeyUpEvent(glaze.Keystroke.parse(key)), cx));
         dispatcher.runUntilParked();
         renderFrame();
     }
@@ -349,7 +349,7 @@ class ComponentSelectTest extends TestCase {
             dispatcher.runUntilParked();
             final events:Array<String> = [];
             final subscriptions = [
-                app.subscribe(language, gpui.DismissEvent, (_, _, _) -> events.push("dismiss")),
+                app.subscribe(language, glaze.DismissEvent, (_, _, _) -> events.push("dismiss")),
                 app.subscribe(language, SelectEvent, (_, _, _) -> events.push("confirm")),
             ];
 
@@ -453,7 +453,7 @@ private class Form extends Model implements Render {
 
     final titlePrefix:Null<String>;
 
-    var agreeBounds:Null<gpui.Bounds> = null;
+    var agreeBounds:Null<glaze.Bounds> = null;
 
     public function new(language:Entity<SelectState<String>>, titlePrefix:Null<String>) {
         super();
@@ -461,9 +461,9 @@ private class Form extends Model implements Render {
         this.titlePrefix = titlePrefix;
     }
 
-    public function agreeCenter():gpui.Point {
+    public function agreeCenter():glaze.Point {
         final b = agreeBounds;
-        return new gpui.Point(b.origin.x + b.size.width / 2, b.origin.y + b.size.height / 2);
+        return new glaze.Point(b.origin.x + b.size.width / 2, b.origin.y + b.size.height / 2);
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
@@ -476,7 +476,7 @@ private class Form extends Model implements Render {
             return div().sizeFull().child(select);
         }
         final agree = div().child(
-            new gpui.component.checkbox.Checkbox("agree")
+            new glaze.kit.checkbox.Checkbox("agree")
                 .label("Agree")
                 .checked(agreed)
                 .onChange(cx.listener((this_:Form, checked:Bool, _, cx) -> {
@@ -484,7 +484,7 @@ private class Form extends Model implements Render {
                     cx.notify();
                 }))
         );
-        gpui.base.ElementExt.onPrepaint(agree, (bounds, _, _) -> self.agreeBounds = bounds);
+        glaze.kit.base.ElementExt.onPrepaint(agree, (bounds, _, _) -> self.agreeBounds = bounds);
         return div()
             .sizeFull()
             .flex()
@@ -496,9 +496,9 @@ private class Form extends Model implements Render {
 
 }
 
-typedef VecDelegate<T> = gpui.component.searchablelist.SearchableVec.VecDelegate<T>;
+typedef VecDelegate<T> = glaze.kit.searchablelist.SearchableVec.VecDelegate<T>;
 
-private class RemoteChoice extends gpui.component.searchablelist.SearchableListItem.SearchableListItemBase {
+private class RemoteChoice extends glaze.kit.searchablelist.SearchableListItem.SearchableListItemBase {
 
     final valueValue:String;
 

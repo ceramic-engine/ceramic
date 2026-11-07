@@ -1,47 +1,47 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/notification.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.notification;
+package glaze.kit.notification;
 
-import gpui.Anchor;
-import gpui.Animation;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Edges;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Render;
-import gpui.SpringMath.f32;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.SystemNotification;
-import gpui.SystemNotificationResponse;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.Toast;
-import gpui.base.animation.Easings;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.TitleBar;
-import gpui.component.button.Button;
-import gpui.component.theme.Theme;
+import glaze.Anchor;
+import glaze.Animation;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Edges;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Render;
+import glaze.SpringMath.f32;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.SystemNotification;
+import glaze.SystemNotificationResponse;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.Toast;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.TitleBar;
+import glaze.kit.button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * The kind of a notification: its default icon and color.
@@ -52,7 +52,7 @@ enum abstract NotificationType(Int) {
     var Warning = 2;
     var Error = 3;
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function icon(cx:App):Icon {
         final theme = Theme.global(cx);
         return switch (cast this : NotificationType) {
@@ -157,7 +157,7 @@ private class DefaultIdType {}
  * Rust builds the struct and moves it into an entity on push: here the
  * object is a `Model` from the start, attached to the app on push.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class Notification extends Model implements Render implements Styled {
 
     static var nextDefaultId:Int = 0;
@@ -417,7 +417,7 @@ class Notification extends Model implements Render implements Styled {
             .gap3()
             .refineStyle(notificationStyle);
         if (icon != null) {
-            toast.child(div().absolute().top(gpui.Prelude.px(18.)).left4().child(icon));
+            toast.child(div().absolute().top(glaze.Prelude.px(18.)).left4().child(icon));
         }
         final column = vFlex()
             .flex1()
@@ -479,7 +479,7 @@ class Notification extends Model implements Render implements Styled {
                         case BottomLeft | BottomRight | BottomCenter: f32(delta * offset);
                         case _: 0.;
                     };
-                    return that.top(gpui.Prelude.px(yOffset));
+                    return that.top(glaze.Prelude.px(yOffset));
                 }
                 else {
                     final yOffset:Float = switch placement {
@@ -493,7 +493,7 @@ class Notification extends Model implements Render implements Styled {
                     // does not hide its own shadow and it shows through as a
                     // dark slab. Ramping the ink by the cube of the fade
                     // keeps it out of sight until the card can cover it.
-                    return element.top(gpui.Prelude.px(f32(0. + yOffset)))
+                    return element.top(glaze.Prelude.px(f32(0. + yOffset)))
                         .opacity(opacity)
                         .shadow(ThemeStyled.toastShadow(f32(f32(opacity * opacity) * opacity)));
                 }
@@ -567,7 +567,7 @@ private class AnchorStack {
 /**
  * A list of notifications.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class NotificationList extends Model implements Render {
 
     static inline final NOTIFICATION_TRANSITION_DURATION:Float = 0.4;
@@ -908,17 +908,17 @@ class NotificationList extends Model implements Render {
                 .focusHandle(stack.focusHandle)
                 .vFlex()
                 .w(width)
-                .maxH(gpui.Prelude.px(size.height))
+                .maxH(glaze.Prelude.px(size.height))
                 .absolute();
             switch anchor {
-                case TopLeft: element.top(gpui.Prelude.px(margins.top)).left(gpui.Prelude.px(margins.left));
-                case TopRight: element.top(gpui.Prelude.px(margins.top)).right(gpui.Prelude.px(margins.right));
-                case TopCenter: element.top(gpui.Prelude.px(margins.top)).left(gpui.Prelude.relative(0.5)).ml(gpui.Prelude.px(-(width:Float) / 2.));
-                case BottomLeft: element.bottom(gpui.Prelude.px(margins.bottom)).left(gpui.Prelude.px(margins.left));
-                case BottomRight: element.bottom(gpui.Prelude.px(margins.bottom)).right(gpui.Prelude.px(margins.right));
-                case BottomCenter: element.bottom(gpui.Prelude.px(margins.bottom)).left(gpui.Prelude.relative(0.5)).ml(gpui.Prelude.px(-(width:Float) / 2.));
-                case LeftCenter: element.left(gpui.Prelude.px(margins.left)).top0().bottom0().myAuto();
-                case RightCenter: element.right(gpui.Prelude.px(margins.right)).top0().bottom0().myAuto();
+                case TopLeft: element.top(glaze.Prelude.px(margins.top)).left(glaze.Prelude.px(margins.left));
+                case TopRight: element.top(glaze.Prelude.px(margins.top)).right(glaze.Prelude.px(margins.right));
+                case TopCenter: element.top(glaze.Prelude.px(margins.top)).left(glaze.Prelude.relative(0.5)).ml(glaze.Prelude.px(-(width:Float) / 2.));
+                case BottomLeft: element.bottom(glaze.Prelude.px(margins.bottom)).left(glaze.Prelude.px(margins.left));
+                case BottomRight: element.bottom(glaze.Prelude.px(margins.bottom)).right(glaze.Prelude.px(margins.right));
+                case BottomCenter: element.bottom(glaze.Prelude.px(margins.bottom)).left(glaze.Prelude.relative(0.5)).ml(glaze.Prelude.px(-(width:Float) / 2.));
+                case LeftCenter: element.left(glaze.Prelude.px(margins.left)).top0().bottom0().myAuto();
+                case RightCenter: element.right(glaze.Prelude.px(margins.right)).top0().bottom0().myAuto();
             }
             rendered.push(element);
         }
@@ -956,7 +956,7 @@ private class SystemNotificationEntry {
  * dispatch the user's response, ordered oldest-first so overflow prunes the
  * stalest entries (Rust `SystemNotificationRegistry`).
  */
-@:allow(gpui.component.notification)
+@:allow(glaze.kit.notification)
 class SystemNotificationRegistry {
 
     static inline final MAX_SYSTEM_NOTIFICATION_ENTRIES = 100;
@@ -1072,7 +1072,7 @@ class SystemNotificationRegistry {
 
     /** Rust `ClickEvent::default()`: a keyboard click (Enter) with empty bounds. */
     static function defaultClickEvent():ClickEvent {
-        return ClickEvent.Keyboard(new gpui.ClickEvent.KeyboardClickEvent(gpui.KeyboardButton.Enter, new gpui.Bounds()));
+        return ClickEvent.Keyboard(new glaze.ClickEvent.KeyboardClickEvent(glaze.KeyboardButton.Enter, new glaze.Bounds()));
     }
 
 }

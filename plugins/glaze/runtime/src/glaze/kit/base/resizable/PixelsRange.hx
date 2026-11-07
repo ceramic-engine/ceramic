@@ -1,8 +1,8 @@
 // New code for the Haxe port of gpui-kit: Rust's `std::ops::Range<Pixels>`, as used by
 // crates/base/src/resizable (Longbridge, Apache-2.0). See NOTICE.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.Pixels;
+import glaze.Pixels;
 
 /**
  * A range of pixels, `start..end` (Rust `Range<Pixels>`, the size range of a

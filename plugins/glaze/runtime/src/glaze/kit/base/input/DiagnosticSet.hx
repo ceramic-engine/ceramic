@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/diagnostics.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Range;
+import glaze.Range;
 import ropey.Rope;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * The diagnostics of an editor, with their byte ranges in its text.
@@ -47,7 +47,7 @@ class DiagnosticSet {
     }
 
     public function extend(diagnostics:Iterable<Diagnostic>):Void {
-        for (diagnostic in gpui.util.Iterables.asArray(diagnostics))
+        for (diagnostic in glaze.util.Iterables.asArray(diagnostics))
             push(diagnostic);
     }
 

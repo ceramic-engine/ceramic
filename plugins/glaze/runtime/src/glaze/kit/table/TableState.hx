@@ -1,69 +1,69 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/table/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.table;
+package glaze.kit.table;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Div;
-import gpui.DragMoveEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.ListSizingBehavior;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollStrategy;
-import gpui.Size;
-import gpui.Task;
-import gpui.TextAlign;
-import gpui.UniformListScrollHandle;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectFirst;
-import gpui.base.Actions.SelectLast;
-import gpui.base.Actions.SelectNextColumn;
-import gpui.base.Actions.SelectPageDown;
-import gpui.base.Actions.SelectPageUp;
-import gpui.base.Actions.SelectPrevColumn;
-import gpui.base.Actions.SelectUp;
-import gpui.base.Measure;
-import gpui.base.ScrollBounce;
-import gpui.base.ScrollableMask;
-import gpui.base.VirtualList;
-import gpui.base.VirtualList.VirtualListScrollHandle;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.menu.PopupMenu;
-import gpui.component.scroll.Scrollbar;
-import gpui.component.table.Column;
-import gpui.component.table.DataTable.TableOptions;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Div;
+import glaze.DragMoveEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.ListSizingBehavior;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollStrategy;
+import glaze.Size;
+import glaze.Task;
+import glaze.TextAlign;
+import glaze.UniformListScrollHandle;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectFirst;
+import glaze.kit.base.Actions.SelectLast;
+import glaze.kit.base.Actions.SelectNextColumn;
+import glaze.kit.base.Actions.SelectPageDown;
+import glaze.kit.base.Actions.SelectPageUp;
+import glaze.kit.base.Actions.SelectPrevColumn;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.Measure;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.VirtualList;
+import glaze.kit.base.VirtualList.VirtualListScrollHandle;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.scroll.Scrollbar;
+import glaze.kit.table.Column;
+import glaze.kit.table.DataTable.TableOptions;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.ElementExt;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
-using gpui.component.StyleSized;
-using gpui.component.menu.ContextMenu.ContextMenuExt;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
+using glaze.kit.StyleSized;
+using glaze.kit.menu.ContextMenu.ContextMenuExt;
 
 enum abstract SelectionMode(Int) {
     var Column = 0;
@@ -117,7 +117,7 @@ class CellPosition {
  * `TableEvent.SelectCell`. Match on it instead of combining
  * `TableState.selectedRow`, `selectedCol` and `selectedCell`.
  */
-@:using(gpui.component.table.TableState.TableSelectionTools)
+@:using(glaze.kit.table.TableState.TableSelectionTools)
 enum TableSelection {
     /** Nothing is selected. */
     None;
@@ -182,10 +182,10 @@ enum TableEvent {
 /** The visible range of the rows and columns. */
 class TableVisibleRange {
 
-    @:allow(gpui.component.table)
+    @:allow(glaze.kit.table)
     var rowsValue:Range = new Range(0, 0);
 
-    @:allow(gpui.component.table)
+    @:allow(glaze.kit.table)
     var colsValue:Range = new Range(0, 0);
 
     public function new() {}
@@ -202,7 +202,7 @@ class TableVisibleRange {
 
 }
 
-@:allow(gpui.component.table)
+@:allow(glaze.kit.table)
 class HeaderCell {
 
     public var label:String;
@@ -244,7 +244,7 @@ class HeaderCell {
  * (arrow keys, Home, End, PageUp, PageDown, Tab). A row header column appears
  * on the left side, to select entire rows.
  */
-@:allow(gpui.component.table, tests)
+@:allow(glaze.kit.table, tests)
 class TableState<D:TableDelegate> extends Model implements Render {
 
     /** How far behind the pointer a resize drag trails the column edge. */
@@ -1151,7 +1151,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /** Rust `usize::saturating_sub` against zero. */
@@ -2304,7 +2304,7 @@ class TableState<D:TableDelegate> extends Model implements Render {
         final state = view;
         root.onPrepaint((bounds, _, cx) -> state.update(cx, (state, _) -> state.bounds = bounds));
         // Rust `.when(!window.is_inspector_picking(cx), ...)`: no inspector in the port.
-        #if gpui_inspector
+        #if glaze_inspector
         if (window.isInspectorPicking(cx.app)) {
             return root;
         }

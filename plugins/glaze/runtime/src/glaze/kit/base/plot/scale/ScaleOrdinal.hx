@@ -2,7 +2,7 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-scale/ordinal
-package gpui.base.plot.scale;
+package glaze.kit.base.plot.scale;
 
 /**
  * Maps discrete domain values to range values, cycling through the range.

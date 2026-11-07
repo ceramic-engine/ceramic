@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/nav_stack.rs (NavStack)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.SpringMath.f32;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.NavStackState;
-import gpui.base.motion.Presence;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.SpringMath.f32;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.NavStackState;
+import glaze.kit.base.motion.Presence;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
 
-import gpui.Prelude.div;
+import glaze.Prelude.div;
 
 /**
  * An unstyled host for a `NavStackState`.

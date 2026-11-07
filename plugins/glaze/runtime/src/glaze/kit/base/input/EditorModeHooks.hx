@@ -2,22 +2,22 @@
 // `EditorState::syntax_context_at`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.Entity;
-import gpui.Hitbox;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.Range;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.Entity;
+import glaze.Hitbox;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.Range;
+import glaze.Window;
 import ropey.Rope;
 
-import gpui.base.input.InputActions;
+import glaze.kit.base.input.InputActions;
 
-using gpui.base.input.InputLspExt;
+using glaze.kit.base.input.InputLspExt;
 
 /**
  * The body of Rust's `impl InputModeKind for EditorMode` (written in
@@ -25,7 +25,7 @@ using gpui.base.input.InputLspExt;
  * `InputModeKind` methods by calling these. `MULTI_LINE` and
  * `CODE_EDITOR` are both true for the editor.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class EditorModeHooks {
 
     public static inline final MULTI_LINE:Bool = true;
@@ -102,7 +102,7 @@ class EditorModeHooks {
         return state.isContextMenuOpen(cx);
     }
 
-    public static function handleContextMenuAction(state:InputBaseState, action:gpui.Action, window:Window, cx:Context<InputBaseState>):Bool {
+    public static function handleContextMenuAction(state:InputBaseState, action:glaze.Action, window:Window, cx:Context<InputBaseState>):Bool {
         return state.handleActionForContextMenu(action, window, cx);
     }
 

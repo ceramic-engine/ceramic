@@ -1,7 +1,7 @@
 // New code for the Haxe port of GPUI (no GPUI origin): JSON dump of a finished
 // Scene, in the schema of the reference harness (reference/src/dump.rs), so the
 // primitives of the port can be compared with those of the original GPUI.
-package gpui.scene;
+package glaze.scene;
 
 import haxe.Json;
 
@@ -66,7 +66,7 @@ class SceneDump {
             border_style: q.borderStyle == Dashed ? 'Dashed' : 'Solid'
         }];
 
-        inline function background(b:Null<gpui.Background>, h:Float, s:Float, l:Float, a:Float):Dynamic {
+        inline function background(b:Null<glaze.Background>, h:Float, s:Float, l:Float, a:Float):Dynamic {
             if (b == null) {
                 return {
                     tag: 0, tag_name: 'solid', color_space: 0, solid: hsla(h, s, l, a), gradient_angle_or_pattern_height: 0,

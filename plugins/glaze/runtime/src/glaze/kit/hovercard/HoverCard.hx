@@ -1,27 +1,27 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/hover_card.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.hovercard;
+package glaze.kit.hovercard;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.HoverCard as BaseHoverCard;
-import gpui.base.HoverCard.HoverCardState;
-import gpui.component.popover.Popover;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.HoverCard as BaseHoverCard;
+import glaze.kit.base.HoverCard.HoverCardState;
+import glaze.kit.popover.Popover;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A hover card element that displays content when hovering over a trigger element.

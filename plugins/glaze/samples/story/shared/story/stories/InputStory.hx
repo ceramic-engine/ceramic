@@ -3,40 +3,40 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.A11y.Role;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.input.InputActions.Paste;
-import gpui.base.input.InputActions.SelectAll;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.input.Input;
-import gpui.component.input.InputContentType;
-import gpui.component.label.Label;
-import gpui.component.theme.Theme;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.A11y.Role;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.input.InputActions.Paste;
+import glaze.kit.base.input.InputActions.SelectAll;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.input.Input;
+import glaze.kit.input.InputContentType;
+import glaze.kit.label.Label;
+import glaze.kit.theme.Theme;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 import story.stories.InputCompletion.CompletionExample;
 import story.stories.InputTokens.TokenExample;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 private class ContentTypeInput {
 

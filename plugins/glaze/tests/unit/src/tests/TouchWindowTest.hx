@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.Context;
-import gpui.DispatchPhase;
-import gpui.Entity;
-import gpui.GestureTuning;
-import gpui.IntoElement;
-import gpui.LongPressEvent;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollEvent;
-import gpui.ScrollSource;
-import gpui.TestDispatcher;
-import gpui.TouchDragEvent;
-import gpui.TouchEvent;
-import gpui.TouchPhase;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.DispatchPhase;
+import glaze.Entity;
+import glaze.GestureTuning;
+import glaze.IntoElement;
+import glaze.LongPressEvent;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollEvent;
+import glaze.ScrollSource;
+import glaze.TestDispatcher;
+import glaze.TouchDragEvent;
+import glaze.TouchEvent;
+import glaze.TouchPhase;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ScrollDelta.ScrollDeltaTools;
+using glaze.ScrollDelta.ScrollDeltaTools;
 
 /**
  * Touch dispatch through the window (Rust `Window::dispatch_touch_event`):

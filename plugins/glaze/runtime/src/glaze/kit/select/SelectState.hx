@@ -3,60 +3,60 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-010 (the menu is measured from the trigger). See DEVIATIONS.md.
-package gpui.component.select;
+package glaze.kit.select;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.ElementId;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Length;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.GlobalState;
-import gpui.base.IndexPath;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.input.ClearButton;
-import gpui.component.input.Input;
-import gpui.component.list.List;
-import gpui.component.list.ListState;
-import gpui.component.popover.Popover;
-import gpui.component.searchablelist.SearchableListAdapter;
-import gpui.component.searchablelist.SearchableListChange;
-import gpui.component.searchablelist.SearchableListDelegate;
-import gpui.component.searchablelist.SearchableListItems;
-import gpui.component.searchablelist.SearchableListState;
-import gpui.component.searchablelist.SelectedItem;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.ElementId;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Length;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.IndexPath;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.input.ClearButton;
+import glaze.kit.input.Input;
+import glaze.kit.list.List;
+import glaze.kit.list.ListState;
+import glaze.kit.popover.Popover;
+import glaze.kit.searchablelist.SearchableListAdapter;
+import glaze.kit.searchablelist.SearchableListChange;
+import glaze.kit.searchablelist.SearchableListDelegate;
+import glaze.kit.searchablelist.SearchableListItems;
+import glaze.kit.searchablelist.SearchableListState;
+import glaze.kit.searchablelist.SelectedItem;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /** Re-exported for backward compatibility. New code should prefer `SearchableGroup`. */
-typedef SelectGroup<I> = gpui.component.searchablelist.SearchableVec.SearchableGroup<I>;
+typedef SelectGroup<I> = glaze.kit.searchablelist.SearchableVec.SearchableGroup<I>;
 
 /** Re-exported for backward compatibility. New code should prefer `SearchableListDelegate`. */
-typedef SelectDelegate<I> = gpui.component.searchablelist.SearchableListDelegate<I>;
+typedef SelectDelegate<I> = glaze.kit.searchablelist.SearchableListDelegate<I>;
 
 /** Re-exported for backward compatibility. New code should prefer `SearchableListItem`. */
-typedef SelectItem = gpui.component.searchablelist.SearchableListItem;
+typedef SelectItem = glaze.kit.searchablelist.SearchableListItem;
 
 /** Re-exported for backward compatibility. New code should prefer `SearchableListItemElement`. */
-typedef SelectListItem = gpui.component.searchablelist.SearchableListItemElement;
+typedef SelectListItem = glaze.kit.searchablelist.SearchableListItemElement;
 
 /**
  * Events emitted by `SelectState`. The value is the item's value
@@ -73,7 +73,7 @@ enum SelectEvent {
  *
  * `I` is the item type of the delegate (Rust `D::Item`).
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class SelectState<I> extends Model implements Render {
 
     final state:SearchableListState<I>;
@@ -226,7 +226,7 @@ class SelectState<I> extends Model implements Render {
     /** Rust `Icon::new(IconName::Inbox).size(px(28.))` (`Styled::size`). */
     static function inboxIcon():Icon {
         final icon = new Icon(IconName.Inbox);
-        new gpui.StyleBuilder(icon.style()).size(px(28.));
+        new glaze.StyleBuilder(icon.style()).size(px(28.));
         return icon;
     }
 
@@ -470,7 +470,7 @@ class SelectState<I> extends Model implements Render {
             list.delegateMut().size = size;
         });
 
-        final entity:gpui.Entity<SelectState<I>> = cx.entity();
+        final entity:glaze.Entity<SelectState<I>> = cx.entity();
 
         final input = div()
             .id("input")
@@ -561,7 +561,7 @@ class SelectState<I> extends Model implements Render {
             if (state.searchPlaceholder != null) list.searchPlaceholder(state.searchPlaceholder);
             list.withSize(state.size).maxH(state.menuMaxH);
             if (state.scrollBounce != null) list.scrollBounce(state.scrollBounce);
-            list.paddingsEdges(gpui.Edges.all(SizeTools.DROPDOWN_LIST_PADDING));
+            list.paddingsEdges(glaze.Edges.all(SizeTools.DROPDOWN_LIST_PADDING));
             surface.popoverStyle(cx.app)
                 .child(list)
                 .onMouseDownOut(cx.listener((this_:SelectState<I>, _, window, cx) -> {
@@ -574,7 +574,7 @@ class SelectState<I> extends Model implements Render {
                     surface,
                     cx.app
                 ))
-                    .withPriority(gpui.base.Popup.POPUP_PRIORITY)
+                    .withPriority(glaze.kit.base.Popup.POPUP_PRIORITY)
             );
         }
 

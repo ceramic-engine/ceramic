@@ -1,33 +1,33 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/resize_handle.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.Hsla;
-import gpui.LayoutId;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.Hsla;
+import glaze.LayoutId;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.Observe;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.Observe;
 
 /**
  * Draws the visible part of a resize handle.
@@ -51,7 +51,7 @@ class ResizeHandleContext {
 
     final stateValue:ResizeHandleState;
 
-    @:allow(gpui.base.resizable, tests)
+    @:allow(glaze.kit.base.resizable, tests)
     function new(axis:Axis, edge:Null<HandleEdge>, state:ResizeHandleState) {
         this.axisValue = axis;
         this.edgeValue = edge;
@@ -146,7 +146,7 @@ enum abstract HandleEdge(Int) {
  * One handle's `ResizeHandleState`, shared between the element and the
  * mouse listeners it registers (Rust `Rc<Cell<ResizeHandleState>>`).
  */
-@:allow(gpui.base.resizable, tests)
+@:allow(glaze.kit.base.resizable, tests)
 class SharedHandleState {
 
     var state:ResizeHandleState = Idle;
@@ -284,7 +284,7 @@ class ResizeHandle<T> extends Element {
             if (box.value == null) box.value = new SharedHandleState();
             final state:SharedHandleState = box.value;
 
-            final bgColor = handleColor(gpui.base.theme.Theme.global(cx), state.get().isActive());
+            final bgColor = handleColor(glaze.kit.base.theme.Theme.global(cx), state.get().isActive());
 
             final el = base
                 .id(id)
@@ -415,8 +415,8 @@ class ResizeHandle<T> extends Element {
      * that already mean these two states everywhere else: `border` for a
      * divider at rest, `ring` for the thing the pointer currently owns.
      */
-    @:allow(gpui.base, tests)
-    static function handleColor(theme:gpui.base.theme.Theme, active:Bool):Hsla {
+    @:allow(glaze.kit.base, tests)
+    static function handleColor(theme:glaze.kit.base.theme.Theme, active:Bool):Hsla {
         if (active) {
             return theme.resizable.activeHandle != null ? theme.resizable.activeHandle : theme.tokens.colors.ring;
         } else {

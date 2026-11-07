@@ -4,13 +4,13 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.App;
-import gpui.SystemNotification;
-import gpui.SystemNotificationAction;
-import gpui.SystemNotificationResponse;
-import gpui.TestDispatcher;
-import gpui.TestPlatformOperations;
-import gpui.platform.CeramicPlatformOperations;
+import glaze.App;
+import glaze.SystemNotification;
+import glaze.SystemNotificationAction;
+import glaze.SystemNotificationResponse;
+import glaze.TestDispatcher;
+import glaze.TestPlatformOperations;
+import glaze.platform.CeramicPlatformOperations;
 import testing.TestCase;
 
 /**

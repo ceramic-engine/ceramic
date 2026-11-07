@@ -1,30 +1,30 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/panel.rs (ResizablePanel)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.resizable;
+package glaze.kit.base.resizable;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.resizable.ResizablePanelGroup.DragPanel;
-import gpui.base.resizable.ResizablePanelGroup.DragPanelView;
-import gpui.base.resizable.ResizeHandle.ResizeHandleRenderer;
-import gpui.util.MathUtil;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.resizable.ResizablePanelGroup.DragPanel;
+import glaze.kit.base.resizable.ResizablePanelGroup.DragPanelView;
+import glaze.kit.base.resizable.ResizeHandle.ResizeHandleRenderer;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.ElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A resizable panel inside a `ResizablePanelGroup`.
@@ -43,13 +43,13 @@ using gpui.base.StyledExt;
  */
 class ResizablePanel implements RenderOnce implements Styled implements ParentElement {
 
-    @:allow(gpui.base.resizable)
+    @:allow(glaze.kit.base.resizable)
     var axis:Axis = Horizontal;
 
-    @:allow(gpui.base.resizable)
+    @:allow(glaze.kit.base.resizable)
     var panelIx:Int = 0;
 
-    @:allow(gpui.base.resizable)
+    @:allow(glaze.kit.base.resizable)
     var state:Null<Entity<ResizableState>> = null;
 
     /**
@@ -68,7 +68,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
 
     final panelStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.base.resizable)
+    @:allow(glaze.kit.base.resizable)
     var handleAppearance:Null<ResizeHandleRenderer> = null;
 
     var fixedValue:Bool = false;
@@ -76,7 +76,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
     /**
      * Create a new resizable panel (see `Resizable.resizablePanel()`).
      */
-    @:allow(gpui.base.resizable)
+    @:allow(glaze.kit.base.resizable)
     function new() {}
 
     /**
@@ -157,10 +157,10 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
             // above and the size management below.
             .refineStyle(panelStyle);
         if (axis.isVertical()) {
-            el.minH(gpui.Prelude.px(sizeRange.start)).maxH(gpui.Prelude.px(sizeRange.end));
+            el.minH(glaze.Prelude.px(sizeRange.start)).maxH(glaze.Prelude.px(sizeRange.end));
         }
         if (axis.isHorizontal()) {
-            el.minW(gpui.Prelude.px(sizeRange.start)).maxW(gpui.Prelude.px(sizeRange.end));
+            el.minW(glaze.Prelude.px(sizeRange.start)).maxW(glaze.Prelude.px(sizeRange.end));
         }
         // 1. initial_size is None, to use auto size.
         // 2. initial_size is Some and size is none, to use the initial size of the panel for first time render.
@@ -172,10 +172,10 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
             if (panelState.size == null && (initialSize : Float) != 0.) {
                 el.flexNone();
             }
-            el.flexBasis(gpui.Prelude.px(initialSize));
+            el.flexBasis(glaze.Prelude.px(initialSize));
         }
         if (panelState.size != null) {
-            el.flexBasis(gpui.Prelude.px(MathUtil.max(MathUtil.min(panelState.size, sizeRange.end), sizeRange.start)));
+            el.flexBasis(glaze.Prelude.px(MathUtil.max(MathUtil.min(panelState.size, sizeRange.end), sizeRange.start)));
         }
         // A fixed panel neither grows nor shrinks with the container, so the
         // first frame of a resize already has its size. Not `flexNone`, which
@@ -198,7 +198,7 @@ class ResizablePanel implements RenderOnce implements Styled implements ParentEl
                 state.update(cx, (state, _) -> {
                     state.resizingPanelIx = ix;
                 });
-                return cx.newEntity((_:gpui.Context<DragPanelView>) -> new DragPanelView());
+                return cx.newEntity((_:glaze.Context<DragPanelView>) -> new DragPanelView());
             });
             el.child(handle);
         }

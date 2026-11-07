@@ -3,13 +3,13 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Keystroke;
-import gpui.TestDispatcher;
-import gpui.base.Root;
-import gpui.component.Component;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Keystroke;
+import glaze.TestDispatcher;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
 import story.stories.InputCompletion;
 import story.stories.InputCompletion.CompletionExample;
 import testing.TestCase;

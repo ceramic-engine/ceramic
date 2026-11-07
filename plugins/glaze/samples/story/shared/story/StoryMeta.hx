@@ -4,12 +4,12 @@
 package story;
 
 #if !macro
-import gpui.AnyView;
-import gpui.App;
-import gpui.Hsla;
-import gpui.Pixels;
-import gpui.Window;
-import gpui.component.dock.PanelControl;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Hsla;
+import glaze.Pixels;
+import glaze.Window;
+import glaze.kit.dock.PanelControl;
 #end
 
 #if macro
@@ -146,17 +146,17 @@ class StoryMeta {
         final title = macro $ref.title();
         final description = statics.exists('description') ? macro $ref.description() : macro '';
         final closable = statics.exists('closable') ? macro $ref.closable() : macro true;
-        final zoomable = statics.exists('zoomable') ? macro $ref.zoomable() : macro gpui.component.dock.PanelControl.defaultValue();
+        final zoomable = statics.exists('zoomable') ? macro $ref.zoomable() : macro glaze.kit.dock.PanelControl.defaultValue();
         final titleBg = statics.exists('titleBg') ? macro $ref.titleBg() : macro null;
         final paddings = statics.exists('paddings') ? macro $ref.paddings() : macro 16.;
         final onActive = hasOnActive
-            ? macro (view:gpui.AnyView, active:Bool, window:gpui.Window, cx:gpui.App) -> {
-                final story = Std.downcast((view : gpui.Model), $ref);
+            ? macro (view:glaze.AnyView, active:Bool, window:glaze.Window, cx:glaze.App) -> {
+                final story = Std.downcast((view : glaze.Model), $ref);
                 if (story != null) {
                     cx.updateEntity(story, (story, cx) -> story.onActive(active, window, cx));
                 }
             }
-            : macro (view:gpui.AnyView, active:Bool, window:gpui.Window, cx:gpui.App) -> {};
+            : macro (view:glaze.AnyView, active:Bool, window:glaze.Window, cx:glaze.App) -> {};
 
         // The expression is built in a generated class of its own and reached
         // with `new` (a type path), so that a local variable of the call site
@@ -165,7 +165,7 @@ class StoryMeta {
         final helperExists = try Context.getType('story.meta.' + helperName) != null catch (e:Dynamic) false;
         if (!helperExists) {
             final body = macro return new story.StoryMeta($klass, $title, $description, $closable, $zoomable, $titleBg, $paddings,
-                (window:gpui.Window, cx:gpui.App) -> ($ref.newView(window, cx) : gpui.AnyView), $onActive);
+                (window:glaze.Window, cx:glaze.App) -> ($ref.newView(window, cx) : glaze.AnyView), $onActive);
             final helper = macro class $helperName {
                 public function new() {}
                 public function meta():story.StoryMeta $body;

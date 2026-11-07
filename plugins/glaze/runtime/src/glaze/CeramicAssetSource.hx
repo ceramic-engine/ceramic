@@ -1,6 +1,6 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
@@ -68,7 +68,7 @@ class CeramicAssetSource implements AssetSource {
             final normalized = normalize(path);
             if (entries.exists(normalized))
                 continue;
-            final asset = new ceramic.BinaryAsset('gpui-asset:' + normalized);
+            final asset = new ceramic.BinaryAsset('glaze-asset:' + normalized);
             asset.path = normalized;
             assets.addAsset(asset);
             pending.push({path: normalized, asset: asset});

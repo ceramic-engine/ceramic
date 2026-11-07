@@ -1,4 +1,4 @@
-package gpui;
+package glaze;
 
 /**
  * A text input painted in a frame, focused or not: its visible bounds

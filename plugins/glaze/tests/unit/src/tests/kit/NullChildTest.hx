@@ -1,31 +1,31 @@
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.component.Component;
-import gpui.component.button.Button;
-import gpui.component.statusbar.StatusBar;
-import gpui.component.table.Table;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.Component;
+import glaze.kit.button.Button;
+import glaze.kit.statusbar.StatusBar;
+import glaze.kit.table.Table;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * `child(null)` and null entries of `children([...])` are skipped: the
@@ -160,7 +160,7 @@ class NullChildTest extends TestCase {
 
         final expected = renderLog(log -> div().id('root').flex().flexCol()
             .child(anchored().child(probe(log, 'anchored', true)))
-            .child(div().withAnimation('anim', new gpui.Animation(1.0), (d, _) -> d).child(probe(log, 'animated', true)))
+            .child(div().withAnimation('anim', new glaze.Animation(1.0), (d, _) -> d).child(probe(log, 'animated', true)))
             .child(new StatusBar().left(probe(log, 'left', true)).right(probe(log, 'right', true)).child(probe(log, 'bar', true)))
             .child(new Table()
                 .child(new TableHeader().child(new TableRow()
@@ -175,7 +175,7 @@ class NullChildTest extends TestCase {
         );
         final actual = renderLog(log -> div().id('root').flex().flexCol()
             .child(anchored().child(null).child(probe(log, 'anchored', true)).child(element))
-            .child(div().withAnimation('anim', new gpui.Animation(1.0), (d, _) -> d).child(text).child(probe(log, 'animated', true)).child(null))
+            .child(div().withAnimation('anim', new glaze.Animation(1.0), (d, _) -> d).child(text).child(probe(log, 'animated', true)).child(null))
             .child(new StatusBar().left(null).left(probe(log, 'left', true)).right(element).right(probe(log, 'right', true)).child(null).child(probe(log, 'bar', true)))
             .child(new Table()
                 .child(null)

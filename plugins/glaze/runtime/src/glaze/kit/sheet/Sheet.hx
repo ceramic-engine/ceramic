@@ -1,43 +1,43 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sheet.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.sheet;
+package glaze.kit.sheet;
 
-import gpui.AbsoluteLength;
-import gpui.Animation;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.DefiniteLength;
-import gpui.DefiniteLengthTools;
-import gpui.Edges;
-import gpui.FocusHandle;
-import gpui.IntoDefiniteLength;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.SpringMath.f32;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Geometry.Placement;
-import gpui.component.IconName;
-import gpui.component.TitleBar;
-import gpui.component.WindowBorder;
-import gpui.component.button.Button;
-import gpui.component.dialog.Dialog;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.Animation;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.DefiniteLength;
+import glaze.DefiniteLengthTools;
+import glaze.Edges;
+import glaze.FocusHandle;
+import glaze.IntoDefiniteLength;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.SpringMath.f32;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.IconName;
+import glaze.kit.TitleBar;
+import glaze.kit.WindowBorder;
+import glaze.kit.button.Button;
+import glaze.kit.dialog.Dialog;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
-using gpui.component.scroll.Scrollable;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
+using glaze.kit.scroll.Scrollable;
 
 /**
  * The settings for sheets (the theme's `sheet`).
@@ -63,7 +63,7 @@ class SheetSettings {
  * Rust's `EventEmitter<DismissEvent>` declaration is kept as a comment: a
  * `Sheet` is a `RenderOnce`, not an entity, so it never emits.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class Sheet implements RenderOnce implements Styled implements ParentElement {
 
     var focusHandle:FocusHandle;
@@ -72,7 +72,7 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
 
     var sizeValue:DefiniteLength = DefiniteLength.Absolute(AbsoluteLength.Pixels(350.));
 
-    var selectionScope:gpui.base.TextSelectionScopeId = gpui.base.TextSelectionScopeId.DEFAULT;
+    var selectionScope:glaze.kit.base.TextSelectionScopeId = glaze.kit.base.TextSelectionScopeId.DEFAULT;
 
     var resizableValue:Bool = true;
 
@@ -190,8 +190,8 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
 
         final overlay = div()
             .occlude()
-            .w(gpui.Prelude.px(sizeWidth))
-            .h(gpui.Prelude.px(sizeHeight))
+            .w(glaze.Prelude.px(sizeWidth))
+            .h(glaze.Prelude.px(sizeHeight))
             .bg(@:privateAccess Dialog.overlayColor(overlayValue, cx));
 
         final surface = vFlex()
@@ -220,8 +220,8 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
         final body = vFlex()
             .sizeFull()
             .overflowYScrollbar()
-            .pl(gpui.Prelude.px(paddingLeft))
-            .pr(gpui.Prelude.px(paddingRight));
+            .pl(glaze.Prelude.px(paddingLeft))
+            .pr(glaze.Prelude.px(paddingRight));
         body.extend(childElements);
         surface
             .child(
@@ -253,20 +253,20 @@ class Sheet implements RenderOnce implements Styled implements ParentElement {
         final animated = surface.withAnimation('slide', new Animation(0.15), (element, delta) -> {
             final y = f32(-100. + f32(delta * 100.));
             return switch placement {
-                case Top: element.top(gpui.Prelude.px(f32(top + y)));
-                case Right: element.right(gpui.Prelude.px(y));
-                case Bottom: element.bottom(gpui.Prelude.px(y));
-                case Left: element.left(gpui.Prelude.px(y));
+                case Top: element.top(glaze.Prelude.px(f32(top + y)));
+                case Right: element.right(glaze.Prelude.px(y));
+                case Bottom: element.bottom(glaze.Prelude.px(y));
+                case Left: element.left(glaze.Prelude.px(y));
             }
         });
-        final scopedSurface = gpui.base.TextSelection.textSelectionScope(selectionScope, animated);
+        final scopedSurface = glaze.kit.base.TextSelection.textSelectionScope(selectionScope, animated);
 
         final onClose = onCloseHandler;
-        return new gpui.base.Sheet(cx)
-            .top(gpui.Prelude.px(frameTop))
-            .left(gpui.Prelude.px(frameLeft))
-            .w(gpui.Prelude.px(sizeWidth))
-            .h(gpui.Prelude.px(sizeHeight))
+        return new glaze.kit.base.Sheet(cx)
+            .top(glaze.Prelude.px(frameTop))
+            .left(glaze.Prelude.px(frameLeft))
+            .w(glaze.Prelude.px(sizeWidth))
+            .h(glaze.Prelude.px(sizeHeight))
             .focusHandle(focusHandle)
             .overlayInteractive(overlayValue)
             .overlayClosable(overlayValue && overlayClosableValue)

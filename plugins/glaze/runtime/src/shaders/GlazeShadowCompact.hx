@@ -11,14 +11,14 @@ package shaders;
  * drop shadow, element bounds for an inset shadow) is computed on the CPU
  * side and given as `vertexGeometry`.
  *
- * Compact variant of `GpuiShadow`, used only when the GPU limits are too
- * low for it (see `gpui.platform.SceneRenderable.useCompactShaders`): 8
+ * Compact variant of `GlazeShadow`, used only when the GPU limits are too
+ * low for it (see `glaze.platform.SceneRenderable.useCompactShaders`): 8
  * vertex attributes. The unit vertex, inset flag and blur radius travel in
  * `vertexTCoord`; the element bounds of an inset shadow are its geometry.
  */
-class GpuiShadowCompact extends Shader<GpuiShadowCompact_Vert, GpuiShadowCompact_Frag> {}
+class GlazeShadowCompact extends Shader<GlazeShadowCompact_Vert, GlazeShadowCompact_Frag> {}
 
-class GpuiShadowCompact_Vert extends Vert {
+class GlazeShadowCompact_Vert extends Vert {
 
     @param var projectionMatrix:Mat4;
     @param var modelViewMatrix:Mat4;
@@ -82,7 +82,7 @@ class GpuiShadowCompact_Vert extends Vert {
 
 }
 
-class GpuiShadowCompact_Frag extends Frag {
+class GlazeShadowCompact_Frag extends Frag {
 
     @in var scenePosition:Vec2;
     @in var clipDistances:Vec4;

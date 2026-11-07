@@ -2,46 +2,46 @@
 // (Carousel, carousel_control, focus_after_pointer_click, axis_value, set_axis_value, snap_offset)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.carousel;
+package glaze.kit.carousel;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Axis;
-import gpui.ClickEvent;
-import gpui.Droppable;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.ParentElement;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.ScrollHandle;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectFirst;
-import gpui.base.Actions.SelectLast;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.Actions.SelectUp;
-import gpui.base.ComponentTraits.FocusableExt;
-import gpui.component.I18n;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Axis;
+import glaze.ClickEvent;
+import glaze.Droppable;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.ParentElement;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.ScrollHandle;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectFirst;
+import glaze.kit.base.Actions.SelectLast;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.ComponentTraits.FocusableExt;
+import glaze.kit.I18n;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * A composable carousel root.
@@ -49,12 +49,12 @@ using gpui.component.ThemeStyled;
  * Add one `CarouselContent` and any optional controls as children. Every
  * part must share the same `CarouselState`.
  *
- * The GPUI port has no accessibility tree: the region role and its label
+ * Glaze has no accessibility tree: the region role and its label
  * (`accessibilityLabel`) are kept but not exported.
  */
 class Carousel implements RenderOnce implements Styled implements ParentElement implements FocusableExt {
 
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     static inline final CONTEXT:String = 'Carousel';
 
     /** Rust `carousel::init`: the navigation keys of the `Carousel` context. */
@@ -145,7 +145,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
         final focusVisible = isFocused && !ringSuppressed && focusRingEnabled;
         final state = this.state;
 
-        inline function listenerFor<A>(f:(CarouselState, A, Window, gpui.Context<CarouselState>) -> Void):(A, Window, App) -> Void {
+        inline function listenerFor<A>(f:(CarouselState, A, Window, glaze.Context<CarouselState>) -> Void):(A, Window, App) -> Void {
             return (action, window, cx) -> state.update(cx, (s, cx) -> f(s, action, window, cx));
         }
 
@@ -205,8 +205,8 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
                 .absolute()
                 .top0()
                 .left0()
-                .w(gpui.Prelude.px(frameSize.width))
-                .h(gpui.Prelude.px(frameSize.height))
+                .w(glaze.Prelude.px(frameSize.width))
+                .h(glaze.Prelude.px(frameSize.height))
                 .border1()
                 .borderColor(theme.transparent)
                 .rounded(theme.radius)
@@ -219,7 +219,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
      * Rust `carousel_control`: the previous or next button, absolutely
      * positioned around the content frame.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     static function carouselControl(state:Entity<CarouselState>, size:Size, style:StyleRefinement, accessibilityLabel:Null<String>,
             children:Array<AnyElement>, next:Bool, cx:App):IntoElement {
         final snapshot = state.read(cx);
@@ -243,7 +243,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
             .absolute()
             .top0()
             .left0();
-        if (frameSize != null) wrapper.w(gpui.Prelude.px(frameSize.width)).h(gpui.Prelude.px(frameSize.height));
+        if (frameSize != null) wrapper.w(glaze.Prelude.px(frameSize.width)).h(glaze.Prelude.px(frameSize.height));
         if (frameSize == null) wrapper.right0().bottom0();
 
         final button = new Button(id)
@@ -282,7 +282,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
      * controls, so the arrow keys keep working without drawing the ring. A
      * keyboard activation leaves focus on the control.
      */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     static function focusAfterPointerClick(state:Entity<CarouselState>, focusHandle:FocusHandle, event:ClickEvent, window:Window, cx:App):Void {
         if (event.isKeyboard() || focusHandle.containsFocused(window, cx)) {
             return;
@@ -291,28 +291,28 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
         window.focus(focusHandle, cx);
     }
 
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     static inline function axisValue(point:Point, axis:Axis):Float {
         return axis == Horizontal ? point.x : point.y;
     }
 
     /** Rust `set_axis_value` on a copy (points are immutable here). */
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     @:allow(tests)
     static function setAxisValue(point:Point, axis:Axis, value:Float):Point {
         return axis == Horizontal ? new Point(value, point.y) : new Point(point.x, value);
     }
 
-    @:allow(gpui.component.carousel)
+    @:allow(glaze.kit.carousel)
     static function snapOffset(handle:ScrollHandle, axis:Axis, index:Int):Null<Float> {
         final viewport = handle.bounds();
         final item = handle.boundsForItem(index);
         if (item == null) {
             return null;
         }
-        final target = gpui.SpringMath.f32(axis == Horizontal ? viewport.left() - item.left() : viewport.top() - item.top());
+        final target = glaze.SpringMath.f32(axis == Horizontal ? viewport.left() - item.left() : viewport.top() - item.top());
         final max = Math.max(axisValue(handle.maxOffset(), axis), 0.);
-        return gpui.util.MathUtil.clamp(target, -max, 0.);
+        return glaze.util.MathUtil.clamp(target, -max, 0.);
     }
 
 }
@@ -322,7 +322,7 @@ class Carousel implements RenderOnce implements Styled implements ParentElement 
  * `CarouselStateObserver` and `CarouselFocusOut`): dropping the state drops
  * the subscription.
  */
-@:allow(gpui.component.carousel)
+@:allow(glaze.kit.carousel)
 private class CarouselSubscription implements Droppable {
 
     final subscription:Subscription;

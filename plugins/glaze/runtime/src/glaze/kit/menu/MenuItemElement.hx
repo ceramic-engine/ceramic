@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/menu_item.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.menu;
+package glaze.kit.menu;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Disableable;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Disableable;
+import glaze.kit.theme.Theme;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A row of a `PopupMenu` (crate private in Rust).
@@ -31,15 +31,15 @@ class MenuItemElement implements RenderOnce implements Styled implements ParentE
 
     final id:ElementId;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var ariaLabelValue:Null<String> = null;
 
     final menuItemStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var disabledValue:Bool = false;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var selectedValue:Bool = false;
 
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;

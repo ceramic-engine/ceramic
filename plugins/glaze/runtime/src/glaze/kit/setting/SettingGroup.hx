@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/group.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.groupbox.GroupBox;
-import gpui.component.label.Label;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.groupbox.GroupBox;
+import glaze.kit.label.Label;
+import glaze.kit.theme.Theme;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A setting group that can contain multiple setting items.
@@ -28,13 +28,13 @@ class SettingGroup implements Styled {
 
     var variantValue:Null<GroupBoxVariant> = null;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var titleValue:Null<String> = null;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var descriptionValue:Null<String> = null;
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var itemsValue:Array<SettingItem> = [];
 
     /**
@@ -114,14 +114,14 @@ class SettingGroup implements Styled {
      * Add multiple setting items to the group.
      */
     public function items(items:Iterable<SettingItem>):SettingGroup {
-        gpui.util.Iterables.append(this.itemsValue, items);
+        glaze.util.Iterables.append(this.itemsValue, items);
         return this;
     }
 
     /**
      * Return true if any of the setting items in the group match the given query.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function isMatch(query:String, cx:App):Bool {
         for (item in itemsValue) {
             if (item.isMatch(query, cx)) return true;
@@ -129,7 +129,7 @@ class SettingGroup implements Styled {
         return false;
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function isResettable(query:String, cx:App):Bool {
         for (item in itemsValue) {
             if (item.isMatch(query, cx) && item.isResettable(cx)) return true;
@@ -137,7 +137,7 @@ class SettingGroup implements Styled {
         return false;
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function render(query:String, options:RenderOptions, window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final group = new GroupBox()
@@ -165,7 +165,7 @@ class SettingGroup implements Styled {
         return group.refineStyle(groupStyle);
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function reset(query:String, window:Window, cx:App):Void {
         for (item in itemsValue) {
             if (item.isMatch(query, cx)) {

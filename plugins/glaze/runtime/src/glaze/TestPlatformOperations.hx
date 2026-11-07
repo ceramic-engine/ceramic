@@ -3,10 +3,10 @@
 // and system notifications of `TestPlatform`; `TestSystemNotifications`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.Menu.MenuItem;
-import gpui.Menu.OwnedMenu;
+import glaze.Menu.MenuItem;
+import glaze.Menu.OwnedMenu;
 
 /**
  * `PlatformOperations` for tests, like GPUI's test platform: nothing reaches

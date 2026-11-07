@@ -4,23 +4,23 @@ package tests;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 #else
-import gpui.Font;
-import gpui.FontRun;
-import gpui.LineLayout;
-import gpui.RenderGlyphParams;
-import gpui.ShapedGlyph;
-import gpui.platform.BundledEmojiFont;
-import gpui.platform.CanvasFallbackText;
-import gpui.platform.CeramicTextSystem;
-import gpui.platform.SystemFontFallback;
-import gpui.util.Utf8;
+import glaze.Font;
+import glaze.FontRun;
+import glaze.LineLayout;
+import glaze.RenderGlyphParams;
+import glaze.ShapedGlyph;
+import glaze.platform.BundledEmojiFont;
+import glaze.platform.CanvasFallbackText;
+import glaze.platform.CeramicTextSystem;
+import glaze.platform.SystemFontFallback;
+import glaze.util.Utf8;
 import testing.TestCase;
 import tests.CanvasFallbackTest.FakeCanvas;
 #end
 
 /**
- * The bundled emoji font (Noto Color Emoji, define `gpui_bundled_emoji`,
- * `gpui.platform.BundledEmojiFont`): read piece by piece from the plugin's
+ * The bundled emoji font (Noto Color Emoji, define `glaze_bundled_emoji`,
+ * `glaze.platform.BundledEmojiFont`): read piece by piece from the plugin's
  * asset file, emoji graphemes resolve to it as polychrome glyphs, sequences
  * are single glyphs (`GSUB`), it comes before the system emoji font and the
  * browser canvas, which keep what it lacks. The tests open the plugin's
@@ -295,8 +295,8 @@ class BundledEmojiFontTest #if !macro extends TestCase #end {
     }
 
     function testDefaultTextSystemWithTheDefine() {
-        final ts:CeramicTextSystem = cast gpui.App.defaultTextSystem().platformTextSystem;
-        #if gpui_bundled_emoji
+        final ts:CeramicTextSystem = cast glaze.App.defaultTextSystem().platformTextSystem;
+        #if glaze_bundled_emoji
         assertTrue(BundledEmojiFont.enabled());
         // Added by the plugin once the default assets are loaded, from the shipped asset
         assertNotNull(ts.bundledEmojiFace);
@@ -326,13 +326,13 @@ class BundledEmojiFontTest #if !macro extends TestCase #end {
     static macro function pluginFontPath():Expr {
         final file = Context.getPosInfos(Context.currentPos()).file;
         final dir = haxe.io.Path.directory(sys.FileSystem.fullPath(file));
-        return macro $v{haxe.io.Path.normalize(dir + '/../../../../emoji-font/assets/gpui/emoji/NotoColorEmoji.ttf.bin')};
+        return macro $v{haxe.io.Path.normalize(dir + '/../../../../emoji-font/assets/glaze/emoji/NotoColorEmoji.ttf.bin')};
     }
 
     /** Absolute path of the ttf library's test fonts */
     static macro function ttfTestFontsDir():Expr {
         final file = Context.getPosInfos(Context.currentPos()).file;
         final dir = haxe.io.Path.directory(sys.FileSystem.fullPath(file));
-        return macro $v{haxe.io.Path.normalize(dir + '/../../../../../ceramic/git/ttf/test/fonts')};
+        return macro $v{haxe.io.Path.normalize(dir + '/../../../../../../git/ttf/test/fonts')};
     }
 }

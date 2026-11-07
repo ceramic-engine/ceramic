@@ -1,7 +1,7 @@
 package;
 
-import gpui.App;
-import gpui.Window;
+import glaze.App;
+import glaze.Window;
 
 /**
  * A benchmark scenario: a window built once per mode, then one mutation or
@@ -16,7 +16,7 @@ interface Scenario {
 
     /**
      * Short identifier used in the summary lines, the JSON file name and
-     * `GPUI_BENCH_SCENARIOS` (letters, digits, dashes).
+     * `GLAZE_BENCH_SCENARIOS` (letters, digits, dashes).
      */
     var name:String;
 

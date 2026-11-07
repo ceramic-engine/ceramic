@@ -7,10 +7,10 @@ import haxe.macro.Expr;
 
 /**
  * Embeds the values dumped from the original gpui-kit by
- * `reference/examples/theme_dump.rs` (test/unit/data/gpui-kit-themes-reference.json),
+ * `reference/examples/theme_dump.rs` (tests/unit/data/gpui-kit-themes-reference.json),
  * and the theme files of `assets/themes/` (copied unmodified from gpui-kit's `themes/`).
  * Regenerate the reference with, from `reference/`:
- * `cargo run --release --example theme_dump -- ../test/unit/data/gpui-kit-themes-reference.json`
+ * `cargo run --release --example theme_dump -- ../../ceramic/plugins/glaze/tests/unit/data/gpui-kit-themes-reference.json`
  */
 class ThemeReference {
 

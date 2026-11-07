@@ -1,18 +1,18 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (Transition)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.SpringMath.f32;
-import gpui.base.motion.SignedDuration.IntoSignedDuration;
-import gpui.base.motion.SignedDuration.SignedDurationTools;
-import gpui.base.animation.Easings;
+import glaze.SpringMath.f32;
+import glaze.kit.base.motion.SignedDuration.IntoSignedDuration;
+import glaze.kit.base.motion.SignedDuration.SignedDurationTools;
+import glaze.kit.base.animation.Easings;
 
 /**
  * CSS-like timing policy for a target-value transition.
  *
  * This type is intentionally separate from
- * `gpui.base.animation.EffectTransition`, which applies concrete fade, slide,
+ * `glaze.kit.base.animation.EffectTransition`, which applies concrete fade, slide,
  * and size effects to an element. A value transition never chooses a visual
  * property for the caller.
  *
@@ -24,7 +24,7 @@ class Transition {
     /**
      * The duration, in whole nanoseconds (see `MotionTime`).
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var durationNanos(default, null):Float;
 
     var delayValue:SignedDuration;
@@ -63,7 +63,7 @@ class Transition {
         return this;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     inline function sample(progress:Float):Float {
         return easingValue.sample(progress);
     }
@@ -80,7 +80,7 @@ class Transition {
      * The progress after `elapsedNanos` over `durationNanos` (Rust returns it
      * with the status; see `progressStatus`).
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function progressValue(elapsedNanos:Float, durationNanos:Float):Float {
         final activeElapsed = SignedDurationTools.activeElapsedNanos(delayValue, elapsedNanos);
         if (activeElapsed < 0) {
@@ -95,7 +95,7 @@ class Transition {
     /**
      * The status after `elapsedNanos` over `durationNanos`.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function progressStatus(elapsedNanos:Float, durationNanos:Float):MotionStatus {
         final activeElapsed = SignedDurationTools.activeElapsedNanos(delayValue, elapsedNanos);
         if (activeElapsed < 0) {
@@ -111,7 +111,7 @@ class Transition {
      * The elapsed time (nanoseconds) at which the progress over the
      * transition's own duration first reports `Finished`.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function finishesAfterNanos():Float {
         return switch delayValue {
             case Positive(delay): MotionTime.nanos(delay) + durationNanos;

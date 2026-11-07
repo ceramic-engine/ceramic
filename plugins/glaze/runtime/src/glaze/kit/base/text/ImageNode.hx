@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/node.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.DefiniteLength;
-import gpui.Image;
-import gpui.ImageSource;
+import glaze.DefiniteLength;
+import glaze.Image;
+import glaze.ImageSource;
 
-using gpui.DefiniteLengthTools;
+using glaze.DefiniteLengthTools;
 
 /**
  * An image in the document.
@@ -21,7 +21,7 @@ class ImageNode {
     public var width:Null<DefiniteLength> = null;
     public var height:Null<DefiniteLength> = null;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var span:Null<Span> = null;
 
     /**
@@ -61,7 +61,7 @@ class ImageNode {
      * Every other document-provided value remains URI-backed, including
      * `file://` and scheme-less strings.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function source():ImageSource {
         if (!embeddedInit) {
             embeddedInit = true;
@@ -69,7 +69,7 @@ class ImageNode {
         }
         if (embedded != null)
             return ImageSource.Image(embedded);
-        return ImageSource.Resource(gpui.Resource.Uri(url));
+        return ImageSource.Resource(glaze.Resource.Uri(url));
     }
 
     public function equals(other:Null<ImageNode>):Bool {

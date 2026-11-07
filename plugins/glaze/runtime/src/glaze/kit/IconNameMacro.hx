@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/assets/build.rs (generation of IconName from the bundled SVG files)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from a Rust build script to a Haxe build macro for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
 #if macro
 import haxe.macro.Context;
@@ -22,7 +22,7 @@ class IconNameMacro {
         final fields = Context.getBuildFields();
         final pos = Context.currentPos();
 
-        // runtime/src/gpui/component -> plugin root
+        // runtime/src/glaze/kit -> plugin root
         final here = haxe.io.Path.directory(FileSystem.absolutePath(Context.getPosInfos(pos).file));
         final dir = haxe.io.Path.normalize(here + '/../../../../assets/icons');
         if (!FileSystem.exists(dir)) {
@@ -58,7 +58,7 @@ class IconNameMacro {
             fields.push({
                 name: icon.variant,
                 access: [APublic, AStatic, AInline],
-                kind: FVar(macro :gpui.component.IconName, macro cast $v{icon.path}),
+                kind: FVar(macro :glaze.kit.IconName, macro cast $v{icon.path}),
                 pos: pos
             });
         }
@@ -68,7 +68,7 @@ class IconNameMacro {
             name: 'ALL',
             doc: 'Every bundled icon in variant-name order.',
             access: [APublic, AStatic, AFinal],
-            kind: FVar(macro :Array<gpui.component.IconName>, macro $a{allExprs}),
+            kind: FVar(macro :Array<glaze.kit.IconName>, macro $a{allExprs}),
             pos: pos
         });
 

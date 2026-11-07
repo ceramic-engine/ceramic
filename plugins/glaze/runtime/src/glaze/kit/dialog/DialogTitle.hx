@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/title.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Title element for a dialog header.
  */
 class DialogTitle implements RenderOnce implements Styled implements ParentElement {
 
-    final base:gpui.base.Dialog.DialogTitle = new gpui.base.Dialog.DialogTitle();
+    final base:glaze.kit.base.Dialog.DialogTitle = new glaze.kit.base.Dialog.DialogTitle();
 
     final titleStyle:StyleRefinement = new StyleRefinement();
 
@@ -43,7 +43,7 @@ class DialogTitle implements RenderOnce implements Styled implements ParentEleme
     public function render(_:Window, _:App):IntoElement {
         base.textBase()
             .fontSemibold()
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .refineStyle(titleStyle);
         base.extend(childElements);
         return base;

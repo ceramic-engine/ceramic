@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/stream_fade.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.base.motion.Easing;
-import gpui.base.motion.MotionTime;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.motion.MotionTime;
 
 /**
  * Motion policy of a text view. Base plays it; every duration defaults to
@@ -14,13 +14,13 @@ import gpui.base.motion.MotionTime;
  */
 class TextViewMotion {
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var _streamFade:Float = 0;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var _streamFadeStagger:Float = 0;
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     var _streamFadeEasing:Easing;
 
     public function new() {
@@ -82,7 +82,7 @@ class TextViewMotion {
      * that appeared at once, so drop it instead and let the update fade as one
      * chunk.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function staggerStep(words:Int):Float {
         if (words < 2) {
             return 0;

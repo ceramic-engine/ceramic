@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/layout.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.LineLayout;
-import gpui.ShapedLine;
+import glaze.LineLayout;
+import glaze.ShapedLine;
 
 /**
  * The shaped glyphs drawn for visible whitespace.

@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.input.TextSelector;
+import glaze.kit.base.input.TextSelector;
 import ropey.Rope;
 import testing.TestCase;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * Tests of `TextSelector` (Rust `selection.rs`). Columns are byte offsets

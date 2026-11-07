@@ -1,40 +1,40 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline_object.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ClickEvent.MouseClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.LayoutId;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.Style;
-import gpui.StyledText;
-import gpui.TextStyle;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.TextSelection;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.base.text.InlineNode.SharedFlag;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ClickEvent.MouseClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.LayoutId;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.Style;
+import glaze.StyledText;
+import glaze.TextStyle;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.kit.base.text.InlineNode.SharedFlag;
+import glaze.util.Utf8;
 
 using StringTools;
 
 /** Rust `LinkClickHandlerFn` (text_view.rs): `(url, event, window, cx)`. */
-private typedef LinkClickHandler = (url:String, event:gpui.ClickEvent, window:gpui.Window, cx:gpui.App) -> Void;
+private typedef LinkClickHandler = (url:String, event:glaze.ClickEvent, window:glaze.Window, cx:glaze.App) -> Void;
 
 /**
  * The size of an inline object and the distance from its top to its
@@ -55,7 +55,7 @@ class InlineMetrics {
         return new InlineMetrics(size, baseline);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function isValid():Bool {
         final width:Float = size.width;
         final height:Float = size.height;
@@ -121,8 +121,8 @@ class MeasuredInlineObject {
         final result = new MeasuredInlineObject(fallback, null, text, fontSize, style.clone());
         if (presentation != null) {
             // The wrapper carries inherited marks into both layout and painting.
-            final wrapper = gpui.Prelude.div().child(presentation.element);
-            wrapper.style().text = style.subtract(new gpui.TextStyleRefinement());
+            final wrapper = glaze.Prelude.div().child(presentation.element);
+            wrapper.style().text = style.subtract(new glaze.TextStyleRefinement());
             final element = wrapper.intoAnyElement();
             final measured = element.layoutAsRoot(new SizeOf<AvailableSpace>(MaxContent, MaxContent), window, cx);
             final metrics = new InlineMetrics(measured,
@@ -160,11 +160,11 @@ class MeasuredInlineObject {
         }
         final text = new StyledText(this.text).withRuns([textStyle.toRun(Utf8.byteLength(this.text))]);
         return {
-            element: gpui.Prelude.div()
-                .w(gpui.Prelude.px(metrics.size.width))
-                .h(gpui.Prelude.px(metrics.size.height))
-                .textSize(gpui.Prelude.px(fontSize))
-                .lineHeight(gpui.Prelude.px(metrics.size.height))
+            element: glaze.Prelude.div()
+                .w(glaze.Prelude.px(metrics.size.width))
+                .h(glaze.Prelude.px(metrics.size.height))
+                .textSize(glaze.Prelude.px(fontSize))
+                .lineHeight(glaze.Prelude.px(metrics.size.height))
                 .whitespaceNowrap()
                 .overflowHidden()
                 .child(text)
@@ -208,7 +208,7 @@ class InlineObjectSelectionProjection {
  * role `GenericContainer` labelled with `accessibilityLabel`), the port has
  * no accessibility tree yet; the label is kept.
  */
-class InlineObject extends gpui.Element {
+class InlineObject extends glaze.Element {
 
     final id:ElementId;
 
@@ -264,7 +264,7 @@ class InlineObject extends gpui.Element {
         return id;
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function objectInSelection(bounds:Bounds, start:Point, end:Point):Bool {
         return Inline.pointInTextSelection(bounds.origin, bounds.size.width, start, end, bounds.size.height);
     }
@@ -272,8 +272,8 @@ class InlineObject extends gpui.Element {
     public function requestLayout(globalId:Null<GlobalElementId>, window:Window, cx:App):LayoutId {
         final metrics = object.metrics;
         final style = new Style();
-        style.sizeWidth = gpui.Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(metrics.size.width)));
-        style.sizeHeight = gpui.Length.Definite(gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(metrics.size.height)));
+        style.sizeWidth = glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(metrics.size.width)));
+        style.sizeHeight = glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(metrics.size.height)));
         return window.requestLayout(style, [], cx);
     }
 
@@ -319,7 +319,7 @@ class InlineObject extends gpui.Element {
         this.selected.value = selected;
         if (selected) {
             final color = view.read(cx).textViewStyle.selection();
-            window.paintQuad(gpui.Prelude.fill(bounds, color));
+            window.paintQuad(glaze.Prelude.fill(bounds, color));
         }
         final link = this.link_;
         if (link != null) {

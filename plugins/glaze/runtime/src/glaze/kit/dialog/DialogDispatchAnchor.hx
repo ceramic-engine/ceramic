@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/dispatch_anchor.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.Action;
-import gpui.App;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Window;
+import glaze.Action;
+import glaze.App;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * A focus node of a dialog control's own, so the control can dispatch its
@@ -25,7 +25,7 @@ import gpui.Prelude.*;
  * Create it where the control renders, so the keyed state lives in that
  * control's scope, and place `element()` inside the control.
  */
-@:allow(gpui.component)
+@:allow(glaze.kit)
 class DialogDispatchAnchor {
 
     final handle:FocusHandle;

@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.util.Utf8;
 
 /**
  * A snapshot of the text a `TextViewState` renders, as of one parse of its
@@ -30,7 +30,7 @@ class RenderedText {
     final indexCell:RenderedIndexCell;
 
     /** The text of `document`, whose index `indexCell` holds once built. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function new(owner:Int, revision:Int, document:ParsedDocument, indexCell:RenderedIndexCell) {
         this.owner = owner;
         this.revision = revision;
@@ -87,7 +87,7 @@ class RenderedText {
         return index().rangeForSource(source);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function index():RenderedIndex {
         if (indexCell.value == null) {
             indexCell.value = new RenderedIndex(document);

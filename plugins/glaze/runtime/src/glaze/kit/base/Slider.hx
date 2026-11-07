@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/slider.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.DragMoveEvent;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.MouseButton;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.ParentElement;
-import gpui.Point;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.DragMoveEvent;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.MouseButton;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.ParentElement;
+import glaze.Point;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Slider.SliderValueTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Slider.SliderValueTools;
 
 /**
  * Events emitted by the `SliderState`.
@@ -45,7 +45,7 @@ enum SliderEvent {
  * The value of the slider, a single value or a range of values (default
  * `Single(0)`). Methods are in `SliderValueTools`.
  */
-@:using(gpui.base.Slider.SliderValueTools)
+@:using(glaze.kit.base.Slider.SliderValueTools)
 enum SliderValue {
     Single(value:Float);
     Range(start:Float, end:Float);
@@ -124,7 +124,7 @@ class SliderValueTools {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function withStart(self:SliderValue, value:Float):SliderValue {
         return switch self {
             case Range(_, end): Range(Math.min(value, end), end);
@@ -132,7 +132,7 @@ class SliderValueTools {
         }
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function withEnd(self:SliderValue, value:Float):SliderValue {
         return switch self {
             case Range(start, _): Range(start, Math.max(value, start));
@@ -199,7 +199,7 @@ class SliderValueTools {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -258,7 +258,7 @@ class SliderState extends Model {
     @observe var percentageEnd:Float = 0.0;
 
     /** The bounds of the slider after rendered. */
-    var stateBounds:Bounds = new Bounds(new Point(0, 0), new gpui.Size(0, 0));
+    var stateBounds:Bounds = new Bounds(new Point(0, 0), new glaze.Size(0, 0));
 
     var scaleMode:SliderScale = Linear;
 
@@ -269,7 +269,7 @@ class SliderState extends Model {
     var dragging:Bool = false;
 
     /** The touch drag this slider claimed, while one is live. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var touchDrag:Null<SliderTouchDrag> = null;
 
     /**
@@ -280,7 +280,7 @@ class SliderState extends Model {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     static inline function clampF(value:Float, min:Float, max:Float):Float {
@@ -443,7 +443,7 @@ class SliderState extends Model {
         }
 
         var value = percentageToValue(percentage);
-        value = f32(f32(gpui.util.MathUtil.round(f32(value / step))) * step);
+        value = f32(f32(glaze.util.MathUtil.round(f32(value / step))) * step);
 
         if (isStart) {
             percentageStart = percentage;
@@ -458,7 +458,7 @@ class SliderState extends Model {
     /**
      * Whether `position` is closer to the range start thumb than to the end thumb.
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function isNearerStart(axis:Axis, position:Point):Bool {
         final size = f32(stateBounds.size.along(axis));
         final along = axis == Axis.Horizontal ? f32(position.x - stateBounds.left()) : f32(stateBounds.bottom() - position.y);
@@ -553,7 +553,7 @@ private class EmptyDragView extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }
@@ -734,7 +734,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
             element.extend([
                 canvas((bounds, window, _) -> window.insertHitbox(bounds, HitboxBehavior.Normal), (_, hitbox, window, _) -> {
                     window.onMouseEvent(TouchDrag, (e, phase, window, cx) -> {
-                        final event:gpui.TouchDragEvent = cast e;
+                        final event:glaze.TouchDragEvent = cast e;
                         if (!phase.bubble()) {
                             return;
                         }
@@ -807,7 +807,7 @@ class SliderTrack implements RenderOnce implements Styled implements ParentEleme
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
 }
@@ -941,7 +941,7 @@ class SliderThumb implements RenderOnce implements Styled implements ParentEleme
 /**
  * A touch drag claimed by a slider.
  */
-@:allow(gpui.base)
+@:allow(glaze.kit.base)
 class SliderTouchDrag {
 
     /** Identifies the gesture: every event of one drag carries the same start. */

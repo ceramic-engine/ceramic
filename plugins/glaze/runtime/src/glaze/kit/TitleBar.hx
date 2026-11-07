@@ -1,33 +1,33 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/title_bar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Background;
-import gpui.ClickEvent;
-import gpui.Decorations;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.OperatingSystem;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.Rgba;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.WindowControlArea;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Background;
+import glaze.ClickEvent;
+import glaze.Decorations;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.OperatingSystem;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.Rgba;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.WindowControlArea;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.InteractiveElementExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * TitleBar used to customize the appearance of the title bar.
@@ -81,7 +81,7 @@ class TitleBar implements RenderOnce implements Styled implements ParentElement 
 
     /** 80px on macOS, 12px elsewhere (Rust `TITLE_BAR_LEFT_PADDING`). */
     static function titleBarLeftPadding():Pixels {
-        return isMacos() ? gpui.Prelude.px(80.) : gpui.Prelude.px(12.);
+        return isMacos() ? glaze.Prelude.px(80.) : glaze.Prelude.px(12.);
     }
 
     @:allow(tests)
@@ -107,7 +107,7 @@ class TitleBar implements RenderOnce implements Styled implements ParentElement 
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     final titleBarStyle:StyleRefinement = new StyleRefinement();
@@ -252,7 +252,7 @@ private class TitleBarState {
  * We don't need implementation the click event for the control buttons on
  * Windows: if the user clicks in the bounds, the window event is triggered.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 private enum ControlIcon {
     Minimize;
     Restore;
@@ -260,7 +260,7 @@ private enum ControlIcon {
     Close(onCloseWindow:Null<(ClickEvent, Window, App) -> Void>);
 }
 
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 private class ControlIconTools {
 
     public static function id(self:ControlIcon):String {
@@ -313,7 +313,7 @@ private class ControlIconTools {
 /**
  * Renders one `ControlIcon` (Rust `impl RenderOnce for ControlIcon`).
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 private class ControlIconElement implements RenderOnce {
 
     final icon:ControlIcon;
@@ -364,9 +364,9 @@ private class ControlIconElement implements RenderOnce {
                         case Close(_):
                             if (onCloseWindow != null) {
                                 // Rust `ClickEvent::default()`
-                                onCloseWindow(Mouse(new gpui.ClickEvent.MouseClickEvent(
-                                    new gpui.MouseDownEvent(Left, new gpui.Point(0., 0.), null, 0),
-                                    new gpui.MouseUpEvent(Left, new gpui.Point(0., 0.), null, 0)
+                                onCloseWindow(Mouse(new glaze.ClickEvent.MouseClickEvent(
+                                    new glaze.MouseDownEvent(Left, new glaze.Point(0., 0.), null, 0),
+                                    new glaze.MouseUpEvent(Left, new glaze.Point(0., 0.), null, 0)
                                 )), window, cx);
                             } else {
                                 window.removeWindow();
@@ -381,9 +381,9 @@ private class ControlIconElement implements RenderOnce {
 
 /**
  * The window control buttons of the title bar (Rust's private
- * `WindowControls`, not GPUI's `gpui.WindowControls`).
+ * `WindowControls`, not GPUI's `glaze.WindowControls`).
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 private class WindowControls implements RenderOnce {
 
     final onCloseWindow:Null<(ClickEvent, Window, App) -> Void>;

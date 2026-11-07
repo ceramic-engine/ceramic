@@ -9,7 +9,7 @@ class Tests {
 
     public static function register(runner:TestRunner):Void {
 
-        runner.add(new tests.GpuiTest());
+        runner.add(new tests.GlazeTest());
         runner.add(new tests.GeometryTest());
         runner.add(new tests.ColorTest());
         runner.add(new tests.SceneTest());
@@ -40,7 +40,7 @@ class Tests {
         runner.add(new tests.DivInteractivityTest());
         runner.add(new tests.TouchGestureTest());
         runner.add(new tests.TouchWindowTest());
-        runner.add(new tests.GpuiInputTouchTest());
+        runner.add(new tests.GlazeInputTouchTest());
         runner.add(new tests.BrowserFilesTest());
         runner.add(new tests.kit.InputTouchTest());
         runner.add(new tests.kit.TouchSelectionIntegrationTest());
@@ -50,8 +50,8 @@ class Tests {
         runner.add(new tests.SystemNotificationsTest());
         runner.add(new tests.CeramicInputHelpersTest());
         runner.add(new tests.CeramicFocusKeyboardTest());
-        // GPUI's inspector (define gpui_inspector)
-        #if gpui_inspector
+        // GPUI's inspector (define glaze_inspector)
+        #if glaze_inspector
         runner.add(new tests.InspectorTest());
         #end
         runner.add(new tests.InteractiveTest());
@@ -226,7 +226,7 @@ class Tests {
         // gpui-kit wave 12: carousel
         runner.add(new tests.kit.ComponentCarouselTest());
         runner.add(new tests.kit.ComponentInspectorTest());
-        #if gpui_inspector
+        #if glaze_inspector
         runner.add(new tests.kit.InspectorStyleJsonTest());
         runner.add(new tests.kit.ComponentInspectorPanelTest());
         #end

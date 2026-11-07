@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/list/delegate.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.list;
+package glaze.kit.list;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.base.IndexPath;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.list.ListItem.Loading;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.list.ListItem.Loading;
+import glaze.kit.theme.Theme;
 
-import gpui.base.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
 /**
  * An item a `ListDelegate` renders (Rust `ListDelegate::Item: Selectable +

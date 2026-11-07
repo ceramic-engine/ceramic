@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/touch_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Hsla;
-import gpui.Point;
-import gpui.Size;
-import gpui.Window;
+import glaze.Bounds;
+import glaze.Hsla;
+import glaze.Point;
+import glaze.Size;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The grab handle at one end of a touch selection: a bar down the caret
@@ -38,7 +38,7 @@ class TouchHandle {
         final knobTop = edge == Start ? caret.top() - KNOB_SIZE : caret.bottom();
         final knob = new Bounds(new Point(caret.left() - KNOB_SIZE / 2., knobTop), new Size(KNOB_SIZE, KNOB_SIZE));
         window.paintQuad(fill(bar, color));
-        window.paintQuad(fill(knob, color).withCornerRadii(gpui.Corners.all(KNOB_SIZE / 2.)));
+        window.paintQuad(fill(knob, color).withCornerRadii(glaze.Corners.all(KNOB_SIZE / 2.)));
     }
 
 }

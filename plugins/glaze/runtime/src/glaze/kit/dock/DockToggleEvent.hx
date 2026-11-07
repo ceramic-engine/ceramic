@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.base.dock.DockPlacement;
+import glaze.kit.base.dock.DockPlacement;
 
 /**
  * A dock that the user opened or closed with one of `DockSkin`'s controls:
@@ -21,7 +21,7 @@ class DockToggleEvent {
 
     final open:Bool;
 
-    @:allow(gpui.component.dock)
+    @:allow(glaze.kit.dock)
     function new(placement:DockPlacement, open:Bool) {
         this.placementValue = placement;
         this.open = open;

@@ -1,42 +1,42 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/group.rs, crates/component/src/input/group/button_element.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.ViewElement;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.ComponentTraits;
-import gpui.base.motion.Interpolators;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.button.Button.Button;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.ViewElement;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.motion.Interpolators;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.button.Button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.AbsoluteLengthTools;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A shared frame around one text control and any number of explicitly aligned addons.
@@ -274,7 +274,7 @@ abstract InputGroupControl(Input) from Input to Input {
 /**
  * What the addons and the control need to know about the group they sit in.
  */
-@:allow(gpui.component.input)
+@:allow(glaze.kit.input)
 class GroupPresentation {
 
     final size:Size;
@@ -302,7 +302,7 @@ class GroupPresentation {
 
 }
 
-@:allow(gpui.component.input)
+@:allow(glaze.kit.input)
 class GroupAppearance {
 
     final background:Hsla;
@@ -353,7 +353,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
 
     final id:ElementId;
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     var alignment:InputGroupAddonAlignment = InlineStart;
 
     final addonStyle:StyleRefinement = new StyleRefinement();
@@ -387,7 +387,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
         return this;
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function renderInGroup(presentation:GroupPresentation, window:Window, cx:App):IntoElement {
         for (child in childElements) {
             final button = InputGroupButton.fromElement(child);
@@ -440,7 +440,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
      * An icon without an explicit size follows the addon's one-rem default;
      * an explicit size stays with the icon.
      */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function addonChild(child:AnyElement):IntoElement {
         if (componentOf(child) is Icon) {
             return div().flexNone().textBase().child(child);
@@ -449,7 +449,7 @@ class InputGroupAddon implements RenderOnce implements Styled implements ParentE
     }
 
     /** The component a child renders, if it is one (Rust downcasts the element). */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function componentOf(child:AnyElement):Null<RenderOnce> {
         final element = child.element;
         if (element is ViewElement) {
@@ -486,13 +486,13 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
     }
 
     /** The direct `InputGroupButton` child of an addon (Rust `InputGroupButtonElement::from_element`). */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function fromElement(child:AnyElement):Null<InputGroupButton> {
         final component = InputGroupAddon.componentOf(child);
         return component is InputGroupButton ? cast component : null;
     }
 
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     function disable(disabled:Bool):Void {
         inheritedDisabled = inheritedDisabled || disabled;
     }
@@ -552,7 +552,7 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
         return this;
     }
 
-    public function withVariant(variant:gpui.component.button.Button.ButtonVariant):InputGroupButton {
+    public function withVariant(variant:glaze.kit.button.Button.ButtonVariant):InputGroupButton {
         button.withVariant(variant);
         return this;
     }
@@ -643,7 +643,7 @@ class InputGroupButton implements RenderOnce implements Styled implements Sizabl
             button.withSize(size);
         }
         if (ghost) {
-            button.custom(new gpui.component.button.Button.ButtonCustomVariant(cx)
+            button.custom(new glaze.kit.button.Button.ButtonCustomVariant(cx)
                 .color(theme.transparent)
                 .foreground(theme.foreground)
                 .hover(hover)

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/executor.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import tracker.Autorun;
 
@@ -25,12 +25,12 @@ class AnyTask {
      * Called once when the task is cancelled while still pending. Cancels whatever
      * produces the result (a timer, an awaited task...).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var cancelHook:Null<() -> Void> = null;
 
     var listeners:Null<Array<() -> Void>> = null;
 
-    @:allow(gpui.EntitySlot)
+    @:allow(glaze.EntitySlot)
     var owner:Null<EntitySlot> = null;
 
     var detached:Bool = false;
@@ -116,7 +116,7 @@ class AnyTask {
         listeners.push(listener);
     }
 
-    @:allow(gpui)
+    @:allow(glaze)
     function rejectWith(error:Dynamic):Void {
         if (state != Pending)
             return;
@@ -157,7 +157,7 @@ class AnyTask {
      * Runs `f` with tracker capture disabled, so that code run by executors,
      * timers and continuations never subscribes the view being rendered.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function runUnobserved(f:() -> Void):Void {
         Autorun.unobserve();
         try {
@@ -165,7 +165,7 @@ class AnyTask {
         }
         catch (e:haxe.Exception) {
             Autorun.reobserve();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         Autorun.reobserve();
     }

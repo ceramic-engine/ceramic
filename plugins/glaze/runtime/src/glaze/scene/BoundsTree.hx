@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/bounds_tree.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
-package gpui.scene;
+package glaze.scene;
 
 /**
  * The node arrays: typed arrays on JavaScript (V8 keeps the plain arrays in
@@ -112,7 +112,7 @@ class BoundsTree {
 
     /** Rounds to `f32`: GPUI's bounds are `Bounds<ScaledPixels>` (f32). */
     static inline function f(v:Float):Float {
-        return gpui.SpringMath.f32(v);
+        return glaze.SpringMath.f32(v);
     }
 
     /**

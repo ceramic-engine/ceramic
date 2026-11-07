@@ -5,47 +5,47 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.input.AutoClosingPair;
-import gpui.base.input.CodeActionItem;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.Diagnostic;
-import gpui.base.input.DiagnosticEntry;
-import gpui.base.input.EditorLanguage.Languages;
-import gpui.base.input.EditorState;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.LanguageConfig;
-import gpui.base.input.LspCodeAction;
-import gpui.base.input.LspHover;
-import gpui.base.input.SearchMatcher;
-import gpui.component.Component;
-import gpui.component.Size;
-import gpui.component.input.CompletionMenu;
-import gpui.component.input.ComponentLanguages;
-import gpui.component.input.Editor;
-import gpui.component.input.InputOverlays;
-import gpui.component.input.SearchPanel;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.input.AutoClosingPair;
+import glaze.kit.base.input.CodeActionItem;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.Diagnostic;
+import glaze.kit.base.input.DiagnosticEntry;
+import glaze.kit.base.input.EditorLanguage.Languages;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.LanguageConfig;
+import glaze.kit.base.input.LspCodeAction;
+import glaze.kit.base.input.LspHover;
+import glaze.kit.base.input.SearchMatcher;
+import glaze.kit.Component;
+import glaze.kit.Size;
+import glaze.kit.input.CompletionMenu;
+import glaze.kit.input.ComponentLanguages;
+import glaze.kit.input.Editor;
+import glaze.kit.input.InputOverlays;
+import glaze.kit.input.SearchPanel;
 import ropey.Rope;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.input.InputLspExt;
-using gpui.base.input.InputSearchExt;
-using gpui.component.Size.SizeTools;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.input.InputLspExt;
+using glaze.kit.base.input.InputSearchExt;
+using glaze.kit.Size.SizeTools;
 
 /**
  * Tests of the styled code editor: `Editor` (`editor.rs`), the search panel
@@ -59,8 +59,8 @@ using gpui.component.Size.SizeTools;
  * `syntax_context.rs`): the port has no tree-sitter, like gpui-kit built
  * without those features.
  */
-@:access(gpui.component.input)
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.input)
+@:access(glaze.kit.base.input.InputBaseState)
 class ComponentEditorTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -96,8 +96,8 @@ class ComponentEditorTest extends TestCase {
     function init():Void {
         app.update(cx -> {
             Component.init(cx);
-            gpui.component.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
-            gpui.component.theme.Theme.syncBase(cx);
+            glaze.kit.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
+            glaze.kit.theme.Theme.syncBase(cx);
         });
     }
 
@@ -335,7 +335,7 @@ class ComponentEditorTest extends TestCase {
     }
 
     function testNextScrollDirectionReturnsDownWithoutWrap() {
-        assertTrue(SearchScroll.nextScrollDirection(0, 1) == gpui.base.input.MoveDirection.Down);
+        assertTrue(SearchScroll.nextScrollDirection(0, 1) == glaze.kit.base.input.MoveDirection.Down);
     }
 
     function testNextScrollDirectionReturnsNoneOnWrap() {
@@ -347,7 +347,7 @@ class ComponentEditorTest extends TestCase {
     }
 
     function testPrevScrollDirectionReturnsUpWithoutWrap() {
-        assertTrue(SearchScroll.prevScrollDirection(2, 1) == gpui.base.input.MoveDirection.Up);
+        assertTrue(SearchScroll.prevScrollDirection(2, 1) == glaze.kit.base.input.MoveDirection.Up);
     }
 
     function testPrevScrollDirectionReturnsNoneOnWrap() {
@@ -370,11 +370,11 @@ class ComponentEditorTest extends TestCase {
      */
     function testRenderingInputsWithAnOpenOverlayWritesNothingTheyRead() {
         init();
-        final savedCheck = gpui.ViewTracker.checkWritesDuringCapture;
-        final savedHook = gpui.ViewTracker.onWriteDuringCapture;
+        final savedCheck = glaze.ViewTracker.checkWritesDuringCapture;
+        final savedHook = glaze.ViewTracker.onWriteDuringCapture;
         final writes:Array<String> = [];
-        gpui.ViewTracker.checkWritesDuringCapture = true;
-        gpui.ViewTracker.onWriteDuringCapture = tracker -> writes.push(tracker.name);
+        glaze.ViewTracker.checkWritesDuringCapture = true;
+        glaze.ViewTracker.onWriteDuringCapture = tracker -> writes.push(tracker.name);
         var state:Entity<EditorState> = null;
         final opened = addWindowView((window, cx) -> {
             state = cx.newEntity((c:Context<EditorState>) -> (new EditorState(window, c).defaultValue("let value = 1;\nvalue + 2\n") : EditorState));
@@ -392,8 +392,8 @@ class ComponentEditorTest extends TestCase {
                 window.draw();
             });
         }
-        gpui.ViewTracker.checkWritesDuringCapture = savedCheck;
-        gpui.ViewTracker.onWriteDuringCapture = savedHook;
+        glaze.ViewTracker.checkWritesDuringCapture = savedCheck;
+        glaze.ViewTracker.onWriteDuringCapture = savedHook;
         assertTrue(state.read(app).searchSession.open);
         assertEquals('', writes.join(','));
     }
@@ -579,7 +579,7 @@ class ComponentEditorTest extends TestCase {
                 state.presentCompletionItems(0, "f", [new CompletionItem("foo")], cast cx);
                 state.presentCodeActions([new CodeActionItem("test", new LspCodeAction("Fix"))], cast cx);
                 state.presentHover(new Range(0, 1), new LspHover("docs"), cast cx);
-                state.presentDiagnostic(new DiagnosticEntry(new Range(0, 0), new Diagnostic(new gpui.base.input.LspPosition(0, 0), new gpui.base.input.LspPosition(0, 0), "")), cast cx);
+                state.presentDiagnostic(new DiagnosticEntry(new Range(0, 0), new Diagnostic(new glaze.kit.base.input.LspPosition(0, 0), new glaze.kit.base.input.LspPosition(0, 0), "")), cast cx);
             });
 
             final host = new InputOverlayHost(base(state), window, cx);

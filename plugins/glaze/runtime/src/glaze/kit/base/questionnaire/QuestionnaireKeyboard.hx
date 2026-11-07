@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/keyboard.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
-import gpui.App;
-import gpui.Entity;
-import gpui.KeyDownEvent;
-import gpui.OperatingSystem;
-import gpui.Window;
+import glaze.App;
+import glaze.Entity;
+import glaze.KeyDownEvent;
+import glaze.OperatingSystem;
+import glaze.Window;
 
 /**
  * Rust's free function `questionnaire::handle_key_down`.
@@ -40,7 +40,7 @@ class QuestionnaireKeyboard {
             itemState != null && !itemState.isMultiple() && state.focusedCurrentChoice(window) != null;
         };
 
-        final update = (f:(QuestionnaireState, gpui.Context<QuestionnaireState>) -> Bool) -> state.update(cx, f);
+        final update = (f:(QuestionnaireState, glaze.Context<QuestionnaireState>) -> Bool) -> state.update(cx, f);
 
         final handled = if (key == 'enter' && modifiers.secondary(OperatingSystem.current) && modifiers.numberOfModifiers() == 1) {
             update((state, cx) -> state.confirmCurrent(window, cx));

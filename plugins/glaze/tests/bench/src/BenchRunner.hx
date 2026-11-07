@@ -1,15 +1,15 @@
 package;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Window;
-import gpui.util.AllocationCounters;
-import gpui.util.FrameProfiler;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Window;
+import glaze.util.AllocationCounters;
+import glaze.util.FrameProfiler;
 
 /**
  * Runs the registered scenarios (`Scenarios.all()`) and writes one JSON
- * result per (scenario, mode, run) in `test/bench/results/`.
+ * result per (scenario, mode, run) in `tests/bench/results/`.
  *
  * For a regular scenario and each of its modes (full render: no view cache,
  * like GPUI's uncached views; cached: the default view caching), the measured
@@ -17,9 +17,9 @@ import gpui.util.FrameProfiler;
  * followed by `flushImmediate()` and `window.drawIfDirty()`. It reports the
  * mean, median, p50, p95, p99 and max frame time, the views rendered and
  * reused per frame, the objects created per frame (`AllocationCounters`,
- * with `gpui_count_allocations`), the new `AnyElement`s per frame, on native
+ * with `glaze_count_allocations`), the new `AnyElement`s per frame, on native
  * the bytes allocated per frame (20 more frames with the GC disabled), the
- * per-phase times per frame (`FrameProfiler`, with `gpui_profile_frames`,
+ * per-phase times per frame (`FrameProfiler`, with `glaze_profile_frames`,
  * otherwise 0) and on native the minor GC pauses (`cpp.vm.Gc.memInfo64`
  * 107 to 110, 0 until hxcpp exposes them), the concurrent cycles per second,
  * the reserved heap and the process RSS at the end of the block, and the CPU
@@ -34,39 +34,39 @@ import gpui.util.FrameProfiler;
  * exits with 1 when they do.
  *
  * Environment:
- * - `GPUI_BENCH_SCENARIOS`: comma separated names (default: all registered);
- * - `GPUI_BENCH_FRAMES`: measured frames per run (default 300);
- * - `GPUI_BENCH_ONLY`: `full` or `cached` to measure one mode only;
- * - `GPUI_BENCH_RUNS`: repeats of the measured block in the same process (default 1);
- * - `GPUI_BENCH_RESULTS`: results directory (default `test/bench/results`);
- * - `GPUI_BENCH_SCREEN`: `1` runs the measured block through the real update
+ * - `GLAZE_BENCH_SCENARIOS`: comma separated names (default: all registered);
+ * - `GLAZE_BENCH_FRAMES`: measured frames per run (default 300);
+ * - `GLAZE_BENCH_ONLY`: `full` or `cached` to measure one mode only;
+ * - `GLAZE_BENCH_RUNS`: repeats of the measured block in the same process (default 1);
+ * - `GLAZE_BENCH_RESULTS`: results directory (default `tests/bench/results`);
+ * - `GLAZE_BENCH_SCREEN`: `1` runs the measured block through the real update
  *   loop with the renderable on the screen (one step per tick), so the
- *   `render` phase (SceneRenderable, with `gpui_profile_frames`), the time
+ *   `render` phase (SceneRenderable, with `glaze_profile_frames`), the time
  *   Ceramic spends drawing (from its begin draw to its finish draw event) and
  *   the wall time between two ticks (GL flush and swap included) are
  *   measured too;
- * - `GPUI_BENCH_ATLAS`: `1` runs the atlas upload micro benchmark instead;
- * - `GPUI_BENCH_RT`: `1` or `0` forces the `renderToTexture` mode of the
+ * - `GLAZE_BENCH_ATLAS`: `1` runs the atlas upload micro benchmark instead;
+ * - `GLAZE_BENCH_RT`: `1` or `0` forces the `renderToTexture` mode of the
  *   windows' renderables (`SceneRenderable.renderToTexture`), otherwise the
  *   default (`SceneRenderable.defaultRenderToTexture`);
- * - `GPUI_BENCH_GPU`: `1` (on screen, clay) calls `glFinish()` (on the web:
+ * - `GLAZE_BENCH_GPU`: `1` (on screen, clay) calls `glFinish()` (on the web:
  *   reads one pixel back, `finish()` does not wait there) after each
  *   Ceramic draw and measures how long it waits: the GPU work left for the
  *   frame, a proxy of its GPU time (it serializes CPU and GPU, so compare
  *   runs that both use it);
- * - `GPUI_BENCH_VERIFY_PARTIAL`: `1` (on screen, clay) also draws every frame
+ * - `GLAZE_BENCH_VERIFY_PARTIAL`: `1` (on screen, clay) also draws every frame
  *   entirely into a second texture and compares it byte for byte with the
  *   partially drawn one (`SceneRenderable.verifyPartialRendering`), printing
  *   the counts after each block (a check, not a measure);
- * - `GPUI_BENCH_PARTIAL`: `1` or `0` forces the `partialRendering` mode of
+ * - `GLAZE_BENCH_PARTIAL`: `1` or `0` forces the `partialRendering` mode of
  *   the windows' renderables (`SceneRenderable.partialRendering`), otherwise
  *   the default (`SceneRenderable.defaultPartialRendering`);
- * - `GPUI_BENCH_SOAK_SECONDS`: endurance (leak check) run instead of the
+ * - `GLAZE_BENCH_SOAK_SECONDS`: endurance (leak check) run instead of the
  *   measured blocks: each selected scenario and mode runs that many seconds
  *   and its memory is sampled (see `soak`), with
- *   `GPUI_BENCH_SOAK_SAMPLE_SECONDS` (default 5), `GPUI_BENCH_SOAK_LIVE_SECONDS`
+ *   `GLAZE_BENCH_SOAK_SAMPLE_SECONDS` (default 5), `GLAZE_BENCH_SOAK_LIVE_SECONDS`
  *   (live memory after a full collection, default 60, 0 for never) and
- *   `GPUI_BENCH_SOAK_WARMUP_SECONDS` (left out of the slopes, default 180).
+ *   `GLAZE_BENCH_SOAK_WARMUP_SECONDS` (left out of the slopes, default 180).
  */
 #if cpp
 @:cppFileCode('
@@ -148,16 +148,16 @@ class BenchRunner {
 
     final timestamp:String;
 
-    /** `GPUI_BENCH_SOAK_SECONDS`: endurance run length per mode (0: regular bench) */
+    /** `GLAZE_BENCH_SOAK_SECONDS`: endurance run length per mode (0: regular bench) */
     final soakSeconds:Int;
 
-    /** `GPUI_BENCH_SOAK_SAMPLE_SECONDS`: memory sample period of a soak run */
+    /** `GLAZE_BENCH_SOAK_SAMPLE_SECONDS`: memory sample period of a soak run */
     final soakSampleSeconds:Float;
 
-    /** `GPUI_BENCH_SOAK_LIVE_SECONDS`: live memory (after a full collection) period, 0 for never */
+    /** `GLAZE_BENCH_SOAK_LIVE_SECONDS`: live memory (after a full collection) period, 0 for never */
     final soakLiveSeconds:Float;
 
-    /** `GPUI_BENCH_SOAK_WARMUP_SECONDS`: samples left out of the slopes */
+    /** `GLAZE_BENCH_SOAK_WARMUP_SECONDS`: samples left out of the slopes */
     final soakWarmupSeconds:Float;
 
     var resultsDir:Null<String> = null;
@@ -186,7 +186,7 @@ class BenchRunner {
     /** Process CPU time per frame of the last on screen measure (native, ms) */
     var lastCpuPerFrame:Float = 0.0;
 
-    /** `GPUI_BENCH_GPU`: glFinish wait of the last on screen measure (median and p99, ms) */
+    /** `GLAZE_BENCH_GPU`: glFinish wait of the last on screen measure (median and p99, ms) */
     var lastGpuFinishMedian:Float = 0.0;
     var lastGpuFinishP99:Float = 0.0;
 
@@ -197,22 +197,22 @@ class BenchRunner {
     public function new(owner:ceramic.Entity, app:App) {
         this.owner = owner;
         this.app = app;
-        frames = envInt('GPUI_BENCH_FRAMES', 300);
-        runs = envInt('GPUI_BENCH_RUNS', 1);
-        final onlyEnv = env('GPUI_BENCH_ONLY');
+        frames = envInt('GLAZE_BENCH_FRAMES', 300);
+        runs = envInt('GLAZE_BENCH_RUNS', 1);
+        final onlyEnv = env('GLAZE_BENCH_ONLY');
         only = onlyEnv == 'full' || onlyEnv == 'cached' ? onlyEnv : null;
-        screen = env('GPUI_BENCH_SCREEN') == '1';
-        final rtEnv = env('GPUI_BENCH_RT');
+        screen = env('GLAZE_BENCH_SCREEN') == '1';
+        final rtEnv = env('GLAZE_BENCH_RT');
         renderToTexture = rtEnv == '1' ? true : rtEnv == '0' ? false : null;
-        final partialEnv = env('GPUI_BENCH_PARTIAL');
+        final partialEnv = env('GLAZE_BENCH_PARTIAL');
         partialRendering = partialEnv == '1' ? true : partialEnv == '0' ? false : null;
-        if (env('GPUI_BENCH_VERIFY_PARTIAL') == '1') {
-            gpui.platform.SceneRenderable.verifyPartialRendering = true;
+        if (env('GLAZE_BENCH_VERIFY_PARTIAL') == '1') {
+            glaze.platform.SceneRenderable.verifyPartialRendering = true;
         }
-        soakSeconds = envInt('GPUI_BENCH_SOAK_SECONDS', 0);
-        soakSampleSeconds = envFloat('GPUI_BENCH_SOAK_SAMPLE_SECONDS', 5);
-        soakLiveSeconds = envFloat('GPUI_BENCH_SOAK_LIVE_SECONDS', 60);
-        soakWarmupSeconds = envFloat('GPUI_BENCH_SOAK_WARMUP_SECONDS', 180);
+        soakSeconds = envInt('GLAZE_BENCH_SOAK_SECONDS', 0);
+        soakSampleSeconds = envFloat('GLAZE_BENCH_SOAK_SAMPLE_SECONDS', 5);
+        soakLiveSeconds = envFloat('GLAZE_BENCH_SOAK_LIVE_SECONDS', 60);
+        soakWarmupSeconds = envFloat('GLAZE_BENCH_SOAK_WARMUP_SECONDS', 180);
         timestamp = DateTools.format(Date.now(), '%Y%m%d-%H%M%S');
         scenarios = select(Scenarios.all());
     }
@@ -232,12 +232,12 @@ class BenchRunner {
      * check failed).
      */
     /**
-     * Atlas upload micro benchmark (`GPUI_BENCH_ATLAS=1`): 60 bursts of 300
+     * Atlas upload micro benchmark (`GLAZE_BENCH_ATLAS=1`): 60 bursts of 300
      * new glyph-like monochrome tiles and 4 polychrome tiles, each followed
      * by `CeramicAtlas.upload()`, timed.
      */
     static function atlasBench():Void {
-        final atlas = new gpui.platform.CeramicAtlas(1024, true, false);
+        final atlas = new glaze.platform.CeramicAtlas(1024, true, false);
         var seed = 1;
         function rnd(n:Int):Int {
             seed = (seed * 1103515245 + 12345) & 0x7FFFFFFF;
@@ -252,16 +252,16 @@ class BenchRunner {
                 final h = 10 + rnd(14);
                 final bytes = haxe.io.Bytes.alloc(w * h);
                 for (i in 0...bytes.length) bytes.set(i, rnd(256));
-                atlas.getOrInsertWith(gpui.AtlasKey.Svg('g${key++}', w, h), () -> new gpui.AtlasTile.AtlasTileSource(w, h, bytes));
+                atlas.getOrInsertWith(glaze.AtlasKey.Svg('g${key++}', w, h), () -> new glaze.AtlasTile.AtlasTileSource(w, h, bytes));
             }
             for (_ in 0...4) {
                 final w = 24 + rnd(40);
                 final h = 24 + rnd(40);
                 final bytes = haxe.io.Bytes.alloc(w * h * 4);
                 for (i in 0...bytes.length) bytes.set(i, rnd(256));
-                final source = new gpui.AtlasTile.AtlasTileSource(w, h, bytes);
+                final source = new glaze.AtlasTile.AtlasTileSource(w, h, bytes);
                 source.straightAlpha = true;
-                atlas.getOrInsertWith(gpui.AtlasKey.Image(key++, 0), () -> source);
+                atlas.getOrInsertWith(glaze.AtlasKey.Image(key++, 0), () -> source);
             }
             final start = now();
             atlas.upload();
@@ -278,17 +278,17 @@ class BenchRunner {
         #if js
         // `web-run.js --profile`: wait until it has enabled the DevTools
         // profiler, which records the `console.profile` blocks
-        if (env('GPUI_BENCH_PROFILE') == '1' && isElectron() && !isNode() && js.Syntax.code("window.gpuiBenchProfilerReady") != true) {
+        if (env('GLAZE_BENCH_PROFILE') == '1' && isElectron() && !isNode() && js.Syntax.code("window.glazeBenchProfilerReady") != true) {
             haxe.Timer.delay(run, 100);
             return;
         }
         #end
-        if (env('GPUI_BENCH_ATLAS') == '1') {
+        if (env('GLAZE_BENCH_ATLAS') == '1') {
             atlasBench();
             exit(0);
             return;
         }
-        print('gpui benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : '')
+        print('glaze benchmark ($target), ${scenarios.length} scenario(s): ' + [for (s in scenarios) s.name].join(', ') + ', $frames measured frames, $runs run(s)' + (screen ? ', on screen' : '')
             + (renderToTexture != null ? ', renderToTexture $renderToTexture' : '')
             + (partialRendering != null ? ', partialRendering $partialRendering' : ''));
         final tasks:Array<(() -> Void)->Void> = [];
@@ -383,7 +383,7 @@ class BenchRunner {
         var cpuBefore = 0.0;
         final onBeginDraw = () -> drawStart = now();
         final gpuTimes:Array<Float> = [];
-        final measureGpu = env('GPUI_BENCH_GPU') == '1';
+        final measureGpu = env('GLAZE_BENCH_GPU') == '1';
         final onFinishDraw = () -> {
             if (measuringDraws) drawTimes.push(now() - drawStart);
             #if clay
@@ -403,11 +403,11 @@ class BenchRunner {
             measuringDraws = frame > WARMUP_FRAMES;
             if (frame == WARMUP_FRAMES + 1) {
                 cpuBefore = cpuTime();
-                gpui.platform.SceneRenderable.partialStatsDraws = 0;
-                gpui.platform.SceneRenderable.partialStatsPartialDraws = 0;
-                gpui.platform.SceneRenderable.partialStatsFullDraws = 0;
-                gpui.platform.SceneRenderable.partialStatsArea = 0;
-                gpui.platform.SceneRenderable.partialStatsTotalArea = 0;
+                glaze.platform.SceneRenderable.partialStatsDraws = 0;
+                glaze.platform.SceneRenderable.partialStatsPartialDraws = 0;
+                glaze.platform.SceneRenderable.partialStatsFullDraws = 0;
+                glaze.platform.SceneRenderable.partialStatsArea = 0;
+                glaze.platform.SceneRenderable.partialStatsTotalArea = 0;
             }
             final measured = frame >= WARMUP_FRAMES;
             if (frame == WARMUP_FRAMES) {
@@ -425,7 +425,7 @@ class BenchRunner {
             }
             final countersBefore = AllocationCounters.total();
             final elementsBefore = AnyElement.allocatedCount;
-            final rasterizedBefore = gpui.PathRasterizer.rasterizedCount;
+            final rasterizedBefore = glaze.PathRasterizer.rasterizedCount;
             final start = now();
             final threadStart = threadCpuTime();
             final cycleAtStart = gcInfo(MEM_INFO_CYCLE_ACTIVE);
@@ -457,7 +457,7 @@ class BenchRunner {
                 reusedViews += window.reusedViewCount;
                 counters += AllocationCounters.total() - countersBefore;
                 anyElements += AnyElement.allocatedCount - elementsBefore;
-                pathRasterizations += gpui.PathRasterizer.rasterizedCount - rasterizedBefore;
+                pathRasterizations += glaze.PathRasterizer.rasterizedCount - rasterizedBefore;
             }
         }
         final total = WARMUP_FRAMES + frames;
@@ -493,14 +493,14 @@ class BenchRunner {
             drawTimes.sort(Reflect.compare);
             if (drawTimes.length > 0) {
                 print('  ceramic draw per frame: ${fmt(drawTimes[drawTimes.length >> 1])} ms median, p99 ${fmt(percentile(drawTimes, 0.99))} ms, max ${fmt(drawTimes[drawTimes.length - 1])} ms');
-                if (gpui.platform.SceneRenderable.verifyPartialRendering) {
-                    print('  partial rendering check: ${gpui.platform.SceneRenderable.partialVerifiedFrames} frames compared, '
-                        + '${gpui.platform.SceneRenderable.partialMismatchedFrames} differ'
-                        + (gpui.platform.SceneRenderable.partialFirstMismatch != null ? ' (${gpui.platform.SceneRenderable.partialFirstMismatch})' : ''));
+                if (glaze.platform.SceneRenderable.verifyPartialRendering) {
+                    print('  partial rendering check: ${glaze.platform.SceneRenderable.partialVerifiedFrames} frames compared, '
+                        + '${glaze.platform.SceneRenderable.partialMismatchedFrames} differ'
+                        + (glaze.platform.SceneRenderable.partialFirstMismatch != null ? ' (${glaze.platform.SceneRenderable.partialFirstMismatch})' : ''));
                 }
                 if (window.renderable.partialRendering) {
-                    print('  partial rendering: ${gpui.platform.SceneRenderable.partialStatsDraws} texture draws, ${gpui.platform.SceneRenderable.partialStatsPartialDraws} partial, ${gpui.platform.SceneRenderable.partialStatsFullDraws} full, redrawn area '
-                        + fmt(gpui.platform.SceneRenderable.partialStatsTotalArea > 0 ? 100 * gpui.platform.SceneRenderable.partialStatsArea / gpui.platform.SceneRenderable.partialStatsTotalArea : 0) + ' %');
+                    print('  partial rendering: ${glaze.platform.SceneRenderable.partialStatsDraws} texture draws, ${glaze.platform.SceneRenderable.partialStatsPartialDraws} partial, ${glaze.platform.SceneRenderable.partialStatsFullDraws} full, redrawn area '
+                        + fmt(glaze.platform.SceneRenderable.partialStatsTotalArea > 0 ? 100 * glaze.platform.SceneRenderable.partialStatsArea / glaze.platform.SceneRenderable.partialStatsTotalArea : 0) + ' %');
                 }
             }
             lastPathRasterizations = pathRasterizations;
@@ -524,7 +524,7 @@ class BenchRunner {
     }
 
     /**
-     * Endurance run (`GPUI_BENCH_SOAK_SECONDS`): the scenario's frames for
+     * Endurance run (`GLAZE_BENCH_SOAK_SECONDS`): the scenario's frames for
      * that long, through the real update loop in slices of about
      * `SOAK_SLICE_MS` (so timers and other deferred work run between them
      * like in an app). Every `soakSampleSeconds` it records the GC state
@@ -937,7 +937,7 @@ class BenchRunner {
 
     /**
      * Idle frames through the real update loop: nothing changes, nothing is
-     * drawn, nothing is allocated (by gpui or by the renderable).
+     * drawn, nothing is allocated (by Glaze or by the renderable).
      */
     function idle(scenario:IdleScenario, window:Window, caching:Bool, elementCount:Int, done:() -> Void):Void {
         final idleFrames = scenario.idleFrames;
@@ -1028,8 +1028,8 @@ class BenchRunner {
     static function buildInfo():Dynamic {
         return {
             defines: {
-                gpui_count_allocations: #if gpui_count_allocations true #else false #end,
-                gpui_profile_frames: #if gpui_profile_frames true #else false #end,
+                glaze_count_allocations: #if glaze_count_allocations true #else false #end,
+                glaze_profile_frames: #if glaze_profile_frames true #else false #end,
                 debug: #if debug true #else false #end
             },
             gc: #if cpp {
@@ -1073,7 +1073,7 @@ class BenchRunner {
     }
 
     /**
-     * `GPUI_BENCH_RESULTS`, or the `results` folder of the bench project
+     * `GLAZE_BENCH_RESULTS`, or the `results` folder of the bench project
      * found by walking up from the working directory (the folder holding
      * `src/BenchRunner.hx`). Null on the web (no file system).
      */
@@ -1083,7 +1083,7 @@ class BenchRunner {
      * `<label>-allocs.txt`.
      */
     function writeAllocProfile(label:String):Void {
-        final report = AllocProfile.stop(frames, envInt('GPUI_BENCH_ALLOC_TOP', 60));
+        final report = AllocProfile.stop(frames, envInt('GLAZE_BENCH_ALLOC_TOP', 60));
         if (report == null) return;
         print('  allocation profile of $label:');
         print(report);
@@ -1100,7 +1100,7 @@ class BenchRunner {
         if (resultsDir != null) {
             return resultsDir;
         }
-        final fromEnv = env('GPUI_BENCH_RESULTS');
+        final fromEnv = env('GLAZE_BENCH_RESULTS');
         if (fromEnv != null && fromEnv != '') {
             resultsDir = fromEnv;
             return resultsDir;
@@ -1143,7 +1143,7 @@ class BenchRunner {
     }
 
     function select(all:Array<Scenario>):Array<Scenario> {
-        final list = env('GPUI_BENCH_SCENARIOS');
+        final list = env('GLAZE_BENCH_SCENARIOS');
         if (list == null || StringTools.trim(list) == '') {
             return all;
         }
@@ -1192,7 +1192,7 @@ class BenchRunner {
     /**
      * Web under Electron: marks the measured block on the renderer's stdout,
      * where V8 also prints its `--trace-gc` lines, so `web-run.js` can sum
-     * the collections of each block; with `GPUI_BENCH_PROFILE=1`, also a
+     * the collections of each block; with `GLAZE_BENCH_PROFILE=1`, also a
      * `console.profile` around the block (recorded by `web-run.js --profile`
      * through the DevTools protocol).
      */
@@ -1201,12 +1201,12 @@ class BenchRunner {
         if (isNode() || !isElectron()) {
             return;
         }
-        final profile = env('GPUI_BENCH_PROFILE') == '1';
+        final profile = env('GLAZE_BENCH_PROFILE') == '1';
         if (kind == 'end' && profile) {
             js.Syntax.code('console.profileEnd({0})', label);
         }
         final heap:Float = js.Syntax.code("(performance.memory != null ? performance.memory.usedJSHeapSize : 0)");
-        js.Syntax.code("process.stdout.write({0})", 'GPUI_BENCH_MARK $kind $label ${js.Syntax.code("process.pid")} $heap\n');
+        js.Syntax.code("process.stdout.write({0})", 'GLAZE_BENCH_MARK $kind $label ${js.Syntax.code("process.pid")} $heap\n');
         if (kind == 'begin' && profile) {
             js.Syntax.code('console.profile({0})', label);
         }
@@ -1342,10 +1342,10 @@ class BenchRunner {
             // minute later)
             final runner = electronRunner();
             if (runner != null && runner.app != null) {
-                if (env('GPUI_BENCH_PROFILE') == '1') {
+                if (env('GLAZE_BENCH_PROFILE') == '1') {
                     var waited = 0;
                     function quitWhenDone() {
-                        if (js.Syntax.code("window.gpuiBenchMayQuit") == true || waited++ > 600)
+                        if (js.Syntax.code("window.glazeBenchMayQuit") == true || waited++ > 600)
                             runner.app.quit();
                         else
                             haxe.Timer.delay(quitWhenDone, 100);

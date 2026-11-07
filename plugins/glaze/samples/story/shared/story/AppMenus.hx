@@ -3,21 +3,21 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.Entity;
-import gpui.Menu;
-import gpui.base.GlobalState;
-import gpui.base.input.InputActions;
-import gpui.component.I18n;
-import gpui.component.menu.AppMenuBar;
-import gpui.component.theme.Theme;
-import gpui.component.theme.ThemeMode;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Entity;
+import glaze.Menu;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.I18n;
+import glaze.kit.menu.AppMenuBar;
+import glaze.kit.theme.Theme;
+import glaze.kit.theme.ThemeMode;
 import story.StoryActions;
 import story.Themes.SelectTheme;
 import story.Themes.SwitchThemeMode;
 
-using gpui.Menu.MenuItemTools;
+using glaze.Menu.MenuItemTools;
 
 /**
  * The application menus of the gallery, drawn by the title bar's

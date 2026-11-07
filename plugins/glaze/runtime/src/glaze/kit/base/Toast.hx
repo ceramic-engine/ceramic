@@ -1,39 +1,39 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/toast.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.MouseMoveEvent;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.Size;
-import gpui.SpringMath.f32;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.motion.Motion;
-import gpui.base.motion.MotionTime;
-import gpui.base.motion.Spring;
-import gpui.base.motion.TransitionId;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.MouseMoveEvent;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.Size;
+import glaze.SpringMath.f32;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.MotionTime;
+import glaze.kit.base.motion.Spring;
+import glaze.kit.base.motion.TransitionId;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
-using gpui.base.Observe;
-using gpui.base.StyledExt;
+using glaze.kit.base.ElementExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
 
 /**
  * Motion tokens used by an unstyled toast stack.
@@ -81,7 +81,7 @@ class ToastMotion {
      * Create motion matching the shadcn/Sonner toaster (also Rust's `Default`).
      */
     public static function sonner():ToastMotion {
-        return new ToastMotion(0.4, 0.2, gpui.Prelude.px(14.), gpui.Prelude.px(14.), f32(0.05), 3);
+        return new ToastMotion(0.4, 0.2, glaze.Prelude.px(14.), glaze.Prelude.px(14.), f32(0.05), 3);
     }
 
 }
@@ -93,16 +93,16 @@ class ToastMotion {
 class ToastStackState {
 
     /** Measured item heights, keyed by item element id. */
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     final heights:Map<String, Pixels> = new Map();
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     var width:Pixels = 0.;
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     var hovered:Bool = false;
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     var focused:Bool = false;
 
     public function new() {}
@@ -431,7 +431,7 @@ class ToastStackGeometry {
         this.offsets = offsets;
     }
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     static function compute(heights:Array<Pixels>, gap:Pixels, peek:Pixels, anchoredBottom:Bool):ToastStackGeometry {
         final count = heights.length;
         final gaps = count > 0 ? count - 1 : 0;
@@ -557,7 +557,7 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         for (id in [for (k in state.heights.keys()) k]) {
             if (keys.indexOf(id) == -1) state.heights.remove(id);
         }
-        final heights:Array<Pixels> = [for (id in keys) state.heights.exists(id) ? state.heights.get(id) : gpui.Prelude.px(0.)];
+        final heights:Array<Pixels> = [for (id in keys) state.heights.exists(id) ? state.heights.get(id) : glaze.Prelude.px(0.)];
         final measured = state.heights;
         final peek = motionValue.collapsedPeek;
         final gap = motionValue.expandedGap;
@@ -585,13 +585,13 @@ class ToastStack implements RenderOnce implements Styled implements ParentElemen
         for (index in 0...items.length) {
             final itemId = items[index].id;
             final child = items[index].child;
-            final offsetPair = index < offsets.length ? offsets[index] : {collapsed: gpui.Prelude.px(0.), expanded: gpui.Prelude.px(0.)};
+            final offsetPair = index < offsets.length ? offsets[index] : {collapsed: glaze.Prelude.px(0.), expanded: glaze.Prelude.px(0.)};
             final measuredId = key(itemId);
             final rank = count - (1 + index) > 0 ? count - (1 + index) : 0;
             final targetOffset = expanded ? offsetPair.expanded : offsetPair.collapsed;
             final offset:Pixels = Motion.spring(TransitionId.named(itemId, 'offset'), targetOffset, geometry, window, cx);
             final layer = rank < collapsedVisible - 1 ? rank : collapsedVisible - 1;
-            final targetInset:Pixels = expanded ? gpui.Prelude.px(0.) : f32(stackWidth * f32(f32(scaleStep * layer) / 2.));
+            final targetInset:Pixels = expanded ? glaze.Prelude.px(0.) : f32(stackWidth * f32(f32(scaleStep * layer) / 2.));
             final inset:Pixels = Motion.spring(TransitionId.named(itemId, 'inset'), targetInset, geometry, window, cx);
             final opacity = Motion.spring(TransitionId.named(itemId, 'visibility'), expanded || rank < collapsedVisible ? 1. : 0., fade, window, cx);
             final element = div()

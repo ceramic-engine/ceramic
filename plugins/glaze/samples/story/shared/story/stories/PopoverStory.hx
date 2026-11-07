@@ -4,43 +4,43 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.Anchor;
-import gpui.DismissEvent;
-import gpui.KeyBinding;
-import gpui.MouseButton;
-import gpui.WeakEntity;
-import gpui.base.IndexPath;
-import gpui.base.input.InputState;
-import gpui.component.button.Button;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.input.Input;
-import gpui.component.list.List;
-import gpui.component.list.ListDelegate;
-import gpui.component.list.ListItem;
-import gpui.component.list.ListState;
-import gpui.component.menu.PopupMenu;
-import gpui.component.popover.Popover;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.Anchor;
+import glaze.DismissEvent;
+import glaze.KeyBinding;
+import glaze.MouseButton;
+import glaze.WeakEntity;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputState;
+import glaze.kit.button.Button;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.input.Input;
+import glaze.kit.list.List;
+import glaze.kit.list.ListDelegate;
+import glaze.kit.list.ListItem;
+import glaze.kit.list.ListState;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.popover.Popover;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
+using glaze.kit.menu.DropdownMenu;
 
 /** Rust `Info(usize)` (renamed: `Info` clashes with `ButtonVariant.Info`). */
 @:action(namespace = popover_story, name = Info, noJson) private class InfoAction implements Action {
@@ -150,7 +150,7 @@ class PopoverStory extends Model implements Story {
         ]);
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -240,7 +240,7 @@ class PopoverStory extends Model implements Story {
                     .textSm()
                     .w(px(400.))
                     .child('Hello, this is a Popover.')
-                    .child(gpui.component.separator.Separator.horizontal())
+                    .child(glaze.kit.separator.Separator.horizontal())
                     .child('You can put any content here, including text,buttons, forms, and more.'))
                 .child(new Popover('default-open-popover')
                     .defaultOpen(true)
@@ -280,7 +280,7 @@ class PopoverStory extends Model implements Story {
                     .content((_, _, cx) -> vFlex()
                         .gap2()
                         .child('Hello, this is a Popover on the Bottom Right.')
-                        .child(gpui.component.separator.Separator.horizontal())
+                        .child(glaze.kit.separator.Separator.horizontal())
                         .child(new Button('info1')
                             .primary()
                             .label('Dismiss')

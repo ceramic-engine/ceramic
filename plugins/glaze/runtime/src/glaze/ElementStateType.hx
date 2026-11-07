@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/window.rs (`TypeId` of element states)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Integer ids of the element state types: Rust keys element states by

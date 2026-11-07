@@ -4,32 +4,32 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Subscription;
-import gpui.base.TimeField.HourCycle;
-import gpui.base.TimeField.TimeFieldEvent;
-import gpui.base.TimeField.TimeFieldState;
-import gpui.base.TimeField.TimePrecision;
-import gpui.base.chrono.NaiveTime;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
-import gpui.component.time.TimeField;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Subscription;
+import glaze.kit.base.TimeField.HourCycle;
+import glaze.kit.base.TimeField.TimeFieldEvent;
+import glaze.kit.base.TimeField.TimeFieldState;
+import glaze.kit.base.TimeField.TimePrecision;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
+import glaze.kit.time.TimeField;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class TimeFieldStory extends Model implements Story {
 
@@ -41,7 +41,7 @@ class TimeFieldStory extends Model implements Story {
         return 'Edit a time of day segment by segment, on a 24-hour or 12-hour clock.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -61,7 +61,7 @@ class TimeFieldStory extends Model implements Story {
 
     @observe var value:NaiveTime;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     final subscriptions:Array<Subscription>;
 

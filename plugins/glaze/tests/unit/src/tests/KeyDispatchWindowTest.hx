@@ -3,42 +3,42 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Bounds;
-import gpui.DispatchEventResult;
-import gpui.DispatchPhase;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.InputHandler;
-import gpui.InputPreference;
-import gpui.KeyDownEvent;
-import gpui.LayoutId;
-import gpui.Point;
-import gpui.Range;
-import gpui.Style;
-import gpui.TextInputStateChange;
-import gpui.UTF16Selection;
-import gpui.util.Ref;
+import glaze.Action;
+import glaze.App;
+import glaze.Bounds;
+import glaze.DispatchEventResult;
+import glaze.DispatchPhase;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.InputHandler;
+import glaze.InputPreference;
+import glaze.KeyDownEvent;
+import glaze.LayoutId;
+import glaze.Point;
+import glaze.Range;
+import glaze.Style;
+import glaze.TextInputStateChange;
+import glaze.UTF16Selection;
+import glaze.util.Ref;
 import testing.TestPlatformTextInput;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyContext;
-import gpui.KeystrokeEvent;
-import gpui.Keystroke;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyContext;
+import glaze.KeystrokeEvent;
+import glaze.Keystroke;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 @:action(namespace = dispatch_test) class WindowTestAction implements Action {}
 @:action(namespace = dispatch_test) class WindowSecondaryTestAction implements Action {}

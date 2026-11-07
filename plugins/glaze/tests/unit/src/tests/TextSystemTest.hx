@@ -1,11 +1,11 @@
 package tests;
 
-import gpui.Font;
-import gpui.FontId;
-import gpui.NoopTextSystem;
-import gpui.RenderGlyphParams;
-import gpui.TextSystem;
-import gpui.platform.CeramicTextSystem;
+import glaze.Font;
+import glaze.FontId;
+import glaze.NoopTextSystem;
+import glaze.RenderGlyphParams;
+import glaze.TextSystem;
+import glaze.platform.CeramicTextSystem;
 import testing.TestCase;
 
 /**
@@ -37,7 +37,7 @@ class TextSystemTest extends TestCase {
     function testCachesResolvedFontFallbacks() {
         final textSystem = new TextSystem(new NoopTextSystem());
         final requested = Font.of('Missing Font').bold().italic();
-        final missing = gpui.TextSystem.CachedFont.Missing('missing font');
+        final missing = glaze.TextSystem.CachedFont.Missing('missing font');
         textSystem.setCachedFont(requested, missing);
         for (fallback in textSystem.fallbackFontStack) {
             textSystem.setCachedFont(fallback, missing);
@@ -123,12 +123,12 @@ class TextSystemTest extends TestCase {
             assertClose(bbox16[2], b.size.width, F32_EPSILON, 'metrics at size', '$family bounding box width(16)');
             assertClose(bbox16[3], b.size.height, F32_EPSILON, 'metrics at size', '$family bounding box height(16)');
 
-            final windowTs = new gpui.WindowTextSystem(ts);
+            final windowTs = new glaze.WindowTextSystem(ts);
             assertClose(at16.em_layout_width, windowTs.emLayoutWidth(id, 16), F32_EPSILON, 'layout width', '$family em layout width');
 
             final chars:Array<Dynamic> = f.chars;
             for (c in chars) {
-                final ch = gpui.util.Utf8.codePointAtByte(c.char, 0);
+                final ch = glaze.util.Utf8.codePointAtByte(c.char, 0);
                 final glyph = ts.platformTextSystem.glyphForChar(id, ch);
                 assertEquals((c.glyph:Null<Int>), (glyph:Null<Int>), '$family glyph of ${c.char}');
                 if (glyph == null)
@@ -209,7 +209,7 @@ class TextSystemTest extends TestCase {
      * key is rotated so that hxcpp's IntMap spreads the glyph ids).
      */
     function testGlyphCacheKeepsEveryParamApart() {
-        final cache = new gpui.GlyphCache<Int>();
+        final cache = new glaze.GlyphCache<Int>();
         var expected = 0;
         for (glyph in [0, 1, 2, 255, 256, 257, 65535, 70000]) {
             for (variantX in 0...4) {

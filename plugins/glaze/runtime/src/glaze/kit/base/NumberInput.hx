@@ -2,30 +2,30 @@
 // `NumberInputEvent`, `Increment`, `Decrement`, `init`, `apply_number_step`, `step_value`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.input.InputBase;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.input.InputBase;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Steps the value up (bound to `up` in the `NumberInput` context).
@@ -234,7 +234,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
      * Apply a number-input step or emit a step event when stepping is
      * caller-controlled (Rust `InputState::apply_number_step`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function applyNumberStep(state:InputState, action:StepAction, window:Window, cx:Context<InputBaseState>):Void {
         if (state.disabled) {
             return;
@@ -248,7 +248,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
             final newValue = NumberInput.stepValue(value, action, stepValue, state.numberMin, state.numberMax);
             if (newValue != null) {
                 if (state.isValidInput(newValue, cx)) {
-                    final range = state.rangeToUtf16(new gpui.Range(0, utf8Length(state.value())));
+                    final range = state.rangeToUtf16(new glaze.Range(0, utf8Length(state.value())));
                     state.replaceTextInRangeSilent(range, newValue, window, cx);
                     return;
                 }
@@ -310,7 +310,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
      * optional fraction and exponent), `inf`, `infinity` and `nan`; null for
      * anything else (Haxe's `parseFloat` accepts trailing garbage).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function parseF64(s:String):Null<Float> {
         if (~/^[+-]?([0-9]+\.?[0-9]*|\.[0-9]+)([eE][+-]?[0-9]+)?$/.match(s)) {
             return Std.parseFloat(s);
@@ -356,7 +356,7 @@ class NumberInput implements RenderOnce implements Styled implements ParentEleme
      * Rust `format!("{value:.digits$}")`: fixed notation rounded to `digits`
      * fraction digits, ties to even.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function formatFixed(value:Float, digits:Int):String {
         if (Math.isNaN(value))
             return "NaN";

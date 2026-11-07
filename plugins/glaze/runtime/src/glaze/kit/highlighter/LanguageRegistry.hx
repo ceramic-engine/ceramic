@@ -2,7 +2,7 @@
 // LanguageConfig, GrammarConfig, LanguageRegistry)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
 /**
  * The language configuration of gpui-kit's builds without tree-sitter: a
@@ -29,7 +29,7 @@ class LanguageConfig {
 
 /**
  * Explicit name for grammar resources; editing rules use
- * `gpui.component.input.LanguageConfig`.
+ * `glaze.kit.input.LanguageConfig`.
  */
 typedef GrammarConfig = LanguageConfig;
 
@@ -71,7 +71,7 @@ class LanguageRegistry {
     /** Insertion order of the names (Rust's `HashMap` order is unspecified). */
     final names:Array<String> = [];
 
-    @:allow(gpui.component.highlighter, tests)
+    @:allow(glaze.kit.highlighter, tests)
     function new() {}
 
     public static function singleton():LanguageRegistry {
@@ -86,7 +86,7 @@ class LanguageRegistry {
         languagesByName.set(lang, config);
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function editingLanguageName(name:String):String {
         return languagesByName.exists(name) ? name : LanguageName.languageName(name);
     }

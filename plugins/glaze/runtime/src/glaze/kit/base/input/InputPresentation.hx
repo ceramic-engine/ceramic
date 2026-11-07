@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/state.rs (`InputPresentation`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.FocusHandle;
-import gpui.TextAlign;
+import glaze.FocusHandle;
+import glaze.TextAlign;
 
 /**
  * Read-only styling data exposed to presentation facades.
@@ -25,7 +25,7 @@ class InputPresentation {
     final _placeholder:String;
     final _maskPlaceholder:Null<String>;
 
-    @:allow(gpui.base.input)
+    @:allow(glaze.kit.base.input)
     function new(focusHandle:FocusHandle, disabled:Bool, readonly:Bool, loading:Bool, masked:Bool, multiLine:Bool, codeEditor:Bool,
             textAlign:TextAlign, placeholder:String, maskPlaceholder:Null<String>) {
         _focusHandle = focusHandle;

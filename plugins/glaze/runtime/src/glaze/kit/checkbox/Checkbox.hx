@@ -1,53 +1,53 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/checkbox.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.checkbox;
+package glaze.kit.checkbox;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.A11y;
-import gpui.base.Checkbox.CheckboxIndicator;
-import gpui.base.ComponentTraits;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.A11y;
+import glaze.kit.base.Checkbox.CheckboxIndicator;
+import glaze.kit.base.ComponentTraits;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
-import gpui.component.tooltip.Tooltip.ComponentTooltip;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
+import glaze.kit.tooltip.Tooltip.ComponentTooltip;
 
-using gpui.base.StyledExt;
-using gpui.component.StyleSized;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.StyleSized;
+using glaze.kit.ThemeStyled;
 
 /**
  * A Checkbox element.
  *
  * The label is a plain string (Rust `Text::String`; rich text views come
  * with the text module). The tooltip is a managed tooltip
- * (`gpui.component.tooltip`).
+ * (`glaze.kit.tooltip`).
  */
 class Checkbox implements RenderOnce implements Styled implements ParentElement implements Sizable implements Disableable implements Selectable implements FocusableExt {
 
     final id:ElementId;
 
     /** The Base checkbox the component renders (interactive listeners go to `base.base`). */
-    public final base:gpui.base.Checkbox;
+    public final base:glaze.kit.base.Checkbox;
 
     @:allow(tests)
     final checkboxStyle:StyleRefinement = new StyleRefinement();
@@ -87,7 +87,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      */
     public function new(id:ElementIdArg) {
         this.id = id;
-        this.base = new gpui.base.Checkbox(id);
+        this.base = new glaze.kit.base.Checkbox(id);
     }
 
     public inline function style():StyleRefinement {
@@ -244,7 +244,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      * The check mark of a checkbox or a radio: an icon fading in and out
      * with the theme's control spring.
      */
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function checkboxCheckIcon(id:ElementId, size:Size, checked:Bool, disabled:Bool, window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         // The mark keeps its path while the spring is still fading it out. Guarding
@@ -307,7 +307,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
                 onClick(!checked, window, cx);
             });
         }
-        base.hFlex().gap2().itemsStart().lineHeight(gpui.Prelude.relative(1.)).textColor(theme.foreground);
+        base.hFlex().gap2().itemsStart().lineHeight(glaze.Prelude.relative(1.)).textColor(theme.foreground);
         switch size {
             case Size(_):
             case _: base.inputTextSize(size);
@@ -337,7 +337,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
         base.child(indicator);
 
         if (labelValue != null || children.length > 0) {
-            final column = vFlex().flex1().overflowHidden().lineHeight(gpui.Prelude.relative(1.25)).gap1();
+            final column = vFlex().flex1().overflowHidden().lineHeight(glaze.Prelude.relative(1.25)).gap1();
             if (labelValue != null) {
                 final labelDiv = div().sizeFull().textColor(theme.foreground);
                 if (disabledValue) labelDiv.textColor(theme.mutedForeground);

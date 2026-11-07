@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/editor/search.rs (`impl<M: InputModeKind> InputBaseState<M>`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Range;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.Range;
+import glaze.Window;
 
-import gpui.base.input.InputActions;
+import glaze.kit.base.input.InputActions;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
  * The search methods of `InputBaseState`, written where Rust writes them
  * (`search.rs`). Haxe has no `impl` blocks outside a class: they are static
- * extensions (`using gpui.base.input.InputSearchExt;`), and `InputBaseState`
+ * extensions (`using glaze.kit.base.input.InputSearchExt;`), and `InputBaseState`
  * forwards its public API to them.
  *
  * They read the state fields of the Rust struct (`searchable`,
@@ -24,7 +24,7 @@ using gpui.base.input.RopeExt;
  * `rangeToUtf16`, `scrollTo`, `scrollToWithPadding`,
  * `replaceTextInRangeSilent`), named like the Rust ones.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class InputSearchExt {
 
     /**

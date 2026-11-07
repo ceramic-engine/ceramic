@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/appear.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.SpringMath;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.motion.Easing;
-import gpui.base.motion.Presence;
-import gpui.base.motion.TransitionId;
-import gpui.base.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.SpringMath;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.motion.Presence;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.base.theme.Theme;
 
 /**
  * How far a plot's data marks have appeared this frame, handed to
@@ -40,7 +40,7 @@ class PlotAppear {
 
     final easing:Easing;
 
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     @:allow(tests)
     function new(time:Float, easing:Easing) {
         this.time = time;
@@ -92,7 +92,7 @@ class PlotAppear {
      * The scopes being laid out or painted, innermost last. Only non-empty
      * while a `PlotAppearScope` is drawing its child.
      */
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     static final scopes:Array<PlotAppeared> = [];
 
     /**
@@ -101,7 +101,7 @@ class PlotAppear {
      * innermost `PlotAppearScope` saw finish is complete at once. Called by
      * `PlotElement` within the plot's element scope on every frame.
      */
-    @:allow(gpui.base.plot)
+    @:allow(glaze.kit.base.plot)
     static function trackAppear(globalId:GlobalElementId, generation:String, window:Window, cx:App):PlotAppear {
         final scope = scopes.length > 0 ? scopes[scopes.length - 1] : null;
         if (scope != null && scope.finished.get(globalId.key) == generation) {
@@ -198,7 +198,7 @@ class PlotAppearScope extends Element {
             appeared = new PlotAppeared();
         }
         final child = this.child;
-        return within(appeared, () -> child != null ? child.requestLayout(window, cx) : window.requestLayout(@:privateAccess gpui.Style.sharedDefaultStyle(), null, cx));
+        return within(appeared, () -> child != null ? child.requestLayout(window, cx) : window.requestLayout(@:privateAccess glaze.Style.sharedDefaultStyle(), null, cx));
     }
 
     public function prepaint(globalId:Null<GlobalElementId>, bounds:Bounds, window:Window, cx:App):Void {

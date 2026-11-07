@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Range;
+import glaze.Range;
 
 /**
  * Selection projected onto a participant's laid-out text runs.
@@ -16,7 +16,7 @@ class TextSelectionProjection {
     /** Whether the participant participates in the current selection. */
     final _isActive:Bool;
 
-    @:allow(gpui.base, tests)
+    @:allow(glaze.kit.base, tests)
     function new(ranges:Array<Null<Range>>, isActive:Bool) {
         _ranges = ranges;
         _isActive = isActive;

@@ -7,23 +7,23 @@ package tests.kit;
 import haxe.macro.Context;
 import haxe.macro.Expr;
 #else
-import gpui.Axis;
-import gpui.Pixels;
-import gpui.base.dock.DockAreaState;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.JsonValue;
-import gpui.base.dock.PaneNode;
-import gpui.base.dock.PaneTree;
-import gpui.base.dock.PanelBuilder;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelInfo;
-import gpui.base.dock.PanelSource;
-import gpui.base.dock.PanelState;
-import gpui.base.dock.RootKind;
+import glaze.Axis;
+import glaze.Pixels;
+import glaze.kit.base.dock.DockAreaState;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.JsonValue;
+import glaze.kit.base.dock.PaneNode;
+import glaze.kit.base.dock.PaneTree;
+import glaze.kit.base.dock.PanelBuilder;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelInfo;
+import glaze.kit.base.dock.PanelSource;
+import glaze.kit.base.dock.PanelState;
+import glaze.kit.base.dock.RootKind;
 import testing.TestCase;
 
-using gpui.base.dock.JsonValue.JsonValueTools;
-using gpui.base.dock.PanelInfo.PanelInfoTools;
+using glaze.kit.base.dock.JsonValue.JsonValueTools;
+using glaze.kit.base.dock.PanelInfo.PanelInfoTools;
 #end
 
 /**
@@ -32,10 +32,10 @@ using gpui.base.dock.PanelInfo.PanelInfoTools;
  * output for the same values, measured on serde_json 1.0.151).
  *
  * The fixtures are gpui-kit's `crates/base/src/dock/fixtures/*.json`,
- * copied unmodified to `test/unit/data/dock/`.
+ * copied unmodified to `tests/unit/data/dock/`.
  */
 #if !macro
-@:access(gpui.base.dock.PaneTree)
+@:access(glaze.kit.base.dock.PaneTree)
 #end
 class BaseDockStateTest #if !macro extends TestCase #end {
 
@@ -370,7 +370,7 @@ class BaseDockStateTest #if !macro extends TestCase #end {
             {value: 0.1, json: '0.1'},
             {value: 1. / 3., json: '0.33333334'},
             {value: 233.33333, json: '233.33333'},
-            {value: gpui.SpringMath.f32(gpui.SpringMath.f32(2. / 3.) * 700.), json: '466.6667'},
+            {value: glaze.SpringMath.f32(glaze.SpringMath.f32(2. / 3.) * 700.), json: '466.6667'},
             {value: 1e-6, json: '0.000001'},
             {value: 1e-7, json: '1e-7'},
             {value: 1.5e-7, json: '1.5e-7'},

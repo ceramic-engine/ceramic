@@ -1,36 +1,36 @@
 package tests;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.ElementInputHandler;
-import gpui.Entity;
-import gpui.EntityInputHandler;
-import gpui.FocusHandle;
-import gpui.GpuiInput;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.ScrollEvent;
-import gpui.ScrollSource;
-import gpui.TestDispatcher;
-import gpui.TextInputConfiguration;
-import gpui.UTF16Selection;
-import gpui.Window;
-import gpui.util.Ref;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.ElementInputHandler;
+import glaze.Entity;
+import glaze.EntityInputHandler;
+import glaze.FocusHandle;
+import glaze.GlazeInput;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.ScrollEvent;
+import glaze.ScrollSource;
+import glaze.TestDispatcher;
+import glaze.TextInputConfiguration;
+import glaze.UTF16Selection;
+import glaze.Window;
+import glaze.util.Ref;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ScrollDelta.ScrollDeltaTools;
+using glaze.ScrollDelta.ScrollDeltaTools;
 
 /**
- * Ceramic touches through `GpuiInput`: touch events injected in Ceramic's
+ * Ceramic touches through `GlazeInput`: touch events injected in Ceramic's
  * backend screen (like the clay and headless backends emit them) become the
  * GPUI events the recognizer makes of them (taps with their click count,
  * pans as touch scrolls with their phases, cancelled touches). Also Ceramic's
@@ -38,7 +38,7 @@ using gpui.ScrollDelta.ScrollDeltaTools;
  * tap filter answered from the text inputs of the last frame, the touch
  * cancel event and the per touch deltas of `ceramic.Screen`.
  */
-class GpuiInputTouchTest extends TestCase {
+class GlazeInputTouchTest extends TestCase {
 
     var dispatcher:TestDispatcher;
 
@@ -54,7 +54,7 @@ class GpuiInputTouchTest extends TestCase {
 
     override function teardown() {
         if (cx != null) {
-            GpuiInput.unbind(cx.window);
+            GlazeInput.unbind(cx.window);
             cx.destroy();
             cx = null;
         }
@@ -64,7 +64,7 @@ class GpuiInputTouchTest extends TestCase {
     function open<V:Model & Render>(build:(Window, Context<V>) -> V):Entity<V> {
         final opened = VisualTestContext.addWindowView(app, dispatcher, build, 400, 300, 1);
         cx = opened.cx;
-        GpuiInput.bind(cx.window);
+        GlazeInput.bind(cx.window);
         return opened.view;
     }
 
@@ -114,7 +114,7 @@ class GpuiInputTouchTest extends TestCase {
         // binding GPUI input leaves the app's choice as it is
         final settings = ceramic.App.app.settings;
         final previous = settings.webWheelResampling;
-        @:privateAccess if (GpuiInput.instance != null) GpuiInput.instance.destroy();
+        @:privateAccess if (GlazeInput.instance != null) GlazeInput.instance.destroy();
         settings.webWheelResampling = false;
         open((_, _) -> new TouchLogView([]));
         assertFalse(settings.webWheelResampling);
@@ -179,7 +179,7 @@ class GpuiInputTouchTest extends TestCase {
     function testTouchIdentifiersAreNeverReused() {
         final log:Array<String> = [];
         open((_, _) -> new TouchLogView(log));
-        final input:GpuiInput = @:privateAccess GpuiInput.instance;
+        final input:GlazeInput = @:privateAccess GlazeInput.instance;
         final before:Int = @:privateAccess input.nextTouchId;
         touch('down', 0, 40, 50);
         touch('up', 0, 40, 50);

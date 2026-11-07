@@ -2,15 +2,15 @@ package;
 
 import ceramic.Entity;
 import ceramic.InitSettings;
-import gpui.App;
-import gpui.TestDispatcher;
+import glaze.App;
+import glaze.TestDispatcher;
 
 /**
- * Benchmark suite of the GPUI port: `BenchRunner` runs the scenarios of
+ * Benchmark suite of Glaze: `BenchRunner` runs the scenarios of
  * `Scenarios.all()` (`cards`, `idle`, and the ones under `src/scenarios/`),
  * prints a summary per scenario and mode, and writes a JSON result per run in
  * `results/`. See `BenchRunner` for the environment variables and
- * `test/bench/README.md` for the comparison script.
+ * `tests/bench/README.md` for the comparison script.
  *
  * Run: `ceramic headless run node --setup --assets` (Node) or
  * `ceramic clay build mac --setup --assets` then
@@ -37,7 +37,7 @@ class Project extends Entity {
         // synchronous file access (node, web) draw no icon. The full-catalog
         // icons of the stories (ToolbarStory's save icon, the reference icons
         // of InputTokens) are copied in assets/icons like samples/story/assets
-        final paths = [for (icon in gpui.component.IconName.ALL) icon.path()];
+        final paths = [for (icon in glaze.kit.IconName.ALL) icon.path()];
         paths.push(story.stories.ToolbarStory.SAVE_ICON_PATH);
         for (path in ['icons/image.svg', 'icons/sparkles.svg', 'icons/at-sign.svg']) paths.push(path);
         App.defaultAssetSource().preload(paths, _ -> scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run()));

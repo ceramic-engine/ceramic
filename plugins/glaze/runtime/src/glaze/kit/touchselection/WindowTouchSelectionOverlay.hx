@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/touch_selection/window_overlay.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.touchselection;
+package glaze.kit.touchselection;
 
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.TextSelection;
-import gpui.component.I18n;
-import gpui.component.touchselection.EditMenu.EditMenuItem;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.TextSelection;
+import glaze.kit.I18n;
+import glaze.kit.touchselection.EditMenu.EditMenuItem;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Draws the handles and the edit menu of the window text selection, the one
@@ -38,7 +38,7 @@ class WindowTouchSelectionOverlay extends Model implements Render {
     }
 
     static function copy(window:Window, cx:App):Void {
-        final text = gpui.base.text.TextUtils.trim(TextSelection.selectedText(window, cx));
+        final text = glaze.kit.base.text.TextUtils.trim(TextSelection.selectedText(window, cx));
         if (text.length > 0) {
             cx.writeToClipboard(ClipboardItem.newString(text));
         }

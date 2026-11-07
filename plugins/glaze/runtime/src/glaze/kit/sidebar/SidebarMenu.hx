@@ -1,32 +1,32 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sidebar/menu.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.sidebar;
+package glaze.kit.sidebar;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.sidebar.Sidebar.SidebarItem;
-import gpui.component.theme.Theme;
-import gpui.component.tooltip.Tooltip;
-import gpui.component.tooltip.Tooltip.ManagedTooltip;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.sidebar.Sidebar.SidebarItem;
+import glaze.kit.theme.Theme;
+import glaze.kit.tooltip.Tooltip;
+import glaze.kit.tooltip.Tooltip.ManagedTooltip;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Observe;
-using gpui.base.StyledExt;
-using gpui.component.menu.ContextMenu.ContextMenuExt;
+using glaze.kit.base.Observe;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.ContextMenu.ContextMenuExt;
 
 /**
  * Menu for the `Sidebar`.
@@ -61,7 +61,7 @@ class SidebarMenu implements SidebarItem implements Styled {
      * (replaces the items added before, like the original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenu {
-        items = gpui.util.Iterables.toArrayNonNull(children);
+        items = glaze.util.Iterables.toArrayNonNull(children);
         return this;
     }
 
@@ -267,7 +267,7 @@ class SidebarMenuItem implements SidebarItem implements Styled {
      * original).
      */
     public function children(children:Iterable<SidebarMenuItem>):SidebarMenuItem {
-        childItems = gpui.util.Iterables.toArrayNonNull(children);
+        childItems = glaze.util.Iterables.toArrayNonNull(children);
         return this;
     }
 
@@ -291,7 +291,7 @@ class SidebarMenuItem implements SidebarItem implements Styled {
         return childItems.length > 0;
     }
 
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     function collapsedTooltip():Null<String> {
         return (collapsedValue && iconValue != null) ? labelValue : null;
     }
@@ -300,7 +300,7 @@ class SidebarMenuItem implements SidebarItem implements Styled {
      * Accessible name for the submenu caret: the toggle is icon-only, so
      * assistive tech needs the item it acts on.
      */
-    @:allow(gpui.component.sidebar, tests)
+    @:allow(glaze.kit.sidebar, tests)
     function caretAccessibilityLabel():String {
         return 'Toggle $labelValue submenu';
     }

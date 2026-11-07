@@ -1,7 +1,7 @@
 // Ported from gpui-pre-macros 0.3.10: src/derive_action.rs, src/register_action.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 #if macro
 import haxe.macro.Context;
@@ -214,7 +214,7 @@ class ActionMacro {
         // boxedClone()
         addMethod('boxedClone', [APublic], {
             args: [],
-            ret: macro :gpui.Action,
+            ret: macro :glaze.Action,
             expr: macro return ${constructFrom(macro this)}
         });
 
@@ -225,7 +225,7 @@ class ActionMacro {
                 final n = f.name;
                 final test = f.kind != 'any'
                     ? macro this.$n == __other.$n
-                    : macro gpui.ActionJson.valueEquals(this.$n, __other.$n);
+                    : macro glaze.ActionJson.valueEquals(this.$n, __other.$n);
                 compare = macro $compare && $test;
             }
             final body = isUnit
@@ -238,7 +238,7 @@ class ActionMacro {
                     return $compare;
                 };
             addMethod('partialEq', [APublic], {
-                args: [{name: 'action', type: macro :gpui.Action}],
+                args: [{name: 'action', type: macro :glaze.Action}],
                 ret: macro :Bool,
                 expr: body
             });
@@ -263,10 +263,10 @@ class ActionMacro {
                         case 'String': 'readString';
                         case _: 'readAny';
                     }
-                    macro gpui.ActionJson.$reader(__object, $v{f.jsonName}, $v{f.optional});
+                    macro glaze.ActionJson.$reader(__object, $v{f.jsonName}, $v{f.optional});
                 }];
                 body = macro {
-                    final __object:Dynamic = gpui.ActionJson.object(value, $nameExpr);
+                    final __object:Dynamic = glaze.ActionJson.object(value, $nameExpr);
                     return new $selfTypePath($a{args});
                 };
             }
@@ -276,7 +276,7 @@ class ActionMacro {
                     macro if (Reflect.hasField(__object, $v{f.jsonName})) Reflect.setField(__result, $v{n}, Reflect.field(__object, $v{f.jsonName}));
                 }];
                 body = macro {
-                    final __object:Dynamic = gpui.ActionJson.object(value, $nameExpr);
+                    final __object:Dynamic = glaze.ActionJson.object(value, $nameExpr);
                     final __result:$selfType = Type.createEmptyInstance($selfExpr);
                     $b{assigns};
                     return __result;
@@ -284,7 +284,7 @@ class ActionMacro {
             }
             addMethod('build', [APublic, AStatic], {
                 args: [{name: 'value', type: macro :Dynamic}],
-                ret: macro :gpui.Action,
+                ret: macro :glaze.Action,
                 expr: body
             });
         }
@@ -305,7 +305,7 @@ class ActionMacro {
             if (!cls.meta.has(':keep')) {
                 cls.meta.add(':keep', [], pos);
             }
-            final registration = macro gpui.ActionRegistry.registerMacroAction(new gpui.MacroActionData(
+            final registration = macro glaze.ActionRegistry.registerMacroAction(new glaze.MacroActionData(
                 $nameExpr,
                 Type.getClassName($selfExpr),
                 $selfExpr.build,

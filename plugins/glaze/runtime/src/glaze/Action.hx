@@ -1,14 +1,14 @@
 // Ported from gpui-pre 0.3.10: src/action.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Actions are used to implement keyboard-driven UI. When you declare an
  * action, you can bind keys to the action in the keymap and listeners for that
  * action in the element tree.
  *
- * Any class implementing `Action` goes through `gpui.ActionMacro.build()`
+ * Any class implementing `Action` goes through `glaze.ActionMacro.build()`
  * (Rust: `#[derive(Action)]`), which generates every method the class does not
  * define itself:
  *
@@ -42,7 +42,7 @@ package gpui;
  * Registering two actions with the same name throws when the first
  * `ActionRegistry` (one per `App`) is created.
  */
-@:autoBuild(gpui.ActionMacro.build())
+@:autoBuild(glaze.ActionMacro.build())
 interface Action {
 
     /**

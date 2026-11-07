@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/mod.rs (PlotMotion)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.base.motion.Spring;
-import gpui.base.motion.Transition;
+import glaze.kit.base.motion.Spring;
+import glaze.kit.base.motion.Transition;
 
 /**
  * The timing of a plot's motion: how its data marks appear when it is first

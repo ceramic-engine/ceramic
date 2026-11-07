@@ -3,10 +3,10 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.KeyBinding;
-import gpui.OperatingSystem;
-import gpui.base.input.InputActions;
-import gpui.base.input.InputKeyBindings;
+import glaze.KeyBinding;
+import glaze.OperatingSystem;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.InputKeyBindings;
 import testing.TestCase;
 
 /**
@@ -21,7 +21,7 @@ class InputKeyBindingsTest extends TestCase {
 
     /** A binding as `describe` prints it, keystrokes normalized like the bindings. */
     static function b(keystrokes:String, action:String):String {
-        return gpui.Keystroke.parse(keystrokes).unparse(Mac) + '=' + action;
+        return glaze.Keystroke.parse(keystrokes).unparse(Mac) + '=' + action;
     }
 
     function testMacosBindings() {

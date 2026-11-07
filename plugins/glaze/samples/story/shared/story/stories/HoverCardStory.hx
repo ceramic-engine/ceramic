@@ -3,26 +3,26 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Anchor;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.avatar.Avatar;
-import gpui.component.button.Button;
-import gpui.component.hovercard.HoverCard;
-import gpui.component.link.Link;
-import gpui.component.theme.Theme;
+import glaze.Anchor;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.avatar.Avatar;
+import glaze.kit.button.Button;
+import glaze.kit.hovercard.HoverCard;
+import glaze.kit.link.Link;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class HoverCardStory extends Model implements Story {
 

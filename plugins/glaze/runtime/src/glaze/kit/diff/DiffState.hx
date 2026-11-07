@@ -1,33 +1,33 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.App;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.HighlightStyle;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.Model;
-import gpui.Point;
-import gpui.Range;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.Window;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionContentKey;
-import gpui.base.TextSelectionEvent;
-import gpui.base.TextSelectionHandle;
-import gpui.component.diff.Presentation.DiffStyledRange;
-import gpui.component.diff.Presentation.DiffSyntaxHighlighter;
-import gpui.component.diff.Presentation.FilePresentation;
-import gpui.component.diff.Presentation.PresentationOptions;
-import gpui.component.diff.Selection.SelectionGeometry;
-import gpui.component.highlighter.SyntaxHighlighter;
+import glaze.App;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.HighlightStyle;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.Model;
+import glaze.Point;
+import glaze.Range;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.Window;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionContentKey;
+import glaze.kit.base.TextSelectionEvent;
+import glaze.kit.base.TextSelectionHandle;
+import glaze.kit.diff.Presentation.DiffStyledRange;
+import glaze.kit.diff.Presentation.DiffSyntaxHighlighter;
+import glaze.kit.diff.Presentation.FilePresentation;
+import glaze.kit.diff.Presentation.PresentationOptions;
+import glaze.kit.diff.Selection.SelectionGeometry;
+import glaze.kit.highlighter.SyntaxHighlighter;
 
 /**
  * One virtualized row. Every row belongs to exactly one file.
@@ -123,7 +123,7 @@ enum DiffEvent {
 /**
  * Inputs that determine row heights and content width.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class LayoutKey {
 
     final rem:Float;
@@ -154,7 +154,7 @@ class LayoutKey {
 /**
  * The row showing each source line, or the disclosure hiding it.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class FileRows {
 
     final original:Array<Null<Int>>;
@@ -289,7 +289,7 @@ class DiffState extends Model {
 
     var preparing:Null<Int> = null;
 
-    var presentationTask:Null<Task<gpui.Unit>> = null;
+    var presentationTask:Null<Task<glaze.Unit>> = null;
 
     final selectionSubscription:Subscription;
 
@@ -352,7 +352,7 @@ class DiffState extends Model {
         }, cx.app);
         _selection = selection;
         _geometry = geometry;
-        _files = gpui.util.Iterables.toArray(files);
+        _files = glaze.util.Iterables.toArray(files);
         expanded = [for (_ in _files) []];
         _presentations = [for (_ in _files) null];
         fileIxs = fileIxsOf(_files);
@@ -554,49 +554,49 @@ class DiffState extends Model {
         return focus;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function rows():Array<DisplayRow> {
         return _rows;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function list():ListState {
         return _list;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function horizontalScroll():ScrollHandle {
         return _horizontalScroll;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function selection():TextSelectionHandle {
         return _selection;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function geometry():SelectionGeometry {
         return _geometry;
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function presentations():Array<Null<FilePresentation>> {
         return _presentations;
     }
 
     /** The body's size as of the last paint. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function viewport():Size {
         return _viewport;
     }
 
     /** The width rows need to show their longest line. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function contentWidth():Float {
         return _contentWidth;
     }
 
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function setContentWidth(width:Float):Void {
         _contentWidth = width;
     }
@@ -605,7 +605,7 @@ class DiffState extends Model {
      * Records the painted body size and widest painted row. Returns whether
      * either changed, so the frame must be laid out again.
      */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function recordPaint(viewport:Size, paintedWidth:Float):Bool {
         final wider = paintedWidth > _contentWidth;
         if (wider)
@@ -622,7 +622,7 @@ class DiffState extends Model {
     public function setFiles(files:Iterable<DiffFile>, cx:Context<DiffState>):Void {
         if (window != null && selectionIsLocal(cx.app))
             TextSelection.clearForWindow(window, cx.app);
-        _files = gpui.util.Iterables.toArray(files);
+        _files = glaze.util.Iterables.toArray(files);
         fileIxs = fileIxsOf(_files);
         for (path in [for (path in collapsed.keys()) path]) {
             if (!fileIxs.exists(path))
@@ -830,11 +830,11 @@ class DiffState extends Model {
         if (range.file >= _files.length)
             return '';
         final source = _files[range.file].source(range.side);
-        final len = gpui.util.Utf8.byteLength(source);
-        if (range.range.end > len || !gpui.util.Utf8.isCharBoundary(source, range.range.start)
-            || !gpui.util.Utf8.isCharBoundary(source, range.range.end))
+        final len = glaze.util.Utf8.byteLength(source);
+        if (range.range.end > len || !glaze.util.Utf8.isCharBoundary(source, range.range.start)
+            || !glaze.util.Utf8.isCharBoundary(source, range.range.end))
             return '';
-        return gpui.util.Utf8.substring(source, range.range.start, range.range.end);
+        return glaze.util.Utf8.substring(source, range.range.start, range.range.end);
     }
 
     /**
@@ -875,7 +875,7 @@ class DiffState extends Model {
     }
 
     /** Reveals part or all of a collapsed unchanged range. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function expandFold(file:Int, pairs:Range, expansion:FoldExpansion, cx:Context<DiffState>):Void {
         final lines = _expansionLines;
         final revealed = switch (expansion) {
@@ -895,7 +895,7 @@ class DiffState extends Model {
     }
 
     /** Resolves a conflict from its heading and reports the user's change. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function chooseConflict(file:Int, ix:Int, resolution:Null<DiffConflictResolution>, cx:Context<DiffState>):Void {
         final path = _files[file].path();
         resolveConflict(path, ix, resolution, cx);
@@ -903,7 +903,7 @@ class DiffState extends Model {
     }
 
     /** Toggles a file from its header and reports the user's change. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function toggleFileCollapsed(file:Int, cx:Context<DiffState>):Void {
         final path = _files[file].path();
         final isCollapsed = !collapsed.exists(path);
@@ -915,7 +915,7 @@ class DiffState extends Model {
      * Starts a line-number selection gesture, extending the current anchor
      * in the same file when `extend` is set.
      */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function beginLineSelection(position:DiffLinePosition, extend:Bool, window:Window, cx:Context<DiffState>):Void {
         if (lineIndex(position) == null)
             return;
@@ -928,7 +928,7 @@ class DiffState extends Model {
     }
 
     /** Extends an active line-number gesture to `position` in the same file. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function dragLineSelection(position:DiffLinePosition, cx:Context<DiffState>):Void {
         final anchor = selectionAnchor;
         if (anchor == null)
@@ -949,7 +949,7 @@ class DiffState extends Model {
     }
 
     /** Finishes an active line-number gesture. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function endLineSelection(cx:Context<DiffState>):Void {
         final was = selecting;
         selecting = false;
@@ -960,13 +960,13 @@ class DiffState extends Model {
     }
 
     /** Selects one line, or extends to it, as a complete gesture. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function clickLine(position:DiffLinePosition, extend:Bool, window:Window, cx:Context<DiffState>):Void {
         beginLineSelection(position, extend, window, cx);
         endLineSelection(cx);
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function keyboardSelect(direction:Int, extend:Bool, window:Window, cx:Context<DiffState>):Void {
         final active = activeSide(cx.app);
         if (active == null)
@@ -996,7 +996,7 @@ class DiffState extends Model {
             _list.scrollToRevealItem(row);
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function selectAll(window:Window, cx:Context<DiffState>):Void {
         final active = activeSide(cx.app);
         if (active == null)
@@ -1009,7 +1009,7 @@ class DiffState extends Model {
     }
 
     /** The selected lines, resolved for membership tests. */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function selectedSpan():Null<SelectedLines> {
         final range = _selectedLines;
         if (range == null)
@@ -1035,7 +1035,7 @@ class DiffState extends Model {
     }
 
     /** Records the window that renders this state, for clearing its text selection. */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function setWindow(window:Int):Void {
         this.window = window;
     }
@@ -1044,7 +1044,7 @@ class DiffState extends Model {
      * Updates width and row-height measurement when fonts or layout change.
      * Returns whether content width must be measured again.
      */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function updateLayout(key:LayoutKey, rowHeight:Float):Bool {
         if (layout != null && layout.equals(key))
             return false;
@@ -1061,7 +1061,7 @@ class DiffState extends Model {
      * Visible rows are re-measured every frame, so content changes inside an
      * annotation need no notification.
      */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function syncAnnotations(items:Array<DiffAnnotation>):Void {
         final current = new Map<String, DiffAnnotation>();
         for (annotation in items)
@@ -1125,7 +1125,7 @@ class DiffState extends Model {
         return (position != null ? position.key() : '-') + '|' + annotation.path() + '|' + Std.string(annotation.id());
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function position(file:Int, side:DiffSide, ix:Int):DiffLinePosition {
         final document = _files[file];
         return new DiffLinePosition(document.path(), side, document.lineNumber(side, ix));
@@ -1316,7 +1316,7 @@ class DiffState extends Model {
         }
     }
 
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function sourceRow(position:DiffLinePosition):Null<Int> {
         final file = fileIx(position.path());
         if (file == null || file >= fileRows.length)
@@ -1408,7 +1408,7 @@ class DiffState extends Model {
      * last of them reaches the bottom of the viewport. Call this after the
      * list's prepaint, so the hint is back before the next wheel event.
      */
-    @:allow(gpui.component.diff)
+    @:allow(glaze.kit.diff)
     function keepRowHeightHint():Bool {
         final width = _list.viewportBounds().size.width;
         if (rowHeight == null || hintedWidth == width)
@@ -1447,7 +1447,7 @@ class DiffState extends Model {
      * preparation in a task of the background executor too (which runs on
      * the main thread here), one file per task.
      */
-    @:allow(gpui.component.diff, tests)
+    @:allow(glaze.kit.diff, tests)
     function ensurePresentation(cx:Context<DiffState>):Void {
         final generation = presentationGeneration;
         if (preparing == generation)
@@ -1461,10 +1461,10 @@ class DiffState extends Model {
         preparing = generation;
         final highlighters = new Map<String, SyntaxHighlighter>();
         presentationTask = cx.spawn((weak, acx) -> {
-            final done = new Task<gpui.Unit>();
+            final done = new Task<glaze.Unit>();
             function step(i:Int):Void {
                 if (i >= pending.length) {
-                    done.resolve(gpui.Unit.unit);
+                    done.resolve(glaze.Unit.unit);
                     return;
                 }
                 final ix = pending[i];
@@ -1481,11 +1481,11 @@ class DiffState extends Model {
                             return true;
                         });
                     }
-                    catch (e:gpui.EntityReleasedError) {
+                    catch (e:glaze.EntityReleasedError) {
                         current = false;
                     }
                     if (!current) {
-                        done.resolve(gpui.Unit.unit);
+                        done.resolve(glaze.Unit.unit);
                         return;
                     }
                     step(i + 1);

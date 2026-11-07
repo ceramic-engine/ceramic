@@ -2,7 +2,7 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
 /**
  * Generic version of `Edges`, for non numeric values
@@ -14,7 +14,7 @@ package gpui;
  *
  * Immutable: every operation returns a new instance.
  */
-@:using(gpui.EdgesOfDefiniteLength, gpui.EdgesOfAbsoluteLength)
+@:using(glaze.EdgesOfDefiniteLength, glaze.EdgesOfAbsoluteLength)
 class EdgesOf<T> {
 
     /**

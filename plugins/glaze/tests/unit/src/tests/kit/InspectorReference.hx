@@ -1,11 +1,11 @@
-// New code for the Haxe port of gpui-kit: embeds test/unit/data/inspector-reference.json,
+// New code for the Haxe port of gpui-kit: embeds tests/unit/data/inspector-reference.json,
 // the outputs of the original inspector code. See NOTICE.md.
 package tests.kit;
 
 import haxe.macro.Expr;
 
 /**
- * The content of `test/unit/data/inspector-reference.json`, embedded at
+ * The content of `tests/unit/data/inspector-reference.json`, embedded at
  * compile time (kept in its own module so that the macro context does not
  * load the inspector).
  */

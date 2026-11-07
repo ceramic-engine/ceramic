@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/window.rs (`ElementId`)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * An identifier for an element, used to retrieve its state across frames.

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // Static boxing report of the generated C++ (step 5 of docs/perf/PLAN.md).
 //
-// Scans the C++ that hxcpp generated for the GPUI port and its libraries (by
-// default test/bench/out/clay/mac/cpp after a native bench build) and counts,
+// Scans the C++ that hxcpp generated for Glaze and its libraries (by
+// default tests/bench/out/clay/mac/cpp after a native bench build) and counts,
 // per Haxe module and per function, the constructs that box values or
 // allocate behind the code's back:
 //
@@ -41,7 +41,7 @@
 //
 //   cpp-dir        hxcpp output folder holding src/ and include/
 //                  (default: out/clay/mac/cpp next to this script)
-//   --all          report every module of gpui, taffy and ttf, not only the
+//   --all          report every module of glaze, taffy and ttf, not only the
 //                  hot ones
 //   --functions N  functions listed per module (default 12, 0 for none)
 //   --json F       also write the counts as JSON (for --compare later)
@@ -79,21 +79,21 @@ if (!fs.existsSync(srcRoot)) {
 }
 
 // Packages scanned, and the hot modules (Haxe source paths) reported by default
-const PACKAGES = ['gpui', 'taffy', 'ttf', 'tracker', 'similar', 'plutovg', 'lunasvg', 'textmate',
+const PACKAGES = ['glaze', 'taffy', 'ttf', 'tracker', 'similar', 'plutovg', 'lunasvg', 'textmate',
     'oniguruma', 'ropey', 'markdown', 'html5ever', 'unicode_segmentation', 'unicode_linebreak', 'clay', 'ceramic'];
 const HOT = [
-    /^gpui\/Window\.hx$/,
-    /^gpui\/Div\.hx$/,
-    /^gpui\/Interactivity\.hx$/,
-    /^gpui\/Style\.hx$/,
-    /^gpui\/TaffyLayoutEngine\.hx$/,
-    /^gpui\/TextLayout\.hx$/,
-    /^gpui\/LineLayoutCache\.hx$/,
-    /^gpui\/scene\/Scene\.hx$/,
-    /^gpui\/scene\/BoundsTree\.hx$/,
-    /^gpui\/platform\/SceneRenderable\.hx$/,
-    /^gpui\/ViewElement\.hx$/,
-    /^gpui\/SpringMath\.hx$/,
+    /^glaze\/Window\.hx$/,
+    /^glaze\/Div\.hx$/,
+    /^glaze\/Interactivity\.hx$/,
+    /^glaze\/Style\.hx$/,
+    /^glaze\/TaffyLayoutEngine\.hx$/,
+    /^glaze\/TextLayout\.hx$/,
+    /^glaze\/LineLayoutCache\.hx$/,
+    /^glaze\/scene\/Scene\.hx$/,
+    /^glaze\/scene\/BoundsTree\.hx$/,
+    /^glaze\/platform\/SceneRenderable\.hx$/,
+    /^glaze\/ViewElement\.hx$/,
+    /^glaze\/SpringMath\.hx$/,
     /^taffy\/compute\//,
     /^taffy\/util\//,
     /^taffy\/tree\//,

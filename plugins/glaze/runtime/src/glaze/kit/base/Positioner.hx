@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/positioner.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Decorations;
-import gpui.Display;
-import gpui.Edges;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.ParentElement;
-import gpui.Point;
-import gpui.Position;
-import gpui.Size;
-import gpui.Style;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.util.MathUtil;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Decorations;
+import glaze.Display;
+import glaze.Edges;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.ParentElement;
+import glaze.Point;
+import glaze.Position;
+import glaze.Size;
+import glaze.Style;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.util.MathUtil;
 
 /**
  * Shared popup positioning.
@@ -111,7 +111,7 @@ class PointCell {
  */
 class Positioner extends Element implements ParentElement {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var strategy:PositionerStrategy;
 
     var cornerPosition:Null<PointCell> = null;
@@ -201,7 +201,7 @@ class Positioner extends Element implements ParentElement {
     }
 
     // Read after trigger prepaint so an open popup follows a moving trigger.
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function trackedCornerPosition(position:PointCell):Positioner {
         cornerPosition = position;
         return this;

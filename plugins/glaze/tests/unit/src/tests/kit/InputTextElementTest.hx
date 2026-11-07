@@ -3,63 +3,63 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.ListAlignment;
-import gpui.ListOffset;
-import gpui.ListState;
-import gpui.MouseButton;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.TextAlign;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.ScrollBounce;
-import gpui.base.Scrollbar;
-import gpui.base.input.CursorId;
-import gpui.base.input.CursorSelection;
-import gpui.base.input.EditorScrollbarContext;
-import gpui.base.input.EditorState;
-import gpui.base.input.FoldRange;
-import gpui.base.input.InputActions.Redo;
-import gpui.base.input.InputActions.Undo;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.RangeDecoration;
-import gpui.base.input.TextareaState;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.ListAlignment;
+import glaze.ListOffset;
+import glaze.ListState;
+import glaze.MouseButton;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.TextAlign;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.input.CursorId;
+import glaze.kit.base.input.CursorSelection;
+import glaze.kit.base.input.EditorScrollbarContext;
+import glaze.kit.base.input.EditorState;
+import glaze.kit.base.input.FoldRange;
+import glaze.kit.base.input.InputActions.Redo;
+import glaze.kit.base.input.InputActions.Undo;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.RangeDecoration;
+import glaze.kit.base.input.TextareaState;
 import testing.InteractionScript.ScriptView;
 import testing.VisualTestContext;
-import gpui.Bounds;
-import gpui.CornersOf;
-import gpui.Edges;
-import gpui.FontStyle;
-import gpui.HighlightStyle;
-import gpui.Point;
-import gpui.Range;
-import gpui.Size;
-import gpui.TextRun;
-import gpui.TextStyle;
-import gpui.UnderlineStyle;
-import gpui.base.input.ColorSwatch;
-import gpui.base.input.EditorScrollbarSnapshot.EditorScrollbarLayout;
-import gpui.base.input.StyledRange;
-import gpui.base.input.TextDecoration;
-import gpui.base.input.TextElement;
-import gpui.util.Utf8;
+import glaze.Bounds;
+import glaze.CornersOf;
+import glaze.Edges;
+import glaze.FontStyle;
+import glaze.HighlightStyle;
+import glaze.Point;
+import glaze.Range;
+import glaze.Size;
+import glaze.TextRun;
+import glaze.TextStyle;
+import glaze.UnderlineStyle;
+import glaze.kit.base.input.ColorSwatch;
+import glaze.kit.base.input.EditorScrollbarSnapshot.EditorScrollbarLayout;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.input.TextDecoration;
+import glaze.kit.base.input.TextElement;
+import glaze.util.Utf8;
 import ropey.Rope;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.input.InputDecorationsExt;
+using glaze.kit.base.input.InputDecorationsExt;
 using StringTools;
 
 /**
- * Tests of `gpui.base.input.TextElement` (Rust `input/base/element.rs`).
+ * Tests of `glaze.kit.base.input.TextElement` (Rust `input/base/element.rs`).
  */
-@:access(gpui.base.input.TextElement)
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.TextElement)
+@:access(glaze.kit.base.input.InputBaseState)
 class InputTextElementTest extends KitTestCase {
 
     final contexts:Array<VisualTestContext> = [];
@@ -115,8 +115,8 @@ class InputTextElementTest extends KitTestCase {
         assertTrue(expected.equals(actual), 'expected $expected, got $actual', pos);
     }
 
-    static function runOfLen(len:Int, ?color:gpui.Hsla):TextRun {
-        return new TextRun(len, gpui.Font.of('.SystemUIFont'), color != null ? color : black(), null, null, null);
+    static function runOfLen(len:Int, ?color:glaze.Hsla):TextRun {
+        return new TextRun(len, glaze.Font.of('.SystemUIFont'), color != null ? color : black(), null, null, null);
     }
 
     static function lens(runs:Array<TextRun>):Array<Int> {
@@ -1139,7 +1139,7 @@ class InputTextElementTest extends KitTestCase {
     function testGeometricDecorationsTrackEditsHistoryReplacementAndOwnerLifetime() {
         final opened = decorationEditor('abc def', false);
         final editor = opened.editor;
-        function ranges(collection:gpui.base.input.RangeDecorationCollection):String {
+        function ranges(collection:glaze.kit.base.input.RangeDecorationCollection):String {
             return [for (r in collection.getRanges(app)) '${r.start}..${r.end}'].join(',');
         }
         opened.cx.update((window, app) -> {

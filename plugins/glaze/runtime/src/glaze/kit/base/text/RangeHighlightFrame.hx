@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Range;
-import gpui.base.text.RangeHighlightError;
-import gpui.base.text.RenderedIndex.LeafPiece;
+import glaze.Range;
+import glaze.kit.base.text.RangeHighlightError;
+import glaze.kit.base.text.RenderedIndex.LeafPiece;
 
 /** Rust `(TextLeafKey, Vec<(Range<usize>, Hsla)>)`. */
 class LeafBackgrounds {
@@ -39,11 +39,11 @@ class RangeHighlightFrame {
      * Throws `RangeHighlightException` with `InvalidRange` (Rust `Err`);
      * `null` when no highlight paints anything.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     static function create(text:RenderedText, highlights:Iterable<RangeHighlight>):Null<RangeHighlightFrame> {
         final pieces:Array<{key:TextLeafKey, color:RangedColor}> = [];
         var ix = 0;
-        for (highlight in gpui.util.Iterables.asArray(highlights)) {
+        for (highlight in glaze.util.Iterables.asArray(highlights)) {
             final leafRanges = text.index().resolve(highlight.range());
             if (leafRanges == null) {
                 throw new RangeHighlightException(InvalidRange(ix));
@@ -89,7 +89,7 @@ class RangeHighlightFrame {
      * one to: each follows its leaf as far as the leaf's text is unchanged, and
      * is dropped with a leaf that is gone.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function remap(remap:LeafRemap):Null<RangeHighlightFrame> {
         final leaves:Array<LeafBackgrounds> = [];
         for (leaf in this.leaves) {

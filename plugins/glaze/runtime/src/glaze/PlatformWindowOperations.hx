@@ -1,14 +1,14 @@
 // New code for the Haxe port of GPUI: the operations GPUI's `PlatformWindow`
 // performs on the native window (gpui-pre 0.3.10, src/platform.rs, Zed
 // Industries, Apache-2.0). See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The native window operations of GPUI's `PlatformWindow`: activate, minimize, zoom
  * (maximize or restore), interactive move and resize, the window menu, the
  * title bar double click and the window appearance.
  *
- * Windows use `gpui.platform.CeramicWindowOperations` by default, which acts
+ * Windows use `glaze.platform.CeramicWindowOperations` by default, which acts
  * on the Ceramic app window (`ceramic.Screen`: SDL on native targets, nothing
  * on the web and in headless builds). Embedders and tests can set their own
  * on `Window.platformOperations` (null ignores every request, like GPUI's

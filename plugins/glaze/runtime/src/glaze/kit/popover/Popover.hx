@@ -1,47 +1,47 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/popover.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.popover;
+package glaze.kit.popover;
 
-import gpui.Anchor;
-import gpui.Animation;
-import gpui.AnimationElement;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.MouseButton;
-import gpui.ParentElement;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ComponentTraits.Selectable;
-import gpui.base.Geometry.Placement;
-import gpui.base.Popover as BasePopover;
-import gpui.base.Popover.PopoverState;
-import gpui.base.Positioner;
-import gpui.base.Positioner.Align;
-import gpui.base.Positioner.ResolvedPosition;
-import gpui.base.animation.Easings;
-import gpui.component.theme.Theme;
-import gpui.util.MathUtil;
+import glaze.Anchor;
+import glaze.Animation;
+import glaze.AnimationElement;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.MouseButton;
+import glaze.ParentElement;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ComponentTraits.Selectable;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.Popover as BasePopover;
+import glaze.kit.base.Popover.PopoverState;
+import glaze.kit.base.Positioner;
+import glaze.kit.base.Positioner.Align;
+import glaze.kit.base.Positioner.ResolvedPosition;
+import glaze.kit.base.animation.Easings;
+import glaze.kit.theme.Theme;
+import glaze.util.MathUtil;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.AnimationExt;
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.AnimationExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * A popover element that can be triggered by a button or any other element.
@@ -73,8 +73,8 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
         return Positioner.side(bounds)
             .placement(Placement.Bottom)
             .align(Align.Start)
-            .offset(gpui.Prelude.px(6.))
-            .margin(gpui.Prelude.px(8.));
+            .offset(glaze.Prelude.px(6.))
+            .margin(glaze.Prelude.px(8.));
     }
 
     /**
@@ -107,7 +107,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
             id,
             new Animation(DROPDOWN_ENTER_DURATION).withEasing(Easings.easeOutCubic),
             (surface, delta) -> surface
-                .top(gpui.Prelude.px(travel * (1. - delta)))
+                .top(glaze.Prelude.px(travel * (1. - delta)))
                 .opacity(delta)
                 .shadow(ThemeStyled.popoverShadow(ring, delta * delta * delta))
         ));
@@ -304,7 +304,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function renderPopoverContent(anchor:Anchor, appearance:Bool, window:Window, cx:App):Div {
         final content = vFlex()
             .id('content')
@@ -326,7 +326,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
 
     public function render(window:Window, cx:App):IntoElement {
         final anchor = anchorValue;
-        final arrowSize:Float = arrowValue ? window.remSize() * 0.375 : gpui.Prelude.px(0.);
+        final arrowSize:Float = arrowValue ? window.remSize() * 0.375 : glaze.Prelude.px(0.);
         final offset:Float = (offsetValue != null ? offsetValue : window.remSize() * 0.25) + arrowSize;
         final resolved = new ResolvedCell();
         final arrowPosition = resolved;
@@ -372,7 +372,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
                                 return;
                             }
                             final target = arrowAnchor(anchor, arrowPosition.trigger);
-                            final trigger = new Bounds(target.point, new gpui.Size(gpui.Prelude.px(0.), gpui.Prelude.px(0.)));
+                            final trigger = new Bounds(target.point, new glaze.Size(glaze.Prelude.px(0.), glaze.Prelude.px(0.)));
                             final points = arrowPoints(bounds, trigger, target.side, arrowSize, radius);
                             final fill = PathBuilder.fill();
                             fill.moveTo(points[0]);
@@ -386,9 +386,9 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
                             // The triangle ends exactly at the surface edge.
                             // Cover the ring and the antialiased base on both
                             // sides of that edge before drawing its two slopes.
-                            window.paintQuad(gpui.Prelude.fill(arrowJoinBounds(points, target.side, gpui.Prelude.px(1.)), background));
+                            window.paintQuad(glaze.Prelude.fill(arrowJoinBounds(points, target.side, glaze.Prelude.px(1.)), background));
                             if (appearance) {
-                                final outline = PathBuilder.stroke(gpui.Prelude.px(1.));
+                                final outline = PathBuilder.stroke(glaze.Prelude.px(1.));
                                 outline.moveTo(points[0]);
                                 outline.lineTo(points[1]);
                                 outline.lineTo(points[2]);
@@ -417,7 +417,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
         return popover;
     }
 
-    static function tryBuild(builder:PathBuilder):Null<gpui.Path> {
+    static function tryBuild(builder:PathBuilder):Null<glaze.Path> {
         try {
             return builder.build();
         }

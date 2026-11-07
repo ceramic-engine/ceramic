@@ -2,7 +2,7 @@
 // (`app.backend.clipboard`). Metadata handling follows gpui-pre-macos 0.3.10
 // src/pasteboard.rs (Zed Industries, Apache-2.0), which keeps metadata next to
 // the text and checks it with a hash of the text. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * The system clipboard through Ceramic's backend (`getText` / `setText`):

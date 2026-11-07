@@ -3,40 +3,40 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.GlobalElementId;
-import gpui.Interactivity;
-import gpui.Interactivity.ActiveTooltip;
-import gpui.Interactivity.ActiveTooltipCell;
-import gpui.Interactivity.InteractiveElementState;
-import gpui.IntoElement;
-import gpui.KeyDownEvent;
-import gpui.KeyUpEvent;
-import gpui.Keystroke;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseDownEvent;
-import gpui.MouseExitEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.TestDispatcher;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.GlobalElementId;
+import glaze.Interactivity;
+import glaze.Interactivity.ActiveTooltip;
+import glaze.Interactivity.ActiveTooltipCell;
+import glaze.Interactivity.InteractiveElementState;
+import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.KeyUpEvent;
+import glaze.Keystroke;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.MouseExitEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.TestDispatcher;
+import glaze.Window;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `div.rs`: group hover, hover listeners, scroll handle alignment,
@@ -164,11 +164,11 @@ class DivInteractivityTest extends TestCase {
             final element = div().w(px(10)).hover(style -> style.w(px(20))).active(style -> style.w(px(30)));
             final interactivity = element.interactivity;
             final state = new InteractiveElementState();
-            state.hoverState = new gpui.Interactivity.ElementHoverState();
+            state.hoverState = new glaze.Interactivity.ElementHoverState();
             inline function compute() {
                 return @:privateAccess interactivity.computeStyleInternal(null, state, window, app);
             }
-            inline function width(style:gpui.Style):Float {
+            inline function width(style:glaze.Style):Float {
                 return switch style.sizeWidth {
                     case Definite(Absolute(Pixels(value))): value;
                     case _: Math.NaN;
@@ -366,14 +366,14 @@ class DivInteractivityTest extends TestCase {
      * `deltaMode` on the web).
      */
     function testCeramicScrollMapsToGpuiScrollDelta() {
-        switch gpui.GpuiInput.scrollDeltaOf(3, 12.5, ceramic.ScrollUnit.PIXELS) {
+        switch glaze.GlazeInput.scrollDeltaOf(3, 12.5, ceramic.ScrollUnit.PIXELS) {
             case Pixels(delta):
                 assertEquals(-3.0, (delta.x : Float));
                 assertEquals(-12.5, (delta.y : Float));
             case _:
                 fail('expected a pixel delta');
         }
-        switch gpui.GpuiInput.scrollDeltaOf(0, 2, ceramic.ScrollUnit.LINES) {
+        switch glaze.GlazeInput.scrollDeltaOf(0, 2, ceramic.ScrollUnit.LINES) {
             case Lines(delta):
                 assertEquals(0.0, delta.x);
                 assertEquals(-2.0, delta.y);
@@ -393,12 +393,12 @@ class DivInteractivityTest extends TestCase {
         addWindow((_, _) -> new ScrolledContent(scrollHandle, prepainted));
         draw();
 
-        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), gpui.GpuiInput.scrollDeltaOf(0, 7, ceramic.ScrollUnit.PIXELS)), cx));
+        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), glaze.GlazeInput.scrollDeltaOf(0, 7, ceramic.ScrollUnit.PIXELS)), cx));
         draw();
         assertEquals(-7.0, scrollHandle.offset().y);
 
         final before = scrollHandle.offset().y;
-        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), gpui.GpuiInput.scrollDeltaOf(0, 1, ceramic.ScrollUnit.LINES)), cx));
+        cx.update((window, cx) -> window.dispatchEvent(new ScrollEvent(point(px(10), px(10)), glaze.GlazeInput.scrollDeltaOf(0, 1, ceramic.ScrollUnit.LINES)), cx));
         draw();
         final moved = before - scrollHandle.offset().y;
         // One line is the line height of the window's text style (GPUI's default text style)
@@ -449,22 +449,22 @@ class DivInteractivityTest extends TestCase {
         final touchPosition = point(px(49), px(10));
 
         cx.update((window, cx) -> {
-            window.dispatchEvent(new gpui.TouchEvent(1, Started, touchPosition), cx);
+            window.dispatchEvent(new glaze.TouchEvent(1, Started, touchPosition), cx);
         });
-        cx.advanceClock(gpui.GestureTuning.defaults().longPressDuration + 0.001);
+        cx.advanceClock(glaze.GestureTuning.defaults().longPressDuration + 0.001);
         cx.runUntilParked();
 
         assertTrue(isVisible(activeTooltip));
 
         final movedPosition = point(px(55), px(10));
         cx.update((window, cx) -> {
-            window.dispatchEvent(new gpui.TouchEvent(1, Moved, movedPosition), cx);
+            window.dispatchEvent(new glaze.TouchEvent(1, Moved, movedPosition), cx);
             window.draw();
         });
         assertTrue(isVisible(activeTooltip));
 
         cx.update((window, cx) -> {
-            window.dispatchEvent(new gpui.TouchEvent(1, Ended, movedPosition), cx);
+            window.dispatchEvent(new glaze.TouchEvent(1, Ended, movedPosition), cx);
         });
 
         assertNull(activeTooltip.value);

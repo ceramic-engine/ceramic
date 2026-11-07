@@ -1,11 +1,11 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/range_highlight.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Hsla;
-import gpui.IntoHsla;
-import gpui.Range;
+import glaze.Hsla;
+import glaze.IntoHsla;
+import glaze.Range;
 
 /**
  * A background painted behind one range of a `RenderedText`.

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
@@ -37,7 +37,7 @@ class NoopTextSystem implements PlatformTextSystem {
     }
 
     public function glyphForChar(fontId:FontId, ch:Int):Null<GlyphId> {
-        return gpui.util.Utf8.utf16Length(ch);
+        return glaze.util.Utf8.utf16Length(ch);
     }
 
     public function glyphRasterBounds(params:RenderGlyphParams):Bounds {
@@ -53,7 +53,7 @@ class NoopTextSystem implements PlatformTextSystem {
         final metrics = fontMetrics(0);
         final emWidth = fontSize * advance(0, glyphForChar(0, 'm'.code)).width / metrics.unitsPerEm;
         final glyphs:Array<ShapedGlyph> = [];
-        final decoded = new gpui.util.Utf8.Utf8Text(text);
+        final decoded = new glaze.util.Utf8.Utf8Text(text);
         for (k in 0...decoded.count) {
             final ix = decoded.byteOffsets[k];
             final glyph:Int = glyphForChar(0, decoded.codePoints[k]);

@@ -3,46 +3,46 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Element;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Model;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.TextLayout;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.text.BlockNode;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.ColumnumnAlign;
-import gpui.base.text.EditorHost;
-import gpui.base.text.EditorSeam;
-import gpui.base.text.ImageNode;
-import gpui.base.text.InlineElement;
-import gpui.base.text.InlineNode;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.RangedColor;
-import gpui.base.text.RangedMark;
-import gpui.base.text.Table;
-import gpui.base.text.TextMark;
-import gpui.base.text.format.MarkdownFormat;
-import gpui.util.Utf8;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Element;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Model;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.TextLayout;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.ColumnumnAlign;
+import glaze.kit.base.text.EditorHost;
+import glaze.kit.base.text.EditorSeam;
+import glaze.kit.base.text.ImageNode;
+import glaze.kit.base.text.InlineElement;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.RangedColor;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.Table;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.text.format.MarkdownFormat;
+import glaze.util.Utf8;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.text.EditorHost;
+using glaze.kit.base.text.EditorHost;
 using unicode_segmentation.UnicodeSegmentation;
 
 /**
@@ -137,7 +137,7 @@ private class Recorder implements EditorSink {
 /**
  * Tests of the editor host API (Rust `text/editor_host.rs`).
  */
-@:access(gpui.base.text)
+@:access(glaze.kit.base.text)
 class TextEditorHostTest extends KitTestCase {
 
     final contexts:Array<VisualTestContext> = [];
@@ -150,7 +150,7 @@ class TextEditorHostTest extends KitTestCase {
 
     static function initBase(cx:App):Void {
         Base.init(cx);
-        gpui.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
+        glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
     }
 
     function addHost(host:Host):{view:Entity<Host>, cx:VisualTestContext} {
@@ -205,8 +205,8 @@ class TextEditorHostTest extends KitTestCase {
 
     static function svgImage():ImageNode {
         final image = new ImageNode("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'/>");
-        image.width = gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(20.));
-        image.height = gpui.DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(20.));
+        image.width = glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(20.));
+        image.height = glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(20.));
         return image;
     }
 
@@ -216,7 +216,7 @@ class TextEditorHostTest extends KitTestCase {
             Paragraph(plain("first").withLeafKey(2)),
             Paragraph(plain("not an editor leaf")),
             CodeBlock(new CodeBlock("let x = 1;", "rust", null).withLeafKey(3)),
-            Table(gpui.base.text.Table.of([
+            Table(glaze.kit.base.text.Table.of([
                 [plain("a").withLeafKey(4), plain("b").withLeafKey(5)],
                 [plain("c").withLeafKey(6), plain("d").withLeafKey(7)],
             ], [ColumnumnAlign.None, ColumnumnAlign.Right])),
@@ -509,7 +509,7 @@ class TextEditorHostTest extends KitTestCase {
         final source = "# Title\n\nSome **bold** and `code` and ==mark==.\n\n- one\n- two\n";
         final expected = MarkdownFormat.parse(source, new NodeContext());
         final blocks = EditorHost.parseMarkdown(source, new MarkdownExtensions());
-        assertTrue(gpui.base.text.BlockNode.BlockNodeTools.arrayEquals(blocks, expected.blocks));
+        assertTrue(glaze.kit.base.text.BlockNode.BlockNodeTools.arrayEquals(blocks, expected.blocks));
     }
 
     function testTableAndParagraphBuildersReadBack() {
@@ -519,7 +519,7 @@ class TextEditorHostTest extends KitTestCase {
         assertTrue(paragraph.children()[0].markRuns()[0].mark.bold);
         assertTrue(paragraph.children()[0].asImage() == null);
         assertTrue(paragraph.children()[0].asCustom() == null);
-        final table = gpui.base.text.Table.of([[paragraph]], [ColumnumnAlign.Center]);
+        final table = glaze.kit.base.text.Table.of([[paragraph]], [ColumnumnAlign.Center]);
         assertEquals(1, table.rows().length);
         assertEquals(ColumnumnAlign.Center, table.columnAligns()[0]);
     }

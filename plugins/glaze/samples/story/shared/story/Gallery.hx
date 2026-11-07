@@ -3,36 +3,36 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.IndexPath;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.command.CommandItem;
-import gpui.component.input.Input;
-import gpui.component.separator.Separator;
-import gpui.component.sidebar.Sidebar;
-import gpui.component.sidebar.SidebarHeader;
-import gpui.component.sidebar.SidebarMenu;
-import gpui.component.statusbar.StatusBar;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.command.CommandItem;
+import glaze.kit.input.Input;
+import glaze.kit.separator.Separator;
+import glaze.kit.sidebar.Sidebar;
+import glaze.kit.sidebar.SidebarHeader;
+import glaze.kit.sidebar.SidebarMenu;
+import glaze.kit.statusbar.StatusBar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.ThemeStyled;
-using gpui.base.StyledExt;
+using glaze.kit.ThemeStyled;
+using glaze.kit.base.StyledExt;
 
 /**
  * The gallery window: a sidebar listing every story (with a search field),
@@ -374,7 +374,7 @@ class Gallery extends Model implements Render {
                 })))
             .child(new Icon(IconName.GalleryVerticalEnd).xsmall())
             .child('$totalComponents components')
-            .child(gpui.component.separator.Separator.vertical());
+            .child(glaze.kit.separator.Separator.vertical());
         if (currentStory != '') {
             statusBar.child(currentStory);
         }

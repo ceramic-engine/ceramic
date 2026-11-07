@@ -4,39 +4,39 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.DismissEvent;
-import gpui.base.IndexPath;
-import gpui.base.input.InputState;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.input.Input;
-import gpui.component.searchablelist.SearchableListItem;
-import gpui.component.searchablelist.SearchableListItem.SearchableListItemBase;
-import gpui.component.searchablelist.SearchableVec.VecDelegate;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.component.select.Select;
-import gpui.component.select.SelectState;
-import gpui.component.separator.Separator;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.DismissEvent;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputState;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.input.Input;
+import glaze.kit.searchablelist.SearchableListItem;
+import glaze.kit.searchablelist.SearchableListItem.SearchableListItemBase;
+import glaze.kit.searchablelist.SearchableVec.VecDelegate;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.select.Select;
+import glaze.kit.select.SelectState;
+import glaze.kit.separator.Separator;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 @:action(namespace = select_story, noJson) private class ToggleDisabled implements Action {}
 
@@ -82,7 +82,7 @@ class SelectStory extends Model implements Story {
 
     public static function init(_:App):Void {}
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -92,7 +92,7 @@ class SelectStory extends Model implements Story {
 
     @observe var disabled:Bool = false;
 
-    @observe var size:gpui.component.Size = gpui.component.Size.Medium;
+    @observe var size:glaze.kit.Size = glaze.kit.Size.Medium;
 
     var countrySelect:Entity<SelectState<Country>>;
 

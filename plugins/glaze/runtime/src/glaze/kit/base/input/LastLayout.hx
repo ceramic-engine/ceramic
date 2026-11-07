@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/layout.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Bounds;
-import gpui.Pixels;
-import gpui.Range;
-import gpui.TextAlign;
+import glaze.Bounds;
+import glaze.Pixels;
+import glaze.Range;
+import glaze.TextAlign;
 
 /**
  * The layout of the visible part of an input, as of its last prepaint.

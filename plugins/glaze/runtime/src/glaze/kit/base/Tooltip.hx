@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/tooltip.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.Render;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.Render;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * An unstyled tooltip popup.
@@ -146,16 +146,16 @@ class TooltipDefaults {
  */
 class TooltipRequest {
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final build:(Window, App) -> AnyView;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     final triggerBounds:Bounds;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var preferredPlacement:Null<Placement> = null;
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     var showDelay:Null<Float> = null;
 
     public function new(triggerBounds:Bounds, build:(Window, App) -> AnyView) {
@@ -232,7 +232,7 @@ class TooltipOverlay extends Model implements Render {
 
     public function new() {
         super();
-        enabled = !gpui.base.Prelude.isMobile();
+        enabled = !glaze.kit.base.Prelude.isMobile();
         renderer = (view, _, _, _) -> div().child(view).intoAnyElement();
     }
 

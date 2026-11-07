@@ -1,50 +1,50 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/tab_panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.Anchor;
-import gpui.AnyElement;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.Empty;
-import gpui.IntoElement;
-import gpui.Point;
-import gpui.ScrollHandle;
-import gpui.Size;
-import gpui.StyleBuilder;
-import gpui.Window;
-import gpui.base.dock.AnyDrag;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.DragPanel;
-import gpui.base.dock.DropIndicator;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PaneNode;
-import gpui.base.dock.TabGroupContext;
-import gpui.base.dock.TabGroupRendererBase;
-import gpui.base.motion.Motion;
-import gpui.base.motion.TransitionId;
-import gpui.component.I18n;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.button.Button.ButtonCustomVariant;
-import gpui.component.dock.DockDebugBounds.DebugSelectorTab;
-import gpui.component.tab.Tab;
-import gpui.component.tab.TabBar;
-import gpui.component.theme.Theme;
+import glaze.Anchor;
+import glaze.AnyElement;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.Empty;
+import glaze.IntoElement;
+import glaze.Point;
+import glaze.ScrollHandle;
+import glaze.Size;
+import glaze.StyleBuilder;
+import glaze.Window;
+import glaze.kit.base.dock.AnyDrag;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.DragPanel;
+import glaze.kit.base.dock.DropIndicator;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PaneNode;
+import glaze.kit.base.dock.TabGroupContext;
+import glaze.kit.base.dock.TabGroupRendererBase;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.I18n;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.button.Button.ButtonCustomVariant;
+import glaze.kit.dock.DockDebugBounds.DebugSelectorTab;
+import glaze.kit.tab.Tab;
+import glaze.kit.tab.TabBar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.menu.DropdownMenu;
+using glaze.kit.menu.DropdownMenu;
 
 /**
  * One tab group's appearance.
  *
- * `gpui.base.dock.TabGroup` owns the behavior (membership, the displayed
+ * `glaze.kit.base.dock.TabGroup` owns the behavior (membership, the displayed
  * tab, drag hit-testing, the zoom flag) and draws none of it. Everything
  * visible is here: the tab bar, the toolbar, the ellipsis menu, the dock
  * collapse affordances, the drop placeholder, and the styled drag preview.
@@ -53,7 +53,7 @@ using gpui.component.menu.DropdownMenu;
  * container), so the tab bar's scroll position belongs to the group whose
  * tabs it scrolls.
  */
-@:allow(gpui.component.dock, tests)
+@:allow(glaze.kit.dock, tests)
 class TabGroupSkin extends TabGroupRendererBase {
 
     /**
@@ -107,7 +107,7 @@ class TabGroupSkin extends TabGroupRendererBase {
      * `null` when there is none to offer.
      *
      * Two questions, and both have to be asked. `Panel.zoomControl` says
-     * where the control appears; `gpui.base.dock.Panel.zoomable` says
+     * where the control appears; `glaze.kit.base.dock.Panel.zoomable` says
      * whether zooming happens at all, and base refuses a zoom that fails it.
      * A panel answering `zoomable() == false` with `zoomControl() == Toolbar`
      * would otherwise draw a button that does nothing.
@@ -280,7 +280,7 @@ class TabGroupSkin extends TabGroupRendererBase {
      * The drag listener of a tab or of the one-panel title: the styled
      * preview, and the offset and size base reads for the placeholder.
      */
-    static function dragPreview(panel:gpui.base.dock.PanelView):(DragPanel, Point, Window, App) -> AnyView {
+    static function dragPreview(panel:glaze.kit.base.dock.PanelView):(DragPanel, Point, Window, App) -> AnyView {
         return (drag, offset, _, cx) -> {
             cx.stopPropagation();
             drag.setDragOffset(offset);

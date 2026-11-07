@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/item.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Div;
-import gpui.ElementId;
-import gpui.IntoElement;
-import gpui.Window;
-import gpui.component.label.Label;
-import gpui.component.setting.SettingField.AnySettingField;
-import gpui.component.setting.SettingField.ResetHandler;
-import gpui.component.setting.SettingField.SettingFieldRender;
-import gpui.component.setting.SettingField.SettingFieldTypeTools;
-import gpui.component.text.Text;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Div;
+import glaze.ElementId;
+import glaze.IntoElement;
+import glaze.Window;
+import glaze.kit.label.Label;
+import glaze.kit.setting.SettingField.AnySettingField;
+import glaze.kit.setting.SettingField.ResetHandler;
+import glaze.kit.setting.SettingField.SettingFieldRender;
+import glaze.kit.setting.SettingField.SettingFieldTypeTools;
+import glaze.kit.text.Text;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.Geometry.AxisExt;
-using gpui.base.StyledExt;
+using glaze.kit.base.Geometry.AxisExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The two kinds of setting items.
@@ -47,7 +47,7 @@ enum SettingItemKind {
  */
 class SettingItem {
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     var kind:SettingItemKind;
 
     function new(kind:SettingItemKind) {
@@ -105,7 +105,7 @@ class SettingItem {
      * have no title/description but should still show up in search results.
      */
     public function keywords(keywords:Iterable<String>):SettingItem {
-        final keywords = gpui.util.Iterables.toArray(keywords);
+        final keywords = glaze.util.Iterables.toArray(keywords);
         switch kind {
             case Item(title, description, _, layout, disabled, field):
                 kind = Item(title, description, keywords, layout, disabled, field);
@@ -169,7 +169,7 @@ class SettingItem {
         return text.toLowerCase().indexOf(q) != -1;
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function isMatch(query:String, cx:App):Bool {
         return switch kind {
             case Item(title, description, keywords, _, _, _):
@@ -184,7 +184,7 @@ class SettingItem {
         }
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function isResettable(cx:App):Bool {
         return switch kind {
             case Item(_, _, _, _, _, field): field.isResettable(cx);
@@ -192,7 +192,7 @@ class SettingItem {
         }
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function reset(window:Window, cx:App):Void {
         switch kind {
             case Item(_, _, _, _, _, field): field.reset(window, cx);
@@ -224,7 +224,7 @@ class SettingItem {
         return renderer.render(field, options, style, window, cx);
     }
 
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     function renderItem(options:RenderOptions, window:Window, cx:App):Div {
         final theme = Theme.global(cx);
         final content:AnyElement = switch kind {

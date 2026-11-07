@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/popovers/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.input;
+package glaze.kit.input;
 
-import gpui.App;
-import gpui.Div;
-import gpui.ElementIdArg;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.component.text.TextView;
-import gpui.component.text.TextViewStyle;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Div;
+import glaze.ElementIdArg;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.text.TextView;
+import glaze.kit.text.TextViewStyle;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.ThemeStyled;
+using glaze.kit.ThemeStyled;
 
 /**
  * Helpers shared by the code editor's popovers (completion, code actions,
@@ -24,7 +24,7 @@ using gpui.component.ThemeStyled;
 class Popovers {
 
     /** The markdown of a hover, a diagnostic or a completion's documentation. */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function renderMarkdown(id:ElementIdArg, markdown:String, _:Window, cx:App):TextView {
         final codeBlock = new StyleBuilder(new StyleRefinement())
             .bg(Theme.global(cx).transparent)
@@ -44,7 +44,7 @@ class Popovers {
     }
 
     /** The frame of an editor popover. */
-    @:allow(gpui.component.input)
+    @:allow(glaze.kit.input)
     static function editorPopover(id:ElementIdArg, cx:App):Div {
         return div()
             .id(id)

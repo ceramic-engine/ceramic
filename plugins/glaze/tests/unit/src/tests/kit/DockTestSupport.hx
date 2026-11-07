@@ -3,21 +3,21 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.TestDispatcher;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.base.dock.EntityPanelView;
-import gpui.base.dock.NodeId;
-import gpui.base.dock.PanelBase;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelView;
-import gpui.base.dock.TabGroup;
-import gpui.base.dock.TabGroupConstraints;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.TestDispatcher;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.base.dock.EntityPanelView;
+import glaze.kit.base.dock.NodeId;
+import glaze.kit.base.dock.PanelBase;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelView;
+import glaze.kit.base.dock.TabGroup;
+import glaze.kit.base.dock.TabGroupConstraints;
 import testing.VisualTestContext;
 
 /**
@@ -174,7 +174,7 @@ class TestPanel extends PanelBase {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }

@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/state_style.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.StyleRefinement;
-import gpui.Styled;
+import glaze.StyleRefinement;
+import glaze.Styled;
 
 /**
  * A semantic-state style builder: GPUI's `Styled` methods on a refinement,
@@ -29,7 +29,7 @@ class StateStyle implements Styled {
         return condition ? then(this) : this;
     }
 
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function intoRefinement():StyleRefinement {
         return refinement;
     }

@@ -1,7 +1,7 @@
 // Ported from gpui-pre-http-client 0.3.10: src/http_client.rs (HttpClient, RedirectPolicy), gpui-pre 0.3.10: src/app.rs (NullHttpClient)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 import haxe.io.Bytes;
 
@@ -15,7 +15,7 @@ import haxe.io.Bytes;
  * Implementations: `NullHttpClient` (fails every request), `FakeHttpClient`
  * (tests), `CeramicHttpClient` (Ceramic's `http` plugin, when enabled).
  */
-@:using(gpui.HttpClient.HttpClientTools)
+@:using(glaze.HttpClient.HttpClientTools)
 interface HttpClient {
 
     /** The user agent sent with the requests, if any */

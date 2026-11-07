@@ -3,34 +3,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Bounds;
-import gpui.CeramicAssetSource;
-import gpui.Context;
-import gpui.ImageCache;
-import gpui.ImageLoadResult;
-import gpui.Img.ImgState;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.ObjectFit;
-import gpui.Point;
-import gpui.Render;
-import gpui.RenderImage;
-import gpui.Resource;
-import gpui.RetainAllImageCache;
-import gpui.Size;
-import gpui.SizeOf;
-import gpui.TestDispatcher;
-import gpui.Unit;
-import gpui.Window;
-import gpui.scene.PolychromeSprite;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Bounds;
+import glaze.CeramicAssetSource;
+import glaze.Context;
+import glaze.ImageCache;
+import glaze.ImageLoadResult;
+import glaze.Img.ImgState;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.ObjectFit;
+import glaze.Point;
+import glaze.Render;
+import glaze.RenderImage;
+import glaze.Resource;
+import glaze.RetainAllImageCache;
+import glaze.Size;
+import glaze.SizeOf;
+import glaze.TestDispatcher;
+import glaze.Unit;
+import glaze.Window;
+import glaze.scene.PolychromeSprite;
 import haxe.io.Bytes;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Tests of `img()`, `ImageSource`, `ObjectFit` and the image caches. The first
@@ -104,8 +104,8 @@ class ImgTest extends TestCase {
     }
 
     /** One BGRA frame of `width` x `height` transparent pixels */
-    static function frame(width:Int, height:Int):gpui.RenderImage.RenderImageFrame {
-        return new gpui.RenderImage.RenderImageFrame(width, height, Bytes.alloc(width * height * 4), null, 0.1);
+    static function frame(width:Int, height:Int):glaze.RenderImage.RenderImageFrame {
+        return new glaze.RenderImage.RenderImageFrame(width, height, Bytes.alloc(width * height * 4), null, 0.1);
     }
 
     static function testImage(frameCount:Int):RenderImage {
@@ -156,7 +156,7 @@ class ImgTest extends TestCase {
 
     function testZeroFrameImageDoesNotPanicOnPaint() {
         addEmptyWindow();
-        draw(new Point(0, 0), new Size(100, 100), () -> img(gpui.ImageSource.Render(testImage(0))));
+        draw(new Point(0, 0), new Size(100, 100), () -> img(glaze.ImageSource.Render(testImage(0))));
         assertEquals(0, sprites().length);
     }
 
@@ -296,7 +296,7 @@ class ImgTest extends TestCase {
         draw(new Point(0, 0), new Size(100, 100), () -> div().flex().child(img('images/rect.svg')));
         // Loading: nothing painted yet
         assertEquals(0, sprites().length);
-        assertTrue(gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
+        assertTrue(glaze.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
 
         // The load completes, the view is notified and drawn again
         cx.runUntilParked();
@@ -306,8 +306,8 @@ class ImgTest extends TestCase {
         assertEquals(20.0, sprite.boundsWidth);
         assertEquals(10.0, sprite.boundsHeight);
 
-        gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).removeAsset(app);
-        assertFalse(gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
+        glaze.ImageSource.Resource(Resource.Embedded('images/rect.svg')).removeAsset(app);
+        assertFalse(glaze.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
     }
 
     function testMissingResourceShowsFallback() {
@@ -353,19 +353,19 @@ class ImgTest extends TestCase {
 
     /** Loads `resource` with `ImageAssetLoader` and runs the dispatcher until it is done. */
     function loadNow(resource:Resource):ImageLoadResult {
-        final task = gpui.ImageAssetLoader.load(resource, app);
+        final task = glaze.ImageAssetLoader.load(resource, app);
         dispatcher.runUntilParked();
         assertFalse(task.isPending, 'the load should be done');
         return task.value;
     }
 
-    function useHttp(handler:(gpui.HttpClient.HttpRequest) -> gpui.HttpClient.HttpResponse):gpui.FakeHttpClient {
-        final client = gpui.FakeHttpClient.create(request -> gpui.Task.ready(handler(request)));
+    function useHttp(handler:(glaze.HttpClient.HttpRequest) -> glaze.HttpClient.HttpResponse):glaze.FakeHttpClient {
+        final client = glaze.FakeHttpClient.create(request -> glaze.Task.ready(handler(request)));
         app.setHttpClient(client);
         return client;
     }
 
-    function errorOf(result:ImageLoadResult):Null<gpui.ImageCacheError> {
+    function errorOf(result:ImageLoadResult):Null<glaze.ImageCacheError> {
         return switch result {
             case Failed(error): error;
             case Loaded(_): null;
@@ -380,7 +380,7 @@ class ImgTest extends TestCase {
     }
 
     function testUriLoadsPngThroughHttpClient() {
-        final client = useHttp(_ -> new gpui.HttpClient.HttpResponse(200, ['content-type', 'image/png'], pngBytes(3, 2)));
+        final client = useHttp(_ -> new glaze.HttpClient.HttpResponse(200, ['content-type', 'image/png'], pngBytes(3, 2)));
         switch loadNow(Resource.Uri(URI)) {
             case Loaded(image):
                 assertEquals(3.0, image.size(0).width);
@@ -398,7 +398,7 @@ class ImgTest extends TestCase {
 
     function testUriSvgIsDetectedByContent() {
         // Not a raster format: rendered as SVG, whatever the URL or content type
-        useHttp(_ -> new gpui.HttpClient.HttpResponse(200, ['content-type', 'application/octet-stream'], Bytes.ofString(SVG_10x5)));
+        useHttp(_ -> new glaze.HttpClient.HttpResponse(200, ['content-type', 'application/octet-stream'], Bytes.ofString(SVG_10x5)));
         addEmptyWindow();
         draw(new Point(0, 0), new Size(100, 100), () -> div().flex().child(img(URI)));
         assertEquals(0, sprites().length);
@@ -410,7 +410,7 @@ class ImgTest extends TestCase {
     }
 
     function testUriBadStatusKeepsFirstLineOfBody() {
-        useHttp(_ -> new gpui.HttpClient.HttpResponse(404, [], Bytes.ofString('Not Found  \r\nsecond line\n')));
+        useHttp(_ -> new glaze.HttpClient.HttpResponse(404, [], Bytes.ofString('Not Found  \r\nsecond line\n')));
         final error = errorOf(loadNow(Resource.Uri(URI)));
         assertNotNull(error);
         switch error {
@@ -425,7 +425,7 @@ class ImgTest extends TestCase {
     }
 
     function testUriBadStatusShowsFallback() {
-        app.setHttpClient(gpui.FakeHttpClient.with404Response());
+        app.setHttpClient(glaze.FakeHttpClient.with404Response());
         addEmptyWindow();
         draw(new Point(0, 0), new Size(100, 100), () -> img(URI)
             .withFallback(() -> div().size(px(10)).bg(red()).intoAnyElement())
@@ -437,7 +437,7 @@ class ImgTest extends TestCase {
     }
 
     function testUriRequestFailureIsOtherError() {
-        app.setHttpClient(gpui.FakeHttpClient.create(_ -> gpui.Task.failed('connection refused')));
+        app.setHttpClient(glaze.FakeHttpClient.create(_ -> glaze.Task.failed('connection refused')));
         final error = errorOf(loadNow(Resource.Uri(URI)));
         assertNotNull(error);
         assertTrue(error.match(Other(_)));
@@ -445,16 +445,16 @@ class ImgTest extends TestCase {
     }
 
     function testUriLoadIsCached() {
-        final client = useHttp(_ -> new gpui.HttpClient.HttpResponse(200, [], pngBytes(4, 4)));
+        final client = useHttp(_ -> new glaze.HttpClient.HttpResponse(200, [], pngBytes(4, 4)));
         addEmptyWindow();
         draw(new Point(0, 0), new Size(100, 100), () -> div().flex().child(img(URI)).child(img(URI)));
         cx.runUntilParked();
         redraw();
         assertEquals(2, sprites().length);
         assertEquals(1, client.requests.length);
-        assertTrue(gpui.ImageSource.Resource(Resource.Uri(URI)).isAssetCached(app));
+        assertTrue(glaze.ImageSource.Resource(Resource.Uri(URI)).isAssetCached(app));
         // Removing the asset loads it again
-        gpui.ImageSource.Resource(Resource.Uri(URI)).removeAsset(app);
+        glaze.ImageSource.Resource(Resource.Uri(URI)).removeAsset(app);
         redraw();
         cx.runUntilParked();
         redraw();
@@ -464,14 +464,14 @@ class ImgTest extends TestCase {
 
     function testHttpStatusDisplay() {
         // Rust `http::StatusCode` display
-        assertEquals('404 Not Found', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(404));
-        assertEquals('503 Service Unavailable', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(503));
-        assertEquals('299 <unknown status code>', gpui.ImageCacheError.ImageCacheErrorTools.statusToString(299));
+        assertEquals('404 Not Found', glaze.ImageCacheError.ImageCacheErrorTools.statusToString(404));
+        assertEquals('503 Service Unavailable', glaze.ImageCacheError.ImageCacheErrorTools.statusToString(503));
+        assertEquals('299 <unknown status code>', glaze.ImageCacheError.ImageCacheErrorTools.statusToString(299));
     }
 
     function testLoadingElementAfterDelay() {
         addEmptyWindow();
-        final source:gpui.ImageSource = gpui.ImageSource.Custom((_, _) -> null);
+        final source:glaze.ImageSource = glaze.ImageSource.Custom((_, _) -> null);
         draw(new Point(0, 0), new Size(100, 100), () -> img(source)
             .id('loading')
             .withLoading(() -> div().size(px(10)).bg(blue()).intoAnyElement())
@@ -492,7 +492,7 @@ class ImgTest extends TestCase {
 
     function testCustomSourceFailureShowsFallback() {
         addEmptyWindow();
-        draw(new Point(0, 0), new Size(100, 100), () -> img(gpui.ImageSource.Custom((_, _) -> Failed(gpui.ImageCacheError.Other('nope'))))
+        draw(new Point(0, 0), new Size(100, 100), () -> img(glaze.ImageSource.Custom((_, _) -> Failed(glaze.ImageCacheError.Other('nope'))))
             .withFallback(() -> div().size(px(12)).bg(red()).intoAnyElement())
         );
         final quads = cx.window.renderedScene().quads;
@@ -525,7 +525,7 @@ class ImgTest extends TestCase {
         cx.runUntilParked();
         assertEquals(1, sprites().length);
         // The app's asset cache was not used
-        assertFalse(gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
+        assertFalse(glaze.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
 
         cx.update((window, app) -> cache.clear(window, app));
         assertTrue(cache.isEmpty());
@@ -544,7 +544,7 @@ class ImgTest extends TestCase {
         draw(new Point(0, 0), new Size(100, 100), () -> imageCache(retainAll('images')).child(img('images/rect.svg')));
         cx.runUntilParked();
         assertEquals(1, sprites().length);
-        assertFalse(gpui.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
+        assertFalse(glaze.ImageSource.Resource(Resource.Embedded('images/rect.svg')).isAssetCached(app));
     }
 
     #if (clay || unity)
@@ -558,7 +558,7 @@ class ImgTest extends TestCase {
      */
     function asyncTestJpegDecodesThroughTheBackend(done:() -> Void) {
         final bytes = haxe.crypto.Base64.decode(JPEG_RED_4x2);
-        gpui.ImageAssetLoader.decodeRaster(bytes, gpui.ImageFormat.Jpeg).then(result -> {
+        glaze.ImageAssetLoader.decodeRaster(bytes, glaze.ImageFormat.Jpeg).then(result -> {
             switch result {
                 case Loaded(image):
                     assertEquals(4.0, image.size(0).width);

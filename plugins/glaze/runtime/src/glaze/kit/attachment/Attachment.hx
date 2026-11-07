@@ -1,56 +1,56 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/attachment.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.attachment;
+package glaze.kit.attachment;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Hsla;
-import gpui.ImageSource;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.IntoImageSource;
-import gpui.MouseButton;
-import gpui.ObjectFit;
-import gpui.ParentElement;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.RenderOnce;
-import gpui.ScrollHandle;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ScrollableMask;
-import gpui.base.motion.Motion;
-import gpui.base.motion.Transition;
-import gpui.base.motion.TransitionId;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.button.Button;
-import gpui.component.progress.ProgressCircle;
-import gpui.component.shimmer.ShimmerText;
-import gpui.component.spinner.Spinner;
-import gpui.component.theme.Theme;
-import gpui.component.tooltip.Tooltip;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Hsla;
+import glaze.ImageSource;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.IntoImageSource;
+import glaze.MouseButton;
+import glaze.ObjectFit;
+import glaze.ParentElement;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.RenderOnce;
+import glaze.ScrollHandle;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ScrollableMask;
+import glaze.kit.base.motion.Motion;
+import glaze.kit.base.motion.Transition;
+import glaze.kit.base.motion.TransitionId;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.button.Button;
+import glaze.kit.progress.ProgressCircle;
+import glaze.kit.shimmer.ShimmerText;
+import glaze.kit.spinner.Spinner;
+import glaze.kit.theme.Theme;
+import glaze.kit.tooltip.Tooltip;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
-using gpui.base.StyledExt;
-using gpui.component.Size.SizeTools;
+using glaze.kit.base.InteractiveElementExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.Size.SizeTools;
 
 /**
  * The lifecycle status of an attachment.
@@ -134,7 +134,7 @@ class AttachmentControl {
 /**
  * What the root hands its slots at layout time.
  */
-@:allow(gpui.component.attachment, tests)
+@:allow(glaze.kit.attachment, tests)
 class SlotLayout {
 
     public final size:Size;
@@ -230,7 +230,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     static inline final REMOVE_BUTTON_SIZE:Pixels = 20.;
 
     /** The retry control over an image preview. */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static inline final RETRY_BUTTON_SIZE:Pixels = 24.;
 
     /**
@@ -240,11 +240,11 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     static inline final REMOVE_GROUP:String = 'attachment-remove';
 
     /** How much an image preview is darkened while it uploads or processes. */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static inline final PROGRESS_SCRIM:Float = 0.35;
 
     /** How much an image preview is darkened once it has failed. */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static inline final FAILED_SCRIM:Float = 0.55;
 
     /** The upload bar's thickness. */
@@ -400,7 +400,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     /**
      * The geometry of a named size (Rust `card_metrics`).
      */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static function cardMetrics(size:Size):CardMetrics {
         inline function r(value:Float):AbsoluteLength {
             return AbsoluteLength.Rems(rems(value));
@@ -422,14 +422,14 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
     /**
      * The card's corner radius for a size (Rust `card_radius`).
      */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static function cardRadius(size:Size, cx:App):Pixels {
         final tokens = Theme.global(cx).semanticTokens();
         return size.equals(XSmall) ? tokens.radius.md : tokens.radius.lg;
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /**
@@ -503,7 +503,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
             // Register `hover` unconditionally: a conditionally registered
             // hover style stays cached when the condition later flips off.
             .hover(style -> clickable ? style.bg(tokens.colors.muted.opacity(0.5)) : style)
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .textSize(metrics.text);
         switch axis {
             // A chip: fixed height, fixed width once it carries content, the
@@ -564,7 +564,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
             .absolute()
             .top0()
             .right0();
-        if (!gpui.base.Prelude.isMobile()) {
+        if (!glaze.kit.base.Prelude.isMobile()) {
             corner.invisible().groupHover(REMOVE_GROUP, style -> style.visible());
         }
         corner.child(removeButton(remove.id, remove.handler, cx));
@@ -682,7 +682,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
             // The custom variant thins its color to 20%; the disc must stay
             // opaque, so the surface is set on the instance instead.
             .custom(
-                new gpui.component.button.Button.ButtonCustomVariant(cx)
+                new glaze.kit.button.Button.ButtonCustomVariant(cx)
                     .hover(tokens.colors.muted)
                     .active(tokens.colors.muted)
                     .foreground(tokens.colors.foreground)
@@ -703,7 +703,7 @@ class Attachment implements RenderOnce implements Styled implements Sizable {
      * The retry control over a failed image preview: a surface-colored disc
      * with the destructive refresh glyph.
      */
-    @:allow(gpui.component.attachment)
+    @:allow(glaze.kit.attachment)
     static function retryButton(id:ElementId, onRetry:ControlHandler, cx:App):Button {
         final theme = Theme.global(cx);
         final tokens = theme.semanticTokens();
@@ -733,28 +733,28 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
 
     final mediaStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var size:Null<Size> = null;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var status:AttachmentStatus = Complete;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var axis:Axis = Horizontal;
 
     /** Whether the media fills a vertical card flush with its border. */
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var flush:Bool = false;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var retry:Null<AttachmentControl> = null;
 
     /** Upload progress in percent, while uploading. */
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var progress:Null<Float> = null;
 
     /** The attachment's identity, keying the progress ring's state. */
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var id:Null<ElementId> = null;
 
     @:allow(tests)
@@ -790,7 +790,7 @@ class AttachmentMedia implements RenderOnce implements Styled implements ParentE
         return this;
     }
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     function layout(layout:SlotLayout):AttachmentMedia {
         if (size == null) {
             size = layout.size;
@@ -983,16 +983,16 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
 
     final contentStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var verticalLayout:Bool = false;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var status:AttachmentStatus = Complete;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var retry:Null<AttachmentControl> = null;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var progress:Null<Float> = null;
 
     @:allow(tests)
@@ -1013,7 +1013,7 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
         return this;
     }
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     function layout(layout:SlotLayout):AttachmentContent {
         verticalLayout = layout.axis == Vertical;
         status = layout.status;
@@ -1064,12 +1064,12 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
         // the percentage joins it while uploading.
         var retry:Null<AttachmentControl> = status.isFailed() ? this.retry : null;
         final progress:Null<Float> = status.isUploading() ? this.progress : null;
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .maxWFull()
             .minW0()
             .flex1()
             .gap0p5()
-            .lineHeight(gpui.Prelude.relative(1.25));
+            .lineHeight(glaze.Prelude.relative(1.25));
         if (verticalLayout) element.wFull().px1();
         for (child in childElements) {
             switch child {
@@ -1080,7 +1080,7 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
                         final control = retry;
                         retry = null;
                         element.child(
-                            gpui.base.Prelude.hFlex()
+                            glaze.kit.base.Prelude.hFlex()
                                 .maxWFull()
                                 .minW0()
                                 .gap1()
@@ -1101,7 +1101,7 @@ class AttachmentContent implements RenderOnce implements Styled implements Paren
                         );
                     } else {
                         if (progress != null) {
-                            description.text = description.text + ' · ' + Std.int(gpui.util.MathUtil.round(progress)) + '%';
+                            description.text = description.text + ' · ' + Std.int(glaze.util.MathUtil.round(progress)) + '%';
                         }
                         element.child(description);
                     }
@@ -1125,7 +1125,7 @@ class AttachmentTitle implements RenderOnce implements Styled {
     @:allow(tests)
     final text:String;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var statusValue:Null<AttachmentStatus> = null;
 
     @:allow(tests)
@@ -1180,14 +1180,14 @@ class AttachmentDescription implements RenderOnce implements Styled {
 
     final descriptionStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var text:String;
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var statusValue:Null<AttachmentStatus> = null;
 
     /** The card size whose type scale the description follows. */
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var size:Null<Size> = null;
 
     /** Create an attachment description. */
@@ -1214,7 +1214,7 @@ class AttachmentDescription implements RenderOnce implements Styled {
             .minW0()
             .truncate()
             .textSize(Attachment.cardMetrics(size != null ? size : Medium).description)
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .textColor(color)
             .child(text)
             .refineStyle(descriptionStyle);
@@ -1225,7 +1225,7 @@ class AttachmentDescription implements RenderOnce implements Styled {
 /**
  * A composition slot for attachment actions.
  *
- * Add existing `gpui.component.button.Button` or other controls as
+ * Add existing `glaze.kit.button.Button` or other controls as
  * children. A separate attachment-specific action wrapper is intentionally
  * unnecessary.
  */
@@ -1233,7 +1233,7 @@ class AttachmentActions implements RenderOnce implements Styled implements Paren
 
     final actionsStyle:StyleRefinement = new StyleRefinement();
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     var verticalLayout:Bool = false;
 
     @:allow(tests)
@@ -1242,7 +1242,7 @@ class AttachmentActions implements RenderOnce implements Styled implements Paren
     /** Create an empty actions slot. */
     public function new() {}
 
-    @:allow(gpui.component.attachment, tests)
+    @:allow(glaze.kit.attachment, tests)
     function layoutForAxis(axis:Axis):AttachmentActions {
         verticalLayout = axis == Vertical;
         return this;
@@ -1415,7 +1415,7 @@ class AttachmentGroup implements RenderOnce implements Styled implements ParentE
             fadeColor = color;
         }
 
-        final row = gpui.base.Prelude.hFlex()
+        final row = glaze.kit.base.Prelude.hFlex()
             .id(id)
             .wFull()
             .minW0()

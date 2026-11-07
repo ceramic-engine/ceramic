@@ -3,11 +3,11 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.motion.Easing;
+import glaze.kit.base.motion.Easing;
 import testing.TestCase;
 
 /**
- * Tests of `gpui.base.motion.Easing` errors (Rust `motion/easing.rs`).
+ * Tests of `glaze.kit.base.motion.Easing` errors (Rust `motion/easing.rs`).
  */
 class EasingTest extends TestCase {
 

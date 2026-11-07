@@ -1,17 +1,17 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/plot/grid.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.plot;
+package glaze.kit.base.plot;
 
-import gpui.Background;
-import gpui.Bounds;
-import gpui.IntoBackground;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.Window;
+import glaze.Background;
+import glaze.Bounds;
+import glaze.IntoBackground;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.Window;
 
-import gpui.Prelude.fill;
+import glaze.Prelude.fill;
 
 /**
  * Axis-aligned grid lines across a plot, at the given x and y positions.
@@ -30,13 +30,13 @@ class Grid {
 
     /** Set the positions of the vertical lines, from the left of the plot. */
     public function x(x:Iterable<Float>):Grid {
-        xValues = [for (v in gpui.util.Iterables.asArray(x)) f(v)];
+        xValues = [for (v in glaze.util.Iterables.asArray(x)) f(v)];
         return this;
     }
 
     /** Set the positions of the horizontal lines, from the top of the plot. */
     public function y(y:Iterable<Float>):Grid {
-        yValues = [for (v in gpui.util.Iterables.asArray(y)) f(v)];
+        yValues = [for (v in glaze.util.Iterables.asArray(y)) f(v)];
         return this;
     }
 

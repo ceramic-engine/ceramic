@@ -1,4 +1,4 @@
-package gpui.util;
+package glaze.util;
 
 /**
  * Copies of `Iterable` arguments without an iterator when the argument is an

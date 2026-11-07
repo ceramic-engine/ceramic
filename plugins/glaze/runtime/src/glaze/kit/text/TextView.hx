@@ -3,41 +3,41 @@
 // install_text_view_defaults)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.text;
+package glaze.kit.text;
 
-import gpui.AbsoluteLength;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.HighlightStyle;
-import gpui.ImageSource;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Rems;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.motion.Easing;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.ImageSourceFn;
-import gpui.base.text.LinkClickHandlerFn;
-import gpui.base.text.MarkdownExtensions;
-import gpui.base.text.MarkdownExtensions.MarkdownBlockParserFn;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.MarkdownPlugin;
-import gpui.base.text.RevealHandlerFn;
-import gpui.base.text.SelectionFormat;
-import gpui.base.text.TableData;
-import gpui.base.text.TextView.TextViewDefaults;
-import gpui.base.text.TextViewMotion;
-import gpui.base.text.TextViewState;
-import gpui.component.theme.Theme;
+import glaze.AbsoluteLength;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.HighlightStyle;
+import glaze.ImageSource;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Rems;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.motion.Easing;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.ImageSourceFn;
+import glaze.kit.base.text.LinkClickHandlerFn;
+import glaze.kit.base.text.MarkdownExtensions;
+import glaze.kit.base.text.MarkdownExtensions.MarkdownBlockParserFn;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.MarkdownPlugin;
+import glaze.kit.base.text.RevealHandlerFn;
+import glaze.kit.base.text.SelectionFormat;
+import glaze.kit.base.text.TableData;
+import glaze.kit.base.text.TextView.TextViewDefaults;
+import glaze.kit.base.text.TextViewMotion;
+import glaze.kit.base.text.TextViewState;
+import glaze.kit.theme.Theme;
 
 /**
  * A bundle of component `TextView` configuration that can be applied in one
@@ -54,7 +54,7 @@ interface TextViewPlugin {
  * The component-level rich text element.
  *
  * The rendering, parsing and selection all live in the Base
- * `gpui.base.text.TextView`; this wrapper keeps the component API: the
+ * `glaze.kit.base.text.TextView`; this wrapper keeps the component API: the
  * component `TextViewStyle` folded onto the active theme, and the
  * `streamFade` timing of the theme.
  *
@@ -84,8 +84,8 @@ class TextView extends Element implements Styled {
 
     final id:ElementId;
 
-    @:allow(gpui.component.text)
-    var inner:gpui.base.text.TextView;
+    @:allow(glaze.kit.text)
+    var inner:glaze.kit.base.text.TextView;
 
     var textStyle:Null<TextViewStyle> = null;
 
@@ -99,7 +99,7 @@ class TextView extends Element implements Styled {
 
     var element:Null<AnyElement> = null;
 
-    function new(id:ElementId, inner:gpui.base.text.TextView) {
+    function new(id:ElementId, inner:glaze.kit.base.text.TextView) {
         this.id = id;
         this.inner = inner;
     }
@@ -110,19 +110,19 @@ class TextView extends Element implements Styled {
 
     /** Creates a text view rendering an existing `TextViewState` (Rust `TextView::new`). */
     public static function create(state:Entity<TextViewState>):TextView {
-        return new TextView(ElementId.Name(Std.string(state.entityId())), gpui.base.text.TextView.create(state));
+        return new TextView(ElementId.Name(Std.string(state.entityId())), glaze.kit.base.text.TextView.create(state));
     }
 
     /** Creates a text view that parses `text` as Markdown. */
     public static function markdown(id:ElementIdArg, text:String):TextView {
         final id:ElementId = id;
-        return new TextView(id, gpui.base.text.TextView.markdown(id, text));
+        return new TextView(id, glaze.kit.base.text.TextView.markdown(id, text));
     }
 
     /** Creates a text view that parses `text` as HTML. */
     public static function html(id:ElementIdArg, text:String):TextView {
         final id:ElementId = id;
-        return new TextView(id, gpui.base.text.TextView.html(id, text));
+        return new TextView(id, glaze.kit.base.text.TextView.html(id, text));
     }
 
     /** Creates a Markdown text view identified by the caller's code location (Rust `text::markdown`). */
@@ -293,8 +293,8 @@ class TextView extends Element implements Styled {
             // the shared default) rather than comparing two whole themes.
             // Rust compiles this only with a highlighter feature: here it
             // follows `Highlighter.enabled`.
-            if (gpui.component.highlighter.Highlighter.enabled
-                && textStyle.highlightTheme != gpui.component.highlighter.HighlightTheme.defaultLight()) {
+            if (glaze.kit.highlighter.Highlighter.enabled
+                && textStyle.highlightTheme != glaze.kit.highlighter.HighlightTheme.defaultLight()) {
                 inner = inner.sharedCodeBlockHighlighter(sharedCodeBlockHighlighter(textStyle.highlightTheme));
             }
             inner = inner.withStyle(resolveComponentStyle(Theme.global(cx), textStyle));
@@ -328,7 +328,7 @@ class TextView extends Element implements Styled {
     }
 
     /** Derives the Base rich-text style installed by the component theme adapter (Rust `base_text_view_style`). */
-    public static function baseTextViewStyle(theme:Theme):gpui.base.text.TextViewStyle {
+    public static function baseTextViewStyle(theme:Theme):glaze.kit.base.text.TextViewStyle {
         final radius = theme.semanticTokens().radius.md;
         final table = new StyleRefinement();
         table.cornerRadiusTopLeft = AbsoluteLength.Pixels(radius);
@@ -342,7 +342,7 @@ class TextView extends Element implements Styled {
         codeBlock.cornerRadiusBottomRight = table.cornerRadiusBottomRight;
         final tableHead = StyleBuilder.build(s -> s.bg(theme.tableHead).textColor(theme.tableHeadForeground));
 
-        return gpui.base.text.TextViewStyle.defaultValue()
+        return glaze.kit.base.text.TextViewStyle.defaultValue()
             .withForeground(theme.foreground)
             .withMutedForeground(theme.mutedForeground)
             .withLink(theme.link)
@@ -361,7 +361,7 @@ class TextView extends Element implements Styled {
      * `install_text_view_defaults`), called by `Theme.syncBase`.
      *
      * The component code block highlighter is installed when the TextMate
-     * highlighter is on (`gpui.component.highlighter.Highlighter.enable`),
+     * highlighter is on (`glaze.kit.highlighter.Highlighter.enable`),
      * where Rust installs it with its `tree-sitter` or `syntect` feature.
      */
     public static function installTextViewDefaults(theme:Theme, cx:App):Void {
@@ -371,7 +371,7 @@ class TextView extends Element implements Styled {
             .withStyle(baseTextViewStyle(theme))
             .withInheritTextColor(true);
 
-        if (gpui.component.highlighter.Highlighter.enabled) {
+        if (glaze.kit.highlighter.Highlighter.enabled) {
             defaults = defaults.withCodeBlockHighlighter(componentCodeBlockHighlighter(theme.highlightTheme));
         }
 
@@ -384,12 +384,12 @@ class TextView extends Element implements Styled {
      * no state between calls, and the highlights of an unchanged block are
      * cached by the text view itself.
      */
-    @:allow(gpui.component, tests)
-    static function componentCodeBlockHighlighter(highlightTheme:gpui.component.highlighter.HighlightTheme):gpui.base.text.CodeBlockHighlighterFn {
+    @:allow(glaze.kit, tests)
+    static function componentCodeBlockHighlighter(highlightTheme:glaze.kit.highlighter.HighlightTheme):glaze.kit.base.text.CodeBlockHighlighterFn {
         final resolver = highlightTheme.resolver();
         return block -> {
             final lang = block.lang();
-            return lang != null ? gpui.component.highlighter.TextMateBackend.highlightCode(lang, block.code(), resolver) : [];
+            return lang != null ? glaze.kit.highlighter.TextMateBackend.highlightCode(lang, block.code(), resolver) : [];
         };
     }
 
@@ -398,7 +398,7 @@ class TextView extends Element implements Styled {
     /** The registry generation the shared highlighters were built at. */
     static var sharedGeneration:Int = 0;
 
-    static final sharedHighlighters:Array<{theme:gpui.component.highlighter.HighlightTheme, highlighter:gpui.base.text.CodeBlockHighlighterFn}> = [];
+    static final sharedHighlighters:Array<{theme:glaze.kit.highlighter.HighlightTheme, highlighter:glaze.kit.base.text.CodeBlockHighlighterFn}> = [];
 
     /**
      * The `componentCodeBlockHighlighter` for `highlightTheme`, built once
@@ -411,13 +411,13 @@ class TextView extends Element implements Styled {
      * on the grammar registry generation: registering a grammar drops them,
      * so code blocks painted before it existed are highlighted again.
      */
-    @:allow(gpui.component, tests)
-    static function sharedCodeBlockHighlighter(highlightTheme:gpui.component.highlighter.HighlightTheme):gpui.base.text.CodeBlockHighlighterFn {
-        return sharedCodeBlockHighlighterAt(highlightTheme, gpui.component.highlighter.TextMateGrammars.generation);
+    @:allow(glaze.kit, tests)
+    static function sharedCodeBlockHighlighter(highlightTheme:glaze.kit.highlighter.HighlightTheme):glaze.kit.base.text.CodeBlockHighlighterFn {
+        return sharedCodeBlockHighlighterAt(highlightTheme, glaze.kit.highlighter.TextMateGrammars.generation);
     }
 
-    @:allow(gpui.component, tests)
-    static function sharedCodeBlockHighlighterAt(highlightTheme:gpui.component.highlighter.HighlightTheme, generation:Int):gpui.base.text.CodeBlockHighlighterFn {
+    @:allow(glaze.kit, tests)
+    static function sharedCodeBlockHighlighterAt(highlightTheme:glaze.kit.highlighter.HighlightTheme, generation:Int):glaze.kit.base.text.CodeBlockHighlighterFn {
         if (sharedGeneration != generation) {
             sharedGeneration = generation;
             sharedHighlighters.resize(0);
@@ -443,8 +443,8 @@ class TextView extends Element implements Styled {
      * replacing it: a caller who set only the white space keeps the themed
      * padding and colors.
      */
-    @:allow(gpui.component, tests)
-    static function resolveComponentStyle(theme:Theme, legacy:TextViewStyle):gpui.base.text.TextViewStyle {
+    @:allow(glaze.kit, tests)
+    static function resolveComponentStyle(theme:Theme, legacy:TextViewStyle):glaze.kit.base.text.TextViewStyle {
         final themed = baseTextViewStyle(theme);
 
         function refined(base:StyleRefinement, overlay:StyleRefinement):StyleRefinement {

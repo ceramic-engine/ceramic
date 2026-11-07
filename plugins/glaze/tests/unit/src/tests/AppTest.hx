@@ -1,15 +1,15 @@
 package tests;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.EntityReleasedError;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.TestDispatcher;
-import gpui.Unit;
-import gpui.WeakEntity;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.EntityReleasedError;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.TestDispatcher;
+import glaze.Unit;
+import glaze.WeakEntity;
 import testing.TestCase;
 
 /**
@@ -543,7 +543,7 @@ class AppTest extends TestCase {
 
     function testOwnedTaskCancelledOnDestroy() {
         var fired = false;
-        var task:gpui.AnyTask = null;
+        var task:glaze.AnyTask = null;
         final counter = app.newEntity(cx -> {
             task = cx.spawn((weak, cx) -> cx.backgroundExecutor().timer(1).then(_ -> {
                 fired = true;
@@ -562,7 +562,7 @@ class AppTest extends TestCase {
 
     function testDetachedTaskFailsWhenEntityReleased() {
         // A detached task keeps running; `weak.update` then throws, failing the task like `?`
-        var task:gpui.AnyTask = null;
+        var task:glaze.AnyTask = null;
         var after = false;
         final counter = app.newEntity((cx:Context<AppCounter>) -> {
             task = cx.spawn((weak, cx) -> cx.backgroundExecutor().timer(1).then(_ -> {

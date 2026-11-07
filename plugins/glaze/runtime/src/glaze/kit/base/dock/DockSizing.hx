@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/dock/dock_placement.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.dock;
+package glaze.kit.base.dock;
 
-import gpui.Bounds;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Size;
-import gpui.SpringMath;
-import gpui.base.resizable.Resizable;
-import gpui.util.MathUtil;
+import glaze.Bounds;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Size;
+import glaze.SpringMath;
+import glaze.kit.base.resizable.Resizable;
+import glaze.util.MathUtil;
 
 /**
  * Pure arithmetic for resizing one dock (left/right/bottom). The caller

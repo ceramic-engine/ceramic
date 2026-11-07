@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (MotionTransform)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.Point;
-import gpui.base.animation.Lerp;
+import glaze.Point;
+import glaze.kit.base.animation.Lerp;
 
 /**
  * A presentation-neutral bundle for coordinated paint transforms.

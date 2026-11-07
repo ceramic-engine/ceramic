@@ -3,39 +3,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.dock.DockArea;
-import gpui.base.dock.DockLayout;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.PanelId;
-import gpui.base.input.InputState;
-import gpui.component.Component;
-import gpui.component.dock.DockDebugBounds;
-import gpui.component.dock.DockSkin;
-import gpui.component.dock.PanelBase;
-import gpui.component.dock.PanelControl;
-import gpui.component.dock.PanelHandle;
-import gpui.component.dock.PanelStyle;
-import gpui.component.dock.TabGroupSkin;
-import gpui.component.input.Input;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.dock.DockArea;
+import glaze.kit.base.dock.DockLayout;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Component;
+import glaze.kit.dock.DockDebugBounds;
+import glaze.kit.dock.DockSkin;
+import glaze.kit.dock.PanelBase;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.dock.PanelHandle;
+import glaze.kit.dock.PanelStyle;
+import glaze.kit.dock.TabGroupSkin;
+import glaze.kit.input.Input;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * gpui-kit's dock integration tests (`crates/kit/tests/integration/dock.rs`),
@@ -49,8 +49,8 @@ import gpui.Prelude.*;
  * above the named panel, `click` lands in the middle of the element after a
  * pointer move, and `drag` moves in eight steps like gpui-kit's helper.
  */
-@:access(gpui.component.dock.TabGroupSkin)
-@:access(gpui.component.dock.DockDebugBounds)
+@:access(glaze.kit.dock.TabGroupSkin)
+@:access(glaze.kit.dock.DockDebugBounds)
 class ComponentDockIntegrationTest extends TestCase {
 
     var dispatcher:TestDispatcher;

@@ -1,6 +1,6 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.platform;
+package glaze.platform;
 
 import haxe.io.Bytes;
 
@@ -274,7 +274,7 @@ class SystemFontFallback {
     /** Candidate files of this system for a CJK locale */
     public static function systemCandidates(locale:String):Candidates {
         // The operating system from the Ceramic backend (not
-        // `gpui.OperatingSystem.current`, which apps and tests may override)
+        // `glaze.OperatingSystem.current`, which apps and tests may override)
         var os = '';
         try {
             if (ceramic.App.app != null && ceramic.App.app.backend != null)

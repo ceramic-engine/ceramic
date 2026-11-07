@@ -2,14 +2,14 @@
 // HighlightTheme), crates/component/src/theme/registry.rs (DEFAULT_THEME_COLORS, highlight part)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.component.theme.DefaultThemeColors;
-import gpui.component.theme.ThemeMode;
-import gpui.component.highlighter.SyntaxColors.ThemeStyle;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.theme.DefaultThemeColors;
+import glaze.kit.theme.ThemeMode;
+import glaze.kit.highlighter.SyntaxColors.ThemeStyle;
 
 /**
  * The `highlight` section of a theme: editor colors, status colors and the

@@ -2,56 +2,56 @@
 // `ListOptions`, `ListState`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.list;
+package glaze.kit.list;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AppContext;
-import gpui.AvailableSpace;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.DefiniteLength;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Length;
-import gpui.ListSizingBehavior;
-import gpui.Model;
-import gpui.OperatingSystem;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollStrategy;
-import gpui.SizeOf;
-import gpui.Subscription;
-import gpui.Task;
-import gpui.Unit;
-import gpui.Window;
-import gpui.base.Actions.Cancel as CancelAction;
-import gpui.base.Actions.Confirm as ConfirmAction;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.IndexPath;
-import gpui.base.ScrollBounce;
-import gpui.base.VirtualList;
-import gpui.base.VirtualList.VirtualListScrollHandle;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.input.Input;
-import gpui.component.list.RowsCache;
-import gpui.component.scroll.Scrollbar;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AppContext;
+import glaze.AvailableSpace;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.DefiniteLength;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Length;
+import glaze.ListSizingBehavior;
+import glaze.Model;
+import glaze.OperatingSystem;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollStrategy;
+import glaze.SizeOf;
+import glaze.Subscription;
+import glaze.Task;
+import glaze.Unit;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel as CancelAction;
+import glaze.kit.base.Actions.Confirm as ConfirmAction;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.VirtualList;
+import glaze.kit.base.VirtualList.VirtualListScrollHandle;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.input.Input;
+import glaze.kit.list.RowsCache;
+import glaze.kit.scroll.Scrollbar;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.ClickEvent.ClickEventTools;
-using gpui.base.StyledExt;
+using glaze.ClickEvent.ClickEventTools;
+using glaze.kit.base.StyledExt;
 
 /**
  * Events emitted by a `ListState`.
@@ -68,7 +68,7 @@ enum ListEvent {
 /**
  * The options a `List` element hands to its state.
  */
-@:allow(gpui.component)
+@:allow(glaze.kit)
 class ListOptions {
 
     public var scrollBounce:Null<Bool> = null;
@@ -98,7 +98,7 @@ class ListOptions {
  *
  * List required all items has the same height.
  */
-@:allow(gpui.component, tests)
+@:allow(glaze.kit, tests)
 class ListState<D:ListDelegate> extends Model implements Render {
 
     /** The key context of the list. */
@@ -449,9 +449,9 @@ class ListState<D:ListDelegate> extends Model implements Render {
 
     function prepareItemsIfNeeded(window:Window, cx:Context<ListState<D>>):Void {
         final sectionsCount = Std.int(Math.max(delegateValue.sectionsCount(cx.app), 1));
-        var itemSize = new gpui.Size(0, 0);
-        var sectionHeaderSize = new gpui.Size(0, 0);
-        var sectionFooterSize = new gpui.Size(0, 0);
+        var itemSize = new glaze.Size(0, 0);
+        var sectionHeaderSize = new glaze.Size(0, 0);
+        var sectionFooterSize = new glaze.Size(0, 0);
 
         // Measure the item_height and section header/footer height.
         final availableSpace = new SizeOf<AvailableSpace>(MinContent, MinContent);
@@ -566,7 +566,7 @@ class ListState<D:ListDelegate> extends Model implements Render {
                 .withItemToMeasureIndex(itemToMeasureIndex);
             // Rust `.paddings(self.options.paddings.clone())`: every edge is
             // set, an unset one to zero.
-            final zero:DefiniteLength = DefiniteLength.Absolute(gpui.AbsoluteLength.Pixels(0.));
+            final zero:DefiniteLength = DefiniteLength.Absolute(glaze.AbsoluteLength.Pixels(0.));
             list.pt(options.paddingTop != null ? options.paddingTop : zero)
                 .pb(options.paddingBottom != null ? options.paddingBottom : zero)
                 .pl(options.paddingLeft != null ? options.paddingLeft : zero)

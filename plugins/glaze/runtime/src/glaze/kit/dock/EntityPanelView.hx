@@ -1,21 +1,21 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dock/panel.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dock;
+package glaze.kit.dock;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Entity;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Entity;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
 
 /**
  * The presentation `PanelView` of a panel entity (Rust's blanket
  * `impl<T: Panel> PanelView for Entity<T>`).
  */
-class EntityPanelView<T:Model & Panel> extends gpui.base.dock.EntityPanelView<T> implements PanelView {
+class EntityPanelView<T:Model & Panel> extends glaze.kit.base.dock.EntityPanelView<T> implements PanelView {
 
     public function new(entity:Entity<T>) {
         super(entity);

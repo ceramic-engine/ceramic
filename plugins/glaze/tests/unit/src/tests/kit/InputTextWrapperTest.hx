@@ -3,30 +3,30 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Font;
-import gpui.LineLayout;
-import gpui.LineWrapper.Boundary;
-import gpui.Point;
-import gpui.Range;
-import gpui.ShapedLine;
-import gpui.TextAlign;
-import gpui.base.input.InputLineLayout;
-import gpui.base.input.LastLayout;
-import gpui.base.input.LineItem;
-import gpui.base.input.LineItems;
-import gpui.base.input.TextWrapper;
-import gpui.base.input.WidthRange;
-import gpui.base.input.WrapDisplayPoint;
-import gpui.base.input.WrappingIndent;
-import gpui.util.Utf8;
+import glaze.Font;
+import glaze.LineLayout;
+import glaze.LineWrapper.Boundary;
+import glaze.Point;
+import glaze.Range;
+import glaze.ShapedLine;
+import glaze.TextAlign;
+import glaze.kit.base.input.InputLineLayout;
+import glaze.kit.base.input.LastLayout;
+import glaze.kit.base.input.LineItem;
+import glaze.kit.base.input.LineItems;
+import glaze.kit.base.input.TextWrapper;
+import glaze.kit.base.input.WidthRange;
+import glaze.kit.base.input.WrapDisplayPoint;
+import glaze.kit.base.input.WrappingIndent;
+import glaze.util.Utf8;
 import ropey.Rope;
 import testing.TestCase;
 import unicode_segmentation.UnicodeSegmentation;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
- * Tests of `gpui.base.input.TextWrapper` and `InputLineLayout` (Rust
+ * Tests of `glaze.kit.base.input.TextWrapper` and `InputLineLayout` (Rust
  * `text_wrapper.rs`).
  *
  * Not ported: `production_wrap_keeps_shaped_cjk_latin_boundary_during_edits`

@@ -1,41 +1,41 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/scrollable_mask.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.AbsoluteLength;
-import gpui.App;
-import gpui.Axis;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Corners;
-import gpui.DefiniteLength;
-import gpui.Div;
-import gpui.Edges;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.Length;
-import gpui.OngoingScroll;
-import gpui.Path;
-import gpui.PathBuilder;
-import gpui.Point;
-import gpui.ScrollEvent;
-import gpui.ScrollHandle;
-import gpui.Style;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.base.Scrollbar.ScrollbarHandle;
-import gpui.base.theme.Theme as BaseTheme;
+import glaze.AbsoluteLength;
+import glaze.App;
+import glaze.Axis;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Corners;
+import glaze.DefiniteLength;
+import glaze.Div;
+import glaze.Edges;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.Length;
+import glaze.OngoingScroll;
+import glaze.Path;
+import glaze.PathBuilder;
+import glaze.Point;
+import glaze.ScrollEvent;
+import glaze.ScrollHandle;
+import glaze.Style;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.base.Scrollbar.ScrollbarHandle;
+import glaze.kit.base.theme.Theme as BaseTheme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A scroll step that a horizontal `ScrollableMask` used to move its content.
@@ -92,7 +92,7 @@ class RoundedFrameCover extends Element {
     var coverBounds:Bounds = new Bounds();
 
     /** Corners top left, top right, bottom right, bottom left. */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     function new(topLeft:Null<AbsoluteLength>, topRight:Null<AbsoluteLength>, bottomLeft:Null<AbsoluteLength>, bottomRight:Null<AbsoluteLength>) {
         cornerRadii = [topLeft, topRight, bottomLeft, bottomRight];
     }
@@ -144,7 +144,7 @@ class RoundedFrameCover extends Element {
         if (_frameBorder != 0.) {
             bounds = new Bounds(
                 new Point(bounds.origin.x - _frameBorder, bounds.origin.y - _frameBorder),
-                new gpui.Size(bounds.size.width + _frameBorder * 2., bounds.size.height + _frameBorder * 2.)
+                new glaze.Size(bounds.size.width + _frameBorder * 2., bounds.size.height + _frameBorder * 2.)
             );
         }
         final remSize = window.remSize();
@@ -182,7 +182,7 @@ class RoundedFrameCover extends Element {
      * `corner`, minus the quarter disc of the border arc. `xDir`/`yDir` point
      * from the corner toward the frame's inside (`±1`).
      */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static function cornerNotchPath(corner:Point, xDir:Float, yDir:Float, radius:Float):Null<Path> {
         final builder = PathBuilder.fill();
         builder.moveTo(corner);
@@ -240,7 +240,7 @@ class ScrollableMask extends Element {
     static inline final CLAIM_EPSILON:Float = 0.5;
 
     /** `LAST_HORIZONTAL_SCROLL_CLAIM` (a thread local in Rust). */
-    @:allow(gpui.base)
+    @:allow(glaze.kit.base)
     static var lastHorizontalScrollClaimValue:Null<HorizontalScrollClaim> = null;
 
     /**
@@ -323,7 +323,7 @@ class ScrollableMask extends Element {
      * clipping and scroll offset, while delegating wheel input to `ScrollableMask`
      * so vertical wheel events can continue bubbling to the parent scroller.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     static function horizontalScrollArea(id:ElementIdArg, scrollHandle:ScrollHandle, style:StyleRefinement, child:IntoElement):Div {
         final id:ElementId = id;
 

@@ -1,43 +1,43 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/inline.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ClickEvent.MouseClickEvent;
-import gpui.Edges;
-import gpui.Element;
-import gpui.GlobalElementId;
-import gpui.Hitbox;
-import gpui.Hsla;
-import gpui.LayoutId;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Pixels;
-import gpui.Point;
-import gpui.Range;
-import gpui.Size;
-import gpui.StyledText;
-import gpui.TextAlign;
-import gpui.TextLayout;
-import gpui.TextRun;
-import gpui.TextStyle;
-import gpui.Window;
-import gpui.WrappedLineLayout;
-import gpui.base.GlobalState;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionRun;
-import gpui.base.input.Selection;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.base.theme.Theme;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ClickEvent.MouseClickEvent;
+import glaze.Edges;
+import glaze.Element;
+import glaze.GlobalElementId;
+import glaze.Hitbox;
+import glaze.Hsla;
+import glaze.LayoutId;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Pixels;
+import glaze.Point;
+import glaze.Range;
+import glaze.Size;
+import glaze.StyledText;
+import glaze.TextAlign;
+import glaze.TextLayout;
+import glaze.TextRun;
+import glaze.TextStyle;
+import glaze.Window;
+import glaze.WrappedLineLayout;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionRun;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.kit.base.theme.Theme;
+import glaze.util.Utf8;
 
 /** Rust `LinkClickHandlerFn` (text_view.rs): `(url, event, window, cx)`. */
-private typedef LinkClickHandler = (url:String, event:gpui.ClickEvent, window:gpui.Window, cx:gpui.App) -> Void;
+private typedef LinkClickHandler = (url:String, event:glaze.ClickEvent, window:glaze.Window, cx:glaze.App) -> Void;
 
 /**
  * A inline element used to render a inline text and support selectable.
@@ -507,7 +507,7 @@ class Inline extends Element {
 
         final lineHeight = textLayout.lineHeight();
         inline function paint(topLeft:Point, bottomRight:Point) {
-            window.paintQuad(gpui.Prelude.quad(Bounds.fromCorners(topLeft, bottomRight), new gpui.Corners(), color, new Edges(), Hsla.transparentBlack(), gpui.scene.BorderStyle.Solid));
+            window.paintQuad(glaze.Prelude.quad(Bounds.fromCorners(topLeft, bottomRight), new glaze.Corners(), color, new Edges(), Hsla.transparentBlack(), glaze.scene.BorderStyle.Solid));
         }
         if (startPosition.y == endPosition.y) {
             paint(startPosition, new Point(endPosition.x, f32(endPosition.y + lineHeight)));
@@ -530,7 +530,7 @@ class Inline extends Element {
         final lineHeight = textLayout.lineHeight();
         for (item in rangeBackgrounds_) {
             for (box in rangeBoxes(glyphs, item.range)) {
-                window.paintQuad(gpui.Prelude.fill(Bounds.fromCorners(
+                window.paintQuad(glaze.Prelude.fill(Bounds.fromCorners(
                     new Point(f32(origin.x + box.left), f32(origin.y + f32(lineHeight * box.row))),
                     new Point(f32(origin.x + box.right), f32(origin.y + f32(lineHeight * (box.row + 1))))
                 ), item.color));
@@ -789,7 +789,7 @@ class Inline extends Element {
         var lineStart = 0;
         for (line in textLayout.lineLayouts()) {
             final layout = line.unwrappedLayout;
-            final glyphs:Array<gpui.ShapedGlyph> = [];
+            final glyphs:Array<glaze.ShapedGlyph> = [];
             for (run in layout.runs) {
                 for (glyph in run.glyphs) {
                     glyphs.push(glyph);
@@ -912,7 +912,7 @@ class Inline extends Element {
         }
 
         return switch kind {
-            case Word: gpui.base.text.Selection.wordRangeAt(text, offset);
+            case Word: glaze.kit.base.text.Selection.wordRangeAt(text, offset);
             // Known limitation: a paragraph maps to a single Inline run here. When a
             // paragraph embeds an inline image it is split into multiple Inline runs,
             // so triple-click only selects the run on the clicked side of the image.

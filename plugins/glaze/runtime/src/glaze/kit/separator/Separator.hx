@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/separator.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.separator;
+package glaze.kit.separator;
 
-import gpui.App;
-import gpui.Axis;
-import gpui.Div;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.PathBuilder;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Axis;
+import glaze.Div;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.PathBuilder;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The line style of a `Separator`.
@@ -109,8 +109,8 @@ class Separator implements RenderOnce implements Styled {
     static function renderBase(axis:Axis):Div {
         final base = div().absolute();
         return switch axis {
-            case Vertical: base.w(gpui.Prelude.px(1.)).hFull();
-            case Horizontal: base.h(gpui.Prelude.px(1.)).wFull();
+            case Vertical: base.w(glaze.Prelude.px(1.)).hFull();
+            case Horizontal: base.h(glaze.Prelude.px(1.)).wFull();
         }
     }
 
@@ -121,7 +121,7 @@ class Separator implements RenderOnce implements Styled {
     static function renderDashed(axis:Axis, color:Hsla):Div {
         return renderBase(axis).child(
             canvas((_, _, _) -> null, (bounds, _, window, _) -> {
-                final builder = PathBuilder.stroke(gpui.Prelude.px(1.)).dashArray([gpui.Prelude.px(4.), gpui.Prelude.px(2.)]);
+                final builder = PathBuilder.stroke(glaze.Prelude.px(1.)).dashArray([glaze.Prelude.px(4.), glaze.Prelude.px(2.)]);
                 switch axis {
                     case Horizontal:
                         final x = bounds.origin.x;

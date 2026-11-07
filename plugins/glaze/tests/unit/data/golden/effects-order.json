@@ -1,0 +1,24 @@
+{
+  "behaviour": "effects-order",
+  "description": "Order of notify, observe, subscribe / emit, defer, nested updates and release",
+  "log": [
+    "setup app observers",
+    "setup b observers",
+    "update a begin",
+    "nested update b",
+    "update a end",
+    "app observe a value=1",
+    "b observe a value=1 b=10",
+    "app subscribe a event=1 value=1",
+    "b subscribe a event=1 b=11",
+    "defer from a",
+    "app observe b value=11",
+    "nested defer",
+    "after update 3",
+    "dropped b",
+    "release b value=11",
+    "app observe a value=2",
+    "app subscribe a event=3 value=2",
+    "after update 4"
+  ]
+}

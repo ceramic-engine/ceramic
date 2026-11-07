@@ -1,24 +1,24 @@
 package tests;
 
-import gpui.Action;
-import gpui.App;
-import gpui.Context;
-import gpui.Div;
-import gpui.DragMoveEvent;
-import gpui.FocusHandle;
-import gpui.Hsla;
-import gpui.KeyBinding;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.ScrollDelta;
-import gpui.ScrollHandle;
-import gpui.TestDispatcher;
-import gpui.Window;
-import testing.GpuiTruth;
+import glaze.Action;
+import glaze.App;
+import glaze.Context;
+import glaze.Div;
+import glaze.DragMoveEvent;
+import glaze.FocusHandle;
+import glaze.Hsla;
+import glaze.KeyBinding;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.ScrollDelta;
+import glaze.ScrollHandle;
+import glaze.TestDispatcher;
+import glaze.Window;
+import testing.GlazeTruth;
 import testing.InteractionScript;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 import testing.InteractionScript.*;
 
 @:action(namespace = reference) class ActionA implements Action {}
@@ -163,7 +163,7 @@ class InteractionBehaviourTest extends TestCase {
         s.down(Right, 150, 150, 1);
         s.up(Right, 150, 150, 1);
         s.moveTo(10, 10);
-        compare('mouse-dispatch', GpuiTruth.load('mouse-dispatch.json'), log);
+        compare('mouse-dispatch', GlazeTruth.load('mouse-dispatch.json'), log);
     }
 
 /// 2. drag-drop
@@ -203,12 +203,12 @@ class InteractionBehaviourTest extends TestCase {
         s.moveTo(110, 100);
         s.moveTo(200, 300);
         s.up(Left, 200, 300, 1);
-        compare('drag-drop', GpuiTruth.load('drag-drop.json'), log);
+        compare('drag-drop', GlazeTruth.load('drag-drop.json'), log);
     }
 
 /// 3. scroll-wheel
 
-    static function scrollLogger(log:Array<String>, name:String):(gpui.ScrollEvent, Window, App) -> Void {
+    static function scrollLogger(log:Array<String>, name:String):(glaze.ScrollEvent, Window, App) -> Void {
         return (e, window, _) -> {
             final lineHeight = window.lineHeight();
             log.push('$name on_scroll ${pt(e.position)} ${deltaDesc(e.delta)} shift=${e.modifiers.shift} pixel_delta ${pt(e.delta.pixelDelta(lineHeight))} line_height ${f(lineHeight)}');
@@ -262,7 +262,7 @@ class InteractionBehaviourTest extends TestCase {
         s.scroll(300, 50, pixels(0, -40), true);
         s.scroll(300, 50, pixels(-500, 0), false);
         s.step('row scroll_to_item 0', (_, _) -> row.scrollToItem(0));
-        compare('scroll-wheel', GpuiTruth.load('scroll-wheel.json'), log);
+        compare('scroll-wheel', GlazeTruth.load('scroll-wheel.json'), log);
     }
 
 /// 4. focus-tab
@@ -331,7 +331,7 @@ class InteractionBehaviourTest extends TestCase {
         s.step('focus_next', (window, cx) -> window.focusNext(cx));
         s.step('focus e', (window, cx) -> window.focus(get('e'), cx));
         s.step('focus_next', (window, cx) -> window.focusNext(cx));
-        compare('focus-tab', GpuiTruth.load('focus-tab.json'), log);
+        compare('focus-tab', GlazeTruth.load('focus-tab.json'), log);
     }
 
 /// 5. key-actions
@@ -400,7 +400,7 @@ class InteractionBehaviourTest extends TestCase {
         s.step('dispatch_action ActionA', (window, cx) -> window.dispatchAction(new ActionA(), cx));
         s.step('focus ws', (window, cx) -> window.focus(ws, cx));
         s.key('a');
-        compare('key-actions', GpuiTruth.load('key-actions.json'), log);
+        compare('key-actions', GlazeTruth.load('key-actions.json'), log);
     }
 
 /// 6. tooltip
@@ -457,7 +457,7 @@ class InteractionBehaviourTest extends TestCase {
         s.moveTo(300, 450);
         s.advance(300);
         s.advance(300);
-        compare('tooltip', GpuiTruth.load('tooltip.json'), log);
+        compare('tooltip', GlazeTruth.load('tooltip.json'), log);
     }
 
 }

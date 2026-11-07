@@ -1,46 +1,46 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/text_view.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Bounds;
-import gpui.ClickEvent;
-import gpui.ClipboardItem;
-import gpui.ContentMask;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.GlobalElementId;
-import gpui.HitboxBehavior;
-import gpui.Hitbox;
-import gpui.Hsla;
-import gpui.ImageSource;
-import gpui.IntoElement;
-import gpui.LayoutId;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.GlobalState;
-import gpui.base.KeyedEntity;
-import gpui.base.ScrollBounce;
-import gpui.base.Scrollbar;
-import gpui.base.TextSelection;
-import gpui.base.TouchHandleLayout;
-import gpui.base.input.InputActions.Copy;
-import gpui.base.input.InputActions.SelectAll;
-import gpui.base.input.StyledRange;
-import gpui.base.text.PendingReveal.RevealProgress;
-import gpui.base.text.MarkdownExtensions.MarkdownBlockParserFn;
-import gpui.base.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ClickEvent;
+import glaze.ClipboardItem;
+import glaze.ContentMask;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.GlobalElementId;
+import glaze.HitboxBehavior;
+import glaze.Hitbox;
+import glaze.Hsla;
+import glaze.ImageSource;
+import glaze.IntoElement;
+import glaze.LayoutId;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.GlobalState;
+import glaze.kit.base.KeyedEntity;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.Scrollbar;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TouchHandleLayout;
+import glaze.kit.base.input.InputActions.Copy;
+import glaze.kit.base.input.InputActions.SelectAll;
+import glaze.kit.base.input.StyledRange;
+import glaze.kit.base.text.PendingReveal.RevealProgress;
+import glaze.kit.base.text.MarkdownExtensions.MarkdownBlockParserFn;
+import glaze.kit.base.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Application-wide defaults for TextViews that do not provide explicit
@@ -48,9 +48,9 @@ using gpui.base.StyledExt;
  */
 class TextViewDefaults {
 
-    @:allow(gpui.base.text) var _style:Null<TextViewStyle> = null;
-    @:allow(gpui.base.text) var _codeBlockHighlighter:Null<CodeBlockHighlighterFn> = null;
-    @:allow(gpui.base.text) var _inheritTextColor:Bool = false;
+    @:allow(glaze.kit.base.text) var _style:Null<TextViewStyle> = null;
+    @:allow(glaze.kit.base.text) var _codeBlockHighlighter:Null<CodeBlockHighlighterFn> = null;
+    @:allow(glaze.kit.base.text) var _inheritTextColor:Bool = false;
 
     /** Creates defaults that leave every text view as Base renders it. */
     public function new() {}
@@ -71,13 +71,13 @@ class TextViewDefaults {
     }
 
     /** The style every text view starts from, when set. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function style():Null<TextViewStyle> {
         return _style;
     }
 
     /** The syntax highlighter for fenced code blocks, when set. */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function codeBlockHighlighter():Null<CodeBlockHighlighterFn> {
         return _codeBlockHighlighter;
     }
@@ -189,7 +189,7 @@ class TextView extends Element implements Styled {
     final id:ElementId;
     var format:Null<TextViewFormat> = null;
     var text:Null<String> = null;
-    @:allow(gpui.base.text) var state:Null<Entity<TextViewState>> = null;
+    @:allow(glaze.kit.base.text) var state:Null<Entity<TextViewState>> = null;
     var textViewStyle:Null<TextViewStyle> = null;
     var _inlineCodeStyle:Null<StyleRefinement> = null;
     var _listStyle:Null<StyleRefinement> = null;
@@ -205,7 +205,7 @@ class TextView extends Element implements Styled {
     var linkClickHandler:Null<LinkClickHandlerFn> = null;
     var _imageSource:Null<ImageSourceFn> = null;
     var revealHandler:Null<RevealHandlerFn> = null;
-    @:allow(gpui.base.text) var _markdownExtensions:MarkdownExtensions;
+    @:allow(glaze.kit.base.text) var _markdownExtensions:MarkdownExtensions;
     var _motion:Null<TextViewMotion> = null;
 
     // Frame state (Rust `TextViewLayoutState` and `TextViewPrepaintState`).
@@ -299,7 +299,7 @@ class TextView extends Element implements Styled {
      *
      * When true, the view is meant for large content: it shows a scrollbar,
      * requires the parent to have a fixed height, and renders its content
-     * with `gpui.list` in a virtualized way. When false, it expands to fit all
+     * with `glaze.list` in a virtualized way. When false, it expands to fit all
      * content, with no scrollbar.
      */
     public function scrollable(scrollable:Bool):TextView {
@@ -471,7 +471,7 @@ class TextView extends Element implements Styled {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     /**
@@ -630,7 +630,7 @@ class TextView extends Element implements Styled {
             .keyContext('TextView')
             .trackFocus(focusHandle)
             .when(scrollable, el -> el.sizeFull())
-            .whenSome(maxLinesCap, (el, cap) -> el.maxH(gpui.Prelude.px(cap)).overflowHidden())
+            .whenSome(maxLinesCap, (el, cap) -> el.maxH(glaze.Prelude.px(cap)).overflowHidden())
             .relative()
             .textColor(foreground)
             .onAction(Copy, (_, window, cx) -> {

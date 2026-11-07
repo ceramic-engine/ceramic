@@ -1,34 +1,34 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/selectable_text.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base;
+package glaze.kit.base;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Corners;
-import gpui.Edges;
-import gpui.Element;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.GlobalElementId;
-import gpui.HitboxBehavior;
-import gpui.Hsla;
-import gpui.LayoutId;
-import gpui.Point;
-import gpui.Range;
-import gpui.StyledText;
-import gpui.TextLayout;
-import gpui.TextStyleRefinement;
-import gpui.Window;
-import gpui.base.theme.Theme;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Corners;
+import glaze.Edges;
+import glaze.Element;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.GlobalElementId;
+import glaze.HitboxBehavior;
+import glaze.Hsla;
+import glaze.LayoutId;
+import glaze.Point;
+import glaze.Range;
+import glaze.StyledText;
+import glaze.TextLayout;
+import glaze.TextStyleRefinement;
+import glaze.Window;
+import glaze.kit.base.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Retained handle of a `SelectableText` that owns its selection (element
  * state). Rust drops the handle, and its entity, with the element state.
  */
-private class RetainedHandle implements gpui.Droppable {
+private class RetainedHandle implements glaze.Droppable {
     public final handle:TextSelectionHandle;
 
     public function new(handle:TextSelectionHandle) {
@@ -109,7 +109,7 @@ class SelectableText extends Element {
     }
 
     static function selectionQuadBounds(start:Point, end:Point, bounds:Bounds, lineHeight:Float):Array<Bounds> {
-        inline function f32(v:Float):Float return gpui.SpringMath.f32(v);
+        inline function f32(v:Float):Float return glaze.SpringMath.f32(v);
         if (start.y == end.y) {
             return [Bounds.fromCorners(start, new Point(end.x, f32(end.y + lineHeight)))];
         }

@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/touch_selection.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
 /** One end of a selection, as a touch handle grabs it. */
 enum abstract SelectionEdge(Int) {

@@ -1,6 +1,6 @@
 // New code for the Haxe port of GPUI (no GPUI origin): automatic reactivity
-// of views based on tracker. See CERAMIC_GPUI_PLAN_1.md and NOTICE.md.
-package gpui;
+// of views based on tracker. See NOTICE.md.
+package glaze;
 
 import tracker.Autorun;
 
@@ -70,10 +70,10 @@ class ViewTracker extends Autorun {
      * window): the window is told synchronously when this tracker is
      * invalidated.
      */
-    @:allow(gpui)
+    @:allow(glaze)
     var window:Null<Window> = null;
 
-    @:allow(gpui)
+    @:allow(glaze)
     var viewId:Int = -1;
 
     var writeReported:Bool = false;
@@ -150,7 +150,7 @@ class ViewTracker extends Autorun {
         }
         catch (e:haxe.Exception) {
             endCapture();
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
         endCapture();
         return result;
@@ -171,7 +171,7 @@ class ViewTracker extends Autorun {
             }
             catch (e:haxe.Exception) {
                 Autorun.reobserve();
-                throw gpui.util.Exceptions.rethrow(e);
+                throw glaze.util.Exceptions.rethrow(e);
             }
             Autorun.reobserve();
         }

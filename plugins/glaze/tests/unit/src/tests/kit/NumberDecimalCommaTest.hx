@@ -1,11 +1,11 @@
 package tests.kit;
 
-import gpui.ClipboardItem;
-import gpui.base.input.InputActions;
-import gpui.base.input.MaskPattern;
+import glaze.ClipboardItem;
+import glaze.kit.base.input.InputActions;
+import glaze.kit.base.input.MaskPattern;
 import tests.kit.InputStateTestCase.InputView;
 
-using gpui.base.input.MaskPattern.MaskPatternTools;
+using glaze.kit.base.input.MaskPattern.MaskPatternTools;
 
 /**
  * Deliberate deviation DEV-018 (see DEVIATIONS.md): a number mask also takes

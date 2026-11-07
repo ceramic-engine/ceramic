@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/sizing.rs (Sizable)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
 /**
  * A trait for setting the size of an element (`Size.Medium` by default).
@@ -13,7 +13,7 @@ package gpui.component;
  * `setSize` is the untyped entry point used by generic owners (groups that
  * size their children).
  */
-@:autoBuild(gpui.component.SizableMacro.build())
+@:autoBuild(glaze.kit.SizableMacro.build())
 interface Sizable {
 
     /**

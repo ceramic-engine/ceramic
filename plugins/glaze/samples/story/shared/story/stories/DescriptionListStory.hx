@@ -3,27 +3,27 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.AppContext;
-import gpui.Axis;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.descriptionlist.DescriptionList;
-import gpui.component.dock.PanelControl;
-import gpui.component.text.TextView;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.AppContext;
+import glaze.Axis;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.descriptionlist.DescriptionList;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.text.TextView;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
 enum DescriptionListToggle {

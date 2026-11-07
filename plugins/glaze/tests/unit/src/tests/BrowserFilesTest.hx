@@ -2,9 +2,9 @@ package tests;
 
 import ceramic.BrowserFiles;
 import ceramic.Files;
-import gpui.App;
-import gpui.PathPromptOptions;
-import gpui.TestDispatcher;
+import glaze.App;
+import glaze.PathPromptOptions;
+import glaze.TestDispatcher;
 import haxe.io.Bytes;
 import testing.TestCase;
 
@@ -15,7 +15,7 @@ import testing.TestCase;
  * writes; the port's path prompts return them on the web
  * (`CeramicPlatformOperations` over `ceramic.Dialogs`). The browser itself
  * (the Blob download, the `<input type="file">` chooser and its user gesture
- * rule) is checked in headless Chromium (`test/web-files/check.sh`); here the
+ * rule) is checked in headless Chromium (`tests/web-files/check.sh`); here the
  * downloads go to `BrowserFiles.downloadHandler` and the browser's dialogs
  * are played by `Dialogs.handler` the way the browser implementation answers.
  */

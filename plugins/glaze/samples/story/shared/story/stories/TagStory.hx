@@ -4,27 +4,27 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.component.Size;
-import gpui.component.tag.Tag;
-import gpui.component.theme.ColorName;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.kit.Size;
+import glaze.kit.tag.Tag;
+import glaze.kit.theme.ColorName;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
-import gpui.component.theme.Color.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
+import glaze.kit.theme.Color.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 class TagStory extends Model implements Story {
 
@@ -36,7 +36,7 @@ class TagStory extends Model implements Story {
         return 'A short item that can be used to categorize or label content.';
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -46,7 +46,7 @@ class TagStory extends Model implements Story {
 
     final focusHandle_:FocusHandle;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     function new(cx:Context<TagStory>) {
         super();

@@ -1,27 +1,27 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/spinner.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.spinner;
+package glaze.kit.spinner;
 
-import gpui.Animation;
-import gpui.App;
-import gpui.Easing;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Svg;
-import gpui.Svg.Transformation;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
+import glaze.Animation;
+import glaze.App;
+import glaze.Easing;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Svg;
+import glaze.Svg.Transformation;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.AbsoluteLengthTools;
-using gpui.AnimationExt;
+using glaze.AbsoluteLengthTools;
+using glaze.AnimationExt;
 
 /**
  * A spinner: an icon (`IconName.Loader` by default) turning with an
@@ -75,7 +75,7 @@ class Spinner implements RenderOnce implements Sizable {
     }
 
     static inline function f32(value:Float):Float {
-        return gpui.SpringMath.f32(value);
+        return glaze.SpringMath.f32(value);
     }
 
     public function render(window:Window, cx:App):IntoElement {

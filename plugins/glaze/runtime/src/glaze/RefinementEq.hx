@@ -2,7 +2,7 @@
 // of `StyleRefinement` and `TextStyleRefinement` (src/style.rs).
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Equality of the optional fields of style refinements (`Option<T>` with

@@ -2,9 +2,9 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // @reference: https://d3js.org/d3-shape/stack
-package gpui.base.plot.shape;
+package glaze.kit.base.plot.shape;
 
-import gpui.SpringMath;
+import glaze.SpringMath;
 
 /**
  * Represents a stacked series data point with lower and upper values.
@@ -65,13 +65,13 @@ class Stack<T> {
 
     /** Set the data to be stacked */
     public function data(data:Iterable<T>):Stack<T> {
-        dataValues = gpui.util.Iterables.toArray(data);
+        dataValues = glaze.util.Iterables.toArray(data);
         return this;
     }
 
     /** Set the keys (series) for stacking */
     public function keys(keys:Iterable<String>):Stack<T> {
-        keyValues = gpui.util.Iterables.toArray(keys);
+        keyValues = glaze.util.Iterables.toArray(keys);
         return this;
     }
 

@@ -1,23 +1,23 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/group_box.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.groupbox;
+package glaze.kit.groupbox;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The look of a `GroupBox`: no surface, a filled surface or an outlined one.
@@ -122,7 +122,7 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
         final theme = Theme.global(cx);
         final hasPaddings = variant != Normal;
 
-        final element = gpui.base.Prelude.vFlex()
+        final element = glaze.kit.base.Prelude.vFlex()
             .id(idValue != null ? idValue : ElementId.Name('group-box'))
             .wFull();
         if (hasPaddings) element.gap3() else element.gap4();
@@ -131,12 +131,12 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
             element.child(
                 div()
                     .textColor(theme.mutedForeground)
-                    .lineHeight(gpui.Prelude.relative(1.25))
+                    .lineHeight(glaze.Prelude.relative(1.25))
                     .refineStyle(titleStyleValue)
                     .child(titleValue)
             );
         }
-        final surface = gpui.base.Prelude.vFlex();
+        final surface = glaze.kit.base.Prelude.vFlex();
         if (variant == Fill) surface.bg(theme.tokens.groupBox.background);
         if (variant == Outline) surface.borderColor(theme.border).border1();
         surface.textColor(theme.groupBoxForeground);
@@ -145,7 +145,7 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
         surface.extend(childElements);
         // The footer sits inside the surface's slot so its 8 px gap is
         // independent of the root gap between the title and surface.
-        final slot = gpui.base.Prelude.vFlex().gap2().child(surface);
+        final slot = glaze.kit.base.Prelude.vFlex().gap2().child(surface);
         if (footerValue != null) {
             slot.child(div().textSm().textColor(theme.mutedForeground).child(footerValue));
         }

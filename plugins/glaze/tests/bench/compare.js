@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Compares two sets of benchmark results written by test/bench (BenchRunner).
+// Compares two sets of benchmark results written by tests/bench (BenchRunner).
 //
 // Usage:
 //   node compare.js <baseline-glob-or-dir> <candidate-glob-or-dir> [--median-threshold 3] [--p99-threshold 5]

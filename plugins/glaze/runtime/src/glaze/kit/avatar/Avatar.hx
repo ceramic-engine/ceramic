@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/avatar/avatar.rs, crates/component/src/avatar/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.avatar;
+package glaze.kit.avatar;
 
-import gpui.App;
-import gpui.Div;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoImageSource;
-import gpui.ImageSource;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Avatar.AvatarFallback;
-import gpui.base.Avatar.AvatarImage;
-import gpui.base.FxHash;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.Div;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoImageSource;
+import glaze.ImageSource;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Avatar.AvatarFallback;
+import glaze.kit.base.Avatar.AvatarImage;
+import glaze.kit.base.FxHash;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * Background, foreground and border of the initials of a named avatar,
@@ -38,7 +38,7 @@ using gpui.component.ThemeStyled;
 class IdentityColor {
 
     public static inline final HUES:Int = 12;
-    public static final HUE_STEP:Float = gpui.SpringMath.f32(360. / 12.);
+    public static final HUE_STEP:Float = glaze.SpringMath.f32(360. / 12.);
 
     public final background:Hsla;
     public final foreground:Hsla;
@@ -51,7 +51,7 @@ class IdentityColor {
     }
 
     public static function of(shortName:String, cx:App):IdentityColor {
-        final hue = gpui.SpringMath.f32(FxHash.modulo(FxHash.hashString(shortName), HUES) * HUE_STEP);
+        final hue = glaze.SpringMath.f32(FxHash.modulo(FxHash.hashString(shortName), HUES) * HUE_STEP);
         return fromHue(hue, Theme.global(cx).isDark());
     }
 
@@ -88,7 +88,7 @@ class AvatarSizing {
             case Medium: b.textSm();
             case Small: b.textXs();
             case XSmall: b.textSize(rems(0.65));
-            case Size(value): b.size(gpui.Prelude.px(gpui.SpringMath.f32(value * 0.5)));
+            case Size(value): b.size(glaze.Prelude.px(glaze.SpringMath.f32(value * 0.5)));
         }
         return self;
     }
@@ -101,7 +101,7 @@ class AvatarSizing {
  */
 class Avatar implements RenderOnce implements Styled implements Sizable {
 
-    final base:gpui.base.Avatar = new gpui.base.Avatar();
+    final base:glaze.kit.base.Avatar = new glaze.kit.base.Avatar();
 
     final avatarStyle:StyleRefinement = new StyleRefinement();
 
@@ -176,7 +176,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
             .roundedFullStyle(cx)
             .overflowHidden();
         if (identity == null) {
-            fallback.textSize(gpui.Prelude.px(gpui.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.6))).child(placeholderValue);
+            fallback.textSize(glaze.Prelude.px(glaze.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.6))).child(placeholderValue);
         }
         else {
             fallback.bg(identity.background)

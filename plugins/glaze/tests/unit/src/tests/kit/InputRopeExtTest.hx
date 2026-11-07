@@ -3,18 +3,18 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.base.input.Bias;
-import gpui.base.input.LspPosition;
-import gpui.base.input.RopePoint;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.kit.base.input.Bias;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.RopePoint;
+import glaze.util.Utf8;
 import ropey.Rope;
 import testing.TestCase;
 
-using gpui.base.input.RopeExt;
+using glaze.kit.base.input.RopeExt;
 
 /**
- * Tests of `gpui.base.input.RopeExt` (Rust `rope_ext.rs`), with its doc
+ * Tests of `glaze.kit.base.input.RopeExt` (Rust `rope_ext.rs`), with its doc
  * examples. `"..".len()` is the UTF-8 byte length (`Utf8.byteLength`).
  */
 class InputRopeExtTest extends TestCase {

@@ -2,9 +2,9 @@
 // with Rust's `format!` (`{}`, `{:.N}` of `f64` and `f32`).
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.chart;
+package glaze.kit.chart;
 
-import gpui.SpringMath;
+import glaze.SpringMath;
 
 /**
  * Rust's float formatting, as the charts use it for tick labels and tooltip

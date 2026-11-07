@@ -2,7 +2,7 @@
 // the `styled_reflection` module)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
 /**
  * Runtime access to the `Styled` methods of the form `fn name(self) -> Self`
@@ -11,6 +11,6 @@ package gpui;
  * them to a `StyleRefinement`. The table is `StyledReflection.json`.
  */
 #if !macro
-@:build(gpui.StyledReflectionMacro.build('StyledReflection.json', false))
+@:build(glaze.StyledReflectionMacro.build('StyledReflection.json', false))
 #end
 class StyledReflection {}

@@ -3,23 +3,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story;
 
-import gpui.AnyElement;
-import gpui.Anchor;
-import gpui.App;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Div;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.button.Button;
-import gpui.component.menu.PopupMenu;
-import gpui.component.popover.Popover;
+import glaze.AnyElement;
+import glaze.Anchor;
+import glaze.App;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Div;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.button.Button;
+import glaze.kit.menu.PopupMenu;
+import glaze.kit.popover.Popover;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Rust `StoryMenuBuilder`.
@@ -30,8 +30,8 @@ typedef StoryMenuBuilder = (PopupMenu, Window, Context<PopupMenu>) -> PopupMenu;
  * Rust `enum StoryToolbarItem`.
  */
 enum StoryToolbarItem {
-    Button(button:gpui.component.button.Button);
-    Dropdown(button:gpui.component.button.Button, builder:StoryMenuBuilder);
+    Button(button:glaze.kit.button.Button);
+    Dropdown(button:glaze.kit.button.Button, builder:StoryMenuBuilder);
 }
 
 /**
@@ -71,8 +71,8 @@ class StoryToolbar implements RenderOnce implements Styled {
             // neighbour's border instead of drawing a second one.
             final joined = (button:Button) -> {
                 button.outline().small();
-                if (ix > 0) button.roundedTl(gpui.Prelude.px(0.)).roundedBl(gpui.Prelude.px(0.)).borderL0();
-                if (ix < last) button.roundedTr(gpui.Prelude.px(0.)).roundedBr(gpui.Prelude.px(0.));
+                if (ix > 0) button.roundedTl(glaze.Prelude.px(0.)).roundedBl(glaze.Prelude.px(0.)).borderL0();
+                if (ix < last) button.roundedTr(glaze.Prelude.px(0.)).roundedBr(glaze.Prelude.px(0.));
                 return button;
             };
             switch items[ix] {

@@ -1,40 +1,40 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tree.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.tree;
+package glaze.kit.tree;
 
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleBuilder;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.ScrollBounce;
-import gpui.base.Tree as BaseTree;
-import gpui.component.list.ListItem;
-import gpui.component.menu.PopupMenu;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleBuilder;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.ScrollBounce;
+import glaze.kit.base.Tree as BaseTree;
+import glaze.kit.list.ListItem;
+import glaze.kit.menu.PopupMenu;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.menu.ContextMenu.ContextMenuExt;
-using gpui.component.scroll.Scrollable.ScrollableElement;
+using glaze.kit.base.StyledExt;
+using glaze.kit.menu.ContextMenu.ContextMenuExt;
+using glaze.kit.scroll.Scrollable.ScrollableElement;
 
 /** Rust `pub use gpui_base::TreeEntry`. */
-typedef TreeEntry = gpui.base.Tree.TreeEntry;
+typedef TreeEntry = glaze.kit.base.Tree.TreeEntry;
 
 /** Rust `pub use gpui_base::TreeEvent`. */
-typedef TreeEvent = gpui.base.Tree.TreeEvent;
+typedef TreeEvent = glaze.kit.base.Tree.TreeEvent;
 
 /** Rust `pub use gpui_base::TreeItem`. */
-typedef TreeItem = gpui.base.Tree.TreeItem;
+typedef TreeItem = glaze.kit.base.Tree.TreeItem;
 
 /** Rust `pub use gpui_base::TreeState`. */
-typedef TreeState = gpui.base.Tree.TreeState;
+typedef TreeState = glaze.kit.base.Tree.TreeState;
 
 typedef TreeComponentRenderItem = (Int, TreeEntry, Bool, Window, App) -> ListItem;
 

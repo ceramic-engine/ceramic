@@ -4,40 +4,40 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Point;
-import gpui.Size;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.dock.ActiveTracker;
-import gpui.base.dock.Dock;
-import gpui.base.dock.DockPlacement;
-import gpui.base.dock.DockSizing;
-import gpui.base.dock.Drag;
-import gpui.base.dock.DropPlaceholderBounds;
-import gpui.base.dock.EntityPanelView;
-import gpui.base.dock.JsonValue;
-import gpui.base.dock.PanelBase;
-import gpui.base.dock.PanelId;
-import gpui.base.dock.PanelInfo;
-import gpui.base.dock.PanelView;
-import gpui.base.resizable.Resizable;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Point;
+import glaze.Size;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.dock.ActiveTracker;
+import glaze.kit.base.dock.Dock;
+import glaze.kit.base.dock.DockPlacement;
+import glaze.kit.base.dock.DockSizing;
+import glaze.kit.base.dock.Drag;
+import glaze.kit.base.dock.DropPlaceholderBounds;
+import glaze.kit.base.dock.EntityPanelView;
+import glaze.kit.base.dock.JsonValue;
+import glaze.kit.base.dock.PanelBase;
+import glaze.kit.base.dock.PanelId;
+import glaze.kit.base.dock.PanelInfo;
+import glaze.kit.base.dock.PanelView;
+import glaze.kit.base.resizable.Resizable;
 import testing.TestCase;
 
-using gpui.base.dock.PanelInfo.PanelInfoTools;
+using glaze.kit.base.dock.PanelInfo.PanelInfoTools;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's dock modules that need no tree:
  * `active.rs`, `drag.rs`, `dock_placement.rs` and `panel.rs`.
  */
-@:access(gpui.base.dock.ActiveTracker)
-@:access(gpui.base.dock.Drag)
-@:access(gpui.base.dock.DropPlaceholderBounds)
+@:access(glaze.kit.base.dock.ActiveTracker)
+@:access(glaze.kit.base.dock.Drag)
+@:access(glaze.kit.base.dock.DropPlaceholderBounds)
 class BaseDockTest extends TestCase {
 
     static function panel(n:Int):PanelId {
@@ -266,7 +266,7 @@ private class Probe extends PanelBase {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        return new gpui.Empty();
+        return new glaze.Empty();
     }
 
 }

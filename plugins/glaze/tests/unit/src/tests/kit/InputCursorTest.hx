@@ -3,12 +3,12 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.input.ColumnAnchor;
-import gpui.base.input.CursorId;
-import gpui.base.input.CursorSelection;
-import gpui.base.input.LspPosition;
-import gpui.base.input.Selection;
-import gpui.base.input.Selections;
+import glaze.kit.base.input.ColumnAnchor;
+import glaze.kit.base.input.CursorId;
+import glaze.kit.base.input.CursorSelection;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.Selection;
+import glaze.kit.base.input.Selections;
 import testing.TestCase;
 
 /**

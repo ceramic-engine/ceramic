@@ -4,41 +4,41 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Range;
-import gpui.Render;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.input.InlineToken;
-import gpui.base.input.InlineTokenClickEvent;
-import gpui.base.input.InlineTokenContext;
-import gpui.base.input.InlineTokenException;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputContent;
-import gpui.base.input.InputEvent;
-import gpui.base.input.InputState;
-import gpui.base.input.TextareaState;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.checkbox.Checkbox;
-import gpui.component.input.Input;
-import gpui.component.input.InputGroup;
-import gpui.component.input.InputGroup.InputGroupAddon;
-import gpui.component.input.InputGroup.InputGroupAddonAlignment;
-import gpui.component.input.InputGroup.InputGroupButton;
-import gpui.component.input.InputToken;
-import gpui.component.input.Textarea;
-import gpui.component.theme.Theme;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Range;
+import glaze.Render;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.input.InlineToken;
+import glaze.kit.base.input.InlineTokenClickEvent;
+import glaze.kit.base.input.InlineTokenContext;
+import glaze.kit.base.input.InlineTokenException;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputContent;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.TextareaState;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.input.Input;
+import glaze.kit.input.InputGroup;
+import glaze.kit.input.InputGroup.InputGroupAddon;
+import glaze.kit.input.InputGroup.InputGroupAddonAlignment;
+import glaze.kit.input.InputGroup.InputGroupButton;
+import glaze.kit.input.InputToken;
+import glaze.kit.input.Textarea;
+import glaze.kit.theme.Theme;
+import glaze.util.Utf8;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A chat composer shared by the Input and Textarea stories. Commands,

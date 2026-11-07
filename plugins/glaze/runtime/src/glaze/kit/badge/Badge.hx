@@ -2,29 +2,29 @@
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 // Also modified: deliberate deviation DEV-001 (icon badge ring). See DEVIATIONS.md.
-package gpui.component.badge;
+package glaze.kit.badge;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Hsla;
-import gpui.IntoElement;
-import gpui.IntoHsla;
-import gpui.ParentElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.component.Icon;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.theme.Color;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Hsla;
+import glaze.IntoElement;
+import glaze.IntoHsla;
+import glaze.ParentElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.Icon;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.theme.Color;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
-using gpui.component.ThemeStyled;
+using glaze.kit.base.StyledExt;
+using glaze.kit.ThemeStyled;
 
 /**
  * The kind of a `Badge`: a number, a dot or an icon.
@@ -32,7 +32,7 @@ using gpui.component.ThemeStyled;
 enum BadgeVariant {
     Number;
     Dot;
-    Icon(icon:gpui.component.Icon);
+    Icon(icon:glaze.kit.Icon);
 }
 
 /**
@@ -141,7 +141,7 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
         final element = div().relative().refineStyle(badgeStyle);
         element.extend(childElements);
         if (visible) {
-            final badge = gpui.base.Prelude.hFlex()
+            final badge = glaze.kit.base.Prelude.hFlex()
                 .absolute()
                 .justifyCenter()
                 .itemsCenter()
@@ -180,7 +180,7 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
                         .size(iconSize)
                         .bg(theme.background)
                         .p(px(1.))
-                        .child(gpui.base.Prelude.hFlex()
+                        .child(glaze.kit.base.Prelude.hFlex()
                             .sizeFull()
                             .justifyCenter()
                             .itemsCenter()

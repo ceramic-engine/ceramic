@@ -1,35 +1,35 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/menu/app_menu_bar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.menu;
+package glaze.kit.menu;
 
-import gpui.App;
-import gpui.AppContext;
-import gpui.ClickEvent;
-import gpui.Context;
-import gpui.DismissEvent;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Menu.OwnedMenu;
-import gpui.Model;
-import gpui.MouseDownEvent;
-import gpui.Render;
-import gpui.ScrollHandle;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.SelectLeft;
-import gpui.base.Actions.SelectRight;
-import gpui.base.GlobalState;
-import gpui.component.button.Button;
-import gpui.component.scroll.ScrollableMask;
+import glaze.App;
+import glaze.AppContext;
+import glaze.ClickEvent;
+import glaze.Context;
+import glaze.DismissEvent;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Menu.OwnedMenu;
+import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.Render;
+import glaze.ScrollHandle;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.SelectLeft;
+import glaze.kit.base.Actions.SelectRight;
+import glaze.kit.base.GlobalState;
+import glaze.kit.button.Button;
+import glaze.kit.scroll.ScrollableMask;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.InteractiveElementExt;
+using glaze.kit.base.InteractiveElementExt;
 
 /**
  * The application menu bar, for Windows and Linux, drawn in the window.
@@ -49,18 +49,18 @@ class AppMenuBar extends Model implements Render {
         ]);
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var menus:Array<Entity<AppMenu>> = [];
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     @observe var selectedIndex:Null<Int> = null;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var actionContext:Null<FocusHandle> = null;
 
     final scrollHandle:ScrollHandle = new ScrollHandle();
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function new() {
         super();
     }
@@ -123,12 +123,12 @@ class AppMenuBar extends Model implements Render {
         setSelectedIndex(newIx, window, cx);
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function onCancel(_:Null<Cancel>, window:Window, cx:Context<AppMenuBar>):Void {
         setSelectedIndex(null, window, cx);
     }
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     function setSelectedIndex(ix:Null<Int>, window:Window, cx:Context<AppMenuBar>):Void {
         if (selectedIndex == null && ix != null) {
             actionContext = window.focused(cx.app);
@@ -143,7 +143,7 @@ class AppMenuBar extends Model implements Render {
         selectedIndex = ix;
     }
 
-    @:allow(gpui.component.menu)
+    @:allow(glaze.kit.menu)
     inline function hasActivatedMenu():Bool {
         return selectedIndex != null;
     }
@@ -185,7 +185,7 @@ class AppMenu extends Model implements Render {
 
     final menu:OwnedMenu;
 
-    @:allow(gpui.component, tests)
+    @:allow(glaze.kit, tests)
     var popupMenu:Null<Entity<PopupMenu>> = null;
 
     var subscription:Null<Subscription> = null;
@@ -198,7 +198,7 @@ class AppMenu extends Model implements Render {
         this.menu = menu.clone();
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     static function create(ix:Int, menu:OwnedMenu, menuBar:Entity<AppMenuBar>, cx:AppContext):Entity<AppMenu> {
         return (cx:App).newEntity((_:Context<AppMenu>) -> new AppMenu(ix, menu, menuBar));
     }
@@ -315,7 +315,7 @@ class AppMenu extends Model implements Render {
             element.child(deferred(
                 anchored()
                     .anchor(TopLeft)
-                    .snapToWindowWithMargin(gpui.Edges.all(px(8.)))
+                    .snapToWindowWithMargin(glaze.Edges.all(px(8.)))
                     .child(
                         div()
                             .sizeFull()

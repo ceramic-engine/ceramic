@@ -3,7 +3,7 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.base.plot.shape.Sankey;
+import glaze.kit.base.plot.shape.Sankey;
 import testing.TestCase;
 
 /**
@@ -287,7 +287,7 @@ class PlotSankeyTest extends TestCase {
     }
 
     function testPowiMatchesRepeatedSquaring() {
-        final f = gpui.SpringMath.f32;
+        final f = glaze.SpringMath.f32;
         assertEquals(1., @:privateAccess Sankey.powi(f(0.99), 0));
         assertEquals(f(0.99), @:privateAccess Sankey.powi(f(0.99), 1));
         assertEquals(f(f(0.99) * f(0.99)), @:privateAccess Sankey.powi(f(0.99), 2));

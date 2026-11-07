@@ -1,20 +1,20 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/clipboard.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.clipboard;
+package glaze.kit.clipboard;
 
-import gpui.App;
-import gpui.ClipboardItem;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.Window;
-import gpui.component.I18n;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.button.Button;
+import glaze.App;
+import glaze.ClipboardItem;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.Window;
+import glaze.kit.I18n;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
 
 /**
  * An element that provides clipboard copy functionality.

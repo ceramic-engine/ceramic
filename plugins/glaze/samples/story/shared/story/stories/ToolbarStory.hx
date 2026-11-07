@@ -4,43 +4,43 @@
 
 package story.stories;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.Window;
-import gpui.Action;
-import gpui.base.IndexPath;
-import gpui.base.input.InputState;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Size;
-import gpui.component.button.Button;
-import gpui.component.button.Toggle;
-import gpui.component.combobox.Combobox;
-import gpui.component.combobox.ComboboxState;
-import gpui.component.dock.PanelControl;
-import gpui.component.input.Input;
-import gpui.component.searchablelist.SearchableVec;
-import gpui.component.searchablelist.SearchableVec.VecDelegate;
-import gpui.component.select.Select;
-import gpui.component.select.SelectState;
-import gpui.component.separator.Separator;
-import gpui.component.theme.Theme;
-import gpui.component.toolbar.Toolbar;
-import gpui.component.toolbar.Toolbar.ToolbarGroup;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.Window;
+import glaze.Action;
+import glaze.kit.base.IndexPath;
+import glaze.kit.base.input.InputState;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Size;
+import glaze.kit.button.Button;
+import glaze.kit.button.Toggle;
+import glaze.kit.combobox.Combobox;
+import glaze.kit.combobox.ComboboxState;
+import glaze.kit.dock.PanelControl;
+import glaze.kit.input.Input;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.searchablelist.SearchableVec.VecDelegate;
+import glaze.kit.select.Select;
+import glaze.kit.select.SelectState;
+import glaze.kit.separator.Separator;
+import glaze.kit.theme.Theme;
+import glaze.kit.toolbar.Toolbar;
+import glaze.kit.toolbar.Toolbar.ToolbarGroup;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
 import story.Lib.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 @:action(namespace = toolbar_story, noJson) private class ToggleDisabled implements Action {}
 
@@ -65,7 +65,7 @@ class ToolbarStory extends Model implements Story {
         return null;
     }
 
-    public static function newView(window:Window, cx:App):gpui.AnyView {
+    public static function newView(window:Window, cx:App):glaze.AnyView {
         return view(window, cx);
     }
 
@@ -75,7 +75,7 @@ class ToolbarStory extends Model implements Story {
 
     final focusHandle_:FocusHandle;
 
-    @observe var size:Size = gpui.component.Size.Medium;
+    @observe var size:Size = glaze.kit.Size.Medium;
 
     @observe var disabled:Bool = false;
 

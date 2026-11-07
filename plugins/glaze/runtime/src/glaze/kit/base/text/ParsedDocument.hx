@@ -1,19 +1,19 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/document.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ListState;
-import gpui.Range;
-import gpui.Window;
-import gpui.base.text.BlockNode.BlockNodeTools;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ListState;
+import glaze.Range;
+import glaze.Window;
+import glaze.kit.base.text.BlockNode.BlockNodeTools;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.ParentElementTools;
-using gpui.base.text.BlockNode.BlockNodeTools;
+using glaze.ParentElementTools;
+using glaze.kit.base.text.BlockNode.BlockNodeTools;
 
 /**
  * The parsed document AST.
@@ -67,7 +67,7 @@ class ParsedDocument {
         return {isFirst: true, prev: Other};
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function text():String {
         final text = new StringBuf();
         for (block in blocks) {
@@ -99,7 +99,7 @@ class ParsedDocument {
      * before and some block after it are selected), mirroring how an inline
      * image is emitted when the selection runs into it.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedText(format:SelectionFormat, ?blockRange:Array<Int>):String {
         final requestedBlocks = blockRange;
         final painted = [for (block in this.blocks) block.hasSelection()];
@@ -202,7 +202,7 @@ class ParsedDocument {
         return block.selectedText(Source);
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function selectedSourceRange():Null<Range> {
         final selected = SourceRangeSelection.unselected();
         for (block in blocks) {
@@ -219,7 +219,7 @@ class ParsedDocument {
      * do not repaint, so their `InlineState.selection` would otherwise retain
      * stale values from the last painted frame.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function clearSelection():Void {
         for (block in blocks) {
             block.clearSelection();
@@ -231,12 +231,12 @@ class ParsedDocument {
      *
      * This is used to generate markdown for test.
      */
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function toMarkdown():String {
         return [for (child in blocks) child.toMarkdown()].join('\n\n');
     }
 
-    @:allow(gpui.base.text)
+    @:allow(glaze.kit.base.text)
     function renderRoot(listState:Null<ListState>, nodeCx:NodeContext, window:Window, cx:App):IntoElement {
         if (listState == null) {
             final blocksLen = blocks.length;

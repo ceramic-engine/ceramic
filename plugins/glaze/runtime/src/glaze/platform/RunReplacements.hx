@@ -1,9 +1,9 @@
 // Ported from gpui-pre-web 0.3.10: src/run_replacements.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
-import gpui.util.Utf8;
+import glaze.util.Utf8;
 import ttf.shape.Shaper;
 import unicode_segmentation.UnicodeSegmentation;
 

@@ -2,16 +2,16 @@ package;
 
 import ceramic.Scene;
 import ceramic.ScrollUnit;
-import gpui.App;
-import gpui.Context;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollHandle;
-import gpui.Window;
+import glaze.App;
+import glaze.Context;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollHandle;
+import glaze.Window;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Scroll calibration scene (owner only: it needs real devices and a visible
@@ -96,9 +96,9 @@ class MainScene extends Scene {
 
     function logEvent(prefix:String, rawX:Float, rawY:Float, deltaX:Float, deltaY:Float, unit:ScrollUnit):Void {
 
-        final delta = gpui.GpuiInput.scrollDeltaOf(deltaX, deltaY, unit);
+        final delta = glaze.GlazeInput.scrollDeltaOf(deltaX, deltaY, unit);
         final lineHeight:Float = window != null ? (window.lineHeight() : Float) : 0;
-        final pixels = gpui.ScrollDelta.ScrollDeltaTools.pixelDelta(delta, lineHeight);
+        final pixels = glaze.ScrollDelta.ScrollDeltaTools.pixelDelta(delta, lineHeight);
         final gpuiText = switch delta {
             case Pixels(d): 'Pixels(${fmt(d.x)}, ${fmt(d.y)})';
             case Lines(d): 'Lines(${fmt(d.x)}, ${fmt(d.y)})';

@@ -1,25 +1,25 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/kbd.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.kbd;
+package glaze.kit.kbd;
 
-import gpui.Action;
-import gpui.App;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.KeyContext;
-import gpui.Keystroke;
-import gpui.OperatingSystem;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.App;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.KeyContext;
+import glaze.Keystroke;
+import glaze.OperatingSystem;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * A tag for displaying a keyboard shortcut.
@@ -42,7 +42,7 @@ class Kbd implements RenderOnce implements Styled {
         return kbdStyle;
     }
 
-    @:allow(gpui.component)
+    @:allow(glaze.kit)
     function keystroke():Keystroke {
         return stroke;
     }
@@ -200,7 +200,7 @@ class Kbd implements RenderOnce implements Styled {
             .minW5()
             .textCenter()
             .rounded(theme.radius * 0.5)
-            .lineHeight(gpui.Prelude.relative(1.))
+            .lineHeight(glaze.Prelude.relative(1.))
             .textXs()
             .whitespaceNormal()
             .flexShrink0()

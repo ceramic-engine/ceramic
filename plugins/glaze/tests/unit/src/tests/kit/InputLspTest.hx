@@ -4,23 +4,23 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.HighlightStyle;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.base.input.ColorInformation;
-import gpui.base.input.CompletionHighlighter;
-import gpui.base.input.CompletionItem;
-import gpui.base.input.Completions;
-import gpui.base.input.HighlightStyleResolver;
-import gpui.base.input.Lsp;
-import gpui.base.input.Lsp.DocumentColor;
-import gpui.base.input.Lsp.SemanticTokenSpan;
-import gpui.base.input.LspColor;
-import gpui.base.input.LspPosition;
-import gpui.base.input.LspRange;
-import gpui.base.input.SemanticToken;
-import gpui.base.input.SemanticTokens;
-import gpui.base.input.SemanticTokensLegend;
+import glaze.HighlightStyle;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.kit.base.input.ColorInformation;
+import glaze.kit.base.input.CompletionHighlighter;
+import glaze.kit.base.input.CompletionItem;
+import glaze.kit.base.input.Completions;
+import glaze.kit.base.input.HighlightStyleResolver;
+import glaze.kit.base.input.Lsp;
+import glaze.kit.base.input.Lsp.DocumentColor;
+import glaze.kit.base.input.Lsp.SemanticTokenSpan;
+import glaze.kit.base.input.LspColor;
+import glaze.kit.base.input.LspPosition;
+import glaze.kit.base.input.LspRange;
+import glaze.kit.base.input.SemanticToken;
+import glaze.kit.base.input.SemanticTokens;
+import glaze.kit.base.input.SemanticTokensLegend;
 import ropey.Rope;
 import testing.TestCase;
 

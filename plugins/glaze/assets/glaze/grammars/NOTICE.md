@@ -1,6 +1,6 @@
 # Grammars
 
-TextMate grammars used by the code highlighter (`gpui.component.highlighter`).
+TextMate grammars used by the code highlighter (`glaze.kit.highlighter`).
 They are the files of tm-grammars 1.31.15 (https://github.com/shikijs/textmate-grammars-themes),
 the grammar collection of shiki 3.23, unchanged. tm-grammars itself is MIT licensed
 (LICENSE-tm-grammars). Each grammar keeps the license of its origin: the sections of the
@@ -17,7 +17,7 @@ express or implied warranty, and with no claim as to its
 suitability for any purpose.
 ```
 
-Regenerate with `node test/unit/data/highlight/bundle-grammars.mjs <tm-grammars package folder>`.
+Regenerate with `node tests/unit/data/highlight/bundle-grammars.mjs <tm-grammars package folder>`.
 
 | File | Scope | Origin | License |
 |------|-------|--------|---------|

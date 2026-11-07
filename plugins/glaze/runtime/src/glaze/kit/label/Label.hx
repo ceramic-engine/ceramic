@@ -1,22 +1,22 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/label.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.label;
+package glaze.kit.label;
 
-import gpui.App;
-import gpui.HighlightStyle;
-import gpui.IntoElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.StyledText;
-import gpui.Window;
-import gpui.component.theme.Theme;
+import glaze.App;
+import glaze.HighlightStyle;
+import glaze.IntoElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.StyledText;
+import glaze.Window;
+import glaze.kit.theme.Theme;
 import haxe.io.Bytes;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Represents the type of match for highlighting text in a label.

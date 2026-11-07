@@ -3,14 +3,14 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.base.input.AutoClosedPairs;
-import gpui.base.input.DiagnosticSet;
-import gpui.base.input.EditorLanguage;
-import gpui.base.input.HighlighterCell;
-import gpui.base.input.LayoutMode;
-import gpui.base.input.RopePoint;
-import gpui.base.input.TabSize;
+import glaze.Range;
+import glaze.kit.base.input.AutoClosedPairs;
+import glaze.kit.base.input.DiagnosticSet;
+import glaze.kit.base.input.EditorLanguage;
+import glaze.kit.base.input.HighlighterCell;
+import glaze.kit.base.input.LayoutMode;
+import glaze.kit.base.input.RopePoint;
+import glaze.kit.base.input.TabSize;
 import ropey.Rope;
 
 /**

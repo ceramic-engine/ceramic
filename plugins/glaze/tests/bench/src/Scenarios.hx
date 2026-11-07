@@ -6,7 +6,7 @@ package;
  * To add a scenario: implement `Scenario` (or extend `BaseScenario`), put the
  * class under `src/scenarios/` (package `scenarios`), and add one line to
  * `all()` below. The order here is the order of execution when
- * `GPUI_BENCH_SCENARIOS` is not set.
+ * `GLAZE_BENCH_SCENARIOS` is not set.
  */
 class Scenarios {
 

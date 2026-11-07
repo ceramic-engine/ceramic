@@ -4,7 +4,7 @@
 // (src/canvas_fallback.rs). Original data Copyright 2012-2024 The Rust Project
 // Developers, licensed under MIT OR Apache-2.0; Unicode data Copyright Unicode,
 // Inc., Unicode License v3. Modified: extracted to Haxe arrays. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
 /**
  * Unicode properties used by `CanvasFallback.classify`.

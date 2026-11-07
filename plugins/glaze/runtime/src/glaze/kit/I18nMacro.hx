@@ -2,7 +2,7 @@
 // Original code Copyright (c) 2021 Longbridge, licensed under MIT.
 // Modified: translated from Rust to Haxe for Ceramic, with a reader for the
 // subset of YAML the locale files use (gpui-kit's rust-i18n locale files). See NOTICE.md.
-package gpui.component;
+package glaze.kit;
 
 #if macro
 import haxe.macro.Context;
@@ -30,7 +30,7 @@ class I18nMacro {
         for (name in names) {
             if (!StringTools.endsWith(name, '.yml') && !StringTools.endsWith(name, '.yaml')) continue;
             final path = haxe.io.Path.join([dir, name]);
-            Context.registerModuleDependency('gpui.component.I18nMacro', path);
+            Context.registerModuleDependency('glaze.kit.I18nMacro', path);
             final data:Dynamic = parseYaml(sys.io.File.getContent(path), path);
             final version:Dynamic = Reflect.field(data, '_version');
             if (version != 2) {

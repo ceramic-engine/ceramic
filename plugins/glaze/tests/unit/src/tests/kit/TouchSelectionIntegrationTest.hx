@@ -3,39 +3,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.LongPressEvent;
-import gpui.Model;
-import gpui.Modifiers;
-import gpui.MouseButton;
-import gpui.MouseDownEvent;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.Point;
-import gpui.Render;
-import gpui.ScrollDelta;
-import gpui.ScrollEvent;
-import gpui.TestDispatcher;
-import gpui.TouchDragEvent;
-import gpui.TouchPhase;
-import gpui.Window;
-import gpui.base.TextSelection;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.InputTouch;
-import gpui.base.input.TouchSelectionSnapshot;
-import gpui.base.text.TextViewState;
-import gpui.component.Component;
-import gpui.component.input.Input;
-import gpui.component.text.TextView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.LongPressEvent;
+import glaze.Model;
+import glaze.Modifiers;
+import glaze.MouseButton;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.Point;
+import glaze.Render;
+import glaze.ScrollDelta;
+import glaze.ScrollEvent;
+import glaze.TestDispatcher;
+import glaze.TouchDragEvent;
+import glaze.TouchPhase;
+import glaze.Window;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.InputTouch;
+import glaze.kit.base.input.TouchSelectionSnapshot;
+import glaze.kit.base.text.TextViewState;
+import glaze.kit.Component;
+import glaze.kit.input.Input;
+import glaze.kit.text.TextView;
 import tests.kit.ComponentScrollTest.Probe;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * gpui-kit's touch selection integration tests: a long press leaves a
@@ -78,9 +78,9 @@ class TouchSelectionIntegrationTest extends TestCase {
     /** `common::open_window`: a `Root` around the content built by `build`. */
     function openRoot<V:Model & Render>(build:(Window, Context<V>) -> V):{content:Entity<V>, cx:VisualTestContext} {
         var content:Entity<V> = null;
-        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<gpui.base.Root>) -> {
+        final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<glaze.kit.base.Root>) -> {
             content = rootCx.newEntity((cx:Context<V>) -> build(window, cx));
-            return new gpui.base.Root(content, window, rootCx);
+            return new glaze.kit.base.Root(content, window, rootCx);
         });
         contexts.push(opened.cx);
         return {content: content, cx: opened.cx};
@@ -130,7 +130,7 @@ class TouchSelectionIntegrationTest extends TestCase {
     }
 
     static function focusedInput(window:Window, cx:App):InputBaseState {
-        return @:privateAccess gpui.component.WindowExt.focusedInput(window, cx).asInput().read(cx);
+        return @:privateAccess glaze.kit.WindowExt.focusedInput(window, cx).asInput().read(cx);
     }
 
     function testEndHandleDragsTheInputSelectionWithAFinger() {

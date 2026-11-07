@@ -1,13 +1,13 @@
 package tests;
 
-import gpui.platform.SceneDamage;
-import gpui.scene.Scene;
+import glaze.platform.SceneDamage;
+import glaze.scene.Scene;
 import testing.TestCase;
 
 /**
  * Tests for `SceneDamage`, the changed region of the partial rendering of
  * `SceneRenderable` (the pixel equality with a full redraw is checked by the
- * golden harness, see `GPUI_GOLDEN_PARTIAL_OUT` in test/golden).
+ * golden harness, see `GLAZE_GOLDEN_PARTIAL_OUT` in test/golden).
  */
 class SceneDamageTest extends TestCase {
 

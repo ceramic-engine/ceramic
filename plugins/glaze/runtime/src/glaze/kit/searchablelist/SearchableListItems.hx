@@ -2,12 +2,12 @@
 // crates/component/src/searchable_list/vec.rs (the String / SharedString / &'static str impls)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.searchablelist;
+package glaze.kit.searchablelist;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.Window;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.Window;
 
 /**
  * Calls of the `SearchableListItem` trait on any item: a `String` is its

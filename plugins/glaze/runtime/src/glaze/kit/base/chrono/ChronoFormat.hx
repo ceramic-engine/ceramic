@@ -2,7 +2,7 @@
 // (the specifiers gpui-kit 0.8.1 and its tests use, plus the common date and time ones)
 // Original code Copyright (c) 2014--2026, Kang Seonghoon and contributors, licensed under MIT OR Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.chrono;
+package glaze.kit.base.chrono;
 
 /**
  * chrono's strftime-like formatting and parsing, for the specifiers the

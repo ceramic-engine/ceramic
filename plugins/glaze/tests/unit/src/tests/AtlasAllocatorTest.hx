@@ -4,11 +4,11 @@
 // polychrome atlas and straight alpha image decoding added. See NOTICE.md.
 package tests;
 
-import gpui.AtlasKey;
-import gpui.AtlasTile.AtlasTileSource;
-import gpui.ImageAssetLoader;
-import gpui.platform.BucketedAtlasAllocator;
-import gpui.platform.CeramicAtlas;
+import glaze.AtlasKey;
+import glaze.AtlasTile.AtlasTileSource;
+import glaze.ImageAssetLoader;
+import glaze.platform.BucketedAtlasAllocator;
+import glaze.platform.CeramicAtlas;
 import haxe.io.Bytes;
 import testing.TestCase;
 

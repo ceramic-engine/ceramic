@@ -105,7 +105,7 @@ class CeramicInputHelpersTest extends TestCase {
 
         final c = new MouseScrollConverter(true);
         c.convert(0, -0.4, 1.0);
-        switch gpui.GpuiInput.scrollDeltaOf(c.deltaX, c.deltaY, c.unit) {
+        switch glaze.GlazeInput.scrollDeltaOf(c.deltaX, c.deltaY, c.unit) {
             case Pixels(delta):
                 // GPUI's sign is the raw one: positive y moves the content down
                 assertFloatEquals(0, (delta.x : Float));
@@ -115,7 +115,7 @@ class CeramicInputHelpersTest extends TestCase {
         }
         final w = new MouseScrollConverter(false, 120);
         w.convert(0, 240, 1.0);
-        switch gpui.GpuiInput.scrollDeltaOf(w.deltaX, w.deltaY, w.unit) {
+        switch glaze.GlazeInput.scrollDeltaOf(w.deltaX, w.deltaY, w.unit) {
             case Lines(delta):
                 assertFloatEquals(2, delta.y);
             case Pixels(_):

@@ -2,18 +2,18 @@
 // the shared part of `rows`/`set_rows`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.input;
+package glaze.kit.base.input;
 
-import gpui.Context;
-import gpui.Point;
-import gpui.Window;
+import glaze.Context;
+import glaze.Point;
+import glaze.Window;
 
 /**
  * The methods Rust shares between the two multi-line modes (`impl<M:
  * MultiLineMode> InputBaseState<M>`). `TextareaState` and `EditorState`
  * forward to them; a single-line `InputState` does not offer them.
  */
-@:access(gpui.base.input.LayoutMode)
+@:access(glaze.kit.base.input.LayoutMode)
 class MultiLineInputs {
 
     /**

@@ -1,8 +1,8 @@
-// Original code (not a port), written for ceramic-gpui.
+// Original code (not a port), written for Glaze.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.component.highlighter;
+package glaze.kit.highlighter;
 
-import gpui.App;
+import glaze.App;
 import textmate.IGrammar;
 import textmate.OnigLib.IOnigLib;
 import textmate.RawGrammar.IRawGrammar;
@@ -13,8 +13,8 @@ import textmate.Textmate;
  * The TextMate grammars of the highlighter and the `textmate` registry that
  * compiles them.
  *
- * The bundled grammars (`GrammarCatalog`, files in `assets/gpui/grammars`)
- * are read through `gpui.App.defaultAssetSource()` when a language is first
+ * The bundled grammars (`GrammarCatalog`, files in `assets/glaze/grammars`)
+ * are read through `glaze.App.defaultAssetSource()` when a language is first
  * highlighted: synchronously from the assets folder on targets with a file
  * system, from bytes preloaded with `preload` elsewhere (the web). A grammar
  * that cannot be read leaves its language unhighlighted.

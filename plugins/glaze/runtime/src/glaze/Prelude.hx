@@ -2,12 +2,12 @@
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
 
-package gpui;
+package glaze;
 
-import gpui.util.MathUtil;
+import glaze.util.MathUtil;
 
 /**
- * GPUI free functions. Use with `import gpui.Prelude.*;`.
+ * GPUI free functions. Use with `import glaze.Prelude.*;`.
  */
 class Prelude {
 
@@ -300,9 +300,9 @@ class Prelude {
     /**
      * Construct a new `Div` element.
      */
-    public static inline function div(#if gpui_inspector ?pos:haxe.PosInfos #end):Div {
+    public static inline function div(#if glaze_inspector ?pos:haxe.PosInfos #end):Div {
 
-        return new Div(#if gpui_inspector pos #end);
+        return new Div(#if glaze_inspector pos #end);
 
     }
 
@@ -339,7 +339,7 @@ class Prelude {
     /**
      * Creates a quad with the given parameters, to give to `Window.paintQuad()`.
      */
-    public static function quad(bounds:Bounds, cornerRadii:Corners, background:IntoBackground, borderWidths:Edges, borderColor:IntoHsla, borderStyle:gpui.scene.BorderStyle):PaintQuad {
+    public static function quad(bounds:Bounds, cornerRadii:Corners, background:IntoBackground, borderWidths:Edges, borderColor:IntoHsla, borderStyle:glaze.scene.BorderStyle):PaintQuad {
 
         final result = new PaintQuad(bounds, cornerRadii);
         result.background = background;
@@ -364,7 +364,7 @@ class Prelude {
     /**
      * Creates a rectangle outline with the given bounds, border color, and a 1px border width.
      */
-    public static function outline(bounds:Bounds, borderColor:IntoHsla, borderStyle:gpui.scene.BorderStyle):PaintQuad {
+    public static function outline(bounds:Bounds, borderColor:IntoHsla, borderStyle:glaze.scene.BorderStyle):PaintQuad {
 
         final result = new PaintQuad(bounds);
         result.setSolidBackground(0, 0, 0, 0);
@@ -380,8 +380,8 @@ class Prelude {
     /**
      * Create a new SVG element (give it a `path()` and a `textColor()`).
      */
-    public static inline function svg(#if gpui_inspector ?pos:haxe.PosInfos #end):Svg {
-        return new Svg(#if gpui_inspector pos #end);
+    public static inline function svg(#if glaze_inspector ?pos:haxe.PosInfos #end):Svg {
+        return new Svg(#if glaze_inspector pos #end);
     }
 
 /// Images (img.rs, image_cache.rs)
@@ -391,8 +391,8 @@ class Prelude {
      * (`String`), a `Resource`, a `RenderImage`, an `Image`, a
      * `ceramic.Texture` or a loading function.
      */
-    public static inline function img(source:IntoImageSource #if gpui_inspector , ?pos:haxe.PosInfos #end):Img {
-        return new Img(source #if gpui_inspector , pos #end);
+    public static inline function img(source:IntoImageSource #if glaze_inspector , ?pos:haxe.PosInfos #end):Img {
+        return new Img(source #if glaze_inspector , pos #end);
     }
 
     /**

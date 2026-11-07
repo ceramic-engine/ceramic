@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/scene.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust/WGSL to Haxe for Ceramic. See NOTICE.md.
-package gpui.scene;
+package glaze.scene;
 
 import haxe.ds.ArraySort;
 
@@ -117,7 +117,7 @@ class Scene {
 
     public function popLayer():Void {
 
-        gpui.util.Stacks.drop(layerStack);
+        glaze.util.Stacks.drop(layerStack);
         opKinds.push(OP_END_LAYER);
         opPrimitives.push(null);
 
@@ -203,10 +203,10 @@ class Scene {
         final left = Math.max(primitive.boundsX, primitive.contentMaskX);
         final top = Math.max(primitive.boundsY, primitive.contentMaskY);
         // In f32, like GPUI's `Bounds<ScaledPixels>::intersect`
-        final right = Math.max(left, Math.min(gpui.SpringMath.f32(primitive.boundsX + primitive.boundsWidth), gpui.SpringMath.f32(primitive.contentMaskX + primitive.contentMaskWidth)));
-        final bottom = Math.max(top, Math.min(gpui.SpringMath.f32(primitive.boundsY + primitive.boundsHeight), gpui.SpringMath.f32(primitive.contentMaskY + primitive.contentMaskHeight)));
-        final width = gpui.SpringMath.f32(right - left);
-        final height = gpui.SpringMath.f32(bottom - top);
+        final right = Math.max(left, Math.min(glaze.SpringMath.f32(primitive.boundsX + primitive.boundsWidth), glaze.SpringMath.f32(primitive.contentMaskX + primitive.contentMaskWidth)));
+        final bottom = Math.max(top, Math.min(glaze.SpringMath.f32(primitive.boundsY + primitive.boundsHeight), glaze.SpringMath.f32(primitive.contentMaskY + primitive.contentMaskHeight)));
+        final width = glaze.SpringMath.f32(right - left);
+        final height = glaze.SpringMath.f32(bottom - top);
 
         if (width <= 0 || height <= 0) {
             return false;

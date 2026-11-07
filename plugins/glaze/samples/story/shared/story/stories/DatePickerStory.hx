@@ -3,34 +3,34 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.FocusHandle;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.Window;
-import gpui.base.Calendar.CalendarDate;
-import gpui.base.Calendar.Matcher;
-import gpui.base.TimeField.HourCycle;
-import gpui.base.TimeField.TimePrecision;
-import gpui.base.chrono.Local;
-import gpui.base.chrono.NaiveDate;
-import gpui.base.chrono.NaiveTime;
-import gpui.component.Size;
-import gpui.component.theme.Theme;
-import gpui.component.time.DatePicker;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.FocusHandle;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.Window;
+import glaze.kit.base.Calendar.CalendarDate;
+import glaze.kit.base.Calendar.Matcher;
+import glaze.kit.base.TimeField.HourCycle;
+import glaze.kit.base.TimeField.TimePrecision;
+import glaze.kit.base.chrono.Local;
+import glaze.kit.base.chrono.NaiveDate;
+import glaze.kit.base.chrono.NaiveTime;
+import glaze.kit.Size;
+import glaze.kit.theme.Theme;
+import glaze.kit.time.DatePicker;
 import story.Story;
 import story.StoryActions.ChangeStorySize;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.time.DatePicker.DateTimeTools;
+using glaze.kit.base.StyledExt;
+using glaze.kit.time.DatePicker.DateTimeTools;
 
 class DatePickerStory extends Model implements Story {
 
@@ -149,7 +149,7 @@ class DatePickerStory extends Model implements Story {
         ];
 
         dateTimeValue = null;
-        size = gpui.component.Size.Medium;
+        size = glaze.kit.Size.Medium;
         datePickerValue = null;
     }
 

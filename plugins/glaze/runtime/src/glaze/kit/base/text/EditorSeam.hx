@@ -1,12 +1,12 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/editor_seam.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text;
+package glaze.kit.base.text;
 
-import gpui.Bounds;
-import gpui.Hsla;
-import gpui.Range;
-import gpui.TextLayout;
+import glaze.Bounds;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.TextLayout;
 
 /**
  * Crate-private plumbing behind `EditorHost`.
@@ -36,7 +36,7 @@ class EditorSeam {
         }
         catch (e:Dynamic) {
             EditorSeam.sink = previous;
-            throw gpui.util.Exceptions.rethrow(e);
+            throw glaze.util.Exceptions.rethrow(e);
         }
     }
 

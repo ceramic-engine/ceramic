@@ -1,13 +1,13 @@
 package tests;
 
-import gpui.Font;
-import gpui.FontFeatures;
-import gpui.FontStyle;
-import gpui.FontWeight;
-import gpui.LineWrapper;
-import gpui.NoopTextSystem;
-import gpui.TextRun;
-import gpui.TextSystem;
+import glaze.Font;
+import glaze.FontFeatures;
+import glaze.FontStyle;
+import glaze.FontWeight;
+import glaze.LineWrapper;
+import glaze.NoopTextSystem;
+import glaze.TextRun;
+import glaze.TextSystem;
 import testing.TestCase;
 
 /**
@@ -34,7 +34,7 @@ class LineWrapperTest extends TestCase {
     }
 
     static function byteLength(s:String):Int {
-        return gpui.util.Utf8.byteLength(s);
+        return glaze.util.Utf8.byteLength(s);
     }
 
 /// Ported #[cfg(test)] tests
@@ -137,13 +137,13 @@ class LineWrapperTest extends TestCase {
 
     function testIsWordChar() {
         function assertWord(word:String, ?pos:haxe.PosInfos) {
-            final d = new gpui.util.Utf8.Utf8Text(word);
+            final d = new glaze.util.Utf8.Utf8Text(word);
             for (k in 0...d.count) {
-                assertTrue(LineWrapper.isWordChar(d.codePoints[k]), 'assertion failed for \'${gpui.util.Utf8.fromCodePoint(d.codePoints[k])}\' (unicode 0x${StringTools.hex(d.codePoints[k])})', pos);
+                assertTrue(LineWrapper.isWordChar(d.codePoints[k]), 'assertion failed for \'${glaze.util.Utf8.fromCodePoint(d.codePoints[k])}\' (unicode 0x${StringTools.hex(d.codePoints[k])})', pos);
             }
         }
         function assertNotWord(word:String, ?pos:haxe.PosInfos) {
-            final d = new gpui.util.Utf8.Utf8Text(word);
+            final d = new glaze.util.Utf8.Utf8Text(word);
             var found = false;
             for (k in 0...d.count) {
                 if (!LineWrapper.isWordChar(d.codePoints[k]))
@@ -248,7 +248,7 @@ class LineWrapperTest extends TestCase {
         assertEquals('hello', result.text.substr(0, newline));
         final second = result.text.substr(newline + 1);
         var secondWidth = 0.0;
-        final d = new gpui.util.Utf8.Utf8Text(second);
+        final d = new glaze.util.Utf8.Utf8Text(second);
         for (k in 0...d.count)
             secondWidth += wrapper.widthForChar(d.codePoints[k]);
         assertTrue(secondWidth <= 72, 'Second line \'$second\' (${secondWidth}px) exceeds wrap_width');
@@ -376,7 +376,7 @@ class LineWrapperTest extends TestCase {
             final size:Float = w.size;
             final wrapper = ts.lineWrapper(Font.of(family), size);
             for (entry in (w.char_widths:Array<Array<Dynamic>>)) {
-                final ch = gpui.util.Utf8.codePointAtByte(entry[0], 0);
+                final ch = glaze.util.Utf8.codePointAtByte(entry[0], 0);
                 final error = Math.abs((entry[1]:Float) - (wrapper.widthForChar(ch):Float));
                 maxWidthError = Math.max(maxWidthError, error);
                 assertFloatEquals(entry[1], (wrapper.widthForChar(ch):Float), 1e-4, '$family width of ${entry[0]}');

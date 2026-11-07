@@ -3,8 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Range;
-import gpui.component.pagination.Pagination;
+import glaze.Range;
+import glaze.kit.pagination.Pagination;
 import testing.TestCase;
 
 /**

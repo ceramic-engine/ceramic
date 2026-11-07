@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/questionnaire/types.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.questionnaire;
+package glaze.kit.base.questionnaire;
 
 /**
  * Why an item currently fails validation.
@@ -10,7 +10,7 @@ package gpui.base.questionnaire;
  * so the presentation layer supplies the localized sentence. `Message` is the
  * text a validator or the host already wrote. Compare with `Type.enumEq`.
  */
-@:using(gpui.base.questionnaire.QuestionnaireValidationError.QuestionnaireValidationErrorTools)
+@:using(glaze.kit.base.questionnaire.QuestionnaireValidationError.QuestionnaireValidationErrorTools)
 enum QuestionnaireValidationError {
     /** A required item has no answer. */
     Required;

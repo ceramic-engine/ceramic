@@ -1,10 +1,10 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/document.rs (`SourceLine`, `source_line`, `display_chunks`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.Range;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.util.Utf8;
 import unicode_segmentation.UnicodeSegmentation;
 
 /**
@@ -14,7 +14,7 @@ import unicode_segmentation.UnicodeSegmentation;
  * UTF-16 indices of its source range (`sourceUnitStart`, `sourceUnitEnd`) so
  * that slicing the side's source is constant time.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class SourceLine {
 
     var _lineNumber:Int;
@@ -281,7 +281,7 @@ class SourceLine {
 
 }
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class DisplayChunk {
 
     final range:Range;
@@ -295,7 +295,7 @@ class DisplayChunk {
 
 }
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class DisplayTab {
 
     final sourceOffset:Int;

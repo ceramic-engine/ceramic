@@ -4,41 +4,41 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Action;
-import gpui.AnyElement;
-import gpui.App;
-import gpui.AvailableSpace;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.KeyBinding;
-import gpui.Model;
-import gpui.Point;
-import gpui.Render;
-import gpui.SizeOf;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Actions.Cancel;
-import gpui.base.Actions.Confirm;
-import gpui.base.Actions.SelectDown;
-import gpui.base.Actions.SelectUp;
-import gpui.base.IndexPath;
-import gpui.component.Component;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.command.Command;
-import gpui.component.command.CommandItem;
-import gpui.component.command.CommandItem.CommandEntry;
-import gpui.component.command.CommandItem.CommandGroup;
-import gpui.component.command.CommandState;
-import gpui.component.command.CommandState.CommandModel;
-import gpui.component.command.CommandState.CommandRow;
+import glaze.Action;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.AvailableSpace;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.KeyBinding;
+import glaze.Model;
+import glaze.Point;
+import glaze.Render;
+import glaze.SizeOf;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Actions.Cancel;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.base.Actions.SelectDown;
+import glaze.kit.base.Actions.SelectUp;
+import glaze.kit.base.IndexPath;
+import glaze.kit.Component;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.command.Command;
+import glaze.kit.command.CommandItem;
+import glaze.kit.command.CommandItem.CommandEntry;
+import glaze.kit.command.CommandItem.CommandGroup;
+import glaze.kit.command.CommandState;
+import glaze.kit.command.CommandState.CommandModel;
+import glaze.kit.command.CommandState.CommandRow;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.component.command.CommandItem.CommandEntryTools;
+using glaze.kit.command.CommandItem.CommandEntryTools;
 
 @:action(namespace = command_item_test) class CloneAction implements Action {}
 
@@ -1076,7 +1076,7 @@ private class ReentrantCallbackHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final owner:gpui.WeakEntity<ReentrantCallbackHarness> = cast cx.weakEntity();
+        final owner:glaze.WeakEntity<ReentrantCallbackHarness> = cast cx.weakEntity();
 
         return new Command(state)
             .item(new CommandItem().label("alpha"))

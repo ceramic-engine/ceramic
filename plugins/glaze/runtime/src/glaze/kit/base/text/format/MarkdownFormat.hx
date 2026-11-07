@@ -1,28 +1,28 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/text/format/markdown.rs, crates/base/src/text/format/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.text.format;
+package glaze.kit.base.text.format;
 
-import gpui.Hsla;
-import gpui.Range;
-import gpui.base.text.BlockNode;
-import gpui.base.text.BlockState;
-import gpui.base.text.CodeBlock;
-import gpui.base.text.ColumnumnAlign;
-import gpui.base.text.ImageNode;
-import gpui.base.text.InlineNode;
-import gpui.base.text.LinkMark;
-import gpui.base.text.MarkdownNode;
-import gpui.base.text.MarkdownParseContext;
-import gpui.base.text.NodeContext;
-import gpui.base.text.Paragraph;
-import gpui.base.text.ParsedDocument;
-import gpui.base.text.RangedMark;
-import gpui.base.text.SourceSegment;
-import gpui.base.text.Span;
-import gpui.base.text.Table;
-import gpui.base.text.TextMark;
-import gpui.base.text.TextUtils;
+import glaze.Hsla;
+import glaze.Range;
+import glaze.kit.base.text.BlockNode;
+import glaze.kit.base.text.BlockState;
+import glaze.kit.base.text.CodeBlock;
+import glaze.kit.base.text.ColumnumnAlign;
+import glaze.kit.base.text.ImageNode;
+import glaze.kit.base.text.InlineNode;
+import glaze.kit.base.text.LinkMark;
+import glaze.kit.base.text.MarkdownNode;
+import glaze.kit.base.text.MarkdownParseContext;
+import glaze.kit.base.text.NodeContext;
+import glaze.kit.base.text.Paragraph;
+import glaze.kit.base.text.ParsedDocument;
+import glaze.kit.base.text.RangedMark;
+import glaze.kit.base.text.SourceSegment;
+import glaze.kit.base.text.Span;
+import glaze.kit.base.text.Table;
+import glaze.kit.base.text.TextMark;
+import glaze.kit.base.text.TextUtils;
 import haxe.io.Bytes;
 import markdown.Markdown;
 import markdown.ParseOptions;
@@ -103,7 +103,7 @@ class SourceCharPositions {
  * Markdown to `ParsedDocument` (Rust `text/format/markdown.rs`; the free
  * functions are statics). `mod.rs` only declares the format modules.
  */
-@:allow(gpui.base.text)
+@:allow(glaze.kit.base.text)
 class MarkdownFormat {
 
     /**
@@ -308,7 +308,7 @@ class MarkdownFormat {
 
     static function inlineHtmlAttr(attrs:String, name:String):Null<String> {
         inline function isWhitespace(c:Int):Bool {
-            return gpui.util.Utf8.isWhitespace(c);
+            return glaze.util.Utf8.isWhitespace(c);
         }
         var rest = attrs;
         while (rest != '') {
@@ -330,7 +330,7 @@ class MarkdownFormat {
                 final first = rest.length > 0 ? StringTools.fastCodeAt(rest, 0) : -1;
                 if (first == '"'.code || first == "'".code) {
                     rest = rest.substr(1);
-                    final end = rest.indexOf(gpui.util.Utf8.fromCodePoint(first));
+                    final end = rest.indexOf(glaze.util.Utf8.fromCodePoint(first));
                     if (end == -1)
                         return null;
                     value = rest.substr(0, end);
@@ -674,7 +674,7 @@ class MarkdownFormat {
             }
             return lo < offsets.length ? offsets[lo] : -1;
         }
-        final encoded = Bytes.ofString(gpui.util.Utf8.fromCodePoint(character));
+        final encoded = Bytes.ofString(glaze.util.Utf8.fromCodePoint(character));
         final rawLen = raw.length;
         var i = rawCursor;
         while (i + encoded.length <= rawLen) {
@@ -748,12 +748,12 @@ class MarkdownFormat {
             final value = parseU32(number.substr(2), 16);
             if (value == -1 || !isValidChar(value))
                 return null;
-            decoded = gpui.util.Utf8.fromCodePoint(value);
+            decoded = glaze.util.Utf8.fromCodePoint(value);
         } else if (StringTools.startsWith(name, '#')) {
             final value = parseU32(number.substr(1), 10);
             if (value == -1 || !isValidChar(value))
                 return null;
-            decoded = gpui.util.Utf8.fromCodePoint(value);
+            decoded = glaze.util.Utf8.fromCodePoint(value);
         } else {
             final entity = html5ever.markup5ever.data.Data.namedEntity(name);
             if (entity == null)
@@ -762,11 +762,11 @@ class MarkdownFormat {
             final second = entity[1];
             if (!isValidChar(first))
                 return null;
-            decoded = gpui.util.Utf8.fromCodePoint(first);
+            decoded = glaze.util.Utf8.fromCodePoint(first);
             if (second != 0) {
                 if (!isValidChar(second))
                     return null;
-                decoded += gpui.util.Utf8.fromCodePoint(second);
+                decoded += glaze.util.Utf8.fromCodePoint(second);
             }
         }
         return new DecodedEntity(Bytes.ofString(decoded), semicolon + 1);
@@ -1073,7 +1073,7 @@ class MarkdownFormat {
                 if (el != null) {
                     BlockNode.Root(el.blocks.copy(), newSpan(val.position, cx));
                 } else {
-                    BlockNode.Paragraph(gpui.base.text.Paragraph.ofText(val.value));
+                    BlockNode.Paragraph(glaze.kit.base.text.Paragraph.ofText(val.value));
                 }
             case MdxFlowExpression(val):
                 final span = newSpan(val.position, cx);

@@ -4,39 +4,39 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.Anchor;
-import gpui.App;
-import gpui.Bounds;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.MouseButton;
-import gpui.Point;
-import gpui.Render;
-import gpui.Size;
-import gpui.StyleBuilder;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Geometry.Placement;
-import gpui.base.Popup as BasePopup;
-import gpui.base.Root;
-import gpui.Modifiers;
-import gpui.MouseMoveEvent;
-import gpui.MouseUpEvent;
-import gpui.component.WindowState;
-import gpui.component.Component;
-import gpui.component.button.Button;
-import gpui.component.popover.Popover;
+import glaze.Anchor;
+import glaze.App;
+import glaze.Bounds;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.MouseButton;
+import glaze.Point;
+import glaze.Render;
+import glaze.Size;
+import glaze.StyleBuilder;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Geometry.Placement;
+import glaze.kit.base.Popup as BasePopup;
+import glaze.kit.base.Root;
+import glaze.Modifiers;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
+import glaze.kit.WindowState;
+import glaze.kit.Component;
+import glaze.kit.button.Button;
+import glaze.kit.popover.Popover;
 import tests.kit.BaseOverlaysTest.OverlayProbe;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.component.tooltip.Tooltip.ManagedTooltip;
+using glaze.kit.tooltip.Tooltip.ManagedTooltip;
 
 /**
  * The tests of gpui-component's overlays: `popover.rs`, `tooltip.rs` and
@@ -260,8 +260,8 @@ class ComponentOverlaysTest extends TestCase {
 
     function testPointerOpenAndOutsideDismissUseTheBasePopupHost() {
         app.update(cx -> {
-            gpui.base.GlobalState.init(cx);
-            gpui.component.theme.Theme.init(cx);
+            glaze.kit.base.GlobalState.init(cx);
+            glaze.kit.theme.Theme.init(cx);
             Popover.init(cx);
         });
         final changes:Array<Bool> = [];
@@ -285,8 +285,8 @@ class ComponentOverlaysTest extends TestCase {
 
     function testDefaultOpenIsForwardedToTheBasePopover() {
         app.update(cx -> {
-            gpui.base.GlobalState.init(cx);
-            gpui.component.theme.Theme.init(cx);
+            glaze.kit.base.GlobalState.init(cx);
+            glaze.kit.theme.Theme.init(cx);
             Popover.init(cx);
         });
         final cx = open((_, _) -> new ScriptView((_, _) -> new Popover('default-open-popover')
@@ -553,7 +553,7 @@ class ComponentOverlaysTest extends TestCase {
                     builds[0]++;
                     return div()
                         .bg(rgb(TOOLTIP_COLORS[0]))
-                        .child(@:privateAccess gpui.component.tooltip.Tooltip.renderTooltip(view, transition, window, cx))
+                        .child(@:privateAccess glaze.kit.tooltip.Tooltip.renderTooltip(view, transition, window, cx))
                         .intoAnyElement();
                 });
             });
@@ -735,8 +735,8 @@ class ComponentOverlaysTest extends TestCase {
 
     /** A key press (down and up), then a frame. */
     static function press(cx:VisualTestContext, key:String):Void {
-        cx.update((window, cx) -> window.dispatchKeystroke(gpui.Keystroke.parse(key), cx));
-        cx.simulateEvent(new gpui.KeyUpEvent(gpui.Keystroke.parse(key)));
+        cx.update((window, cx) -> window.dispatchKeystroke(glaze.Keystroke.parse(key), cx));
+        cx.simulateEvent(new glaze.KeyUpEvent(glaze.Keystroke.parse(key)));
         cx.runUntilParked();
         draw(cx);
     }
@@ -747,7 +747,7 @@ class ComponentOverlaysTest extends TestCase {
     function testRealHoverCardOpensAndClosesAfterPointerDelays() {
         app.update(cx -> Component.init(cx));
         final cx = open((_, _) -> new ScriptView((_, _) -> div().sizeFull().flex().flexCol().gap8().children([
-            new gpui.component.hovercard.HoverCard('help')
+            new glaze.kit.hovercard.HoverCard('help')
                 .openDelay(0.03)
                 .closeDelay(0.02)
                 .trigger(new Button('help-trigger').label('Help'))
@@ -886,7 +886,7 @@ private class TooltipProbe extends Model implements Render {
         final builds = this.builds;
         final root = div().sizeFull();
         if (shown) {
-            final listener:(gpui.ClickEvent, Window, App) -> Void = (cast cx : Context<TooltipProbe>).listener((this_, _, _, cx) -> {
+            final listener:(glaze.ClickEvent, Window, App) -> Void = (cast cx : Context<TooltipProbe>).listener((this_, _, _, cx) -> {
                 if (this_.removesOnClick) {
                     this_.shown = false;
                 }
@@ -902,7 +902,7 @@ private class TooltipProbe extends Model implements Render {
                     .h(px(30.))
                     .managedTooltip((_, cx) -> {
                         builds[0]++;
-                        return (cx.newEntity((_:Context<gpui.component.tooltip.Tooltip>) -> new gpui.component.tooltip.Tooltip('tip').bg(rgb(0x7a135e))) : gpui.AnyView);
+                        return (cx.newEntity((_:Context<glaze.kit.tooltip.Tooltip>) -> new glaze.kit.tooltip.Tooltip('tip').bg(rgb(0x7a135e))) : glaze.AnyView);
                     })
                     .onClick(listener)
             );
@@ -921,13 +921,13 @@ private class AdjacentTriggers extends Model implements Render {
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         final colors = [0x7a135e, 0x136b7a];
         return div().sizeFull().children([for (index in 0...2) div()
-            .id(gpui.ElementId.NamedInteger('trigger', index))
+            .id(glaze.ElementId.NamedInteger('trigger', index))
             .absolute()
             .left(px(10. + index * 100.))
             .top(px(10.))
             .w(px(100.))
             .h(px(30.))
-            .managedTooltip((_, cx) -> (cx.newEntity((_:Context<gpui.component.tooltip.Tooltip>) -> new gpui.component.tooltip.Tooltip('tip').bg(rgb(colors[index]))) : gpui.AnyView))]);
+            .managedTooltip((_, cx) -> (cx.newEntity((_:Context<glaze.kit.tooltip.Tooltip>) -> new glaze.kit.tooltip.Tooltip('tip').bg(rgb(colors[index]))) : glaze.AnyView))]);
     }
 
 }
@@ -948,7 +948,7 @@ private class TooltipButtons extends Model implements Render {
         final children:Array<IntoElement> = [];
         for (index in 0...2) {
             if (shown[index]) {
-                children.push(new Button(gpui.ElementId.NamedInteger('button', index))
+                children.push(new Button(glaze.ElementId.NamedInteger('button', index))
                     .absolute()
                     .left(px(10. + index * 100.))
                     .top(px(10.))
@@ -988,7 +988,7 @@ private class HoverCardTriggerStyleHarness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
-        final card = new gpui.component.hovercard.HoverCard('trigger-style-hover-card')
+        final card = new glaze.kit.hovercard.HoverCard('trigger-style-hover-card')
             .appearance(false)
             .openDelay(0.)
             .anchor(Anchor.TopRight);

@@ -1,13 +1,13 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/diff/parser.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.diff;
+package glaze.kit.diff;
 
-import gpui.Range;
-import gpui.component.diff.DiffFile.FileSide;
-import gpui.component.diff.DiffFile.Hunk;
-import gpui.component.diff.DiffFile.LinePair;
-import gpui.util.Utf8;
+import glaze.Range;
+import glaze.kit.diff.DiffFile.FileSide;
+import glaze.kit.diff.DiffFile.Hunk;
+import glaze.kit.diff.DiffFile.LinePair;
+import glaze.util.Utf8;
 import haxe.io.Bytes;
 import haxe.io.BytesBuffer;
 
@@ -18,7 +18,7 @@ import haxe.io.BytesBuffer;
  * bounds them by `MAX_LINE` (a hunk header beyond is invalid, like one
  * overflowing `usize` in Rust).
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 class DiffParser {
 
     /** The largest line number (Rust `usize::MAX`). */
@@ -641,7 +641,7 @@ class DiffParser {
  * One file side while parsing: patch source is appended once, and lines are
  * recorded as ranges until the file is complete.
  */
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class SideBuilder {
 
     final parts:Array<String> = [];
@@ -683,7 +683,7 @@ private class SideBuilder {
 
 }
 
-@:allow(gpui.component.diff)
+@:allow(glaze.kit.diff)
 private class ParsedFile {
 
     var oldPath:Null<String> = null;

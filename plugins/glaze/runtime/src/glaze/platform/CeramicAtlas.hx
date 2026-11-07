@@ -3,13 +3,13 @@
 // gpui-pre-apple 0.3.10: src/metal_atlas.rs (polychrome pages: sizes, etagere allocation)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.platform;
+package glaze.platform;
 
-import gpui.*;
+import glaze.*;
 import ceramic.Texture;
 import ceramic.UInt8Array;
-import gpui.AtlasTile;
-import gpui.PlatformAtlas;
+import glaze.AtlasTile;
+import glaze.PlatformAtlas;
 import haxe.io.Bytes;
 import ttf.atlas.ShelfAllocator;
 
@@ -46,7 +46,7 @@ class CeramicAtlas extends ceramic.Entity implements PlatformAtlas {
     public final state:AtlasState<CeramicAtlasBackend>;
 
     /** `Texture.index` of the polychrome pages (straight alpha) of every atlas */
-    @:allow(gpui.platform.CeramicAtlasBackend)
+    @:allow(glaze.platform.CeramicAtlasBackend)
     static final straightAlphaTextures:Map<Int, Bool> = new Map();
 
     /**
@@ -119,7 +119,7 @@ class CeramicAtlas extends ceramic.Entity implements PlatformAtlas {
      * none of the last `PATH_PAGE_KEEP_FRAMES` frames used can be emptied
      * and reused when the path pages are full, instead of adding a page.
      */
-    public function markSceneUsed(scene:gpui.scene.Scene):Void {
+    public function markSceneUsed(scene:glaze.scene.Scene):Void {
         final backend = state.backend;
         backend.drawIndex++;
         final paths = scene.paths;

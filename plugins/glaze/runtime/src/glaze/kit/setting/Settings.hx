@@ -1,38 +1,38 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/settings.rs, crates/component/src/setting/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.Axis;
-import gpui.ElementId;
-import gpui.ElementIdArg;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Pixels;
-import gpui.RenderOnce;
-import gpui.Window.StateModel;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.base.input.InputState;
-import gpui.base.resizable.PixelsRange;
-import gpui.component.I18n;
-import gpui.component.Icon;
-import gpui.component.IconName;
-import gpui.component.Sizable;
-import gpui.component.Size;
-import gpui.component.Size.IntoSize;
-import gpui.component.empty.Empty;
-import gpui.component.groupbox.GroupBox.GroupBoxVariant;
-import gpui.component.input.Input;
-import gpui.component.resizable.Resizable;
-import gpui.component.sidebar.Sidebar;
-import gpui.component.sidebar.SidebarMenu;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.Axis;
+import glaze.ElementId;
+import glaze.ElementIdArg;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Pixels;
+import glaze.RenderOnce;
+import glaze.Window.StateModel;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.resizable.PixelsRange;
+import glaze.kit.I18n;
+import glaze.kit.Icon;
+import glaze.kit.IconName;
+import glaze.kit.Sizable;
+import glaze.kit.Size;
+import glaze.kit.Size.IntoSize;
+import glaze.kit.empty.Empty;
+import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
+import glaze.kit.input.Input;
+import glaze.kit.resizable.Resizable;
+import glaze.kit.sidebar.Sidebar;
+import glaze.kit.sidebar.SidebarMenu;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * The settings structure containing multiple pages for app settings.
@@ -82,7 +82,7 @@ class Settings implements RenderOnce implements Sizable {
      * tests read with `use_keyed_state`), to call from the same element
      * context as the render of the settings.
      */
-    @:allow(gpui.component.setting, tests)
+    @:allow(glaze.kit.setting, tests)
     static function keyedState(window:Window, id:ElementIdArg, cx:App):Entity<StateModel<SettingsState>> {
         return window.useKeyedState(id, cx, _ -> throw 'unreachable');
     }
@@ -115,7 +115,7 @@ class Settings implements RenderOnce implements Sizable {
      * Add pages to the settings.
      */
     public function pages(pages:Iterable<SettingPage>):Settings {
-        gpui.util.Iterables.append(pagesValue, pages);
+        glaze.util.Iterables.append(pagesValue, pages);
         return this;
     }
 
@@ -325,7 +325,7 @@ class SelectIndex {
 /**
  * Visible groups in each original page. Filtering never renumbers source data.
  */
-@:allow(gpui.component.setting, tests)
+@:allow(glaze.kit.setting, tests)
 class SettingsFilter {
 
     final groups:Array<Array<Int>>;
@@ -363,7 +363,7 @@ class SettingsFilter {
 /**
  * The keyed state of a `Settings`.
  */
-@:allow(gpui.component.setting, tests)
+@:allow(glaze.kit.setting, tests)
 class SettingsState {
 
     var selectedIndex:SelectIndex;

@@ -1,15 +1,15 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/motion.rs (Spring, SpringError)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.base.motion;
+package glaze.kit.base.motion;
 
-import gpui.SpringConfig;
-import gpui.SpringMath.f32;
+import glaze.SpringConfig;
+import glaze.SpringMath.f32;
 
 /**
  * Invalid physical or settling parameters for a `Spring`.
  */
-@:using(gpui.base.motion.Spring.SpringErrorTools)
+@:using(glaze.kit.base.motion.Spring.SpringErrorTools)
 enum SpringError {
     InvalidDamping;
     InvalidEpsilon;
@@ -39,7 +39,7 @@ class SpringErrorTools {
  * so a value reversed mid-flight decelerates and turns around instead of
  * snapping to a new curve's initial speed.
  *
- * Not to be confused with `gpui.Spring` (GPUI's spring helpers): this is
+ * Not to be confused with `glaze.Spring` (GPUI's spring helpers): this is
  * gpui-kit's `motion::Spring`. Immutable: the builders return a modified copy.
  */
 class Spring {
@@ -52,14 +52,14 @@ class Spring {
     static final TAU_F32:Float = f32(Math.PI * 2.0);
 
     /** The response, in whole nanoseconds. */
-    @:allow(gpui.base.motion)
+    @:allow(glaze.kit.base.motion)
     var responseNanos(default, null):Float;
 
     var damping:Float;
 
     var epsilonValue:Float;
 
-    @:allow(gpui.base.motion)
+    @:allow(glaze.kit.base.motion)
     var travel(default, null):Bool;
 
     /**
@@ -187,7 +187,7 @@ class Spring {
      * The physical parameters GPUI integrates. The response must be non-zero;
      * `Motion.spring` adopts the target before reaching here when it is not.
      */
-    @:allow(gpui.base.motion)
+    @:allow(glaze.kit.base.motion)
     function config():SpringConfig {
         final frequency = f32(TAU_F32 / MotionTime.asSecsF32(responseNanos));
         return new SpringConfig(f32(frequency * frequency), f32(f32(2.0 * damping) * frequency), 1.0);

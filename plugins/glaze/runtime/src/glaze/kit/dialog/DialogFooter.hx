@@ -1,24 +1,24 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/dialog/footer.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.dialog;
+package glaze.kit.dialog;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.IntoElement;
-import gpui.ParentElement;
-import gpui.RenderOnce;
-import gpui.StyleRefinement;
-import gpui.Styled;
-import gpui.Window;
-import gpui.base.Actions.Confirm;
-import gpui.component.button.Button;
-import gpui.component.theme.Theme;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.IntoElement;
+import glaze.ParentElement;
+import glaze.RenderOnce;
+import glaze.StyleRefinement;
+import glaze.Styled;
+import glaze.Window;
+import glaze.kit.base.Actions.Confirm;
+import glaze.kit.button.Button;
+import glaze.kit.theme.Theme;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 
-using gpui.base.StyledExt;
+using glaze.kit.base.StyledExt;
 
 /**
  * Footer section of a dialog, typically contains action buttons.
@@ -48,7 +48,7 @@ class DialogFooter implements RenderOnce implements Styled implements ParentElem
         final element = hFlex()
             .gap2()
             .justifyEnd()
-            .lineHeight(gpui.Prelude.relative(1.25))
+            .lineHeight(glaze.Prelude.relative(1.25))
             .roundedB(Theme.global(cx).radiusLg)
             .refineStyle(footerStyle);
         element.extend(childElements);
@@ -73,7 +73,7 @@ interface DialogFooterButton {
  */
 class DialogClose implements RenderOnce implements ParentElement {
 
-    var base:gpui.base.Dialog.DialogClose = new gpui.base.Dialog.DialogClose();
+    var base:glaze.kit.base.Dialog.DialogClose = new glaze.kit.base.Dialog.DialogClose();
 
     public function new() {}
 

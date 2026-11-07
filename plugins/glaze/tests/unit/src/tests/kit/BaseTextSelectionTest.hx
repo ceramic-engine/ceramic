@@ -3,43 +3,43 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Bounds;
-import gpui.ContentMask;
-import gpui.Context;
-import gpui.Entity;
-import gpui.Hitbox;
-import gpui.HitboxBehavior;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Point;
-import gpui.Range;
-import gpui.Render;
-import gpui.StyledText;
-import gpui.TextLayout;
-import gpui.Window;
-import gpui.base.SelectableText;
-import gpui.base.SelectableTextState;
-import gpui.base.TextSelection;
-import gpui.base.TextSelectionContentKey;
-import gpui.base.TextSelectionCoverage;
-import gpui.base.TextSelectionEndpoint;
-import gpui.base.TextSelectionEvent;
-import gpui.base.TextSelectionHandle;
-import gpui.base.TextSelectionLayer;
-import gpui.base.TextSelectionProjection;
-import gpui.base.TextSelectionRegistration;
-import gpui.base.TextSelectionRun;
-import gpui.base.TextSelectionScopeId;
-import gpui.base.TextSelectionSnapshot;
-import gpui.base.TextSelectionWindowPoints;
-import gpui.base.WindowSelectionState;
-import gpui.util.Utf8;
+import glaze.App;
+import glaze.Bounds;
+import glaze.ContentMask;
+import glaze.Context;
+import glaze.Entity;
+import glaze.Hitbox;
+import glaze.HitboxBehavior;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Point;
+import glaze.Range;
+import glaze.Render;
+import glaze.StyledText;
+import glaze.TextLayout;
+import glaze.Window;
+import glaze.kit.base.SelectableText;
+import glaze.kit.base.SelectableTextState;
+import glaze.kit.base.TextSelection;
+import glaze.kit.base.TextSelectionContentKey;
+import glaze.kit.base.TextSelectionCoverage;
+import glaze.kit.base.TextSelectionEndpoint;
+import glaze.kit.base.TextSelectionEvent;
+import glaze.kit.base.TextSelectionHandle;
+import glaze.kit.base.TextSelectionLayer;
+import glaze.kit.base.TextSelectionProjection;
+import glaze.kit.base.TextSelectionRegistration;
+import glaze.kit.base.TextSelectionRun;
+import glaze.kit.base.TextSelectionScopeId;
+import glaze.kit.base.TextSelectionSnapshot;
+import glaze.kit.base.TextSelectionWindowPoints;
+import glaze.kit.base.WindowSelectionState;
+import glaze.util.Utf8;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
-using gpui.base.ElementExt;
+using glaze.kit.base.ElementExt;
 
 private class SelectionElementOnlyView extends Model implements Render {
     public function new() {
@@ -50,7 +50,7 @@ private class SelectionElementOnlyView extends Model implements Render {
         return div()
             .sizeFull()
             .child(new TextSelectionLayer())
-            .child(div().sizeFull().onMouseDown(Left, (_, _, cx) -> gpui.base.GlobalState.suppressTextSelection(cx)));
+            .child(div().sizeFull().onMouseDown(Left, (_, _, cx) -> glaze.kit.base.GlobalState.suppressTextSelection(cx)));
     }
 }
 
@@ -95,7 +95,7 @@ private class FakeParticipant {
 /**
  * Tests of the window text selection (Rust `text_selection.rs`).
  */
-@:access(gpui.base)
+@:access(glaze.kit.base)
 class BaseTextSelectionTest extends KitTestCase {
 
     final contexts:Array<VisualTestContext> = [];
@@ -329,7 +329,7 @@ class BaseTextSelectionTest extends KitTestCase {
         final carets = TextSelection.caretsForMultiClick([textRun], click, 4);
         final states = TextSelection.projectRanges(plainSnapshot(carets.start.origin, carets.end.origin), [textRun]);
         assertEquals('0..11', rangesToString(states.ranges()));
-        final line = gpui.base.input.TextBoundary.lineRangeAt("first line\nsecond line\nthird", 15);
+        final line = glaze.kit.base.input.TextBoundary.lineRangeAt("first line\nsecond line\nthird", 15);
         assertEquals('11..22', '${line.start}..${line.end}');
     }
 
@@ -527,8 +527,8 @@ class BaseTextSelectionTest extends KitTestCase {
             assertEquals("modal", selectionState.selectedText(cx));
 
             selectionState.clear(cx);
-            gpui.base.GlobalState.init(cx);
-            gpui.base.GlobalState.suppressTextSelection(cx);
+            glaze.kit.base.GlobalState.init(cx);
+            glaze.kit.base.GlobalState.suppressTextSelection(cx);
             selectionState.begin(point(px(1.), px(21.)), false, cx);
             selectionState.updateGesture(point(px(8.), px(21.)), cx);
             assertFalse(selectionState.hasSelection(cx));
@@ -889,7 +889,7 @@ class BaseTextSelectionTest extends KitTestCase {
     // Retained text views
 
     function retainedRoot(texts:Array<String>):{view:Entity<RetainedSelectionRoot>, cx:VisualTestContext} {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         return addWindowView((_, cx) -> new RetainedSelectionRoot([for (text in texts) RetainedSelectionText.create(text, cx.app)]));
     }
 
@@ -912,10 +912,10 @@ class BaseTextSelectionTest extends KitTestCase {
             bounds.sort((a, b) -> a.top() < b.top() ? -1 : (a.top() > b.top() ? 1 : 0));
             final start = point(bounds[0].left() + 0.1, bounds[0].center().y);
             final end = point(bounds[last].right() - 0.1, bounds[last].center().y);
-            window.dispatchEvent(new gpui.MouseDownEvent(Left, start, gpui.Modifiers.none(), 1, false), cx);
-            window.dispatchEvent(new gpui.MouseMoveEvent(end, Left, gpui.Modifiers.none()), cx);
+            window.dispatchEvent(new glaze.MouseDownEvent(Left, start, glaze.Modifiers.none(), 1, false), cx);
+            window.dispatchEvent(new glaze.MouseMoveEvent(end, Left, glaze.Modifiers.none()), cx);
             if (release) {
-                window.dispatchEvent(new gpui.MouseUpEvent(Left, end, gpui.Modifiers.none(), 1), cx);
+                window.dispatchEvent(new glaze.MouseUpEvent(Left, end, glaze.Modifiers.none(), 1), cx);
             }
             assertTrue(TextSelection.hasSelection(window, cx));
             return TextSelection.selectedText(window, cx);
@@ -1064,7 +1064,7 @@ class BaseTextSelectionTest extends KitTestCase {
         cx.simulateMouseDown(point(px(1.), px(1.)), Left);
         cx.simulateMouseUp(point(px(1.), px(1.)), Left);
         cx.update((window, cx) -> {
-            assertTrue(gpui.base.GlobalState.isTextSelectionSuppressed(cx));
+            assertTrue(glaze.kit.base.GlobalState.isTextSelectionSuppressed(cx));
             assertFalse(TextSelection.hasSelection(window, cx));
             return true;
         });
@@ -1132,7 +1132,7 @@ class BaseTextSelectionTest extends KitTestCase {
 
         cx.simulateMouseDown(point(px(10.), px(10.)), Left);
         cx.simulateMouseUp(point(px(10.), px(10.)), Left);
-        cx.simulateMouseDown(point(px(70.), px(10.)), Left, gpui.Modifiers.none().withShift(true));
+        cx.simulateMouseDown(point(px(70.), px(10.)), Left, glaze.Modifiers.none().withShift(true));
         cx.simulateMouseUp(point(px(70.), px(10.)), Left);
         cx.update((window, cx) -> {
             assertTrue(TextSelection.hasSelection(window, cx));
@@ -1165,8 +1165,8 @@ class BaseTextSelectionTest extends KitTestCase {
         });
 
         final position = run.layout.positionForIndex(7);
-        cx.simulateEvent(new gpui.MouseDownEvent(Left, position, gpui.Modifiers.none(), 2, false));
-        cx.simulateEvent(new gpui.MouseUpEvent(Left, position, gpui.Modifiers.none(), 2));
+        cx.simulateEvent(new glaze.MouseDownEvent(Left, position, glaze.Modifiers.none(), 2, false));
+        cx.simulateEvent(new glaze.MouseUpEvent(Left, position, glaze.Modifiers.none(), 2));
         cx.update((window, cx) -> {
             selection.updateRuns([textRun(0, run.text, run.layout)], cx);
             assertEquals("beta", TextSelection.selectedText(window, cx));
@@ -1176,8 +1176,8 @@ class BaseTextSelectionTest extends KitTestCase {
             return true;
         });
 
-        cx.simulateEvent(new gpui.MouseDownEvent(Left, position, gpui.Modifiers.none(), 3, false));
-        cx.simulateEvent(new gpui.MouseUpEvent(Left, position, gpui.Modifiers.none(), 3));
+        cx.simulateEvent(new glaze.MouseDownEvent(Left, position, glaze.Modifiers.none(), 3, false));
+        cx.simulateEvent(new glaze.MouseUpEvent(Left, position, glaze.Modifiers.none(), 3));
         cx.update((window, cx) -> {
             selection.updateRuns([textRun(0, run.text, run.layout)], cx);
             assertEquals("alpha beta", TextSelection.selectedText(window, cx));
@@ -1205,19 +1205,19 @@ class BaseTextSelectionTest extends KitTestCase {
 
     static function pressAt(text:String, index:Int, clickCount:Int, shift:Bool, cx:VisualTestContext):Point {
         final position = cx.update((window, cx) -> paintedPosition(text, index, window, cx));
-        cx.simulateEvent(new gpui.MouseDownEvent(Left, position, gpui.Modifiers.none().withShift(shift), clickCount, false));
+        cx.simulateEvent(new glaze.MouseDownEvent(Left, position, glaze.Modifiers.none().withShift(shift), clickCount, false));
         return position;
     }
 
     static function dragTo(text:String, index:Int, cx:VisualTestContext):String {
         final position = cx.update((window, cx) -> paintedPosition(text, index, window, cx));
-        cx.simulateEvent(new gpui.MouseMoveEvent(position, Left, gpui.Modifiers.none()));
+        cx.simulateEvent(new glaze.MouseMoveEvent(position, Left, glaze.Modifiers.none()));
         return paintedSelection(cx);
     }
 
     static function releaseAt(clickCount:Int, cx:VisualTestContext):Void {
         final position = cx.update((window, _) -> window.mousePosition());
-        cx.simulateEvent(new gpui.MouseUpEvent(Left, position, gpui.Modifiers.none(), clickCount));
+        cx.simulateEvent(new glaze.MouseUpEvent(Left, position, glaze.Modifiers.none(), clickCount));
     }
 
     static function paintedSelection(cx:VisualTestContext):String {
@@ -1228,7 +1228,7 @@ class BaseTextSelectionTest extends KitTestCase {
     }
 
     function selectableTexts(texts:Array<String>):VisualTestContext {
-        app.update(cx -> gpui.base.Base.init(cx));
+        app.update(cx -> glaze.kit.base.Base.init(cx));
         return addWindowView((_, _) -> new SelectableTextsView(texts)).cx;
     }
 
@@ -1400,7 +1400,7 @@ class BaseTextSelectionTest extends KitTestCase {
             return true;
         });
         var registered = 0;
-        for (_ in WindowSelectionState.globalOf(app, gpui.base.WindowSelectionState.SelectionStateRegistry).map) registered++;
+        for (_ in WindowSelectionState.globalOf(app, glaze.kit.base.WindowSelectionState.SelectionStateRegistry).map) registered++;
         assertEquals(1, registered);
     }
 
@@ -1429,7 +1429,7 @@ private class FirstFrameScopedSelectionView extends Model implements Render {
         TextSelection.activateScope(scope, window, cx.app);
         final selection = this.selection;
         return div().child(new TextSelectionLayer()).child(
-            gpui.base.ElementExt.textSelectionScope(div().sizeFull().onPrepaint((bounds, window, cx) -> {
+            glaze.kit.base.ElementExt.textSelectionScope(div().sizeFull().onPrepaint((bounds, window, cx) -> {
                 final hitbox = window.insertHitbox(bounds, HitboxBehavior.Normal);
                 selection.register(new TextSelectionRegistration(hitbox, bounds).withTextBounds([bounds]), window, cx);
             }), scope)
@@ -1438,23 +1438,23 @@ private class FirstFrameScopedSelectionView extends Model implements Render {
 }
 
 private class RetainedSelectionText extends Model implements Render {
-    public final text:Entity<gpui.base.text.TextViewState>;
+    public final text:Entity<glaze.kit.base.text.TextViewState>;
     public var renders:Int = 0;
     public var scrollable:Bool = false;
 
-    public function new(text:Entity<gpui.base.text.TextViewState>) {
+    public function new(text:Entity<glaze.kit.base.text.TextViewState>) {
         super();
         this.text = text;
     }
 
     public static function create(text:String, cx:App):Entity<RetainedSelectionText> {
-        final state = cx.newEntity(cx -> gpui.base.text.TextViewState.markdown(text, cx));
+        final state = cx.newEntity(cx -> glaze.kit.base.text.TextViewState.markdown(text, cx));
         return cx.newEntity(_ -> new RetainedSelectionText(state));
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         renders++;
-        return div().w(px(240.)).h(px(32.)).child(gpui.base.text.TextView.create(text).scrollable(scrollable));
+        return div().w(px(240.)).h(px(32.)).child(glaze.kit.base.text.TextView.create(text).scrollable(scrollable));
     }
 }
 
@@ -1517,7 +1517,7 @@ private class SelectableTextsView extends Model implements Render {
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
         return div().sizeFull().child(new TextSelectionLayer()).child(
-            div().w(px(400.)).children([for (ix in 0...texts.length) (SelectableText.create(gpui.ElementId.NamedInteger("text", ix), texts[ix]).documentOrder(ix) : IntoElement)])
+            div().w(px(400.)).children([for (ix in 0...texts.length) (SelectableText.create(glaze.ElementId.NamedInteger("text", ix), texts[ix]).documentOrder(ix) : IntoElement)])
         );
     }
 }

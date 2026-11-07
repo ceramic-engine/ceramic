@@ -1,7 +1,7 @@
-// Original code (not a port), written for ceramic-gpui: gives lunasvg the
+// Original code (not a port), written for Glaze: gives lunasvg the
 // fonts of the GPUI text system, so that SVG <text> renders.
 // MIT License, see Ceramic's LICENSE file.
-package gpui.platform;
+package glaze.platform;
 
 /**
  * A `lunasvg.FontProvider` over the faces of a `CeramicTextSystem` (the

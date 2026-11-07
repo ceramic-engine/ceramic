@@ -3,42 +3,42 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package story.stories;
 
-import gpui.Action;
-import gpui.AnyView;
-import gpui.App;
-import gpui.Context;
-import gpui.ElementId;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Subscription;
-import gpui.WeakEntity;
-import gpui.Window;
-import gpui.component.IconName;
-import gpui.component.button.Button;
-import gpui.component.diff.Diff;
-import gpui.component.diff.DiffAnnotation;
-import gpui.component.diff.DiffChangeIndicator;
-import gpui.component.diff.DiffDecoration;
-import gpui.component.diff.DiffFile;
-import gpui.component.diff.DiffGutterMarker;
-import gpui.component.diff.DiffHoverHighlight;
-import gpui.component.diff.DiffHunkSeparator;
-import gpui.component.diff.DiffInlineUnit;
-import gpui.component.diff.DiffLinePosition;
-import gpui.component.diff.DiffLineRange;
-import gpui.component.diff.DiffMode;
-import gpui.component.diff.DiffSide;
-import gpui.component.diff.DiffState;
-import gpui.component.theme.Theme;
+import glaze.Action;
+import glaze.AnyView;
+import glaze.App;
+import glaze.Context;
+import glaze.ElementId;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Subscription;
+import glaze.WeakEntity;
+import glaze.Window;
+import glaze.kit.IconName;
+import glaze.kit.button.Button;
+import glaze.kit.diff.Diff;
+import glaze.kit.diff.DiffAnnotation;
+import glaze.kit.diff.DiffChangeIndicator;
+import glaze.kit.diff.DiffDecoration;
+import glaze.kit.diff.DiffFile;
+import glaze.kit.diff.DiffGutterMarker;
+import glaze.kit.diff.DiffHoverHighlight;
+import glaze.kit.diff.DiffHunkSeparator;
+import glaze.kit.diff.DiffInlineUnit;
+import glaze.kit.diff.DiffLinePosition;
+import glaze.kit.diff.DiffLineRange;
+import glaze.kit.diff.DiffMode;
+import glaze.kit.diff.DiffSide;
+import glaze.kit.diff.DiffState;
+import glaze.kit.theme.Theme;
 import story.Story;
 
-import gpui.Prelude.*;
-import gpui.base.Prelude.*;
+import glaze.Prelude.*;
+import glaze.kit.base.Prelude.*;
 import story.Lib.*;
 
-using gpui.base.StyledExt;
-using gpui.component.WindowExt;
+using glaze.kit.base.StyledExt;
+using glaze.kit.WindowExt;
 
 enum DiffStoryActionKind {
     Example(index:Int);

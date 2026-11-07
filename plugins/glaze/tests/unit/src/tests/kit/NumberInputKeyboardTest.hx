@@ -1,26 +1,26 @@
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.GpuiInput;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.TextInputConfiguration.TextInputMode;
-import gpui.TextInputBridge;
-import gpui.Window;
-import gpui.base.Root;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.input.MaskPattern;
-import gpui.component.Component;
-import gpui.component.input.Input;
-import gpui.component.input.NumberInput;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.GlazeInput;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.TextInputConfiguration.TextInputMode;
+import glaze.TextInputBridge;
+import glaze.Window;
+import glaze.kit.base.Root;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.input.MaskPattern;
+import glaze.kit.Component;
+import glaze.kit.input.Input;
+import glaze.kit.input.NumberInput;
 import testing.TestCase;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * Deliberate deviation DEV-017 (see DEVIATIONS.md): a number field asks the
@@ -32,7 +32,7 @@ import gpui.Prelude.*;
  * other input. Checked on the configuration of the field and on what reaches
  * Ceramic, when the field gets focus and when a tap on it opens the keyboard.
  */
-@:access(gpui.base.input.InputBaseState)
+@:access(glaze.kit.base.input.InputBaseState)
 class NumberInputKeyboardTest extends TestCase {
 
     var dispatcher:TestDispatcher;
@@ -61,7 +61,7 @@ class NumberInputKeyboardTest extends TestCase {
     override function teardown() {
         TextInputBridge.sendConfiguration = previousSend;
         if (window != null) {
-            GpuiInput.unbind(window);
+            GlazeInput.unbind(window);
             window.destroy();
         }
         window = null;
@@ -77,7 +77,7 @@ class NumberInputKeyboardTest extends TestCase {
                 return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
             });
         });
-        GpuiInput.bind(window);
+        GlazeInput.bind(window);
         draw();
         return view.read(app);
     }

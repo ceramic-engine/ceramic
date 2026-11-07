@@ -3,31 +3,31 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package tests.kit;
 
-import gpui.App;
-import gpui.Context;
-import gpui.Entity;
-import gpui.IntoElement;
-import gpui.Model;
-import gpui.Render;
-import gpui.TestDispatcher;
-import gpui.Window;
-import gpui.base.Base;
-import gpui.base.input.InputBaseState;
-import gpui.base.input.InputState;
-import gpui.base.questionnaire.QuestionnaireAnswer;
-import gpui.base.questionnaire.QuestionnaireChoiceDefinition;
-import gpui.base.questionnaire.QuestionnaireEvent;
-import gpui.base.questionnaire.QuestionnaireInputDefinition;
-import gpui.base.questionnaire.QuestionnaireItemDefinition;
-import gpui.base.questionnaire.QuestionnaireItemStatus;
-import gpui.base.questionnaire.QuestionnaireSchemaError;
-import gpui.base.questionnaire.QuestionnaireShortcutMode;
-import gpui.base.questionnaire.QuestionnaireState;
-import gpui.base.questionnaire.QuestionnaireValidationError;
+import glaze.App;
+import glaze.Context;
+import glaze.Entity;
+import glaze.IntoElement;
+import glaze.Model;
+import glaze.Render;
+import glaze.TestDispatcher;
+import glaze.Window;
+import glaze.kit.base.Base;
+import glaze.kit.base.input.InputBaseState;
+import glaze.kit.base.input.InputState;
+import glaze.kit.base.questionnaire.QuestionnaireAnswer;
+import glaze.kit.base.questionnaire.QuestionnaireChoiceDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireEvent;
+import glaze.kit.base.questionnaire.QuestionnaireInputDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireItemDefinition;
+import glaze.kit.base.questionnaire.QuestionnaireItemStatus;
+import glaze.kit.base.questionnaire.QuestionnaireSchemaError;
+import glaze.kit.base.questionnaire.QuestionnaireShortcutMode;
+import glaze.kit.base.questionnaire.QuestionnaireState;
+import glaze.kit.base.questionnaire.QuestionnaireValidationError;
 import testing.TestCase;
 import testing.VisualTestContext;
 
-import gpui.Prelude.*;
+import glaze.Prelude.*;
 
 /**
  * The `#[cfg(test)]` tests of gpui-base's questionnaire state.

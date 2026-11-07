@@ -1,14 +1,14 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/setting/fields/element.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui.component.setting;
+package glaze.kit.setting;
 
-import gpui.AnyElement;
-import gpui.App;
-import gpui.StyleRefinement;
-import gpui.Window;
-import gpui.component.setting.SettingField.AnySettingField;
-import gpui.component.setting.SettingField.SettingFieldRender;
+import glaze.AnyElement;
+import glaze.App;
+import glaze.StyleRefinement;
+import glaze.Window;
+import glaze.kit.setting.SettingField.AnySettingField;
+import glaze.kit.setting.SettingField.SettingFieldRender;
 
 /**
  * A trait for rendering custom setting field elements.
@@ -41,7 +41,7 @@ class FnSettingFieldElement implements SettingFieldElement {
 /**
  * Renders a custom element field.
  */
-@:allow(gpui.component.setting)
+@:allow(glaze.kit.setting)
 class ElementField implements SettingFieldRender {
 
     final elementRender:SettingFieldElement;

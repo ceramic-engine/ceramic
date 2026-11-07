@@ -1,9 +1,9 @@
 // Ported from gpui-pre 0.3.10: src/text_system.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-package gpui;
+package glaze;
 
-import gpui.util.Utf8;
+import glaze.util.Utf8;
 import haxe.ds.IntMap;
 import haxe.io.Bytes;
 
@@ -391,7 +391,7 @@ class TextSystem {
      * `lineWrapper(style.font(), fontSize)` without making the `Font` when
      * the style's font was resolved lately (compared like `Font.equals`).
      */
-    @:allow(gpui)
+    @:allow(glaze)
     function lineWrapperOfStyle(style:TextStyle, fontSize:Pixels):LineWrapper {
         return lineWrapperOfFontId(resolveStyleFont(style), fontSize);
     }
