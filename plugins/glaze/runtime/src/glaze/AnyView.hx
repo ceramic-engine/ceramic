@@ -22,6 +22,14 @@ abstract AnyView(Model) to Model {
     }
 
     /**
+     * A `glaze.Component` as a root view: `new Glaze((window, cx) -> AppView.component())`.
+     * The component lives as long as the window.
+     */
+    @:from static inline function fromGlazeComponent(component:Component):AnyView {
+        return component != null ? ComponentBuilder.rootView(component) : null;
+    }
+
+    /**
      * The entity id of this view.
      */
     public inline function entityId():Int {

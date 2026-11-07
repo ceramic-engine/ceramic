@@ -1083,7 +1083,13 @@ class Window implements WindowInvalidator {
         if (Std.isOfType(spriteAtlas, glaze.platform.CeramicAtlas)) {
             (cast spriteAtlas : glaze.platform.CeramicAtlas).destroy();
         }
-        root = null;
+        final root:Null<Model> = this.root;
+        this.root = null;
+        if (root != null && Std.isOfType(root, ComponentBuilder.ComponentHost)) {
+            // A root component (`AnyView.fromGlazeComponent`) belongs to the
+            // window: it is destroyed with it, like Rust drops the root view
+            root.destroy();
+        }
     }
 
     public inline function isDestroyed():Bool {
@@ -2044,6 +2050,62 @@ class Window implements WindowInvalidator {
      */
     public function useState<T>(cx:App, init:(Window) -> T, ?pos:haxe.PosInfos):Entity<StateModel<T>> {
         return useKeyedState(ElementId.CodeLocation(pos.fileName, pos.lineNumber), cx, init);
+    }
+
+    /**
+     * The host entity of the persistent component placed by `proto` (the
+     * placeholder returned by `X.component()`), kept as an element state
+     * under the placeholder's identity (`proto.__key`: the position of the
+     * `component()` call, or `.at(key)`) as long as the parent renders it in
+     * consecutive frames; dropped (and the component destroyed) otherwise.
+     *
+     * The first time, the component is created, given the props of the
+     * placeholder and initialized. Afterwards the props are assigned: a
+     * changed data prop invalidates the host's tracker while its parent
+     * renders, which would only mark the host dirty for the next frame
+     * (`invalidateView` while drawing), so the host is made dirty for this
+     * frame instead and renders right after its parent, with the new props.
+     */
+    @:allow(glaze)
+    function useComponent(proto:Component, cx:App):ComponentBuilder.ComponentHost {
+        final node = elementIdNode;
+        final globalId = node.child(proto.__key);
+        final box = elementStateBox(globalId, componentStateType);
+        var host:ComponentBuilder.ComponentHost = box.value;
+        if (host != null && host.instance.__elementId() != proto.__elementId()) {
+            // Another component class at the same identity (`cond ? A.component() : B.component()`)
+            host.destroy();
+            host = null;
+        }
+        if (host == null) {
+            final live = proto.__create();
+            proto.__apply(live);
+            host = new ComponentBuilder.ComponentHost(live);
+            cx.attachEntity(host);
+            box.value = host;
+            host.ensureInit(this, cx);
+        }
+        else {
+            final viewId = host.entityId;
+            final childrenChanged = proto.__apply(host.instance);
+            if (pendingDirtyViews.exists(viewId)) {
+                pendingDirtyViews.remove(viewId);
+                pendingDirtyViewIds.remove(viewId);
+                markViewDirty(viewId);
+            }
+            else if (childrenChanged) {
+                markViewDirty(viewId);
+            }
+        }
+        return host;
+    }
+
+    static var componentStateType(get, null):Int = -1;
+    static function get_componentStateType():Int {
+        if (componentStateType == -1) {
+            componentStateType = ElementStateType.of(ComponentBuilder.ComponentHost);
+        }
+        return componentStateType;
     }
 
 /// Stacks

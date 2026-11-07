@@ -51,6 +51,11 @@ abstract IntoElement(AnyElement) to AnyElement {
         return new IntoElement(component != null ? ViewElement.forComponent(component).intoAnyElement() : null);
     }
 
+    /** A `glaze.Component` placed with `X.component()` (see `Component`) */
+    @:from static inline function fromGlazeComponent(component:Component):IntoElement {
+        return new IntoElement(component != null ? component.__intoAnyElement() : null);
+    }
+
     /**
      * Converts into a dynamically-typed `AnyElement`.
      */

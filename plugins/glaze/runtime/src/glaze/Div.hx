@@ -79,9 +79,12 @@ class Div extends Element implements Styled implements ParentElement {
     }
 
     /**
-     * Add multiple child elements to this element.
+     * Add multiple child elements to this element (a null array, like null
+     * children, adds nothing: a component's `children` is null when its
+     * parent gave none).
      */
-    public function children(children:Array<IntoElement>):Div {
+    public function children(children:Null<Array<IntoElement>>):Div {
+        if (children == null) return this;
         for (child in children) {
             if (child != null) childElements.push(child);
         }

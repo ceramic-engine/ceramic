@@ -25,6 +25,24 @@ class Glaze extends ceramic.Visual {
     public static inline final VERSION:String = '0.0.1';
 
     /**
+     * The current GPUI app (the `cx` of the signatures): the last `App`
+     * created, or a default one created on first access. `glaze.App` is
+     * GPUI's app and Ceramic has its own `ceramic.App`, so the current GPUI
+     * context is reached from here.
+     *
+     * ```haxe
+     * Glaze.app.bindKeys([...]);
+     * ```
+     */
+    public static var app(get, set):App;
+    static inline function get_app():App {
+        return App.current;
+    }
+    static inline function set_app(app:App):App {
+        return App.current = app;
+    }
+
+    /**
      * The window shown by this visual. `null` once the visual is destroyed.
      */
     public var window(default, null):Window;

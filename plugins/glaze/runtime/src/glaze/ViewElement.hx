@@ -142,6 +142,9 @@ class ViewElement extends Element {
 
     var component:Null<RenderOnce> = null;
 
+    /** A stateless `glaze.Component` (see `forGlazeComponent`) */
+    var glazeComponent:Null<Component> = null;
+
     var entityId:Int = -1;
 
     var componentName:Null<String> = null;
@@ -195,6 +198,18 @@ class ViewElement extends Element {
     }
 
     /**
+     * The element of a stateless `glaze.Component`, rendered like a
+     * `RenderOnce` under the element id of its class, or under its `.at(key)`.
+     */
+    public static function forGlazeComponent(component:Component):ViewElement {
+        final element = new ViewElement();
+        element.glazeComponent = component;
+        final key = component.__key;
+        element.componentId = key != null ? key : component.__elementId();
+        return element;
+    }
+
+    /**
      * Enable caching of this view's rendered subtree, laid out at `style`
      * (GPUI's caching: the view is not measured from its contents). Only
      * meaningful for entity views.
@@ -233,6 +248,10 @@ class ViewElement extends Element {
      */
     function componentElementId():ElementId {
         var id = componentId;
+        if (componentName == null) {
+            // A `glaze.Component`: its id was given by `forGlazeComponent`
+            return id;
+        }
         if (id == null || componentIdName != componentName) {
             final name = componentName;
             id = name != null ? componentIds.get(name) : null;
@@ -276,9 +295,14 @@ class ViewElement extends Element {
             @:privateAccess cx.finishUpdate();
             return element;
         }
-        else {
+        else if (component != null) {
             final component = this.component;
             this.component = null;
+            return (component.render(window, cx) : AnyElement);
+        }
+        else {
+            final component = this.glazeComponent;
+            this.glazeComponent = null;
             return (component.render(window, cx) : AnyElement);
         }
     }
