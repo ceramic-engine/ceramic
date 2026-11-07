@@ -7,8 +7,8 @@ import haxe.io.Bytes;
 /**
  * The emoji font bundled with the glaze plugin: Noto Color Emoji (`CBDT` /
  * `CBLC` bitmaps, `GSUB` sequences), shipped only when the define
- * `glaze_bundled_emoji` is set (the plugin's `emoji-font/assets` folder, see
- * `emoji-font/README.md` for its origin and licenses).
+ * `glaze_bundled_emoji` is set (the plugin's `resources/emoji-font/assets` folder, see
+ * `resources/emoji-font/README.md` for its origin and licenses).
  *
  * With the define, the plugin adds it to `glaze.App.defaultTextSystem()` once
  * the default assets are loaded (see `ceramic.GlazePlugin`), after the
@@ -29,7 +29,7 @@ import haxe.io.Bytes;
  */
 class BundledEmojiFont {
 
-    /** Asset path of the font file (in the plugin's `emoji-font/assets`) */
+    /** Asset path of the font file (in the plugin's `resources/emoji-font/assets`) */
     public static final ASSET_PATH:String = 'glaze/emoji/NotoColorEmoji.ttf.bin';
 
     /** PostScript name of the bundled face */

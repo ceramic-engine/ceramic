@@ -9,7 +9,7 @@ using StringTools;
 
 /**
  * Copies vscode-oniguruma's `onig.wasm` and its JavaScript binding
- * (`vscode-oniguruma.js`) from the plugin's `onig-wasm` folder into the
+ * (`vscode-oniguruma.js`) from the plugin's `resources/onig-wasm` folder into the
  * ceramic project's web directory, where the code highlighter loads them at
  * startup when the project sets the `glaze_onig_wasm` define. With `--remove`,
  * deletes them from the web directory instead (builds without the define).
@@ -28,7 +28,7 @@ class SetupOnigWasm extends tools.Task {
 
         var doRemove = extractArgFlag(args, 'remove');
 
-        // The files copied into `project/web`, from the plugin's `onig-wasm` folder
+        // The files copied into `project/web`, from the plugin's `resources/onig-wasm` folder
         var files = ['onig.wasm', 'vscode-oniguruma.js'];
 
         var webProjectPath = Path.join([cwd, 'project/web']);
@@ -51,7 +51,7 @@ class SetupOnigWasm extends tools.Task {
             return;
         }
 
-        var sourcePath = Path.join([pluginPath(), 'onig-wasm']);
+        var sourcePath = Path.join([pluginPath(), 'resources', 'onig-wasm']);
         for (name in files) {
             var source = Path.join([sourcePath, name]);
             if (!FileSystem.exists(source)) {

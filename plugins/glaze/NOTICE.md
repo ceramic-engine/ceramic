@@ -88,7 +88,7 @@ Glaze is the `glaze` plugin of Ceramic (`plugins/glaze`): the paths below are re
 ## Grammars and onig.wasm (code highlighting)
 
 - `assets/glaze/grammars/`: 52 TextMate grammar files of tm-grammars 1.31.15 (shiki), unchanged. tm-grammars is MIT; each grammar keeps the license of its origin (mostly MIT from the Microsoft VS Code extensions, plus Apache-2.0 and others listed in `NOTICE-tm-grammars`; `erb`, `toml` and `yaml` are under the TextMate bundle license quoted in `assets/glaze/grammars/NOTICE.md`).
-- `onig-wasm/onig.wasm` and `onig-wasm/vscode-oniguruma.js` (the package's `release/main.js`, renamed): vscode-oniguruma 2.0.1, <https://github.com/microsoft/vscode-oniguruma>, unchanged, MIT (Microsoft Corporation); `onig.wasm` contains Oniguruma (BSD-2-Clause, K.Kosako). The license texts (`LICENSE.txt`, `NOTICES.txt`) are next to them. They are not assets: only web builds with the `glaze_onig_wasm` define get a copy of the two files in `project/web`.
+- `resources/onig-wasm/onig.wasm` and `resources/onig-wasm/vscode-oniguruma.js` (the package's `release/main.js`, renamed): vscode-oniguruma 2.0.1, <https://github.com/microsoft/vscode-oniguruma>, unchanged, MIT (Microsoft Corporation); `onig.wasm` contains Oniguruma (BSD-2-Clause, K.Kosako). The license texts (`LICENSE.txt`, `NOTICES.txt`) are next to them. They are not assets: only web builds with the `glaze_onig_wasm` define get a copy of the two files in `project/web`.
 - Highlighter test samples in `tests/unit/data/highlight/samples` (see the `NOTICE.md` there).
 
 ## fake (via gpui-kit's story gallery)
@@ -133,7 +133,7 @@ Test data shipped with these libraries keeps its own license, documented in each
 
 They are used by the `ttf` library tests and by `samples/ttf`, and bundled with the plugin in `assets/glaze/fonts` (as `.ttf.bin`, so that Ceramic's font converter leaves them alone), always with their OFL license files next to them.
 
-- Noto Color Emoji 2.057 (`CBDT` bitmap build), <https://github.com/googlefonts/noto-emoji> (`2D/fonts/NotoColorEmoji.ttf`, commit `99701e0`), Copyright 2013 Google LLC: the font is under the SIL Open Font License 1.1, the emoji images under the Apache License 2.0, the flag images (region-flags) in the public domain or exempt from copyright. Copied unmodified into `emoji-font/assets/glaze/emoji/NotoColorEmoji.ttf.bin` with the three license files next to it (see `emoji-font/README.md`); shipped with an app only when the define `glaze_bundled_emoji` is set. The golden scenes of the bundled emoji font (`reference/src/kit_scenes14_emoji.rs`) load the same file on both sides.
+- Noto Color Emoji 2.057 (`CBDT` bitmap build), <https://github.com/googlefonts/noto-emoji> (`2D/fonts/NotoColorEmoji.ttf`, commit `99701e0`), Copyright 2013 Google LLC: the font is under the SIL Open Font License 1.1, the emoji images under the Apache License 2.0, the flag images (region-flags) in the public domain or exempt from copyright. Copied unmodified into `resources/emoji-font/assets/glaze/emoji/NotoColorEmoji.ttf.bin` with the three license files next to it (see `resources/emoji-font/README.md`); shipped with an app only when the define `glaze_bundled_emoji` is set. The golden scenes of the bundled emoji font (`reference/src/kit_scenes14_emoji.rs`) load the same file on both sides.
 
 ## Icons and SVG test files
 

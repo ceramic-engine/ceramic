@@ -11,8 +11,8 @@ bundled font) is done (2026-11-02, see below).
 ## Done
 
 - Step 7, bundled emoji font: the define `glaze_bundled_emoji` ships Noto
-  Color Emoji 2.057 (the `CBDT` build, 10.7 MB, `emoji-font/assets`, see
-  `emoji-font/README.md`) through the plugin's `ceramic.yml`, and the
+  Color Emoji 2.057 (the `CBDT` build, 10.7 MB, `resources/emoji-font/assets`, see
+  `resources/emoji-font/README.md`) through the plugin's `ceramic.yml`, and the
   plugin adds it to the default text system right after Inter and
   JetBrains Mono, before the app is ready (`glaze.platform.BundledEmojiFont`,
   `CeramicTextSystem.addBundledEmojiFace()`). Native targets and Node.js read

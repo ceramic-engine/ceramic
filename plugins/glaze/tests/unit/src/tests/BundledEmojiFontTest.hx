@@ -326,7 +326,7 @@ class BundledEmojiFontTest #if !macro extends TestCase #end {
     static macro function pluginFontPath():Expr {
         final file = Context.getPosInfos(Context.currentPos()).file;
         final dir = haxe.io.Path.directory(sys.FileSystem.fullPath(file));
-        return macro $v{haxe.io.Path.normalize(dir + '/../../../../emoji-font/assets/glaze/emoji/NotoColorEmoji.ttf.bin')};
+        return macro $v{haxe.io.Path.normalize(dir + '/../../../../resources/emoji-font/assets/glaze/emoji/NotoColorEmoji.ttf.bin')};
     }
 
     /** Absolute path of the ttf library's test fonts */
