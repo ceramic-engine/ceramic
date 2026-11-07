@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze;
 
+import glaze.Listeners;
+
 /**
  * A `Div` element, the all-in-one element for building complex UIs in GPUI.
  * Create one with `Prelude.div()`, style it with the `Styled` methods, add
@@ -229,7 +231,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Bind the given callback to the mouse down event for the given mouse button.
      * The fluent API equivalent to `Interactivity.onMouseDown`.
      */
-    public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):Div {
+    public function onMouseDown(button:MouseButton, listener:MouseDownListener):Div {
         interactivity.onMouseDown(button, listener);
         return this;
     }
@@ -237,7 +239,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse down event for any button, during the capture phase.
      */
-    public function captureAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Div {
+    public function captureAnyMouseDown(listener:MouseDownListener):Div {
         interactivity.captureAnyMouseDown(listener);
         return this;
     }
@@ -245,7 +247,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse down event for any button, during the bubble phase.
      */
-    public function onAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Div {
+    public function onAnyMouseDown(listener:MouseDownListener):Div {
         interactivity.onAnyMouseDown(listener);
         return this;
     }
@@ -253,7 +255,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse up event for the given button, during the bubble phase.
      */
-    public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Div {
+    public function onMouseUp(button:MouseButton, listener:MouseUpListener):Div {
         interactivity.onMouseUp(button, listener);
         return this;
     }
@@ -261,7 +263,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse up event for any button, during the capture phase.
      */
-    public function captureAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Div {
+    public function captureAnyMouseUp(listener:MouseUpListener):Div {
         interactivity.captureAnyMouseUp(listener);
         return this;
     }
@@ -269,7 +271,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse up event for any button, during the bubble phase.
      */
-    public function onAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Div {
+    public function onAnyMouseUp(listener:MouseUpListener):Div {
         interactivity.onAnyMouseUp(listener);
         return this;
     }
@@ -278,7 +280,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Bind the given callback to the mouse down event, on any button, during the capture phase,
      * when the mouse is outside of the bounds of this element.
      */
-    public function onMouseDownOut(listener:(MouseDownEvent, Window, App) -> Void):Div {
+    public function onMouseDownOut(listener:MouseDownListener):Div {
         interactivity.onMouseDownOut(listener);
         return this;
     }
@@ -287,7 +289,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Bind the given callback to the mouse up event, for the given button, during the capture phase,
      * when the mouse is outside of the bounds of this element.
      */
-    public function onMouseUpOut(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Div {
+    public function onMouseUpOut(button:MouseButton, listener:MouseUpListener):Div {
         interactivity.onMouseUpOut(button, listener);
         return this;
     }
@@ -295,7 +297,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse move event, during the bubble phase.
      */
-    public function onMouseMove(listener:(MouseMoveEvent, Window, App) -> Void):Div {
+    public function onMouseMove(listener:MouseMoveListener):Div {
         interactivity.onMouseMove(listener);
         return this;
     }
@@ -303,7 +305,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to the mouse exit event, during the bubble phase.
      */
-    public function onMouseExit(listener:(MouseExitEvent, Window, App) -> Void):Div {
+    public function onMouseExit(listener:MouseExitListener):Div {
         interactivity.onMouseExit(listener);
         return this;
     }
@@ -313,7 +315,7 @@ class Div extends Element implements Styled implements ParentElement {
      * will be called for all move events, inside or outside of this element, as long as the
      * drag was started with this element under the mouse.
      */
-    public function onDragMove<T>(type:Class<T>, listener:(DragMoveEvent<T>, Window, App) -> Void):Div {
+    public function onDragMove<T>(type:Class<T>, listener:DragMoveListener<T>):Div {
         interactivity.onDragMove(type, listener);
         return this;
     }
@@ -321,7 +323,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to scroll events (wheel and trackpad), during the bubble phase.
      */
-    public function onScroll(listener:(ScrollEvent, Window, App) -> Void):Div {
+    public function onScroll(listener:ScrollListener):Div {
         interactivity.onScroll(listener);
         return this;
     }
@@ -329,14 +331,14 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Renamed to `onScroll` in GPUI.
      */
-    public inline function onScrollWheel(listener:(ScrollEvent, Window, App) -> Void):Div {
+    public inline function onScrollWheel(listener:ScrollListener):Div {
         return onScroll(listener);
     }
 
     /**
      * Capture the given action, before normal action dispatch can fire.
      */
-    public function captureAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Div {
+    public function captureAction<A:Action>(type:Class<A>, listener:ActionListener<A>):Div {
         interactivity.captureAction(type, listener);
         return this;
     }
@@ -344,7 +346,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to an action dispatch during the bubble phase.
      */
-    public function onAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Div {
+    public function onAction<A:Action>(type:Class<A>, listener:ActionListener<A>):Div {
         interactivity.onAction(type, listener);
         return this;
     }
@@ -360,7 +362,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Bind the given callback to an action dispatch, based on a dynamic action parameter
      * instead of a type parameter.
      */
-    public function onBoxedAction(action:Action, listener:(Action, Window, App) -> Void):Div {
+    public function onBoxedAction(action:Action, listener:ActionListener<Action>):Div {
         interactivity.onBoxedAction(action, listener);
         return this;
     }
@@ -368,7 +370,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to a key down event, during the bubble phase.
      */
-    public function onKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Div {
+    public function onKeyDown(listener:KeyDownListener):Div {
         interactivity.onKeyDown(listener);
         return this;
     }
@@ -376,7 +378,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to a key down event, during the capture phase.
      */
-    public function captureKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Div {
+    public function captureKeyDown(listener:KeyDownListener):Div {
         interactivity.captureKeyDown(listener);
         return this;
     }
@@ -384,7 +386,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to a key up event, during the bubble phase.
      */
-    public function onKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Div {
+    public function onKeyUp(listener:KeyUpListener):Div {
         interactivity.onKeyUp(listener);
         return this;
     }
@@ -392,7 +394,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to a key up event, during the capture phase.
      */
-    public function captureKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Div {
+    public function captureKeyUp(listener:KeyUpListener):Div {
         interactivity.captureKeyUp(listener);
         return this;
     }
@@ -400,7 +402,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to modifiers changing events.
      */
-    public function onModifiersChanged(listener:(ModifiersChangedEvent, Window, App) -> Void):Div {
+    public function onModifiersChanged(listener:ModifiersListener):Div {
         interactivity.onModifiersChanged(listener);
         return this;
     }
@@ -429,7 +431,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to drop events of the given type, whether or not the drag started on this element.
      */
-    public function onDrop<T>(type:Class<T>, listener:(T, Window, App) -> Void):Div {
+    public function onDrop<T>(type:Class<T>, listener:DropListener<T>):Div {
         interactivity.onDrop(type, listener);
         return this;
     }
@@ -586,7 +588,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to click events of this element.
      */
-    public function onClick(listener:(ClickEvent, Window, App) -> Void):Div {
+    public function onClick(listener:ClickListener):Div {
         interactivity.onClick(listener);
         return this;
     }
@@ -594,7 +596,7 @@ class Div extends Element implements Styled implements ParentElement {
     /**
      * Bind the given callback to non-primary click events of this element.
      */
-    public function onAuxClick(listener:(ClickEvent, Window, App) -> Void):Div {
+    public function onAuxClick(listener:ClickListener):Div {
         interactivity.onAuxClick(listener);
         return this;
     }
@@ -613,7 +615,7 @@ class Div extends Element implements Styled implements ParentElement {
      * Bind the given callback on the hover start and end events of this element. Note that the boolean
      * passed to the callback is true when the hover starts and false when it ends.
      */
-    public function onHover(listener:(Bool, Window, App) -> Void):Div {
+    public function onHover(listener:HoverListener):Div {
         interactivity.onHover(listener);
         return this;
     }

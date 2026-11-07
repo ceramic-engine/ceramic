@@ -1,5 +1,7 @@
 package;
 
+import scenarios.Components.ComponentsKind;
+
 /**
  * The single registry of benchmark scenarios.
  *
@@ -28,6 +30,10 @@ class Scenarios {
             new scenarios.StoryScroll(null, 'gallery-combobox-scroll', 40, 'Combobox'),
             new scenarios.StoryScroll(null, 'gallery-button-scroll', 40, 'Button'),
             new scenarios.StoryScroll(null, 'gallery-input-scroll', 40, 'Input'),
+            new scenarios.Components(Persistent),
+            new scenarios.Components(Views),
+            new scenarios.Components(Stateless),
+            new scenarios.Components(RenderOnceRows),
         ];
     }
 

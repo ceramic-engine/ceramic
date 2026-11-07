@@ -17,7 +17,10 @@ The `idle` scenario checks that 120 frames of the real update loop draw and
 allocate nothing; the process exits with 1 when they do.
 
 Scenarios are registered in `src/Scenarios.hx` (`cards`, `idle`, and the
-classes under `src/scenarios/`). A scenario implements `Scenario` or extends
+classes under `src/scenarios/`). The `components-*` scenarios compare
+`glaze.Component` with the equivalent hand written code (`components-persistent`
+against `components-views`, `components-stateless` against
+`components-renderonce`, see `src/scenarios/Components.hx`). A scenario implements `Scenario` or extends
 `BaseScenario` (`src/Scenario.hx`, `src/BaseScenario.hx`).
 
 ## Running

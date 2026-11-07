@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze;
 
+import glaze.Listeners;
+
 import haxe.io.Bytes;
 
 /**
@@ -131,22 +133,22 @@ class Svg extends Element implements Styled {
         return this;
     }
 
-    public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):Svg {
+    public function onMouseDown(button:MouseButton, listener:MouseDownListener):Svg {
         interactivity.onMouseDown(button, listener);
         return this;
     }
 
-    public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Svg {
+    public function onMouseUp(button:MouseButton, listener:MouseUpListener):Svg {
         interactivity.onMouseUp(button, listener);
         return this;
     }
 
-    public function onClick(listener:(ClickEvent, Window, App) -> Void):Svg {
+    public function onClick(listener:ClickListener):Svg {
         interactivity.onClick(listener);
         return this;
     }
 
-    public function onHover(listener:(Bool, Window, App) -> Void):Svg {
+    public function onHover(listener:HoverListener):Svg {
         interactivity.onHover(listener);
         return this;
     }

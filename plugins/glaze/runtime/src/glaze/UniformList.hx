@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze;
 
+import glaze.Listeners;
+
 /**
  * A scrollable list of elements with uniform height, optimized for large lists.
  * Rather than use the full taffy layout system, `UniformList` simply measures
@@ -411,7 +413,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to the mouse down event for the given mouse button.
      */
-    public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):UniformList {
+    public function onMouseDown(button:MouseButton, listener:MouseDownListener):UniformList {
         interactivity.onMouseDown(button, listener);
         return this;
     }
@@ -419,7 +421,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to the mouse up event for the given button, during the bubble phase.
      */
-    public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):UniformList {
+    public function onMouseUp(button:MouseButton, listener:MouseUpListener):UniformList {
         interactivity.onMouseUp(button, listener);
         return this;
     }
@@ -427,7 +429,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to the mouse move event, during the bubble phase.
      */
-    public function onMouseMove(listener:(MouseMoveEvent, Window, App) -> Void):UniformList {
+    public function onMouseMove(listener:MouseMoveListener):UniformList {
         interactivity.onMouseMove(listener);
         return this;
     }
@@ -435,7 +437,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to scroll events (wheel and trackpad), during the bubble phase.
      */
-    public function onScroll(listener:(ScrollEvent, Window, App) -> Void):UniformList {
+    public function onScroll(listener:ScrollListener):UniformList {
         interactivity.onScroll(listener);
         return this;
     }
@@ -443,7 +445,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to an action dispatch during the bubble phase.
      */
-    public function onAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):UniformList {
+    public function onAction<A:Action>(type:Class<A>, listener:ActionListener<A>):UniformList {
         interactivity.onAction(type, listener);
         return this;
     }
@@ -451,7 +453,7 @@ class UniformList extends Element implements Styled {
     /**
      * Bind the given callback to a key down event, during the bubble phase.
      */
-    public function onKeyDown(listener:(KeyDownEvent, Window, App) -> Void):UniformList {
+    public function onKeyDown(listener:KeyDownListener):UniformList {
         interactivity.onKeyDown(listener);
         return this;
     }

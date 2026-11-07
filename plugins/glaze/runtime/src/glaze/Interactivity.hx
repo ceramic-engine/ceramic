@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze;
 
+import glaze.Listeners;
+
 import glaze.util.Stacks;
 import glaze.ClickEvent.KeyboardClickEvent;
 import glaze.ClickEvent.MouseClickEvent;
@@ -465,7 +467,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse down event for the given mouse button, during the bubble phase.
      */
-    public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):Void {
+    public function onMouseDown(button:MouseButton, listener:MouseDownListener):Void {
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseDownEvent = cast event;
@@ -478,7 +480,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse down event for any button, during the capture phase.
      */
-    public function captureAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Void {
+    public function captureAnyMouseDown(listener:MouseDownListener):Void {
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
@@ -490,7 +492,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse down event for any button, during the bubble phase.
      */
-    public function onAnyMouseDown(listener:(MouseDownEvent, Window, App) -> Void):Void {
+    public function onAnyMouseDown(listener:MouseDownListener):Void {
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -502,7 +504,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse up event for the given button, during the bubble phase.
      */
-    public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Void {
+    public function onMouseUp(button:MouseButton, listener:MouseUpListener):Void {
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseUpEvent = cast event;
@@ -515,7 +517,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse up event for any button, during the capture phase.
      */
-    public function captureAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Void {
+    public function captureAnyMouseUp(listener:MouseUpListener):Void {
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && hitbox.isHovered(window)) {
@@ -527,7 +529,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse up event for any button, during the bubble phase.
      */
-    public function onAnyMouseUp(listener:(MouseUpEvent, Window, App) -> Void):Void {
+    public function onAnyMouseUp(listener:MouseUpListener):Void {
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -540,7 +542,7 @@ class Interactivity {
      * Bind the given callback to the mouse down event, on any button, during the capture phase,
      * when the mouse is outside of the bounds of this element.
      */
-    public function onMouseDownOut(listener:(MouseDownEvent, Window, App) -> Void):Void {
+    public function onMouseDownOut(listener:MouseDownListener):Void {
         if (mouseDownListeners == null) mouseDownListeners = [];
         mouseDownListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Capture && !hitbox.contains(window.mousePosition())) {
@@ -553,7 +555,7 @@ class Interactivity {
      * Bind the given callback to the mouse up event, for the given button, during the capture phase,
      * when the mouse is outside of the bounds of this element.
      */
-    public function onMouseUpOut(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Void {
+    public function onMouseUpOut(button:MouseButton, listener:MouseUpListener):Void {
         if (mouseUpListeners == null) mouseUpListeners = [];
         mouseUpListeners.push((event, phase, hitbox, window, cx) -> {
             final event:MouseUpEvent = cast event;
@@ -566,7 +568,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse move event, during the bubble phase.
      */
-    public function onMouseMove(listener:(MouseMoveEvent, Window, App) -> Void):Void {
+    public function onMouseMove(listener:MouseMoveListener):Void {
         if (mouseMoveListeners == null) mouseMoveListeners = [];
         mouseMoveListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -578,7 +580,7 @@ class Interactivity {
     /**
      * Bind the given callback to the mouse exit event, during the bubble phase.
      */
-    public function onMouseExit(listener:(MouseExitEvent, Window, App) -> Void):Void {
+    public function onMouseExit(listener:MouseExitListener):Void {
         if (mouseExitListeners == null) mouseExitListeners = [];
         mouseExitListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.isHovered(window)) {
@@ -593,7 +595,7 @@ class Interactivity {
      * drag was started with this element under the mouse. Useful for implementing draggable
      * UIs that don't conform to a drag and drop style interaction, like resizing.
      */
-    public function onDragMove<T>(type:Class<T>, listener:(DragMoveEvent<T>, Window, App) -> Void):Void {
+    public function onDragMove<T>(type:Class<T>, listener:DragMoveListener<T>):Void {
         if (mouseMoveListeners == null) mouseMoveListeners = [];
         mouseMoveListeners.push((event, phase, hitbox, window, cx) -> {
             final drag = cx.activeDrag;
@@ -606,7 +608,7 @@ class Interactivity {
     /**
      * Bind the given callback to scroll events (wheel and trackpad), during the bubble phase.
      */
-    public function onScroll(listener:(ScrollEvent, Window, App) -> Void):Void {
+    public function onScroll(listener:ScrollListener):Void {
         if (scrollListeners == null) scrollListeners = [];
         scrollListeners.push((event, phase, hitbox, window, cx) -> {
             if (phase == Bubble && hitbox.shouldHandleScroll(window)) {
@@ -618,14 +620,14 @@ class Interactivity {
     /**
      * Renamed to `onScroll` in GPUI (kept for compatibility).
      */
-    public inline function onScrollWheel(listener:(ScrollEvent, Window, App) -> Void):Void {
+    public inline function onScrollWheel(listener:ScrollListener):Void {
         onScroll(listener);
     }
 
     /**
      * Bind the given callback to an action dispatch during the capture phase.
      */
-    public function captureAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
+    public function captureAction<A:Action>(type:Class<A>, listener:ActionListener<A>):Void {
         if (actionListeners == null) actionListeners = [];
         actionListeners.push(new CaptureActionListener(type, cast listener));
     }
@@ -633,7 +635,7 @@ class Interactivity {
     /**
      * Bind the given callback to an action dispatch during the bubble phase.
      */
-    public function onAction<A:Action>(type:Class<A>, listener:(A, Window, App) -> Void):Void {
+    public function onAction<A:Action>(type:Class<A>, listener:ActionListener<A>):Void {
         if (actionListeners == null) actionListeners = [];
         actionListeners.push(new BubbleActionListener(type, cast listener));
     }
@@ -660,7 +662,7 @@ class Interactivity {
      * instead of a type parameter. Useful for component libraries that want to expose
      * action bindings to their users.
      */
-    public function onBoxedAction(action:Action, listener:(Action, Window, App) -> Void):Void {
+    public function onBoxedAction(action:Action, listener:ActionListener<Action>):Void {
         final action = action.boxedClone();
         if (actionListeners == null) actionListeners = [];
         actionListeners.push(new TypedActionListener(Type.getClass(action), (_, phase, window, cx) -> {
@@ -673,7 +675,7 @@ class Interactivity {
     /**
      * Bind the given callback to a key down event, during the bubble phase.
      */
-    public function onKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Void {
+    public function onKeyDown(listener:KeyDownListener):Void {
         if (keyDownListeners == null) keyDownListeners = [];
         keyDownListeners.push((event, phase, window, cx) -> {
             if (phase == Bubble) {
@@ -685,7 +687,7 @@ class Interactivity {
     /**
      * Bind the given callback to a key down event, during the capture phase.
      */
-    public function captureKeyDown(listener:(KeyDownEvent, Window, App) -> Void):Void {
+    public function captureKeyDown(listener:KeyDownListener):Void {
         if (keyDownListeners == null) keyDownListeners = [];
         keyDownListeners.push((event, phase, window, cx) -> {
             if (phase == Capture) {
@@ -697,7 +699,7 @@ class Interactivity {
     /**
      * Bind the given callback to a key up event, during the bubble phase.
      */
-    public function onKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Void {
+    public function onKeyUp(listener:KeyUpListener):Void {
         if (keyUpListeners == null) keyUpListeners = [];
         keyUpListeners.push((event, phase, window, cx) -> {
             if (phase == Bubble) {
@@ -709,7 +711,7 @@ class Interactivity {
     /**
      * Bind the given callback to a key up event, during the capture phase.
      */
-    public function captureKeyUp(listener:(KeyUpEvent, Window, App) -> Void):Void {
+    public function captureKeyUp(listener:KeyUpListener):Void {
         if (keyUpListeners == null) keyUpListeners = [];
         keyUpListeners.push((event, phase, window, cx) -> {
             if (phase == Capture) {
@@ -721,7 +723,7 @@ class Interactivity {
     /**
      * Bind the given callback to modifiers changing events.
      */
-    public function onModifiersChanged(listener:(ModifiersChangedEvent, Window, App) -> Void):Void {
+    public function onModifiersChanged(listener:ModifiersListener):Void {
         if (modifiersChangedListeners == null) modifiersChangedListeners = [];
         modifiersChangedListeners.push(listener);
     }
@@ -729,7 +731,7 @@ class Interactivity {
     /**
      * Bind the given callback to drop events of the given type, whether or not the drag started on this element.
      */
-    public function onDrop<T>(type:Class<T>, listener:(T, Window, App) -> Void):Void {
+    public function onDrop<T>(type:Class<T>, listener:DropListener<T>):Void {
         if (dropListeners == null) dropListeners = [];
         dropListeners.push({type: type, listener: (value, window, cx) -> listener(cast value, window, cx)});
     }
@@ -744,7 +746,7 @@ class Interactivity {
     /**
      * Bind the given callback to click events of this element.
      */
-    public function onClick(listener:(ClickEvent, Window, App) -> Void):Void {
+    public function onClick(listener:ClickListener):Void {
         if (clickListeners == null) clickListeners = [];
         clickListeners.push(listener);
     }
@@ -752,7 +754,7 @@ class Interactivity {
     /**
      * Bind the given callback to non-primary click events of this element.
      */
-    public function onAuxClick(listener:(ClickEvent, Window, App) -> Void):Void {
+    public function onAuxClick(listener:ClickListener):Void {
         if (auxClickListeners == null) auxClickListeners = [];
         auxClickListeners.push(listener);
     }
@@ -770,7 +772,7 @@ class Interactivity {
      * Bind the given callback on the hover start and end events of this element. Note that the boolean
      * passed to the callback is true when the hover starts and false when it ends.
      */
-    public function onHover(listener:(Bool, Window, App) -> Void):Void {
+    public function onHover(listener:HoverListener):Void {
         hoverListener = listener;
     }
 

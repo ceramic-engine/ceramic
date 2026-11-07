@@ -3,6 +3,8 @@
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
 package glaze;
 
+import glaze.Listeners;
+
 import glaze.ImageLoadResult;
 
 /**
@@ -140,27 +142,27 @@ class Img extends Element implements Styled {
         return this;
     }
 
-    public function onMouseDown(button:MouseButton, listener:(MouseDownEvent, Window, App) -> Void):Img {
+    public function onMouseDown(button:MouseButton, listener:MouseDownListener):Img {
         interactivity.onMouseDown(button, listener);
         return this;
     }
 
-    public function onMouseUp(button:MouseButton, listener:(MouseUpEvent, Window, App) -> Void):Img {
+    public function onMouseUp(button:MouseButton, listener:MouseUpListener):Img {
         interactivity.onMouseUp(button, listener);
         return this;
     }
 
-    public function onClick(listener:(ClickEvent, Window, App) -> Void):Img {
+    public function onClick(listener:ClickListener):Img {
         interactivity.onClick(listener);
         return this;
     }
 
-    public function onAuxClick(listener:(ClickEvent, Window, App) -> Void):Img {
+    public function onAuxClick(listener:ClickListener):Img {
         interactivity.onAuxClick(listener);
         return this;
     }
 
-    public function onHover(listener:(Bool, Window, App) -> Void):Img {
+    public function onHover(listener:HoverListener):Img {
         interactivity.onHover(listener);
         return this;
     }

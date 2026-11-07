@@ -5,9 +5,15 @@ import glaze.App;
 import glaze.Component;
 import glaze.Context;
 import glaze.Entity;
+import glaze.FocusHandle;
 import glaze.Glaze;
 import glaze.IntoElement;
+import glaze.KeyDownEvent;
+import glaze.Keystroke;
 import glaze.Model;
+import glaze.MouseDownEvent;
+import glaze.MouseMoveEvent;
+import glaze.MouseUpEvent;
 import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
@@ -455,6 +461,22 @@ class ComponentTest extends TestCase {
         assertEquals(1, Counters.counterDestroys);
     }
 
+/// Short listeners
+
+    function testShortListenersOnElements() {
+        final log:Array<String> = [];
+        final window = openWindow(Clickable.component().log(log));
+        frame();
+        // The component focused its root in init(): draw the focus state
+        frame();
+        final position = point(10, 10);
+        window.dispatchEvent(new MouseMoveEvent(position, null, window.modifiers()), app);
+        window.dispatchEvent(new MouseDownEvent(Left, position), app);
+        window.dispatchEvent(new MouseUpEvent(Left, position), app);
+        window.dispatchEvent(new KeyDownEvent(Keystroke.parse('escape')), app);
+        assertEquals('hover:true,down,click,full,escape', log.slice(0, 5).join(','));
+    }
+
     function testGlazeAppIsTheCurrentApp() {
         assertTrue(Glaze.app == app);
         assertTrue(Glaze.app == App.current);
@@ -694,6 +716,37 @@ class Box extends Component {
     function render(window:Window, cx:App):IntoElement {
         Counters.boxRenders++;
         return div().id('box').children(children);
+    }
+
+}
+
+/**
+ * A component using the three forms of the element listeners: `() -> Void`,
+ * `event -> Void` and `(event, window, cx) -> Void`.
+ */
+class Clickable extends Component {
+
+    @prop var log:Array<String> = null;
+
+    final focus:FocusHandle;
+
+    public function new() {
+        super();
+        focus = Glaze.app.focusHandle();
+    }
+
+    override function init(window:Window, cx:App) {
+        window.focus(focus, cx);
+    }
+
+    function render(window:Window, cx:App):IntoElement {
+        return div().id('clickable').w(px(100)).h(px(100))
+            .trackFocus(focus)
+            .onHover(hovered -> log.push('hover:$hovered'))
+            .onMouseDown(Left, () -> log.push('down'))
+            .onClick(e -> log.push(e != null ? 'click' : 'no event'))
+            .onClick((e, window, cx) -> log.push(window != null && cx != null ? 'full' : 'no context'))
+            .onKeyDown(e -> if (e.keystroke.key == 'escape') log.push('escape'));
     }
 
 }
