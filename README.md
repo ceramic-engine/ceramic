@@ -78,6 +78,54 @@ Ceramic was created by **[Jérémy Faivre](https://github.com/jeremyfa)**, as we
 
 * **[LDtk](https://github.com/deepnight/ldtk) by Sébastien Bénard**, a modern 2D level editor, compatible with Ceramic
 
+* **[GPUI](https://github.com/zed-industries/zed/tree/main/crates/gpui) by Zed Industries**, the UI framework of the Zed editor (gpui-pre 0.3.10, Apache-2.0), ported to Haxe as the `glaze` plugin, with its examples (`samples/gpui-examples`) and the text contrast code GPUI adapted from **[Windows Terminal](https://github.com/microsoft/terminal) by Microsoft** (MIT).
+
+* **[GPUI Kit](https://github.com/longbridge/gpui-kit) by Longbridge** (gpui-component and gpui-base 0.8.1, Apache-2.0), ported to Haxe as `glaze.kit`, with its themes (which adapt the color schemes listed in `plugins/glaze/assets/themes/LICENSE.md`) and its story gallery (`samples/story`).
+
+* **[rust-i18n](https://github.com/longbridge/rust-i18n) by Longbridge** (MIT), ported for the locale lookup of `glaze.kit`.
+
+* **[Taffy](https://github.com/DioxusLabs/taffy) by Visly Inc. and the Taffy Authors** (MIT), ported to Haxe as the `taffy` library, the layout engine of `glaze`.
+
+* **[lyon](https://github.com/nical/lyon) by Nicolas Silva** (MIT OR Apache-2.0, used under MIT), adapted for the path building and tessellation of `glaze`, with parts of **[euclid](https://github.com/servo/euclid) by the Servo Project Developers** (MIT OR Apache-2.0, used under MIT).
+
+* **[etagere](https://github.com/nical/etagere) by Nicolas Silva** (MIT OR Apache-2.0, used under MIT), ported for the glyph atlas allocator of `glaze`.
+
+* **[unicode-properties](https://github.com/unicode-rs/unicode-properties) and [unicode-script](https://github.com/unicode-rs/unicode-script) by The Rust Project Developers** (MIT OR Apache-2.0), whose Unicode tables are used by the Canvas2D font fallback of `glaze` on the web.
+
+* **[Ropey](https://github.com/cessen/ropey) by Nathan Vegdahl** (MIT OR Apache-2.0, with parts of str_indices), ported to Haxe as the `ropey` library, the text buffer of the `glaze.kit` inputs and editor.
+
+* **[unicode-segmentation](https://github.com/unicode-rs/unicode-segmentation) by The Rust Project Developers** (MIT OR Apache-2.0) and **[unicode-linebreak](https://github.com/axelf4/unicode-linebreak) by Axel Forsman** (Apache-2.0), ported to Haxe as the libraries of the same names, with tables from the **[Unicode Character Database](https://www.unicode.org/ucd/)** (Unicode License v3).
+
+* **[similar](https://github.com/mitsuhiko/similar) by Armin Ronacher** (Apache-2.0), ported to Haxe as the `similar` library, the diff engine of the `glaze.kit` editor.
+
+* **[html5ever](https://github.com/servo/html5ever) by The html5ever Project Developers (Servo)** (MIT OR Apache-2.0, with parts of tendril and utf-8), ported to Haxe as the `html5ever` library, the HTML parser of the `glaze.kit` rich text.
+
+* **[markdown-rs](https://github.com/wooorm/markdown-rs) by Titus Wormer** (MIT, with the tables of unicode-id), ported to Haxe as the `markdown` library, the Markdown parser of the `glaze.kit` rich text.
+
+* **[data-url](https://github.com/servo/rust-url/tree/main/data-url) by The rust-url developers** (MIT OR Apache-2.0, used under MIT, with fixtures of the **[web-platform-tests](https://github.com/web-platform-tests/wpt)** project, BSD-3-Clause) and **[html5minify](https://github.com/martingallagher/html5minify) by Martin Gallagher** (MIT), ported for the `glaze.kit` rich text.
+
+* **[lsp-types](https://github.com/gluon-lang/lsp-types) by Markus Westerlind** (MIT), ported for the LSP data types of the `glaze.kit` editor.
+
+* **[chrono](https://github.com/chronotope/chrono) by Kang Seonghoon and contributors** (MIT OR Apache-2.0, used under MIT), ported for the dates and times of `glaze.kit`.
+
+* **[serde_json](https://github.com/serde-rs/json) by David Tolnay** (MIT OR Apache-2.0, used under MIT), ported for the JSON style editor of the `glaze.kit` inspector.
+
+* **[fake](https://github.com/cksac/fake-rs) by cksac** (MIT OR Apache-2.0, used under MIT), ported for the generated data of the `glaze` story gallery.
+
+* **[Oniguruma](https://github.com/kkos/oniguruma) by K. Kosako** (BSD-2-Clause), ported to Haxe as the `oniguruma` library with the API of **[vscode-oniguruma](https://github.com/microsoft/vscode-oniguruma) by Microsoft** (MIT), whose `onig.wasm` build `glaze` can also use on the web.
+
+* **[vscode-textmate](https://github.com/microsoft/vscode-textmate) by Microsoft** (MIT), ported to Haxe as the `textmate` library, with the TextMate grammars of **[tm-grammars](https://github.com/shikijs/textmate-grammars-themes) (shiki)**, each under the license of its origin (`plugins/glaze/assets/glaze/grammars`), for the code highlighting of `glaze.kit`.
+
+* **[lunasvg](https://github.com/sammycage/lunasvg) and [plutovg](https://github.com/sammycage/plutovg) by Samuel Ugochukwu** (MIT, plutovg includes code derived from **[FreeType](https://freetype.org)**), ported to Haxe as the `lunasvg` and `plutovg` libraries, used by the `vector` and `ttf` plugins and by `glaze`.
+
+* **[zeno](https://github.com/dfrg/zeno) by Chad Brokaw** (MIT OR Apache-2.0), whose scan converter is ported in the `ttf` library.
+
+* **[Inter](https://github.com/rsms/inter) by The Inter Project Authors** and **[JetBrains Mono](https://github.com/JetBrains/JetBrainsMono) by The JetBrains Mono Project Authors** (SIL Open Font License 1.1), the fonts bundled with `glaze`, and **[Noto Color Emoji](https://github.com/googlefonts/noto-emoji) by Google** (SIL Open Font License 1.1 for the font, Apache-2.0 for the images, public domain flags of region-flags), its optional emoji font.
+
+* **[Lucide](https://lucide.dev) icons by the Lucide Contributors** (ISC, with icons derived from **[Feather](https://github.com/feathericons/feather) by Cole Bemis**, MIT), the icons of `glaze.kit`, and SVG files of the **[resvg](https://github.com/linebender/resvg)** test suite (Apache-2.0 / MIT) in `plugins/glaze/samples/vector`.
+
 ## License
 
 Ceramic is [MIT licensed](LICENSE).
+
+The `glaze` plugin (`plugins/glaze`) is licensed under the Apache License 2.0, see [plugins/glaze/LICENSE](plugins/glaze/LICENSE) and [plugins/glaze/NOTICE.md](plugins/glaze/NOTICE.md). The libraries and fonts it ports or bundles keep their own licenses, found in their folders (`plugins/glaze/LICENSES`, the license files next to the bundled fonts and grammars, and the `LICENSE` of each library in `git/`).
