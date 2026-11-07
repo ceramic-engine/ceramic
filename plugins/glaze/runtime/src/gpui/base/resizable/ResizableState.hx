@@ -1,6 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/resizable/mod.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+// Also modified: deliberate deviation DEV-022 (a panel laid out at PANEL_MIN_SIZE does not notify every frame). See DEVIATIONS.md.
 package gpui.base.resizable;
 
 import gpui.Axis;
@@ -217,7 +218,13 @@ class ResizableState extends Model {
             return true;
         }
         final panel = panels[panelIx];
-        return (panelIx < sizesValue.length && (sizesValue[panelIx] : Float) == (Resizable.PANEL_MIN_SIZE : Float))
+        // Deliberate deviation DEV-022: a stored size of PANEL_MIN_SIZE (the
+        // placeholder of a panel not measured yet) is a change only when
+        // `updatePanelSize` would adopt another size; a panel laid out at
+        // exactly PANEL_MIN_SIZE no longer updates and notifies every frame.
+        final size:Float = bounds.size.along(axis);
+        return (panelIx < sizesValue.length && (sizesValue[panelIx] : Float) == (Resizable.PANEL_MIN_SIZE : Float)
+                && (size != (Resizable.PANEL_MIN_SIZE : Float) || !sameOptionalSize(panel.size, size)))
             || !panel.bounds.equals(bounds)
             || !panel.sizeRange.equals(sizeRange)
             || panel.fixed != fixed;
