@@ -170,6 +170,9 @@ class Tests {
         runner.add(new tests.kit.BaseNavigationTest());
         runner.add(new tests.kit.ComponentNavigationTest());
         runner.add(new tests.kit.ComponentWindowTest());
+        // gpui-kit (wave 7: resizable panels)
+        runner.add(new tests.kit.BaseResizableTest());
+        runner.add(new tests.kit.ResizableIdleTest());
         // gpui-kit (wave 7: base dock)
         runner.add(new tests.kit.BaseDockLayoutTest());
         runner.add(new tests.kit.BaseDockStateTest());
@@ -182,6 +185,8 @@ class Tests {
         // gpui-kit (wave 8: tree, table)
         runner.add(new tests.kit.BaseTreeTest());
         runner.add(new tests.kit.BaseTableTest());
+        runner.add(new tests.kit.ComponentTreeTest());
+        runner.add(new tests.kit.ComponentTableTest());
         // gpui-kit (wave 9: plot, charts)
         runner.add(new tests.kit.PlotScaleTest());
         runner.add(new tests.kit.PlotBaseTest());

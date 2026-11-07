@@ -727,6 +727,12 @@ class Window implements WindowInvalidator {
     /** The keys of `pendingDirtyViews`, iterated without allocating (a map's `keys()` copies them) */
     final pendingDirtyViewIds:Array<Int> = [];
 
+    /**
+     * View trackers invalidated outside a draw whose reaction has not run yet
+     * (see `viewTrackerInvalidated`).
+     */
+    final invalidatedTrackers:Array<ViewTracker> = [];
+
     /** Shared scroll states read by the views cached by default (port, see `ViewDependencies`) */
     @:allow(gpui)
     final viewDependencies:ViewDependencies = new ViewDependencies();
@@ -1066,6 +1072,7 @@ class Window implements WindowInvalidator {
         }
         trackers.clear();
         trackerIds.resize(0);
+        invalidatedTrackers.resize(0);
         for (entityId in liveEntities.ids) {
             app.removeWindowInvalidator(entityId, id);
         }
@@ -1102,6 +1109,51 @@ class Window implements WindowInvalidator {
             return true;
         }
         return false;
+    }
+
+    /**
+     * Told by a view tracker of this window as soon as it is invalidated (an
+     * observable field the view read has changed). The port's views track
+     * the fields they read where GPUI renders every uncached view on every
+     * frame, so the change has the effect of a `cx.notify()` on the view:
+     *
+     * - While the window draws, like GPUI's notify during a draw
+     *   (`WindowInvalidator::invalidate_view`, window.rs:178-202): the view
+     *   renders on the next frame, but no frame is scheduled and nothing
+     *   observes it. The reaction is consumed here: the change of a model a
+     *   view prepaints or paints from (gpui-kit's resizable panels report
+     *   their bounds to their state on every prepaint) would otherwise draw
+     *   the window again after every frame.
+     * - Otherwise, the reaction runs as scheduled by tracker, or at the
+     *   latest when the window draws (`reactToInvalidatedTrackers`).
+     */
+    @:allow(gpui)
+    function viewTrackerInvalidated(tracker:ViewTracker):Void {
+        if (drawing) {
+            @:privateAccess tracker.reacted = true;
+            invalidateView(tracker.viewId, app);
+        }
+        else {
+            invalidatedTrackers.push(tracker);
+        }
+    }
+
+    /**
+     * Runs the reactions of the view trackers invalidated before this draw
+     * that tracker has not run yet (the change was made in the update that
+     * draws): GPUI's notify is immediate, so the draw that follows it renders
+     * the view.
+     */
+    function reactToInvalidatedTrackers():Void {
+        final list = invalidatedTrackers;
+        if (list.length == 0)
+            return;
+        var i = 0;
+        while (i < list.length) {
+            list[i].run();
+            i++;
+        }
+        list.resize(0);
     }
 
     /**
@@ -1304,6 +1356,7 @@ class Window implements WindowInvalidator {
     public function draw():Void {
         if (drawing || destroyed)
             return;
+        reactToInvalidatedTrackers();
         drawing = true;
         drawingClean = !dirty;
         final previousRecorder = accessRecorder;
@@ -1638,6 +1691,8 @@ class Window implements WindowInvalidator {
         var tracker = trackers.get(entityId);
         if (tracker == null) {
             tracker = new ViewTracker(() -> app.notify(entityId), view);
+            tracker.window = this;
+            tracker.viewId = entityId;
             trackers.set(entityId, tracker);
             trackerIds.push(entityId);
         }

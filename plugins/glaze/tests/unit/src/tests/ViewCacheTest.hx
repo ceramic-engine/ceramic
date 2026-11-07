@@ -159,6 +159,70 @@ class ViewCacheTest extends TestCase {
         assertEquals(4, window.renderedViewCount);
     }
 
+    /**
+     * A tracked field written while the window draws has the effect of a
+     * notify sent during a draw in GPUI (`WindowInvalidator::invalidate_view`,
+     * window.rs:178-202): the view reading it renders on the next frame, but
+     * no frame is scheduled for it.
+     */
+    function testAChangeWhileDrawingSchedulesNoFrame() {
+        final counter = app.newEntity(_ -> new CacheCounter());
+        final reader = view((window, cx) -> div().w(px(50)).h(px(20 + counter.read(cx).count)).bg(red()));
+        final writer = view((window, cx) -> canvas((_, _, app) -> {
+            final model = counter.read(app);
+            model.count = model.count + 1;
+            return 0;
+        }, (_, _, _, _) -> {}).size(px(10)));
+        final root = view((window, cx) -> div().flex().child((reader : AnyView)).child((writer : AnyView)));
+        final window = openWindow(root, true);
+        window.draw();
+        assertEquals(1, counter.read(app).count);
+        assertEquals(1, reader.read(app).renders);
+
+        // Idle: the write made by the prepaint does not draw again
+        final drawCount = window.drawCount;
+        frame();
+        frame();
+        assertEquals(drawCount, window.drawCount);
+        assertFalse(window.dirty);
+
+        // The next frame, whatever causes it, renders the reader again
+        root.update(app, (_, cx) -> cx.notify());
+        frame();
+        assertEquals(drawCount + 1, window.drawCount);
+        assertEquals(2, reader.read(app).renders);
+        assertEquals(21.0 * 2, window.renderedScene().quads[0].boundsHeight);
+        assertFalse(window.dirty);
+    }
+
+    /**
+     * A tracked field written before a draw, in the same update, is seen by
+     * that draw: GPUI's notify takes effect at once, before the reaction
+     * tracker schedules.
+     */
+    function testAChangeBeforeADrawIsRenderedByIt() {
+        final counter = app.newEntity(_ -> new CacheCounter());
+        final reader = view((window, cx) -> div().w(px(50)).h(px(20 + counter.read(cx).count)).bg(red()));
+        final other = view((_, _) -> div().size(px(10)).bg(blue()));
+        final root = view((window, cx) -> div().flex().child((reader : AnyView)).child((other : AnyView)));
+        final window = openWindow(root, true);
+        window.draw();
+        assertEquals(1, reader.read(app).renders);
+
+        app.update(cx -> {
+            other.update(cx, (_, cx) -> cx.notify());
+            counter.read(cx).count = 5;
+            window.draw();
+        });
+        assertEquals(2, reader.read(app).renders);
+        assertEquals(25.0 * 2, window.renderedScene().quads[0].boundsHeight);
+
+        // The reaction scheduled by tracker finds nothing left to do
+        final drawCount = window.drawCount;
+        frame();
+        assertEquals(drawCount, window.drawCount);
+    }
+
     function testUncachedViewsRenderEveryFrame() {
         final child = view((_, _) -> div().size(px(10)).bg(red()));
         final other = view((_, _) -> div().size(px(10)).bg(blue()));

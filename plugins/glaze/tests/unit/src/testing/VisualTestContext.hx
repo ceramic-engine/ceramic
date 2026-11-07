@@ -61,9 +61,22 @@ class VisualTestContext {
         return {view: view, cx: cx};
     }
 
+    /**
+     * Most frames the effect flushes may draw between two calls of `update`
+     * or `runUntilParked`: a window that keeps asking for a new frame fails
+     * the test instead of hanging it.
+     */
+    public static var maxDrawsPerStep:Int = 1000;
+
+    static var drawsThisStep:Int = 0;
+
     static function drawDirtyWindows(app:App):Void {
         for (window in Window.windows.copy()) {
             if (window.app == app && window.dirty && !window.isDestroyed()) {
+                if (++drawsThisStep > maxDrawsPerStep) {
+                    drawsThisStep = 0;
+                    throw 'Window ${window.id} was drawn more than $maxDrawsPerStep times in one step: it never goes idle';
+                }
                 window.draw();
             }
         }
@@ -78,6 +91,7 @@ class VisualTestContext {
      * Rust `VisualTestContext::update`: runs `f` with the window and the app, in an app update.
      */
     public function update<R>(f:(Window, App) -> R):R {
+        drawsThisStep = 0;
         return app.update(cx -> f(window, cx));
     }
 
@@ -85,6 +99,7 @@ class VisualTestContext {
      * Wait until there are no more pending tasks.
      */
     public function runUntilParked():Void {
+        drawsThisStep = 0;
         dispatcher.runUntilParked();
         ceramic.App.app.flushImmediate();
     }

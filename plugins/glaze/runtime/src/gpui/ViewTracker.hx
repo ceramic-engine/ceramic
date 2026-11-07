@@ -15,6 +15,10 @@ import tracker.Autorun;
  *   and schedules `run()` with `app.onceImmediate` (flushed within the frame).
  *   `run()` only calls `onInvalidated` (mark the view dirty, the same path as
  *   `cx.notify()`), exactly once per capture, and never re-renders by itself.
+ * - **Window**: the tracker of a view drawn by a window is also told to that
+ *   window as soon as it is invalidated (`Window.viewTrackerInvalidated`), so
+ *   that a change made while the window draws has the effect of a notify sent
+ *   during a draw, and a change made before a draw is seen by that draw.
  *
  * Code run by executors, timers, event dispatch and observers runs with
  * capture disabled, so it never subscribes the view by accident.
@@ -61,6 +65,17 @@ class ViewTracker extends Autorun {
 
     var reacted:Bool = false;
 
+    /**
+     * The window drawing the view and the view's entity id (set by the
+     * window): the window is told synchronously when this tracker is
+     * invalidated.
+     */
+    @:allow(gpui)
+    var window:Null<Window> = null;
+
+    @:allow(gpui)
+    var viewId:Int = -1;
+
     var writeReported:Bool = false;
 
     var savedCurrent:Null<Autorun> = null;
@@ -82,9 +97,11 @@ class ViewTracker extends Autorun {
         if (capturing) {
             throw 'ViewTracker $name is already capturing';
         }
+        // Not invalidated anymore before unbinding: unbinding an invalidated
+        // tracker is how an invalidation is detected (see below)
+        @:privateAccess invalidated = false;
         unbindFromAllAutorunArrays();
         accessed.clear();
-        @:privateAccess invalidated = false;
         reacted = false;
         writeReported = false;
         capturing = true;
@@ -160,11 +177,25 @@ class ViewTracker extends Autorun {
         }
     }
 
+    /**
+     * Tracker's `invalidate()` marks the autorun invalidated, then unbinds it:
+     * this is where the window learns synchronously that the view changed,
+     * while the reaction itself waits for `run()`.
+     */
+    override public function unbindFromAllAutorunArrays():Void {
+        super.unbindFromAllAutorunArrays();
+        final window = this.window;
+        if (window != null && invalidated && !reacted && !destroyed) {
+            window.viewTrackerInvalidated(this);
+        }
+    }
+
     override function destroy() {
         if (capturing) {
             endCapture();
         }
         onInvalidated = null;
+        window = null;
         super.destroy();
     }
 
