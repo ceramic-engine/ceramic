@@ -9,6 +9,7 @@ import ceramic.Either;
 import ceramic.Entity;
 import ceramic.LorelineAsset;
 import ceramic.Shortcuts.*;
+import loreline.Timer as LorelineTimer;
 
 using StringTools;
 
@@ -58,6 +59,13 @@ class LorelinePlugin {
 
             // Extend assets with `loreline` kind
             Assets.addAssetKind('loreline', addLoreline, ['lor', 'loreline'], false, ['loreline.Script']);
+
+            // The `wait()` of the scripts runs on the app's update loop: without it, it
+            // blocks the main thread for its whole duration on native targets
+            #if sys
+            LorelineTimer.enableDeferredMode();
+            #end
+            App.app.onUpdate(null, LorelineTimer.update);
 
             // Extend converters
             // TODO?
