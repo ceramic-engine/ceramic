@@ -16,7 +16,7 @@ app:
         - glaze
 ```
 
-Open a window with a view:
+Add a `Glaze` visual to a scene, with the view it shows:
 
 ```haxe
 import glaze.*;
@@ -24,12 +24,16 @@ import glaze.Prelude.*;
 
 class MainScene extends ceramic.Scene {
 
+    var ui:Glaze;
+
     override function create() {
-        final cx = App.current;
-        final window = Window.open(cx, {width: width, height: height}, (window, cx) -> {
-            return cx.newEntity((cx:Context<Counter>) -> new Counter());
-        });
-        add(window.renderable);
+        ui = new Glaze((window, cx) -> cx.newEntity((cx:Context<Counter>) -> new Counter()));
+        ui.size(width, height);
+        add(ui);
+    }
+
+    override function resize(width:Float, height:Float) {
+        ui.size(width, height);
     }
 
 }
@@ -54,12 +58,14 @@ class Counter extends Model implements Render {
 }
 ```
 
+`Glaze` is a regular Ceramic visual: it resizes its window with it and closes it when destroyed. `ui.window` gives the GPUI window behind it.
+
 For the components, initialize the kit once and wrap your view in a `Root`, which applies the theme:
 
 ```haxe
 cx.update(cx -> glaze.kit.Component.init(cx));
 
-Window.open(cx, {width: width, height: height}, (window, cx) -> {
+ui = new Glaze((window, cx) -> {
     final view = cx.newEntity((cx:Context<MyView>) -> new MyView());
     return cx.newEntity((cx:Context<Root>) -> new Root(view, window, cx));
 });

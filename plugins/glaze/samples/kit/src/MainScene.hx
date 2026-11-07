@@ -3,6 +3,7 @@ package;
 import ceramic.Scene;
 import glaze.App;
 import glaze.Context;
+import glaze.Glaze;
 import glaze.IntoElement;
 import glaze.Keystroke;
 import glaze.Model;
@@ -82,7 +83,7 @@ using glaze.kit.menu.DropdownMenu;
  */
 class MainScene extends Scene {
 
-    var window:Window;
+    var ui:Glaze;
 
     override function create() {
 
@@ -91,11 +92,12 @@ class MainScene extends Scene {
 
         final paths = [for (name in IconName.ALL) name.path()];
         App.defaultAssetSource().preload(paths.concat(['ceramic.png']), _ -> {
-            window = Window.open(cx, {width: width, height: height}, (window, cx) -> {
+            ui = new Glaze((window, cx) -> {
                 final view = cx.newEntity((_:Context<Gallery>) -> new Gallery());
                 return cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
             });
-            add(window.renderable);
+            ui.size(width, height);
+            add(ui);
         });
 
         #if sys
@@ -116,15 +118,7 @@ class MainScene extends Scene {
     }
 
     override function resize(width:Float, height:Float) {
-        if (window != null) window.resize(width, height);
-    }
-
-    override function destroy() {
-        if (window != null) {
-            window.destroy();
-            window = null;
-        }
-        super.destroy();
+        if (ui != null) ui.size(width, height);
     }
 
 }

@@ -12,6 +12,7 @@ import glaze.KeyBinding;
 import glaze.Model;
 import glaze.Render;
 import glaze.ScrollHandle;
+import glaze.Glaze;
 import glaze.Window;
 
 import glaze.Prelude.*;
@@ -48,7 +49,7 @@ class DraggedColor {
  */
 class MainScene extends Scene {
 
-    var window:Window;
+    var ui:Glaze;
 
     var counter:Entity<CounterModel>;
 
@@ -69,10 +70,11 @@ class MainScene extends Scene {
         // `svg().path(...)` and `img(...)` read the app's asset source:
         // preload the files (synchronous file access is not available everywhere)
         App.defaultAssetSource().preload(SampleView.ICONS.concat(['ceramic.png']), _ -> {
-            window = Window.open(cx, {width: width, height: height}, (window, cx) -> {
+            ui = new Glaze((window, cx) -> {
                 return cx.newEntity((viewCx:Context<SampleView>) -> new SampleView(counter, viewCx));
             });
-            add(window.renderable);
+            ui.size(width, height);
+            add(ui);
         });
 
         // Not inside a render: the timer never subscribes anything
@@ -86,20 +88,7 @@ class MainScene extends Scene {
 
     override function resize(width:Float, height:Float) {
 
-        if (window != null) {
-            window.resize(width, height);
-        }
-
-    }
-
-    override function destroy() {
-
-        if (window != null) {
-            window.destroy();
-            window = null;
-        }
-
-        super.destroy();
+        if (ui != null) ui.size(width, height);
 
     }
 

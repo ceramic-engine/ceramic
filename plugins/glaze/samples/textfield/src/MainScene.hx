@@ -8,6 +8,7 @@ import glaze.App;
 import glaze.Context;
 import glaze.Entity;
 import glaze.FocusHandle;
+import glaze.Glaze;
 import glaze.IntoElement;
 import glaze.Keystroke;
 import glaze.Model;
@@ -28,7 +29,7 @@ import glaze.Prelude.*;
  */
 class MainScene extends Scene {
 
-    var window:Window;
+    var ui:Glaze;
 
     var keystrokes:Subscription;
 
@@ -38,12 +39,14 @@ class MainScene extends Scene {
         TextInput.bindKeys(cx);
 
         var example:Entity<InputExample> = null;
-        window = Window.open(cx, {width: width, height: height}, (window, cx) -> {
+        ui = new Glaze((window, cx) -> {
             final textInput = cx.newEntity((inputCx:Context<TextInput>) -> new TextInput(inputCx.focusHandle(), '', 'Type here...'));
             example = cx.newEntity((exampleCx:Context<InputExample>) -> new InputExample(textInput, exampleCx.focusHandle()));
             return example;
         });
-        add(window.renderable);
+        ui.size(width, height);
+        add(ui);
+        final window = ui.window;
 
         keystrokes = cx.observeKeystrokes((event, _, cx) -> {
             example.update(cx, (view, cx) -> {
@@ -84,9 +87,7 @@ class MainScene extends Scene {
 
     override function resize(width:Float, height:Float) {
 
-        if (window != null) {
-            window.resize(width, height);
-        }
+        if (ui != null) ui.size(width, height);
 
     }
 
@@ -95,10 +96,6 @@ class MainScene extends Scene {
         if (keystrokes != null) {
             keystrokes.dispose();
             keystrokes = null;
-        }
-        if (window != null) {
-            window.destroy();
-            window = null;
         }
 
         super.destroy();

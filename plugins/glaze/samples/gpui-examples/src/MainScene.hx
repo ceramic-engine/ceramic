@@ -6,7 +6,7 @@ import ceramic.Platform;
 import ceramic.Scene;
 import examples.Examples;
 import glaze.App;
-import glaze.Window;
+import glaze.Glaze;
 
 /**
  * GPUI's own examples ported to Haxe (`shared/examples`), one at a time:
@@ -19,7 +19,7 @@ import glaze.Window;
  */
 class MainScene extends Scene {
 
-    var window:Window;
+    var ui:Glaze;
 
     var index:Int = 0;
 
@@ -55,9 +55,9 @@ class MainScene extends Scene {
 
     function show():Void {
 
-        if (window != null) {
-            window.destroy();
-            window = null;
+        if (ui != null) {
+            ui.destroy();
+            ui = null;
         }
 
         final example = Examples.ALL[index];
@@ -67,8 +67,9 @@ class MainScene extends Scene {
             example.setup(cx);
         }
 
-        window = Window.open(cx, {width: width, height: height}, example.open);
-        add(window.renderable);
+        ui = new Glaze(example.open);
+        ui.size(width, height);
+        add(ui);
         app.settings.title = 'GPUI examples: ${example.id} (${index + 1}/${Examples.ALL.length}, left / right to switch)';
 
     }
@@ -109,20 +110,7 @@ class MainScene extends Scene {
 
     override function resize(width:Float, height:Float) {
 
-        if (window != null) {
-            window.resize(width, height);
-        }
-
-    }
-
-    override function destroy() {
-
-        if (window != null) {
-            window.destroy();
-            window = null;
-        }
-
-        super.destroy();
+        if (ui != null) ui.size(width, height);
 
     }
 
