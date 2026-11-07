@@ -1,0 +1,9 @@
+syntax = "proto3";
+package demo;
+
+// A message.
+message User {
+  string name = 1;
+  repeated int32 ids = 2;
+  map<string, bool> flags = 3;
+}

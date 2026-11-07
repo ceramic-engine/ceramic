@@ -1,0 +1,11 @@
+{
+    "haxelib.executable": "../../../ceramic/tools/haxelib",
+    "window.title": "${activeEditorShort} — unit",
+    "search.exclude": {
+        "**/.git": true,
+        "**/node_modules": true,
+        "**/out": true,
+        "**/tmp": true
+    },
+    "haxe.executable": "../../../ceramic/tools/haxe"
+}

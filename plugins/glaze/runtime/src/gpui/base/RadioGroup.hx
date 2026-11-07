@@ -1,0 +1,86 @@
+// Ported from gpui-kit 0.8.1: crates/base/src/radio_group.rs
+// Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui.base;
+
+import gpui.AnyElement;
+import gpui.App;
+import gpui.Axis;
+import gpui.ClickEvent;
+import gpui.Div;
+import gpui.ElementIdArg;
+import gpui.IntoElement;
+import gpui.ParentElement;
+import gpui.RenderOnce;
+import gpui.StyleRefinement;
+import gpui.Styled;
+import gpui.Window;
+import gpui.base.A11y;
+
+import gpui.Prelude.*;
+
+using gpui.base.StyledExt;
+
+/**
+ * An unstyled container for a set of radio elements.
+ *
+ * Listeners go to `base`, the stateful `Div` the group renders (Rust
+ * implements `InteractiveElement` by delegation).
+ */
+class RadioGroup implements RenderOnce implements Styled implements ParentElement {
+
+    /** The stateful element the group renders. */
+    public final base:Div;
+
+    final groupStyle:StyleRefinement = new StyleRefinement();
+
+    var axisValue:Axis = Axis.Vertical;
+
+    final childElements:Array<AnyElement> = [];
+
+    /** The accessibility properties the group exports (filled by `render`). */
+    public final a11y:A11y = new A11y(Role.RadioGroup);
+
+    public function new(id:ElementIdArg) {
+        base = div().id(id);
+    }
+
+    public inline function style():StyleRefinement {
+        return groupStyle;
+    }
+
+    public function extend(elements:Array<AnyElement>):Void {
+        for (element in elements) childElements.push(element);
+    }
+
+    public function child(child:IntoElement):RadioGroup {
+        if (child != null) childElements.push(child);
+        return this;
+    }
+
+    public function children(children:Array<IntoElement>):RadioGroup {
+        for (child in children) if (child != null) childElements.push(child);
+        return this;
+    }
+
+    /**
+     * Sets the semantic axis of the group.
+     */
+    public function axis(axis:Axis):RadioGroup {
+        axisValue = axis;
+        return this;
+    }
+
+    /** A click listener on the group element (on `base`). */
+    public function onClick(listener:(ClickEvent, Window, App) -> Void):RadioGroup {
+        base.onClick(listener);
+        return this;
+    }
+
+    public function render(window:Window, cx:App):IntoElement {
+        a11y.orientation = axisValue == Axis.Horizontal ? Orientation.Horizontal : Orientation.Vertical;
+        base.extend(childElements);
+        return base.refineStyle(groupStyle);
+    }
+
+}

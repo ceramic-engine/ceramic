@@ -1,0 +1,9 @@
+/* Styles */
+@import url("theme.css");
+:root { --accent: #ff8800; }
+.button:hover, #main > a[href^="http"] {
+  color: rgba(255, 0, 0, 0.5);
+  margin: 0 auto !important;
+  font-family: "Inter", sans-serif;
+}
+@media (max-width: 600px) { .button { display: none; } }

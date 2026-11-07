@@ -1,0 +1,167 @@
+// Ported from gpui-kit 0.8.1: crates/component/src/rating.rs
+// Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui.component.rating;
+
+import gpui.App;
+import gpui.ElementId;
+import gpui.ElementIdArg;
+import gpui.Hsla;
+import gpui.IntoElement;
+import gpui.IntoHsla;
+import gpui.Model;
+import gpui.RenderOnce;
+import gpui.StyleRefinement;
+import gpui.Styled;
+import gpui.Window;
+import gpui.component.Icon;
+import gpui.component.IconName;
+import gpui.component.Sizable;
+import gpui.component.Size;
+import gpui.component.Size.IntoSize;
+import gpui.component.theme.Theme;
+
+import gpui.Prelude.*;
+
+using gpui.base.StyledExt;
+
+/**
+ * The state of a `Rating` kept across frames (Rust `RaitingState`), with
+ * observable fields: hovering or clicking re-renders without `notify`.
+ */
+class RatingState extends Model {
+
+    public var defaultValue:Int;
+
+    @observe public var value:Int;
+
+    @observe public var hoveredValue:Int = 0;
+
+    public function new(defaultValue:Int) {
+        super();
+        this.defaultValue = defaultValue;
+        this.value = defaultValue;
+    }
+
+}
+
+/**
+ * A row of stars to show or pick a value between 0 and `max` (5 by
+ * default). Clicking the current value clears it.
+ */
+class Rating implements RenderOnce implements Styled implements Sizable {
+
+    final id:ElementId;
+
+    final ratingStyle:StyleRefinement = new StyleRefinement();
+
+    var size:Size = Medium;
+
+    var disabledValue:Bool = false;
+
+    @:allow(tests) var valueValue:Int = 0;
+
+    @:allow(tests) var maxValue:Int = 5;
+
+    var colorValue:Null<Hsla> = null;
+
+    var onClickHandler:Null<(Int, Window, App) -> Void> = null;
+
+    public function new(id:ElementIdArg) {
+        this.id = id;
+    }
+
+    public function withSize(size:IntoSize):Rating {
+        this.size = size;
+        return this;
+    }
+
+    public function disabled(disabled:Bool):Rating {
+        disabledValue = disabled;
+        return this;
+    }
+
+    /** The active color (default: the theme's `yellow`). */
+    public function color(color:IntoHsla):Rating {
+        colorValue = color;
+        return this;
+    }
+
+    /** The value, at most `max`. */
+    public function value(value:Int):Rating {
+        valueValue = value > maxValue ? maxValue : value;
+        return this;
+    }
+
+    public function max(max:Int):Rating {
+        maxValue = max;
+        if (valueValue > maxValue) valueValue = maxValue;
+        return this;
+    }
+
+    /** Called with the new value after a click. */
+    public function onClick(handler:(Int, Window, App) -> Void):Rating {
+        onClickHandler = handler;
+        return this;
+    }
+
+    public inline function style():StyleRefinement {
+        return ratingStyle;
+    }
+
+    public function render(window:Window, cx:App):IntoElement {
+        final disabled = disabledValue;
+        final max = maxValue;
+        final defaultValue = valueValue;
+        final activeColor = colorValue != null ? colorValue : Theme.global(cx).yellow;
+        final onClick = onClickHandler;
+
+        final state:RatingState = window.useKeyedState(id, cx, _ -> new RatingState(defaultValue)).read(cx).value;
+
+        // Reset state if outside has changed `value` prop.
+        if (state.defaultValue != defaultValue) {
+            state.defaultValue = defaultValue;
+            tracker.Autorun.unobserve();
+            state.value = defaultValue;
+            tracker.Autorun.reobserve();
+        }
+        final value = state.value;
+
+        final row = gpui.base.Prelude.hFlex()
+            .id(id)
+            .flexNowrap()
+            .refineStyle(ratingStyle)
+            .onHover((hovered, _, _) -> {
+                if (!hovered && state.hoveredValue != 0) {
+                    state.hoveredValue = 0;
+                }
+            });
+        for (ix in 1...max + 1) {
+            final filled = ix <= value;
+            final hovered = state.hoveredValue >= ix;
+            final star = div()
+                .id(ix)
+                .p0p5()
+                .flexNone()
+                .flexShrink0();
+            if (filled || hovered) star.textColor(activeColor);
+            star.child(new Icon(filled ? IconName.StarFill : IconName.Star).withSize(size));
+            if (!disabled) {
+                star.onMouseMove((_, _, _) -> {
+                    if (state.hoveredValue != ix) {
+                        state.hoveredValue = ix;
+                    }
+                }).onClick((_, window, cx) -> {
+                    final newValue = value >= ix ? ix - 1 : ix;
+                    state.value = newValue;
+                    if (onClick != null) {
+                        onClick(newValue, window, cx);
+                    }
+                });
+            }
+            row.child(star);
+        }
+        return row;
+    }
+
+}

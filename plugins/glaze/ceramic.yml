@@ -1,0 +1,66 @@
+plugin:
+    name: Gpui
+    tools: tools.GpuiPlugin
+
+    runtime:
+        if plugin_gpui:
+            +libs:
+                - taffy
+                - plutovg
+                - ttf
+                - lunasvg
+                - ropey
+                - unicode-segmentation
+                - unicode-linebreak
+                - markdown
+                - html5ever
+                - oniguruma
+                - textmate
+                - similar
+            +paths:
+                - '{plugin:cwd}/runtime/src'
+            +assets:
+                - '{plugin:cwd}/assets'
+
+            # Optional: when the app also lists Ceramic's `http` plugin (define
+            # plugin_http, set by Ceramic), img() loads http(s) Uri images
+            # through gpui.CeramicHttpClient. Without it, the app keeps GPUI's
+            # NullHttpClient and such images fail into their fallback.
+
+            # Unity imports images as (premultiplied) textures; the port
+            # decodes image files itself, so it needs their exact bytes too
+            if unity:
+                +defines:
+                    - unity_raw_image_bytes
+
+            # Opt-in: Noto Color Emoji shipped with the app as the first
+            # emoji font of the text system, on every target (define
+            # gpui_bundled_emoji; see emoji-font/README.md). Without the
+            # define, nothing of it is shipped.
+            if gpui_bundled_emoji:
+                +assets:
+                    - '{plugin:cwd}/emoji-font/assets'
+
+            # Opt-in: vscode-oniguruma's onig.wasm as the code highlighter's
+            # regex engine on the web (define gpui_onig_wasm). The hook copies
+            # onig.wasm and its JavaScript binding from onig-wasm/ into
+            # project/web, or removes them when the define is not set.
+            if web && gpui_onig_wasm:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm']
+
+            if web && !gpui_onig_wasm:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm', '--remove']
+
+        if !plugin_gpui:
+
+            if web:
+                +hooks:
+                    - when: begin build
+                      command: ceramic
+                      args: ['gpui', 'setup', 'onig-wasm', '--remove']

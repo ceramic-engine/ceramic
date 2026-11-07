@@ -1,0 +1,61 @@
+app:
+    package: mycompany.bench
+    name: bench
+    displayName: bench
+    author: My Company
+    version: '1.0'
+
+    plugins:
+        # GPUI port (linked through plugins/gpui.plugin)
+        - gpui
+
+    # The story gallery ported to Haxe (shared with samples/story), for the
+    # story scenarios (src/scenarios/StoryDense.hx)
+    paths:
+        - ../../samples/story/shared
+
+    defines:
+        # Native bench runs use a hidden SDL window (no window on screen)
+        - clay_sdl_headless
+
+    # Count the allocations of the main gpui objects (see gpui.util.AllocationCounters)
+    if !perf && !perf_onig:
+        +defines:
+            - gpui_count_allocations
+
+    # `ceramic clay build mac --variant perf`: release build without the hxcpp
+    # pointer checks, safe mode and stack bookkeeping that Ceramic adds for
+    # crash dumps, and without the allocation counters, for timings
+    if perf:
+        +defines:
+            - ceramic_no_hxcpp_checks
+
+    # `--variant perf_onig` (web): the perf build with vscode-oniguruma's
+    # onig.wasm as the regex engine of the code highlighter (gpui_onig_wasm)
+    if perf_onig:
+        +defines:
+            - gpui_onig_wasm
+
+    # `--variant prof`: the perf build with its symbols kept, for profilers
+    # (Instruments, sample)
+    if prof:
+        +defines:
+            - ceramic_no_hxcpp_checks
+            - HXCPP_DEBUG_LINK
+
+    # `--variant prof_checked`: the default build (hxcpp checks on, the one
+    # that counts) with its symbols kept, to see where the checks cost
+    if prof_checked:
+        +defines:
+            - HXCPP_DEBUG_LINK
+
+    # `--variant allocprof`: the default build with hxcpp's telemetry, which
+    # records every allocation with its type, size and call stack; the bench
+    # writes the allocation sites of each measured block (`AllocProfile`,
+    # `<label>-allocs.txt` in the results folder). Diagnostic only: slow.
+    # Without the concurrent collector: hxcpp's telemetry reads the stack
+    # context of the collecting thread, which its marking thread has not.
+    if allocprof:
+        +defines:
+            - HXCPP_TELEMETRY
+            - ceramic_no_concurrent_gc

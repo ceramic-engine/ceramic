@@ -1,0 +1,11 @@
+app:
+    package: mycompany.webnotifications
+    name: webnotifications
+    displayName: webnotifications
+    author: My Company
+    version: '1.0'
+
+    plugins:
+        # GPUI port (its system notifications go through the notifications plugin)
+        - gpui
+        - notifications

@@ -1,0 +1,89 @@
+app:
+    package: mycompany.unit
+    name: unit
+    displayName: unit
+    author: My Company
+    version: '1.0'
+
+    plugins:
+
+        # Uncomment plugins you want to enable
+
+        # Arcade physics
+        #- arcade
+
+        # Nape physics
+        #- nape
+
+        # Support of .ase/.aseprite files
+        #- ase
+
+        # Sprite support (requires ase plugin to create sprites from .ase/.aseprite files)
+        #- sprite
+
+        # Tilemap support (.tmx/.tsx loading included, requires ldtk plugin to create tilemaps from .ldtk files)
+        #- tilemap
+
+        # LDtk support (requires tilemap and ase plugins)
+        #- ldtk
+
+        # HTTP client (img() Uri resources through CeramicHttpClient, tested by
+        # CeramicHttpClientTest against a local server)
+        - http
+
+        # UI-related classes
+        #- ui
+
+        # Immediate GUI utility (requires ui plugin)
+        #- elements
+
+        # Gif capture utility
+        #- gif
+
+        # Native dialogs (CeramicPlatformOperations prompts, tested by
+        # PlatformOperationsTest through ceramic.Dialogs.handler)
+        - dialogs
+
+        # System notifications (CeramicPlatformOperations, tested by
+        # SystemNotificationsTest: the recording backend on node, the real
+        # notification center of the hidden app on macOS, never posting)
+        - notifications
+
+        # Extended support of Electron
+        #- electron
+
+        # Spine animation support
+        #- spine
+
+        # Dear ImGui support (clay backend only)
+        #- imgui
+
+        # Midi support (experimental, clay backend only)
+        #- midi
+
+        # Add entity runtime scripting support: entity.scriptContent = ...
+        #- script
+
+        # GPUI port (linked through plugins/gpui.plugin)
+        - gpui
+
+    # The text field of samples/textfield (examples/input.rs port), tested by InputHandlerTest
+    paths:
+        - ../../samples/textfield/shared
+        # The story gallery (samples/story), tested by StoryGalleryTest and StoryInputCompletionTest
+        - ../../samples/story/shared
+
+    libs:
+        #- somelib
+        #- somelib: someversion
+        #- somelib: git:https://github.com/somelibauthor/somelib.git
+
+    defines:
+        # Native test runs use a hidden SDL window (no window on screen)
+        - clay_sdl_headless
+        # Native runs keep the fonts of the reference only (no system font fallback
+        # in App.defaultTextSystem); SystemFontFallbackTest enables it explicitly
+        - gpui_no_system_fonts
+        #- some_define
+        #- some_define: 'some value'
+

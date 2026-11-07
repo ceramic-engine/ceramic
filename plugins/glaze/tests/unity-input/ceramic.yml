@@ -1,0 +1,21 @@
+app:
+    package: mycompany.unityinput
+    name: unityinput
+    displayName: unityinput
+    author: My Company
+    version: '1.0'
+
+    # Input of the Unity backend (docs/UNITY.md, lot U6):
+    # - Unity, batch mode, CERAMIC_UNITY_INPUT_SELFTEST=1: injects Input System
+    #   events on virtual devices (scroll, key repeat, text with emoji, IME
+    #   composition, clipboard, touch cancel), checks what Ceramic and GPUI
+    #   receive, exits with 0 when every check passes. No window.
+    # - Otherwise (owner only, a visible window): the scroll calibration scene,
+    #   one log line per scroll event, the same on clay native and on Unity.
+
+    plugins:
+        - gpui
+
+    libs:
+
+    defines:

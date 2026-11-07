@@ -1,0 +1,17 @@
+app:
+    package: ceramic.samples.ttf
+    name: ttf
+    displayName: ttf
+    author: Ceramic
+    version: '1.0'
+
+    plugins:
+
+        # Runtime TrueType / OpenType fonts
+        - ttf
+
+        # Electron runner support (used for screenshots, see MainScene)
+        - electron
+
+    defines:
+        - ceramic_no_skip

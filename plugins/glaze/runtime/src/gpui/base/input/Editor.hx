@@ -1,0 +1,27 @@
+// Ported from gpui-kit 0.8.1: crates/base/src/input/editor/mod.rs (`Editor`)
+// Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui.base.input;
+
+import gpui.App;
+import gpui.Entity;
+import gpui.IntoElement;
+import gpui.RenderOnce;
+import gpui.Window;
+
+/**
+ * An unstyled source-code editor: renders its state (Rust `Entity<EditorState>`).
+ */
+class Editor implements RenderOnce {
+
+    final state:Entity<EditorState>;
+
+    public function new(state:Entity<EditorState>) {
+        this.state = state;
+    }
+
+    public function render(_:Window, _:App):IntoElement {
+        return state;
+    }
+
+}

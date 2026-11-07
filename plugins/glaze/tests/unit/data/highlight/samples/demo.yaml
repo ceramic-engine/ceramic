@@ -1,0 +1,15 @@
+# Config
+name: demo
+version: 1.2
+enabled: true
+tags: [a, "b", 'c']
+nested:
+  key: value # trailing comment
+  list:
+    - one
+    - two: 2
+multiline: |
+  line one
+  line two
+anchor: &base { x: 1 }
+ref: *base

@@ -1,0 +1,10 @@
+[package]
+name = "demo" # the name
+version = 1
+authors = ["Jérémy <j@example.com>"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+date = 1979-05-27T07:32:00Z
+pi = 3.14159
+enabled = true

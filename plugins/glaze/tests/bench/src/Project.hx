@@ -1,0 +1,46 @@
+package;
+
+import ceramic.Entity;
+import ceramic.InitSettings;
+import gpui.App;
+import gpui.TestDispatcher;
+
+/**
+ * Benchmark suite of the GPUI port: `BenchRunner` runs the scenarios of
+ * `Scenarios.all()` (`cards`, `idle`, and the ones under `src/scenarios/`),
+ * prints a summary per scenario and mode, and writes a JSON result per run in
+ * `results/`. See `BenchRunner` for the environment variables and
+ * `test/bench/README.md` for the comparison script.
+ *
+ * Run: `ceramic headless run node --setup --assets` (Node) or
+ * `ceramic clay build mac --setup --assets` then
+ * `project/mac/bench.app/Contents/MacOS/bench` (native).
+ */
+class Project extends Entity {
+
+    function new(settings:InitSettings) {
+
+        super();
+
+        settings.targetWidth = 640;
+        settings.targetHeight = 480;
+
+        ceramic.App.app.onceReady(this, ready);
+
+    }
+
+    function ready() {
+        final app = new App(new TestDispatcher());
+        // The editor scenarios need their TextMate grammar, loaded
+        // asynchronously, and the icons are preloaded like the story gallery
+        // does (samples/story MainScene): without them, targets with no
+        // synchronous file access (node, web) draw no icon. The full-catalog
+        // icons of the stories (ToolbarStory's save icon, the reference icons
+        // of InputTokens) are copied in assets/icons like samples/story/assets
+        final paths = [for (icon in gpui.component.IconName.ALL) icon.path()];
+        paths.push(story.stories.ToolbarStory.SAVE_ICON_PATH);
+        for (path in ['icons/image.svg', 'icons/sparkles.svg', 'icons/at-sign.svg']) paths.push(path);
+        App.defaultAssetSource().preload(paths, _ -> scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run()));
+    }
+
+}

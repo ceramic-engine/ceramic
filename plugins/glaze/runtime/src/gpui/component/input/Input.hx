@@ -1,0 +1,718 @@
+// Ported from gpui-kit 0.8.1: crates/component/src/input/input.rs
+// Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
+// Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
+package gpui.component.input;
+
+import gpui.AnyElement;
+import gpui.App;
+import gpui.ClipboardItem;
+import gpui.DefiniteLength;
+import gpui.Edges;
+import gpui.ElementId;
+import gpui.ElementIdArg;
+import gpui.Entity;
+import gpui.FocusHandle;
+import gpui.Hsla;
+import gpui.IntoElement;
+import gpui.RenderOnce;
+import gpui.StyleRefinement;
+import gpui.Styled;
+import gpui.TextAlign;
+import gpui.TextStyleRefinement;
+import gpui.Window;
+import gpui.base.A11y;
+import gpui.base.ComponentTraits;
+import gpui.base.input.DiagnosticColors;
+import gpui.base.input.InlineTokenClickListener;
+import gpui.base.input.InlineTokenContext;
+import gpui.base.input.InlineTokenHoverListener;
+import gpui.base.input.InlineTokenRenderer;
+import gpui.base.input.InputAccessibility;
+import gpui.base.input.InputActions;
+import gpui.base.input.InputBase;
+import gpui.base.input.InputBaseState;
+import gpui.base.input.InputEditorStyle;
+import gpui.base.input.InputState;
+import gpui.base.input.NativeMenu;
+import gpui.component.IconName;
+import gpui.component.Sizable;
+import gpui.component.Size;
+import gpui.component.Size.IntoSize;
+import gpui.component.button.Button.Button;
+import gpui.component.spinner.Spinner;
+import gpui.component.theme.Color;
+import gpui.component.theme.Theme;
+import gpui.component.input.AnyInputState.TextInputState;
+
+import gpui.Prelude.*;
+import gpui.base.Prelude.*;
+
+using gpui.base.A11y.RoleOverrideTools;
+using gpui.base.StyledExt;
+using gpui.base.input.InputTokenPresentation;
+using gpui.base.input.InputTouch;
+using gpui.component.StyleSized;
+using gpui.component.ThemeStyled;
+using gpui.component.theme.Colorize;
+
+/**
+ * A text input element bind to an `InputState`.
+ *
+ * `Textarea` (and the code editor) render through this element too, with
+ * their own state (Rust `Input::from_state`).
+ */
+class Input implements RenderOnce implements Styled implements Sizable implements Selectable implements FocusableExt {
+
+    var tokenRenderer:Null<InlineTokenRenderer> = null;
+
+    @:allow(tests)
+    var tokenClickListener:Null<InlineTokenClickListener> = null;
+
+    @:allow(tests)
+    var tokenHoverListener:Null<InlineTokenHoverListener> = null;
+
+    var idValue:Null<ElementId> = null;
+
+    var state:TextInputState;
+
+    var inputStyle:StyleRefinement = new StyleRefinement();
+
+    var size:Size = Medium;
+
+    var prefixElement:Null<AnyElement> = null;
+
+    var suffixElement:Null<AnyElement> = null;
+
+    var height:Null<DefiniteLength> = null;
+
+    var appearanceValue:Bool = true;
+
+    var cleanableValue:Bool = false;
+
+    var maskToggleValue:Bool = false;
+
+    var disabledValue:Bool = false;
+
+    var readonlyValue:Bool = false;
+
+    var borderedValue:Bool = true;
+
+    var focusBorderedValue:Bool = true;
+
+    var tabIndexValue:Int = 0;
+
+    var selectedValue:Bool = false;
+
+    var contentTypeValue:Null<InputContentType> = null;
+
+    var roleValue:RoleOverride = Implicit;
+
+    var accessibilityIdValue:Null<String> = null;
+
+    var ariaLabelValue:Null<String> = null;
+
+    /**
+     * An optional context menu builder to allow a custom context menu on the input.
+     *
+     * If set, this overrides the built-in context menu.
+     */
+    var contextMenuBuilder:Null<(NativeMenu, Window, App) -> NativeMenu> = null;
+
+    /**
+     * An optional paste handler. If set, it is invoked with the clipboard item
+     * before the default text insertion. Return `true` if handled.
+     */
+    @:allow(tests)
+    var pasteHandler:Null<(ClipboardItem, Window, App) -> Bool> = null;
+
+    /** Create a new `Input` element bind to the `InputState`. */
+    public function new(state:Entity<InputState>) {
+        final model:Null<InputBaseState> = (state : InputState);
+        this.state = new TextInputState(model);
+    }
+
+    /**
+     * Builds an input renderer around a state of any kind.
+     *
+     * `Textarea` and `Editor` render through this. Application code uses
+     * `new Input`, `Textarea`, or `Editor`.
+     */
+    @:allow(gpui.component)
+    static function fromState(state:Entity<InputBaseState>):Input {
+        // Not `new Input(cast state)`: a textarea state is not an
+        // `InputState`, and hxcpp checks class casts (it would give null).
+        final input = new Input(null);
+        input.state = new TextInputState(state);
+        return input;
+    }
+
+    public inline function style():StyleRefinement {
+        return inputStyle;
+    }
+
+    /** Rust `std::mem::take(input.style())`: the style, replaced by an empty one. */
+    @:allow(gpui.component)
+    function takeStyle():StyleRefinement {
+        final style = inputStyle;
+        inputStyle = new StyleRefinement();
+        return style;
+    }
+
+    public function withSize(size:IntoSize):Input {
+        this.size = size;
+        return this;
+    }
+
+    public function selected(selected:Bool):Input {
+        selectedValue = selected;
+        return this;
+    }
+
+    public function setSelected(selected:Bool):Void {
+        selectedValue = selected;
+    }
+
+    public function isSelected():Bool {
+        return selectedValue;
+    }
+
+    public function setOpen(open:Bool):Void {
+        setSelected(open);
+    }
+
+    public function isOpen():Bool {
+        return isSelected();
+    }
+
+    public function focusRing(enabled:Bool):Input {
+        focusBorderedValue = enabled;
+        return this;
+    }
+
+    public function setFocusRing(enabled:Bool):Void {
+        focusBorderedValue = enabled;
+    }
+
+    public function isFocusRingEnabled():Bool {
+        return focusBorderedValue;
+    }
+
+    /**
+     * The element each atomic inline token renders as, in place of the default
+     * `InputToken`; editing and history stay with the input.
+     */
+    public function token(render:(InlineTokenContext, Window, App) -> IntoElement):Input {
+        tokenRenderer = (token, window, cx) -> (render(token, window, cx) : AnyElement);
+        return this;
+    }
+
+    /** Open a reference after a completed, unconsumed token click. */
+    public function onTokenClick(listener:InlineTokenClickListener):Input {
+        tokenClickListener = listener;
+        return this;
+    }
+
+    /**
+     * Report pointer presence over a token so the application can show a
+     * tooltip or run custom logic. Hover never selects or edits.
+     */
+    public function onTokenHover(listener:InlineTokenHoverListener):Input {
+        tokenHoverListener = listener;
+        return this;
+    }
+
+    /** Sets the GPUI identity of the input frame. By default it uses the state entity ID. */
+    public function id(id:ElementIdArg):Input {
+        idValue = id;
+        return this;
+    }
+
+    /**
+     * The state this input renders; a compound control reads focus and
+     * presentation from it.
+     */
+    @:allow(gpui.component)
+    inline function getState():TextInputState {
+        return state;
+    }
+
+    @:allow(gpui.component)
+    inline function isDisabled():Bool {
+        return disabledValue;
+    }
+
+    /** Set the developer-assigned identifier exposed to accessibility clients. */
+    public function accessibilityId(id:String):Input {
+        accessibilityIdValue = id;
+        return this;
+    }
+
+    public function ariaLabel(label:String):Input {
+        ariaLabelValue = label;
+        return this;
+    }
+
+    public function prefix(prefix:IntoElement):Input {
+        prefixElement = prefix;
+        return this;
+    }
+
+    public function suffix(suffix:IntoElement):Input {
+        suffixElement = suffix;
+        return this;
+    }
+
+    /** Set full height of the input (Multi-line only). */
+    public function hFull():Input {
+        height = gpui.Prelude.relative(1.);
+        return this;
+    }
+
+    /** Set height of the input (Multi-line only). */
+    public function h(height:gpui.IntoDefiniteLength):Input {
+        this.height = height;
+        return this;
+    }
+
+    /** Set the appearance of the input field, if false the input field will no border, background. */
+    public function appearance(appearance:Bool):Input {
+        appearanceValue = appearance;
+        return this;
+    }
+
+    /** Set the bordered for the input, default: true */
+    public function bordered(bordered:Bool):Input {
+        borderedValue = bordered;
+        return this;
+    }
+
+    /** Set focus border for the input, default is true. */
+    public function focusBordered(bordered:Bool):Input {
+        focusBorderedValue = bordered;
+        return this;
+    }
+
+    /** Set whether to show the clear button when the input field is not empty, default is false. */
+    public function cleanable(cleanable:Bool):Input {
+        cleanableValue = cleanable;
+        return this;
+    }
+
+    /** Set to enable toggle button for password mask state. */
+    public function maskToggle():Input {
+        maskToggleValue = true;
+        return this;
+    }
+
+    /**
+     * Set the semantic content type for password managers and autofill.
+     *
+     * This is a component-level semantic hint. It does not change the text
+     * value or masked rendering state.
+     */
+    public function contentType(contentType:InputContentType):Input {
+        contentTypeValue = contentType;
+        return this;
+    }
+
+    /**
+     * Override the accessible role for the input.
+     *
+     * If unset, the role is inferred from multi-line mode and content type.
+     */
+    public function role(role:RoleOverride):Input {
+        roleValue = role;
+        return this;
+    }
+
+    /** Set to disable the input field. */
+    public function disabled(disabled:Bool):Input {
+        disabledValue = disabled;
+        return this;
+    }
+
+    /**
+     * Set the input field to read-only, default is `false`.
+     *
+     * Unlike `disabled`, a read-only input keeps the normal appearance and
+     * still can be focused, selected and copied, it only rejects the changes
+     * made by the user.
+     */
+    public function readonly(readonly:Bool):Input {
+        readonlyValue = readonly;
+        return this;
+    }
+
+    /** Set the tab index for the input, default is 0. */
+    public function tabIndex(index:Int):Input {
+        tabIndexValue = index;
+        return this;
+    }
+
+    /**
+     * Sets a custom context menu builder for the input, shown as a native OS menu.
+     *
+     * If set, this overrides the built-in right-click context menu. It shows
+     * only while the state's context menu is enabled, which is the default.
+     */
+    public function contextMenu(f:(NativeMenu, Window, App) -> NativeMenu):Input {
+        contextMenuBuilder = f;
+        return this;
+    }
+
+    /**
+     * Intercept paste payloads (images, files) before the default text insertion.
+     *
+     * The handler receives the clipboard item and returns whether it took the
+     * paste: `true` stops the `input.Paste` action so the input inserts
+     * nothing, `false` lets it reach the engine, which inserts
+     * `clipboard.text()`.
+     */
+    public function onPaste(handler:(ClipboardItem, Window, App) -> Bool):Input {
+        pasteHandler = handler;
+        return this;
+    }
+
+    @:allow(tests)
+    static function accessibilityRole(isMultiLine:Bool, contentType:Null<InputContentType>, role:RoleOverride):Null<Role> {
+        return role.resolve(() -> {
+            if (isMultiLine) {
+                return Role.MultilineTextInput;
+            }
+            if (contentType == null) {
+                return Role.TextInput;
+            }
+            return switch (contentType : InputContentType) {
+                case TelephoneNumber: Role.PhoneNumberInput;
+                case EmailAddress: Role.EmailInput;
+                case Url: Role.UrlInput;
+                case Password | NewPassword: Role.PasswordInput;
+                case DateTime: Role.DateTimeInput;
+                case Birthdate: Role.DateInput;
+                case _: Role.TextInput;
+            }
+        });
+    }
+
+    @:allow(tests)
+    static function exposesAccessibilityValue(contentType:Null<InputContentType>):Bool {
+        return !(contentType == Password || contentType == NewPassword);
+    }
+
+    /** Returns `(background, foreground)` colors for input-like components (Rust `input_style`). */
+    @:allow(gpui.component)
+    static function inputStyleColors(disabled:Bool, cx:App):InputStyleColors {
+        final theme = Theme.global(cx);
+        if (disabled) {
+            return new InputStyleColors(theme.input.mixOklab(theme.transparent, 0.8), theme.mutedForeground);
+        }
+        return new InputStyleColors(theme.inputBackground(), theme.foreground);
+    }
+
+    /**
+     * A color of the highlight theme's editor style (Rust
+     * `cx.theme().highlight_theme.style.<key>`). The highlight theme comes
+     * with the highlighter (wave 11); until then its colors are read from
+     * the `highlight` section of the theme config.
+     */
+    /** Rust `Theme::editor_background`: the editor background, or the input background. */
+    static function editorBackground(theme:Theme):Hsla {
+        final color = theme.highlightTheme.style.editorBackground;
+        return color != null ? color : theme.inputBackground();
+    }
+
+    static function renderToggleMaskButton(state:TextInputState, cx:App):Button {
+        final masked = state.presentation(cx).isMasked();
+        return new Button("toggle-mask")
+            .icon(masked ? IconName.Eye : IconName.EyeOff)
+            .accessibilityLabel(masked ? I18n.t("Input.Show Password") : I18n.t("Input.Hide Password"))
+            .xsmall()
+            .text()
+            .tabStop(false)
+            .onClick((_, window, cx) -> state.toggleMasked(window, cx));
+    }
+
+    /** This method must after the refineStyle. */
+    static function renderEditor(inputState:TextInputState, searchPanel:Null<AnyElement>, window:Window):IntoElement {
+        final element = vFlex().sizeFull();
+        if (searchPanel != null) element.child(searchPanel);
+        return element.child(div().relative().flex1().child(inputState.state));
+    }
+
+    /**
+     * The handles and the edit menu of the selection a long press made.
+     *
+     * The menu offers what the native context menu would: Cut, Copy, Paste
+     * and Select All, leaving out what cannot apply right now rather than
+     * disabling it. Cut, Copy and Paste go through the input's actions, so a
+     * custom key binding or an open completion menu sees them the same way.
+     */
+    static function renderTouchSelection(state:TextInputState, window:Window, cx:App):Array<AnyElement> {
+        final engine = state.state;
+        if (gpui.base.input.InputTouch.touchSelection(engine.read(cx)) == null) {
+            return [];
+        }
+        final capabilities = engine.read(cx).contextMenuCapabilities();
+        final editable = capabilities.isEditable();
+        final copyable = capabilities.isCopyable();
+        // Offered whenever the text can change, without peeking at the
+        // clipboard: on iOS every read of it shows the system's paste banner,
+        // and an empty clipboard pastes nothing.
+        final pasteable = editable;
+        final selectable = state.text(cx).len() > 0 && !state.isAllSelected(cx);
+        final focusHandle = state.presentation(cx).focusHandle();
+
+        final dispatch = (action:gpui.Action, window:Window, cx:App) -> focusHandle.dispatchAction(action, window, cx);
+        final items:Array<gpui.component.touchselection.EditMenu.EditMenuItem> = [];
+        if (editable && copyable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Cut"), (window, cx) -> dispatch(new Cut(), window, cx)));
+        }
+        if (copyable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Copy"), (window, cx) -> {
+                dispatch(new Copy(), window, cx);
+                engine.update(cx, (state, cx) -> state.closeEditMenu(cx));
+            }));
+        }
+        if (pasteable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Paste"), (window, cx) -> dispatch(new Paste(), window, cx)));
+        }
+        if (selectable) {
+            items.push(new gpui.component.touchselection.EditMenu.EditMenuItem(I18n.t("Input.Select All"), (window, cx) -> {
+                engine.update(cx, (state, cx) -> state.selectAllFromEditMenu(window, cx));
+            }));
+        }
+
+        return new gpui.component.touchselection.TouchSelectionOverlay(NamedInteger('input-touch-selection', state.entityId()), (_, cx) -> gpui.base.input.InputTouch.touchSelection(engine.read(cx)))
+            .handles((edge, phase, position, _, cx) -> {
+                engine.update(cx, (state, cx) -> switch phase {
+                    case Started: state.beginEdgeDrag(edge, position, cx);
+                    case Moved: state.updateEdgeDrag(position, cx);
+                    case Ended | Cancelled: state.endEdgeDrag(cx);
+                });
+            })
+            .items(items)
+            .intoElements(window, cx);
+    }
+
+    public function render(window:Window, cx:App):IntoElement {
+        final LINE_HEIGHT = rems(1.25);
+        final textAlign:TextAlign = inputStyle.text != null && inputStyle.text.has(TextStyleRefinement.TEXT_ALIGN) ? inputStyle.text.textAlign : Left;
+        final state = this.state;
+        final theme = Theme.global(cx);
+        final secret = contentTypeValue == Password || contentTypeValue == NewPassword;
+        final renderer:InlineTokenRenderer = tokenRenderer != null ? tokenRenderer : (token, _, _) -> (new InputToken(token) : IntoElement);
+        final clickListener = tokenClickListener;
+        final hoverListener = tokenHoverListener;
+        state.state.update(cx, (s, _) -> s.installTokenPresentation(renderer, clickListener, secret));
+        state.state.update(cx, (s, _) -> s.installTokenHoverPresentation(hoverListener));
+        // Which kind of input this registers as follows from the state itself.
+        @:privateAccess AnyInputState.syncFocusedInputRegistry(state.toAny(), window, cx);
+
+        state.state.update(cx, (s, _) -> s.ensureHighlighterFactory(gpui.component.highlighter.Highlighter.inputHighlighterFactory()));
+        final status = theme.highlightTheme.style.status;
+        final editorStyle = new InputEditorStyle(
+            theme.foreground,
+            theme.mutedForeground,
+            editorBackground(theme),
+            theme.border,
+            theme.selection,
+            theme.caret,
+            new DiagnosticColors(status.error(cx), status.warning(cx), status.info(cx), status.hint(cx)),
+            theme.highlightTheme.resolver(),
+            theme.highlightTheme.style.editorInvisible,
+            theme.highlightTheme.style.editorActiveLine,
+            theme.highlightTheme.style.editorGutterBackground,
+            (ix, isFolded) -> (new Button(ElementId.NamedInteger("fold-icon", ix))
+                .ghost()
+                .icon(isFolded ? IconName.ChevronRight : IconName.ChevronDown)
+                .xsmall()
+                .rounded(gpui.component.button.Button.ButtonRounded.Small)
+                .size(gpui.Prelude.px(14.))
+                .selected(isFolded) : IntoElement)
+        );
+        state.state.update(cx, (s, _) -> s.setEditorStyle(editorStyle));
+        final presentation0 = state.presentation(cx);
+        final paddings = if (presentation0.isMultiLine()) {
+            new Edges(size.inputPy(), size.inputPx(), size.inputPy(), presentation0.isCodeEditor() ? Math.min(size.inputPx(), 6.) : size.inputPx());
+        } else {
+            new Edges();
+        }
+        state.state.update(cx, (s, _) -> s.setEditorPaddings(paddings));
+        state.setDisabled(disabledValue, cx);
+        state.setReadonly(readonlyValue, cx);
+        state.setTextAlign(textAlign, cx);
+        final custom = contextMenuBuilder;
+        state.state.update(cx, (s, _) -> s.onContextMenu((_, capabilities, position, window, cx) -> {
+            final menu = if (custom != null) {
+                custom(new NativeMenu(), window, cx);
+            } else {
+                final enabled = !capabilities.isDisabled();
+                // A read-only input can still navigate the code, it only
+                // rejects the items that would change the text.
+                final editable = enabled && !capabilities.isReadonly();
+                var menu = new NativeMenu();
+                if (capabilities.isCodeEditor()) {
+                    menu = menu
+                        .menuWithDisabled(I18n.t("Input.Go to Definition"), !(enabled && capabilities.hasDefinition()), new GoToDefinition())
+                        .menuWithDisabled(I18n.t("Input.Show Code Actions"), !(editable && capabilities.hasCodeActions()), new ToggleCodeActions())
+                        .separator();
+                }
+                menu.menuWithDisabled(I18n.t("Input.Cut"), !(editable && capabilities.isCopyable()), new Cut())
+                    .menuWithDisabled(I18n.t("Input.Copy"), !capabilities.isCopyable(), new Copy())
+                    // Offered whenever the text can change, without peeking
+                    // at the clipboard: the synchronous read is always empty
+                    // on the web, and an empty clipboard pastes nothing.
+                    .menuWithDisabled(I18n.t("Input.Paste"), !editable, new Paste())
+                    .separator()
+                    .menu(I18n.t("Input.Select All"), new SelectAll());
+            }
+            // Rust `menu.show(position, window, cx)`: the native menu of the
+            // component layer (an OS popup on macOS and Windows, a drawn
+            // PopupMenu elsewhere) is not ported yet, the menu is not shown.
+        }));
+        // The engine ignores `Paste` on a read-only or disabled input; the hook
+        // must not see a paste the input itself would refuse.
+        final pasteHandler = this.pasteHandler != null && state.presentation(cx).isEditable() ? this.pasteHandler : null;
+        final overlays = InputOverlays.renderOverlays(state.state, window, cx);
+        for (element in renderTouchSelection(state, window, cx)) overlays.floating.push(element);
+
+        final presentation = state.presentation(cx);
+        final contentType = contentTypeValue;
+        final disabled = disabledValue;
+        final isMultiLine = presentation.isMultiLine();
+        // Without a content type, a masked input is a password field to screen
+        // readers, so they announce it as one.
+        final accessibilityRole = Input.accessibilityRole(isMultiLine, contentType != null ? contentType : (presentation.isMasked() ? Password : null), roleValue);
+        final inputFocused = presentation.focusHandle().isFocused(window) && !presentation.isDisabled();
+        if (inputFocused) {
+            InputContentType.syncNativeContentType(window, contentType, presentation.isEditable());
+        }
+        final frameFocusHandle:FocusHandle = window.useKeyedState(ElementId.NamedInteger("input-frame-focus", state.entityId()), cx, _ -> cx.focusHandle()).read(cx).value;
+        final focused = !presentation.isDisabled() && (state.hasSelectionFocus(window, cx) || frameFocusHandle.containsFocused(window, cx));
+
+        final gapX:Float = switch size {
+            case Small: 4.;
+            case Large: 8.;
+            case _: 6.;
+        }
+
+        var bg = inputStyleColors(presentation.isDisabled(), cx).background;
+        if (presentation.isCodeEditor()) bg = editorBackground(theme);
+        if (presentation.isDisabled()) bg = bg.opacity(0.5);
+        final prefix = prefixElement;
+        final suffix = suffixElement;
+        final showClearButton = cleanableValue && presentation.isEditable() && !presentation.isLoading() && state.text(cx).len() > 0
+            && !presentation.isMultiLine();
+        final hasSuffix = suffix != null || presentation.isLoading() || maskToggleValue || showClearButton;
+
+        final placeholder:Null<String> = presentation.placeholder() != "" ? presentation.placeholder() : null;
+
+        // Don't use a mask-derived placeholder ("(___)___-___") as an aria_label fallback.
+        final placeholderIsMask = presentation.maskPlaceholder() == placeholder;
+
+        final ariaLabel = ariaLabelValue != null ? ariaLabelValue : (placeholderIsMask ? null : placeholder);
+        final accessibility = new InputAccessibility(accessibilityRole)
+            .withLabel(ariaLabel)
+            .withPlaceholder(placeholder)
+            .withAccessibilityId(accessibilityIdValue)
+            .withValueExposed(exposesAccessibilityValue(contentType));
+        state.state.update(cx, (s, _) -> s.setAccessibility(accessibility));
+        final id:ElementId = idValue != null ? idValue : ElementId.NamedInteger("input", state.entityId());
+        final appearance = appearanceValue;
+        final bordered = borderedValue;
+        final focusBordered = focusBorderedValue;
+        final frame = new InputBase(id)
+            .semanticOwner(state.entityId())
+            .focused(focused)
+            .disabled(disabled)
+            .trackFocus(frameFocusHandle);
+        frame.base.onMouseDown(Right, (_, window, cx) -> {
+            // The text element has already taken focus. Publish its state
+            // before an outer ContextMenu resolves the selection owner;
+            // render-time registration still names the previous input.
+            @:privateAccess AnyInputState.syncFocusedInputRegistry(state.toAny(), window, cx);
+        });
+        if (disabled) {
+            frame.base.captureAnyMouseDown((_, _, cx) -> cx.stopPropagation());
+        }
+        frame.styles(styles -> styles.focused(style -> {
+            if (appearance && bordered && focusBordered) style.border1().borderColor(theme.ring);
+            return style;
+        }))
+            // The editor owns text semantics. The frame still scopes addon
+            // controls, custom IDs and focus styling without registering the
+            // editor's FocusHandle a second time.
+            .role(Presentational);
+        frame.flex().sizeFull().lineHeight(LINE_HEIGHT);
+        if (!isMultiLine) frame.inputPx(size).inputPy(size);
+        frame.inputH(size).inputTextSize(size).itemsCenter();
+        if (presentation.isMultiLine()) {
+            frame.hAuto();
+            if (height != null) frame.h(height);
+        }
+        if (appearance) {
+            frame.bg(bg).rounded(theme.radius);
+            if (bordered) frame.border1().borderColor(theme.input);
+        }
+        frame.itemsCenter().gap(gpui.Prelude.px(gapX)).refineStyle(inputStyle);
+        if (focused && appearance && bordered && focusBordered) frame.focusRingStyle(window, cx);
+        if (prefix != null) {
+            final wrapper = div();
+            if (presentation.isDisabled()) wrapper.opacity(0.5);
+            frame.child(wrapper.child(prefix));
+        }
+        if (presentation.isMultiLine()) {
+            frame.child(renderEditor(state, overlays.search, window));
+        }
+        if (!presentation.isMultiLine()) {
+            frame.child(state.state);
+        }
+        if (hasSuffix) {
+            frame.pr(size.inputPx());
+            final suffixRow = hFlex().id("suffix").gap(gpui.Prelude.px(gapX)).itemsCenter().cursorDefault();
+            if (presentation.isDisabled()) suffixRow.opacity(0.5);
+            if (presentation.isLoading()) suffixRow.child(new Spinner().color(theme.mutedForeground));
+            if (maskToggleValue) suffixRow.child(renderToggleMaskButton(state, cx));
+            if (showClearButton) {
+                suffixRow.child(ClearButton.clearButton(cx).onClick((_, window, cx) -> {
+                    state.clean(window, cx);
+                    state.focus(window, cx);
+                }));
+            }
+            if (suffix != null) suffixRow.child(suffix);
+            frame.child(suffixRow);
+        }
+        frame.relative();
+        for (element in overlays.floating) frame.child(element);
+        if (pasteHandler != null) {
+            frame.base.captureAction(Paste, (_, window, cx) -> {
+                final clipboard = cx.readFromClipboard();
+                if (clipboard != null) {
+                    if (pasteHandler(clipboard, window, cx)) {
+                        cx.stopPropagation();
+                    }
+                }
+            });
+        }
+        return frame.render(window, cx);
+    }
+
+}
+
+/**
+ * The colors of `Input.inputStyleColors` (a class: the fields of an
+ * anonymous structure are read by name on hxcpp). Internal.
+ */
+@:noCompletion
+class InputStyleColors {
+
+    public final background:Hsla;
+
+    public final foreground:Hsla;
+
+    public inline function new(background:Hsla, foreground:Hsla) {
+        this.background = background;
+        this.foreground = foreground;
+    }
+
+}
