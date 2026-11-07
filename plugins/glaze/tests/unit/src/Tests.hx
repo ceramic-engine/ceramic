@@ -235,7 +235,7 @@ class Tests {
         runner.add(new tests.kit.ComponentQuestionnaireTest());
         // gpui-kit wave 11: code highlighter
         runner.add(new tests.kit.HighlighterTest());
-        // Deliberate deviations (DEVIATIONS.md)
+        // Initial port deviations (docs/DEVIATIONS.md)
         runner.add(new tests.kit.DeviationsTest());
         // The story gallery (samples/story/shared)
         runner.add(new tests.kit.StoryGalleryTest());

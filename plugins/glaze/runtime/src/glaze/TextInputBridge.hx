@@ -2,7 +2,7 @@
 // handling) and gpui-pre 0.3.10 src/window.rs (IME position)
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: rewritten in Haxe on top of Ceramic's text editing events. See NOTICE.md.
-// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-017 (the software keyboard suited to a number field). See docs/DEVIATIONS.md.
 package glaze;
 
 /**
@@ -215,7 +215,7 @@ class TextInputBridge implements PlatformTextInput {
      * Gives the text assistance preferences to Ceramic, which maps them onto
      * its hidden editable element on the web like GPUI's web platform
      * (`ime_mirror.rs` `apply_configuration`). The input mode is the one the
-     * field asks for (deliberate deviation DEV-017: `decimal` or `numeric`
+     * field asks for (initial port deviation DEV-017: `decimal` or `numeric`
      * for a number field that cannot hold a negative value, `text` otherwise;
      * GPUI has no input mode and always asks for `text`).
      */

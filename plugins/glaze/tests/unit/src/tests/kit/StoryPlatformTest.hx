@@ -68,7 +68,7 @@ class StoryPlatformTest extends TestCase {
 
     /**
      * The gallery's saved scrollbar mode wins over the `Hover` default of
-     * `Theme.init` (deliberate deviation DEV-020); without a saved mode the
+     * `Theme.init` (initial port deviation DEV-020); without a saved mode the
      * default stays.
      */
     function testSavedScrollbarModeIsRestoredOverTheDefault() {

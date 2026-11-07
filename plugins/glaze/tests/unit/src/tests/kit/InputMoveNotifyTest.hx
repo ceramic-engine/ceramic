@@ -40,7 +40,7 @@ import glaze.Prelude.*;
 using glaze.kit.base.input.InputLspExt;
 
 /**
- * Deliberate deviation DEV-016 (see DEVIATIONS.md): gpui-kit's input element
+ * Initial port deviation DEV-016 (see docs/DEVIATIONS.md): gpui-kit's input element
  * no longer notifies its view from `paint` when the input only moved.
  *
  * Each test drives a page like the golden scene `kit-input-scroll-follow`

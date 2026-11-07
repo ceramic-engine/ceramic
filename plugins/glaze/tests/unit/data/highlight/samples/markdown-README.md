@@ -2,7 +2,7 @@
 
 A pure Haxe port of [markdown-rs](https://github.com/wooorm/markdown-rs) **1.0.0** (the `markdown` crate), the CommonMark compliant markdown parser written in Rust by Titus Wormer. It turns markdown into HTML or into a syntax tree ([mdast](https://github.com/syntax-tree/mdast)), with GFM, math, frontmatter and MDX extensions.
 
-It is the markdown parser of the gpui-kit rich text engine in ceramic-gpui (gpui-kit calls `markdown::to_mdast` with the `serde` feature).
+It is the markdown parser of the gpui-kit rich text engine in Glaze (gpui-kit calls `markdown::to_mdast` with the `serde` feature).
 
 It has no dependency (no Ceramic, no other haxelib) and runs on every Haxe target. The input is encoded to UTF-8 and parsed as `haxe.io.Bytes`, like upstream works on `&[u8]`: positions are the same on targets with UTF-16 strings (JavaScript) and UTF-8 strings.
 

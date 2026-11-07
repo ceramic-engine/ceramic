@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 //
-// Browser check of deliberate deviation DEV-021 in headless Chromium
+// Browser check of initial port deviation DEV-021 in headless Chromium
 // (Playwright, no window): the web build of this project (project/web) is
 // served on 127.0.0.1 and driven by mouse clicks (trusted events, so the
 // page gets user activation like with a real click).

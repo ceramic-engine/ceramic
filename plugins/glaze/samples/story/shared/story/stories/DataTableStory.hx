@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/story/src/stories/data_table_story.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-019 (CSV export on the web, as a browser download). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-019 (CSV export on the web, as a browser download). See docs/DEVIATIONS.md.
 package story.stories;
 
 import glaze.Action;
@@ -1134,7 +1134,7 @@ class DataTableStory extends Model implements Story {
      * crate's defaults (comma, `\n` line ends, fields quoted only when
      * needed). The text is written with Ceramic's `Files` (native targets,
      * node and Electron; in a browser, the download path of the save prompt
-     * starts a download, deliberate deviation DEV-019).
+     * starts a download, initial port deviation DEV-019).
      */
     static function writeCsv(table:Entity<TableState<StockTableDelegate>>, path:String, cx:App):Void {
         final state = table.read(cx);
@@ -1188,7 +1188,7 @@ class DataTableStory extends Model implements Story {
      */
     static function downloadDir():Null<String> {
         #if web
-        // Deliberate deviation DEV-019: Rust has no download directory on
+        // Initial port deviation DEV-019: Rust has no download directory on
         // wasm and stops here. The browser chooses where downloads go, so any
         // folder will do: the save prompt gives a download path whose write
         // starts a browser download (Ceramic `BrowserFiles`).

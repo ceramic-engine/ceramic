@@ -50,7 +50,7 @@ import glaze.Prelude.*;
 import glaze.kit.base.Prelude.*;
 
 /**
- * Keeps the deliberate deviations of DEVIATIONS.md in place on the port, so a
+ * Keeps the initial port deviations of docs/DEVIATIONS.md in place on the port, so a
  * later change cannot silently bring a fixed defect back. The pixel level
  * checks (defect metric on the captures, scene equal to the original outside
  * the declared primitives) are in `reference/verify-deviations.js port`.

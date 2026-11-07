@@ -2,8 +2,8 @@
 // ComboboxState, render_trigger_container, render_popup_shell)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-006 (default placeholder key). See DEVIATIONS.md.
-// Also modified: deliberate deviation DEV-010 (the menu is measured from the trigger). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-006 (default placeholder key). See docs/DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-010 (the menu is measured from the trigger). See docs/DEVIATIONS.md.
 package glaze.kit.combobox;
 
 import glaze.AnyElement;
@@ -545,7 +545,7 @@ class ComboboxState<I> extends Model implements Render {
     }
 
     function defaultTriggerBody(_window:Window, cx:Context<ComboboxState<I>>):AnyElement {
-        // Deliberate deviation DEV-006: the original reads `Combobox.placeholder`,
+        // Initial port deviation DEV-006: the original reads `Combobox.placeholder`,
         // a key the locales do not have (they spell it `ComboBox`), so it showed
         // the key itself.
         final placeholderText = state.placeholder != null ? state.placeholder : I18n.t("ComboBox.placeholder");

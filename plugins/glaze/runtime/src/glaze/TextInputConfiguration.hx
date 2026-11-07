@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/platform.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-017 (the software keyboard suited to a number field). See docs/DEVIATIONS.md.
 package glaze;
 
 /**
@@ -29,7 +29,7 @@ class TextInputConfiguration {
 
     /**
      * The kind of software keyboard suited to what the field accepts
-     * (deliberate deviation DEV-017; GPUI has no such field).
+     * (initial port deviation DEV-017; GPUI has no such field).
      */
     public final inputMode:TextInputMode;
 
@@ -121,7 +121,7 @@ enum abstract TextInputAction(Int) {
 }
 
 /**
- * The kind of software keyboard a field asks for (deliberate deviation
+ * The kind of software keyboard a field asks for (initial port deviation
  * DEV-017). The values are those of the HTML `inputmode` attribute; only a
  * field whose accepted text fits the smaller keyboard asks for it.
  */

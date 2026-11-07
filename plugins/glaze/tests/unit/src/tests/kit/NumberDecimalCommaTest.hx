@@ -8,7 +8,7 @@ import tests.kit.InputStateTestCase.InputView;
 using glaze.kit.base.input.MaskPattern.MaskPatternTools;
 
 /**
- * Deliberate deviation DEV-018 (see DEVIATIONS.md): a number mask also takes
+ * Initial port deviation DEV-018 (see docs/DEVIATIONS.md): a number mask also takes
  * the comma as the decimal separator and turns it into a dot, so that the
  * decimal keypad of regions writing decimals with a comma can enter decimals.
  * Not when the mask groups digits with a comma: there the comma keeps its

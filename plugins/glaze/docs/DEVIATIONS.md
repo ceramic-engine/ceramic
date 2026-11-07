@@ -1,6 +1,8 @@
-# Deliberate deviations
+# Deviations made during the initial port
 
-The port matches the original GPUI (`gpui-pre` 0.3.10) and gpui-kit (0.8.1) exactly. This file lists the only allowed differences: fixes of defects proven to exist in the original's own output. Any other difference between the port and the original is a bug of the port.
+During the initial port, Glaze matched the original GPUI (`gpui-pre` 0.3.10) and gpui-kit (0.8.1) exactly. This file lists the differences introduced at that time: fixes of defects proven to exist in the original's own output, and a few product decisions. Each one followed the procedure below.
+
+Now that the port is done, Glaze evolves on its own. New changes are made directly in the code and are not documented here; this file stays as the record of the initial port, and the golden tests of glaze-golden keep checking these deviations.
 
 The reference patches and declarations (`reference/deviations/`), the truths (`test/golden/`) and the captures (`docs/deviations/`) named below are in glaze-golden, the working repository of the port; the port paths (`runtime/src/glaze/...`, `tests/unit/...`) are in this plugin.
 
@@ -15,7 +17,7 @@ A deviation is accepted only with all of the following:
 5. **Validation.** `reference/verify-deviations.sh` passes (see "Safeguards"), the port matches the patched truth (`compare.js`, `compare-scene.js`) and the port side checks pass (`node reference/verify-deviations.js port`).
 6. **Upstream status.** Whether the defect was reported or fixed upstream. When upstream fixes it in a version the port moves to, the deviation is removed.
 
-The patches modify Apache-2.0 code (GPUI: Copyright Zed Industries, Inc.; gpui-kit: Copyright Longbridge). Patched files keep their license headers, every changed place carries a "Modified for ceramic-gpui (DEV-nnn)" comment, and the port files changed by a deviation say so in their header. See [NOTICE.md](NOTICE.md).
+The patches modify Apache-2.0 code (GPUI: Copyright Zed Industries, Inc.; gpui-kit: Copyright Longbridge). Patched files keep their license headers, every changed place carries a "Modified for Glaze (DEV-nnn)" comment, and the port files changed by a deviation say so in their header. See [NOTICE.md](../NOTICE.md).
 
 ## How it works
 

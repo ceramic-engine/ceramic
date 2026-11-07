@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/virtual_list.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-004 (Infer sizing of horizontal lists). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-004 (Infer sizing of horizontal lists). See docs/DEVIATIONS.md.
 package glaze.kit.base;
 
 import glaze.AbsoluteLength;
@@ -452,7 +452,7 @@ class VirtualList extends Element implements Styled {
                             case Definite(x): x;
                             case MinContent | MaxContent: contentSize.width;
                         }
-                        // Deliberate deviation DEV-004: the original reads
+                        // Initial port deviation DEV-004: the original reads
                         // `known_dimensions.width` here (a list as high as it is wide).
                         height = knownDimensions.height != null ? knownDimensions.height : switch availableSpace.height {
                             case Definite(x): x;

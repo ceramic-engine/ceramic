@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/color_picker.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-011 (the trigger and tooltip hex is rounded). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-011 (the trigger and tooltip hex is rounded). See docs/DEVIATIONS.md.
 package glaze.kit.colorpicker;
 
 import glaze.Anchor;

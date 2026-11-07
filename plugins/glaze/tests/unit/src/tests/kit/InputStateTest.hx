@@ -587,7 +587,7 @@ class InputStateTest extends InputStateTestCase {
         // A pre-existing invalid text (e.g. a `default_value` that does not
         // conform) must not trap the user, the edit is allowed to fix it.
         //
-        // Deliberate deviation DEV-018: the comma is a decimal separator in
+        // Initial port deviation DEV-018: the comma is a decimal separator in
         // this mask, so gpui-kit's "1,234" (invalid there) is the valid 1.234
         // here, and the edit gives "1.23" where gpui-kit keeps "1,23". The
         // escape itself is covered with a text invalid on both sides below.

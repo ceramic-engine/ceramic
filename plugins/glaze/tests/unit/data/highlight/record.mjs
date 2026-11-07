@@ -14,7 +14,7 @@
 // of the build without tree-sitter: `comment_doc`, not `comment.doc`).
 //
 // Usage:
-//   VTM_NODE_MODULES=/path/to/node_modules node tests/unit/data/highlight/record.mjs
+//   VTM_NODE_MODULES=/path/to/node_modules [GPUI_KIT_DIR=/path/to/gpui-kit] node tests/unit/data/highlight/record.mjs
 //
 // The node_modules folder must hold vscode-textmate@9.2.0 and
 // vscode-oniguruma@2.0.1 (npm install them in a scratch folder, never in this
@@ -146,7 +146,10 @@ function semanticName(scope) {
 }
 
 // The default highlight themes, with the serde names of `SyntaxColors`.
-const themeSet = JSON.parse(fs.readFileSync(path.join(root, 'gpui-kit/crates/component/src/theme/default-theme.json'), 'utf8'));
+// gpui-kit's sources: GPUI_KIT_DIR, or the clone kept next to the glaze-golden
+// working repository (cloned next to ceramic/)
+const gpuiKitDir = process.env.GPUI_KIT_DIR || path.resolve(root, '../../../glaze-golden/gpui-kit');
+const themeSet = JSON.parse(fs.readFileSync(path.join(gpuiKitDir, 'crates/component/src/theme/default-theme.json'), 'utf8'));
 const KEYS = {
     'comment.doc': 'comment_doc'
 };

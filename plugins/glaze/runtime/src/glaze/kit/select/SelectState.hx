@@ -2,7 +2,7 @@
 // the back-compat re-exports)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-010 (the menu is measured from the trigger). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-010 (the menu is measured from the trigger). See docs/DEVIATIONS.md.
 package glaze.kit.select;
 
 import glaze.AnyElement;

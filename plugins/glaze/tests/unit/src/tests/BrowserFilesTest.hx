@@ -9,7 +9,7 @@ import haxe.io.Bytes;
 import testing.TestCase;
 
 /**
- * Deliberate deviation DEV-019 (see DEVIATIONS.md): saving and opening files
+ * Initial port deviation DEV-019 (see docs/DEVIATIONS.md): saving and opening files
  * in a browser. Ceramic's `BrowserFiles` gives downloads and the files picked
  * in the browser's file chooser pseudo paths that `ceramic.Files` reads and
  * writes; the port's path prompts return them on the web

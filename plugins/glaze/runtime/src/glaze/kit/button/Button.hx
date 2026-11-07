@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/button/button.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-003 (icon button with a dropdown caret). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-003 (icon button with a dropdown caret). See docs/DEVIATIONS.md.
 package glaze.kit.button;
 
 import glaze.AnyElement;
@@ -1072,7 +1072,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         if (interactive && (variantValue.isLink() || variantValue.isText())) root.cursorPointer();
         if (!disabled && theme.shadow && normalStyle.shadow) root.shadowXs();
         if (!style.noPadding()) {
-            // Deliberate deviation DEV-003: an icon with a dropdown caret does
+            // Initial port deviation DEV-003: an icon with a dropdown caret does
             // not fit the icon square, size it like a normal button.
             if (labelValue == null && children.length == 0 && !(iconValue != null && dropdownCaretValue)) {
                 // Icon Button

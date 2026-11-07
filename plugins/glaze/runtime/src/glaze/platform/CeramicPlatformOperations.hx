@@ -1,13 +1,13 @@
 // New code for the Haxe port of GPUI: the application operations of GPUI's
 // `Platform` (gpui-pre 0.3.10, src/platform.rs, Zed Industries, Apache-2.0)
 // implemented with Ceramic. The web behavior follows gpui-pre-web 0.3.10
-// src/platform.rs, except the path prompts (deliberate deviation DEV-019).
+// src/platform.rs, except the path prompts (initial port deviation DEV-019).
 // The system notifications follow gpui-pre-macos 0.3.10
 // src/system_notifications.rs (request the authorization on the first post),
 // gpui-pre-linux and gpui-pre-windows 0.3.10 (src/linux/system_notifications.rs,
 // src/system_notifications.rs) through Ceramic's notifications plugin, also
-// in a browser (deliberate deviation DEV-021, gpui-pre-web has none).
-// See NOTICE.md and DEVIATIONS.md.
+// in a browser (initial port deviation DEV-021, gpui-pre-web has none).
+// See NOTICE.md and docs/DEVIATIONS.md.
 package glaze.platform;
 
 import glaze.AnyTask;
@@ -31,7 +31,7 @@ import glaze.WindowAppearance;
  *   nothing on the web, like GPUI's web platform, and in headless builds).
  * - The path prompts use the `dialogs` plugin (`ceramic.Dialogs`: SDL's
  *   native file dialogs on desktop, Electron's dialogs). In a browser
- *   (deliberate deviation DEV-019; GPUI's web platform fails them as "not
+ *   (initial port deviation DEV-019; GPUI's web platform fails them as "not
  *   supported"), `promptForNewPath` gives a download path at once
  *   (`download:<suggested name>`: writing it with `ceramic.Files` starts a
  *   browser download, the browser chooses the folder) and `promptForPaths`
@@ -81,7 +81,7 @@ import glaze.WindowAppearance;
  *   operations that registered a callback (one platform per process in
  *   GPUI). Without the plugin and on Unity, the calls do nothing, like a
  *   GPUI platform without notifications.
- * - In a browser (deliberate deviation DEV-021; gpui-pre-web has no system
+ * - In a browser (initial port deviation DEV-021; gpui-pre-web has no system
  *   notifications), the notifications are the browser's (Notification API,
  *   through the plugin). Browsers ask for the permission only during a user
  *   gesture: a first post made from a click or key handler (GPUI dispatches

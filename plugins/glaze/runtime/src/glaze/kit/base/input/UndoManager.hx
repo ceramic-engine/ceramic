@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/undo_manager.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-015 (a typing run may start by replacing text). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-015 (a typing run may start by replacing text). See docs/DEVIATIONS.md.
 package glaze.kit.base.input;
 
 import glaze.util.Utf8;

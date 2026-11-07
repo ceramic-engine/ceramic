@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/badge.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-001 (icon badge ring). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-001 (icon badge ring). See docs/DEVIATIONS.md.
 package glaze.kit.badge;
 
 import glaze.AnyElement;
@@ -169,7 +169,7 @@ class Badge implements RenderOnce implements ParentElement implements Sizable {
                         .lineHeight(relative(1.))
                         .child(count);
                 case Icon(icon):
-                    // Deliberate deviation DEV-001 (see DEVIATIONS.md): gpui-kit
+                    // Initial port deviation DEV-001 (see docs/DEVIATIONS.md): gpui-kit
                     // draws the ring as a border in the background color, which
                     // GPUI paints as a second quad over the colored disc, so both
                     // antialiased outer edges let the badge color leak around the

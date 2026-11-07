@@ -23,7 +23,7 @@ import testing.TestCase;
 import glaze.Prelude.*;
 
 /**
- * Deliberate deviation DEV-017 (see DEVIATIONS.md): a number field asks the
+ * Initial port deviation DEV-017 (see docs/DEVIATIONS.md): a number field asks the
  * web virtual keyboard for the keypad suited to what it accepts, through the
  * `inputmode` the port gives Ceramic (`Input.setTextEditingConfiguration`).
  * `decimal` for a number field that cannot hold a negative value, `numeric`

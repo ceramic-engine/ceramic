@@ -39,7 +39,7 @@ using glaze.Menu.MenuItemTools;
  * when a window opens, read again after the platform reports a change, the
  * observers running after the update that saw the change), the scrollbar
  * preference is what gpui-kit's opt-in sync reads (`Theme.init` itself sets
- * `Hover`, deliberate deviation DEV-020), and the dock menu is Ceramic's
+ * `Hover`, initial port deviation DEV-020), and the dock menu is Ceramic's
  * dock menu whose items dispatch their action.
  *
  * The Ceramic side is driven like a backend does: `systemAppearanceChange`,
@@ -214,7 +214,7 @@ class PlatformAppearanceTest extends TestCase {
 /// gpui-kit theme sync (theme/mod.rs)
 
     /**
-     * Deliberate deviation DEV-020: `Theme.init` sets `Hover` whatever the
+     * Initial port deviation DEV-020: `Theme.init` sets `Hover` whatever the
      * platform says (gpui-kit syncs with the platform there).
      */
     function testInitUsesHoverWhateverThePlatformSays() {

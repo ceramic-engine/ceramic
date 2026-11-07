@@ -71,7 +71,7 @@ ui = new Glaze((window, cx) -> {
 });
 ```
 
-Then use them like in Rust, with camelCase names: `new Button('save').primary().label('Save').onClick(...)`. gpui-kit's documentation applies; [PORTING.md](PORTING.md) lists the differences.
+Then use them like in Rust, with camelCase names: `new Button('save').primary().label('Save').onClick(...)`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
 
 ## Samples
 
@@ -85,4 +85,6 @@ cd tests/unit && ceramic headless run node --setup --assets
 
 ## License
 
-Apache License 2.0, see [LICENSE](LICENSE). Ported projects, fonts and icons keep their own licenses, listed in [NOTICE.md](NOTICE.md). The deliberate differences with the original GPUI are documented in [DEVIATIONS.md](DEVIATIONS.md).
+Apache License 2.0, see [LICENSE](LICENSE). Ported projects, fonts and icons keep their own licenses, listed in [NOTICE.md](NOTICE.md).
+
+The few differences with the original GPUI and gpui-kit introduced during the initial port are listed in [docs/DEVIATIONS.md](docs/DEVIATIONS.md). Glaze now evolves on its own.

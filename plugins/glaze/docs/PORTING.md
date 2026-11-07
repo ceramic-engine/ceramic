@@ -90,8 +90,8 @@ Null in the other slots: the `@:from` conversions of `IntoBreadcrumbItem`, `Into
 No license washing: ported code keeps its authors and license.
 
 - Every port carries the header above. gpui-kit files use `Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.`
-- [NOTICE.md](NOTICE.md) lists every upstream project, version, copyright holder and license; add an entry before porting anything new (libraries, shaders, icons, fonts, test fixtures).
-- Upstream license texts live in `LICENSES/`.
+- [NOTICE.md](../NOTICE.md) lists every upstream project, version, copyright holder and license; add an entry before porting anything new (libraries, shaders, icons, fonts, test fixtures).
+- Upstream license texts live in `LICENSES/` (at the root of the plugin).
 - Standalone libraries in `ceramic/git/<lib>` ship the upstream `LICENSE` (with the original copyright) and a README naming the original project and the ported version.
 - Assets follow the same rule: Lucide icons (ISC), fonts (OFL) and test fixtures get their license file and a NOTICE entry.
 
@@ -109,11 +109,13 @@ No license washing: ported code keeps its authors and license.
 - Builders whose name clashes with a field get a `with` prefix (`Background.withColorSpace`).
 - Device pixels are stored as Float, so halving them is exact (Rust truncates).
 
-## Deliberate deviations
+## Deviations made during the initial port
 
-The port must match the original GPUI and gpui-kit exactly. The only allowed differences are the fixes listed in [DEVIATIONS.md](DEVIATIONS.md), each motivated by a defect proven to exist in the original. A fix is applied to the port and, as a patch, to the copy of the original built by the reference harness, so the comparison stays strict. Any other difference is a bug of the port.
+During the initial port, Glaze matched the original GPUI and gpui-kit exactly, and the only differences were the ones listed in [DEVIATIONS.md](DEVIATIONS.md), each applied to the port and, as a patch, to the copy of the original built by the reference harness, so the comparison stayed strict.
 
-A few entries are decisions of the owner rather than fixes of a rendered defect, and follow the same procedure (patch, declaration, safeguards): the web keyboard and comma of number fields (DEV-017, DEV-018), files in a browser (DEV-019) and the scrollbar mode (DEV-020: `Theme.init` sets `Hover` on every platform where gpui-kit syncs with the system; an app that wants the system setting calls GPUI's own `Theme.syncScrollbarAppearance(cx)` after `init`, read once, not followed afterwards), system notifications in a browser (DEV-021) and resizable panels at exactly 100 px that no longer update on every frame (DEV-022).
+Now that the port is done, Glaze evolves on its own: new changes are made directly in the code, without a DEVIATIONS entry or a reference patch. The golden tests of glaze-golden still compare the port with the original and show where it has moved away from it.
+
+Some of the initial deviations were product decisions rather than fixes of a rendered defect, and followed the same procedure (patch, declaration, safeguards): the web keyboard and comma of number fields (DEV-017, DEV-018), files in a browser (DEV-019) and the scrollbar mode (DEV-020: `Theme.init` sets `Hover` on every platform where gpui-kit syncs with the system; an app that wants the system setting calls GPUI's own `Theme.syncScrollbarAppearance(cx)` after `init`, read once, not followed afterwards), system notifications in a browser (DEV-021) and resizable panels at exactly 100 px that no longer update on every frame (DEV-022).
 
 ## Writing style
 

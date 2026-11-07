@@ -1,9 +1,9 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/state.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-009 (no Change event when the value did not change). See DEVIATIONS.md.
-// Also modified: deliberate deviation DEV-015 (typing over a selection undoes in one step). See DEVIATIONS.md.
-// Also modified: deliberate deviation DEV-017 (the software keyboard suited to a number field). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-009 (no Change event when the value did not change). See docs/DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-015 (typing over a selection undoes in one step). See docs/DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-017 (the software keyboard suited to a number field). See docs/DEVIATIONS.md.
 package glaze.kit.base.input;
 
 import glaze.Action;
@@ -1023,12 +1023,12 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         // opt-in for structured fields such as passwords, email and URLs.
         final autocorrect = this.autocorrect != null ? this.autocorrect : false;
         final inputAction = this.inputAction != null ? this.inputAction : (isMultiLine() && !submitOnEnter ? TextInputAction.Enter : TextInputAction.Done);
-        // Modified for ceramic-gpui (DEV-017): the input mode
+        // Modified for Glaze (DEV-017): the input mode
         return new TextInputConfiguration(autocorrect, autocapitalize != null ? autocapitalize : Autocapitalize.None, autocorrect, inputAction, numberInputMode());
     }
 
     /**
-     * Deliberate deviation DEV-017: the software keyboard suited to what a
+     * Initial port deviation DEV-017: the software keyboard suited to what a
      * number field (a single-line input with a number mask, which
      * `NumberInput` sets) accepts. The numeric and decimal keypads of iOS
      * have no minus sign, so a field that may hold a negative value (no
@@ -3850,7 +3850,7 @@ class InputBaseState extends Model implements Render implements EntityInputHandl
         if (!silentReplaceText) {
             modeKind.onTextTyped(this, range, newText, window, cx);
         }
-        // Deliberate deviation DEV-009: only when the value changed, not for an
+        // Initial port deviation DEV-009: only when the value changed, not for an
         // edit that left it as it was (a newline dropped by a single-line
         // input, a character rejected by the mask).
         if (emitEvents && (text.len() != oldText.len() || text.toString() != oldText.toString())) {

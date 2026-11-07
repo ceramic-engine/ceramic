@@ -75,7 +75,7 @@ class TextDataUrlTest extends TestCase {
         // parses one), so `data://test:test/,X` is accepted and decodes as
         // `text/plain;charset=US-ASCII` / "X" even though the WPT fixture
         // expects the browser's full URL parser to reject it earlier.
-        // Reproduced as-is below, not fixed (see DEVIATIONS.md policy).
+        // Reproduced as-is below, not fixed (see docs/DEVIATIONS.md policy).
         final knownFailure = "data://test:test/,X";
 
         for (c in DataUrlWptFixtures.DATA_URL_CASES) {

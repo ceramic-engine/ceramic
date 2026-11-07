@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tab/tab_bar.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-014 (no indicator under a disabled selected tab). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-014 (no indicator under a disabled selected tab). See docs/DEVIATIONS.md.
 package glaze.kit.tab;
 
 import glaze.Anchor;

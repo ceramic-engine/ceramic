@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/input/number_input.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-007 (the placeholder is used). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-007 (the placeholder is used). See docs/DEVIATIONS.md.
 package glaze.kit.input;
 
 import glaze.AnyElement;
@@ -40,7 +40,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
 
     final state:Entity<InputState>;
 
-    // Passed to the input state when rendering (deliberate deviation DEV-007:
+    // Passed to the input state when rendering (initial port deviation DEV-007:
     // the original stored it but never used it).
     var placeholderValue:String = "";
 
@@ -150,7 +150,7 @@ class NumberInput implements RenderOnce implements Styled implements Sizable imp
         // The buttons sit inside the 1px frame, so their corners are a pixel
         // tighter than the frame's, or they paint over its inner curve.
         final buttonRadius:glaze.Pixels = appearanceValue ? Math.max(theme.radius - 1., 0.) : theme.radius;
-        // Deliberate deviation DEV-007: the original never used the
+        // Initial port deviation DEV-007: the original never used the
         // placeholder. Pass it to the input state, only when it is set and
         // differs (`setPlaceholder` notifies).
         if (placeholderValue != "" && state.read(cx).presentation().placeholder() != placeholderValue) {

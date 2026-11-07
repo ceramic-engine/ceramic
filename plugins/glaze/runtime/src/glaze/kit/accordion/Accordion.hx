@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/accordion.rs
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-008 (on_toggle_click reported by the toggled item). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-008 (on_toggle_click reported by the toggled item). See docs/DEVIATIONS.md.
 package glaze.kit.accordion;
 
 import glaze.AnyElement;
@@ -124,7 +124,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
         final openIndices:Array<Int> = [];
         final multiple = multipleValue;
         final lastIx = items.length > 0 ? items.length - 1 : 0;
-        // Deliberate deviation DEV-008: reported by the item that toggled, not
+        // Initial port deviation DEV-008: reported by the item that toggled, not
         // by a click anywhere on the accordion (the original's root `on_click`).
         final onToggle = disabledValue ? null : onToggleClickHandler;
 

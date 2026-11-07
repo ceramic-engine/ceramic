@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/theme/mod.rs, crates/component/src/theme/schema.rs (Theme::apply_config)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-020 (scrollbars shown on hover by default). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-020 (scrollbars shown on hover by default). See docs/DEVIATIONS.md.
 package glaze.kit.theme;
 
 import glaze.AppContext;
@@ -287,7 +287,7 @@ class Theme extends ThemeColor {
      * Initializes the theme system: the registry, the default light theme,
      * then the `Hover` scrollbar mode (Rust: `theme::init`).
      *
-     * Deliberate deviation DEV-020: gpui-kit syncs the scrollbar mode with
+     * Initial port deviation DEV-020: gpui-kit syncs the scrollbar mode with
      * the platform here; the port uses `Hover` on every platform (the bars
      * show on hover and for a moment after any scroll). An app that wants
      * the system setting calls `syncScrollbarAppearance` after `init`
@@ -300,7 +300,7 @@ class Theme extends ThemeColor {
 
         // Ensure theme is loaded directly on startup
         change(Light, null, cx);
-        // Modified for ceramic-gpui (DEV-020): Hover on every platform
+        // Modified for Glaze (DEV-020): Hover on every platform
         // instead of syncScrollbarAppearance(cx)
         setScrollbarMode(Hover, cx);
 

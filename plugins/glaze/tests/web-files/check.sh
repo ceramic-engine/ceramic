@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Browser check of deliberate deviation DEV-019 (saving and opening files in a
+# Browser check of initial port deviation DEV-019 (saving and opening files in a
 # browser): builds this project for the web, then runs check.js in headless
 # Chromium (Playwright, no window).
 #

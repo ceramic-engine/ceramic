@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/component/src/tab/tab.rs (Tab)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviations DEV-013 (icon-only tab width) and DEV-014 (disabled selected tab). See DEVIATIONS.md.
+// Also modified: initial port deviations DEV-013 (icon-only tab width) and DEV-014 (disabled selected tab). See docs/DEVIATIONS.md.
 package glaze.kit.tab;
 
 import glaze.AnyElement;

@@ -5,7 +5,7 @@ import ceramic.Entity;
 import ceramic.InitSettings;
 
 /**
- * Browser check of deliberate deviation DEV-021 (system notifications in a
+ * Browser check of initial port deviation DEV-021 (system notifications in a
  * browser), driven by `check.js` in headless Chromium: see `check.sh`.
  */
 class Project extends Entity {

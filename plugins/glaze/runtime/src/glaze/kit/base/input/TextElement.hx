@@ -1,7 +1,7 @@
 // Ported from gpui-kit 0.8.1: crates/base/src/input/base/element.rs, crates/base/src/input/mod.rs (`MASK_CHAR`)
 // Original code Copyright 2024-2026 Longbridge, licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-016 (no notify when the input only moved). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-016 (no notify when the input only moved). See docs/DEVIATIONS.md.
 package glaze.kit.base.input;
 
 import glaze.AnyElement;

@@ -1,7 +1,7 @@
 // Ported from gpui-pre 0.3.10: src/style.rs
 // Original code Copyright 2022-2025 Zed Industries, Inc., licensed under Apache-2.0.
 // Modified: translated from Rust to Haxe for Ceramic. See NOTICE.md.
-// Also modified: deliberate deviation DEV-002 (background under an opaque border). See DEVIATIONS.md.
+// Also modified during the initial port: deviation DEV-002 (background under an opaque border). See docs/DEVIATIONS.md.
 package glaze;
 
 import glaze.scene.BorderStyle;
@@ -458,7 +458,7 @@ class Style {
             final quad = window.scratchPaintQuad();
             quad.bounds = bounds;
             quad.cornerRadii = cornerRadii;
-            // Deliberate deviation DEV-002: the background of a rounded element
+            // Initial port deviation DEV-002: the background of a rounded element
             // with an opaque border stops under the middle of the border.
             backgroundUnderBorder(quad, window);
             quad.background = backgroundColor;
@@ -497,7 +497,7 @@ class Style {
     }
 
     /**
-     * Deliberate deviation DEV-002 (see DEVIATIONS.md). `paint` draws the
+     * Initial port deviation DEV-002 (see docs/DEVIATIONS.md). `paint` draws the
      * background and the border as two quads on the same outer edge, each
      * antialiased on its own, so on a rounded edge the background color leaked
      * through the antialiased outer edge of the border. When the border is
