@@ -174,7 +174,7 @@ class Group<T:Entity> extends Entity #if plugin_arcade implements arcade.Collida
      * 
      * @param item The entity that was destroyed
      */
-    function itemDestroyed(item:Entity) {
+    function itemDestroyed(item:tracker.Owner) {
 
         remove(cast item);
 

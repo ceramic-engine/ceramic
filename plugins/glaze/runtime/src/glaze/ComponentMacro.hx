@@ -9,6 +9,7 @@ import haxe.macro.ExprTools;
 import haxe.macro.MacroStringTools;
 import haxe.macro.Type;
 import haxe.macro.TypeTools;
+import haxe.macro.TypedExprTools;
 
 using StringTools;
 
@@ -475,9 +476,277 @@ class ComponentMacro {
 
         if (persistent) {
             buildPersistent(cls, fields, newFields, fieldsByName, props, ctorArgs, thisPath, depth, maskCount, classPath, pos);
+            if (!parentPersistent) {
+                buildOwner(newFields, pos);
+            }
+        }
+        else {
+            refuseStatelessOwner(classPath);
         }
 
         return fields.concat(newFields);
+    }
+
+    /**
+     * The `tracker.Owner` implementation of a persistent component (in the
+     * first persistent class of a hierarchy): the lifecycle is the one of the
+     * host entity (`ComponentBuilder.ComponentHost`), which runs the destroy
+     * handlers after `destroy()`, giving them the component.
+     */
+    static function buildOwner(newFields:Array<Field>, pos:Position):Void {
+        final noCompletion = [{name: ':noCompletion', params: [], pos: pos}];
+        final optionalOwner = Context.defined('tracker_optional_owner');
+        final debugEvents = Context.defined('tracker_debug_events');
+
+        newFields.push({
+            pos: pos,
+            name: '__ownerHost',
+            kind: FVar(macro :Null<glaze.ComponentBuilder.ComponentHost>, macro null),
+            access: [APrivate],
+            meta: noCompletion
+        });
+        newFields.push({
+            pos: pos,
+            name: '__destroyHandlers',
+            kind: FVar(macro :Null<Array<(tracker.Owner) -> Void>>, macro null),
+            access: [APrivate],
+            meta: noCompletion
+        });
+        newFields.push({
+            pos: pos,
+            name: '__destroyUnbinds',
+            kind: FVar(macro :Null<Array<Null<() -> Void>>>, macro null),
+            access: [APrivate],
+            meta: noCompletion
+        });
+        newFields.push({
+            pos: pos,
+            name: '__attachHost',
+            kind: FFun({
+                args: [{name: 'host', type: macro :glaze.ComponentBuilder.ComponentHost}],
+                ret: macro :Void,
+                expr: macro this.__ownerHost = host
+            }),
+            access: [APublic, AOverride],
+            meta: noCompletion
+        });
+        newFields.push({
+            pos: pos,
+            name: 'get_destroyed',
+            kind: FFun({
+                args: [],
+                ret: macro :Bool,
+                expr: macro {
+                    final host = this.__ownerHost;
+                    return host != null && host.destroyed;
+                }
+            }),
+            access: [AOverride],
+            meta: noCompletion
+        });
+
+        final onceArgs:Array<FunctionArg> = [
+            {name: 'owner', type: macro :Null<tracker.Owner>, opt: optionalOwner},
+            {name: 'handler', type: macro :(tracker.Owner) -> Void}
+        ];
+        if (debugEvents) {
+            onceArgs.push({name: 'pos', type: macro :haxe.PosInfos, opt: true});
+        }
+        newFields.push({
+            pos: pos,
+            name: 'onceDestroy',
+            kind: FFun({
+                args: onceArgs,
+                ret: macro :Void,
+                expr: macro {
+                    // An owner of this subscription: the handler goes away with it
+                    var unbind:Null<() -> Void> = null;
+                    if (owner != null) {
+                        if (owner.destroyed) {
+                            throw 'Failed to bind event destroy because owner is destroyed!';
+                        }
+                        final subscriptionOwner = owner;
+                        var ownerDestroyed:Null<(tracker.Owner) -> Void> = null;
+                        ownerDestroyed = _ -> {
+                            ownerDestroyed = null;
+                            this.offDestroy(handler);
+                        };
+                        subscriptionOwner.onceDestroy(null, ownerDestroyed);
+                        unbind = () -> {
+                            if (ownerDestroyed != null) {
+                                subscriptionOwner.offDestroy(ownerDestroyed);
+                                ownerDestroyed = null;
+                            }
+                        };
+                    }
+                    if (this.__destroyHandlers == null) {
+                        this.__destroyHandlers = [];
+                        this.__destroyUnbinds = [];
+                    }
+                    this.__destroyHandlers.push(handler);
+                    this.__destroyUnbinds.push(unbind);
+                }
+            }),
+            access: [APublic, AOverride],
+            meta: []
+        });
+        newFields.push({
+            pos: pos,
+            name: 'offDestroy',
+            kind: FFun({
+                args: [{name: 'handler', type: macro :(tracker.Owner) -> Void, opt: true}],
+                ret: macro :Void,
+                expr: macro {
+                    final handlers = this.__destroyHandlers;
+                    if (handlers == null) {
+                        return;
+                    }
+                    final unbinds = this.__destroyUnbinds;
+                    if (handler == null) {
+                        this.__destroyHandlers = null;
+                        this.__destroyUnbinds = null;
+                        for (unbind in unbinds) {
+                            if (unbind != null) unbind();
+                        }
+                        return;
+                    }
+                    final index = handlers.indexOf(handler);
+                    if (index != -1) {
+                        final unbind = unbinds[index];
+                        handlers.splice(index, 1);
+                        unbinds.splice(index, 1);
+                        if (unbind != null) unbind();
+                    }
+                }
+            }),
+            access: [APublic, AOverride],
+            meta: []
+        });
+        newFields.push({
+            pos: pos,
+            name: '__emitDestroy',
+            kind: FFun({
+                args: [],
+                ret: macro :Void,
+                expr: macro {
+                    final handlers = this.__destroyHandlers;
+                    if (handlers == null) {
+                        return;
+                    }
+                    final unbinds = this.__destroyUnbinds;
+                    this.__destroyHandlers = null;
+                    this.__destroyUnbinds = null;
+                    for (i in 0...handlers.length) {
+                        final unbind = unbinds[i];
+                        if (unbind != null) unbind();
+                        handlers[i](this);
+                    }
+                }
+            }),
+            access: [APublic, AOverride],
+            meta: noCompletion
+        });
+    }
+
+    /** The stateless component classes, checked once typed */
+    static var statelessClasses:Null<Map<String, Bool>> = null;
+
+    static final checkedStatelessClasses = new Map<String, Bool>();
+
+    /**
+     * A stateless component is rebuilt at every render: it cannot own
+     * handlers. Once the code is typed, passing `this` where a
+     * `tracker.Owner` is expected (an argument, a variable, an assignment)
+     * in such a class is a compile error.
+     */
+    static function refuseStatelessOwner(classPath:String):Void {
+        if (Context.defined('display') || Context.defined('completion')) {
+            return;
+        }
+        if (statelessClasses == null) {
+            statelessClasses = new Map();
+            Context.onAfterTyping(checkStatelessOwners);
+        }
+        statelessClasses.set(classPath, true);
+    }
+
+    static function checkStatelessOwners(types:Array<ModuleType>):Void {
+        for (type in types) {
+            switch type {
+                case TClassDecl(ref):
+                    final cls = ref.get();
+                    final path = cls.pack.length > 0 ? cls.pack.join('.') + '.' + cls.name : cls.name;
+                    if (!statelessClasses.exists(path) || checkedStatelessClasses.exists(path)) {
+                        continue;
+                    }
+                    checkedStatelessClasses.set(path, true);
+                    final all = cls.fields.get().concat(cls.statics.get());
+                    if (cls.constructor != null) {
+                        all.push(cls.constructor.get());
+                    }
+                    for (field in all) {
+                        final expr = field.expr();
+                        if (expr != null) {
+                            checkStatelessExpr(expr, cls.name);
+                        }
+                    }
+                case _:
+            }
+        }
+    }
+
+    static function checkStatelessExpr(expr:TypedExpr, className:String):Void {
+        switch expr.expr {
+            case TCall(callee, args):
+                checkOwnerArgs(callee.t, args, className);
+            case TNew(c, _, args):
+                final ctor = c.get().constructor;
+                if (ctor != null) {
+                    checkOwnerArgs(ctor.get().type, args, className);
+                }
+            case TVar(v, init) if (init != null && isThis(init) && isOwnerType(v.t)):
+                refuseOwner(init.pos, className);
+            case TBinop(OpAssign, lhs, rhs) if (isThis(rhs) && isOwnerType(lhs.t)):
+                refuseOwner(rhs.pos, className);
+            case _:
+        }
+        TypedExprTools.iter(expr, e -> checkStatelessExpr(e, className));
+    }
+
+    static function checkOwnerArgs(calleeType:Type, args:Array<TypedExpr>, className:String):Void {
+        switch Context.follow(calleeType) {
+            case TFun(params, _):
+                for (i in 0...args.length) {
+                    if (i < params.length && isThis(args[i]) && isOwnerType(params[i].t)) {
+                        refuseOwner(args[i].pos, className);
+                    }
+                }
+            case _:
+        }
+    }
+
+    static function isThis(expr:TypedExpr):Bool {
+        return switch expr.expr {
+            case TConst(TThis): true;
+            case TParenthesis(e) | TMeta(_, e) | TCast(e, null): isThis(e);
+            case _: false;
+        }
+    }
+
+    static function isOwnerType(type:Type):Bool {
+        return switch type {
+            case TAbstract(_.get() => {pack: [], name: 'Null'}, [t]): isOwnerType(t);
+            case TType(_, _) | TLazy(_): isOwnerType(Context.follow(type, true));
+            case TMono(ref):
+                final bound = ref.get();
+                bound != null && isOwnerType(bound);
+            case TInst(_.get() => {pack: ['tracker'], name: 'Owner'}, _): true;
+            case _: false;
+        }
+    }
+
+    static function refuseOwner(pos:Position, className:String):Void {
+        Context.error('$className is a stateless component: it is rebuilt at every render and cannot be an owner (make it persistent with @persist, or give an entity as the owner)', pos);
     }
 
     static function maskName(depth:Int, index:Int):String {

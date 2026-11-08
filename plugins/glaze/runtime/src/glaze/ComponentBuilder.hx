@@ -49,7 +49,9 @@ class ComponentBuilder {
 /**
  * The entity drawing a `Component` as a view: the component's `render` runs
  * in the host's tracker capture, so the observables it reads render it
- * again. Destroying the host disposes the component (`destroy()`).
+ * again. Destroying the host disposes the component (`destroy()`), then
+ * runs the destroy handlers of the component: the host carries the
+ * lifecycle of the component as a `tracker.Owner`.
  */
 class ComponentHost extends Model implements Render {
 
@@ -63,6 +65,7 @@ class ComponentHost extends Model implements Render {
     public function new(instance:Component) {
         super();
         this.instance = instance;
+        instance.__attachHost(this);
         instance.__start();
     }
 
@@ -92,6 +95,7 @@ class ComponentHost extends Model implements Render {
 
     override function destroy() {
         instance.__dispose();
+        instance.__emitDestroy();
         super.destroy();
     }
 

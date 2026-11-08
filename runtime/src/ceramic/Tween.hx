@@ -56,7 +56,7 @@ class Tween extends Entity {
 
 /// Properties
 
-    var owner:Entity;
+    var owner:tracker.Owner;
 
     /**
      * The easing function used for this tween.
@@ -100,7 +100,7 @@ class Tween extends Entity {
 
 /// Lifecycle
 
-    private function new(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, easing:Easing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
+    private function new(#if ceramic_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, easing:Easing, duration:Float, fromValue:Float, toValue:Float #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end) {
 
         super(#if ceramic_debug_entity_allocs pos #end);
 
@@ -219,7 +219,7 @@ class Tween extends Entity {
     /**
      * Start a new tween animation.
      * 
-     * @param owner Optional owner entity. If provided and destroyed, the tween is also destroyed.
+     * @param owner Optional owner (an entity, or any `tracker.Owner`). If provided and destroyed, the tween is also destroyed.
      * @param easing The easing function to use. Defaults to QUAD_EASE_IN_OUT.
      * @param duration Duration in seconds. If <= 0, completes immediately.
      * @param fromValue Starting value
@@ -227,7 +227,7 @@ class Tween extends Entity {
      * @param handleValueTime Callback function called each frame with (value, time)
      * @return The created Tween instance
      */
-    public static function start(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public static function start(#if ceramic_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
 
@@ -245,7 +245,7 @@ class Tween extends Entity {
      * for the next frame. This ensures the target property is set to an
      * interpolated value right away, preventing visual jumps.
      * 
-     * @param owner Optional owner entity. If provided and destroyed, the tween is also destroyed.
+     * @param owner Optional owner (an entity, or any `tracker.Owner`). If provided and destroyed, the tween is also destroyed.
      * @param easing The easing function to use. Defaults to QUAD_EASE_IN_OUT.
      * @param duration Duration in seconds. If <= 0, completes immediately.
      * @param fromValue Starting value
@@ -253,7 +253,7 @@ class Tween extends Entity {
      * @param handleValueTime Callback function called each frame with (value, time)
      * @return The created Tween instance
      */
-    public static function eagerStart(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
+    public static function eagerStart(#if ceramic_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, ?easing:Easing, duration:Float, fromValue:Float, toValue:Float, handleValueTime:(value:Float, time:Float)->Void #if ceramic_debug_entity_allocs , ?pos:haxe.PosInfos #end):Tween {
 
         var instance = new Tween(owner, easing == null ? Easing.QUAD_EASE_IN_OUT : easing, duration, fromValue, toValue #if ceramic_debug_entity_allocs , pos #end);
         instance.eager = true;

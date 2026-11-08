@@ -164,12 +164,12 @@ class TrackerBackend {
 
     /**
      * Execute a callback periodically at the given interval in seconds.
-     * @param owner The entity that owns this interval
+     * @param owner The owner of this interval (the interval stops once it is destroyed)
      * @param seconds The time in seconds between each call
      * @param callback The callback to call
      * @return Void->Void A callback to cancel the interval
      */
-    inline public function interval(owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    inline public function interval(owner:tracker.Owner, seconds:Float, callback:Void->Void):Void->Void {
 
         return Timer.interval(owner, seconds, callback);
 
@@ -177,12 +177,12 @@ class TrackerBackend {
 
     /**
      * Execute a callback after the given delay in seconds.
-     * @param owner The entity that owns this delayed call
+     * @param owner The owner of this delayed call (the call is skipped once it is destroyed)
      * @param seconds The time in seconds of delay before the call
      * @param callback The callback to call
      * @return Void->Void A callback to cancel the delayed call
      */
-    inline public function delay(owner:Entity, seconds:Float, callback:Void->Void):Void->Void {
+    inline public function delay(owner:tracker.Owner, seconds:Float, callback:Void->Void):Void->Void {
 
         return Timer.delay(owner, seconds, callback);
 

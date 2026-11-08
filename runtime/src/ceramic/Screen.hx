@@ -1243,84 +1243,84 @@ class Screen extends Entity implements Observable implements RenderTarget {
     #if plugin_elements
 
     @:plugin('elements')
-    inline function canEmitMultiTouchPointerDown(owner:Entity):Bool {
+    inline function canEmitMultiTouchPointerDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitMultiTouchPointerMove(owner:Entity):Bool {
+    inline function canEmitMultiTouchPointerMove(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitMultiTouchPointerUp(owner:Entity):Bool {
+    inline function canEmitMultiTouchPointerUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitMouseDown(owner:Entity):Bool {
+    inline function canEmitMouseDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitMouseMove(owner:Entity):Bool {
+    inline function canEmitMouseMove(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitMouseUp(owner:Entity):Bool {
+    inline function canEmitMouseUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitTouchDown(owner:Entity):Bool {
+    inline function canEmitTouchDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitTouchMove(owner:Entity):Bool {
+    inline function canEmitTouchMove(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitTouchUp(owner:Entity):Bool {
+    inline function canEmitTouchUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitPointerDown(owner:Entity):Bool {
+    inline function canEmitPointerDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitPointerMove(owner:Entity):Bool {
+    inline function canEmitPointerMove(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitPointerUp(owner:Entity):Bool {
+    inline function canEmitPointerUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 

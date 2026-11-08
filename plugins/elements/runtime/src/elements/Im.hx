@@ -206,7 +206,7 @@ class Im {
 
     static var _displayedPendingDialog:PendingDialog = null;
 
-    static var _allowedOwners:Array<Entity> = [];
+    static var _allowedOwners:Array<tracker.Owner> = [];
 
     static var _usedWindowKeys:Map<String,String> = new Map();
 
@@ -3369,13 +3369,13 @@ class Im {
 
     }
 
-    static function _allowedOwnerDestroyed(owner:Entity) {
+    static function _allowedOwnerDestroyed(owner:tracker.Owner) {
 
         _allowedOwners.remove(owner);
 
     }
 
-    @:noCompletion inline public static function filterEventOwner(owner:Entity):Bool {
+    @:noCompletion inline public static function filterEventOwner(owner:tracker.Owner):Bool {
 
         // When a window is focused, block any event emit that are not related to elements UI
 
@@ -3393,7 +3393,7 @@ class Im {
 
     }
 
-    static function _filterEventOwner(owner:Entity):Bool {
+    static function _filterEventOwner(owner:tracker.Owner):Bool {
 
         var view = Context.context.view;
         if (view == owner) {

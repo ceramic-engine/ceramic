@@ -52,9 +52,17 @@ package glaze;
  * Not an entity: a stateless instance costs what a `RenderOnce` builder
  * costs. A persistent instance is drawn through a small carrier entity
  * (`ComponentBuilder.ComponentHost`).
+ *
+ * **Owner**: a persistent component is a `tracker.Owner`, its lifecycle
+ * being the one of its host. `this` is a valid owner for tracker events
+ * (`model.onChange(this, ...)`), `Timer.interval(this, ...)`, tweens and
+ * immediates: what it owns ends when it leaves the tree. A stateless
+ * component is rebuilt at every render and owns nothing: passing `this` as
+ * an owner there is refused at compile time (the members of `tracker.Owner`
+ * below throw if reached anyway).
  */
 @:autoBuild(glaze.ComponentMacro.build())
-abstract class Component {
+abstract class Component implements tracker.Owner {
 
     /**
      * The children given by the parent with `.child(...)` / `.children(...)`,
@@ -144,6 +152,48 @@ abstract class Component {
      */
     @:noCompletion public function __intoAnyElement():AnyElement {
         return ComponentBuilder.intoAnyElement(this);
+    }
+
+/// Owner (generated in persistent components)
+
+    /**
+     * Whether this component left the tree (persistent component: its host
+     * was destroyed). A stateless component is not an owner.
+     */
+    public var destroyed(get, never):Bool;
+    function get_destroyed():Bool {
+        throw notAnOwner();
+    }
+
+    /**
+     * Calls `handler` once, when this persistent component leaves the tree
+     * (after its `destroy()`), with the component.
+     */
+    public function onceDestroy(#if tracker_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, handler:(tracker.Owner) -> Void #if tracker_debug_events , ?pos:haxe.PosInfos #end):Void {
+        throw notAnOwner();
+    }
+
+    /**
+     * Removes a handler bound with `onceDestroy()` (all of them without
+     * argument).
+     */
+    public function offDestroy(?handler:(tracker.Owner) -> Void):Void {
+        throw notAnOwner();
+    }
+
+    /**
+     * Gives the persistent instance its host, whose lifecycle it carries
+     * (generated).
+     */
+    @:noCompletion public function __attachHost(host:ComponentBuilder.ComponentHost):Void {}
+
+    /**
+     * Runs the destroy handlers, once the host is destroyed (generated).
+     */
+    @:noCompletion public function __emitDestroy():Void {}
+
+    function notAnOwner():haxe.Exception {
+        return new haxe.Exception('${Type.getClassName(Type.getClass(this))} is a stateless component: it is rebuilt at every render and cannot own handlers (make it persistent with @persist)');
     }
 
 }

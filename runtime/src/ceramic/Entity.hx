@@ -33,7 +33,7 @@ import tracker.DynamicEvents;
 #if ceramic_entity_field_info
 @autoFieldInfo
 #end
-class Entity #if ceramic_entity_base extends EntityBase #end implements Events implements Lazy {
+class Entity #if ceramic_entity_base extends EntityBase #end implements Events implements Lazy implements tracker.Owner {
 
 /// Statics
 
@@ -201,7 +201,7 @@ class Entity #if ceramic_entity_base extends EntityBase #end implements Events i
 
     @event function dispose(entity:ceramic.Entity);
 
-    @event function destroy(entity:ceramic.Entity);
+    @staticEvent @event function destroy(entity:tracker.Owner);
 
 /// Lifecycle
 

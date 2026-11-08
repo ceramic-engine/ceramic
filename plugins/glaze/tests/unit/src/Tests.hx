@@ -76,6 +76,7 @@ class Tests {
         runner.add(new tests.TextInputBehaviourTest());
         runner.add(new tests.ViewCacheTest());
         runner.add(new tests.ComponentTest());
+        runner.add(new tests.ComponentOwnerTest());
         // gpui-kit (waves 1 and 2)
         runner.add(new tests.kit.BaseRootTest());
         runner.add(new tests.kit.FrameScheduleTest());

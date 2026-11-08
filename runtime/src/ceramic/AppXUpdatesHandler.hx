@@ -16,7 +16,7 @@ class AppXUpdatesHandler {
      * The entity that owns this callback.
      * If the owner is destroyed, the callback won't execute.
      */
-    public var owner:Entity = null;
+    public var owner:tracker.Owner = null;
 
     /**
      * Number of update frames remaining before executing the callback.

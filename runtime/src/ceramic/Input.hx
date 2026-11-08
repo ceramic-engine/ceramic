@@ -218,28 +218,28 @@ class Input extends Entity {
     }
 
     @:plugin('elements')
-    inline function canEmitKeyDown(owner:Entity):Bool {
+    inline function canEmitKeyDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitKeyUp(owner:Entity):Bool {
+    inline function canEmitKeyUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitGamepadDown(owner:Entity):Bool {
+    inline function canEmitGamepadDown(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 
     }
 
     @:plugin('elements')
-    inline function canEmitGamepadUp(owner:Entity):Bool {
+    inline function canEmitGamepadUp(owner:tracker.Owner):Bool {
 
         return elements.Im.filterEventOwner(owner);
 

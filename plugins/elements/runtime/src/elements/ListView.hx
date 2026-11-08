@@ -600,7 +600,7 @@ class ListViewDataSource implements CollectionViewDataSource {
      * 
      * @param destroyed The destroyed entity
      */
-    function handleCellDestroy(destroyed:Entity) {
+    function handleCellDestroy(destroyed:tracker.Owner) {
 
         updateItemsBehaviorFromDragging();
 

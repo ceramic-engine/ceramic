@@ -156,8 +156,8 @@ class Timer {
     /**
      * Execute a callback after the given delay in seconds.
      *
-     * @param owner Optional entity that owns this timer. If provided and the entity
-     *              is destroyed, the timer is automatically cancelled.
+     * @param owner Optional owner of this timer (an entity, or any `tracker.Owner`).
+     *              If provided and destroyed, the timer is automatically cancelled.
      * @param seconds The delay in seconds before executing the callback
      * @param callback The function to execute after the delay
      * @return A function that can be called to cancel this timer delay
@@ -173,7 +173,7 @@ class Timer {
      * if (playerDied) cancel();
      * ```
      */
-    inline public static function delay(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, seconds:Float, callback:Void->Void):Void->Void {
+    inline public static function delay(#if ceramic_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, seconds:Float, callback:Void->Void):Void->Void {
 
         return schedule(owner, seconds, callback, -1);
 
@@ -182,8 +182,8 @@ class Timer {
     /**
      * Execute a callback periodically at the given interval in seconds.
      *
-     * @param owner Optional entity that owns this timer. If provided and the entity
-     *              is destroyed, the timer is automatically cancelled.
+     * @param owner Optional owner of this timer (an entity, or any `tracker.Owner`).
+     *              If provided and destroyed, the timer is automatically cancelled.
      * @param seconds The interval in seconds between each callback execution
      * @param callback The function to execute at each interval
      * @return A function that can be called to cancel this timer interval
@@ -200,7 +200,7 @@ class Timer {
      * Timer.delay(this, 10.0, () -> spawnTimer());
      * ```
      */
-    inline public static function interval(#if ceramic_optional_owner ?owner:Entity #else owner:Null<Entity> #end, seconds:Float, callback:Void->Void):Void->Void {
+    inline public static function interval(#if ceramic_optional_owner ?owner:tracker.Owner #else owner:Null<tracker.Owner> #end, seconds:Float, callback:Void->Void):Void->Void {
 
         return schedule(owner, seconds, callback, seconds);
 
@@ -208,13 +208,13 @@ class Timer {
 
     /**
      * Internal method to schedule a timer callback.
-     * @param owner The entity that owns this timer (for auto-cleanup)
+     * @param owner The owner of this timer (for auto-cleanup)
      * @param seconds Initial delay before first execution
      * @param callback The function to execute
      * @param interval For repeating timers, the interval between executions. -1 for one-shot timers.
      * @return A function to cancel the timer
      */
-    private static function schedule(owner:Entity, seconds:Float, callback:Void->Void, interval:Float):Void->Void {
+    private static function schedule(owner:tracker.Owner, seconds:Float, callback:Void->Void, interval:Float):Void->Void {
 
         // Check handler
         #if ceramic_check_handlers
@@ -284,7 +284,7 @@ class TimerCallback {
      * The entity that owns this timer. If the owner is destroyed,
      * the timer is automatically cancelled.
      */
-    public var owner:Entity = null;
+    public var owner:tracker.Owner = null;
 
     /**
      * The callback function to execute when the timer fires.
