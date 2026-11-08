@@ -50,7 +50,10 @@ class Highlighter {
     }
 
     static function reinstall(cx:Null<App>):Void {
-        if (cx != null && cx.hasGlobal(glaze.kit.theme.Theme)) {
+        if (cx != null) {
+            // A setting: made before the first render, it initializes the
+            // kit, then applies
+            glaze.kit.Kit.ensureInit(cx);
             glaze.kit.text.TextView.installTextViewDefaults(glaze.kit.theme.Theme.global(cx), cx);
         }
     }

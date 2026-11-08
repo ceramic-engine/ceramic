@@ -43,7 +43,6 @@ import glaze.kit.base.input.LspPosition;
 import glaze.kit.base.input.LspRange;
 import glaze.kit.base.input.LspShowDocumentParams;
 import glaze.kit.base.input.LspTextEdit;
-import glaze.kit.Component;
 import glaze.kit.input.CaretAnchoredPopup;
 import glaze.kit.input.Editor;
 import glaze.kit.input.Input;
@@ -101,7 +100,6 @@ class ComponentEditorCompletionsTest extends TestCase {
     function fixture(?provider:Suggestions, activate:Bool = true):Fixture {
         if (provider == null) provider = new Suggestions(false, app);
         app.update(cx -> {
-            Component.init(cx);
             // The port's text system only has Inter and JetBrains Mono.
             Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
             Theme.syncBase(cx);

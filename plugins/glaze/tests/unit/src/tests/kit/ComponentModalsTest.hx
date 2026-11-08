@@ -18,7 +18,6 @@ import glaze.TestPlatformOperations;
 import glaze.Window;
 import glaze.App;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.WindowState;
 import glaze.kit.dialog.AlertDialog;
 import glaze.kit.dialog.Dialog;
@@ -78,7 +77,6 @@ class ComponentModalsTest extends TestCase {
      */
     function window(width:Float, height:Float):{cx:VisualTestContext, clicks:Counter} {
         app.update(cx -> {
-            Component.init(cx);
             cx.setReduceMotion(true);
         });
         final clicks = new Counter();
@@ -208,7 +206,6 @@ class ComponentModalsTest extends TestCase {
     }
 
     function testDialogEntranceBuilder() {
-        app.update(cx -> Component.init(cx));
         app.update(cx -> {
             assertEquals(SlideDown, new Dialog(cx).props.entrance);
             for (entrance in [SlideDown, Fade, FadeSlide, None]) {
@@ -1162,7 +1159,6 @@ class ComponentModalsTest extends TestCase {
 
     function plainWindow(?cached:Counter):VisualTestContext {
         app.update(cx -> {
-            Component.init(cx);
             // This test checks layer hosting, independently of animation time.
             cx.setReduceMotion(true);
         });
@@ -1208,7 +1204,6 @@ class ComponentModalsTest extends TestCase {
 
     function testInitializationLeavesQuitAndCloseShortcutsToTheApplication() {
         app.update(cx -> {
-            Component.init(cx);
             for (shortcut in ['cmd-q', 'cmd-w', 'alt-f4']) {
                 assertEquals(0, cx.allBindingsForInput([glaze.Keystroke.parse(shortcut)]).length, '$shortcut must remain an application-owned binding');
             }
@@ -1241,7 +1236,6 @@ class ComponentModalsTest extends TestCase {
 // kit/tests/integration/overlays.rs (dialog, sheet and notification parts)
 
     function workspace():{cx:VisualTestContext, view:Entity<Workspace>} {
-        app.update(cx -> Component.init(cx));
         var workspace:Null<Entity<Workspace>> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
             workspace = rootCx.newEntity((viewCx:Context<Workspace>) -> new Workspace(viewCx.focusHandle().tabStop(true)));

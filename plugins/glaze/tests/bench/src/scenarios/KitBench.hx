@@ -8,7 +8,6 @@ import glaze.PlatformInput;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.theme.Theme;
 import glaze.kit.theme.ThemeMode;
 import glaze.util.AllocationCounters;
@@ -35,18 +34,17 @@ class KitBench {
 
     static var storyApp:Null<App> = null;
 
-    /** `Component.init` and the golden theme settings, once per app. */
+    /** The golden theme settings (which initialize the kit), once per app. */
     public static function initKit(app:App):Void {
         if (kitApp == app)
             return;
         kitApp = app;
         app.update(cx -> {
-            Component.init(cx);
             applyTheme(cx);
         });
     }
 
-    /** The story crate's `init` (includes `Component.init`) and the golden theme settings, once per app. */
+    /** The story crate's `init` (which initializes the kit) and the golden theme settings, once per app. */
     public static function initStory(app:App):Void {
         if (storyApp == app)
             return;

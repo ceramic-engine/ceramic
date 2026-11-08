@@ -22,7 +22,6 @@ import glaze.ScrollHandle;
 import glaze.Size;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.VirtualList;
 import glaze.kit.scroll.Scrollbar;
 import testing.InteractionScript.ScriptView;
@@ -53,7 +52,6 @@ class ComponentScrollTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         Probe.bounds.clear();
         ceramic.App.app.flushImmediate();
     }

@@ -7,7 +7,6 @@ import ceramic.Platform;
 import ceramic.Scene;
 import glaze.App;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.IconName;
 import story.Gallery;
 import story.Lib;

@@ -25,7 +25,6 @@ import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.WeakEntity;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.button.Button;
 import glaze.kit.button.Button.ButtonVariant;
 import glaze.kit.button.DropdownButton;
@@ -69,7 +68,8 @@ class ComponentMenuTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
+        // The frame counts below need the kit initialized before the first frame
+        app.update(cx -> glaze.kit.Kit.init(cx));
         Probe.bounds.clear();
         ceramic.App.app.flushImmediate();
     }
@@ -351,7 +351,6 @@ class ComponentMenuTest extends TestCase {
         final glyphs = cx.window.renderedScene().monochromeSprites.length;
         // Clear the bindings for the next window
         app.update(cx -> cx.clearKeyBindings());
-        app.update(cx -> Component.init(cx));
         return {framesBeforeOpen: framesBeforeOpen, framesAfterOpen: framesAfterOpen, glyphs: glyphs};
     }
 
@@ -457,7 +456,6 @@ class ComponentMenuTest extends TestCase {
         final framesAfterOpen = firstFrameRenders;
         final glyphs = firstFrameGlyphs;
         app.update(cx -> cx.clearKeyBindings());
-        app.update(cx -> Component.init(cx));
         return {framesBeforeOpen: framesBeforeOpen, framesAfterOpen: framesAfterOpen, glyphs: glyphs};
     }
 

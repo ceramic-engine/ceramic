@@ -26,7 +26,6 @@ import glaze.TestDispatcher;
 import glaze.TouchPhase;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.Size;
 import glaze.kit.table.Column;
 import glaze.kit.table.DataTable;
@@ -70,7 +69,6 @@ class ComponentTableTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

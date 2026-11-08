@@ -19,7 +19,6 @@ import glaze.Subscription;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.IndexPath;
-import glaze.kit.Component;
 import glaze.kit.combobox.Combobox;
 import glaze.kit.combobox.ComboboxState;
 import glaze.kit.searchablelist.SearchableListChange;
@@ -56,10 +55,12 @@ class ComponentComboboxTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
+        // The Base key bindings come with the initialization, which the
+        // unstyled harnesses below (no Root, no kit theme) do not trigger
+        app.update(cx -> glaze.kit.Kit.init(cx));
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

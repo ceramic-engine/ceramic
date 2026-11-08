@@ -41,7 +41,7 @@ using glaze.kit.base.ElementExt;
 /**
  * Component-owned window state and presentation; Base owns the actual root.
  *
- * Registered by `Component.init` as a `Root` plugin: before each root
+ * Registered by `Kit.init` as a `Root` plugin: before each root
  * render it sets the window's rem size to the theme's font size, it gives the
  * root surface the theme's font family, background and text color, and it
  * mounts the window-level layers above the application content.
@@ -105,7 +105,7 @@ class WindowState extends RootPlugin {
         touchSelectionOverlay = cx.newEntity((cx:Context<glaze.kit.touchselection.WindowTouchSelectionOverlay>) -> new glaze.kit.touchselection.WindowTouchSelectionOverlay(window, cx));
     }
 
-    static inline final ROOT_MISSING = 'component window state is missing; call glaze.kit.Component.init before opening the window';
+    static inline final ROOT_MISSING = 'component window state is missing; the window has no glaze.kit.base.Root, or its Root was created before the kit was initialized (see glaze.kit.Kit)';
 
     /**
      * The component state of `window`, or null when its root has none.

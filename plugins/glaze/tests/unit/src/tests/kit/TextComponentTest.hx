@@ -15,7 +15,6 @@ import glaze.Render;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.text.FrontmatterPlugin;
 import glaze.kit.text.TextView;
 import glaze.kit.text.TextViewStyle;
@@ -160,7 +159,6 @@ class TextComponentTest #if !macro extends KitTestCase #end {
 
     function testStatelessMarkdownFacadeSettlesAfterParsing() {
         app.update(cx -> {
-            Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of the theme).
             glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });

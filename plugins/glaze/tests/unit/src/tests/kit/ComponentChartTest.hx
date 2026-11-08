@@ -53,7 +53,6 @@ class ComponentChartTest extends KitTestCase {
 
     override function setup() {
         super.setup();
-        app.update(cx -> glaze.kit.Component.init(cx));
     }
 
 /// chart/mod.rs

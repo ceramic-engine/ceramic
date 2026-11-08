@@ -149,6 +149,9 @@ class Root extends Model implements Render implements Styled {
      */
     public function new(view:AnyView, window:Window, cx:Context<Root>) {
         super();
+        // The kit initializes itself here when the app did not: its root
+        // plugin (`WindowState`) must be registered before the plugins are built
+        glaze.kit.Kit.ensureInit(cx);
         this.view = view;
         tracker.Autorun.unobserve();
         final registry = cx.app.tryGlobal(RootPluginRegistry);

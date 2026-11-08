@@ -21,7 +21,6 @@ import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.IndexPath;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.combobox.Combobox;
 import glaze.kit.combobox.ComboboxState;
 import glaze.kit.combobox.ComboboxState.ComboboxEvent;
@@ -64,7 +63,6 @@ class ComponentSearchIntegrationTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

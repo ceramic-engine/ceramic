@@ -597,7 +597,7 @@ class NotificationList extends Model implements Render {
      *
      * GPUI keeps a single such handler (later registrations replace earlier
      * ones), so gpui-kit owns it: applications must not call
-     * `App.onSystemNotificationResponse` after `Component.init`. Responses
+     * `App.onSystemNotificationResponse` after `Kit.init`. Responses
      * to notifications the application posts itself are ignored here.
      */
     public static function init(cx:AppContext):Void {

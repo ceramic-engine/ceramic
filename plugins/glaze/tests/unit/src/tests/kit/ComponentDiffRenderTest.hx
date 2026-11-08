@@ -17,7 +17,6 @@ import glaze.ScrollDelta;
 import glaze.ScrollEvent;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.diff.Diff;
 import glaze.kit.diff.DiffAnnotation;
 import glaze.kit.diff.DiffDecoration;
@@ -48,7 +47,6 @@ class ComponentDiffRenderTest extends TestCase {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
         app.update(cx -> {
-            Component.init(cx);
             // The tests run without system fonts: use the bundled monospace font.
             glaze.kit.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
         });

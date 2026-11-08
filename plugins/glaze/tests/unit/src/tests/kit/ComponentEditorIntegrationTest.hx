@@ -27,7 +27,6 @@ import glaze.kit.base.Root;
 import glaze.kit.base.input.EditorState;
 import glaze.kit.base.input.FoldRange;
 import glaze.kit.base.input.InputBaseState;
-import glaze.kit.Component;
 import glaze.kit.input.Editor;
 import glaze.kit.input.InputOverlays;
 import glaze.kit.input.SearchPanel;
@@ -82,7 +81,6 @@ class ComponentEditorIntegrationTest extends TestCase {
 
     function editor(language:Null<String>, value:String, readonly:Bool = false, searchable:Bool = true):Entity<EditorState> {
         app.update(cx -> {
-            Component.init(cx);
             // The port's text system only has Inter and JetBrains Mono.
             Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
             Theme.syncBase(cx);

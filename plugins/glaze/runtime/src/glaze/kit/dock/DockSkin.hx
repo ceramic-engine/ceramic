@@ -89,7 +89,7 @@ class DockSkin extends DockAreaRendererBase {
     }
 
     /**
-     * Rust `dock::init`, run by `glaze.kit.Component.init`.
+     * Rust `dock::init`, run by `glaze.kit.Kit.init`.
      *
      * `PanelRegistry.init` is base's own, but the global it installs is not:
      * `DockArea`'s constructor and `PanelRegistry.registerPanel` both create

@@ -13,7 +13,6 @@ import glaze.TestDispatcher;
 import glaze.TestPlatformOperations;
 import glaze.Window;
 import glaze.kit.base.theme.ScrollbarMode;
-import glaze.kit.Component;
 import story.Themes;
 import story.stories.DataTableStory;
 import testing.TestCase;
@@ -81,7 +80,6 @@ class StoryPlatformTest extends TestCase {
                 Themes.stateStorage = {read: () -> json, write: (_) -> {}};
                 final app = new App(new TestDispatcher());
                 app.update(cx -> {
-                    Component.init(cx);
                     assertEquals(ScrollbarMode.Hover, glaze.kit.theme.Theme.global(cx).scrollbarMode);
                     story.AppState.init(cx);
                     Themes.init(cx);
@@ -92,7 +90,6 @@ class StoryPlatformTest extends TestCase {
             Themes.stateStorage = {read: () -> '{"theme": "Default Light"}', write: (_) -> {}};
             final app = new App(new TestDispatcher());
             app.update(cx -> {
-                Component.init(cx);
                 story.AppState.init(cx);
                 Themes.init(cx);
             });
@@ -136,7 +133,6 @@ class StoryPlatformTest extends TestCase {
         final app = new App(dispatcher);
         final platform = new TestPlatformOperations();
         app.platformOperations = platform;
-        app.update(cx -> Component.init(cx));
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, cx:Context<Blank>) -> new Blank(), 400, 300, 1);
         final window = opened.cx.window;
         try {

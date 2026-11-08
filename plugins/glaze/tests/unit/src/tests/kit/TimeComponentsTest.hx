@@ -31,7 +31,6 @@ import glaze.kit.base.chrono.NaiveDate;
 import glaze.kit.base.chrono.NaiveDateTime;
 import glaze.kit.base.chrono.NaiveTime;
 import glaze.kit.base.chrono.Weekday;
-import glaze.kit.Component;
 import glaze.kit.time.DatePicker.DatePickerEvent;
 import glaze.kit.time.DatePicker.DatePickerState;
 import glaze.kit.time.DatePicker.DateRangePreset;
@@ -74,7 +73,6 @@ class TimeComponentsTest extends TestCase {
         Local.fixAt(NaiveDateTime.of(NaiveDate.fromYmd(2026, 10, 30), NaiveTime.fromHms(12, 0, 0)));
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

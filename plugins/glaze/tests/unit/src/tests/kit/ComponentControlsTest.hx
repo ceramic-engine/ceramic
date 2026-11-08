@@ -29,7 +29,6 @@ import glaze.kit.base.A11y;
 import glaze.kit.base.Slider.SliderEvent;
 import glaze.kit.base.Slider.SliderState;
 import glaze.kit.base.Slider.SliderValue;
-import glaze.kit.Component;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.Sizable;
@@ -81,7 +80,6 @@ class ComponentControlsTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

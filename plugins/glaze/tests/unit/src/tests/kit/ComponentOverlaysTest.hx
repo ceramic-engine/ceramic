@@ -25,7 +25,6 @@ import glaze.Modifiers;
 import glaze.MouseMoveEvent;
 import glaze.MouseUpEvent;
 import glaze.kit.WindowState;
-import glaze.kit.Component;
 import glaze.kit.button.Button;
 import glaze.kit.popover.Popover;
 import tests.kit.BaseOverlaysTest.OverlayProbe;
@@ -115,7 +114,6 @@ class ComponentOverlaysTest extends TestCase {
     }
 
     function testAnchorAndOffsetPositionTheSurfaceOnEachTriggerEdge() {
-        app.update(cx -> Component.init(cx));
         final opened = open((_, _) -> new AnchorHarness(Anchor.TopLeft, null, new Point(200., 200.), false));
         final cx = opened.cx;
         draw(cx);
@@ -161,7 +159,6 @@ class ComponentOverlaysTest extends TestCase {
      * is anchored to.
      */
     function testTriggerStyleIsAppliedToTheTriggerContainer() {
-        app.update(cx -> Component.init(cx));
         final opened = open((_, _) -> new TriggerStyleHarness());
         final cx = opened.cx;
         draw(cx);
@@ -184,7 +181,6 @@ class ComponentOverlaysTest extends TestCase {
     }
 
     function testArrowReservesSpaceWithoutChangingAnchorAlignment() {
-        app.update(cx -> Component.init(cx));
         final opened = open((_, _) -> new AnchorHarness(Anchor.TopLeft, px(12.), new Point(200., 8.), true));
         final cx = opened.cx;
         draw(cx);
@@ -203,7 +199,6 @@ class ComponentOverlaysTest extends TestCase {
     }
 
     function testAnchorDoesNotFlipWhenOffsetOrArrowIsEnabled() {
-        app.update(cx -> Component.init(cx));
         final cx = open((_, _) -> new AnchorHarness(Anchor.BottomCenter, px(12.), new Point(200., 8.), true)).cx;
         draw(cx);
         draw(cx);
@@ -304,7 +299,6 @@ class ComponentOverlaysTest extends TestCase {
      * open after that.
      */
     function testTheEnterMotionStartsOverEveryTimeTheDropdownOpens() {
-        app.update(cx -> Component.init(cx));
         final opened = open((_, _) -> new DropdownHarness());
         final cx = opened.cx;
 
@@ -380,7 +374,6 @@ class ComponentOverlaysTest extends TestCase {
 
     function openRoot<V:Model & Render>(view:Entity<V>):VisualTestContext {
         app.update(cx -> {
-            Component.init(cx);
             // These tests cover tooltip lifetime, not intermediate fade frames.
             cx.setReduceMotion(true);
         });
@@ -534,7 +527,6 @@ class ComponentOverlaysTest extends TestCase {
 
     function openButtons(shown:Array<Bool>, delay:Float):{cx:VisualTestContext, buttons:Entity<TooltipButtons>, builds:Array<Int>} {
         app.update(cx -> {
-            Component.init(cx);
             // These tests cover tooltip lifetime, not intermediate fade frames.
             cx.setReduceMotion(true);
         });
@@ -636,7 +628,6 @@ class ComponentOverlaysTest extends TestCase {
      * is anchored to.
      */
     function testHoverCardTriggerStyleIsAppliedToTheTriggerContainer() {
-        app.update(cx -> Component.init(cx));
         final opened = open((_, _) -> new HoverCardTriggerStyleHarness());
         final cx = opened.cx;
         draw(cx);
@@ -670,7 +661,6 @@ class ComponentOverlaysTest extends TestCase {
      * query layer, the content is read through a probe.)
      */
     function testKitPopoverOpensBelowItsTriggerOnClick() {
-        app.update(cx -> Component.init(cx));
         final cx = open((_, _) -> new ScriptView((_, _) -> div()
             .sizeFull()
             .flex()
@@ -698,7 +688,6 @@ class ComponentOverlaysTest extends TestCase {
      * focus to the trigger.
      */
     function testPopoverContentKeepsKeyboardActivation() {
-        app.update(cx -> Component.init(cx));
         for (activation in ['enter', 'space']) {
             final applied = [0];
             final trigger = app.update(cx -> cx.focusHandle());
@@ -745,7 +734,6 @@ class ComponentOverlaysTest extends TestCase {
      * `real_hover_card_opens_and_closes_after_pointer_delays`.
      */
     function testRealHoverCardOpensAndClosesAfterPointerDelays() {
-        app.update(cx -> Component.init(cx));
         final cx = open((_, _) -> new ScriptView((_, _) -> div().sizeFull().flex().flexCol().gap8().children([
             new glaze.kit.hovercard.HoverCard('help')
                 .openDelay(0.03)

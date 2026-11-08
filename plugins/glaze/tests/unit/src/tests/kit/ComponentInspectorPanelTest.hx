@@ -26,7 +26,6 @@ import glaze.kit.base.input.CompletionContext;
 import glaze.kit.base.input.CompletionItem;
 import glaze.kit.base.input.EditorState;
 import glaze.kit.base.input.InputBaseState;
-import glaze.kit.Component;
 import glaze.kit.inspector.Inspector;
 import glaze.kit.inspector.Inspector.DivInspector;
 import glaze.kit.inspector.Inspector.InspectorCompletionProvider;
@@ -66,7 +65,6 @@ class ComponentInspectorPanelTest extends TestCase {
         app = new App(dispatcher);
         ceramic.App.app.flushImmediate();
         app.update(cx -> {
-            Component.init(cx);
             Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
             Theme.syncBase(cx);
         });

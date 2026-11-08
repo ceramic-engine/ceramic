@@ -23,7 +23,6 @@ import glaze.kit.base.dock.DockLayout;
 import glaze.kit.base.dock.DockPlacement;
 import glaze.kit.base.dock.PanelId;
 import glaze.kit.base.input.InputState;
-import glaze.kit.Component;
 import glaze.kit.dock.DockDebugBounds;
 import glaze.kit.dock.DockSkin;
 import glaze.kit.dock.PanelBase;
@@ -75,7 +74,6 @@ class ComponentDockIntegrationTest extends TestCase {
     }
 
     function openWindow<V:Model & Render>(build:(Window, Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
-        app.update(cx -> Component.init(cx));
         final opened = VisualTestContext.addWindowView(app, dispatcher, build, 900, 600);
         opened.cx.window.viewCachingDisabled = true;
         contexts.push(opened.cx);

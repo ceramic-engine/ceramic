@@ -27,7 +27,6 @@ import glaze.ScrollHandle;
 import glaze.TestDispatcher;
 import glaze.TouchPhase;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.Size;
@@ -69,7 +68,6 @@ class ComponentTabTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

@@ -9,7 +9,6 @@ import glaze.Entity;
 import glaze.Keystroke;
 import glaze.TestDispatcher;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import story.stories.InputCompletion;
 import story.stories.InputCompletion.CompletionExample;
 import testing.TestCase;
@@ -61,7 +60,6 @@ class StoryInputCompletionTest extends TestCase {
     }
 
     function mount():{story:Entity<CompletionExample>, cx:VisualTestContext} {
-        app.update(cx -> Component.init(cx));
         var story:Null<Entity<CompletionExample>> = null;
         final opened = VisualTestContext.addWindowView(app, dispatcher, (window, rootCx:Context<Root>) -> {
             story = CompletionExample.create(window, rootCx.app);

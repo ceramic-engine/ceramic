@@ -28,7 +28,6 @@ import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.InputTouch;
 import glaze.kit.base.input.TouchSelectionSnapshot;
 import glaze.kit.base.text.TextViewState;
-import glaze.kit.Component;
 import glaze.kit.input.Input;
 import glaze.kit.text.TextView;
 import tests.kit.ComponentScrollTest.Probe;
@@ -63,7 +62,6 @@ class TouchSelectionIntegrationTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         Probe.bounds.clear();
         ceramic.App.app.flushImmediate();
     }

@@ -198,7 +198,8 @@ class BaseRootTest extends TestCase {
             });
             extra.push(opened.cx);
             final root:Root = opened.view;
-            assertEquals(1, root.plugins.length);
+            // The kit, initialized by the root, adds its own plugin
+            assertEquals(1, root.plugins.filter(p -> Std.isOfType(p, Layer)).length);
             ids.push(root.plugin(Layer).entityId);
         }
         assertTrue(ids[0] != ids[1]);

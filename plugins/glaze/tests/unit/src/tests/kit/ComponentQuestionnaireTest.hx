@@ -25,7 +25,6 @@ import glaze.kit.base.questionnaire.QuestionnaireInputDefinition;
 import glaze.kit.base.questionnaire.QuestionnaireItemDefinition;
 import glaze.kit.base.questionnaire.QuestionnaireShortcutMode;
 import glaze.kit.base.questionnaire.QuestionnaireState;
-import glaze.kit.Component;
 import glaze.kit.Size;
 import glaze.kit.questionnaire.Questionnaire;
 import glaze.kit.theme.Theme;
@@ -55,7 +54,6 @@ class ComponentQuestionnaireTest extends TestCase {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
         app.update(cx -> {
-            Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of
             // the theme, used by the shortcut badges).
             Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';

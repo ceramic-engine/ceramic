@@ -22,7 +22,6 @@ import glaze.kit.base.resizable.ResizablePanelGroup;
 import glaze.kit.base.resizable.ResizablePanelGroup.IntoResizablePanel;
 import glaze.kit.base.resizable.ResizablePanelGroup.ResizablePanelEvent;
 import glaze.kit.base.resizable.ResizableState;
-import glaze.kit.Component;
 import glaze.kit.breadcrumb.Breadcrumb;
 import glaze.kit.breadcrumb.Breadcrumb.BreadcrumbItem;
 import glaze.kit.breadcrumb.Breadcrumb.IntoBreadcrumbItem;
@@ -67,7 +66,6 @@ class NullSlotTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

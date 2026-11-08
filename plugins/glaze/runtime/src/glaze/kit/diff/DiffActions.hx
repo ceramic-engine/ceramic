@@ -33,7 +33,7 @@ import glaze.kit.base.input.InputActions.SelectAll;
 
 /**
  * The key bindings of the diff (Rust `diff::init`), in a module of their own
- * so that `Component.init` registers them without loading the diff itself.
+ * so that `Kit.init` registers them without loading the diff itself.
  */
 class DiffActions {
 

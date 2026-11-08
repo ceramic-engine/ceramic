@@ -13,7 +13,6 @@ import glaze.Keystroke;
 import glaze.ScrollHandle;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.Size;
 import glaze.kit.attachment.Attachment;
 import glaze.kit.button.Button;
@@ -307,7 +306,6 @@ class AttachmentTest extends TestCase {
     }
 
     function testWholeCardClickStaysBelowTheActions() {
-        app.update(cx -> Component.init(cx));
         var cardClicks = 0;
         var actionClicks = 0;
         final cx = open((_, _) -> new Attachment()
@@ -337,7 +335,6 @@ class AttachmentTest extends TestCase {
 /// retry_dispatch
 
     function failedMediaHarness(retry:Bool, retries:Array<Int>):VisualTestContext {
-        app.update(cx -> Component.init(cx));
         final cx = open((_, _) -> {
             final attachment = new Attachment()
                 .id('failed-attachment')

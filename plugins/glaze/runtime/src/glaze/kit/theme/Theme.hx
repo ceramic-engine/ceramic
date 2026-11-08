@@ -296,6 +296,17 @@ class Theme extends ThemeColor {
      */
     public static function init(cx:AppContext):Void {
 
+        // The theme is initialized with the rest of the kit, once
+        Kit.ensureInit(cx);
+
+    }
+
+    /**
+     * Rust `theme::init`, run by the kit's initialization (`Kit`).
+     */
+    @:allow(glaze.kit)
+    static function initTheme(cx:AppContext):Void {
+
         ThemeRegistry.init(cx);
 
         // Ensure theme is loaded directly on startup
@@ -313,6 +324,7 @@ class Theme extends ThemeColor {
      */
     public static function syncSystemAppearance(window:Null<Window>, cx:AppContext):Void {
 
+        Kit.ensureInit(cx);
         final appearance = window != null ? window.appearance() : cx.windowAppearance();
         change(ThemeMode.fromAppearance(appearance), window, cx);
 
@@ -328,6 +340,7 @@ class Theme extends ThemeColor {
      */
     public static function syncScrollbarAppearance(cx:AppContext):Void {
 
+        Kit.ensureInit(cx);
         final mode:ScrollbarMode = cx.shouldAutoHideScrollbars() ? Scrolling : Hover;
         setScrollbarMode(mode, cx);
 
@@ -339,6 +352,7 @@ class Theme extends ThemeColor {
      */
     public static inline function global(cx:AppContext):Theme {
 
+        Kit.ensureInit(cx);
         return cx.global(Theme);
 
     }
@@ -352,6 +366,7 @@ class Theme extends ThemeColor {
      */
     public static inline function globalMut(cx:AppContext):Theme {
 
+        Kit.ensureInit(cx);
         return cx.globalMut(Theme);
 
     }
@@ -386,6 +401,7 @@ class Theme extends ThemeColor {
     @:allow(glaze.kit.theme)
     static function edit<R>(cx:AppContext, reloadMode:Bool, edit:(Theme) -> R):R {
 
+        Kit.ensureInit(cx);
         tracker.Autorun.unobserve();
         final before = cx.global(Theme);
         tracker.Autorun.reobserve();
@@ -456,6 +472,7 @@ class Theme extends ThemeColor {
      */
     public static function change(mode:ThemeMode, window:Null<Window>, cx:AppContext):Void {
 
+        Kit.ensureInit(cx);
         if (!cx.hasGlobal(Theme)) {
             final theme = new Theme();
             final registry = ThemeRegistry.global(cx);

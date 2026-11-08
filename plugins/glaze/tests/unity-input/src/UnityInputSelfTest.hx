@@ -549,7 +549,6 @@ class UnityInputSelfTest {
             textInput.virtualKeyboard = keyboard;
             // A gpui-kit input in a second window
             final cx = glaze.App.current;
-            glaze.kit.Component.init(cx);
             keyboardWindow = Window.open(cx, {width: 400, height: 60}, (window, cx) -> {
                 return cx.newEntity((rootCx:Context<Root>) -> {
                     final content = rootCx.newEntity((viewCx:Context<KeyboardView>) -> {

@@ -15,7 +15,6 @@ import glaze.kit.base.Root;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.MaskPattern;
-import glaze.kit.Component;
 import glaze.kit.input.Input;
 import glaze.kit.input.NumberInput;
 import testing.TestCase;
@@ -52,7 +51,6 @@ class NumberInputKeyboardTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
         previousSend = TextInputBridge.sendConfiguration;
         TextInputBridge.sendConfiguration = (inputMode, _, _, _, _) -> sent.push(inputMode);

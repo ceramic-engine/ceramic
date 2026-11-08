@@ -25,7 +25,6 @@ import glaze.kit.base.dock.TabGroupContext;
 import glaze.kit.base.dock.TabGroupRenderer;
 import glaze.kit.base.dock.TabGroupRendererBase;
 import glaze.kit.base.resizable.Resizable as BaseResizable;
-import glaze.kit.Component;
 import glaze.kit.dock.ClosePanel;
 import glaze.kit.dock.DockDebugBounds;
 import glaze.kit.dock.DockSkin;
@@ -80,7 +79,6 @@ class ComponentDockTest extends TestCase {
 
     /** Rust `crate::init(cx)`. */
     function init():Void {
-        app.update(cx -> Component.init(cx));
     }
 
     function open(build:(Window, Context<DockArea>) -> DockArea, width:Float = 1920, height:Float = 1080):{area:Entity<DockArea>, cx:VisualTestContext} {

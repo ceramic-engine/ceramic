@@ -18,7 +18,6 @@ import glaze.TestDispatcher;
 import glaze.TouchPhase;
 import glaze.Window;
 import glaze.kit.base.IndexPath;
-import glaze.kit.Component;
 import glaze.kit.list.List;
 import glaze.kit.list.ListDelegate.ListDelegateBase;
 import glaze.kit.list.ListDelegate.ListDelegateItem;
@@ -51,7 +50,6 @@ class ComponentListTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

@@ -29,7 +29,6 @@ import glaze.kit.base.input.LanguageConfig;
 import glaze.kit.base.input.LspCodeAction;
 import glaze.kit.base.input.LspHover;
 import glaze.kit.base.input.SearchMatcher;
-import glaze.kit.Component;
 import glaze.kit.Size;
 import glaze.kit.input.CompletionMenu;
 import glaze.kit.input.ComponentLanguages;
@@ -95,7 +94,6 @@ class ComponentEditorTest extends TestCase {
      */
     function init():Void {
         app.update(cx -> {
-            Component.init(cx);
             glaze.kit.theme.Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
             glaze.kit.theme.Theme.syncBase(cx);
         });

@@ -14,7 +14,6 @@ import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.messagescroller.MessageScroller;
 import testing.InteractionScript.ScriptView;
 import testing.TestCase;
@@ -99,7 +98,6 @@ class MessageScrollerTest extends TestCase {
     }
 
     function testLogicalScrollTopReportsTheRowAtTheTop() {
-        app.update(cx -> Component.init(cx));
         final state = newState(30);
         final cx = harness(state);
         function top():ListOffset {
@@ -129,7 +127,6 @@ class MessageScrollerTest extends TestCase {
      * the tail-follow off and the jump button showing.
      */
     function testTheScrollbarDragRangeReachesTheEndOfTheContent() {
-        app.update(cx -> Component.init(cx));
         final state = newState(10);
         final cx = harness(state);
         draw(cx);
@@ -158,7 +155,6 @@ class MessageScrollerTest extends TestCase {
      * message the list's padding instead of giving it to the list.
      */
     function testACustomListPaddingRidesOnTheFirstAndTheLastRow() {
-        app.update(cx -> Component.init(cx));
 
         final first = newState(10);
         final second = newState(10);

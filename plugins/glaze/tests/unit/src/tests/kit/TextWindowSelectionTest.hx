@@ -35,7 +35,6 @@ import glaze.kit.base.TextSelectionRegistration;
 import glaze.kit.base.TextSelectionRun;
 import glaze.kit.base.text.SelectionFormat;
 import glaze.kit.base.text.TextViewState;
-import glaze.kit.Component;
 import glaze.kit.text.TextView;
 import glaze.kit.text.TextViewStyle;
 import testing.VisualTestContext;
@@ -406,7 +405,6 @@ class TextWindowSelectionTest #if !macro extends KitTestCase #end {
     /** `cx.update(crate::init)` then a window whose Root shows the view built by `build`. */
     function openRoot<V:Model & Render>(build:(Context<V>) -> V):{view:Entity<V>, cx:VisualTestContext} {
         app.update(cx -> {
-            Component.init(cx);
             // The test fonts have no `Menlo` (the macOS monospace family of the theme).
             glaze.kit.base.theme.Theme.globalMut(cx).tokens.typography.mono = 'JetBrains Mono';
         });

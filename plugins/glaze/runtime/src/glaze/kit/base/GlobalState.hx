@@ -108,6 +108,9 @@ class GlobalState {
     }
 
     public static function global(cx:AppContext):GlobalState {
+        // Settings go through here before any initialization (`setAppMenus`
+        // before the first render): the global is created when missing
+        init(cx);
         tracker.Autorun.unobserve();
         final state = (cx:App).global(GlobalState);
         tracker.Autorun.reobserve();

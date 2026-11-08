@@ -10,7 +10,6 @@ import glaze.Model;
 import glaze.Render;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.alert.Alert;
@@ -88,7 +87,6 @@ class MainScene extends Scene {
     override function create() {
 
         final cx = App.current;
-        cx.update(cx -> Component.init(cx));
 
         final paths = [for (name in IconName.ALL) name.path()];
         App.defaultAssetSource().preload(paths.concat(['ceramic.png']), _ -> {

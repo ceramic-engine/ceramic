@@ -66,12 +66,14 @@ class ThemeRegistry {
 
     public static function global(cx:AppContext):ThemeRegistry {
 
+        glaze.kit.Kit.ensureInit(cx);
         return cx.global(ThemeRegistry);
 
     }
 
     public static function globalMut(cx:AppContext):ThemeRegistry {
 
+        glaze.kit.Kit.ensureInit(cx);
         return cx.globalMut(ThemeRegistry);
 
     }

@@ -17,7 +17,6 @@ import glaze.Window.StateModel;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.groupbox.GroupBox.GroupBoxVariant;
 import glaze.kit.setting.SettingGroup;
 import glaze.kit.setting.SettingItem;
@@ -53,7 +52,6 @@ class ComponentSettingTest extends TestCase {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
         app.update(cx -> {
-            Component.init(cx);
             Theme.globalMut(cx).fontSize = 16.;
         });
         ceramic.App.app.flushImmediate();

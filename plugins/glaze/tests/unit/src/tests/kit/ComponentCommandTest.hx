@@ -23,7 +23,6 @@ import glaze.kit.base.Actions.Confirm;
 import glaze.kit.base.Actions.SelectDown;
 import glaze.kit.base.Actions.SelectUp;
 import glaze.kit.base.IndexPath;
-import glaze.kit.Component;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.command.Command;
@@ -73,7 +72,6 @@ class ComponentCommandTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

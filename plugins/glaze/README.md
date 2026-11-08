@@ -60,11 +60,9 @@ class Counter extends Model implements Render {
 
 `Glaze` is a regular Ceramic visual: it resizes its window with it and closes it when destroyed. `ui.window` gives the GPUI window behind it.
 
-For the components, initialize the kit once and wrap your view in a `Root`, which applies the theme:
+For the components, wrap your view in a `Root`, which applies the theme. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change`, `Kit.setLocale`...) initializes it too, then applies:
 
 ```haxe
-cx.update(cx -> glaze.kit.Component.init(cx));
-
 ui = new Glaze((window, cx) -> {
     final view = cx.newEntity((cx:Context<MyView>) -> new MyView());
     return cx.newEntity((cx:Context<Root>) -> new Root(view, window, cx));

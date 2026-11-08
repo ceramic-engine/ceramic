@@ -18,7 +18,6 @@ import glaze.RenderOnce;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.button.Button;
 import glaze.kit.statusbar.StatusBar;
 import glaze.kit.table.Table;
@@ -50,7 +49,6 @@ class NullChildTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

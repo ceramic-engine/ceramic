@@ -19,7 +19,6 @@ import glaze.Render;
 import glaze.StyleRefinement;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.Icon;
 import glaze.kit.IconName;
 import glaze.kit.PlatformUrl;
@@ -121,7 +120,6 @@ class ComponentLeavesTest extends TestCase {
     // empty.rs
 
     function testMediaKeepsIntrinsicWidthAndSlotAlignment() {
-        app.update(cx -> Component.init(cx));
         for (grouped in [false, true]) {
             for (leading in [false, true]) {
                 final b = new Map<String, Bounds>();
@@ -235,7 +233,6 @@ class ComponentLeavesTest extends TestCase {
     // component link.rs
 
     function legacyLink(disabled:Bool, ?bounds:Map<String, Bounds>):{clicks:Int} {
-        app.update(cx -> Component.init(cx));
         final state = {clicks: 0};
         open(() -> new glaze.kit.link.Link('legacy-link')
             .href('https://example.com')

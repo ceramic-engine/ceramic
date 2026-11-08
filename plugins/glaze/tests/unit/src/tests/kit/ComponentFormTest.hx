@@ -12,7 +12,6 @@ import glaze.Model;
 import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.button.Button;
 import glaze.kit.form.Field;
 import glaze.kit.form.Form;
@@ -36,7 +35,6 @@ class ComponentFormTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

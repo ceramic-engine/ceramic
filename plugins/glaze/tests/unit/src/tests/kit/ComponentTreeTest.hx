@@ -19,7 +19,6 @@ import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.list.ListItem;
 import glaze.kit.tree.Tree;
 import testing.TestCase;
@@ -46,7 +45,6 @@ class ComponentTreeTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

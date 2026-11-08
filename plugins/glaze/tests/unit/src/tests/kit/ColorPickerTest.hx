@@ -21,7 +21,6 @@ import glaze.kit.base.ColorPicker.ColorPickerEvent;
 import glaze.kit.base.ColorPicker.ColorPickerState;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputEvent;
-import glaze.kit.Component;
 import glaze.kit.colorpicker.ColorPicker;
 import glaze.kit.colorpicker.ColorPicker.ColorSelect;
 import testing.InteractionScript.ScriptView;
@@ -51,7 +50,9 @@ class ColorPickerTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
+        // The Base key bindings come with the initialization, which the
+        // unstyled color picker (no Root, no kit theme) does not trigger
+        app.update(cx -> glaze.kit.Kit.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

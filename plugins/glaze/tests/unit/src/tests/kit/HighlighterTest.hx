@@ -200,7 +200,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
 
     function testStatusColorsOfTheStubAreTransparent() {
         app.update(cx -> {
-            glaze.kit.Component.init(cx);
             for (severity in [DiagnosticSeverity.Error, DiagnosticSeverity.Warning, DiagnosticSeverity.Info, DiagnosticSeverity.Hint]) {
                 assertTrue(DiagnosticStyles.diagnosticForeground(severity, cx).equals(new Hsla()));
                 assertTrue(DiagnosticStyles.diagnosticBackground(severity, cx).equals(new Hsla()));
@@ -408,7 +407,6 @@ class HighlighterTest #if !macro extends KitTestCase #end {
 
     function testComponentInitializationInstallsCodeHighlightingWhenEnabled() {
         app.update(cx -> {
-            glaze.kit.Component.init(cx);
             assertFalse(glaze.kit.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());
             Highlighter.enable(cx);
             assertTrue(glaze.kit.base.text.TextView.TextViewDefaults.global(cx).hasCodeBlockHighlighter());

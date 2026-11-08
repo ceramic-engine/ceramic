@@ -23,7 +23,6 @@ import glaze.kit.base.OtpInput.OtpState;
 import glaze.kit.base.StepAction;
 import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.TextareaState;
-import glaze.kit.Component;
 import glaze.kit.input.AnyInputState;
 import glaze.kit.input.Input;
 import glaze.kit.input.InputContentType;
@@ -61,7 +60,6 @@ class InputComponentsTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

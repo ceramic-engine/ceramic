@@ -26,7 +26,6 @@ import glaze.kit.base.input.EditorState;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.LspHover;
-import glaze.kit.Component;
 import glaze.kit.input.Editor;
 import glaze.kit.input.Input;
 import glaze.kit.theme.Theme;
@@ -73,7 +72,6 @@ class InputMoveNotifyTest extends TestCase {
             }
         };
         app.update(cx -> {
-            Component.init(cx);
             cx.setReduceMotion(true);
             Theme.change(ThemeMode.Light, null, cx);
             Theme.setScrollbarMode(Always, cx);

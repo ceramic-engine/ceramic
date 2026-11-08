@@ -24,7 +24,6 @@ import glaze.TestPlatformOperations;
 import glaze.Window;
 import glaze.WindowAppearance;
 import glaze.kit.base.theme.ScrollbarMode;
-import glaze.kit.Component;
 import glaze.kit.theme.Theme;
 import glaze.platform.CeramicPlatformOperations;
 import testing.TestCase;
@@ -222,7 +221,6 @@ class PlatformAppearanceTest extends TestCase {
             emitAutoHideScrollbars(autoHide);
             final app = new App(new TestDispatcher());
             assertEquals(autoHide, app.shouldAutoHideScrollbars());
-            app.update(cx -> Component.init(cx));
             assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode, 'auto hide $autoHide');
             // The platform still answers what the system says
             assertEquals(autoHide, app.shouldAutoHideScrollbars());
@@ -234,7 +232,6 @@ class PlatformAppearanceTest extends TestCase {
      * read when it is called (a later change is not followed).
      */
     function testSyncScrollbarAppearanceIsTheOptIn() {
-        app.update(cx -> Component.init(cx));
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
 
         emitAutoHideScrollbars(true);
@@ -257,7 +254,6 @@ class PlatformAppearanceTest extends TestCase {
         // Like gpui-kit's own tests (TestPlatform: false), whatever the screen says
         emitAutoHideScrollbars(true);
         app.platformOperations = new TestPlatformOperations();
-        app.update(cx -> Component.init(cx));
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
         app.update(cx -> Theme.syncScrollbarAppearance(cx));
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
@@ -265,7 +261,6 @@ class PlatformAppearanceTest extends TestCase {
 
     function testAModeChosenByTheAppIsKept() {
         app.update(cx -> {
-            Component.init(cx);
             Theme.setScrollbarMode(Always, cx);
         });
         assertEquals(ScrollbarMode.Always, Theme.global(app).scrollbarMode);
@@ -279,7 +274,6 @@ class PlatformAppearanceTest extends TestCase {
     }
 
     function testSyncSystemAppearance() {
-        app.update(cx -> Component.init(cx));
         emitSystemAppearance(DARK);
         final window = openWindow();
         app.update(cx -> Theme.syncSystemAppearance(window, cx));
@@ -384,7 +378,6 @@ class PlatformAppearanceTest extends TestCase {
     function testNativeInitUsesHoverAndTheSyncFollowsTheScrollerStyle() {
         final overlay = clay.sdl.SDL.autoHideScrollbars();
         assertEquals(overlay, app.shouldAutoHideScrollbars());
-        app.update(cx -> Component.init(cx));
         assertEquals(ScrollbarMode.Hover, Theme.global(app).scrollbarMode);
         app.update(cx -> Theme.syncScrollbarAppearance(cx));
         assertEquals(overlay ? ScrollbarMode.Scrolling : ScrollbarMode.Hover, Theme.global(app).scrollbarMode);

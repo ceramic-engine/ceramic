@@ -16,7 +16,7 @@ import glaze.AppContext;
 class Menus {
 
     /**
-     * Registers the key bindings of the menus (called by `Component.init`).
+     * Registers the key bindings of the menus (called by `Kit.init`).
      */
     public static function init(cx:AppContext):Void {
         AppMenuBar.init(cx);

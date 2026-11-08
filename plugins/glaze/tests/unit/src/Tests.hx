@@ -246,6 +246,7 @@ class Tests {
         runner.add(new tests.kit.StoryListTest());
         // child(null) and null children are skipped (README, UI API)
         runner.add(new tests.kit.NullChildTest());
+        runner.add(new tests.kit.KitInitTest());
         // null in the other slot APIs (breadcrumb, resizable, message avatar,
         // description text, radar label) and HoverCard.trigger(null) throws
         runner.add(new tests.kit.NullSlotTest());

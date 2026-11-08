@@ -25,7 +25,6 @@ import glaze.kit.base.Root;
 import glaze.kit.base.input.InputBaseState;
 import glaze.kit.base.input.InputState;
 import glaze.kit.base.input.TextareaState;
-import glaze.kit.Component;
 import glaze.kit.IconName;
 import glaze.kit.Size;
 import glaze.kit.button.Button.Button;
@@ -76,7 +75,6 @@ class ComponentInputTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

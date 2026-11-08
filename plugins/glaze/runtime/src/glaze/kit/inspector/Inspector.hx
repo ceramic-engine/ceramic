@@ -66,7 +66,7 @@ using glaze.kit.base.input.InputIndentExt;
  * provider of the Rust editor (`InspectorCompletionProvider`).
  *
  * The panel needs GPUI's inspector (define `glaze_inspector`, Rust feature
- * `inspector`): `Inspector.init` (called by `Component.init`) binds
+ * `inspector`): `Inspector.init` (called by `Kit.init`) binds
  * `ToggleInspector` (cmd-alt-i on macOS, ctrl-shift-i elsewhere), registers
  * `DivInspector` for `DivInspectorState` and sets `renderInspector` as the
  * renderer of GPUI's inspector panel.

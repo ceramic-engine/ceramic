@@ -26,7 +26,6 @@ import glaze.TestDispatcher;
 import glaze.Decorations.Tiling;
 import glaze.Window;
 import glaze.WindowControlArea;
-import glaze.kit.Component;
 import glaze.kit.TitleBar;
 import glaze.kit.WindowBorder;
 import testing.InteractionScript.ScriptView;
@@ -63,7 +62,6 @@ class ComponentWindowTest extends TestCase {
         TitleBar.isWeb = false;
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

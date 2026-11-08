@@ -13,7 +13,6 @@ import glaze.Pixels;
 import glaze.Point;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.accordion.Accordion;
 import glaze.kit.collapsible.Collapsible;
 import glaze.kit.stepper.Stepper;
@@ -48,7 +47,6 @@ class ComponentDisclosureTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         DebugProbe.clear();
         ceramic.App.app.flushImmediate();
     }

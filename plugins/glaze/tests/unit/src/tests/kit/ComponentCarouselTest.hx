@@ -29,7 +29,6 @@ import glaze.Window;
 import glaze.kit.base.Actions.SelectDown;
 import glaze.kit.base.Actions.SelectLeft;
 import glaze.kit.base.Actions.SelectRight;
-import glaze.kit.Component;
 import glaze.kit.button.Button;
 import glaze.kit.carousel.Carousel;
 import glaze.kit.carousel.CarouselContent;
@@ -513,7 +512,6 @@ class ComponentCarouselTest extends TestCase {
     }
 
     function openHarness<V:Model & Render>(build:(Context<V>) -> V):VisualTestContext {
-        app.update(cx -> Component.init(cx));
         final opened = VisualTestContext.addWindowView(app, dispatcher, (_, cx:Context<V>) -> build(cx));
         contexts.push(opened.cx);
         draw(opened.cx);
@@ -569,7 +567,6 @@ class ComponentCarouselTest extends TestCase {
     }
 
     function testTrackGrowsByItsLeadingMarginSoItemsFillTheFrame() {
-        app.update(cx -> Component.init(cx));
         for (axis in [Horizontal, Vertical]) {
             final state = newState(() -> new CarouselState(3).withAxis(axis));
             final opened = VisualTestContext.addWindowView(app, dispatcher, (_, _) -> new KeyboardHarness(state));

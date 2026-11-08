@@ -10,7 +10,6 @@ import glaze.KeyBinding;
 import glaze.OperatingSystem;
 import glaze.Window;
 import glaze.kit.base.Root;
-import glaze.kit.Component;
 import glaze.kit.I18n;
 import glaze.kit.Size;
 import glaze.kit.TitleBar;
@@ -115,7 +114,6 @@ class Lib {
         // Rust initializes a tracing subscriber here (no equivalent).
 
         extendComponentTranslations();
-        Component.init(cx);
         AppState.init(cx);
         Themes.init(cx);
         story.stories.Stories.init(cx);

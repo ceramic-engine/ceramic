@@ -20,6 +20,11 @@ class Base {
      * globals and bindings here as they are ported.
      */
     public static function init(cx:AppContext):Void {
+        // Once per app: the kit's initialization runs it too, after an app
+        // that initializes the Base layer itself
+        final app:App = cx;
+        if (app.hasGlobal(BaseInitialized)) return;
+        app.setGlobal(BaseInitialized.instance, BaseInitialized);
         glaze.kit.base.theme.Theme.globalMut(cx);
         GlobalState.init(cx);
         Dialog.DialogKeys.init(cx);
@@ -37,5 +42,16 @@ class Base {
         glaze.kit.base.text.Text.init(cx);
         Root.init(cx);
     }
+
+}
+
+/**
+ * The global marking an app whose Base layer is initialized.
+ */
+private class BaseInitialized {
+
+    public static final instance:BaseInitialized = new BaseInitialized();
+
+    function new() {}
 
 }

@@ -13,7 +13,6 @@ import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.base.IndexPath;
-import glaze.kit.Component;
 import glaze.kit.I18n;
 import glaze.kit.searchablelist.SearchableListItem;
 import glaze.kit.searchablelist.SearchableVec;
@@ -49,7 +48,6 @@ class ComponentSelectTest extends TestCase {
         app.onEffectsFlushed = app -> {
             if (window != null && window.dirty && !window.isDestroyed()) window.draw();
         };
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 

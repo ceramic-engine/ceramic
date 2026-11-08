@@ -7,7 +7,6 @@ import glaze.Model;
 import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
-import glaze.kit.Component;
 import glaze.kit.IconName;
 import glaze.kit.badge.Badge;
 import glaze.kit.button.Button;
@@ -66,7 +65,6 @@ class DeviationsTest extends TestCase {
     override function setup() {
         dispatcher = new TestDispatcher();
         app = new App(dispatcher);
-        app.update(cx -> Component.init(cx));
         ceramic.App.app.flushImmediate();
     }
 
