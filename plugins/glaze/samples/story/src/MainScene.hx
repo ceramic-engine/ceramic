@@ -5,10 +5,8 @@ package;
 
 import ceramic.Platform;
 import ceramic.Scene;
-import glaze.App;
 import glaze.Glaze;
 import glaze.Window;
-import glaze.kit.IconName;
 import story.Gallery;
 import story.Lib;
 
@@ -28,12 +26,6 @@ class MainScene extends Scene {
         final cx = Glaze.app;
         final name = Platform.getEnv('GLAZE_STORY');
 
-        // The icons are loaded before the first frame (needed on the web)
-        final paths = [for (icon in IconName.ALL) icon.path()];
-        // The full-catalog icons of the stories (samples/story/assets/icons):
-        // ToolbarStory's save icon and the reference icons of InputTokens
-        paths.push(story.stories.ToolbarStory.SAVE_ICON_PATH);
-        for (path in ['icons/image.svg', 'icons/sparkles.svg', 'icons/at-sign.svg']) paths.push(path);
         // Rust keeps the settings of the gallery in `target/state.json` on
         // native targets (not on the web): here in Ceramic's app storage
         #if !web
@@ -46,23 +38,25 @@ class MainScene extends Scene {
         };
         #end
 
-        App.defaultAssetSource().preload(paths, _ -> {
-            cx.update(cx -> {
-                Lib.init(cx);
-                // Required for system notifications on Windows; macOS only
-                // shows them when running from the signed app bundle
-                cx.setAppIdentity('com.longbridge.gpui-component.story', 'GPUI Component');
-            });
-            var gallery:Null<glaze.Entity<Gallery>> = null;
-            window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
-                final view = Gallery.view(name != null && name != '' ? name : null, window, cx);
-                gallery = view;
-                return view;
-            }, cx, width, height);
-            add(window.renderable);
-            // Automated tour of every page (GLAZE_STORY_TOUR, see StoryTour)
-            StoryTour.startIfRequested(gallery, window);
+        // The icons need no loading: the kit's icons and the full-catalog
+        // icons of the stories (samples/story/resources/glaze/icons: ToolbarStory's save
+        // icon and the reference icons of InputTokens) are embedded in the
+        // code (`IconName`)
+        cx.update(cx -> {
+            Lib.init(cx);
+            // Required for system notifications on Windows; macOS only
+            // shows them when running from the signed app bundle
+            cx.setAppIdentity('com.longbridge.gpui-component.story', 'GPUI Component');
         });
+        var gallery:Null<glaze.Entity<Gallery>> = null;
+        window = Lib.createNewWindow('GPUI Component', (window, cx) -> {
+            final view = Gallery.view(name != null && name != '' ? name : null, window, cx);
+            gallery = view;
+            return view;
+        }, cx, width, height);
+        add(window.renderable);
+        // Automated tour of every page (GLAZE_STORY_TOUR, see StoryTour)
+        StoryTour.startIfRequested(gallery, window);
 
     }
 

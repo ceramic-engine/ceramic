@@ -1,6 +1,7 @@
 package tests.kit;
 
 import glaze.App;
+import glaze.CeramicAssetSource;
 import glaze.Context;
 import glaze.IntoElement;
 import glaze.Model;
@@ -8,6 +9,7 @@ import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
 import glaze.kit.I18n;
+import glaze.kit.IconName;
 import glaze.kit.Kit;
 import glaze.kit.WindowState;
 import glaze.kit.base.Root;
@@ -81,6 +83,17 @@ class KitInitTest extends TestCase {
         assertTrue(app.hasGlobal(Theme));
         assertEquals(ThemeMode.Dark, Theme.global(app).mode, 'the setting applies after the initialization');
         assertEquals(1, registeredPlugins(app));
+    }
+
+    function testTheKitAddsTheEmbeddedIconsToTheAssetSource() {
+        final source = new CeramicAssetSource();
+        app.setAssetSource(source);
+        app.update(cx -> Kit.init(cx));
+        assertEquals(IconName.ALL.length, IconName.embeddedSvgs().length);
+        final bytes = source.load(IconName.ChevronDown.path());
+        assertTrue(bytes != null);
+        assertTrue(bytes.toString().indexOf('<svg') != -1);
+        assertEquals(0, source.resolutions, 'served from the embedded icons, no file read');
     }
 
     function testALocaleSetBeforeTheFirstRenderTranslatesIt() {

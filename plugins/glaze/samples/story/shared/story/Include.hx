@@ -28,12 +28,12 @@ class Include {
 
     /**
      * Rust `include_bytes!("../../../assets/assets/icons/<name>")`: an icon
-     * of the plugin's `assets/icons` (the same files as gpui-kit's assets
+     * of the plugin's `resources/icons` (the same files as gpui-kit's assets
      * crate), as bytes.
      */
     macro public static function iconBytes(name:String):ExprOf<haxe.io.Bytes> {
         final dir = haxe.io.Path.directory(sys.FileSystem.absolutePath(Context.resolvePath('story/Include.hx')));
-        final path = haxe.io.Path.join([dir, '..', '..', '..', '..', 'assets', 'icons', name]);
+        final path = haxe.io.Path.join([dir, '..', '..', '..', '..', 'resources', 'icons', name]);
         if (!sys.FileSystem.exists(path)) {
             Context.error('Missing icon: $path', Context.currentPos());
         }

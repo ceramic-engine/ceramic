@@ -88,8 +88,9 @@ class MainScene extends Scene {
 
         final cx = Glaze.app;
 
-        final paths = [for (name in IconName.ALL) name.path()];
-        App.defaultAssetSource().preload(paths.concat(['ceramic.png']), _ -> {
+        // The image is loaded before the first frame (the web has no
+        // synchronous file access); the icons are embedded in the code
+        App.defaultAssetSource().preload(['ceramic.png'], _ -> {
             ui = new Glaze((window, cx) -> {
                 final view = cx.newEntity((_:Context<Gallery>) -> new Gallery());
                 return Root.component().child(view);

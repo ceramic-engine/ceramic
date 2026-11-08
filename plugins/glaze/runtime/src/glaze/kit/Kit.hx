@@ -7,6 +7,7 @@ package glaze.kit;
 import glaze.App;
 import glaze.Glaze;
 import glaze.AppContext;
+import glaze.CeramicAssetSource;
 import glaze.kit.base.Base;
 import glaze.kit.base.GlobalState;
 import glaze.kit.base.Root;
@@ -79,6 +80,12 @@ class Kit {
      * globals and key bindings here as they are ported.
      */
     static function initApp(cx:AppContext):Void {
+        // The icons are embedded in the code (`IconName`): no file to load
+        final app:App = cx;
+        final source = app.assetSource();
+        if (source is CeramicAssetSource) {
+            IconName.addTo(cast source);
+        }
         Theme.initTheme(cx);
         // Rust `global_state::init`: the legacy initialization point of the Base global
         GlobalState.init(cx);

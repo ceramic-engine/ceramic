@@ -121,6 +121,8 @@ Select.component().at('theme').options(themes).value(prefs.theme).onChange(id ->
 
 The kit initializes itself the first time it is needed. A setting made before the first render initializes it too, then applies: `Theme.setMode(ThemeMode.Dark)`, `Kit.setLocale('fr')`. Stateful controls (`Input`, `Select`, `Slider`) keep their own state under the identity of their call, like persistent components; `.value(v)` makes them controlled.
 
+Icons are `IconName` values: `Button.component('add').icon(IconName.Plus)`. The SVG files of your project's `resources/glaze/icons` become icons too (`resources/glaze/icons/alarm-clock.svg` is `IconName.AlarmClock`), and more directories can be listed in `ceramic.yml` (`glaze:` then `icons:` with a list of paths). Every icon is embedded in the code at compile time, so nothing has to be preloaded, on the web included.
+
 The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences. `Kit.window(view)` is `Root.component().child(view)`: `Root` is itself a component.
 
 ## Samples

@@ -32,15 +32,11 @@ class Project extends Entity {
     function ready() {
         final app = new App(new TestDispatcher());
         // The editor scenarios need their TextMate grammar, loaded
-        // asynchronously, and the icons are preloaded like the story gallery
-        // does (samples/story MainScene): without them, targets with no
-        // synchronous file access (node, web) draw no icon. The full-catalog
-        // icons of the stories (ToolbarStory's save icon, the reference icons
-        // of InputTokens) are copied in assets/icons like samples/story/assets
-        final paths = [for (icon in glaze.kit.IconName.ALL) icon.path()];
-        paths.push(story.stories.ToolbarStory.SAVE_ICON_PATH);
-        for (path in ['icons/image.svg', 'icons/sparkles.svg', 'icons/at-sign.svg']) paths.push(path);
-        App.defaultAssetSource().preload(paths, _ -> scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run()));
+        // asynchronously. The icons need no loading: the kit's icons and the
+        // full-catalog icons of the stories (ToolbarStory's save icon, the
+        // reference icons of InputTokens, copied in resources/glaze/icons like
+        // samples/story) are embedded in the code (`IconName`)
+        scenarios.EditorBench.preload(_ -> new BenchRunner(this, app).run());
     }
 
 }
