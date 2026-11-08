@@ -54,6 +54,8 @@ class Counter extends Component {
 }
 ```
 
+`import glaze.Prelude.*;` brings in GPUI's free functions: the element constructors (`div()`, `svg()`, `img()`, `uniformList()`...), the units (`px()`, `rems()`, `relative()`) and the colors (`hsla()`, `rgb()`, `white()`...).
+
 Three things happen here:
 
 - **Elements** are built with chained calls: `div().p4().bg(...).child(...)`. The style methods follow Tailwind's names (`p4`, `px3`, `roundedMd`, `textSm`, `flex`, `gap2`...).
