@@ -119,7 +119,7 @@ Input.component().at('name').placeholder('Your name').value(model.name).onChange
 Select.component().at('theme').options(themes).value(prefs.theme).onChange(id -> prefs.theme = id)
 ```
 
-The kit initializes itself the first time it is needed. A setting made before the first render initializes it too, then applies: `Theme.change(ThemeMode.Dark, null, Glaze.app)`, `Kit.setLocale('fr')`. Stateful controls (`Input`, `Select`, `Slider`) keep their own state under the identity of their call, like persistent components; `.value(v)` makes them controlled.
+The kit initializes itself the first time it is needed. A setting made before the first render initializes it too, then applies: `Theme.setMode(ThemeMode.Dark)`, `Kit.setLocale('fr')`. Stateful controls (`Input`, `Select`, `Slider`) keep their own state under the identity of their call, like persistent components; `.value(v)` makes them controlled.
 
 The names are gpui-kit's in camelCase, so its documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences. `Kit.window(view)` is `Root.component().child(view)`: `Root` is itself a component.
 

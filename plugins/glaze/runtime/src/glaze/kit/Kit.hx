@@ -19,7 +19,7 @@ import glaze.kit.theme.Theme;
  * Rust's `gpui_component::init(cx)` is implicit in Glaze: the kit
  * initializes itself for an app the first time it is needed (a `Root` is
  * created, a component reads the theme, a setting is changed: `setLocale`,
- * `Theme.change`, a theme is loaded, `Theme.setScrollbarMode`,
+ * `Theme.setMode`, a theme is loaded, `Theme.setScrollbarMode`,
  * `Theme.syncScrollbarAppearance`, `GlobalState.setAppMenus`...). A setting
  * changed before the first render initializes the kit and then applies, so
  * the first render already has the right locale and theme.

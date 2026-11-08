@@ -33,7 +33,7 @@ using glaze.kit.theme.Colorize;
  * copies every color of `palette`.
  *
  * Reactivity: the theme installed in the global is never mutated.
- * `Theme.update` and `Theme.change` edit a copy and install it with
+ * `Theme.update` and `Theme.setMode` edit a copy and install it with
  * `cx.setGlobal`, so a view that reads `cx.theme()` (or `Theme.global(cx)`)
  * during render subscribes to the one observable value of the global cell,
  * and re-renders when a new theme is installed (no `observeGlobal` + `notify`).
@@ -310,7 +310,7 @@ class Theme extends ThemeColor {
         ThemeRegistry.init(cx);
 
         // Ensure theme is loaded directly on startup
-        change(Light, null, cx);
+        setMode(Light, cx);
         // Modified for Glaze (DEV-020): Hover on every platform
         // instead of syncScrollbarAppearance(cx)
         setScrollbarMode(Hover, cx);
@@ -326,7 +326,7 @@ class Theme extends ThemeColor {
 
         Kit.ensureInit(cx);
         final appearance = window != null ? window.appearance() : cx.windowAppearance();
-        change(ThemeMode.fromAppearance(appearance), window, cx);
+        setMode(ThemeMode.fromAppearance(appearance), cx);
 
     }
 
@@ -463,15 +463,18 @@ class Theme extends ThemeColor {
     }
 
     /**
-     * Change the theme mode.
+     * Sets the theme mode: `Theme.setMode(Dark)`.
      *
      * Loads the registered theme for `mode` (even when `mode` is already
      * current, so a caller that swapped `lightTheme` or `darkTheme` sees the
-     * new theme) through `update`. `window` is accepted for compatibility;
-     * every window is refreshed either way, so it is not read.
+     * new theme) through `update`, and refreshes every window. Applies to
+     * the app of `cx` (the current app when `cx` is not given), and
+     * initializes its kit first, so a mode set before the first render
+     * applies to it.
      */
-    public static function change(mode:ThemeMode, window:Null<Window>, cx:AppContext):Void {
+    public static function setMode(mode:ThemeMode, ?cx:AppContext):Void {
 
+        if (cx == null) cx = glaze.Glaze.app;
         Kit.ensureInit(cx);
         if (!cx.hasGlobal(Theme)) {
             final theme = new Theme();

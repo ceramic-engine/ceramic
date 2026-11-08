@@ -94,7 +94,7 @@ class FrameScheduleTest extends TestCase {
     function init():Void {
         headlessUpdate(cx -> {
             cx.setReduceMotion(true);
-            Theme.change(ThemeMode.Light, null, cx);
+            Theme.setMode(ThemeMode.Light, cx);
             Theme.setScrollbarMode(Always, cx);
         });
         headlessUpdate(cx -> {

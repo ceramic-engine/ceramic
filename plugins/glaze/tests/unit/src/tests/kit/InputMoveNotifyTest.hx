@@ -73,7 +73,7 @@ class InputMoveNotifyTest extends TestCase {
         };
         app.update(cx -> {
             cx.setReduceMotion(true);
-            Theme.change(ThemeMode.Light, null, cx);
+            Theme.setMode(ThemeMode.Light, cx);
             Theme.setScrollbarMode(Always, cx);
             // The port's text system only has Inter and JetBrains Mono.
             Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';

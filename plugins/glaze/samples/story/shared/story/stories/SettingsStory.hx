@@ -159,7 +159,7 @@ class SettingsStory extends Model implements Story {
                     new SettingGroup().title('Appearance').items([
                         SettingItem.create('Dark Mode', SettingField.switch_(
                             cx -> Theme.global(cx).mode.isDark(),
-                            (val, cx) -> Theme.change(val ? ThemeMode.Dark : ThemeMode.Light, null, cx)
+                            (val, cx) -> Theme.setMode(val ? ThemeMode.Dark : ThemeMode.Light, cx)
                         ).defaultValue(false))
                             .description('Switch between light and dark themes.')
                             .disabled(disabled),

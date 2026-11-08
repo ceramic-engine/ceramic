@@ -272,7 +272,7 @@ class Gallery extends Model implements Render {
     }
 
     public static function toggleTheme(cx:App):Void {
-        Theme.change(Theme.global(cx).isDark() ? ThemeMode.Light : ThemeMode.Dark, null, cx);
+        Theme.setMode(Theme.global(cx).isDark() ? ThemeMode.Light : ThemeMode.Dark, cx);
     }
 
     function section(title:String, content:IntoElement):IntoElement {

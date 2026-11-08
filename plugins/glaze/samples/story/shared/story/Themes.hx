@@ -214,7 +214,7 @@ class Themes {
             cx.refreshWindows();
         });
         cx.onAction(SwitchThemeMode, (switchMode, cx) -> {
-            Theme.change(switchMode.value, null, cx);
+            Theme.setMode(switchMode.value, cx);
             cx.refreshWindows();
         });
     }

@@ -67,7 +67,7 @@ class KitBench {
 
     static function applyTheme(cx:App):Void {
         cx.setReduceMotion(true);
-        Theme.change(ThemeMode.Light, null, cx);
+        Theme.setMode(ThemeMode.Light, cx);
         Theme.setScrollbarMode(Always, cx);
         Theme.globalMut(cx).monoFontFamily = 'JetBrains Mono';
         Theme.syncBase(cx);

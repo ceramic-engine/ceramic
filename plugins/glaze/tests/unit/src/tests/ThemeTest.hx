@@ -450,7 +450,7 @@ class ThemeTest extends TestCase {
         Theme.init(app);
         assertStyledProjection();
 
-        Theme.change(Dark, null, app);
+        Theme.setMode(Dark, app);
         assertStyledProjection();
 
         Theme.setScrollbarMode(Always, app);
@@ -472,7 +472,7 @@ class ThemeTest extends TestCase {
         Theme.init(app);
         assertCloseTokens(Theme.global(app).colorTokens(), ColorTokens.light());
 
-        Theme.change(Dark, null, app);
+        Theme.setMode(Dark, app);
         assertCloseTokens(Theme.global(app).colorTokens(), ColorTokens.dark());
     }
 
@@ -677,7 +677,7 @@ class ThemeTest extends TestCase {
         final view = new ViewTracker(() -> invalidations++);
 
         view.capture(() -> app.theme().primary);
-        Theme.change(Dark, null, app);
+        Theme.setMode(Dark, app);
         ceramic.App.app.flushImmediate();
         assertEquals(1, invalidations, 'change() installs a new theme');
 
@@ -731,7 +731,7 @@ class ThemeTest extends TestCase {
             theme.darkTheme = mocha;
             return null;
         });
-        Theme.change(Dark, null, app);
+        Theme.setMode(Dark, app);
         assertEquals('Catppuccin Mocha', Theme.global(app).themeName());
         final expected = resolve(mocha);
         assertTrue(Theme.global(app).colorsEqual(expected));

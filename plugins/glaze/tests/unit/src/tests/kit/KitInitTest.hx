@@ -77,7 +77,7 @@ class KitInitTest extends TestCase {
     }
 
     function testASettingBeforeTheFirstRenderInitializesThenApplies() {
-        app.update(cx -> Theme.change(Dark, null, cx));
+        app.update(cx -> Theme.setMode(Dark, cx));
         assertTrue(app.hasGlobal(Theme));
         assertEquals(ThemeMode.Dark, Theme.global(app).mode, 'the setting applies after the initialization');
         assertEquals(1, registeredPlugins(app));

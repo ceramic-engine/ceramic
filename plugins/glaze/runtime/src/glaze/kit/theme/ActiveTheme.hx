@@ -11,7 +11,7 @@ import glaze.EntitySlot;
  * `using glaze.kit.theme.ActiveTheme;`.
  *
  * Read during render, it subscribes the view to the global theme: the view
- * re-renders when `Theme.update` or `Theme.change` installs a new theme.
+ * re-renders when `Theme.update` or `Theme.setMode` installs a new theme.
  */
 class ActiveTheme {
 
