@@ -5,6 +5,10 @@ package glaze.kit.input;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.kit.base.input.InputEvent;
+import glaze.kit.KeyedEntity;
+import glaze.Model;
+import glaze.Context;
 import glaze.ClipboardItem;
 import glaze.DefiniteLength;
 import glaze.Edges;
@@ -73,7 +77,26 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     var idValue:Null<ElementId> = null;
 
-    var state:TextInputState;
+    /**
+     * The state rendered; `null` until the first render for an input built
+     * by `component()` without a state (see `resolveKeyedState`).
+     */
+    var textState:Null<TextInputState>;
+
+    /**
+     * The position of the `component()` call, the identity of the state
+     * it creates when none is given (`null` when the state was given).
+     */
+    var keyedPos:Null<haxe.PosInfos> = null;
+
+    /** `.at(key)`: the identity of the created state instead of the call position. */
+    var keyedId:Null<ElementId> = null;
+
+    var valueToPush:Null<String> = null;
+
+    var hasValueToPush:Bool = false;
+
+    var changeHandler:Null<(String) -> Void> = null;
 
     var inputStyle:StyleRefinement = new StyleRefinement();
 
@@ -128,7 +151,94 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     /** Create a new `Input` element bind to the `InputState`. */
     public function new(state:Entity<InputState>) {
         final model:Null<InputBaseState> = (state : InputState);
-        this.state = new TextInputState(model);
+        this.textState = model != null ? new TextInputState(model) : null;
+    }
+
+    /**
+     * Places an input in a tree. With `state`, it is `new Input(state)`.
+     * Without, the input creates its `InputState` the first time it is
+     * rendered and keeps it as long as it is rendered, under the identity
+     * of this call (its position in the code, or `.at(key)` in a loop); the
+     * state is destroyed when the input leaves the tree. `.value(v)` pushes
+     * a value into the state when it differs from the current one,
+     * `.onChange(f)` is called with the new text on each change (the latest
+     * `f` is kept, without invalidation), and `.state` gives the entity
+     * once rendered.
+     */
+    public static function component(?state:Entity<InputState>, ?pos:haxe.PosInfos):Input {
+        if (state != null) return new Input(state);
+        final input = new Input(null);
+        input.keyedPos = pos;
+        return input;
+    }
+
+    /**
+     * The identity of the state created by `component()` without a state,
+     * instead of the position of the call: needed when the call runs more
+     * than once per render (a loop).
+     */
+    public function at(key:ElementIdArg):Input {
+        keyedId = key;
+        return this;
+    }
+
+    /**
+     * Pushes `value` into the state when it differs from the state's value
+     * (the user's typing is kept otherwise). For an input built by
+     * `component()`; an input given its state keeps its value itself.
+     */
+    public function value(value:String):Input {
+        valueToPush = value;
+        hasValueToPush = true;
+        return this;
+    }
+
+    /**
+     * Called with the new text on each `InputEvent.Change` of the state
+     * created by `component()`. The handler of the latest render is the one
+     * called; replacing it invalidates nothing.
+     */
+    public function onChange(handler:(String) -> Void):Input {
+        changeHandler = handler;
+        return this;
+    }
+
+    /**
+     * The `InputState` rendered by this input: the one given to
+     * `component(state)` or `new Input(state)`, or the one created by
+     * `component()` once the input was rendered (`null` before, and for a
+     * state of another kind, a textarea's for instance).
+     */
+    public var state(get, never):Null<Entity<InputState>>;
+    function get_state():Null<Entity<InputState>> {
+        if (textState == null) return null;
+        final model:Model = textState.state.intoAny();
+        return Std.isOfType(model, InputState) ? (cast model : InputState) : null;
+    }
+
+    /**
+     * Creates or finds the state of an input built by `component()` without
+     * one, under the identity of the call, applies `.value()` and installs
+     * the change handler (`KeyedEntity`).
+     */
+    function resolveKeyedState(window:Window, cx:App):Void {
+        final key:ElementIdArg = keyedId != null ? keyedId : ElementId.CodeLocation(keyedPos.fileName, keyedPos.lineNumber);
+        final keyed:KeyedEntity<InputState, (String) -> Void> = window.useKeyedState(key, cx, w -> new KeyedEntity(cx.newEntity((c:Context<InputState>) -> new InputState(w, c)))).read(cx).value;
+        final entity = keyed.entity;
+        final base:Entity<InputBaseState> = (entity : InputState);
+        textState = new TextInputState(base);
+        keyed.handler = changeHandler;
+        if (changeHandler != null) {
+            keyed.subscribe(cx, InputEvent, (entity, event, cx) -> {
+                if (event.match(Change) && keyed.handler != null) {
+                    keyed.handler(entity.read(cx).value());
+                }
+            });
+        }
+        if (hasValueToPush && entity.read(cx).value() != valueToPush) {
+            final value = valueToPush;
+            base.update(cx, (s, c) -> s.setValue(value, window, c));
+        }
     }
 
     /**
@@ -142,7 +252,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
         // Not `new Input(cast state)`: a textarea state is not an
         // `InputState`, and hxcpp checks class casts (it would give null).
         final input = new Input(null);
-        input.state = new TextInputState(state);
+        input.textState = new TextInputState(state);
         return input;
     }
 
@@ -233,7 +343,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
      */
     @:allow(glaze.kit)
     inline function getState():TextInputState {
-        return state;
+        return textState;
     }
 
     @:allow(glaze.kit)
@@ -495,9 +605,10 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     public function render(window:Window, cx:App):IntoElement {
+        if (textState == null) resolveKeyedState(window, cx);
         final LINE_HEIGHT = rems(1.25);
         final textAlign:TextAlign = inputStyle.text != null && inputStyle.text.has(TextStyleRefinement.TEXT_ALIGN) ? inputStyle.text.textAlign : Left;
-        final state = this.state;
+        final state = this.textState;
         final theme = Theme.global(cx);
         final secret = contentTypeValue == Password || contentTypeValue == NewPassword;
         final renderer:InlineTokenRenderer = tokenRenderer != null ? tokenRenderer : (token, _, _) -> (new InputToken(token) : IntoElement);

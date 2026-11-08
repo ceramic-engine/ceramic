@@ -5,6 +5,12 @@ package glaze.kit.slider;
 
 import glaze.AbsoluteLength;
 import glaze.App;
+import glaze.kit.base.Slider.IntoSliderValue;
+import glaze.kit.base.Slider.SliderValue;
+import glaze.kit.base.Slider.SliderEvent;
+import glaze.kit.KeyedEntity;
+import glaze.ElementIdArg;
+import glaze.Context;
 import glaze.Axis;
 import glaze.Background;
 import glaze.Corners;
@@ -101,9 +107,33 @@ private class ThumbRing {
  */
 class Slider implements RenderOnce implements Styled {
 
-    final state:Entity<SliderState>;
+    /**
+     * The `SliderState` rendered: the one given to `component(state)` or
+     * `new Slider(state)`, or the one created by `component()` once the
+     * slider was rendered (`null` before).
+     */
+    public var state(default, null):Null<Entity<SliderState>>;
 
     var axis:Axis = Axis.Horizontal;
+
+    /**
+     * The position of the `component()` call, the identity of the state
+     * it creates when none is given (`null` when the state was given).
+     */
+    var keyedPos:Null<haxe.PosInfos> = null;
+
+    /** `.at(key)`: the identity of the created state instead of the call position. */
+    var keyedId:Null<ElementId> = null;
+
+    var valueToPush:Null<SliderValue> = null;
+
+    var minValue:Null<Float> = null;
+
+    var maxValue:Null<Float> = null;
+
+    var stepValue:Null<Float> = null;
+
+    var changeHandler:Null<(Float) -> Void> = null;
 
     final sliderStyle:StyleRefinement = new StyleRefinement();
 
@@ -118,6 +148,108 @@ class Slider implements RenderOnce implements Styled {
      */
     public function new(state:Entity<SliderState>) {
         this.state = state;
+    }
+
+    /**
+     * Places a slider in a tree. With `state`, it is `new Slider(state)`.
+     * Without, the slider creates its `SliderState` the first time it is
+     * rendered and keeps it as long as it is rendered, under the identity
+     * of this call (its position in the code, or `.at(key)` in a loop); the
+     * state is destroyed when the slider leaves the tree. `.min()`, `.max()`,
+     * `.step()` and `.value(v)` are applied to the state when they differ
+     * from its current ones, `.onChange(f)` is called with the value while
+     * the user moves the slider (the latest `f` is kept, without
+     * invalidation), and `.state` gives the entity once rendered.
+     */
+    public static function component(?state:Entity<SliderState>, ?pos:haxe.PosInfos):Slider {
+        if (state != null) return new Slider(state);
+        final slider = new Slider(null);
+        slider.keyedPos = pos;
+        return slider;
+    }
+
+    /**
+     * The identity of the state created by `component()` without a state,
+     * instead of the position of the call: needed when the call runs more
+     * than once per render (a loop).
+     */
+    public function at(key:ElementIdArg):Slider {
+        keyedId = key;
+        return this;
+    }
+
+    /** The minimum of the state created by `component()` (default 0). */
+    public function min(min:Float):Slider {
+        minValue = min;
+        return this;
+    }
+
+    /** The maximum of the state created by `component()` (default 100). */
+    public function max(max:Float):Slider {
+        maxValue = max;
+        return this;
+    }
+
+    /** The step of the state created by `component()` (default 1). */
+    public function step(step:Float):Slider {
+        stepValue = step;
+        return this;
+    }
+
+    /**
+     * Pushes `value` into the state created by `component()` when it
+     * differs from the state's value (a drag in progress is kept otherwise).
+     */
+    public function value(value:IntoSliderValue):Slider {
+        valueToPush = value;
+        return this;
+    }
+
+    /**
+     * Called with the value on each `SliderEvent.Change` of the state
+     * created by `component()`: the value of a single value slider (the
+     * start of a range). The handler of the latest render is the one
+     * called; replacing it invalidates nothing.
+     */
+    public function onChange(handler:(Float) -> Void):Slider {
+        changeHandler = handler;
+        return this;
+    }
+
+    /**
+     * Creates or finds the state of a slider built by `component()` without
+     * one, under the identity of the call, applies the range and the value
+     * and installs the change handler (`KeyedEntity`).
+     */
+    function resolveKeyedState(window:Window, cx:App):Void {
+        final key:ElementIdArg = keyedId != null ? keyedId : ElementId.CodeLocation(keyedPos.fileName, keyedPos.lineNumber);
+        final keyed:KeyedEntity<SliderState, (Float) -> Void> = window.useKeyedState(key, cx, _ -> new KeyedEntity(cx.newEntity((_:Context<SliderState>) -> new SliderState()))).read(cx).value;
+        final entity = keyed.entity;
+        state = entity;
+        keyed.handler = changeHandler;
+        if (changeHandler != null) {
+            keyed.subscribe(cx, SliderEvent, (entity, event, cx) -> {
+                switch event {
+                    case Change(value):
+                        if (keyed.handler != null) keyed.handler(value.start());
+                    case Release(_):
+                }
+            });
+        }
+        final current = entity.read(cx);
+        final minChanged = minValue != null && current.minValue() != minValue;
+        final maxChanged = maxValue != null && current.maxValue() != maxValue;
+        final stepChanged = stepValue != null && current.stepValue() != stepValue;
+        final valueChanged = valueToPush != null && !Type.enumEq(current.value(), valueToPush);
+        if (minChanged || maxChanged || stepChanged || valueChanged) {
+            final min = minValue, max = maxValue, step = stepValue, value = valueToPush;
+            entity.update(cx, (s, c) -> {
+                if (minChanged) s.min(min);
+                if (maxChanged) s.max(max);
+                if (stepChanged) s.step(step);
+                if (valueChanged) s.setValue(value, window, c);
+            });
+        }
     }
 
     public inline function style():StyleRefinement {
@@ -177,6 +309,7 @@ class Slider implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
+        if (state == null) resolveKeyedState(window, cx);
         final theme = Theme.global(cx);
         final axis = this.axis;
         final current = state.read(cx);

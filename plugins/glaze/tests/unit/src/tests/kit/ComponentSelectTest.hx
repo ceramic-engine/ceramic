@@ -87,15 +87,15 @@ class ComponentSelectTest extends TestCase {
             final state = newState(cx, items, null, window);
 
             final plain = new Select(state).placeholder("Choose a language");
-            assertEquals(null, plain.options.accessibilityLabel);
-            assertEquals("Choose a language", plain.options.placeholder);
+            assertEquals(null, plain.builderOptions.accessibilityLabel);
+            assertEquals("Choose a language", plain.builderOptions.placeholder);
 
             final named = new Select(state)
                 .placeholder("Choose a language")
                 .accessibilityLabel("Programming language");
-            assertEquals("Programming language", named.options.accessibilityLabel);
+            assertEquals("Programming language", named.builderOptions.accessibilityLabel);
             // an accessible name must not change what is drawn
-            assertEquals("Choose a language", named.options.placeholder);
+            assertEquals("Choose a language", named.builderOptions.placeholder);
         });
     }
 

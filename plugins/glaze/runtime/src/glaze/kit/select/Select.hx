@@ -5,6 +5,11 @@ package glaze.kit.select;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.kit.select.SelectState.SelectEvent;
+import glaze.kit.searchablelist.SearchableVec;
+import glaze.kit.searchablelist.SearchableListItems;
+import glaze.kit.KeyedEntity;
+import glaze.Context;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Entity;
@@ -67,17 +72,145 @@ class SelectOptions {
 @:allow(glaze.kit, tests)
 class Select<I> implements RenderOnce implements Styled implements Sizable implements FocusableExt {
 
-    var idValue:ElementId;
+    var idValue:Null<ElementId>;
 
-    final state:Entity<SelectState<I>>;
+    /**
+     * The `SelectState` rendered: the one given to `component(state)` or
+     * `new Select(state)`, or the one created by `component()` once the
+     * select was rendered (`null` before).
+     */
+    public var state(default, null):Null<Entity<SelectState<I>>>;
 
-    final options:SelectOptions = new SelectOptions();
+    final builderOptions:SelectOptions = new SelectOptions();
 
     var emptyBuilder:Null<(Window, App) -> AnyElement> = null;
 
+    /**
+     * The position of the `component()` call, the identity of the state
+     * it creates when none is given (`null` when the state was given).
+     */
+    var keyedPos:Null<haxe.PosInfos> = null;
+
+    /** `.at(key)`: the identity of the created state instead of the call position. */
+    var keyedId:Null<ElementId> = null;
+
+    var optionItems:Null<Array<I>> = null;
+
+    var valueToPush:Null<Any> = null;
+
+    var hasValueToPush:Bool = false;
+
+    var changeHandler:Null<(Null<Any>) -> Void> = null;
+
     public function new(state:Entity<SelectState<I>>) {
-        this.idValue = ElementId.NamedInteger("select", state.entityId());
+        this.idValue = state != null ? ElementId.NamedInteger("select", state.entityId()) : null;
         this.state = state;
+    }
+
+    /**
+     * Places a select in a tree. With `state`, it is `new Select(state)`.
+     * Without, the select creates its `SelectState` over `.options(items)`
+     * the first time it is rendered and keeps it as long as it is rendered,
+     * under the identity of this call (its position in the code, or
+     * `.at(key)` in a loop); the state is destroyed when the select leaves
+     * the tree. `.value(v)` selects the item of that value when it differs
+     * from the selected one, `.onChange(f)` is called with the confirmed
+     * value (the latest `f` is kept, without invalidation), and `.state`
+     * gives the entity once rendered.
+     */
+    public static function component<I>(?state:Entity<SelectState<I>>, ?pos:haxe.PosInfos):Select<I> {
+        if (state != null) return new Select<I>(state);
+        final select = new Select<I>(null);
+        select.keyedPos = pos;
+        return select;
+    }
+
+    /**
+     * The identity of the state created by `component()` without a state,
+     * instead of the position of the call: needed when the call runs more
+     * than once per render (a loop).
+     */
+    public function at(key:ElementIdArg):Select<I> {
+        keyedId = key;
+        return this;
+    }
+
+    /**
+     * The items of the state created by `component()` (a `SearchableVec`):
+     * strings, or items implementing `SearchableListItem`. Items that
+     * differ from the ones applied last replace them (`setItems`).
+     */
+    public function options(items:Array<I>):Select<I> {
+        optionItems = items;
+        return this;
+    }
+
+    /**
+     * Selects the item of `value` (`SearchableListItems.value`) when it is
+     * not the selected one. For a select built by `component()`.
+     */
+    public function value(value:Null<Any>):Select<I> {
+        valueToPush = value;
+        hasValueToPush = true;
+        return this;
+    }
+
+    /**
+     * Called with the confirmed value (`SelectEvent.Confirm`, `null` when
+     * cleared) of the state created by `component()`. The handler of the
+     * latest render is the one called; replacing it invalidates nothing.
+     */
+    public function onChange(handler:(Null<Any>) -> Void):Select<I> {
+        changeHandler = handler;
+        return this;
+    }
+
+    static function sameItems<I>(a:Array<I>, b:Null<Array<I>>):Bool {
+        if (b == null || a.length != b.length) return false;
+        for (i in 0...a.length) {
+            if (!SearchableListItems.itemEquals(a[i], b[i])) return false;
+        }
+        return true;
+    }
+
+    /**
+     * Creates or finds the state of a select built by `component()` without
+     * one, under the identity of the call, applies `.options()` and
+     * `.value()` and installs the change handler (`KeyedEntity`).
+     */
+    function resolveKeyedState(window:Window, cx:App):Void {
+        final key:ElementIdArg = keyedId != null ? keyedId : ElementId.CodeLocation(keyedPos.fileName, keyedPos.lineNumber);
+        final initialItems:Array<I> = optionItems != null ? optionItems : [];
+        final keyed:KeyedEntity<SelectState<I>, (Null<Any>) -> Void> = window.useKeyedState(key, cx, w -> {
+            #if cs
+            // Names I in this closure's own body: Haxe's C# output makes a closure generic
+            // only then (see `SelectState`)
+            final _csTypeParam:Null<I> = null;
+            #end
+            final holder = new KeyedEntity(cx.newEntity((c:Context<SelectState<I>>) -> new SelectState<I>(new SearchableVec<I>(initialItems), null, w, c)));
+            holder.memo = initialItems;
+            return holder;
+        }).read(cx).value;
+        final entity = keyed.entity;
+        state = entity;
+        keyed.handler = changeHandler;
+        if (changeHandler != null) {
+            keyed.subscribe(cx, SelectEvent, (entity, event, cx) -> {
+                switch event {
+                    case Confirm(value):
+                        if (keyed.handler != null) keyed.handler(value);
+                }
+            });
+        }
+        if (optionItems != null && !sameItems(optionItems, keyed.memo)) {
+            final items = optionItems;
+            keyed.memo = items;
+            entity.update(cx, (s, c) -> s.setItems(new SearchableVec<I>(items), window, c));
+        }
+        if (hasValueToPush && !SearchableListItems.valueEquals(entity.read(cx).selectedValue(), valueToPush)) {
+            final value = valueToPush;
+            entity.update(cx, (s, c) -> s.setSelectedValue(value, window, c));
+        }
     }
 
     /** Sets an explicit identity for the select root. */
@@ -88,19 +221,19 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     /** Set the width of the dropdown menu, default: `Length.Auto`. */
     public function menuWidth(width:IntoLength):Select<I> {
-        options.menuWidth = width;
+        builderOptions.menuWidth = width;
         return this;
     }
 
     /** Set the max height of the dropdown menu, default: 20rem. */
     public function menuMaxH(maxH:IntoLength):Select<I> {
-        options.menuMaxH = maxH;
+        builderOptions.menuMaxH = maxH;
         return this;
     }
 
     /** Set the placeholder shown when no value is selected. */
     public function placeholder(placeholder:String):Select<I> {
-        options.placeholder = placeholder;
+        builderOptions.placeholder = placeholder;
         return this;
     }
 
@@ -111,13 +244,13 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
      * because they describe the current value rather than the control itself.
      */
     public function accessibilityLabel(label:String):Select<I> {
-        options.accessibilityLabel = label;
+        builderOptions.accessibilityLabel = label;
         return this;
     }
 
     /** Override the trailing icon, replacing the default chevron. */
     public function icon(icon:IntoIcon):Select<I> {
-        options.icon = new Icon(icon);
+        builderOptions.icon = new Icon(icon);
         return this;
     }
 
@@ -127,19 +260,19 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
      * e.g. `titlePrefix("Country: ")` gives "Country: United States"
      */
     public function titlePrefix(prefix:String):Select<I> {
-        options.titlePrefix = prefix;
+        builderOptions.titlePrefix = prefix;
         return this;
     }
 
     /** Show a clear button when a value is selected. */
     public function cleanable(cleanable:Bool):Select<I> {
-        options.cleanable = cleanable;
+        builderOptions.cleanable = cleanable;
         return this;
     }
 
     /** Set the placeholder text for the search input. */
     public function searchPlaceholder(placeholder:String):Select<I> {
-        options.searchPlaceholder = placeholder;
+        builderOptions.searchPlaceholder = placeholder;
         return this;
     }
 
@@ -148,13 +281,13 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
      * Android and macOS, off elsewhere; reduced motion disables displacement.
      */
     public function scrollBounce(enabled:Bool):Select<I> {
-        options.scrollBounce = enabled;
+        builderOptions.scrollBounce = enabled;
         return this;
     }
 
     /** Set the disabled state. */
     public function disabled(disabled:Bool):Select<I> {
-        options.disabled = disabled;
+        builderOptions.disabled = disabled;
         return this;
     }
 
@@ -166,42 +299,44 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
 
     /** Control whether the trigger shows a border and background (`true` by default). */
     public function appearance(appearance:Bool):Select<I> {
-        options.appearance = appearance;
+        builderOptions.appearance = appearance;
         return this;
     }
 
     public function withSize(size:IntoSize):Select<I> {
-        options.size = size;
+        builderOptions.size = size;
         return this;
     }
 
     public function setSize(size:Size):Void {
-        options.size = size;
+        builderOptions.size = size;
     }
 
     public function focusRing(enabled:Bool):Select<I> {
-        options.focusRingEnabled = enabled;
+        builderOptions.focusRingEnabled = enabled;
         return this;
     }
 
     public function setFocusRing(enabled:Bool):Void {
-        options.focusRingEnabled = enabled;
+        builderOptions.focusRingEnabled = enabled;
     }
 
     public function isFocusRingEnabled():Bool {
-        return options.focusRingEnabled;
+        return builderOptions.focusRingEnabled;
     }
 
     public inline function style():StyleRefinement {
-        return options.style;
+        return builderOptions.style;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = options.disabled;
-        final accessibilityLabel = options.accessibilityLabel;
+        if (state == null) resolveKeyedState(window, cx);
+        if (idValue == null) idValue = ElementId.NamedInteger("select", state.entityId());
+        final disabled = builderOptions.disabled;
+        final accessibilityLabel = builderOptions.accessibilityLabel;
         final focusHandle = state.read(cx).state.focusHandle;
         final empty = emptyBuilder;
-        final opts = options;
+        final opts = builderOptions;
 
         state.update(cx, (this_, _) -> {
             this_.state.style = opts.style;
