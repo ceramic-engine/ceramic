@@ -1209,7 +1209,7 @@ private class PropRenamer {
                     scopes.pop();
                     ({values: c.values, guard: guard, expr: body} : Case);
                 }];
-                return {expr: ESwitch(renamedSubject, result, rename(def)), pos: e.pos};
+                return {expr: ESwitch(renamedSubject, result, def == null || def.expr == null ? def : rename(def)), pos: e.pos};
             case _:
                 return ExprTools.map(e, rename);
         }
