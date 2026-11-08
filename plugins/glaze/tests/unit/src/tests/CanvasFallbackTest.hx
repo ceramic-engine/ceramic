@@ -44,7 +44,7 @@ class CanvasFallbackTest extends TestCase {
     }
 
     function testCanvasFontFallbackPolicy() {
-        assertEquals(Emoji, new CeramicTextSystem().canvasFontFallback, 'default policy');
+        assertEquals(EmojiAndCjk, new CeramicTextSystem().canvasFontFallback, 'default policy');
         for (entry in [
             {g: "😀", allowed: true},
             {g: "❤️", allowed: true},
@@ -787,7 +787,7 @@ class CanvasFallbackTest extends TestCase {
         if (!glaze.platform.CanvasText.BrowserCanvasText.available()) {
             final ts:CeramicTextSystem = cast glaze.App.defaultTextSystem().platformTextSystem;
             assertNull(ts.canvasText);
-            assertEquals(Emoji, ts.canvasFontFallback);
+            assertEquals(EmojiAndCjk, ts.canvasFontFallback);
         }
         #else
         assertTrue(true);

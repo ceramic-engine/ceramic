@@ -28,12 +28,6 @@ class MainScene extends Scene {
         final cx = Glaze.app;
         final name = Platform.getEnv('GLAZE_STORY');
 
-        // On the web, the browser also draws the CJK text of the stories
-        // (gpui-pre-web's `CanvasFontFallback::EmojiAndCjk`; GPUI's default
-        // only draws emoji). No effect on native targets.
-        final platform:glaze.platform.CeramicTextSystem = cast cx.textSystem().platformTextSystem;
-        platform.canvasFontFallback = glaze.platform.CanvasFontFallback.EmojiAndCjk;
-
         // The icons are loaded before the first frame (needed on the web)
         final paths = [for (icon in IconName.ALL) icon.path()];
         // The full-catalog icons of the stories (samples/story/assets/icons):

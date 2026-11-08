@@ -12,10 +12,10 @@ enum abstract CanvasFontFallback(Int) from Int to Int {
     /** Use only fonts loaded into GPUI. */
     var Disabled = 0;
 
-    /** Use Canvas for eligible emoji, including missing text-presentation symbols (the default). */
+    /** Use Canvas for eligible emoji, including missing text-presentation symbols. */
     var Emoji = 1;
 
-    /** Also allow approximate independent rendering of eligible horizontal CJK text. */
+    /** Also allow approximate independent rendering of eligible horizontal CJK text (the default). */
     var EmojiAndCjk = 2;
 
     /** Whether the policy lets a grapheme fall back on Canvas */

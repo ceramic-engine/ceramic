@@ -126,9 +126,8 @@ class App {
      * are taken from the fonts of the operating system
      * (`glaze.platform.SystemFontFallback`, loaded on first use; define
      * `glaze_no_system_fonts` to skip). In browsers (clay web, Electron),
-     * graphemes missing from the added fonts are drawn by the browser like
-     * gpui-pre-web's Canvas fallback, with GPUI's default policy
-     * (`CanvasFontFallback.Emoji`; change it with
+     * graphemes missing from the added fonts are drawn by the browser,
+     * emoji and CJK text included (`CanvasFontFallback.EmojiAndCjk`; change it with
      * `CeramicTextSystem.canvasFontFallback`, define
      * `glaze_no_canvas_fallback` to skip).
      */

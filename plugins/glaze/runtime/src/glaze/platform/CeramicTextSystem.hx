@@ -120,11 +120,10 @@ class CeramicTextSystem implements PlatformTextSystem {
     public var systemFallback(default, set):Null<SystemFontFallback> = null;
 
     /**
-     * Which graphemes missing from the loaded fonts the browser draws
-     * (gpui-pre-web's `CanvasFontFallback`): `Emoji` (the default, like
-     * GPUI), `EmojiAndCjk` (also approximate horizontal CJK) or `Disabled`.
-     * Only used when `canvasText` is set; set it before laying out text
-     * (GPUI fixes it when the platform is created).
+     * Which graphemes missing from the loaded fonts the browser draws:
+     * `EmojiAndCjk` (the default: emoji and approximate horizontal CJK, so
+     * CJK text shows without a bundled CJK font), `Emoji` or `Disabled`.
+     * Only used when `canvasText` is set; set it before laying out text.
      */
     public var canvasFontFallback(get, set):CanvasFontFallback;
 
@@ -141,7 +140,7 @@ class CeramicTextSystem implements PlatformTextSystem {
 
     public function new(systemFontFallback:String = 'Inter') {
         this.systemFontFallback = systemFontFallback;
-        canvas = new CanvasFallbackText(this, null, Emoji);
+        canvas = new CanvasFallbackText(this, null, EmojiAndCjk);
     }
 
     inline function get_canvasFontFallback():CanvasFontFallback {

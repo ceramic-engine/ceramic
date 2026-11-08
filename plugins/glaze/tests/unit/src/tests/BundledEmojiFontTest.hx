@@ -276,6 +276,7 @@ class BundledEmojiFontTest #if !macro extends TestCase #end {
         assertEquals(['normal 400 16px "Inter", sans-serif'].join('|'), canvas.fonts.join('|'));
         // With the Emoji policy, nothing goes to the canvas
         final q = platform();
+        q.canvasFontFallback = Emoji;
         q.canvasText = new FakeCanvas();
         for (run in layout(q, 'a中😀👨‍👩‍👧b').runs)
             assertFalse(CanvasFallbackText.isCanvasFontId(run.fontId));
