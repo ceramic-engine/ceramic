@@ -8,7 +8,17 @@ import glaze.Model;
 import glaze.Render;
 import glaze.TestDispatcher;
 import glaze.Window;
+import glaze.Component;
+import glaze.kit.WindowState;
 import glaze.kit.base.Root;
+import glaze.kit.button.Button;
+import glaze.kit.button.ButtonGroup;
+import glaze.kit.button.Toggle;
+import glaze.kit.button.Toggle.ToggleGroup;
+import glaze.kit.radio.Radio;
+import glaze.kit.radio.Radio.RadioGroup;
+import glaze.kit.checkbox.Checkbox;
+import glaze.kit.switch_.Switch;
 import glaze.kit.base.Slider.SliderState;
 import glaze.kit.base.Slider.SliderValue;
 import glaze.kit.base.input.InputState;
@@ -235,6 +245,111 @@ class StatefulComponentTest extends TestCase {
         assertEquals('c', (state.read(app).selectedValue() : String));
     }
 
+    function testSelectValueDoesNotFreezeTheViewRenderingIt() {
+        // The first render pushes the value into the state: the write must
+        // not unbind the parent view from the model it reads
+        final probe = new Probe();
+        final h = open((window, cx) -> {
+            final tick = probe.tick;
+            return div().child('$tick').child(Select.component().options(['Rust', 'Go']).value('Go'));
+        });
+        final before = h.view.read(app).renders;
+        probe.tick++;
+        ceramic.App.app.flushImmediate();
+        h.cx.runUntilParked();
+        h.cx.update((window, _) -> window.drawIfDirty());
+        assertTrue(h.view.read(app).renders > before, 'the view reacts to the model after the first render');
+    }
+
+    function testInputAndSliderValuesDoNotFreezeTheViewRenderingThem() {
+        final probe = new Probe();
+        final h = open((window, cx) -> {
+            final tick = probe.tick;
+            return div().child('$tick')
+                .child(Input.component().value('text').placeholder('hint'))
+                .child(Slider.component().min(0).max(10).value(5));
+        });
+        final before = h.view.read(app).renders;
+        probe.tick++;
+        ceramic.App.app.flushImmediate();
+        h.cx.runUntilParked();
+        h.cx.update((window, _) -> window.drawIfDirty());
+        assertTrue(h.view.read(app).renders > before, 'the view reacts to the model after the first render');
+    }
+
+    function testInputPlaceholderIsPushedToTheState() {
+        var hint = 'Search';
+        var rendered:Null<Input> = null;
+        final h = open((window, cx) -> {
+            rendered = Input.component().placeholder(hint);
+            return rendered;
+        });
+        final base:Entity<glaze.kit.base.input.InputBaseState> = (rendered.state : InputState);
+        assertEquals('Search', base.read(app).placeholder);
+        hint = 'Find';
+        redraw(h.cx, h.view);
+        assertEquals('Find', base.read(app).placeholder);
+        // also on an input given its state
+        final state = app.newEntity((c:Context<InputState>) -> new InputState(h.cx.window, c));
+        final given = Input.component(state).placeholder('Given');
+        final opened = open((window, cx) -> given);
+        final givenBase:Entity<glaze.kit.base.input.InputBaseState> = (state : InputState);
+        assertEquals('Given', givenBase.read(app).placeholder);
+    }
+
+    function testRootBuilderBuildsTheRootOfAWindow() {
+        final build = Root.builder(Content.component().title('hello'));
+        var window:Window = null;
+        app.update(cx -> {
+            window = Window.open(cx, {width: 320, height: 240, scaleFactor: 2, autoDraw: false, bindInput: false}, build);
+        });
+        app.update(_ -> window.draw());
+        dispatcher.runUntilParked();
+        final root = Root.tryRead(window);
+        assertTrue(root != null, 'the window root is a Root');
+        assertTrue(root.contentView() != null);
+        assertTrue(WindowState.tryRead(window) != null, 'the kit initialized with the root');
+        window.destroy();
+    }
+
+    function testShortCallbacksOnKitControls() {
+        final log:Array<String> = [];
+        final button = Button.component('save').onClick(() -> log.push('click'));
+        final buttonEvent = Button.component('save2').onClick(e -> log.push(e == null ? 'event:null' : 'event'));
+        final buttonFull = Button.component('save3').onClick((e, window, cx) -> log.push('full'));
+        final sw = Switch.component('wifi').onChange(on -> log.push('switch:$on'));
+        final swVoid = Switch.component('wifi2').onClick(() -> log.push('switch'));
+        final checkbox = Checkbox.component('remember').onChange(v -> log.push('check:$v'));
+        final checkboxFull = Checkbox.component('remember2').onChange((v, window, cx) -> log.push('checkfull:$v'));
+        @:privateAccess button.onClickHandler(null, null, null);
+        @:privateAccess buttonEvent.onClickHandler(null, null, null);
+        @:privateAccess buttonFull.onClickHandler(null, null, null);
+        @:privateAccess sw.onClickHandler(true, null, null);
+        @:privateAccess swVoid.onClickHandler(false, null, null);
+        @:privateAccess checkbox.onClickHandler(true, null, null);
+        @:privateAccess checkboxFull.onClickHandler(false, null, null);
+        assertEquals('click,event:null,full,switch:true,switch,check:true,checkfull:false', log.join(','));
+
+        log.resize(0);
+        final radio = Radio.component('a').onChange(v -> log.push('radio:$v'));
+        final radioVoid = Radio.component('b').onClick(() -> log.push('radio'));
+        final radioGroup = RadioGroup.component('g').onChange(i -> log.push('group:$i'));
+        final radioGroupFull = RadioGroup.component('g2').onClick((i, window, cx) -> log.push('groupfull:$i'));
+        final toggle = Toggle.component('t').onClick(on -> log.push('toggle:$on'));
+        final toggleGroup = ToggleGroup.component('tg').onClick(states -> log.push('toggles:' + states.join('')));
+        final buttonGroup = ButtonGroup.component('bg').onClick(indices -> log.push('buttons:' + indices.join('')));
+        final buttonGroupVoid = ButtonGroup.component('bg2').onClick(() -> log.push('buttons'));
+        @:privateAccess radio.onClickHandler(true, null, null);
+        @:privateAccess radioVoid.onClickHandler(true, null, null);
+        @:privateAccess radioGroup.onClickHandler(2, null, null);
+        @:privateAccess radioGroupFull.onClickHandler(3, null, null);
+        @:privateAccess toggle.onClickHandler(false, null, null);
+        @:privateAccess toggleGroup.onClickHandler([true, false], null, null);
+        @:privateAccess buttonGroup.onClickHandler([0, 2], null, null);
+        @:privateAccess buttonGroupVoid.onClickHandler([1], null, null);
+        assertEquals('radio:true,radio,group:2,groupfull:3,toggle:false,toggles:truefalse,buttons:02,buttons', log.join(','));
+    }
+
     // MARK: Slider
 
     function testSliderComponentWithAStateIsTheSliderOfThatState() {
@@ -271,6 +386,8 @@ class StatefulComponentTest extends TestCase {
 
 private class Harness extends Model implements Render {
 
+    public var renders:Int = 0;
+
     final build:(Window, Context<Dynamic>) -> IntoElement;
 
     public function new(build:(Window, Context<Dynamic>) -> IntoElement) {
@@ -279,7 +396,28 @@ private class Harness extends Model implements Render {
     }
 
     public function render(window:Window, cx:Context<Dynamic>):IntoElement {
+        renders++;
         return div().size(px(400.)).child(build(window, cx));
+    }
+
+}
+
+private class Probe extends Model {
+
+    @observe public var tick:Int = 0;
+
+    public function new() {
+        super();
+    }
+
+}
+
+private class Content extends Component {
+
+    @prop var title:String = 'content';
+
+    function render(window:Window, cx:App):IntoElement {
+        return div().id('content').child(title);
     }
 
 }

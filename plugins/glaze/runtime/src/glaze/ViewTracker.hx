@@ -56,6 +56,12 @@ class ViewTracker extends Autorun {
     public var capturing(default, null):Bool = false;
 
     /**
+     * `true` during the render capture (`beginCapture()` to `endCapture()`),
+     * not during the prepaint and paint captures (`resumeCapture()`).
+     */
+    public var rendering(default, null):Bool = false;
+
+    /**
      * The entities read, updated or created while the view rendered,
      * prepainted and painted since its last render (Rust: the accessed
      * entities of a view, kept while a cached view is reused). Cleared by
@@ -105,6 +111,7 @@ class ViewTracker extends Autorun {
         reacted = false;
         writeReported = false;
         capturing = true;
+        rendering = true;
         savedCurrent = Autorun.current;
         Autorun.current = this;
     }
@@ -131,6 +138,7 @@ class ViewTracker extends Autorun {
         Autorun.current = savedCurrent;
         savedCurrent = null;
         capturing = false;
+        rendering = false;
         if (checkWritesDuringCapture && invalidated && !destroyed && !writeReported) {
             // Only synchronous code ran during the capture: the invalidation
             // comes from a write to a field read earlier in this same capture.

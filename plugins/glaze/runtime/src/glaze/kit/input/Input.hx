@@ -98,6 +98,8 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     var changeHandler:Null<(String) -> Void> = null;
 
+    var placeholderValue:Null<String> = null;
+
     var inputStyle:StyleRefinement = new StyleRefinement();
 
     var size:Size = Medium;
@@ -194,6 +196,16 @@ class Input implements RenderOnce implements Styled implements Sizable implement
     }
 
     /**
+     * The placeholder of the state, pushed when it differs from the state's
+     * (`InputState.setPlaceholder`); for an input built by `component()`,
+     * or any input whose state the caller does not configure itself.
+     */
+    public function placeholder(text:String):Input {
+        placeholderValue = text;
+        return this;
+    }
+
+    /**
      * Called with the new text on each `InputEvent.Change` of the state
      * created by `component()`. The handler of the latest render is the one
      * called; replacing it invalidates nothing.
@@ -235,9 +247,27 @@ class Input implements RenderOnce implements Styled implements Sizable implement
                 }
             });
         }
+        // Not tracked by the view being rendered (see `Select.resolveKeyedState`)
+        tracker.Autorun.unobserve();
         if (hasValueToPush && entity.read(cx).value() != valueToPush) {
             final value = valueToPush;
             base.update(cx, (s, c) -> s.setValue(value, window, c));
+        }
+        tracker.Autorun.reobserve();
+    }
+
+    /**
+     * Pushes `.placeholder(text)` into the state when it differs from the
+     * state's placeholder.
+     */
+    function applyPlaceholder(window:Window, cx:App):Void {
+        final base = textState.state;
+        final text = placeholderValue;
+        tracker.Autorun.unobserve();
+        final differs = base.read(cx).placeholder != text;
+        tracker.Autorun.reobserve();
+        if (differs) {
+            base.update(cx, (s, c) -> s.setPlaceholder(text, window, c));
         }
     }
 
@@ -606,6 +636,7 @@ class Input implements RenderOnce implements Styled implements Sizable implement
 
     public function render(window:Window, cx:App):IntoElement {
         if (textState == null) resolveKeyedState(window, cx);
+        if (placeholderValue != null) applyPlaceholder(window, cx);
         final LINE_HEIGHT = rems(1.25);
         final textAlign:TextAlign = inputStyle.text != null && inputStyle.text.has(TextStyleRefinement.TEXT_ALIGN) ? inputStyle.text.textAlign : Left;
         final state = this.textState;

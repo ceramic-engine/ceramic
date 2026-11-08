@@ -5,6 +5,7 @@ package glaze.kit.checkbox;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.kit.CheckedListener;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
@@ -160,7 +161,7 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
     /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
-    public function onClick(handler:(Bool, Window, App) -> Void):Checkbox {
+    public function onClick(handler:CheckedListener):Checkbox {
         return onChange(handler);
     }
 
@@ -170,9 +171,10 @@ class Checkbox implements RenderOnce implements Styled implements ParentElement 
      * This is a controlled value: the owner must write the requested value to
      * render it. Disabled controls do not call the handler. This and `onClick`
      * share one callback; chaining them replaces the previous handler instead
-     * of calling both.
+     * of calling both. Also written `onChange(v -> ...)` or
+     * `onChange(() -> ...)` (`CheckedListener`).
      */
-    public function onChange(handler:(Bool, Window, App) -> Void):Checkbox {
+    public function onChange(handler:CheckedListener):Checkbox {
         onClickHandler = handler;
         return this;
     }

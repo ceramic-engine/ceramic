@@ -266,7 +266,8 @@ class Inspector {
                         .gapX2()
                         .textSm()
                         .child(
-                            Link.component('source-location')
+                            // Qualified: `Link` alone is the `ButtonVariant.Link` constructor of the imported `Button` module
+                            glaze.kit.link.Link.component('source-location')
                                 .href('file://' + sourceLocation)
                                 .child(sourceLocation)
                                 .flex1()

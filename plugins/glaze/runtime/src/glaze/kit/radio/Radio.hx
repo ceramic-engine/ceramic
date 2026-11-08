@@ -5,6 +5,8 @@ package glaze.kit.radio;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.kit.CheckedListener;
+import glaze.kit.ValueListener;
 import glaze.Axis;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -181,7 +183,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
     /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
-    public function onClick(handler:(Bool, Window, App) -> Void):Radio {
+    public function onClick(handler:CheckedListener):Radio {
         return onChange(handler);
     }
 
@@ -189,9 +191,10 @@ class Radio implements RenderOnce implements Styled implements ParentElement imp
      * Handle a requested checked value from pointer or keyboard activation.
      *
      * This is a controlled value: the owner must write the requested value to
-     * render it. Disabled controls do not call the handler.
+     * render it. Disabled controls do not call the handler. Also written
+     * `onChange(checked -> ...)` or `onChange(() -> ...)` (`CheckedListener`).
      */
-    public function onChange(handler:(Bool, Window, App) -> Void):Radio {
+    public function onChange(handler:CheckedListener):Radio {
         onClickHandler = handler;
         return this;
     }
@@ -342,7 +345,7 @@ class RadioGroup implements RenderOnce implements Styled {
     /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
-    public function onClick(handler:(Int, Window, App) -> Void):RadioGroup {
+    public function onClick(handler:ValueListener<Int>):RadioGroup {
         return onChange(handler);
     }
 
@@ -350,9 +353,10 @@ class RadioGroup implements RenderOnce implements Styled {
      * Handle a requested selected index from pointer or keyboard activation.
      *
      * This is a controlled value: the owner must write the requested value to
-     * render it. Disabled controls do not call the handler.
+     * render it. Disabled controls do not call the handler. Also written
+     * `onChange(index -> ...)` or `onChange(() -> ...)` (`ValueListener`).
      */
-    public function onChange(handler:(Int, Window, App) -> Void):RadioGroup {
+    public function onChange(handler:ValueListener<Int>):RadioGroup {
         onClickHandler = handler;
         return this;
     }

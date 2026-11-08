@@ -8,6 +8,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Background;
 import glaze.ClickEvent;
+import glaze.Listeners;
 import glaze.Corners;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -810,9 +811,10 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     }
 
     /**
-     * Add click handler.
+     * Add click handler. Also written `onClick(() -> ...)` or
+     * `onClick(event -> ...)` (`glaze.Listeners.ClickListener`).
      */
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):Button {
+    public function onClick(handler:ClickListener):Button {
         onClickHandler = handler;
         return this;
     }

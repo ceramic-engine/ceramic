@@ -63,11 +63,10 @@ class Counter extends Model implements Render {
 For the components, wrap your view in a `Root`, which applies the theme. The kit initializes itself the first time it is needed; a setting made before the first render (`Theme.change`, `Kit.setLocale`...) initializes it too, then applies:
 
 ```haxe
-ui = new Glaze((window, cx) -> {
-    final view = cx.newEntity((cx:Context<MyView>) -> new MyView());
-    return cx.newEntity((cx:Context<Root>) -> new Root(view, window, cx));
-});
+ui = new Glaze(Root.builder(AppView.component()));
 ```
+
+`Root.builder(view)` is the root view builder `new Glaze(...)` takes: it creates the `Root` of the window around `view`, a `Component`, an entity view or any `AnyView`. The explicit form is `(window, cx) -> cx.newEntity((cx:Context<Root>) -> new Root(view, window, cx))`.
 
 Then use them like in Rust, with camelCase names: `new Button('save').primary().label('Save').onClick(...)`. gpui-kit's documentation applies; [docs/PORTING.md](docs/PORTING.md) lists the differences.
 

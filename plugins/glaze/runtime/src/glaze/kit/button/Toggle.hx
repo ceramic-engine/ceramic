@@ -5,6 +5,8 @@ package glaze.kit.button;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.kit.CheckedListener;
+import glaze.kit.ValueListener;
 import glaze.Axis;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -136,9 +138,10 @@ class Toggle implements RenderOnce implements Styled implements ParentElement im
 
     /**
      * Set the callback to be called when the toggle is clicked, with the new
-     * checked state of the toggle.
+     * checked state of the toggle. Also written `onClick(checked -> ...)`
+     * or `onClick(() -> ...)` (`CheckedListener`).
      */
-    public function onClick(handler:(Bool, Window, App) -> Void):Toggle {
+    public function onClick(handler:CheckedListener):Toggle {
         onClickHandler = handler;
         return this;
     }
@@ -285,9 +288,10 @@ class ToggleGroup implements RenderOnce implements Styled implements Sizable imp
 
     /**
      * Set the callback to be called when the toggle group changes, with the
-     * new check state of each `Toggle` in the group.
+     * new check state of each `Toggle` in the group. Also written
+     * `onClick(states -> ...)` or `onClick(() -> ...)` (`ValueListener`).
      */
-    public function onClick(onClick:(Array<Bool>, Window, App) -> Void):ToggleGroup {
+    public function onClick(onClick:ValueListener<Array<Bool>>):ToggleGroup {
         onClickHandler = onClick;
         return this;
     }

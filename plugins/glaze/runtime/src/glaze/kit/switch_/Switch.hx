@@ -4,6 +4,7 @@
 package glaze.kit.switch_;
 
 import glaze.App;
+import glaze.kit.CheckedListener;
 import glaze.Background;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -116,7 +117,7 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
     /**
      * Alias for `onChange`. The last callback registered with either name wins.
      */
-    public function onClick(handler:(Bool, Window, App) -> Void):Switch {
+    public function onClick(handler:CheckedListener):Switch {
         return onChange(handler);
     }
 
@@ -124,9 +125,10 @@ class Switch implements RenderOnce implements Styled implements Sizable implemen
      * Handle a requested checked value from pointer or keyboard activation.
      *
      * This is a controlled value: the owner must write the requested value to
-     * render it. Disabled controls do not call the handler.
+     * render it. Disabled controls do not call the handler. Also written
+     * `onChange(on -> ...)` or `onChange(() -> ...)` (`CheckedListener`).
      */
-    public function onChange(handler:(Bool, Window, App) -> Void):Switch {
+    public function onChange(handler:CheckedListener):Switch {
         onClickHandler = handler;
         return this;
     }

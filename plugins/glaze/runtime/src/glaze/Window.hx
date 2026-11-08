@@ -1130,6 +1130,14 @@ class Window implements WindowInvalidator {
      *   view prepaints or paints from (gpui-kit's resizable panels report
      *   their bounds to their state on every prepaint) would otherwise draw
      *   the window again after every frame.
+     * - Except when the view's own render wrote a value it read earlier in
+     *   that render (`ViewTracker.rendering`): tracker unbound the view from
+     *   everything it read before the write, so until it renders again the
+     *   view reacts to nothing. The next frame is scheduled, with the view
+     *   dirty, so it renders again (and binds again) right away instead of
+     *   staying frozen until something else draws the window. A render
+     *   that writes a different value each time still draws forever, and
+     *   is what the debug warning of `ViewTracker` reports.
      * - Otherwise, the reaction runs as scheduled by tracker, or at the
      *   latest when the window draws (`reactToInvalidatedTrackers`).
      */
@@ -1137,7 +1145,12 @@ class Window implements WindowInvalidator {
     function viewTrackerInvalidated(tracker:ViewTracker):Void {
         if (drawing) {
             @:privateAccess tracker.reacted = true;
-            invalidateView(tracker.viewId, app);
+            if (tracker.rendering) {
+                invalidateViewForNextFrame(tracker.viewId);
+            }
+            else {
+                invalidateView(tracker.viewId, app);
+            }
         }
         else {
             invalidatedTrackers.push(tracker);

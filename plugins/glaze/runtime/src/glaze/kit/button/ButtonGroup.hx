@@ -4,6 +4,7 @@
 package glaze.kit.button;
 
 import glaze.App;
+import glaze.kit.ValueListener;
 import glaze.Axis;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -134,9 +135,10 @@ class ButtonGroup implements RenderOnce implements Styled implements Sizable imp
      * The handler first argument is the indices of the clicked buttons
      * (selected in `multiple` mode): `[0, 2, 3]` means the first, third and
      * fourth buttons. A group handler replaces the click handlers of its
-     * buttons, and only pointer clicks reach it.
+     * buttons, and only pointer clicks reach it. Also written
+     * `onClick(indices -> ...)` or `onClick(() -> ...)` (`ValueListener`).
      */
-    public function onClick(handler:(Array<Int>, Window, App) -> Void):ButtonGroup {
+    public function onClick(handler:ValueListener<Array<Int>>):ButtonGroup {
         onClickHandler = handler;
         return this;
     }

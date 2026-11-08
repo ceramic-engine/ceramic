@@ -202,6 +202,12 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
                 }
             });
         }
+        // The state is the select's own: what is compared and pushed here
+        // is not tracked by the view being rendered. Reading `selectedValue`
+        // (an observable) then writing it in the view's render capture would
+        // bind the view to it and unbind the view from everything it read
+        // before, mid render.
+        tracker.Autorun.unobserve();
         if (optionItems != null && !sameItems(optionItems, keyed.memo)) {
             final items = optionItems;
             keyed.memo = items;
@@ -211,6 +217,7 @@ class Select<I> implements RenderOnce implements Styled implements Sizable imple
             final value = valueToPush;
             entity.update(cx, (s, c) -> s.setSelectedValue(value, window, c));
         }
+        tracker.Autorun.reobserve();
     }
 
     /** Sets an explicit identity for the select root. */

@@ -236,6 +236,8 @@ class Slider implements RenderOnce implements Styled {
                 }
             });
         }
+        // Not tracked by the view being rendered (see `Select.resolveKeyedState`)
+        tracker.Autorun.unobserve();
         final current = entity.read(cx);
         final minChanged = minValue != null && current.minValue() != minValue;
         final maxChanged = maxValue != null && current.maxValue() != maxValue;
@@ -250,6 +252,7 @@ class Slider implements RenderOnce implements Styled {
                 if (valueChanged) s.setValue(value, window, c);
             });
         }
+        tracker.Autorun.reobserve();
     }
 
     public inline function style():StyleRefinement {

@@ -140,6 +140,24 @@ class Root extends Model implements Render implements Styled {
     }
 
     /**
+     * The root view builder of a window showing `view` under a `Root`, for
+     * `new Glaze(Root.builder(AppView.component()))` or `Window.open`: the
+     * builder creates the `Root` entity of the window around `view` (a
+     * `Component`, an entity view or any `AnyView`). One builder is for one
+     * window: its `view` is one view.
+     *
+     * Not named `component`: a `Root` is an entity, and `ceramic.Entity`
+     * has an instance method of that name (Haxe refuses a static with the
+     * name of an inherited instance field).
+     */
+    public static function builder(view:AnyView):(Window, App) -> AnyView {
+        return (window, cx) -> {
+            final root:Entity<Root> = cx.newEntity((rootCx:Context<Root>) -> new Root(view, window, rootCx));
+            return (root : AnyView);
+        };
+    }
+
+    /**
      * Creates a root for `view`. Build it in the window's root view builder:
      * `Window.open(app, options, (window, cx) -> cx.newEntity(rootCx -> new Root(view, window, rootCx)))`.
      *
