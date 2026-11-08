@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -38,7 +38,7 @@ using glaze.kit.base.StyledExt;
  * renders (Rust implements `InteractiveElement` by delegation). `onClick`
  * is the button's own activation handler, like the inherent Rust method.
  */
-class Button implements RenderOnce implements Styled implements ParentElement implements Selectable {
+class Button extends Component implements Styled implements ParentElement implements Selectable {
 
     final id:ElementId;
 
@@ -49,25 +49,67 @@ class Button implements RenderOnce implements Styled implements ParentElement im
 
     var semanticStyles:ButtonStyles = new ButtonStyles();
 
-    var selectedValue:Bool = false;
+    /**
+     * Sets the application-controlled selected presentation state.
+     *
+     * This supports persistent trigger presentation while an associated menu
+     * or popover is open. It is distinct from momentary `active`, Toggle's
+     * `pressed` state, and accessibility toggle metadata; selecting a Button
+     * does not automatically set `aria_toggled`.
+     */
+    @prop var selected:Bool = false;
 
-    var disabledValue:Bool = false;
+    /**
+     * Sets whether the button ignores pointer and keyboard activation.
+     *
+     * Disabled buttons are skipped during Tab traversal. If this button already
+     * owns focus when it becomes disabled, it retains the focus binding until
+     * focus moves away, so keyboard traversal can continue in either direction.
+     */
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Sets the activation handler for pointer, Enter, and Space input.
+     */
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the label exposed to accessibility clients.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var roleValue:RoleOverride = Implicit;
+    /**
+     * Overrides the accessibility role. The default is `Role.Button`.
+     */
+    @prop var role:RoleOverride = Implicit;
 
-    var providedFocusHandle:Null<FocusHandle> = null;
+    /**
+     * Uses a caller-owned focus handle instead of creating keyed state.
+     */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
-    var tabIndexValue:Int = 0;
+    /**
+     * Sets the focus traversal index. The default is `0`.
+     */
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    /**
+     * Sets whether the button participates in keyboard focus traversal.
+     */
+    @prop var tabStop:Bool = true;
 
-    var focusableValue:Bool = true;
+    /**
+     * Sets whether pressing the button moves focus onto it. The default is `true`.
+     *
+     * A non-focusable button leaves focus wherever it already is, which keeps a
+     * composed control from flickering its focus ring on every press. It also
+     * gives up Enter and Space activation, so only use it for a button that a
+     * focused sibling already exposes to the keyboard, such as a number input's
+     * step buttons.
+     */
+    @prop var focusable:Bool = true;
 
     /**
      * The accessibility properties the button exports (filled by `render`,
@@ -76,6 +118,7 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     public final a11y:A11y = new A11y();
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
         this.base = div().id(id);
     }
@@ -98,37 +141,12 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         return this;
     }
 
-    /**
-     * Sets whether the button ignores pointer and keyboard activation.
-     *
-     * Disabled buttons are skipped during Tab traversal. If this button already
-     * owns focus when it becomes disabled, it retains the focus binding until
-     * focus moves away, so keyboard traversal can continue in either direction.
-     */
-    public function disabled(disabled:Bool):Button {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Sets the application-controlled selected presentation state.
-     *
-     * This supports persistent trigger presentation while an associated menu
-     * or popover is open. It is distinct from momentary `active`, Toggle's
-     * `pressed` state, and accessibility toggle metadata; selecting a Button
-     * does not automatically set `aria_toggled`.
-     */
-    public function selected(selected:Bool):Button {
-        selectedValue = selected;
-        return this;
-    }
-
     public function setSelected(selected:Bool):Void {
-        selectedValue = selected;
+        this.selected = selected;
     }
 
     public function isSelected():Bool {
-        return selectedValue;
+        return selected;
     }
 
     public function setOpen(open:Bool):Void {
@@ -144,68 +162,6 @@ class Button implements RenderOnce implements Styled implements ParentElement im
      */
     public function styles(build:(ButtonStyles) -> ButtonStyles):Button {
         semanticStyles = build(semanticStyles);
-        return this;
-    }
-
-    /**
-     * Sets the label exposed to accessibility clients.
-     */
-    public function accessibilityLabel(label:String):Button {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Overrides the accessibility role. The default is `Role.Button`.
-     */
-    public function role(role:RoleOverride):Button {
-        roleValue = role;
-        return this;
-    }
-
-    /**
-     * Uses a caller-owned focus handle instead of creating keyed state.
-     */
-    public function trackFocus(focusHandle:FocusHandle):Button {
-        providedFocusHandle = focusHandle;
-        return this;
-    }
-
-    /**
-     * Sets the activation handler for pointer, Enter, and Space input.
-     */
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):Button {
-        onClickHandler = handler;
-        return this;
-    }
-
-    /**
-     * Sets the focus traversal index. The default is `0`.
-     */
-    public function tabIndex(tabIndex:Int):Button {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    /**
-     * Sets whether the button participates in keyboard focus traversal.
-     */
-    public function tabStop(tabStop:Bool):Button {
-        tabStopValue = tabStop;
-        return this;
-    }
-
-    /**
-     * Sets whether pressing the button moves focus onto it. The default is `true`.
-     *
-     * A non-focusable button leaves focus wherever it already is, which keeps a
-     * composed control from flickering its focus ring on every press. It also
-     * gives up Enter and Space activation, so only use it for a button that a
-     * focused sibling already exposes to the keyboard, such as a number input's
-     * step buttons.
-     */
-    public function focusable(focusable:Bool):Button {
-        focusableValue = focusable;
         return this;
     }
 
@@ -246,23 +202,23 @@ class Button implements RenderOnce implements Styled implements ParentElement im
     }
 
     function focusHandle(window:Window, cx:App):FocusHandle {
-        if (providedFocusHandle != null) return providedFocusHandle;
+        if (trackFocus != null) return trackFocus;
         return window.useKeyedState(id, cx, _ -> cx.focusHandle()).read(cx).value;
     }
 
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (selectedValue) states.push(semanticStyles.selectedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (selected) states.push(semanticStyles.selectedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(buttonStyle, states);
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = this.focusHandle(window, cx);
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final style = resolvedStyle();
-        final onClick = onClickHandler;
+        final onClick = this.onClick;
 
         // Centering is part of Button's control geometry. Without a flex
         // formatting context an ordinary child starts at the root's leading
@@ -275,13 +231,13 @@ class Button implements RenderOnce implements Styled implements ParentElement im
         // button cannot be sized precisely. `relative(1.)` makes the text box
         // exactly the font size; anything the caller sets refines over it.
         final element = base.flex().itemsCenter().justifyCenter().lineHeight(glaze.Prelude.relative(1.));
-        final role = roleValue.resolve(() -> Role.Button);
+        final role = this.role.resolve(() -> Role.Button);
         if (role != null) a11y.role = role;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         // Keep the current focus in the dispatch tree when activation
         // disables this button, so Tab can still leave it in either direction.
-        if (focusableValue && (!disabled || focusHandle.isFocused(window))) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue && !disabled));
+        if (focusable && (!disabled || focusHandle.isFocused(window))) {
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop && !disabled));
         }
         if (disabled) {
             element.onMouseDown(Left, (_, _, cx) -> cx.stopPropagation());

@@ -4,19 +4,20 @@
 package glaze.kit.base.input;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 
 /**
  * An unstyled source-code editor: renders its state (Rust `Entity<EditorState>`).
  */
-class Editor implements RenderOnce {
+class Editor extends Component {
 
     final state:Entity<EditorState>;
 
     public function new(state:Entity<EditorState>) {
+        super();
         this.state = state;
     }
 

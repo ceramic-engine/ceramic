@@ -4,9 +4,9 @@
 package glaze.kit.base.text;
 
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 
 /** The two forms of `Text` (Rust enum `Text`). */
@@ -21,11 +21,12 @@ enum TextKind {
  *
  * Rust's `From` conversions are `Text.ofString` and `Text.ofTextView`.
  */
-class Text implements RenderOnce {
+class Text extends Component {
 
     public final kind:TextKind;
 
     function new(kind:TextKind) {
+        super();
         this.kind = kind;
     }
 

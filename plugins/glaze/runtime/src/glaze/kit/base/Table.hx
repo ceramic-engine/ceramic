@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
@@ -13,7 +14,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -33,7 +33,7 @@ using glaze.kit.base.StyledExt;
  * Interactive styles and listeners go to `base` (or to the forwarding
  * methods below).
  */
-abstract class TablePart implements RenderOnce implements Styled implements ParentElement {
+abstract class TablePart extends Component implements Styled implements ParentElement {
 
     /** The stateful element the part renders (Rust `base`). */
     public final base:Div;
@@ -46,6 +46,7 @@ abstract class TablePart implements RenderOnce implements Styled implements Pare
     public final a11y:A11y;
 
     function new(id:ElementIdArg, ?role:Role) {
+        super();
         base = div().id(id).testSupport();
         a11y = new A11y(role);
     }
@@ -107,46 +108,31 @@ abstract class TablePart implements RenderOnce implements Styled implements Pare
  */
 class Table extends TablePart {
 
-    var rowCountValue:Null<Int> = null;
+    /**
+     * Sets the total number of rows, including rows outside the rendered
+     * range. Assistive technology needs this to announce "row 5 of 200" for a
+     * virtualized table whose rendered rows are only a window onto the data.
+     */
+    @prop var rowCount:Null<Int> = null;
 
-    var columnCountValue:Null<Int> = null;
+    /**
+     * Sets the total number of columns, including columns outside the
+     * rendered range.
+     */
+    @prop var columnCount:Null<Int> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Sets the table's accessible name. */
+    @prop var accessibilityLabel:Null<String> = null;
 
     /** Create an unstyled semantic table root. */
     public function new(id:ElementIdArg) {
         super(id, Role.Table);
     }
 
-    /**
-     * Sets the total number of rows, including rows outside the rendered
-     * range. Assistive technology needs this to announce "row 5 of 200" for a
-     * virtualized table whose rendered rows are only a window onto the data.
-     */
-    public function rowCount(count:Int):Table {
-        rowCountValue = count;
-        return this;
-    }
-
-    /**
-     * Sets the total number of columns, including columns outside the
-     * rendered range.
-     */
-    public function columnCount(count:Int):Table {
-        columnCountValue = count;
-        return this;
-    }
-
-    /** Sets the table's accessible name. */
-    public function accessibilityLabel(label:String):Table {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
     override public function render(window:Window, cx:App):IntoElement {
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
-        if (rowCountValue != null) a11y.rowCount = rowCountValue;
-        if (columnCountValue != null) a11y.columnCount = columnCountValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
+        if (rowCount != null) a11y.rowCount = rowCount;
+        if (columnCount != null) a11y.columnCount = columnCount;
         return renderBase();
     }
 

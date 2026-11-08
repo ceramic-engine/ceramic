@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.IntoElement;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -34,7 +34,7 @@ using glaze.kit.base.StyledExt;
  *
  * Interactive styles and listeners go to `base` (see `glaze.kit.base.Button`).
  */
-class Radio implements RenderOnce implements Styled implements ParentElement {
+class Radio extends Component implements Styled implements ParentElement {
 
     var radioId:ElementId;
 
@@ -45,21 +45,33 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
 
     var semanticStyles:RadioStyles = new RadioStyles();
 
-    var checkedValue:Bool = false;
+    @prop var checked:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     final childElements:Array<AnyElement> = [];
 
-    var onChangeHandler:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
+    /**
+     * Handles a requested selection change.
+     *
+     * The callback receives `true`. Activating an already checked radio is a
+     * no-op because a radio cannot deselect itself.
+     */
+    @prop var onChange:Null<(Bool, ClickEvent, Window, App) -> Void> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var tabIndexValue:Int = 0;
+    @prop var tabIndex:Int = 0;
 
-    var tabStopValue:Bool = true;
+    @prop var tabStop:Bool = true;
 
-    var providedFocusHandle:Null<FocusHandle> = null;
+    /**
+     * Uses a caller-owned focus handle instead of creating keyed state.
+     *
+     * A styled radio needs this to draw its own focus ring from the same
+     * handle the primitive tracks.
+     */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
     var positionInSet:Null<Int> = null;
 
@@ -69,6 +81,7 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y(Role.RadioButton);
 
     public function new(id:ElementIdArg) {
+        super();
         this.radioId = id;
         this.base = div().id(id);
     }
@@ -103,16 +116,6 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function checked(checked:Bool):Radio {
-        checkedValue = checked;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Radio {
-        disabledValue = disabled;
-        return this;
-    }
-
     /**
      * Configures application-owned styles for the radio's semantic states.
      */
@@ -124,36 +127,9 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (checkedValue) states.push(semanticStyles.checkedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (checked) states.push(semanticStyles.checkedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(radioStyle, states);
-    }
-
-    public function accessibilityLabel(label:String):Radio {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Handles a requested selection change.
-     *
-     * The callback receives `true`. Activating an already checked radio is a
-     * no-op because a radio cannot deselect itself.
-     */
-    public function onChange(handler:(Bool, ClickEvent, Window, App) -> Void):Radio {
-        onChangeHandler = handler;
-        return this;
-    }
-
-    /**
-     * Uses a caller-owned focus handle instead of creating keyed state.
-     *
-     * A styled radio needs this to draw its own focus ring from the same
-     * handle the primitive tracks.
-     */
-    public function trackFocus(focusHandle:FocusHandle):Radio {
-        providedFocusHandle = focusHandle;
-        return this;
     }
 
     /**
@@ -163,16 +139,6 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     public function setPosition(position:Int, size:Int):Radio {
         positionInSet = position;
         sizeOfSet = size;
-        return this;
-    }
-
-    public function tabIndex(tabIndex:Int):Radio {
-        tabIndexValue = tabIndex;
-        return this;
-    }
-
-    public function tabStop(tabStop:Bool):Radio {
-        tabStopValue = tabStop;
         return this;
     }
 
@@ -201,16 +167,16 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
     }
 
     function focusHandle(window:Window, cx:App):FocusHandle {
-        if (providedFocusHandle != null) return providedFocusHandle;
+        if (trackFocus != null) return trackFocus;
         return window.useKeyedState(radioId, cx, _ -> cx.focusHandle()).read(cx).value;
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final focusHandle = this.focusHandle(window, cx);
-        final disabled = disabledValue;
-        final checked = checkedValue;
+        final disabled = this.disabled;
+        final checked = this.checked;
         final style = resolvedStyle();
-        final onChange = onChangeHandler;
+        final onChange = this.onChange;
 
         final element = base;
         a11y.toggled = checked ? Toggled.True : Toggled.False;
@@ -218,11 +184,11 @@ class Radio implements RenderOnce implements Styled implements ParentElement {
         // technology reads one or the other, so state both rather than
         // making callers choose.
         a11y.selected = checked;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
         if (positionInSet != null) a11y.positionInSet = positionInSet;
         if (sizeOfSet != null) a11y.sizeOfSet = sizeOfSet;
         if (!disabled) {
-            element.trackFocus(focusHandle.tabIndex(tabIndexValue).tabStop(tabStopValue));
+            element.trackFocus(focusHandle.tabIndex(tabIndex).tabStop(tabStop));
         }
         if (!disabled && !checked && onChange != null) {
             a11y.clickable = true;

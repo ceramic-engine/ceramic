@@ -6,6 +6,7 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
@@ -13,7 +14,6 @@ import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.OperatingSystem;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -44,7 +44,7 @@ using glaze.kit.base.StyledExt;
  * kept in `a11y` (filled by `render`), and the accessible Click activation is
  * `a11yClick` (set by `render` when the select is enabled).
  */
-class Select implements RenderOnce implements Styled implements ParentElement {
+class Select extends Component implements Styled implements ParentElement {
 
     static inline final CONTEXT:String = "Select";
 
@@ -65,29 +65,55 @@ class Select implements RenderOnce implements Styled implements ParentElement {
     /** The stateful element the root renders. */
     public final base:Div;
 
-    var openValue:Bool = false;
+    /** Sets the application-controlled open state. */
+    @prop var open:Bool = false;
 
-    var disabledValue:Bool = false;
+    /** Prevents keyboard and accessible activation and removes the trigger from tab traversal. */
+    @prop var disabled:Bool = false;
 
-    var focusHandleValue:Null<FocusHandle> = null;
+    /** Supplies the focus handle for the select trigger. */
+    @prop var focusHandle:Null<FocusHandle> = null;
 
-    var contentFocusHandleValue:Null<FocusHandle> = null;
+    /** Supplies the focus handle that receives keyboard navigation while open. */
+    @prop var contentFocusHandle:Null<FocusHandle> = null;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /** Sets the accessible name exposed by the controlled root. */
+    @prop var accessibilityLabel:Null<String> = null;
 
-    var accessibilityValueValue:Null<String> = null;
+    /**
+     * Sets the committed value exposed by the controlled root.
+     *
+     * Supply a readable selection title, not the current search query or cursor.
+     */
+    @prop var accessibilityValue:Null<String> = null;
 
     final selectStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
+    /** Handles requests to update the controlled open state. */
+    @prop var onOpenChange:Null<(Bool, Window, App) -> Void> = null;
 
-    var keyContextValue:String = CONTEXT;
+    /** Rust `key_context` (hidden). */
+    @prop var keyContext:String = CONTEXT;
 
-    var onDismissHandler:Null<(Window, App) -> Void> = null;
+    /**
+     * Handles a dismissal, however it was requested: the Cancel action, or
+     * the accessible activation that closes an open control.
+     *
+     * This runs before the controlled open state is asked to close, so a
+     * caller that commits its pending value on dismissal can still read that
+     * value here.
+     */
+    @prop var onDismiss:Null<(Window, App) -> Void> = null;
 
-    var onConfirmHandler:Null<(Window, App) -> Void> = null;
+    /**
+     * Handles the Confirm action while the select is open.
+     *
+     * Confirming a closed select opens it instead, so this never runs for
+     * that case.
+     */
+    @prop var onConfirm:Null<(Window, App) -> Void> = null;
 
     /** The accessibility properties the root exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.ComboBox);
@@ -99,83 +125,8 @@ class Select implements RenderOnce implements Styled implements ParentElement {
     public var a11yClick(default, null):Null<(Window, App) -> Void> = null;
 
     public function new(id:ElementIdArg) {
+        super();
         base = div().id(id).testSupport();
-    }
-
-    /** Sets the application-controlled open state. */
-    public function open(open:Bool):Select {
-        openValue = open;
-        return this;
-    }
-
-    /** Prevents keyboard and accessible activation and removes the trigger from tab traversal. */
-    public function disabled(disabled:Bool):Select {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /** Supplies the focus handle for the select trigger. */
-    public function focusHandle(focusHandle:FocusHandle):Select {
-        focusHandleValue = focusHandle;
-        return this;
-    }
-
-    /** Supplies the focus handle that receives keyboard navigation while open. */
-    public function contentFocusHandle(focusHandle:FocusHandle):Select {
-        contentFocusHandleValue = focusHandle;
-        return this;
-    }
-
-    /** Sets the accessible name exposed by the controlled root. */
-    public function accessibilityLabel(label:String):Select {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
-    /**
-     * Sets the committed value exposed by the controlled root.
-     *
-     * Supply a readable selection title, not the current search query or cursor.
-     */
-    public function accessibilityValue(value:String):Select {
-        accessibilityValueValue = value;
-        return this;
-    }
-
-    /** Handles requests to update the controlled open state. */
-    public function onOpenChange(handler:(Bool, Window, App) -> Void):Select {
-        onOpenChangeHandler = handler;
-        return this;
-    }
-
-    /** Rust `key_context` (hidden). */
-    public function keyContext(keyContext:String):Select {
-        keyContextValue = keyContext;
-        return this;
-    }
-
-    /**
-     * Handles a dismissal, however it was requested: the Cancel action, or
-     * the accessible activation that closes an open control.
-     *
-     * This runs before the controlled open state is asked to close, so a
-     * caller that commits its pending value on dismissal can still read that
-     * value here.
-     */
-    public function onDismiss(handler:(Window, App) -> Void):Select {
-        onDismissHandler = handler;
-        return this;
-    }
-
-    /**
-     * Handles the Confirm action while the select is open.
-     *
-     * Confirming a closed select opens it instead, so this never runs for
-     * that case.
-     */
-    public function onConfirm(handler:(Window, App) -> Void):Select {
-        onConfirmHandler = handler;
-        return this;
     }
 
     public inline function style():StyleRefinement {
@@ -197,13 +148,13 @@ class Select implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final open = openValue;
-        final disabled = disabledValue;
-        final focusHandle = focusHandleValue;
-        final contentFocusHandle = contentFocusHandleValue;
-        final onOpenChange = onOpenChangeHandler;
-        final onDismiss = onDismissHandler;
-        final onConfirm = onConfirmHandler;
+        final open = this.open;
+        final disabled = this.disabled;
+        final focusHandle = this.focusHandle;
+        final contentFocusHandle = this.contentFocusHandle;
+        final onOpenChange = this.onOpenChange;
+        final onDismiss = this.onDismiss;
+        final onConfirm = this.onConfirm;
 
         // Every way of closing runs the same steps. A caller that tracks
         // dismissal has to see one however the popup was closed, and the
@@ -222,9 +173,9 @@ class Select implements RenderOnce implements Styled implements ParentElement {
 
         final element = base;
         a11y.expanded = open;
-        if (accessibilityLabelValue != null) a11y.label = accessibilityLabelValue;
-        if (accessibilityValueValue != null) a11y.value = accessibilityValueValue;
-        element.keyContext(keyContextValue);
+        if (accessibilityLabel != null) a11y.label = accessibilityLabel;
+        if (accessibilityValue != null) a11y.value = accessibilityValue;
+        element.keyContext(keyContext);
         if (focusHandle != null && !disabled) {
             element.trackFocus(focusHandle.tabStop(true));
         }

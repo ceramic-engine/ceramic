@@ -5,12 +5,12 @@ package glaze.kit.base.input;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementIdArg;
 import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -31,7 +31,7 @@ using glaze.kit.base.StyledExt;
  * Interactive styles and listeners go to `base` (the stateful element the
  * frame renders, Rust `InteractiveElement::interactivity`).
  */
-class InputBase implements RenderOnce implements Styled implements ParentElement {
+class InputBase extends Component implements Styled implements ParentElement {
 
     /** The stateful element the frame renders. */
     public final base:Div;
@@ -42,16 +42,17 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
 
     final childElements:Array<AnyElement> = [];
 
-    var focusedValue:Bool = false;
+    @prop var focused:Bool = false;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var roleValue:RoleOverride = Implicit;
+    @prop var role:RoleOverride = Implicit;
 
     /** The accessibility properties the frame exports (filled by `render`). */
     public final a11y:A11y = new A11y();
 
     public function new(id:ElementIdArg) {
+        super();
         this.base = div().id(id);
     }
 
@@ -70,21 +71,6 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
 
     public function children(children:Array<IntoElement>):InputBase {
         for (child in children) if (child != null) childElements.push(child);
-        return this;
-    }
-
-    public function role(role:RoleOverride):InputBase {
-        roleValue = role;
-        return this;
-    }
-
-    public function focused(focused:Bool):InputBase {
-        focusedValue = focused;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):InputBase {
-        disabledValue = disabled;
         return this;
     }
 
@@ -117,15 +103,15 @@ class InputBase implements RenderOnce implements Styled implements ParentElement
     @:allow(tests)
     function resolvedStyle():StyleRefinement {
         final states = [];
-        if (focusedValue) states.push(semanticStyles.focusedStyle);
-        if (disabledValue) states.push(semanticStyles.disabledStyle);
+        if (focused) states.push(semanticStyles.focusedStyle);
+        if (disabled) states.push(semanticStyles.disabledStyle);
         return StateStyle.resolveStyle(frameStyle, states);
     }
 
     public function render(window:Window, cx:App):IntoElement {
         final style = resolvedStyle();
         // `Role::TextInput` (not declared by `glaze.kit.base.A11y.Role` yet).
-        final role = roleValue.resolve(() -> (cast 'textInput' : Role));
+        final role = this.role.resolve(() -> (cast 'textInput' : Role));
         if (role != null) a11y.role = role;
         base.extend(childElements);
         return base.refineStyle(style);

@@ -6,11 +6,11 @@ package glaze.kit.base;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,7 +27,7 @@ using glaze.kit.base.StyledExt;
  * The unstyled alert dialog parts (Rust `alert_part!`).
  */
 @:allow(glaze.kit.base)
-abstract class AlertDialogPart implements RenderOnce implements Styled implements ParentElement {
+abstract class AlertDialogPart extends Component implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
@@ -38,6 +38,7 @@ abstract class AlertDialogPart implements RenderOnce implements Styled implement
     final occlude:Bool;
 
     function new(partId:String, occlude:Bool) {
+        super();
         this.partId = partId;
         this.occlude = occlude;
     }
@@ -92,31 +93,22 @@ class AlertDialogDescription extends AlertDialogPart {
 
 }
 
-class AlertDialogTrigger implements RenderOnce {
+class AlertDialogTrigger extends Component {
 
     final trigger:AnyElement;
 
-    var openRequest:(Window, App) -> Void = (_, _) -> {};
+    @prop var onOpen:(Window, App) -> Void = (_, _) -> {};
 
-    var handleValue:Null<DialogHandle> = null;
+    @prop var handle:Null<DialogHandle> = null;
 
     public function new(trigger:IntoElement) {
+        super();
         this.trigger = trigger;
     }
 
-    public function onOpen(open:(Window, App) -> Void):AlertDialogTrigger {
-        openRequest = open;
-        return this;
-    }
-
-    public function handle(handle:DialogHandle):AlertDialogTrigger {
-        handleValue = handle;
-        return this;
-    }
-
     public function render(_:Window, _:App):IntoElement {
-        final handle = handleValue;
-        final open = openRequest;
+        final handle = this.handle;
+        final open = onOpen;
         return div()
             .onMouseDown(Left, (_, window, cx) -> {
                 if (handle != null) {
@@ -134,7 +126,7 @@ class AlertDialogTrigger implements RenderOnce {
  * The parts that dispatch `Cancel` on click (Rust `alert_close_part!`).
  */
 @:allow(glaze.kit.base)
-abstract class AlertDialogClosePart implements RenderOnce implements Styled implements ParentElement {
+abstract class AlertDialogClosePart extends Component implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
@@ -143,6 +135,7 @@ abstract class AlertDialogClosePart implements RenderOnce implements Styled impl
     final partId:String;
 
     function new(partId:String) {
+        super();
         this.partId = partId;
     }
 
@@ -183,13 +176,15 @@ class AlertDialogCancel extends AlertDialogClosePart {
 /**
  * Wrapper that dispatches the alert dialog's confirm action.
  */
-class AlertDialogAction implements RenderOnce implements Styled implements ParentElement {
+class AlertDialogAction extends Component implements Styled implements ParentElement {
 
     final actionStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return actionStyle;
@@ -212,13 +207,14 @@ class AlertDialogAction implements RenderOnce implements Styled implements Paren
 /**
  * Alert-dialog specialization of the Base modal host.
  */
-class AlertDialog implements RenderOnce implements Styled implements ParentElement {
+class AlertDialog extends Component implements Styled implements ParentElement {
 
     /** The wrapped host (Rust `AlertDialog(Dialog)`). */
     @:allow(glaze.kit.base, glaze.kit)
     var inner:Dialog;
 
     public function new(cx:App) {
+        super();
         inner = glaze.kit.base.Dialog.component(cx)
             .role(Role.AlertDialog)
             .closeOnBackdropPress(false);

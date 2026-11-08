@@ -8,6 +8,7 @@ import glaze.Anchor;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -16,7 +17,6 @@ import glaze.IntoKeyContext;
 import glaze.MouseButton;
 import glaze.MouseDownEvent;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -52,7 +52,7 @@ class PopupAnchorState {
  * `base`, the stateful `Div` the popup renders (Rust implements
  * `InteractiveElement` by delegation).
  */
-class Popup implements RenderOnce implements Styled {
+class Popup extends Component implements Styled {
 
     /** Distance kept between a popup and the window edge. */
     static inline final WINDOW_MARGIN:Float = 8.;
@@ -67,17 +67,24 @@ class Popup implements RenderOnce implements Styled {
 
     final popupStyle:StyleRefinement = new StyleRefinement();
 
-    var anchorValue:Anchor = Anchor.TopLeft;
+    @prop var anchor:Anchor = Anchor.TopLeft;
 
-    var offsetValue:Float = 0.;
+    /**
+     * Gap from the trigger along the anchor's outward direction, zero by default.
+     */
+    @prop var offset:Float = 0.;
 
-    var onPositionCallback:Null<(ResolvedPosition, Bounds) -> Void> = null;
+    /**
+     * Observe resolved popup and trigger bounds before content prepaint.
+     */
+    @prop var onPosition:Null<(ResolvedPosition, Bounds) -> Void> = null;
 
     final trigger:AnyElement;
 
     var contentElement:Null<AnyElement> = null;
 
     public function new(id:ElementIdArg, trigger:IntoElement) {
+        super();
         this.id = id;
         this.base = div().id(id);
         this.trigger = trigger;
@@ -85,27 +92,6 @@ class Popup implements RenderOnce implements Styled {
 
     public inline function style():StyleRefinement {
         return popupStyle;
-    }
-
-    public function anchor(anchor:Anchor):Popup {
-        anchorValue = anchor;
-        return this;
-    }
-
-    /**
-     * Gap from the trigger along the anchor's outward direction, zero by default.
-     */
-    public function offset(offset:Float):Popup {
-        offsetValue = offset;
-        return this;
-    }
-
-    /**
-     * Observe resolved popup and trigger bounds before content prepaint.
-     */
-    public function onPosition(callback:(ResolvedPosition, Bounds) -> Void):Popup {
-        onPositionCallback = callback;
-        return this;
     }
 
     public function content(content:IntoElement):Popup {
@@ -161,9 +147,9 @@ class Popup implements RenderOnce implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final state = window.useKeyedState(ElementId.NamedChild(id, 'anchor'), cx, _ -> new PopupAnchorState()).read(cx).value;
-        final anchor = anchorValue;
+        final anchor = this.anchor;
         final triggerBounds = new BoundsCell(state.bounds);
-        final offset = offsetValue;
+        final offset = this.offset;
         final position = new PointCell(anchorPosition(anchor, state.bounds, offset));
 
         // A closed popup places nothing: it notes its trigger's bounds, for when
@@ -199,7 +185,7 @@ class Popup implements RenderOnce implements Styled {
         }
 
         var positioner = Positioner.corner(anchor, position.value).trackedCornerPosition(position);
-        final callback = onPositionCallback;
+        final callback = onPosition;
         if (callback != null) {
             positioner = positioner.onPosition(position -> callback(position, triggerBounds.value));
         }

@@ -4,9 +4,9 @@
 package glaze.kit.base.input;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 
 using glaze.kit.base.input.InputTokenPresentation;
@@ -17,13 +17,14 @@ using glaze.kit.base.input.InputTokenPresentation;
  * Applications that need a fully styled control can wrap this state with
  * their own presentation or use `glaze.kit.input.Input`.
  */
-class Input implements RenderOnce {
+class Input extends Component {
 
     var presentation:InlineTokenPresentation = new InlineTokenPresentation();
 
     final state:Entity<InputState>;
 
     public function new(state:Entity<InputState>) {
+        super();
         this.state = state;
     }
 

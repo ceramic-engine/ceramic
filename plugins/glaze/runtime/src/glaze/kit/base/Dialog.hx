@@ -8,6 +8,7 @@ import glaze.App;
 import glaze.AppContext;
 import glaze.Bounds;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.FocusHandle;
@@ -17,7 +18,6 @@ import glaze.KeyboardButton;
 import glaze.MouseButton;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -141,23 +141,24 @@ class DialogKeys {
  * The port has no accessibility tree: the role the host would export is
  * kept in `a11y`.
  */
-class Dialog implements RenderOnce implements Styled implements ParentElement {
+class Dialog extends Component implements Styled implements ParentElement {
 
     final dialogStyle:StyleRefinement = new StyleRefinement();
 
-    var focus:FocusHandle;
+    /** Hidden in the Rust docs: the focus handle the host tracks and traps. */
+    @prop var focusHandle:FocusHandle;
 
     var roleValue:Role = Role.Dialog;
 
     var layerValue:Int = 0;
 
-    var keyboard:Bool = true;
+    @prop var closeOnEscape:Bool = true;
 
-    var overlayClosable:Bool = true;
+    @prop var closeOnBackdropPress:Bool = true;
 
     var topmost:Bool = true;
 
-    var dismissBelowYValue:Pixels = 0.;
+    @prop var dismissBelowY:Pixels = 0.;
 
     var backdropElement:Null<AnyElement> = null;
 
@@ -165,17 +166,17 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
 
     final childElements:Array<AnyElement> = [];
 
-    var onOkHandler:Decision = (_, _, _) -> true;
+    @prop var onOk:Decision = (_, _, _) -> true;
 
-    var onCancelHandler:Decision = (_, _, _) -> true;
+    @prop var onCancel:Decision = (_, _, _) -> true;
 
-    var onCloseHandler:Closed = (_, _, _) -> {};
+    @prop var onClose:Closed = (_, _, _) -> {};
 
-    var requestCloseHandler:CloseRequest = (_, _, _) -> {};
+    @prop var requestClose:CloseRequest = (_, _, _) -> {};
 
     var handleValue:Null<DialogHandle> = null;
 
-    var openValue:Bool = true;
+    @prop var open:Bool = true;
 
     var onOpenChangeHandler:Null<OpenChange> = null;
 
@@ -183,7 +184,8 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
     public final a11y:A11y = new A11y();
 
     public function new(cx:App) {
-        this.focus = cx.focusHandle();
+        super();
+        this.focusHandle = cx.focusHandle();
     }
 
     public inline function style():StyleRefinement {
@@ -205,22 +207,17 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function onOk(handler:(ClickEvent, Window, App) -> Bool):Dialog {
-        onOkHandler = handler;
+        this.onOk = handler;
         return this;
     }
 
     public function onCancel(handler:(ClickEvent, Window, App) -> Bool):Dialog {
-        onCancelHandler = handler;
+        this.onCancel = handler;
         return this;
     }
 
     public function onClose(handler:(ClickEvent, Window, App) -> Void):Dialog {
-        onCloseHandler = handler;
-        return this;
-    }
-
-    public function open(open:Bool):Dialog {
-        openValue = open;
+        this.onClose = handler;
         return this;
     }
 
@@ -250,21 +247,6 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function closeOnEscape(value:Bool):Dialog {
-        keyboard = value;
-        return this;
-    }
-
-    public function closeOnBackdropPress(value:Bool):Dialog {
-        overlayClosable = value;
-        return this;
-    }
-
-    public function dismissBelowY(value:Pixels):Dialog {
-        dismissBelowYValue = value;
-        return this;
-    }
-
     @:allow(glaze.kit.base)
     function role(role:Role):Dialog {
         roleValue = role;
@@ -278,29 +260,23 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /** Hidden in the Rust docs: the focus handle the host tracks and traps. */
-    public function focusHandle(value:FocusHandle):Dialog {
-        focus = value;
-        return this;
-    }
-
     /** Hidden in the Rust docs: called with whether the close is deferred (confirm) or not. */
     public function requestClose(handler:(Bool, Window, App) -> Void):Dialog {
-        requestCloseHandler = handler;
+        this.requestClose = handler;
         return this;
     }
 
     public function render(window:Window, _:App):IntoElement {
-        final open = handleValue != null ? handleValue.isOpen() : openValue;
+        final open = handleValue != null ? handleValue.isOpen() : this.open;
         if (!open) {
             return div();
         }
-        final requestClose = requestCloseHandler;
-        final cancel = onCancelHandler;
-        final confirm = onOkHandler;
-        final closed = onCloseHandler;
-        final overlayClosable = this.overlayClosable && topmost;
-        final dismissBelowY = dismissBelowYValue;
+        final requestClose = this.requestClose;
+        final cancel = onCancel;
+        final confirm = onOk;
+        final closed = onClose;
+        final overlayClosable = this.closeOnBackdropPress && topmost;
+        final dismissBelowY = this.dismissBelowY;
         final escapeHandle = handleValue;
         final confirmHandle = handleValue;
         final backdropHandle = handleValue;
@@ -324,11 +300,11 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
             .itemsCenter()
             .justifyCenter()
             // Rust `.role(self.role)`: no accessibility tree in the port (see `a11y`).
-            .trackFocus(focus);
-        final container = host.focusTrap('dialog-$layerValue', focus);
+            .trackFocus(focusHandle);
+        final container = host.focusTrap('dialog-$layerValue', focusHandle);
         // FocusTrapContainer delegates its interactivity to the wrapped Div.
         final trapped = container.base;
-        if (keyboard) {
+        if (closeOnEscape) {
             trapped.keyContext(DialogKeys.CONTEXT);
         }
         final requestCancel = requestClose;
@@ -350,8 +326,8 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
             }
         });
         if (backdropElement != null) {
-            final cancel = onCancelHandler;
-            final closed = onCloseHandler;
+            final cancel = onCancel;
+            final closed = onClose;
             final requestClose = requestClose;
             trapped.child(div()
                 // The backdrop covers the host, so a caller's
@@ -388,21 +364,17 @@ class Dialog implements RenderOnce implements Styled implements ParentElement {
 /**
  * Unstyled trigger that owns pointer activation for opening a dialog.
  */
-class DialogTrigger implements RenderOnce {
+class DialogTrigger extends Component {
 
     final trigger:AnyElement;
 
     var openRequest:OpenRequest = (_, _) -> {};
 
-    var handleValue:Null<DialogHandle> = null;
+    @prop var handle:Null<DialogHandle> = null;
 
     public function new(trigger:IntoElement) {
+        super();
         this.trigger = trigger;
-    }
-
-    public function handle(handle:DialogHandle):DialogTrigger {
-        handleValue = handle;
-        return this;
     }
 
     public function onOpen(open:(Window, App) -> Void):DialogTrigger {
@@ -411,7 +383,7 @@ class DialogTrigger implements RenderOnce {
     }
 
     public function render(_:Window, _:App):IntoElement {
-        final handle = handleValue;
+        final handle = this.handle;
         final open = openRequest;
         return div()
             .onMouseDown(Left, (_, window, cx) -> {
@@ -431,7 +403,7 @@ class DialogTrigger implements RenderOnce {
  * optionally occluding, with the part's children and style.
  */
 @:allow(glaze.kit.base)
-abstract class DialogPart implements RenderOnce implements Styled implements ParentElement {
+abstract class DialogPart extends Component implements Styled implements ParentElement {
 
     final partStyle:StyleRefinement = new StyleRefinement();
 
@@ -442,6 +414,7 @@ abstract class DialogPart implements RenderOnce implements Styled implements Par
     final occlude:Bool;
 
     function new(partId:String, occlude:Bool) {
+        super();
         this.partId = partId;
         this.occlude = occlude;
     }
@@ -490,7 +463,7 @@ class DialogPopup extends DialogPart {
 /**
  * Unstyled title slot for a dialog surface.
  */
-class DialogTitle implements RenderOnce implements Styled implements ParentElement {
+class DialogTitle extends Component implements Styled implements ParentElement {
 
     final base:Div = div();
 
@@ -498,7 +471,9 @@ class DialogTitle implements RenderOnce implements Styled implements ParentEleme
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return titleStyle;
@@ -519,7 +494,7 @@ class DialogTitle implements RenderOnce implements Styled implements ParentEleme
 /**
  * Unstyled descriptive-content slot for a dialog surface.
  */
-class DialogDescription implements RenderOnce implements Styled implements ParentElement {
+class DialogDescription extends Component implements Styled implements ParentElement {
 
     final base:Div = div();
 
@@ -527,7 +502,9 @@ class DialogDescription implements RenderOnce implements Styled implements Paren
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return descriptionStyle;
@@ -548,7 +525,7 @@ class DialogDescription implements RenderOnce implements Styled implements Paren
 /**
  * Wrapper that dispatches the dialog cancel action when activated.
  */
-class DialogClose implements RenderOnce implements Styled implements ParentElement {
+class DialogClose extends Component implements Styled implements ParentElement {
 
     final closeStyle:StyleRefinement = new StyleRefinement();
 
@@ -562,7 +539,9 @@ class DialogClose implements RenderOnce implements Styled implements ParentEleme
      */
     final anchor:AnchorCell = new AnchorCell();
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return closeStyle;

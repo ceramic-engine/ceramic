@@ -4,9 +4,9 @@
 package glaze.kit.base.input;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Entity;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Window;
 
 using glaze.kit.base.input.InputTokenPresentation;
@@ -14,13 +14,14 @@ using glaze.kit.base.input.InputTokenPresentation;
 /**
  * An unstyled ordinary multi-line text input.
  */
-class Textarea implements RenderOnce {
+class Textarea extends Component {
 
     var presentation:InlineTokenPresentation = new InlineTokenPresentation();
 
     final state:Entity<TextareaState>;
 
     public function new(state:Entity<TextareaState>) {
+        super();
         this.state = state;
     }
 

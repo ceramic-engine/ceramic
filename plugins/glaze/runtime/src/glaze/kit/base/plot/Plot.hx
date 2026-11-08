@@ -7,12 +7,12 @@ package glaze.kit.base.plot;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.Path;
 import glaze.PathBuilder;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.SpringMath;
 import glaze.Window;
 
@@ -28,9 +28,11 @@ import glaze.Window;
  * `id` is `plotId`, `interactive` is `isInteractive`, `appear` is
  * `updateAppear` and `hover` is `updateHover`.
  */
-abstract class Plot implements RenderOnce {
+abstract class Plot extends Component {
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Lay out and place the child elements this plot hosts (e.g. element
