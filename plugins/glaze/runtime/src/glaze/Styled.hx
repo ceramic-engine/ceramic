@@ -8,10 +8,12 @@ package glaze;
  * Use this to opt-in to a utility CSS-like styling API.
  *
  * Implementing classes only provide `style()`: the fluent methods (`flex()`,
- * `gap2()`, `roundedMd()`, `bg(...)`, about 900 of them) are added by
- * `StyledMacro.build()` as `extern inline` methods returning the class.
+ * `gap2()`, `roundedMd()`, `bg(...)`, about 900 of them) are `extern inline`
+ * static extensions of `StyledMethods`, generated once by `StyledMacro` and
+ * returning the element with its own type. Inside a class body, call them
+ * on `this` explicitly (`this.flex()`).
  */
-@:autoBuild(glaze.StyledMacro.build())
+@:using(glaze.StyledMethods)
 interface Styled {
 
     /**

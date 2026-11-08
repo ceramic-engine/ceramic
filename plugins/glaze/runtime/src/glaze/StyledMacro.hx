@@ -7,7 +7,6 @@ package glaze;
 #if macro
 import haxe.macro.Context;
 import haxe.macro.Expr;
-import haxe.macro.Type;
 
 using StringTools;
 
@@ -29,11 +28,18 @@ private typedef Suffix = {
  * `style_helpers!`, `margin_style_methods!`... plus the methods written by
  * hand in `styled.rs`), and the shared length constants of `StyledValues`.
  *
- * Every class implementing `Styled` gets about 900 `extern inline` methods
- * returning the class itself: they produce no code of their own, each call
- * site is inlined into a field assignment on `style()`. Lengths of the
- * predefined scales are shared constants (`StyledValues`), so calling
- * `gap2()` allocates nothing.
+ * The about 900 methods are generated once, as `extern inline` static
+ * extensions of `StyledMethods` (attached to every `Styled` with `@:using`):
+ * they take the element and return it with its own type, produce no code of
+ * their own, and each call site is inlined into a field assignment on
+ * `style()`. Generating them on every class implementing `Styled` instead
+ * would parse and type them again for each class, which made compilation
+ * and completion very slow. Lengths of the predefined scales are shared
+ * constants (`StyledValues`), so calling `gap2()` allocates nothing.
+ *
+ * Being static extensions, they need an explicit receiver inside a class
+ * body (`this.flex()`, not `flex()`). A field of the class with the same
+ * name takes precedence over the generated method.
  *
  * Names are converted to camelCase: `gap_2` -> `gap2`, `px_0p5` -> `px0p5`,
  * `w_full` -> `wFull`, `m_neg_2` -> `mNeg2`, `rounded_md` -> `roundedMd`.
@@ -301,44 +307,30 @@ class StyledMacro {
     }
 
     /**
-     * Auto build macro of `Styled`: adds the fluent style methods to the class.
+     * Build macro of `StyledMethods`: adds the fluent style methods as
+     * static extensions of any `Styled` (`self:T` in, `T` out).
      */
-    public static function build():Array<Field> {
+    public static function buildMethods():Array<Field> {
         final fields = Context.getBuildFields();
-        final localClass = Context.getLocalClass().get();
         final pos = Context.currentPos();
-
-        // Only the first class of a hierarchy implementing Styled gets the methods
-        var parent = localClass.superClass;
-        while (parent != null) {
-            final parentClass = parent.t.get();
-            if (implementsStyled(parentClass))
-                return null;
-            parent = parentClass.superClass;
-        }
-        if (localClass.isInterface)
-            return null;
 
         final existing = new Map<String, Bool>();
         for (field in fields) existing.set(field.name, true);
 
-        final selfType:ComplexType = TPath({
-            pack: localClass.pack,
-            name: localClass.module.split('.').pop() == localClass.name ? localClass.name : localClass.module.split('.').pop(),
-            sub: localClass.module.split('.').pop() == localClass.name ? null : localClass.name,
-            params: [for (param in localClass.params) TPType(TPath({pack: [], name: param.name}))]
-        });
+        final selfType:ComplexType = TPath({pack: [], name: 'T'});
+        final selfArg:FunctionArg = {name: 'self', type: selfType};
+        final params:Array<TypeParamDecl> = [{name: 'T', constraints: [macro :glaze.Styled]}];
 
         function addMethod(name:String, args:Array<FunctionArg>, body:String, ?doc:String):Void {
             if (existing.exists(name))
                 return;
             existing.set(name, true);
-            final expr = Context.parseInlineString('{ final style:glaze.StyleRefinement = this.style(); ' + body + ' return this; }', pos);
+            final expr = Context.parseInlineString('{ final style:glaze.StyleRefinement = self.style(); ' + body + ' return self; }', pos);
             fields.push({
                 name: name,
                 doc: doc,
-                access: [APublic, AExtern, AInline],
-                kind: FFun({args: args, ret: selfType, expr: expr}),
+                access: [APublic, AStatic, AExtern, AInline],
+                kind: FFun({args: [selfArg].concat(args), ret: selfType, expr: expr, params: params}),
                 pos: pos
             });
         }
@@ -558,22 +550,13 @@ class StyledMacro {
             fields.push({
                 name: 'textStyle',
                 doc: 'Returns the text style refinement of this element, created on first use.',
-                access: [APublic, AExtern, AInline],
-                kind: FFun({args: [], ret: macro :glaze.TextStyleRefinement, expr: macro return this.style().textStyle()}),
+                access: [APublic, AStatic, AExtern, AInline],
+                kind: FFun({args: [selfArg], ret: macro :glaze.TextStyleRefinement, expr: macro return self.style().textStyle(), params: params}),
                 pos: pos
             });
         }
 
         return fields;
-    }
-
-    static function implementsStyled(cls:ClassType):Bool {
-        for (iface in cls.interfaces) {
-            final ifaceType = iface.t.get();
-            if (ifaceType.pack.join('.') == 'glaze' && ifaceType.name == 'Styled')
-                return true;
-        }
-        return false;
     }
 
     #end

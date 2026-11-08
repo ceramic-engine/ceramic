@@ -44,9 +44,18 @@ class StyledReflectionMacro {
 
         final available = new Map<String, Bool>();
         if (!ext) {
+            // Methods of the builder itself, and the generated methods of
+            // every `Styled` (static extensions of `StyledMethods`)
             switch Context.getType('glaze.StyleBuilder') {
                 case TInst(ref, _):
                     for (field in ref.get().fields.get()) {
+                        available.set(field.name, true);
+                    }
+                case _:
+            }
+            switch Context.getType('glaze.StyledMethods') {
+                case TInst(ref, _):
+                    for (field in ref.get().statics.get()) {
                         available.set(field.name, true);
                     }
                 case _:
