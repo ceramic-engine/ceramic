@@ -7,11 +7,11 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -30,7 +30,7 @@ using glaze.kit.ThemeStyled;
  * The trigger part of a stepper item.
  */
 @:allow(glaze.kit.stepper)
-class StepperTrigger implements RenderOnce implements Styled implements ParentElement {
+class StepperTrigger extends Component implements Styled implements ParentElement {
 
     var stepValue:Int = 0;
 
@@ -54,7 +54,9 @@ class StepperTrigger implements RenderOnce implements Styled implements ParentEl
 
     var onClickHandler:(ClickEvent, Window, App) -> Void = (_, _, _) -> {};
 
-    function new() {}
+    function new() {
+        super();
+    }
 
     function step(ix:Int):StepperTrigger {
         stepValue = ix;

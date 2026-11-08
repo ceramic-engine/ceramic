@@ -5,9 +5,9 @@ package glaze.kit.skeleton;
 
 import glaze.Animation;
 import glaze.App;
+import glaze.Component;
 import glaze.Easing;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -21,13 +21,15 @@ using glaze.kit.base.StyledExt;
 /**
  * A placeholder block pulsing while content loads.
  */
-class Skeleton implements RenderOnce implements Styled {
+class Skeleton extends Component implements Styled {
 
     final skeletonStyle:StyleRefinement = new StyleRefinement();
 
     var secondaryValue:Bool = false;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return skeletonStyle;

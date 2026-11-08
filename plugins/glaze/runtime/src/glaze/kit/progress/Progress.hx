@@ -6,6 +6,7 @@ package glaze.kit.progress;
 import glaze.Animation;
 import glaze.App;
 import glaze.Background;
+import glaze.Component;
 import glaze.Easing;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -13,7 +14,6 @@ import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -37,33 +37,29 @@ using glaze.kit.base.StyledExt;
  * The theme's motion tokens are not ported yet: the transition uses their
  * default values (180ms, `cubic-bezier(0.2, 0, 0, 1)`).
  */
-class Progress implements RenderOnce implements Styled implements Sizable {
+class Progress extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
     final progressStyle:StyleRefinement = new StyleRefinement();
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
     var valueValue:Float = 0.;
 
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     var size:Size = Medium;
 
-    var loadingValue:Bool = false;
+    @prop var loading:Bool = false;
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
-    public function loading(loading:Bool):Progress {
-        loadingValue = loading;
-        return this;
-    }
-
     public function color(color:IntoHsla):Progress {
-        colorValue = color;
+        this.color = color;
         return this;
     }
 
@@ -73,14 +69,9 @@ class Progress implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    public function accessibilityLabel(label:String):Progress {
-        accessibilityLabelValue = label;
-        return this;
-    }
-
     @:allow(tests)
     function getAccessibilityLabel():Null<String> {
-        return accessibilityLabelValue;
+        return accessibilityLabel;
     }
 
     public inline function style():StyleRefinement {
@@ -98,9 +89,9 @@ class Progress implements RenderOnce implements Styled implements Sizable {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final bg:Background = colorValue != null ? Background.fromHsla(colorValue) : theme.tokens.progressBar.background;
+        final bg:Background = color != null ? Background.fromHsla(color) : theme.tokens.progressBar.background;
         final value = valueValue;
-        final loading = loadingValue;
+        final loading = this.loading;
         final reduceMotion = cx.reduceMotion();
 
         final innerStyle = new StyleRefinement();
@@ -130,8 +121,8 @@ class Progress implements RenderOnce implements Styled implements Sizable {
         );
 
         final progress = glaze.kit.base.Progress.component(id).value(value).indeterminate(loading);
-        if (accessibilityLabelValue != null) {
-            progress.accessibilityLabel(accessibilityLabelValue);
+        if (accessibilityLabel != null) {
+            progress.accessibilityLabel(accessibilityLabel);
         }
         progress.wFull().relative().h(height).rounded(radius).refineStyle(progressStyle);
 

@@ -183,15 +183,15 @@ class ComponentLeavesTest extends TestCase {
             .content(EmptyContent.component().children(['First action', 'Second action']))
             .child('Trailing content');
         assertEquals(2, empty.childElements.length);
-        final header = empty.headerValue;
-        assertTrue(header.mediaValue.variant == EmptyMediaVariant.Icon);
-        assertEquals(1, header.mediaValue.childElements.length);
-        assertEquals(1, header.titleValue.childElements.length);
-        assertEquals(2, header.descriptionValue.childElements.length);
-        assertEquals(2, empty.contentValue.childElements.length);
+        final header = empty.headerProp;
+        assertTrue(header.mediaProp.variant == EmptyMediaVariant.Icon);
+        assertEquals(1, header.mediaProp.childElements.length);
+        assertEquals(1, header.titleProp.childElements.length);
+        assertEquals(2, header.descriptionProp.childElements.length);
+        assertEquals(2, empty.contentProp.childElements.length);
         final empty = Empty.component();
-        assertNull(empty.headerValue);
-        assertNull(empty.contentValue);
+        assertNull(empty.headerProp);
+        assertNull(empty.contentProp);
         assertEquals(0, empty.childElements.length);
         assertTrue(EmptyMedia.component().variant == EmptyMediaVariant.Default);
     }
@@ -458,7 +458,7 @@ class ComponentLeavesTest extends TestCase {
         assertFalse(text.shimmerStyle.reverseValue);
         assertFalse(text.shimmerStyle.onceValue);
         assertEquals(0.8, text.shimmerTextStyle.opacity);
-        assertTrue(Type.enumEq(glaze.ElementId.Name('thinking'), text.idValue));
+        assertTrue(Type.enumEq(glaze.ElementId.Name('thinking'), text.idProp));
 
         assertTrue(Type.enumEq(new ShimmerStyle().spread(Relative(0.)).spreadValue, Relative(0.05)));
         assertTrue(Type.enumEq(new ShimmerStyle().spread(Relative(2.)).spreadValue, Relative(1.)));
@@ -580,7 +580,7 @@ class ComponentLeavesTest extends TestCase {
             .ellipsis();
         assertEquals(4, group.avatars.length);
         assertTrue(group.size.equals(Large));
-        assertEquals(3, group.limitValue);
+        assertEquals(3, group.limitProp);
         assertTrue(group.ellipsisValue);
     }
 

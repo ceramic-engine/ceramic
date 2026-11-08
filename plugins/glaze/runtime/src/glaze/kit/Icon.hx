@@ -5,6 +5,7 @@ package glaze.kit;
 
 import glaze.App;
 import glaze.AppContext;
+import glaze.Component;
 import glaze.Context;
 import glaze.Entity;
 import glaze.Hsla;
@@ -14,7 +15,6 @@ import glaze.Model;
 import glaze.Pixels;
 import glaze.Radians;
 import glaze.Render;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -82,7 +82,7 @@ class IconResolver {
  * (`Icon::view`). Here the view is a separate model, `IconView`, so that a
  * plain icon stays a light object.
  */
-class Icon implements RenderOnce implements Styled implements Sizable {
+class Icon extends Component implements Styled implements Sizable {
 
     final iconStyle:StyleRefinement = new StyleRefinement();
 
@@ -90,19 +90,23 @@ class Icon implements RenderOnce implements Styled implements Sizable {
     var source:IconSource = Path('');
 
     @:allow(glaze.kit, tests)
-    var textColorValue:Null<Hsla> = null;
+    @prop var textColor:Null<Hsla> = null;
 
     @:allow(glaze.kit, tests)
     var size:Null<Size> = null;
 
+    /**
+     * Set the SVG transformation, replacing any previous transformation or rotation.
+     */
     @:allow(glaze.kit, tests)
-    var transformation:Null<Transformation> = null;
+    @prop var transform:Null<Transformation> = null;
 
     /**
      * `Icon.component(IconName.Search)` (Rust `Icon::new`), or `Icon.component()` for an
      * empty icon (Rust `Icon::default()`).
      */
     public function new(?icon:IntoIcon) {
+        super();
         if (icon != null) {
             final other:Icon = icon;
             copyFrom(other);
@@ -112,9 +116,9 @@ class Icon implements RenderOnce implements Styled implements Sizable {
     function copyFrom(other:Icon):Void {
         iconStyle.refine(other.iconStyle);
         source = other.source;
-        textColorValue = other.textColorValue;
+        textColor = other.textColorProp;
         size = other.size;
-        transformation = other.transformation;
+        transform = other.transformProp;
     }
 
     /**
@@ -165,14 +169,6 @@ class Icon implements RenderOnce implements Styled implements Sizable {
     }
 
     /**
-     * Set the SVG transformation, replacing any previous transformation or rotation.
-     */
-    public function transform(transformation:Transformation):Icon {
-        this.transformation = transformation;
-        return this;
-    }
-
-    /**
      * An icon without source (Rust `Icon::empty()`).
      */
     public static function empty():Icon {
@@ -184,7 +180,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
      * transformation or rotation.
      */
     public function rotate(radians:Radians):Icon {
-        transformation = Transformation.rotated(radians);
+        transform = Transformation.rotated(radians);
         return this;
     }
 
@@ -193,7 +189,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
      * from the style refinement).
      */
     public function textColor(color:IntoHsla):Icon {
-        textColorValue = color;
+        this.textColor = color;
         return this;
     }
 
@@ -214,7 +210,7 @@ class Icon implements RenderOnce implements Styled implements Sizable {
 
     @:allow(glaze.kit, tests)
     function intoSvg(textSize:Pixels, fallbackColor:Hsla):Svg {
-        final textColor = textColorValue != null ? textColorValue : fallbackColor;
+        final textColor = this.textColor != null ? this.textColor : fallbackColor;
         final hasBaseSize = iconStyle.sizeWidth != null || iconStyle.sizeHeight != null;
 
         final svg = glaze.Prelude.svg();
@@ -236,8 +232,8 @@ class Icon implements RenderOnce implements Styled implements Sizable {
             case Path(path): svg.path(path);
             case Data(data): svg.data(data);
         }
-        if (transformation != null) {
-            svg.withTransformation(transformation);
+        if (transform != null) {
+            svg.withTransformation(transform);
         }
         return svg;
     }

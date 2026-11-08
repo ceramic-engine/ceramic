@@ -6,11 +6,11 @@ package glaze.kit.tag;
 import glaze.AbsoluteLength;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Hsla;
 import glaze.IntoAbsoluteLength;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,7 +27,7 @@ using glaze.kit.base.StyledExt;
 /**
  * A small labelled chip, in a color variant, filled or outlined.
  */
-class Tag implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class Tag extends Component implements Styled implements ParentElement implements Sizable {
 
     final tagStyle:StyleRefinement = new StyleRefinement();
 
@@ -37,11 +37,13 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
 
     var size:Size = Medium;
 
-    var roundedValue:Null<AbsoluteLength> = null;
+    @prop var rounded:Null<AbsoluteLength> = null;
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public static function primary():Tag return Tag.component().withVariant(Primary);
 
@@ -87,7 +89,7 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
      * method of the same name).
      */
     public function rounded(radius:IntoAbsoluteLength):Tag {
-        roundedValue = radius;
+        this.rounded = radius;
         return this;
     }
 
@@ -95,7 +97,7 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
      * Set the corner radius to fully rounded (1rem).
      */
     public function roundedFull():Tag {
-        roundedValue = AbsoluteLength.Rems(1.);
+        rounded = AbsoluteLength.Rems(1.);
         return this;
     }
 
@@ -127,7 +129,7 @@ class Tag implements RenderOnce implements Styled implements ParentElement imple
         final bg = outlineValue ? transparentWhite() : variant.bg(cx);
         final fg = variant.fg(outlineValue, cx);
         final border = variant.border(cx);
-        final rounded:AbsoluteLength = roundedValue != null ? roundedValue : AbsoluteLength.Pixels(switch size {
+        final rounded:AbsoluteLength = this.rounded != null ? this.rounded : AbsoluteLength.Pixels(switch size {
             case XSmall | Small: theme.radius / 2.;
             case _: theme.radius;
         });

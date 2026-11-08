@@ -5,13 +5,13 @@ package glaze.kit.scroll;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.Overflow;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.ScrollHandle;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -85,19 +85,24 @@ class ScrollableElement {
  * A scrollable element wrapper that renders the original element as the
  * scroll area and overlays scrollbars.
  */
-class Scrollable implements RenderOnce implements Styled implements ParentElement {
+class Scrollable extends Component implements Styled implements ParentElement {
 
-    var _id:ElementId;
+    @prop var id:ElementId;
 
     final element:Div;
 
     final axis:ScrollbarAxis;
 
-    var _scrollBounce:Null<Bool> = null;
+    /**
+     * Bounce at the vertical boundaries. On by default on iOS, Android and
+     * macOS, off elsewhere; horizontal-only areas do not bounce.
+     */
+    @prop var scrollBounce:Null<Bool> = null;
 
     @:allow(glaze.kit.scroll)
     function new(element:Div, axis:ScrollbarAxis, ?pos:haxe.PosInfos) {
-        _id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
+        super();
+        id = ElementId.CodeLocation(pos.fileName, pos.lineNumber);
         this.element = element;
         this.axis = axis;
     }
@@ -109,16 +114,7 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
      * otherwise share a single scroll position.
      */
     public function id(id:ElementIdArg):Scrollable {
-        _id = id;
-        return this;
-    }
-
-    /**
-     * Bounce at the vertical boundaries. On by default on iOS, Android and
-     * macOS, off elsewhere; horizontal-only areas do not bounce.
-     */
-    public function scrollBounce(enabled:Bool):Scrollable {
-        _scrollBounce = enabled;
+        this.id = id;
         return this;
     }
 
@@ -187,16 +183,16 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final scrollHandle = scrollHandleFor(_id, window, cx);
+        final scrollHandle = scrollHandleFor(id, window, cx);
 
         // Preserve the caller-requested size on the wrapper, while keeping the
         // caller's element as the actual scroll-tracked layout container.
         final rootStyle = rootStyleFrom(element, axis);
 
-        final rootId = _id;
-        final areaId = ElementId.NamedChild(_id, 'area');
-        final contentId = ElementId.NamedChild(_id, 'content');
-        final scrollbarId = ElementId.NamedChild(_id, 'scrollbar');
+        final rootId = id;
+        final areaId = ElementId.NamedChild(id, 'area');
+        final contentId = ElementId.NamedChild(id, 'content');
+        final scrollbarId = ElementId.NamedChild(id, 'scrollbar');
 
         final content = element.id(contentId).flexNone();
         switch axis {
@@ -246,9 +242,9 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
             case Horizontal: root.flexRow();
             case Vertical | Both: root.flexCol();
         }
-        final bounce = new ScrollBounce(ElementId.NamedChild(_id, 'bounce'), scrollHandle, scrollArea);
-        if (_scrollBounce != null) {
-            bounce.enabled(_scrollBounce);
+        final bounce = new ScrollBounce(ElementId.NamedChild(id, 'bounce'), scrollHandle, scrollArea);
+        if (scrollBounce != null) {
+            bounce.enabled(scrollBounce);
         }
         root.child(bounce);
         // A plain mouse wheel has only a vertical axis, which the locked
@@ -286,7 +282,7 @@ class Scrollable implements RenderOnce implements Styled implements ParentElemen
 /**
  * A scrollbar overlay added as a child (Rust `ScrollbarLayer`).
  */
-private class ScrollbarLayer implements RenderOnce {
+private class ScrollbarLayer extends Component {
 
     final id:ElementId;
 
@@ -295,6 +291,7 @@ private class ScrollbarLayer implements RenderOnce {
     final scrollHandle:ScrollbarHandle;
 
     public function new(id:ElementId, axis:ScrollbarAxis, scrollHandle:ScrollbarHandle) {
+        super();
         this.id = id;
         this.axis = axis;
         this.scrollHandle = scrollHandle;

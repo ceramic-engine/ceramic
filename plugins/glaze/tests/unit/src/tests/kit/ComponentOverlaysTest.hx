@@ -97,11 +97,11 @@ class ComponentOverlaysTest extends TestCase {
             .defaultOpen(true)
             .appearance(false)
             .overlayClosable(false);
-        assertEquals(Anchor.BottomCenter, @:privateAccess popover.anchorValue);
-        assertEquals(MouseButton.Right, @:privateAccess popover.mouseButtonValue);
-        assertTrue(@:privateAccess popover.defaultOpenValue);
-        assertFalse(@:privateAccess popover.appearanceValue);
-        assertFalse(@:privateAccess popover.overlayClosableValue);
+        assertEquals(Anchor.BottomCenter, @:privateAccess popover.anchorProp);
+        assertEquals(MouseButton.Right, @:privateAccess popover.mouseButtonProp);
+        assertTrue(@:privateAccess popover.defaultOpenProp);
+        assertFalse(@:privateAccess popover.appearanceProp);
+        assertFalse(@:privateAccess popover.overlayClosableProp);
     }
 
     function testResolvedCornerTopPositions() {

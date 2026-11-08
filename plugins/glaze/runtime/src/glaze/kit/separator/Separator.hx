@@ -5,12 +5,12 @@ package glaze.kit.separator;
 
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.Div;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.PathBuilder;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -31,21 +31,25 @@ enum abstract SeparatorStyle(Int) {
 /**
  * A horizontal or vertical line, solid or dashed, with an optional label.
  */
-class Separator implements RenderOnce implements Styled {
+class Separator extends Component implements Styled {
 
     final base:Div;
 
     final separatorStyle:StyleRefinement = new StyleRefinement();
 
-    var labelValue:Null<String> = null;
+    /**
+     * Sets the label shown in the middle of the line.
+     */
+    @prop var label:Null<String> = null;
 
     final axis:Axis;
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
     var lineStyle:SeparatorStyle = Solid;
 
     function new(base:Div, axis:Axis) {
+        super();
         this.base = base;
         this.axis = axis;
     }
@@ -83,18 +87,10 @@ class Separator implements RenderOnce implements Styled {
     }
 
     /**
-     * Sets the label shown in the middle of the line.
-     */
-    public function label(label:String):Separator {
-        labelValue = label;
-        return this;
-    }
-
-    /**
      * Sets the line color (default: the theme's `border`).
      */
     public function color(color:IntoHsla):Separator {
-        colorValue = color;
+        this.color = color;
         return this;
     }
 
@@ -144,7 +140,7 @@ class Separator implements RenderOnce implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final color = colorValue != null ? colorValue : theme.border;
+        final color = this.color != null ? this.color : theme.border;
 
         final element = base
             .flex()
@@ -156,7 +152,7 @@ class Separator implements RenderOnce implements Styled {
                 case Solid: renderSolid(axis, color);
                 case Dashed: renderDashed(axis, color);
             });
-        if (labelValue != null) {
+        if (label != null) {
             element.child(
                 div()
                     .px2()
@@ -165,7 +161,7 @@ class Separator implements RenderOnce implements Styled {
                     .textXs()
                     .bg(theme.tokens.background.background)
                     .textColor(theme.mutedForeground)
-                    .child(labelValue)
+                    .child(label)
             );
         }
         return element;

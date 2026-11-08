@@ -6,12 +6,12 @@ package glaze.kit.hovercard;
 import glaze.Anchor;
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Context;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -33,7 +33,7 @@ using glaze.kit.base.StyledExt;
  *
  * The state type is gpui-base's `HoverCardState` (Rust re-exports it).
  */
-class HoverCard implements RenderOnce implements Styled implements ParentElement {
+class HoverCard extends Component implements Styled implements ParentElement {
 
     /** The error thrown by `trigger(null)` (the same as gpui-base's). */
     public static inline final NULL_TRIGGER_ERROR = BaseHoverCard.NULL_TRIGGER_ERROR;
@@ -43,12 +43,18 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
     final hoverCardStyle:StyleRefinement = new StyleRefinement();
 
     /**
-     * Style for the trigger container, the element laid out in the parent
-     * and measured to anchor the card.
+     * Set the style for the trigger container.
+     *
+     * The container is the element laid out in the parent and measured to
+     * anchor the card, so this is where `wFull` or `flex1` must go for the
+     * trigger to fill its slot.
      */
-    var triggerStyleValue:Null<StyleRefinement> = null;
+    @prop var triggerStyle:Null<StyleRefinement> = null;
 
-    var anchorValue:Anchor = Anchor.TopCenter;
+    /**
+     * Set the anchor corner of the hover card, default is `Anchor.TopCenter`.
+     */
+    @prop var anchor:Anchor = Anchor.TopCenter;
 
     var triggerBuilder:Null<(Window, App) -> AnyElement> = null;
 
@@ -56,11 +62,20 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
 
     final childElements:Array<AnyElement> = [];
 
-    var openDelayValue:Float = 0.6;
+    /**
+     * Set the delay before showing the hover card, default is 600ms.
+     */
+    @prop var openDelay:Float = 0.6;
 
-    var closeDelayValue:Float = 0.3;
+    /**
+     * Set the delay before hiding the hover card, default is 300ms.
+     */
+    @prop var closeDelay:Float = 0.3;
 
-    var appearanceValue:Bool = true;
+    /**
+     * Set whether to apply default appearance styles, default is `true`.
+     */
+    @prop var appearance:Bool = true;
 
     var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
 
@@ -68,6 +83,7 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
      * Create a new HoverCard.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -90,14 +106,6 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
     }
 
     /**
-     * Set the anchor corner of the hover card, default is `Anchor.TopCenter`.
-     */
-    public function anchor(anchor:Anchor):HoverCard {
-        anchorValue = anchor;
-        return this;
-    }
-
-    /**
      * Set the trigger element of the hover card.
      *
      * The trigger is mandatory: a null trigger throws (a card without one
@@ -110,46 +118,10 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
     }
 
     /**
-     * Set the style for the trigger container.
-     *
-     * The container is the element laid out in the parent and measured to
-     * anchor the card, so this is where `wFull` or `flex1` must go for the
-     * trigger to fill its slot.
-     */
-    public function triggerStyle(style:StyleRefinement):HoverCard {
-        triggerStyleValue = style;
-        return this;
-    }
-
-    /**
      * Set the content builder of the hover card.
      */
     public function content(content:(HoverCardState, Window, Context<HoverCardState>) -> IntoElement):HoverCard {
         contentBuilder = (state, window, cx) -> content(state, window, cx);
-        return this;
-    }
-
-    /**
-     * Set the delay before showing the hover card, default is 600ms.
-     */
-    public function openDelay(duration:Float):HoverCard {
-        openDelayValue = duration;
-        return this;
-    }
-
-    /**
-     * Set the delay before hiding the hover card, default is 300ms.
-     */
-    public function closeDelay(duration:Float):HoverCard {
-        closeDelayValue = duration;
-        return this;
-    }
-
-    /**
-     * Set whether to apply default appearance styles, default is `true`.
-     */
-    public function appearance(appearance:Bool):HoverCard {
-        appearanceValue = appearance;
         return this;
     }
 
@@ -167,17 +139,17 @@ class HoverCard implements RenderOnce implements Styled implements ParentElement
             return div().id('empty');
         }
 
-        final anchor = anchorValue;
-        final appearance = appearanceValue;
+        final anchor = this.anchor;
+        final appearance = this.appearance;
         final content = contentBuilder;
         final children = childElements;
         final style = hoverCardStyle;
-        final triggerStyle = triggerStyleValue;
+        final triggerStyle = this.triggerStyle;
 
         final card = new BaseHoverCard(id)
             .anchor(anchor)
-            .openDelay(openDelayValue)
-            .closeDelay(closeDelayValue)
+            .openDelay(openDelay)
+            .closeDelay(closeDelay)
             .trigger(trigger(window, cx))
             .content((state, window, cx) -> {
                 final surface = @:privateAccess Popover.renderPopoverContent(anchor, appearance, window, cx.app)

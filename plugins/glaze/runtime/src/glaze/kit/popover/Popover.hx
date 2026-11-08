@@ -10,6 +10,7 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.AppContext;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Context;
 import glaze.Div;
 import glaze.ElementId;
@@ -21,7 +22,6 @@ import glaze.MouseButton;
 import glaze.ParentElement;
 import glaze.PathBuilder;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -48,7 +48,7 @@ using glaze.kit.ThemeStyled;
  *
  * The state type is gpui-base's `PopoverState` (Rust re-exports it).
  */
-class Popover implements RenderOnce implements Styled implements ParentElement {
+class Popover extends Component implements Styled implements ParentElement {
 
     public static function bindKeys(_:AppContext):Void {}
 
@@ -117,17 +117,47 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
 
     final popoverStyle:StyleRefinement = new StyleRefinement();
 
-    var anchorValue:Anchor = Anchor.TopLeft;
+    /**
+     * Set the anchor corner of the popover, default is `Anchor.TopLeft`.
+     *
+     * This names the popover's own anchor, not a corner of the trigger.
+     * `TopLeft` opens below the trigger, left-aligned; `BottomRight` opens
+     * above it, right-aligned. Legacy anchoring clamps without flipping.
+     */
+    @prop var anchor:Anchor = Anchor.TopLeft;
 
-    var offsetValue:Null<Float> = null;
+    /**
+     * Gap from the trigger to the surface (or arrow tip), default 0.25rem.
+     * Preserves the anchor and does not enable automatic flipping.
+     */
+    @prop var offset:Null<Float> = null;
 
-    var arrowValue:Bool = false;
+    /**
+     * Show an arrow pointing toward the trigger. Default is `false`.
+     * Follows the anchor, with its base inset to avoid rounded corners.
+     * Uses the surface background, falling back to the theme's popover color.
+     */
+    @prop var arrow:Bool = false;
 
-    var defaultOpenValue:Bool = false;
+    /**
+     * Set the default open state of the popover, default is `false`.
+     *
+     * This is only used to initialize the open state of the popover, and is
+     * ignored when `open` is used.
+     */
+    @prop var defaultOpen:Bool = false;
 
-    var openValue:Null<Bool> = null;
+    /**
+     * Force set the open state of the popover. The popover is then controlled
+     * by this value: use it with `onOpenChange` to handle state changes.
+     */
+    @prop var open:Null<Bool> = null;
 
-    var trackedFocusHandle:Null<FocusHandle> = null;
+    /**
+     * Bind the focus handle to receive focus when the popover is opened.
+     * Without it, the popover focuses a handle of its own.
+     */
+    @prop var trackFocus:Null<FocusHandle> = null;
 
     var triggerBuilder:Null<(Bool, Window, App) -> AnyElement> = null;
 
@@ -136,16 +166,30 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
     final childElements:Array<AnyElement> = [];
 
     /**
-     * Style for the trigger container, the element laid out in the parent
-     * and measured to anchor the popup.
+     * Set the style for the trigger container.
+     *
+     * The container is the element laid out in the parent and measured to
+     * anchor the popup, so this is where `wFull` or `flex1` must go for the
+     * trigger to fill its slot.
      */
-    var triggerStyleValue:Null<StyleRefinement> = null;
+    @prop var triggerStyle:Null<StyleRefinement> = null;
 
-    var mouseButtonValue:MouseButton = MouseButton.Left;
+    /**
+     * Set the mouse button to trigger the popover, default is `MouseButton.Left`.
+     */
+    @prop var mouseButton:MouseButton = MouseButton.Left;
 
-    var appearanceValue:Bool = true;
+    /**
+     * Set whether the popover has its default appearance, default is `true`.
+     *
+     * Without it the popover has no bg, border, shadow, or padding.
+     */
+    @prop var appearance:Bool = true;
 
-    var overlayClosableValue:Bool = true;
+    /**
+     * Set whether clicking outside the popover will dismiss it, default is `true`.
+     */
+    @prop var overlayClosable:Bool = true;
 
     var onOpenChangeHandler:Null<(Bool, Window, App) -> Void> = null;
 
@@ -153,6 +197,7 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
      * Create a new Popover with `view` mode.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -175,45 +220,6 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
     }
 
     /**
-     * Set the anchor corner of the popover, default is `Anchor.TopLeft`.
-     *
-     * This names the popover's own anchor, not a corner of the trigger.
-     * `TopLeft` opens below the trigger, left-aligned; `BottomRight` opens
-     * above it, right-aligned. Legacy anchoring clamps without flipping.
-     */
-    public function anchor(anchor:Anchor):Popover {
-        anchorValue = anchor;
-        return this;
-    }
-
-    /**
-     * Gap from the trigger to the surface (or arrow tip), default 0.25rem.
-     * Preserves the anchor and does not enable automatic flipping.
-     */
-    public function offset(offset:Float):Popover {
-        offsetValue = offset;
-        return this;
-    }
-
-    /**
-     * Show an arrow pointing toward the trigger. Default is `false`.
-     * Follows the anchor, with its base inset to avoid rounded corners.
-     * Uses the surface background, falling back to the theme's popover color.
-     */
-    public function arrow(arrow:Bool):Popover {
-        arrowValue = arrow;
-        return this;
-    }
-
-    /**
-     * Set the mouse button to trigger the popover, default is `MouseButton.Left`.
-     */
-    public function mouseButton(mouseButton:MouseButton):Popover {
-        mouseButtonValue = mouseButton;
-        return this;
-    }
-
-    /**
      * Set the trigger element of the popover.
      */
     public function trigger(trigger:Selectable):Popover {
@@ -222,26 +228,6 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
             trigger.setOpen(open || isOpen);
             return BasePopover.selectableElement(trigger);
         };
-        return this;
-    }
-
-    /**
-     * Set the default open state of the popover, default is `false`.
-     *
-     * This is only used to initialize the open state of the popover, and is
-     * ignored when `open` is used.
-     */
-    public function defaultOpen(open:Bool):Popover {
-        defaultOpenValue = open;
-        return this;
-    }
-
-    /**
-     * Force set the open state of the popover. The popover is then controlled
-     * by this value: use it with `onOpenChange` to handle state changes.
-     */
-    public function open(open:Bool):Popover {
-        openValue = open;
         return this;
     }
 
@@ -255,26 +241,6 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
     }
 
     /**
-     * Set the style for the trigger container.
-     *
-     * The container is the element laid out in the parent and measured to
-     * anchor the popup, so this is where `wFull` or `flex1` must go for the
-     * trigger to fill its slot.
-     */
-    public function triggerStyle(style:StyleRefinement):Popover {
-        triggerStyleValue = style;
-        return this;
-    }
-
-    /**
-     * Set whether clicking outside the popover will dismiss it, default is `true`.
-     */
-    public function overlayClosable(closable:Bool):Popover {
-        overlayClosableValue = closable;
-        return this;
-    }
-
-    /**
      * Set the content builder for content of the Popover.
      *
      * This callback is called every time the popover renders, so avoid
@@ -282,25 +248,6 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
      */
     public function content(content:(PopoverState, Window, Context<PopoverState>) -> IntoElement):Popover {
         contentBuilder = (state, window, cx) -> content(state, window, cx);
-        return this;
-    }
-
-    /**
-     * Set whether the popover has its default appearance, default is `true`.
-     *
-     * Without it the popover has no bg, border, shadow, or padding.
-     */
-    public function appearance(appearance:Bool):Popover {
-        appearanceValue = appearance;
-        return this;
-    }
-
-    /**
-     * Bind the focus handle to receive focus when the popover is opened.
-     * Without it, the popover focuses a handle of its own.
-     */
-    public function trackFocus(handle:FocusHandle):Popover {
-        trackedFocusHandle = handle;
         return this;
     }
 
@@ -325,33 +272,33 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final anchor = anchorValue;
-        final arrowSize:Float = arrowValue ? window.remSize() * 0.375 : glaze.Prelude.px(0.);
-        final offset:Float = (offsetValue != null ? offsetValue : window.remSize() * 0.25) + arrowSize;
+        final anchor = this.anchor;
+        final arrowSize:Float = this.arrow ? window.remSize() * 0.375 : glaze.Prelude.px(0.);
+        final offset:Float = (this.offset != null ? this.offset : window.remSize() * 0.25) + arrowSize;
         final resolved = new ResolvedCell();
         final arrowPosition = resolved;
-        final arrow = arrowValue;
+        final arrow = this.arrow;
         final theme = Theme.global(cx);
         final styleBackground = popoverStyle.background != null ? popoverStyle.background.asSolid() : null;
         final background:Hsla = styleBackground != null ? styleBackground : theme.popover;
         final ring = ThemeStyled.popoverRing(cx);
         final radius = theme.radius;
-        final appearance = appearanceValue;
+        final appearance = this.appearance;
         final style = popoverStyle;
         final children = childElements;
         final content = contentBuilder;
-        final triggerStyle = triggerStyleValue;
+        final triggerStyle = this.triggerStyle;
 
         final popover = new BasePopover(id)
-            .anchor(anchorValue)
+            .anchor(this.anchor)
             .offset(offset)
             .onPosition((position, trigger) -> {
                 resolved.position = position;
                 resolved.trigger = trigger;
             })
-            .mouseButton(mouseButtonValue)
-            .defaultOpen(defaultOpenValue)
-            .overlayClosable(overlayClosableValue)
+            .mouseButton(mouseButton)
+            .defaultOpen(defaultOpen)
+            .overlayClosable(overlayClosable)
             .content((state, window, cx) -> {
                 final surface = vFlex()
                     .id('content')
@@ -408,8 +355,8 @@ class Popover implements RenderOnce implements Styled implements ParentElement {
         final trigger = triggerBuilder;
         if (trigger != null) popover.triggerWith(trigger);
         if (triggerStyle != null) popover.refineStyle(triggerStyle);
-        if (openValue != null) popover.open(openValue);
-        if (trackedFocusHandle != null) popover.trackFocus(trackedFocusHandle);
+        if (this.open != null) popover.open(this.open);
+        if (trackFocus != null) popover.trackFocus(trackFocus);
         final onOpenChange = onOpenChangeHandler;
         if (onOpenChange != null) {
             popover.onOpenChange((open, window, cx) -> onOpenChange(open, window, cx));

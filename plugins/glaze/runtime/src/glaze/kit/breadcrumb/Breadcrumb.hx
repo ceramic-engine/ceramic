@@ -5,9 +5,9 @@ package glaze.kit.breadcrumb;
 
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -23,7 +23,7 @@ using glaze.kit.base.StyledExt;
 /**
  * An item of a `Breadcrumb`: a label, clickable when it has `onClick`.
  */
-class BreadcrumbItem implements RenderOnce implements Styled {
+class BreadcrumbItem extends Component implements Styled {
 
     var id:ElementId = ElementId.Integer(0);
 
@@ -33,7 +33,7 @@ class BreadcrumbItem implements RenderOnce implements Styled {
 
     var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     var isLastValue:Bool = false;
 
@@ -41,12 +41,8 @@ class BreadcrumbItem implements RenderOnce implements Styled {
     public final a11y:A11y = new A11y(Role.ListItem);
 
     public function new(label:String) {
+        super();
         this.label = label;
-    }
-
-    public function disabled(disabled:Bool):BreadcrumbItem {
-        disabledValue = disabled;
-        return this;
     }
 
     public function onClick(onClick:(ClickEvent, Window, App) -> Void):BreadcrumbItem {
@@ -72,15 +68,15 @@ class BreadcrumbItem implements RenderOnce implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        a11y.role = onClickHandler != null && !disabledValue ? Role.Link : Role.ListItem;
+        a11y.role = onClickHandler != null && !disabled ? Role.Link : Role.ListItem;
         final element = div()
             .id(id)
             .child(label)
             .textColor(theme.mutedForeground);
         if (isLastValue) element.textColor(theme.foreground);
-        if (disabledValue) element.textColor(theme.mutedForeground);
+        if (disabled) element.textColor(theme.mutedForeground);
         element.refineStyle(itemStyle);
-        if (!disabledValue && onClickHandler != null) {
+        if (!disabled && onClickHandler != null) {
             final onClick = onClickHandler;
             element.cursorPointer().onClick((event, window, cx) -> onClick(event, window, cx));
         }
@@ -106,13 +102,15 @@ abstract IntoBreadcrumbItem(BreadcrumbItem) from BreadcrumbItem to BreadcrumbIte
 /**
  * A trail of items separated by chevrons, the last one in the foreground color.
  */
-class Breadcrumb implements RenderOnce implements Styled {
+class Breadcrumb extends Component implements Styled {
 
     final breadcrumbStyle:StyleRefinement = new StyleRefinement();
 
     final items:Array<BreadcrumbItem> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function child(item:IntoBreadcrumbItem):Breadcrumb {
         if (item != null) items.push(item);

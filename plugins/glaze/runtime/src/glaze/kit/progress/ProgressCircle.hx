@@ -7,6 +7,7 @@ import glaze.AnyElement;
 import glaze.Animation;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.Easing;
 import glaze.ElementId;
 import glaze.ElementIdArg;
@@ -14,7 +15,6 @@ import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.SpringMath;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -64,42 +64,39 @@ private class CircleState {
 /**
  * A circular progress indicator element.
  */
-class ProgressCircle implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class ProgressCircle extends Component implements Styled implements ParentElement implements Sizable {
 
     final id:ElementId;
 
     final circleStyle:StyleRefinement = new StyleRefinement();
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
     var valueValue:Float = 0.;
 
+    /** Set the accessible name exposed by the progress indicator. */
     @:allow(tests)
-    var accessibilityLabelValue:Null<String> = null;
+    @prop var accessibilityLabel:Null<String> = null;
 
     var size:Size = Medium;
 
     final childElements:Array<AnyElement> = [];
 
-    var loadingValue:Bool = false;
-
-    /** Create a new circular progress indicator. */
-    public function new(id:ElementIdArg) {
-        this.id = id;
-    }
-
     /**
      * Enable indeterminate loading animation: the value is ignored and an
      * infinite rotating arc animation is shown instead.
      */
-    public function loading(loading:Bool):ProgressCircle {
-        loadingValue = loading;
-        return this;
+    @prop var loading:Bool = false;
+
+    /** Create a new circular progress indicator. */
+    public function new(id:ElementIdArg) {
+        super();
+        this.id = id;
     }
 
     /** Set the color of the progress circle. */
     public function color(color:IntoHsla):ProgressCircle {
-        colorValue = color;
+        this.color = color;
         return this;
     }
 
@@ -107,12 +104,6 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
     public function value(value:Float):ProgressCircle {
         final v = SpringMath.f32(value);
         valueValue = v < 0. ? 0. : (v > 100. ? 100. : v);
-        return this;
-    }
-
-    /** Set the accessible name exposed by the progress indicator. */
-    public function accessibilityLabel(label:String):ProgressCircle {
-        accessibilityLabelValue = label;
         return this;
     }
 
@@ -160,7 +151,7 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final value = valueValue;
-        final loading = loadingValue;
+        final loading = this.loading;
         final animated = Motion.transition(
             TransitionId.named(id, 'value'),
             value,
@@ -172,11 +163,11 @@ class ProgressCircle implements RenderOnce implements Styled implements ParentEl
         // but the ring cannot sweep more than once around.
         final animatedValue = animated < 0. ? 0. : (animated > 100. ? 100. : animated);
 
-        final color:Hsla = colorValue != null ? colorValue : theme.progressBar;
+        final color:Hsla = this.color != null ? this.color : theme.progressBar;
 
         final progress = glaze.kit.base.Progress.component(id).value(value).indeterminate(loading);
-        if (accessibilityLabelValue != null) {
-            progress.accessibilityLabel(accessibilityLabelValue);
+        if (accessibilityLabel != null) {
+            progress.accessibilityLabel(accessibilityLabel);
         }
         progress.flex().itemsCenter().justifyCenter().lineHeight(glaze.Prelude.relative(1.));
         switch size {

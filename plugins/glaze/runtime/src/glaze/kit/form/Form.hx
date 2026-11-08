@@ -6,10 +6,10 @@ package glaze.kit.form;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.Pixels;
 import glaze.Rems;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -26,7 +26,7 @@ using glaze.kit.base.StyledExt;
 /**
  * A form element that contains multiple form fields.
  */
-class Form implements RenderOnce implements Styled implements Sizable {
+class Form extends Component implements Styled implements Sizable {
 
     /**
      * Create a new `Form` with a vertical layout.
@@ -63,7 +63,9 @@ class Form implements RenderOnce implements Styled implements Sizable {
     /**
      * Creates a single-column form with labels above their controls.
      */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Creates a new form with labels beside their controls.

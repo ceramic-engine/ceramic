@@ -99,16 +99,16 @@ class ComponentFoundationsTest extends TestCase {
             case _:
                 fail('cloning must preserve the data source');
         }
-        assertTrue(cloned.transformation == transformation);
+        assertTrue(cloned.transformProp == transformation);
         assertTrue(cloned.size.equals(icon.size));
-        assertTrue(cloned.textColorValue.equals(icon.textColorValue));
+        assertTrue(cloned.textColorProp.equals(icon.textColorProp));
 
         final svg = cloned.intoSvg(12., blue());
         assertTrue(svg.style().text.color.equals(red()));
         assertTrue(Type.enumEq(svg.style().sizeWidth, glaze.Length.Definite(glaze.DefiniteLength.Absolute(glaze.AbsoluteLength.Rems(1.5)))));
 
         final rotated = icon.rotate(radians(Math.PI)).clone();
-        assertEquals(Math.PI, (rotated.transformation.rotate : Float));
+        assertEquals(Math.PI, (rotated.transformProp.rotate : Float));
     }
 
     function testIconSourceBuildersReplacePreviousSource() {

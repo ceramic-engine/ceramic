@@ -5,9 +5,9 @@ package glaze.kit.empty;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -25,30 +25,22 @@ using glaze.kit.base.StyledExt;
  *
  * Not to be confused with `glaze.Empty` (the element that renders nothing).
  */
-class Empty implements RenderOnce implements Styled implements ParentElement {
+class Empty extends Component implements Styled implements ParentElement {
 
     @:allow(tests)
     final emptyStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests)
-    var headerValue:Null<EmptyHeader> = null;
+    @prop var header:Null<EmptyHeader> = null;
 
     @:allow(tests)
-    var contentValue:Null<EmptyContent> = null;
+    @prop var content:Null<EmptyContent> = null;
 
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
-
-    public function header(header:EmptyHeader):Empty {
-        headerValue = header;
-        return this;
-    }
-
-    public function content(content:EmptyContent):Empty {
-        contentValue = content;
-        return this;
+    public function new() {
+        super();
     }
 
     public inline function style():StyleRefinement {
@@ -85,8 +77,8 @@ class Empty implements RenderOnce implements Styled implements ParentElement {
             .textCenter()
             .textColor(theme.foreground)
             .refineStyle(emptyStyle);
-        if (headerValue != null) element.child(headerValue);
-        if (contentValue != null) element.child(contentValue);
+        if (header != null) element.child(header);
+        if (content != null) element.child(content);
         element.extend(childElements);
         return element;
     }
@@ -96,35 +88,22 @@ class Empty implements RenderOnce implements Styled implements ParentElement {
 /**
  * The header of an `Empty`: media, title and description, in that order.
  */
-class EmptyHeader implements RenderOnce implements Styled {
+class EmptyHeader extends Component implements Styled {
 
     @:allow(tests)
     final headerStyle:StyleRefinement = new StyleRefinement();
 
     @:allow(tests)
-    var mediaValue:Null<EmptyMedia> = null;
+    @prop var media:Null<EmptyMedia> = null;
 
     @:allow(tests)
-    var titleValue:Null<EmptyTitle> = null;
+    @prop var title:Null<EmptyTitle> = null;
 
     @:allow(tests)
-    var descriptionValue:Null<EmptyDescription> = null;
+    @prop var description:Null<EmptyDescription> = null;
 
-    public function new() {}
-
-    public function media(media:EmptyMedia):EmptyHeader {
-        mediaValue = media;
-        return this;
-    }
-
-    public function title(title:EmptyTitle):EmptyHeader {
-        titleValue = title;
-        return this;
-    }
-
-    public function description(description:EmptyDescription):EmptyHeader {
-        descriptionValue = description;
-        return this;
+    public function new() {
+        super();
     }
 
     public inline function style():StyleRefinement {
@@ -139,9 +118,9 @@ class EmptyHeader implements RenderOnce implements Styled {
             .itemsCenter()
             .gap2()
             .refineStyle(headerStyle);
-        if (mediaValue != null) element.child(mediaValue);
-        if (titleValue != null) element.child(titleValue);
-        if (descriptionValue != null) element.child(descriptionValue);
+        if (media != null) element.child(media);
+        if (title != null) element.child(title);
+        if (description != null) element.child(description);
         return element;
     }
 
@@ -159,7 +138,7 @@ enum abstract EmptyMediaVariant(Int) {
 /**
  * The media slot of an `EmptyHeader` (an icon, an avatar...).
  */
-class EmptyMedia implements RenderOnce implements Styled implements ParentElement {
+class EmptyMedia extends Component implements Styled implements ParentElement {
 
     @:allow(tests)
     final mediaStyle:StyleRefinement = new StyleRefinement();
@@ -170,7 +149,9 @@ class EmptyMedia implements RenderOnce implements Styled implements ParentElemen
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function withVariant(variant:EmptyMediaVariant):EmptyMedia {
         this.variant = variant;
@@ -216,7 +197,7 @@ class EmptyMedia implements RenderOnce implements Styled implements ParentElemen
 /**
  * The title of an `EmptyHeader`.
  */
-class EmptyTitle implements RenderOnce implements Styled implements ParentElement {
+class EmptyTitle extends Component implements Styled implements ParentElement {
 
     @:allow(tests)
     final titleStyle:StyleRefinement = new StyleRefinement();
@@ -224,7 +205,9 @@ class EmptyTitle implements RenderOnce implements Styled implements ParentElemen
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return titleStyle;
@@ -256,7 +239,7 @@ class EmptyTitle implements RenderOnce implements Styled implements ParentElemen
 /**
  * The description of an `EmptyHeader`.
  */
-class EmptyDescription implements RenderOnce implements Styled implements ParentElement {
+class EmptyDescription extends Component implements Styled implements ParentElement {
 
     @:allow(tests)
     final descriptionStyle:StyleRefinement = new StyleRefinement();
@@ -264,7 +247,9 @@ class EmptyDescription implements RenderOnce implements Styled implements Parent
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return descriptionStyle;
@@ -302,7 +287,7 @@ class EmptyDescription implements RenderOnce implements Styled implements Parent
 /**
  * The content slot of an `Empty` (actions...).
  */
-class EmptyContent implements RenderOnce implements Styled implements ParentElement {
+class EmptyContent extends Component implements Styled implements ParentElement {
 
     @:allow(tests)
     final contentStyle:StyleRefinement = new StyleRefinement();
@@ -310,7 +295,9 @@ class EmptyContent implements RenderOnce implements Styled implements ParentElem
     @:allow(tests)
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public inline function style():StyleRefinement {
         return contentStyle;

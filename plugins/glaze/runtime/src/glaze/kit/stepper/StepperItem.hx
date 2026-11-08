@@ -7,11 +7,11 @@ import glaze.AnyElement;
 import glaze.App;
 import glaze.Axis;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -29,7 +29,7 @@ using glaze.kit.base.StyledExt;
 /**
  * A step item within a `Stepper`.
  */
-class StepperItem implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class StepperItem extends Component implements Styled implements ParentElement implements Sizable {
 
     var stepValue:Int = 0;
 
@@ -37,13 +37,20 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
 
     final itemStyle:StyleRefinement = new StyleRefinement();
 
-    var iconValue:Null<Icon> = null;
+    @prop var icon:Null<Icon> = null;
 
     final childElements:Array<AnyElement> = [];
 
     var layoutValue:Axis = Horizontal;
 
-    var disabledValue:Bool = false;
+    /**
+     * Set disabled state of the stepper item.
+     *
+     * Will override the stepper's disabled state if set to true.
+     *
+     * Default is false.
+     */
+    @prop var disabled:Bool = false;
 
     var size:Size = Medium;
 
@@ -56,25 +63,15 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
     /** The accessibility properties the item exports (filled by `render`). */
     public final a11y:A11y = new A11y(Role.ListItem);
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Set the icon of the stepper item.
      */
     public function icon(icon:IntoIcon):StepperItem {
-        iconValue = icon;
-        return this;
-    }
-
-    /**
-     * Set disabled state of the stepper item.
-     *
-     * Will override the stepper's disabled state if set to true.
-     *
-     * Default is false.
-     */
-    public function disabled(disabled:Bool):StepperItem {
-        disabledValue = disabled;
+        this.icon = icon;
         return this;
     }
 
@@ -161,14 +158,14 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
         root.itemsStart()
             .refineStyle(itemStyle);
         final trigger = new StepperTrigger()
-            .icon(iconValue)
+            .icon(icon)
             .iconSize(iconSize)
             .step(stepValue)
             .withSize(size)
             .checkedStep(checkedStepValue)
             .textCenter(textCenterValue)
             .layout(layoutValue)
-            .disabled(disabledValue);
+            .disabled(disabled);
         trigger.extend(childElements);
         final onClick = onClickHandler;
         root.child(trigger.onClick((e, window, cx) -> {
@@ -193,44 +190,26 @@ class StepperItem implements RenderOnce implements Styled implements ParentEleme
  * Default is `absolute` positioned.
  */
 @:allow(glaze.kit.stepper)
-class StepperSeparator implements RenderOnce implements Styled {
+class StepperSeparator extends Component implements Styled {
 
     var size:Size = Medium;
 
-    var checkedValue:Bool = false;
+    @prop var checked:Bool = false;
 
-    var iconSizeValue:Pixels = 24.;
+    @prop var iconSize:Pixels = 24.;
 
-    var layoutValue:Axis = Horizontal;
+    @prop var layout:Axis = Horizontal;
 
     final separatorStyle:StyleRefinement = new StyleRefinement();
 
-    var textCenterValue:Bool = false;
+    @prop var textCenter:Bool = false;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function withSize(size:Size):StepperSeparator {
         this.size = size;
-        return this;
-    }
-
-    public function textCenter(center:Bool):StepperSeparator {
-        textCenterValue = center;
-        return this;
-    }
-
-    public function layout(layout:Axis):StepperSeparator {
-        layoutValue = layout;
-        return this;
-    }
-
-    public function iconSize(size:Pixels):StepperSeparator {
-        iconSizeValue = size;
-        return this;
-    }
-
-    public function checked(checked:Bool):StepperSeparator {
-        checkedValue = checked;
         return this;
     }
 
@@ -240,8 +219,8 @@ class StepperSeparator implements RenderOnce implements Styled {
 
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
-        final iconSize = iconSizeValue;
-        final textCenter = textCenterValue;
+        final iconSize = this.iconSize;
+        final textCenter = this.textCenter;
         final separatorWide:Pixels = switch size {
             case XSmall: glaze.Prelude.px(1.5);
             case Large: glaze.Prelude.px(3.);
@@ -253,7 +232,7 @@ class StepperSeparator implements RenderOnce implements Styled {
         final root = div()
             .absolute()
             .flex1();
-        if (layoutValue.isHorizontal()) {
+        if (layout.isHorizontal()) {
             root.h(separatorWide).mt(iconSize.half());
             if (!textCenter) {
                 root.ml(iconSize + gap).mr(gap).left0().right0();
@@ -263,7 +242,7 @@ class StepperSeparator implements RenderOnce implements Styled {
                     .right(glaze.Prelude.relative(-0.5));
             }
         }
-        if (layoutValue.isVertical()) {
+        if (layout.isVertical()) {
             root.w(separatorWide).ml(iconSize.half());
             if (!textCenter) {
                 root.mt(iconSize + gap).mb(gap).top0().bottom0();
@@ -275,7 +254,7 @@ class StepperSeparator implements RenderOnce implements Styled {
         }
         root.refineStyle(separatorStyle)
             .bg(theme.border);
-        if (checkedValue) root.bg(theme.tokens.primary.background);
+        if (checked) root.bg(theme.tokens.primary.background);
         return root;
     }
 

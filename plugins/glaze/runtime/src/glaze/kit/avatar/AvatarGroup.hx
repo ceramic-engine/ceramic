@@ -4,9 +4,9 @@
 package glaze.kit.avatar;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -24,7 +24,7 @@ using glaze.kit.base.StyledExt;
  * A row of overlapping avatars, at most `limit` (3 by default), with an
  * optional ellipsis avatar when some are hidden.
  */
-class AvatarGroup implements RenderOnce implements Styled implements Sizable {
+class AvatarGroup extends Component implements Styled implements Sizable {
 
     final base:Div = div();
 
@@ -36,13 +36,16 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
     @:allow(tests)
     var size:Size = Medium;
 
+    /** Set the maximum number of avatars shown (default 3). */
     @:allow(tests)
-    var limitValue:Int = 3;
+    @prop var limit:Int = 3;
 
     @:allow(tests)
     var ellipsisValue:Bool = false;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function child(avatar:Avatar):AvatarGroup {
         if (avatar != null) avatars.push(avatar);
@@ -51,12 +54,6 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
 
     public function children(avatars:Array<Avatar>):AvatarGroup {
         for (avatar in avatars) if (avatar != null) this.avatars.push(avatar);
-        return this;
-    }
-
-    /** Set the maximum number of avatars shown (default 3). */
-    public function limit(limit:Int):AvatarGroup {
-        limitValue = limit;
         return this;
     }
 
@@ -81,7 +78,7 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
         final avatarsLen = avatars.length;
 
         base.hFlex().flexRowReverse().refineStyle(groupStyle);
-        if (ellipsisValue && avatarsLen > limitValue) {
+        if (ellipsisValue && avatarsLen > limit) {
             base.child(
                 Avatar.component()
                     .name('⋯')
@@ -91,7 +88,7 @@ class AvatarGroup implements RenderOnce implements Styled implements Sizable {
                     .ml1()
             );
         }
-        final shown = avatars.slice(0, limitValue);
+        final shown = avatars.slice(0, limit);
         var ix = shown.length - 1;
         while (ix >= 0) {
             final item = shown[ix].withSize(size);

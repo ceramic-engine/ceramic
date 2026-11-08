@@ -6,12 +6,12 @@ package glaze.kit.accordion;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Rems;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -37,62 +37,30 @@ using glaze.kit.base.StyledExt;
 /**
  * Accordion element.
  */
-class Accordion implements RenderOnce implements Styled implements Sizable {
+class Accordion extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
     final accordionStyle:StyleRefinement = new StyleRefinement();
 
-    var multipleValue:Bool = false;
-
-    var size:Size = Medium;
-
-    var borderedValue:Bool = true;
-
-    var disabledValue:Bool = false;
-
-    final items:Array<AccordionItem> = [];
-
-    var onToggleClickHandler:Null<(Array<Int>, Window, App) -> Void> = null;
-
-    /**
-     * Create a new Accordion with the given ID.
-     */
-    public function new(id:ElementIdArg) {
-        this.id = id;
-    }
-
     /**
      * Set whether multiple accordion items can be opened simultaneously, default: false
      */
-    public function multiple(multiple:Bool):Accordion {
-        multipleValue = multiple;
-        return this;
-    }
+    @prop var multiple:Bool = false;
+
+    var size:Size = Medium;
 
     /**
      * Set whether the accordion items have borders, default: true
      */
-    public function bordered(bordered:Bool):Accordion {
-        borderedValue = bordered;
-        return this;
-    }
+    @prop var bordered:Bool = true;
 
     /**
      * Set whether the accordion is disabled, default: false
      */
-    public function disabled(disabled:Bool):Accordion {
-        disabledValue = disabled;
-        return this;
-    }
+    @prop var disabled:Bool = false;
 
-    /**
-     * Adds an AccordionItem to the Accordion.
-     */
-    public function item(child:(AccordionItem) -> AccordionItem):Accordion {
-        items.push(child(AccordionItem.component()));
-        return this;
-    }
+    final items:Array<AccordionItem> = [];
 
     /**
      * Sets the on_toggle_click callback for the AccordionGroup.
@@ -101,8 +69,21 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
      * them from a `HashSet`, whose order is unspecified; the port keeps the
      * order in which they were opened.
      */
-    public function onToggleClick(onToggleClick:(Array<Int>, Window, App) -> Void):Accordion {
-        onToggleClickHandler = onToggleClick;
+    @prop var onToggleClick:Null<(Array<Int>, Window, App) -> Void> = null;
+
+    /**
+     * Create a new Accordion with the given ID.
+     */
+    public function new(id:ElementIdArg) {
+        super();
+        this.id = id;
+    }
+
+    /**
+     * Adds an AccordionItem to the Accordion.
+     */
+    public function item(child:(AccordionItem) -> AccordionItem):Accordion {
+        items.push(child(AccordionItem.component()));
         return this;
     }
 
@@ -122,18 +103,18 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
     public function render(window:Window, cx:App):IntoElement {
         final theme = Theme.global(cx);
         final openIndices:Array<Int> = [];
-        final multiple = multipleValue;
+        final multiple = this.multiple;
         final lastIx = items.length > 0 ? items.length - 1 : 0;
         // Initial port deviation DEV-008: reported by the item that toggled, not
         // by a click anywhere on the accordion (the original's root `on_click`).
-        final onToggle = disabledValue ? null : onToggleClickHandler;
+        final onToggle = this.disabled ? null : onToggleClick;
 
         final root = glaze.kit.base.Accordion.component(id)
             .vFlex()
             .sizeFull();
         // The bordered accordion is a single rounded card, the items are
         // joined by their separators.
-        if (borderedValue) {
+        if (bordered) {
             root.border1()
                 .borderColor(theme.border)
                 .rounded(theme.radiusLg)
@@ -142,10 +123,10 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
         root.refineStyle(accordionStyle);
         for (ix in 0...items.length) {
             final accordion = items[ix];
-            if (accordion.openValue) {
+            if (accordion.openProp) {
                 if (openIndices.indexOf(ix) == -1) openIndices.push(ix);
             }
-            final disabled = disabledValue || accordion.disabledValue;
+            final disabled = this.disabled || accordion.disabledProp;
 
             root.child(accordion
                 .index(ix)
@@ -175,7 +156,7 @@ class Accordion implements RenderOnce implements Styled implements Sizable {
  * An Accordion is a vertically stacked list of items, each of which can be
  * expanded to reveal the content associated with it.
  */
-class AccordionItem implements RenderOnce implements Styled implements ParentElement implements Sizable {
+class AccordionItem extends Component implements Styled implements ParentElement implements Sizable {
 
     var indexValue:Int = 0;
 
@@ -185,36 +166,44 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
 
     var hoverStyle:Null<StyleRefinement> = null;
 
-    var titleStyleValue:StyleRefinement = new StyleRefinement();
+    /**
+     * Set extra style for the title row.
+     */
+    @prop var titleStyle:StyleRefinement = new StyleRefinement();
 
-    var contentStyleValue:StyleRefinement = new StyleRefinement();
+    /**
+     * Set extra style for the content below the title.
+     */
+    @prop var contentStyle:StyleRefinement = new StyleRefinement();
 
-    var iconValue:Null<Icon> = null;
+    @prop var icon:Null<Icon> = null;
 
-    var titleValue:AnyElement = ('' : IntoElement);
+    @prop var title:AnyElement = ('' : IntoElement);
 
     final childElements:Array<AnyElement> = [];
 
     @:allow(glaze.kit.accordion)
-    var openValue:Bool = false;
+    @prop var open:Bool = false;
 
     var size:Size = Medium;
 
     @:allow(glaze.kit.accordion)
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     var onToggleClickHandler:Null<(Bool, Window, App) -> Void> = null;
 
     /**
      * Create a new AccordionItem.
      */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Set the icon for the accordion item.
      */
     public function icon(icon:IntoIcon):AccordionItem {
-        iconValue = icon;
+        this.icon = icon;
         return this;
     }
 
@@ -222,25 +211,7 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
      * Set the title for the accordion item.
      */
     public function title(title:IntoElement):AccordionItem {
-        titleValue = title;
-        return this;
-    }
-
-    public function open(open:Bool):AccordionItem {
-        openValue = open;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):AccordionItem {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Set extra style for the title row.
-     */
-    public function titleStyle(style:StyleRefinement):AccordionItem {
-        titleStyleValue = style;
+        this.title = title;
         return this;
     }
 
@@ -253,14 +224,6 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
      */
     public function hover(f:(StyleBuilder) -> StyleBuilder):AccordionItem {
         hoverStyle = StyleBuilder.build(f);
-        return this;
-    }
-
-    /**
-     * Set extra style for the content below the title.
-     */
-    public function contentStyle(style:StyleRefinement):AccordionItem {
-        contentStyleValue = style;
         return this;
     }
 
@@ -318,14 +281,14 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
         };
         final progress = Motion.spring(
             TransitionId.named(indexValue, 'accordion-panel'),
-            openValue ? 1. : 0.,
+            this.open ? 1. : 0.,
             theme.motionTokens().springControl,
             window,
             cx
         );
         final trigger = AccordionTrigger.component(ElementId.NamedInteger('trigger', indexValue))
-            .open(openValue)
-            .disabled(disabledValue)
+            .open(this.open)
+            .disabled(disabled)
             .hFlex()
             .justifyBetween()
             .gap3()
@@ -336,8 +299,8 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
             case Large: trigger.py3().px4();
             case _: trigger.py2().px3();
         }
-        if (openValue) trigger.textColor(theme.foreground);
-        trigger.refineStyle(titleStyleValue);
+        if (this.open) trigger.textColor(theme.foreground);
+        trigger.refineStyle(titleStyle);
         final title = hFlex()
             .flex1()
             .minW0()
@@ -346,10 +309,10 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
             case XSmall | Small: title.gap1();
             case _: title.gap2();
         }
-        if (iconValue != null) title.child(iconValue.withSize(size));
-        title.child(titleValue);
+        if (icon != null) title.child(icon.withSize(size));
+        title.child(this.title);
         trigger.child(title);
-        if (!disabledValue) {
+        if (!disabled) {
             final hoverStyle = this.hoverStyle;
             if (hoverStyle != null) {
                 trigger.hover(s -> s.refineStyle(hoverStyle));
@@ -358,7 +321,7 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
                 .xsmall()
                 .flexNone()
                 .textColor(theme.mutedForeground)
-                .rotate(percentage(openValue ? 0.5 : 0.)));
+                .rotate(percentage(this.open ? 0.5 : 0.)));
             final onToggleClick = onToggleClickHandler;
             if (onToggleClick != null) {
                 trigger.onChange((open, _, window, cx) -> {
@@ -374,18 +337,18 @@ class AccordionItem implements RenderOnce implements Styled implements ParentEle
             case Large: content.pb3().px4();
             case _: content.pb2().px3();
         }
-        content.refineStyle(contentStyleValue);
+        content.refineStyle(contentStyle);
         content.extend(childElements);
 
         final item = new BaseAccordionItem()
-            .open(openValue)
-            .disabled(disabledValue)
+            .open(this.open)
+            .disabled(disabled)
             .header(new BaseAccordionHeader(trigger)
                 .id(ElementId.NamedInteger('header', indexValue))
                 .wFull())
             .panel(new BaseAccordionPanel()
                 .id(ElementId.NamedInteger('panel', indexValue))
-                .open(openValue)
+                .open(this.open)
                 // Mounted while the reveal moves; a settled closed panel
                 // unmounts, so its content costs no layout or paint. A
                 // settled spring returns exactly 0, and `!=` keeps a

@@ -13,6 +13,7 @@ import glaze.ElementIdArg;
 import glaze.Context;
 import glaze.Axis;
 import glaze.Background;
+import glaze.Component;
 import glaze.Corners;
 import glaze.DefiniteLength;
 import glaze.ElementId;
@@ -21,7 +22,6 @@ import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.Model;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -105,7 +105,7 @@ private class ThumbRing {
  * `SliderState`, `SliderValue`, `SliderEvent` and `SliderScale` are the Base
  * ones (`glaze.kit.base.Slider`).
  */
-class Slider implements RenderOnce implements Styled {
+class Slider extends Component implements Styled {
 
     /**
      * The `SliderState` rendered: the one given to `component(state)` or
@@ -127,19 +127,32 @@ class Slider implements RenderOnce implements Styled {
 
     var valueToPush:Null<SliderValue> = null;
 
-    var minValue:Null<Float> = null;
+    /** The minimum of the state created by `component()` (default 0). */
+    @prop var min:Null<Float> = null;
 
     var maxValue:Null<Float> = null;
 
     var stepValue:Null<Float> = null;
 
-    var changeHandler:Null<(Float) -> Void> = null;
+    /**
+     * Called with the value on each `SliderEvent.Change` of the state
+     * created by `component()`: the value of a single value slider (the
+     * start of a range). The handler of the latest render is the one
+     * called; replacing it invalidates nothing.
+     */
+    @prop var onChange:Null<(Float) -> Void> = null;
 
     final sliderStyle:StyleRefinement = new StyleRefinement();
 
-    var disabledValue:Bool = false;
+    /**
+     * Set the disabled state of the slider, default: false
+     */
+    @prop var disabled:Bool = false;
 
-    var accessibilityLabelValue:Null<String> = null;
+    /**
+     * Sets the label exposed to accessibility clients.
+     */
+    @prop var accessibilityLabel:Null<String> = null;
 
     var reverseValue:Bool = false;
 
@@ -147,6 +160,7 @@ class Slider implements RenderOnce implements Styled {
      * Create a new `Slider` element bound to the `SliderState`.
      */
     public function new(state:Entity<SliderState>) {
+        super();
         this.state = state;
     }
 
@@ -178,12 +192,6 @@ class Slider implements RenderOnce implements Styled {
         return this;
     }
 
-    /** The minimum of the state created by `component()` (default 0). */
-    public function min(min:Float):Slider {
-        minValue = min;
-        return this;
-    }
-
     /** The maximum of the state created by `component()` (default 100). */
     public function max(max:Float):Slider {
         maxValue = max;
@@ -206,17 +214,6 @@ class Slider implements RenderOnce implements Styled {
     }
 
     /**
-     * Called with the value on each `SliderEvent.Change` of the state
-     * created by `component()`: the value of a single value slider (the
-     * start of a range). The handler of the latest render is the one
-     * called; replacing it invalidates nothing.
-     */
-    public function onChange(handler:(Float) -> Void):Slider {
-        changeHandler = handler;
-        return this;
-    }
-
-    /**
      * Creates or finds the state of a slider built by `component()` without
      * one, under the identity of the call, applies the range and the value
      * and installs the change handler (`KeyedEntity`).
@@ -226,8 +223,8 @@ class Slider implements RenderOnce implements Styled {
         final keyed:KeyedEntity<SliderState, (Float) -> Void> = window.useKeyedState(key, cx, _ -> new KeyedEntity(cx.newEntity((_:Context<SliderState>) -> new SliderState()))).read(cx).value;
         final entity = keyed.entity;
         state = entity;
-        keyed.handler = changeHandler;
-        if (changeHandler != null) {
+        keyed.handler = onChange;
+        if (onChange != null) {
             keyed.subscribe(cx, SliderEvent, (entity, event, cx) -> {
                 switch event {
                     case Change(value):
@@ -239,12 +236,12 @@ class Slider implements RenderOnce implements Styled {
         // Not tracked by the view being rendered (see `Select.resolveKeyedState`)
         tracker.Autorun.unobserve();
         final current = entity.read(cx);
-        final minChanged = minValue != null && current.minValue() != minValue;
+        final minChanged = this.min != null && current.minValue() != this.min;
         final maxChanged = maxValue != null && current.maxValue() != maxValue;
         final stepChanged = stepValue != null && current.stepValue() != stepValue;
         final valueChanged = valueToPush != null && !Type.enumEq(current.value(), valueToPush);
         if (minChanged || maxChanged || stepChanged || valueChanged) {
-            final min = minValue, max = maxValue, step = stepValue, value = valueToPush;
+            final min = this.min, max = maxValue, step = stepValue, value = valueToPush;
             entity.update(cx, (s, c) -> {
                 if (minChanged) s.min(min);
                 if (maxChanged) s.max(max);
@@ -272,22 +269,6 @@ class Slider implements RenderOnce implements Styled {
      */
     public function vertical():Slider {
         axis = Axis.Vertical;
-        return this;
-    }
-
-    /**
-     * Set the disabled state of the slider, default: false
-     */
-    public function disabled(disabled:Bool):Slider {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Sets the label exposed to accessibility clients.
-     */
-    public function accessibilityLabel(label:String):Slider {
-        accessibilityLabelValue = label;
         return this;
     }
 
@@ -339,7 +320,7 @@ class Slider implements RenderOnce implements Styled {
         final startRing = isRange ? new ThumbRing(entityId, true, ringColor, window, cx) : null;
         final endRing = new ThumbRing(entityId, false, ringColor, window, cx);
 
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         function thumb(position:DefiniteLength, start:Bool, ring:ThumbRing):SliderThumb {
             final thumb = SliderThumb.component(state).axis(axis).start(start).disabled(disabled);
             if (!disabled) {
@@ -381,7 +362,7 @@ class Slider implements RenderOnce implements Styled {
         }
 
         final root = glaze.kit.base.Slider.component(state).axis(axis).disabled(disabled);
-        if (accessibilityLabelValue != null) root.accessibilityLabel(accessibilityLabelValue);
+        if (accessibilityLabel != null) root.accessibilityLabel(accessibilityLabel);
         root.flex().flex1().itemsCenter().justifyCenter();
         if (axis == Axis.Vertical) root.h(glaze.Prelude.px(120.));
         if (axis == Axis.Horizontal) root.wFull();

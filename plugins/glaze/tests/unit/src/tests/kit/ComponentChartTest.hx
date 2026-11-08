@@ -165,7 +165,7 @@ class ComponentChartTest extends KitTestCase {
             app
         );
         assertTrue(tooltip != null);
-        assertEquals('Jan', @:privateAccess tooltip.titleValue);
+        assertEquals('Jan', @:privateAccess tooltip.titleProp);
         final rows = @:privateAccess tooltip.rows;
         assertEquals('0: +2', rows[0].value);
         assertTrue(rows[0].valueColor.equals(green()));
@@ -185,7 +185,7 @@ class ComponentChartTest extends KitTestCase {
             app
         );
         assertTrue(tooltip != null);
-        assertEquals(null, @:privateAccess tooltip.titleValue);
+        assertEquals(null, @:privateAccess tooltip.titleProp);
         final rows = @:privateAccess tooltip.rows;
         assertEquals(1, rows.length);
         assertEquals('80', rows[0].value);
@@ -214,7 +214,7 @@ class ComponentChartTest extends KitTestCase {
         );
         assertTrue(tooltip != null);
         assertFalse(built);
-        assertEquals(null, @:privateAccess tooltip.titleValue);
+        assertEquals(null, @:privateAccess tooltip.titleProp);
         assertEquals(0, (@:privateAccess tooltip.rows).length);
     }
 
@@ -593,10 +593,10 @@ class ComponentChartTest extends KitTestCase {
 
     function testStoresAnExplicitAccessibilityLabel() {
         final plain = ProgressCircle.component('upload');
-        assertEquals(null, @:privateAccess plain.accessibilityLabelValue);
+        assertEquals(null, @:privateAccess plain.accessibilityLabelProp);
 
         final named = ProgressCircle.component('upload').accessibilityLabel('Upload progress');
-        assertEquals('Upload progress', @:privateAccess named.accessibilityLabelValue);
+        assertEquals('Upload progress', @:privateAccess named.accessibilityLabelProp);
     }
 
     function testButtonIconProgressVariant() {

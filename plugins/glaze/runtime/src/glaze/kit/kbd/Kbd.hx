@@ -5,13 +5,13 @@ package glaze.kit.kbd;
 
 import glaze.Action;
 import glaze.App;
+import glaze.Component;
 import glaze.FocusHandle;
 import glaze.IntoElement;
 import glaze.KeyBinding;
 import glaze.KeyContext;
 import glaze.Keystroke;
 import glaze.OperatingSystem;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -24,17 +24,22 @@ using glaze.kit.base.StyledExt;
 /**
  * A tag for displaying a keyboard shortcut.
  */
-class Kbd implements RenderOnce implements Styled {
+class Kbd extends Component implements Styled {
 
     final kbdStyle:StyleRefinement = new StyleRefinement();
 
     final stroke:Keystroke;
 
-    var appearanceValue:Bool = true;
+    /**
+     * Set whether to draw the key cap (default true). Without it, the
+     * shortcut is plain text.
+     */
+    @prop var appearance:Bool = true;
 
     var outlineValue:Bool = false;
 
     public function new(stroke:Keystroke) {
+        super();
         this.stroke = stroke;
     }
 
@@ -45,15 +50,6 @@ class Kbd implements RenderOnce implements Styled {
     @:allow(glaze.kit)
     function keystroke():Keystroke {
         return stroke;
-    }
-
-    /**
-     * Set whether to draw the key cap (default true). Without it, the
-     * shortcut is plain text.
-     */
-    public function appearance(appearance:Bool):Kbd {
-        appearanceValue = appearance;
-        return this;
     }
 
     /**
@@ -183,7 +179,7 @@ class Kbd implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        if (!appearanceValue) {
+        if (!appearance) {
             return Kbd.format(stroke);
         }
 

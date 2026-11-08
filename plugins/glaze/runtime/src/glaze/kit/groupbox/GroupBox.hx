@@ -5,11 +5,11 @@ package glaze.kit.groupbox;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -49,48 +49,40 @@ enum abstract GroupBoxVariant(Int) {
 /**
  * A titled group of content, with an optional footer.
  */
-class GroupBox implements RenderOnce implements Styled implements ParentElement {
+class GroupBox extends Component implements Styled implements ParentElement {
 
-    var idValue:Null<ElementId> = null;
+    @prop var id:Null<ElementId> = null;
 
     var variant:GroupBoxVariant = Normal;
 
     final groupStyle:StyleRefinement = new StyleRefinement();
 
-    var titleStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var titleStyle:StyleRefinement = new StyleRefinement();
 
-    var titleValue:Null<AnyElement> = null;
+    @prop var title:Null<AnyElement> = null;
 
-    var contentStyleValue:StyleRefinement = new StyleRefinement();
+    @prop var contentStyle:StyleRefinement = new StyleRefinement();
 
     final childElements:Array<AnyElement> = [];
 
-    var footerValue:Null<AnyElement> = null;
+    @prop var footer:Null<AnyElement> = null;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function id(id:ElementIdArg):GroupBox {
-        idValue = id;
+        this.id = id;
         return this;
     }
 
     public function title(title:IntoElement):GroupBox {
-        titleValue = title;
-        return this;
-    }
-
-    public function titleStyle(style:StyleRefinement):GroupBox {
-        titleStyleValue = style;
-        return this;
-    }
-
-    public function contentStyle(style:StyleRefinement):GroupBox {
-        contentStyleValue = style;
+        this.title = title;
         return this;
     }
 
     public function footer(footer:IntoElement):GroupBox {
-        footerValue = footer;
+        this.footer = footer;
         return this;
     }
 
@@ -123,17 +115,17 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
         final hasPaddings = variant != Normal;
 
         final element = glaze.kit.base.Prelude.vFlex()
-            .id(idValue != null ? idValue : ElementId.Name('group-box'))
+            .id(id != null ? id : ElementId.Name('group-box'))
             .wFull();
         if (hasPaddings) element.gap3() else element.gap4();
         element.refineStyle(groupStyle);
-        if (titleValue != null) {
+        if (title != null) {
             element.child(
                 div()
                     .textColor(theme.mutedForeground)
                     .lineHeight(glaze.Prelude.relative(1.25))
-                    .refineStyle(titleStyleValue)
-                    .child(titleValue)
+                    .refineStyle(titleStyle)
+                    .child(title)
             );
         }
         final surface = glaze.kit.base.Prelude.vFlex();
@@ -141,13 +133,13 @@ class GroupBox implements RenderOnce implements Styled implements ParentElement 
         if (variant == Outline) surface.borderColor(theme.border).border1();
         surface.textColor(theme.groupBoxForeground);
         if (hasPaddings) surface.p4();
-        surface.gap4().rounded(theme.radius).refineStyle(contentStyleValue);
+        surface.gap4().rounded(theme.radius).refineStyle(contentStyle);
         surface.extend(childElements);
         // The footer sits inside the surface's slot so its 8 px gap is
         // independent of the root gap between the title and surface.
         final slot = glaze.kit.base.Prelude.vFlex().gap2().child(surface);
-        if (footerValue != null) {
-            slot.child(div().textSm().textColor(theme.mutedForeground).child(footerValue));
+        if (footer != null) {
+            slot.child(div().textSm().textColor(theme.mutedForeground).child(footer));
         }
         element.child(slot);
         return element;

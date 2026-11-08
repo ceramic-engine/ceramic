@@ -4,13 +4,13 @@
 package glaze.kit.rating;
 
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoHsla;
 import glaze.Model;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -49,7 +49,7 @@ class RatingState extends Model {
  * A row of stars to show or pick a value between 0 and `max` (5 by
  * default). Clicking the current value clears it.
  */
-class Rating implements RenderOnce implements Styled implements Sizable {
+class Rating extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
@@ -57,17 +57,19 @@ class Rating implements RenderOnce implements Styled implements Sizable {
 
     var size:Size = Medium;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
     @:allow(tests) var valueValue:Int = 0;
 
     @:allow(tests) var maxValue:Int = 5;
 
-    var colorValue:Null<Hsla> = null;
+    @prop var color:Null<Hsla> = null;
 
-    var onClickHandler:Null<(Int, Window, App) -> Void> = null;
+    /** Called with the new value after a click. */
+    @prop var onClick:Null<(Int, Window, App) -> Void> = null;
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -76,14 +78,9 @@ class Rating implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    public function disabled(disabled:Bool):Rating {
-        disabledValue = disabled;
-        return this;
-    }
-
     /** The active color (default: the theme's `yellow`). */
     public function color(color:IntoHsla):Rating {
-        colorValue = color;
+        this.color = color;
         return this;
     }
 
@@ -99,22 +96,16 @@ class Rating implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    /** Called with the new value after a click. */
-    public function onClick(handler:(Int, Window, App) -> Void):Rating {
-        onClickHandler = handler;
-        return this;
-    }
-
     public inline function style():StyleRefinement {
         return ratingStyle;
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final disabled = disabledValue;
+        final disabled = this.disabled;
         final max = maxValue;
         final defaultValue = valueValue;
-        final activeColor = colorValue != null ? colorValue : Theme.global(cx).yellow;
-        final onClick = onClickHandler;
+        final activeColor = color != null ? color : Theme.global(cx).yellow;
+        final onClick = this.onClick;
 
         final state:RatingState = window.useKeyedState(id, cx, _ -> new RatingState(defaultValue)).read(cx).value;
 

@@ -5,10 +5,10 @@ package glaze.kit.statusbar;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -22,7 +22,7 @@ using glaze.kit.base.StyledExt;
  * The center aligns by which ends are pinned: centered with both left and
  * right, end-aligned with only left, otherwise start-aligned.
  */
-class StatusBar implements RenderOnce implements Styled implements ParentElement {
+class StatusBar extends Component implements Styled implements ParentElement {
 
     final barStyle:StyleRefinement = new StyleRefinement();
 
@@ -32,7 +32,9 @@ class StatusBar implements RenderOnce implements Styled implements ParentElement
 
     final childElements:Array<AnyElement> = [];
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     public function left(child:IntoElement):StatusBar {
         if (child != null) leftElements.push(child);

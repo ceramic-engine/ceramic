@@ -5,6 +5,7 @@ package glaze.kit.plot;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.Hsla;
@@ -13,7 +14,6 @@ import glaze.IntoHsla;
 import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.Size;
 import glaze.SpringMath;
 import glaze.StyleRefinement;
@@ -62,7 +62,7 @@ enum abstract CrossLineAxis(Int) {
  * The crosshair of a chart's tooltip: a dashed hairline (or a solid band)
  * through a point.
  */
-class CrossLine implements RenderOnce {
+class CrossLine extends Component {
 
     @:allow(glaze.kit.plot)
     var point:Point;
@@ -93,6 +93,7 @@ class CrossLine implements RenderOnce {
     var direction:CrossLineAxis = Vertical;
 
     public function new(point:Point) {
+        super();
         this.point = point;
     }
 
@@ -199,22 +200,23 @@ class CrossLine implements RenderOnce {
 /**
  * A dot marking a hovered data point, with an optional translucent halo.
  */
-class Dot implements RenderOnce {
+class Dot extends Component {
 
     @:allow(glaze.kit.plot)
     var point:Point;
 
     var sizeValue:Pixels = 6.;
 
-    var strokeValue:Hsla = transparentBlack();
+    @prop var stroke:Hsla = transparentBlack();
 
-    var fillValue:Hsla = transparentBlack();
+    @prop var fill:Hsla = transparentBlack();
 
     /** Diameter of the translucent ring behind the dot; null draws no ring. */
     @:allow(glaze.kit.plot)
     var haloValue:Null<Float> = null;
 
     public function new(point:Point) {
+        super();
         this.point = point;
     }
 
@@ -236,13 +238,13 @@ class Dot implements RenderOnce {
 
     /** Set the stroke of the dot. */
     public function stroke(stroke:IntoHsla):Dot {
-        strokeValue = stroke;
+        this.stroke = stroke;
         return this;
     }
 
     /** Set the fill of the dot. */
     public function fill(fill:IntoHsla):Dot {
-        fillValue = fill;
+        this.fill = fill;
         return this;
     }
 
@@ -256,8 +258,8 @@ class Dot implements RenderOnce {
             .h(px(sizeValue))
             .roundedFull()
             .border(px(borderWidth))
-            .borderColor(strokeValue)
-            .bg(fillValue)
+            .borderColor(stroke)
+            .bg(fill)
             .left(px(f(point.x - offset)))
             .top(px(f(point.y - offset)));
 
@@ -270,7 +272,7 @@ class Dot implements RenderOnce {
                 .absolute()
                 .size(px(halo))
                 .roundedFull()
-                .bg(fillValue.opacity(0.2))
+                .bg(fill.opacity(0.2))
                 .left(px(f(point.x - f(halo / 2.))))
                 .top(px(f(point.y - f(halo / 2.)))));
         }
@@ -311,7 +313,7 @@ class TooltipRow {
  * The hover overlay of a chart: a crosshair, dots, and a box that follows
  * the cursor with a title and rows (or freeform children).
  */
-class Tooltip implements RenderOnce implements Styled implements ParentElement {
+class Tooltip extends Component implements Styled implements ParentElement {
 
     /** The spring ids a tooltip glides its crosshair with, within the plot's scope. */
     static inline final GLIDE:String = '__plot-tooltip-glide';
@@ -320,15 +322,18 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
 
     var gapValue:Pixels = 0.;
 
-    var crossLineValue:Null<CrossLine> = null;
+    /** Set the cross line of the tooltip. */
+    @prop var crossLine:Null<CrossLine> = null;
 
     var dotsValue:Null<Array<Dot>> = null;
 
-    var appearanceValue:Bool = true;
+    /** Set the appearance of the tooltip. */
+    @prop var appearance:Bool = true;
 
+    /** Set a bold title row shown at the top of the tooltip (e.g. the hovered x value). */
     @:allow(glaze.kit)
     @:allow(tests)
-    var titleValue:Null<String> = null;
+    @prop var title:Null<String> = null;
 
     @:allow(glaze.kit)
     @:allow(tests)
@@ -346,27 +351,22 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
     /** Opacity of the whole overlay when set; see `progress`. */
     var progressValue:Null<Float> = null;
 
-    /** Whether the crosshair and dots glide between data; see `glide`. */
-    var glideValue:Bool = true;
+    /**
+     * Glide the crosshair and dots between data, or snap them to each
+     * datum. Default is true.
+     */
+    @prop var glide:Bool = true;
 
     /**
      * Create a tooltip whose box follows the cursor at `cursor` within a
      * `within`-sized plot.
      */
     public function new(cursor:Point, within:Size) {
+        super();
         // The same row rhythm the structured content lays out with.
         base = vFlex().gapY1();
         this.cursor = cursor;
         this.within = within;
-    }
-
-    /**
-     * Glide the crosshair and dots between data, or snap them to each
-     * datum. Default is true.
-     */
-    public function glide(glide:Bool):Tooltip {
-        glideValue = glide;
-        return this;
     }
 
     /**
@@ -375,12 +375,6 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
      */
     public function progress(progress:Float):Tooltip {
         progressValue = progress < 0. ? 0. : (progress > 1. ? 1. : progress);
-        return this;
-    }
-
-    /** Set a bold title row shown at the top of the tooltip (e.g. the hovered x value). */
-    public function title(title:String):Tooltip {
-        titleValue = title;
         return this;
     }
 
@@ -416,21 +410,9 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /** Set the cross line of the tooltip. */
-    public function crossLine(crossLine:CrossLine):Tooltip {
-        crossLineValue = crossLine;
-        return this;
-    }
-
     /** Set the dots of the tooltip. */
     public function dots(dots:Iterable<Dot>):Tooltip {
         dotsValue = glaze.util.Iterables.toArray(dots);
-        return this;
-    }
-
-    /** Set the appearance of the tooltip. */
-    public function appearance(appearance:Bool):Tooltip {
-        appearanceValue = appearance;
         return this;
     }
 
@@ -467,10 +449,10 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
         final progress:Float = progressValue != null ? progressValue : trackedProgress;
         final theme = Theme.global(cx);
 
-        if (glideValue) {
+        if (glide) {
             final policy = PlotHover.pointerSpring(cx).withTravel(!entering);
-            if (crossLineValue != null) {
-                final line = crossLineValue;
+            if (crossLine != null) {
+                final line = crossLine;
                 if (line.direction.showVertical()) {
                     line.point = new Point(Motion.spring(TransitionId.named(GLIDE, 'x'), line.point.x, policy, window, cx), line.point.y);
                 }
@@ -499,11 +481,11 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
 
         // Structured content (title + rows) takes precedence over freeform `base` children.
         var content:Div;
-        if (titleValue != null || rows.length > 0) {
+        if (title != null || rows.length > 0) {
             final swatched = hasSwatches(rows);
             content = vFlex().gap1();
-            if (titleValue != null) {
-                content.child(div().fontSemibold().child(titleValue));
+            if (title != null) {
+                content.child(div().fontSemibold().child(title));
             }
             for (row in rows) {
                 final label = hFlex().itemsCenter().gap1p5();
@@ -526,8 +508,8 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
         content = content.textXs();
 
         final result = div().sizeFull().absolute().top0().left0().opacity(progress);
-        if (crossLineValue != null) {
-            result.child(crossLineValue);
+        if (crossLine != null) {
+            result.child(crossLine);
         }
         if (dotsValue != null) {
             result.children([for (dot in dotsValue) (dot : IntoElement)]);
@@ -537,7 +519,7 @@ class Tooltip implements RenderOnce implements Styled implements ParentElement {
         // paint above sibling content, while the crosshair and dots stay in
         // the plot's own layer. A deferred draw paints outside this
         // element's opacity, so the box carries the fade itself.
-        if (!appearanceValue) {
+        if (!appearance) {
             content = content.sizeFull().relative().opacity(progress);
         }
         else {

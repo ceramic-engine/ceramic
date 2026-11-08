@@ -5,11 +5,11 @@ package glaze.kit.collapsible;
 
 import glaze.AnyElement;
 import glaze.App;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -22,20 +22,22 @@ using glaze.kit.base.StyledExt;
 /**
  * An interactive element which expands/collapses.
  */
-class Collapsible implements RenderOnce implements Styled implements ParentElement {
+class Collapsible extends Component implements Styled implements ParentElement {
 
     final base:glaze.kit.base.BaseCollapsible = glaze.kit.base.BaseCollapsible.component();
 
     final collapsibleStyle:StyleRefinement = new StyleRefinement();
 
-    var motionIdValue:Null<ElementId> = null;
+    @prop var motionId:Null<ElementId> = null;
 
     var openValue:Bool = false;
 
     /**
      * Creates a new `Collapsible` instance.
      */
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Sets whether the collapsible is open. default is false.
@@ -50,7 +52,7 @@ class Collapsible implements RenderOnce implements Styled implements ParentEleme
      * Enables a reversible measured reveal under a stable identity.
      */
     public function motionId(id:ElementIdArg):Collapsible {
-        motionIdValue = id;
+        this.motionId = id;
         return this;
     }
 
@@ -83,7 +85,7 @@ class Collapsible implements RenderOnce implements Styled implements ParentEleme
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final id = motionIdValue;
+        final id = motionId;
         if (id != null) {
             final progress = Motion.spring(
                 TransitionId.named(id, 'reveal'),

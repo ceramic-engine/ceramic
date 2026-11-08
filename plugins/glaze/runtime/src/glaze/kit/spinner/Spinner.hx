@@ -5,10 +5,10 @@ package glaze.kit.spinner;
 
 import glaze.Animation;
 import glaze.App;
+import glaze.Component;
 import glaze.Easing;
 import glaze.Hsla;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.Svg;
 import glaze.Svg.Transformation;
 import glaze.Window;
@@ -31,41 +31,33 @@ using glaze.AnimationExt;
  * element here, so the icon is resolved to its `svg()` element (with the
  * text size and color of the spinner) and that element is animated.
  */
-class Spinner implements RenderOnce implements Sizable {
+class Spinner extends Component implements Sizable {
 
     var size:Size = Medium;
 
-    var iconValue:Icon = Icon.component(IconName.Loader);
+    @prop var icon:Icon = Icon.component(IconName.Loader);
 
     var speed:Float = 0.8;
 
-    var easing:(Float) -> Float = Easing.easeInOut;
+    /**
+     * Set the easing of the rotation.
+     */
+    @prop var ease:(Float) -> Float = Easing.easeInOut;
 
-    var colorValue:Null<Hsla> = null;
+    /**
+     * Set the color of the spinner.
+     */
+    @prop var color:Null<Hsla> = null;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Set the icon to use for the spinner.
      */
     public function icon(icon:IntoIcon):Spinner {
-        iconValue = icon;
-        return this;
-    }
-
-    /**
-     * Set the color of the spinner.
-     */
-    public function color(color:Hsla):Spinner {
-        colorValue = color;
-        return this;
-    }
-
-    /**
-     * Set the easing of the rotation.
-     */
-    public function ease(easing:(Float) -> Float):Spinner {
-        this.easing = easing;
+        this.icon = icon;
         return this;
     }
 
@@ -79,14 +71,14 @@ class Spinner implements RenderOnce implements Sizable {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final icon = iconValue.clone().withSize(size);
-        if (colorValue != null) {
-            icon.textColor(colorValue);
+        final icon = this.icon.clone().withSize(size);
+        if (color != null) {
+            icon.textColor(color);
         }
         final textStyle = window.textStyle();
         final svg:Svg = icon.resolved(cx).intoSvg(textStyle.fontSize.toPixels(window.remSize()), textStyle.color);
         return div().child(
-            svg.withAnimation('circle', new Animation(speed).repeat().withEasing(easing), (svg, delta) -> {
+            svg.withAnimation('circle', new Animation(speed).repeat().withEasing(ease), (svg, delta) -> {
                 // Rust `Transformation::rotate(percentage(delta))`: percentage to radians in f32
                 return svg.withTransformation(Transformation.rotated(f32(f32(f32(delta) * f32(Math.PI)) * 2.)));
             })

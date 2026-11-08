@@ -5,10 +5,10 @@ package glaze.kit.stepper;
 
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -23,7 +23,7 @@ using glaze.kit.base.StyledExt;
 /**
  * A step-by-step progress for users to navigate through a series of steps or stages.
  */
-class Stepper implements RenderOnce implements Styled implements Sizable {
+class Stepper extends Component implements Styled implements Sizable {
 
     final id:ElementId;
 
@@ -33,15 +33,29 @@ class Stepper implements RenderOnce implements Styled implements Sizable {
 
     var step:Int = 0;
 
-    var layoutValue:Axis = Horizontal;
+    /**
+     * Set the layout of the stepper, default is horizontal.
+     */
+    @prop var layout:Axis = Horizontal;
 
-    var disabledValue:Bool = false;
+    /**
+     * Set the disabled state of the stepper, default is false.
+     */
+    @prop var disabled:Bool = false;
 
     var size:Size = Medium;
 
-    var textCenterValue:Bool = false;
+    /**
+     * Set whether to center the text within each stepper item.
+     */
+    @prop var textCenter:Bool = false;
 
-    var onClickHandler:(Int, Window, App) -> Void = (_, _, _) -> {};
+    /**
+     * Add an on_click handler for when a step is clicked.
+     *
+     * The first parameter is the `step` of currently clicked item.
+     */
+    @prop var onClick:(Int, Window, App) -> Void = (_, _, _) -> {};
 
     /**
      * Creates a new stepper with the given ID.
@@ -49,30 +63,15 @@ class Stepper implements RenderOnce implements Styled implements Sizable {
      * Default use is horizontal layout with step 0 selected.
      */
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
-    }
-
-    /**
-     * Set whether to center the text within each stepper item.
-     */
-    public function textCenter(center:Bool):Stepper {
-        textCenterValue = center;
-        return this;
-    }
-
-    /**
-     * Set the layout of the stepper, default is horizontal.
-     */
-    public function layout(layout:Axis):Stepper {
-        layoutValue = layout;
-        return this;
     }
 
     /**
      * Sets the layout of the stepper to Vertical.
      */
     public function vertical():Stepper {
-        layoutValue = Vertical;
+        layout = Vertical;
         return this;
     }
 
@@ -100,24 +99,6 @@ class Stepper implements RenderOnce implements Styled implements Sizable {
         return this;
     }
 
-    /**
-     * Set the disabled state of the stepper, default is false.
-     */
-    public function disabled(disabled:Bool):Stepper {
-        disabledValue = disabled;
-        return this;
-    }
-
-    /**
-     * Add an on_click handler for when a step is clicked.
-     *
-     * The first parameter is the `step` of currently clicked item.
-     */
-    public function onClick(f:(Int, Window, App) -> Void):Stepper {
-        onClickHandler = f;
-        return this;
-    }
-
     public function withSize(size:IntoSize):Stepper {
         this.size = size;
         return this;
@@ -136,19 +117,19 @@ class Stepper implements RenderOnce implements Styled implements Sizable {
         final root = div()
             .id(id)
             .wFull();
-        if (layoutValue.isHorizontal()) root.hFlex();
-        if (layoutValue.isVertical()) root.vFlex();
+        if (layout.isHorizontal()) root.hFlex();
+        if (layout.isVertical()) root.vFlex();
         root.refineStyle(stepperStyle);
-        final onClick = onClickHandler;
+        final onClick = this.onClick;
         for (step in 0...totalItems) {
             final item = stepItems[step];
             final isLast = step + 1 == totalItems;
             item.step(step)
                 .withSize(size)
                 .checkedStep(this.step)
-                .layout(layoutValue)
-                .textCenter(textCenterValue);
-            if (disabledValue) item.disabled(true);
+                .layout(layout)
+                .textCenter(textCenter);
+            if (disabled) item.disabled(true);
             item.isLast(isLast)
                 .onClick((_, window, cx) -> {
                     onClick(step, window, cx);

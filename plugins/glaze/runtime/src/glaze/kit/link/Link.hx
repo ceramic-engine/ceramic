@@ -6,11 +6,11 @@ package glaze.kit.link;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.ClickEvent;
+import glaze.Component;
 import glaze.ElementId;
 import glaze.ElementIdArg;
 import glaze.IntoElement;
 import glaze.ParentElement;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -27,21 +27,22 @@ using glaze.kit.base.StyledExt;
  * `disabled` is stored but inert, like the original legacy component; use
  * `glaze.kit.base.Link` for a focusable, keyboard activatable link.
  */
-class Link implements RenderOnce implements Styled implements ParentElement {
+class Link extends Component implements Styled implements ParentElement {
 
     final id:ElementId;
 
     final linkStyle:StyleRefinement = new StyleRefinement();
 
-    var hrefValue:Null<String> = null;
+    @prop var href:Null<String> = null;
 
-    var disabledValue:Bool = false;
+    @prop var disabled:Bool = false;
 
-    var onClickHandler:Null<(ClickEvent, Window, App) -> Void> = null;
+    @prop var onClick:Null<(ClickEvent, Window, App) -> Void> = null;
 
     final childElements:Array<AnyElement> = [];
 
     public function new(id:ElementIdArg) {
+        super();
         this.id = id;
     }
 
@@ -63,24 +64,9 @@ class Link implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    public function href(href:String):Link {
-        hrefValue = href;
-        return this;
-    }
-
-    public function onClick(handler:(ClickEvent, Window, App) -> Void):Link {
-        onClickHandler = handler;
-        return this;
-    }
-
-    public function disabled(disabled:Bool):Link {
-        disabledValue = disabled;
-        return this;
-    }
-
     public function render(window:Window, cx:App):IntoElement {
-        final href = hrefValue;
-        final onClick = onClickHandler;
+        final href = this.href;
+        final onClick = this.onClick;
         final link = Theme.global(cx).link;
 
         final element = div()

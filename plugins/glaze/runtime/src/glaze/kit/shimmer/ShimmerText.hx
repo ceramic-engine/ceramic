@@ -6,6 +6,7 @@ package glaze.kit.shimmer;
 import glaze.Animation;
 import glaze.App;
 import glaze.Bounds;
+import glaze.Component;
 import glaze.ContentMask;
 import glaze.Element;
 import glaze.ElementId;
@@ -18,7 +19,6 @@ import glaze.LayoutId;
 import glaze.LineLayout;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.StyledText;
@@ -123,7 +123,7 @@ class ShimmerStyle {
  * Text with a highlight band sweeping across its glyphs (plain text under
  * reduced motion).
  */
-class ShimmerText implements RenderOnce implements Styled {
+class ShimmerText extends Component implements Styled {
 
     public static inline final SHIMMER_LAYER_COUNT:Int = 12;
 
@@ -139,14 +139,15 @@ class ShimmerText implements RenderOnce implements Styled {
     var shimmerStyle:ShimmerStyle = new ShimmerStyle();
 
     @:allow(tests)
-    var idValue:Null<ElementId> = null;
+    @prop var id:Null<ElementId> = null;
 
     public function new(text:String) {
+        super();
         this.text = text;
     }
 
     public function id(id:ElementIdArg):ShimmerText {
-        idValue = id;
+        this.id = id;
         return this;
     }
 
@@ -185,7 +186,7 @@ class ShimmerText implements RenderOnce implements Styled {
     }
 
     public function render(window:Window, cx:App):IntoElement {
-        final id:ElementId = idValue != null ? idValue : ElementId.Name(text);
+        final id:ElementId = this.id != null ? this.id : ElementId.Name(text);
         final container = div().minW0().refineStyle(shimmerTextStyle);
 
         if (cx.reduceMotion()) {

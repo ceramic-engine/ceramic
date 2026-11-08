@@ -7,6 +7,7 @@ package glaze.kit;
 import glaze.AnyElement;
 import glaze.App;
 import glaze.BoxShadow;
+import glaze.Component;
 import glaze.CursorStyle;
 import glaze.Decorations;
 import glaze.Edges;
@@ -16,7 +17,6 @@ import glaze.OperatingSystem;
 import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Point;
-import glaze.RenderOnce;
 import glaze.ResizeEdge;
 import glaze.Size;
 import glaze.Window;
@@ -36,7 +36,7 @@ import glaze.Prelude.*;
  * The free functions of the Rust module (`window_border`, `window_paddings`,
  * `window_content_insets`, `window_safe_insets`) are static functions here.
  */
-class WindowBorder implements RenderOnce implements ParentElement {
+class WindowBorder extends Component implements ParentElement {
 
     /**
      * The shadow size of typical Linux client side decorations: 20 on Linux,
@@ -61,15 +61,26 @@ class WindowBorder implements RenderOnce implements ParentElement {
      */
     static inline final BORDER_RADIUS:Pixels = 0.0;
 
-    var shadowSizeValue:Pixels;
+    /**
+     * Set the shadow size for typical Linux client-side decorations.
+     *
+     * Default: `SHADOW_SIZE`
+     */
+    @prop var shadowSize:Pixels;
 
-    var resizeHitSizeValue:Pixels;
+    /**
+     * Set the resize hit band half-width around the visible inner frame edge.
+     *
+     * Default: `RESIZE_HIT_SIZE`
+     */
+    @prop var resizeHitSize:Pixels;
 
     final childElements:Array<AnyElement> = [];
 
     public function new() {
-        shadowSizeValue = SHADOW_SIZE;
-        resizeHitSizeValue = RESIZE_HIT_SIZE;
+        super();
+        shadowSize = SHADOW_SIZE;
+        resizeHitSize = RESIZE_HIT_SIZE;
     }
 
     /**
@@ -77,26 +88,6 @@ class WindowBorder implements RenderOnce implements ParentElement {
      */
     public static function windowBorder():WindowBorder {
         return WindowBorder.component();
-    }
-
-    /**
-     * Set the shadow size for typical Linux client-side decorations.
-     *
-     * Default: `SHADOW_SIZE`
-     */
-    public function shadowSize(size:Pixels):WindowBorder {
-        shadowSizeValue = size;
-        return this;
-    }
-
-    /**
-     * Set the resize hit band half-width around the visible inner frame edge.
-     *
-     * Default: `RESIZE_HIT_SIZE`
-     */
-    public function resizeHitSize(size:Pixels):WindowBorder {
-        resizeHitSizeValue = size;
-        return this;
     }
 
     public function extend(elements:Array<AnyElement>):Void {
@@ -203,13 +194,13 @@ class WindowBorder implements RenderOnce implements ParentElement {
         // shadow padding, but `set_client_inset` must still use the full shadow size. Clearing it
         // makes the first resize after restore double-count the shadow in `compute_outer_size`, and
         // the window jumps larger.
-        final platformInset = shadowSizeValue;
+        final platformInset = shadowSize;
         final visualShadow = if (tiling.top && tiling.bottom && tiling.left && tiling.right) {
             px(0.0);
         } else {
-            shadowSizeValue;
+            shadowSize;
         };
-        final resizeHitSize = resizeHitSizeValue;
+        final resizeHitSize = this.resizeHitSize;
         window.setClientInset(platformInset);
         // Rust `window.window_bounds().get_bounds().size`: the port has no
         // platform window bounds, the window is its viewport.

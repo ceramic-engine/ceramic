@@ -4,13 +4,13 @@
 package glaze.kit.avatar;
 
 import glaze.App;
+import glaze.Component;
 import glaze.Div;
 import glaze.Hsla;
 import glaze.IntoElement;
 import glaze.IntoImageSource;
 import glaze.ImageSource;
 import glaze.Pixels;
-import glaze.RenderOnce;
 import glaze.StyleBuilder;
 import glaze.StyleRefinement;
 import glaze.Styled;
@@ -99,13 +99,13 @@ class AvatarSizing {
  * A user avatar: an image, the initials of a name on a color picked from
  * them, or a placeholder icon.
  */
-class Avatar implements RenderOnce implements Styled implements Sizable {
+class Avatar extends Component implements Styled implements Sizable {
 
     final base:glaze.kit.base.Avatar = glaze.kit.base.Avatar.component();
 
     final avatarStyle:StyleRefinement = new StyleRefinement();
 
-    var srcValue:Null<ImageSource> = null;
+    @prop var src:Null<ImageSource> = null;
 
     @:allow(tests)
     var nameValue:Null<String> = null;
@@ -113,18 +113,20 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
     @:allow(tests)
     var shortName:String = '';
 
-    var placeholderValue:Icon = Icon.component(IconName.User);
+    @prop var placeholder:Icon = Icon.component(IconName.User);
 
     @:allow(tests)
     var size:Size = Medium;
 
-    public function new() {}
+    public function new() {
+        super();
+    }
 
     /**
      * Set the image source of the avatar.
      */
     public function src(source:IntoImageSource):Avatar {
-        srcValue = source;
+        this.src = source;
         return this;
     }
 
@@ -141,7 +143,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
      * Set the placeholder icon (default `IconName.User`).
      */
     public function placeholder(icon:IntoIcon):Avatar {
-        placeholderValue = icon;
+        this.placeholder = icon;
         return this;
     }
 
@@ -166,7 +168,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
 
         // The tinted outline belongs to the initials. An image, or the anonymous
         // placeholder, keeps the neutral border.
-        final borderColor = identity != null && srcValue == null ? identity.border : theme.border;
+        final borderColor = identity != null && src == null ? identity.border : theme.border;
 
         final fallback = AvatarFallback.component()
             .sizeFull()
@@ -176,7 +178,7 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
             .roundedFullStyle(cx)
             .overflowHidden();
         if (identity == null) {
-            fallback.textSize(glaze.Prelude.px(glaze.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.6))).child(placeholderValue);
+            fallback.textSize(glaze.Prelude.px(glaze.SpringMath.f32(AvatarSizing.avatarSize(size) * 0.6))).child(placeholder);
         }
         else {
             fallback.bg(identity.background)
@@ -194,9 +196,9 @@ class Avatar implements RenderOnce implements Styled implements Sizable {
             .border1()
             .borderColor(borderColor)
             .fallback(fallback);
-        if (srcValue != null) {
+        if (src != null) {
             base.image(
-                AvatarImage.component(srcValue)
+                AvatarImage.component(src)
                     .sizeFull()
                     .roundedFullStyle(cx)
                     .refineStyle(innerStyle)

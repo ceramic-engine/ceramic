@@ -8,13 +8,13 @@ import glaze.AnyElement;
 import glaze.AnyView;
 import glaze.App;
 import glaze.Axis;
+import glaze.Component;
 import glaze.Div;
 import glaze.ElementId;
 import glaze.IntoElement;
 import glaze.ParentElement;
 import glaze.Pixels;
 import glaze.Rems;
-import glaze.RenderOnce;
 import glaze.StyleRefinement;
 import glaze.Styled;
 import glaze.Window;
@@ -101,7 +101,7 @@ class FieldBuilderTools {
 /**
  * Form field element.
  */
-class Field implements RenderOnce implements Styled implements ParentElement {
+class Field extends Component implements Styled implements ParentElement {
 
     var id:ElementId = ElementId.Integer(0);
 
@@ -112,40 +112,6 @@ class Field implements RenderOnce implements Styled implements ParentElement {
 
     var labelValue:Null<FieldBuilder> = null;
 
-    var labelIndentValue:Bool = true;
-
-    var descriptionValue:Null<FieldBuilder> = null;
-
-    /**
-     * Used to render the actual form field, e.g.: Input, Switch...
-     */
-    final childElements:Array<AnyElement> = [];
-
-    var visibleValue:Bool = true;
-
-    var requiredValue:Bool = false;
-
-    /**
-     * Alignment of the form field.
-     */
-    var alignItems:Null<AlignItems> = null;
-
-    var colSpanValue:Int = 1;
-
-    var colStartValue:Null<Int> = null;
-
-    var colEndValue:Null<Int> = null;
-
-    public function new() {}
-
-    /**
-     * Sets the label for the form field.
-     */
-    public function label(label:IntoFieldBuilder):Field {
-        labelValue = label;
-        return this;
-    }
-
     /**
      * Sets indent with the label width (in Horizontal layout), default is `true`.
      *
@@ -154,8 +120,56 @@ class Field implements RenderOnce implements Styled implements ParentElement {
      *
      * This is only work when the `label` is not set.
      */
-    public function labelIndent(indent:Bool):Field {
-        labelIndentValue = indent;
+    @prop var labelIndent:Bool = true;
+
+    var descriptionValue:Null<FieldBuilder> = null;
+
+    /**
+     * Used to render the actual form field, e.g.: Input, Switch...
+     */
+    final childElements:Array<AnyElement> = [];
+
+    /**
+     * Set the visibility of the form field, default is `true`.
+     */
+    @prop var visible:Bool = true;
+
+    /**
+     * Set the required status of the form field, default is `false`.
+     */
+    @prop var required:Bool = false;
+
+    /**
+     * Alignment of the form field.
+     */
+    var alignItems:Null<AlignItems> = null;
+
+    /**
+     * Sets the column span for the form field.
+     *
+     * Default is 1.
+     */
+    @prop var colSpan:Int = 1;
+
+    /**
+     * Sets the column start of this form field.
+     */
+    @prop var colStart:Null<Int> = null;
+
+    /**
+     * Sets the column end of this form field.
+     */
+    @prop var colEnd:Null<Int> = null;
+
+    public function new() {
+        super();
+    }
+
+    /**
+     * Sets the label for the form field.
+     */
+    public function label(label:IntoFieldBuilder):Field {
+        labelValue = label;
         return this;
     }
 
@@ -184,27 +198,11 @@ class Field implements RenderOnce implements Styled implements ParentElement {
     }
 
     /**
-     * Set the visibility of the form field, default is `true`.
-     */
-    public function visible(visible:Bool):Field {
-        visibleValue = visible;
-        return this;
-    }
-
-    /**
      * Returns whether the form field is visible.
      */
     @:allow(glaze.kit.form, tests)
     function isVisible():Bool {
-        return visibleValue;
-    }
-
-    /**
-     * Set the required status of the form field, default is `false`.
-     */
-    public function required(required:Bool):Field {
-        requiredValue = required;
-        return this;
+        return visible;
     }
 
     /**
@@ -243,32 +241,6 @@ class Field implements RenderOnce implements Styled implements ParentElement {
         return this;
     }
 
-    /**
-     * Sets the column span for the form field.
-     *
-     * Default is 1.
-     */
-    public function colSpan(colSpan:Int):Field {
-        colSpanValue = colSpan;
-        return this;
-    }
-
-    /**
-     * Sets the column start of this form field.
-     */
-    public function colStart(colStart:Int):Field {
-        colStartValue = colStart;
-        return this;
-    }
-
-    /**
-     * Sets the column end of this form field.
-     */
-    public function colEnd(colEnd:Int):Field {
-        colEndValue = colEnd;
-        return this;
-    }
-
     public function extend(elements:Array<AnyElement>):Void {
         for (element in elements) childElements.push(element);
     }
@@ -302,7 +274,7 @@ class Field implements RenderOnce implements Styled implements ParentElement {
         final layout = propsValue.layout;
 
         final labelWidth = layout.isVertical() ? null : propsValue.labelWidth;
-        final hasLabel = labelIndentValue;
+        final hasLabel = labelIndent;
 
         final gap:Pixels = switch propsValue.size {
             case Large: 8.;
@@ -314,11 +286,11 @@ class Field implements RenderOnce implements Styled implements ParentElement {
         final field = vFlex()
             .flex1()
             .gap(gap / 2.)
-            .colSpan(colSpanValue);
-        if (colStartValue != null) field.colStart(colStartValue);
-        if (colEndValue != null) field.colEnd(colEndValue);
+            .colSpan(colSpan);
+        if (colStart != null) field.colStart(colStart);
+        if (colEnd != null) field.colEnd(colEnd);
         field.refineStyle(fieldStyle);
-        if (!visibleValue) field.hidden();
+        if (!visible) field.hidden();
 
         // This warp for aligning the Label + Input
         final row = wrapDiv(layout)
@@ -342,7 +314,7 @@ class Field implements RenderOnce implements Styled implements ParentElement {
                 final labelRow = hFlex()
                     .gap1()
                     .child(div().overflowXHidden().child(FieldBuilderTools.render(labelValue, window, cx)));
-                if (requiredValue) {
+                if (required) {
                     labelRow.child(div().textColor(theme.danger).child('*'));
                 }
                 label.child(labelRow);
